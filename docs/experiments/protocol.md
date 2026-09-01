@@ -5,10 +5,11 @@ This document defines the paper experiment and the future experiment runner. It 
 The primary evidence base is the independently reviewed and ACCEPTED survey in [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). Platform and plugin claims use these resources:
 
 - [`docs/research/skill-subagent-survey.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)
-- [`plugin/README.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/1facf95b3ce71fac8baa0f6bf75eb25aea48e264/plugin/README.md)
-- [`plugin/skills/cognitive-writing/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/1facf95b3ce71fac8baa0f6bf75eb25aea48e264/plugin/skills/cognitive-writing/SKILL.md)
-- [`plugin/skills/cognitive-writing/references/ablation-variants.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/1facf95b3ce71fac8baa0f6bf75eb25aea48e264/plugin/skills/cognitive-writing/references/ablation-variants.md)
-- [`plugin/skills/cognitive-writing/references/trace-jsonl-schema.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/1facf95b3ce71fac8baa0f6bf75eb25aea48e264/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
+- [`plugin/README.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/README.md)
+- [`plugin/skills/cognitive-writing/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/SKILL.md)
+- [`plugin/skills/cognitive-writing-fixed-order/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing-fixed-order/SKILL.md)
+- [`plugin/skills/cognitive-writing-no-goal-network/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing-no-goal-network/SKILL.md)
+- [`plugin/skills/cognitive-writing/references/trace-jsonl-schema.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
 
 The cited survey and plugin files are supplied by prerequisite pull requests:
 
@@ -87,11 +88,11 @@ A4 uses these processes:
 | A1 single-shot | One generation pass from the assignment and supplied context. No explicit planning or review stage. | Record the externally visible generation event. Do not infer hidden goals or stages. |
 | A2 linear stages | One pass each through Pre-Write, Write, and Re-Write. The order is fixed and each stage hands its output to the next. | Record the three stage transitions and their outputs. Record no unobserved reasoning. |
 | A3 [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval | The pipeline follows the five stages above. STORM [^2] separates planning from writing. This arm omits retrieval, source gathering, and citation generation under the equal-information policy. The surveys describe this no-retrieval adaptation and the related STORM pipeline precedent. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) and [`docs/research/skill-subagent-survey.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md). | Record the five stages. Retrieval, evidence-gathering, and citation traces are `N/A` by design. |
-| A4 proposed plugin | The documented cognitive-writing plugin. The Monitor selects among the three processes above. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. | Use the plugin's append-only `.writing/trace/process.jsonl` and goal-network files. Record the normal loop with no ablation marker. |
-| A5 no goal network | The plugin's documented `no-goal-network` variant. The assignment acts as one implicit objective. The Monitor does not create, develop, or regenerate hierarchical goal IDs. | Keep an existing `goals.md` unchanged. Continue recording process switches. Set `ablation` to `no-goal-network` in each applicable trace event. |
-| A6 fixed process order | The plugin's documented `fixed-linear-order` variant. Repeat `planning -> translating -> reviewing` for each pass. Generate and Evaluate may still interrupt when new knowledge, a serious goal conflict, or the growing text requires it. Return to the prescribed order after the interruption. | Keep the ordinary goal network and trace. Set `ablation` to `fixed-linear-order` in each applicable trace event. |
+| A4 proposed plugin | The documented cognitive-writing plugin. The Monitor selects among the three processes above. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. | Use the plugin's append-only `.writing/trace/process.jsonl` and goal-network files. Record the normal loop under the shared trace contract. |
+| A5 no goal network | Invoke the `cognitive-writing-no-goal-network` skill. It uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. | Leave any existing `goals.md` untouched. Record process switches under the shared trace contract. Do not record goal events or goal fields. |
+| A6 fixed process order | Invoke the `cognitive-writing-fixed-order` skill. It runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, return to the prescribed order. | Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Do not add variant-specific fields. |
 
-A5 and A6 are session variants, not forks of the plugin. The runner must apply the exact variant names and behavior in [`plugin/skills/cognitive-writing/references/ablation-variants.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/1facf95b3ce71fac8baa0f6bf75eb25aea48e264/plugin/skills/cognitive-writing/references/ablation-variants.md). All full and ablated runs use the same:
+A5 and A6 are sibling skills in the plugin. The runner invokes `cognitive-writing-no-goal-network` for A5. It invokes `cognitive-writing-fixed-order` for A6. Both skills share the role skills and use the common trace contract. All six arms use the same:
 
 - Assignment
 - Starting draft
@@ -105,7 +106,7 @@ The plugin mapping is an implementation of the theory, not a claim that the 1981
 - Final wording
 - Publication
 
-The Monitor owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/cognitive-writing/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/1facf95b3ce71fac8baa0f6bf75eb25aea48e264/plugin/skills/cognitive-writing/SKILL.md).
+The Monitor owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/cognitive-writing/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/SKILL.md).
 
 ## Benchmarks and data gates
 
@@ -415,9 +416,11 @@ Do not discard ties or cases with disagreement.
 
 For A4, A5, and A6, the authoritative sources are:
 
-- The plugin's append-only `.writing/trace/process.jsonl` [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/1facf95b3ce71fac8baa0f6bf75eb25aea48e264/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
-- `.writing/goals.md`
+- The plugin's append-only `.writing/trace/process.jsonl` [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
+- `.writing/goals.md` for A4 and A6
 - The final draft
+
+A5 leaves any existing `goals.md` untouched. Do not use that file for A5 goal measures.
 
 Each trace line is one JSON object. The documented event types are:
 
@@ -432,19 +435,18 @@ Process-switch events include `from_process` and `to_process`. Goal events inclu
 - Decision
 - Evidence
 - Uncertainty
-- Applicable ablation
 
-For A1, A2, and A3, the runner records only externally observed generation or stage events in the same per-run trace location. An adapter must not invent goals, hidden decisions, or internal reasoning. Plugin-specific fields that cannot be observed are `N/A` in the derived analysis. The baseline stage traces support structural comparisons. The goal-network and recursive-monitor estimands are interpreted primarily on A4 to A6, where the plugin documents those semantics.
+For A1, A2, and A3, the runner records only externally observed generation or stage events in the same per-run trace location. An adapter must not invent goals, hidden decisions, or internal reasoning. Plugin-specific fields that cannot be observed are `N/A` in the derived analysis. The baseline stage traces support structural comparisons. The goal-network estimands apply to A4 and A6. The recursive-monitor estimands apply to A4 to A6, with no goal events or goal fields for A5.
 
 The trace is an operational analogue of a thinking-aloud protocol, not a direct transcript of an agent's private state. The analysis therefore distinguishes logged actions from claims about cognition. An event that lacks enough evidence for a code is marked ambiguous and remains in the denominator for trace completeness.
 
 ### Metrics
 
-The analysis extracts these measures from the trace and goal files:
+The analysis extracts these measures from the traces. It uses goal files only for A4 and A6.
 
 | Process measure | Operational definition |
 | --- | --- |
-| Goal count | Count all three goal event types. Add the unique active goal IDs in `goals.md`. Report a total. When the kind is available, also report content, process, and criterion goals. |
+| Goal count | For A4 and A6, count all three goal event types. Add the unique active goal IDs in `goals.md`. For A5, report zero because the variant records no goal events and leaves `goals.md` untouched. Report a total. When the kind is available, also report content, process, and criterion goals. |
 | Goal specificity | Code whether each goal defines an operational action. Code whether it names a content target. Code whether it names an audience or purpose target. Code whether it states an evaluative criterion. Report the coding rubric and double-code a reliability sample. Do not treat goal length alone as specificity. |
 | Middle-range goal quantity | Count goals that connect a high-level rhetorical intention to a local prose or process action. The coding rule and examples are frozen before analysis. |
 | Middle-range goal quality | Score whether each middle-range goal gives concrete direction. Score whether it covers the rhetorical problem. Score whether it can be checked against the output. Report the mean and distribution with coder agreement. |
@@ -522,7 +524,7 @@ The runner writes a manifest before each run. The manifest records:
 
 - Benchmark release and hash
 - Prompt manifest hash
-- Arm ID and platform
+- Arm ID, platform, and selected skill or prompt variant
 - CLI versions and plugin commit
 - Generator and judge model IDs
 - System, arm, and judge prompt hashes
@@ -560,8 +562,8 @@ The runner enforces the equal-tool and no-retrieval policy. It logs network-poli
 The runner validates these conditions:
 
 - Every trace line is standalone JSON.
-- A4 to A6 contain the required plugin fields.
-- A5 and A6 markers match the selected variant.
+- A4 to A6 contain the fields required by their selected plugin skill.
+- A5 and A6 manifests record the selected sibling skill.
 - Blind labels are independent of arm IDs.
 - All 15 unordered pairs have both presentation orders.
 
@@ -662,8 +664,8 @@ The owner must close every gate below before the first scored run. Codex records
 8. **Trace conformance.** Run one smoke test for each arm and platform. Validate these properties:
 
    - Trace JSONL
-   - Goal history
-   - Ablation markers
+   - Goal-state handling for each selected skill
+   - Correct variant skill invocation
    - Stage events
    - Blind labels
    - Pair balance
