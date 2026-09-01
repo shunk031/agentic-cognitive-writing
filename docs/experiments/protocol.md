@@ -19,7 +19,7 @@ The questions are:
 3. **RQ3.** Do agent traces, analyzed as thinking-aloud protocols, show the goal creation and regeneration dynamics described by Flower and Hayes? This includes their prediction that the quantity and quality of middle-range goals relate to writing quality.
 4. **RQ4.** Does the mapping replicate across platforms?
 
-The primary product estimands are the per-prompt differences in pointwise quality and pairwise preference between the full plugin and each baseline or ablation. The primary process estimands are the rates and distributions of goal events, adaptive process switches, interruptions, and pop-back events. The replication estimand is the direction and size of the A4 treatment effect under the secondary platform, reported separately from the primary platform.
+The pointwise two-judge composite is the sole CONFIRMATORY estimand (Holm families: per benchmark, 5 theory-arm-vs-other contrasts; 15 confirmatory tests total). The pairwise Bradley-Terry average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY: reported with intervals, no Holm-adjusted claims attached; all other contrasts remain exploratory. The 15 confirmatory tests apply to the primary Codex pointwise composite. The Claude Code replication remains separate. The primary process estimands are the rates and distributions of goal events, adaptive process switches, interruptions, and pop-back events. The replication estimand is the direction and size of the A4 treatment effect under the secondary platform, reported separately from the primary platform.
 
 ## Arms
 
@@ -158,9 +158,14 @@ The six arms produce 15 unordered arm pairs. For every prompt and assigned judge
 
 The pairwise JSON object follows this contract:
 
+Every record must include the fields shown below.
+
 ```json
 {
   "prompt_id": "<prompt ID>",
+  "platform": "<codex-primary|claude-code-replication>",
+  "judge_id": "<judge ID>",
+  "judge_family": "<claude_frontier|gpt_frontier|open_evaluator>",
   "pair_id": "<unordered pair ID>",
   "presentation": "<A|B or B|A>",
   "winner": "<A|B|tie>",
@@ -172,7 +177,9 @@ The pairwise JSON object follows this contract:
 }
 ```
 
-Fit one Bradley-Terry model per judge and per platform with a predeclared tie treatment. For arm `a`, let `theta_Codex(a, Claude)` and `theta_Codex(a, open)` be the judge-specific ability estimates under the same reference-arm constraint. The primary Codex pairwise estimand is their equal-weight average, `theta_primary(a) = 0.5 * theta_Codex(a, Claude) + 0.5 * theta_Codex(a, open)`. For the replication, use `theta_replication(a) = 0.5 * theta_ClaudeCode(a, GPT) + 0.5 * theta_ClaudeCode(a, open)`. Fit and report the two platform models separately. Report per-judge win rates in addition to the equal-weight estimates. If the selected implementation cannot fit ties, report tie-aware win rates with ties counted as half a win and the raw win, loss, and tie counts. Do not pool platforms.
+Group pairwise records on `(platform, judge_id)` before fitting each judge-specific Bradley-Terry model. Use `judge_family` to verify each group against the runtime judge manifest. Compute the equal-weight average from those per-judge fits within each platform. Do not combine records from different platforms or judges before fitting.
+
+The pointwise two-judge composite is the sole CONFIRMATORY estimand (Holm families: per benchmark, 5 theory-arm-vs-other contrasts; 15 confirmatory tests total). The pairwise Bradley-Terry average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY: reported with intervals, no Holm-adjusted claims attached; all other contrasts remain exploratory. Fit each Bradley-Terry model with a predeclared tie treatment. For arm `a`, let `theta_Codex(a, Claude)` and `theta_Codex(a, open)` be the judge-specific ability estimates under the same reference-arm constraint. The Codex pairwise average is `theta_primary(a) = 0.5 * theta_Codex(a, Claude) + 0.5 * theta_Codex(a, open)`. For the replication, use `theta_replication(a) = 0.5 * theta_ClaudeCode(a, GPT) + 0.5 * theta_ClaudeCode(a, open)`. Fit and report the two platform models separately. Report per-judge win rates in addition to the equal-weight estimates. If the selected implementation cannot fit ties, report tie-aware win rates with ties counted as half a win and the raw win, loss, and tie counts. Do not pool platforms.
 
 ### Length and judge sensitivity
 
@@ -230,9 +237,9 @@ For pointwise quality, compute the primary equal-weight judge composite for each
 
 For pairwise quality, report raw wins, losses, ties, per-judge tie-aware win rates, per-judge Bradley-Terry ability estimates, and the equal-weight judge average on each platform. Use prompt-level paired resampling for uncertainty. Report the effect size on the selected Bradley-Terry scale or the paired difference in tie-aware win rate. Keep Codex and Claude Code inference separate.
 
-For RQ1 and RQ2, the five confirmatory contrasts are A4 versus A1, A2, A3, A5, and A6 on the primary Codex pointwise estimand, with one family per primary benchmark. The same five contrasts on the Claude Code replication estimand are reported separately and do not enter the primary correction family. Pairwise contrasts, per-judge results, ablation-specific process contrasts, process-quality associations, platform contrasts, and all other contrasts are exploratory. They carry no confirmatory claim. For RQ4, compare platforms descriptively by direction, rank agreement, and standardized effect size. The analysis does not pool platforms.
+The pointwise two-judge composite is the sole CONFIRMATORY estimand (Holm families: per benchmark, 5 theory-arm-vs-other contrasts; 15 confirmatory tests total). The pairwise Bradley-Terry average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY: reported with intervals, no Holm-adjusted claims attached; all other contrasts remain exploratory. For RQ1 and RQ2, run the 15 confirmatory contrasts on the primary Codex pointwise composite. The contrasts compare A4 with A1, A2, A3, A5, and A6 within each primary benchmark. Report the same five contrasts on the Claude Code replication separately, without pooled or confirmatory inference. Report the pairwise average with intervals, but attach no Holm-adjusted claims to it. For RQ4, compare platforms descriptively by direction, rank agreement, and standardized effect size. The analysis does not pool platforms.
 
-Apply Holm correction within each primary-benchmark family of five confirmatory contrasts on the primary pointwise estimand. All other contrasts are exploratory and are reported without confirmatory claims. The alternative hypotheses, missing-value rules, bootstrap resample count, confidence level, effect-size definitions, Bradley-Terry tie treatment, and ability-scale convention are `REQUIRED_AT_RUNTIME` and must be frozen before outcome inspection. Exploratory subgroup results use clear labels and do not replace the confirmatory estimates.
+Apply Holm correction within each primary-benchmark family of five confirmatory contrasts on the primary Codex pointwise composite. Do not apply Holm correction to the pairwise average or to any other contrast. Report the pairwise average with uncertainty intervals and no Holm-adjusted claims. The alternative hypotheses, missing-value rules, bootstrap resample count, confidence level, effect-size definitions, Bradley-Terry tie treatment, and ability-scale convention are `REQUIRED_AT_RUNTIME` and must be frozen before outcome inspection. Exploratory subgroup results use clear labels and do not replace the confirmatory estimates.
 
 ## Reproducibility and artifact plan
 
