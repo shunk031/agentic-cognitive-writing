@@ -1,14 +1,14 @@
-# Skill/Sub-agent Survey for Agentic Cognitive Writing Process
+# Skill/sub-agent survey for agentic cognitive writing process
 
-## 目的と読み方
+## Purpose and reading guide
 
-本レポートは、Flower & Hayes (1981) の Cognitive Process Theory of Writing を、Claude Code plugin と OpenAI Codex から使える skills + sub-agents の実装へ落とすための設計根拠である。各節は、(a) 公式 non-GitHub 資料、(b) GitHub 上の直接ファイル、(c) 差分・含意、の順に整理する。ファイル形式・ディレクトリ構成・プラットフォーム挙動に関する主張は、`VERIFIED` または `HYPOTHESIS` を明示した。
+This report provides design evidence for turning Flower & Hayes (1981) Cognitive Process Theory of Writing into a skills + sub-agents implementation that works as a Claude Code plugin and from OpenAI Codex. Each section follows the same order: official non-GitHub sources, direct GitHub files, then differences and implications. Every claim about a file format, directory layout, or platform behavior is marked `VERIFIED` or `HYPOTHESIS`.
 
-冒頭要約: 問いは「認知的な文章産出プロセスを、Claude Code と Codex の両方で動く skill/sub-agent plugin としてどう設計すべきか」である。方法は、各トピックで公式 non-GitHub ドキュメントを先に読み、その後 GitHub の直接ファイルで実装例を確認し、差分を照合した。結論は、共有可能な中核は `SKILL.md` + `scripts/` + `references/` + `assets/` で、Claude には `.claude-plugin/` と `agents/*.md`、Codex には `.codex-plugin/` と `agents/openai.yaml` を薄い adapter として重ねるのが最小リスクというものだ。帰結として、論文用プロトタイプは「monitor / planner / translator / reviewer」の役割と、各判断を記録する process ledger を中心に置き、最終文面だけでなく認知プロセスの変化を評価できるようにするべきである。
+Opening summary. The question is how to design a skill/sub-agent plugin for a cognitive writing process that works in both Claude Code and Codex. The method was to read official non-GitHub documentation first for each topic, then check direct GitHub files for implementation examples, then reconcile the differences. The conclusion is that the lowest-risk shared core is `SKILL.md` + `scripts/` + `references/` + `assets/`, with thin adapters layered on top: `.claude-plugin/` and `agents/*.md` for Claude, and `.codex-plugin/` and `agents/openai.yaml` for Codex. For the paper prototype, the design should center the `monitor / planner / translator / reviewer` roles and a process ledger that records each decision, so the evaluation can measure changes in the cognitive process as well as the final text.
 
-調査制約として、GitHub API は途中から `403` を返したため、既に取得済みの API 結果、raw.githubusercontent.com の直接ファイル、公式 Markdown docs を優先した。API 403 後も raw 直指定で読めたファイルは `VERIFIED` とした。読めなかった推測パスは本文の根拠に使わない。
+Survey constraint. The GitHub API began returning `403` during the work, so the survey relies on API results already fetched, direct files from raw.githubusercontent.com, and official Markdown docs. Files that remained readable through direct raw URLs after the API `403` are marked `VERIFIED`. The report does not use guessed paths that could not be read as evidence.
 
-## 1. Anthropic Skill Format & Skill-Creator
+## 1. Anthropic skill format and skill-creator
 
 **Sources**
 
@@ -43,7 +43,7 @@
 - `VERIFIED` `grading.json` expects each assertion under `expectations[]` to use `text`, `passed`, and `evidence`; the viewer depends on these exact field names. Sources: https://github.com/anthropics/skills/blob/main/skills/skill-creator/references/schemas.md and https://github.com/anthropics/skills/blob/main/skills/skill-creator/eval-viewer/generate_review.py
 - `VERIFIED` `package_skill.py` creates a `.skill` zip archive after running validation and excludes `__pycache__`, `node_modules`, `.DS_Store`, `*.pyc`, and root-level `evals`. Source: https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/package_skill.py
 
-## 2. Claude Code Plugin Format
+## 2. Claude Code plugin format
 
 **Sources**
 
@@ -79,7 +79,7 @@
 - `VERIFIED` Installed plugins are copied to a cache location except command sources in link mode. Source: https://code.claude.com/docs/en/plugin-marketplaces.md
 - `VERIFIED` Anthropic's official marketplace file demonstrates local `source: "./plugins/agent-sdk-dev"` entries and external `git-subdir`/URL entries. Source: https://github.com/anthropics/claude-plugins-official/blob/main/.claude-plugin/marketplace.json
 
-## 3. Claude Code Sub-agent Definitions
+## 3. Claude Code sub-agent definitions
 
 **Sources**
 
@@ -105,7 +105,7 @@
 - `VERIFIED` `feature-dev/commands/feature-dev.md` uses a command skill to launch multiple `code-explorer`, `code-architect`, and `code-reviewer` agents across discovery, design, and quality review phases. Source: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
 - `HYPOTHESIS` For our writing-process plugin, Claude Code should represent Flower & Hayes monitor/planner/translator/reviewer as plugin agents, while top-level skills orchestrate phase transitions, because official examples already use commands/skills to route subagents for structured workflows. Evidence: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
 
-## 4. OpenAI Codex Skill Format & Skill-Creator
+## 4. OpenAI Codex skill format and skill-creator
 
 **Sources**
 
@@ -144,7 +144,7 @@
 | UI metadata | `VERIFIED` No Anthropic skill UI metadata file is required by the skill-creator anatomy: https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md | `VERIFIED` `agents/openai.yaml` is recommended by OpenAI for UI metadata and dependencies: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md | Add `agents/openai.yaml` as OpenAI-only metadata; Claude should ignore it as an ordinary support file. |
 | Creation workflow | `VERIFIED` Emphasizes eval loop, with-skill/baseline subagents, viewer, grader/comparator/analyzer: https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md | `VERIFIED` Emphasizes lean skills, degree-of-freedom choice, `init_skill.py`, `quick_validate.py`, and real usage iteration: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md | Adopt Anthropic's eval workflow and OpenAI's lean/context-budget discipline. |
 
-## 5. Codex Multi-agent / Sub-agent Construction
+## 5. Codex multi-agent / sub-agent construction
 
 **Sources**
 
@@ -171,9 +171,9 @@
 - `VERIFIED` VoltAgent's community `agent-installer` agent installs Claude subagents by fetching category lists and raw `.md` files into `~/.claude/agents/` or `.claude/agents/`. Source: https://github.com/VoltAgent/awesome-claude-code-subagents/blob/main/categories/09-meta-orchestration/agent-installer.md
 - `VERIFIED` contains-studio's `ai-engineer.md` uses Claude subagent frontmatter with `name`, long `description`, `color`, and `tools`. Source: https://github.com/contains-studio/agents/blob/main/engineering/ai-engineer.md
 - `VERIFIED` OpenAI `build-web-apps` plugin uses `.codex-plugin/plugin.json` to package multiple skills and top-level UI metadata, and its `frontend-app-builder` skill coordinates with other installed skills. Sources: https://github.com/openai/plugins/blob/main/plugins/build-web-apps/.codex-plugin/plugin.json and https://github.com/openai/plugins/blob/main/plugins/build-web-apps/skills/frontend-app-builder/SKILL.md
-- `VERIFIED` OpenAI `openai-developers` `agents-sdk` skill recommends starting with one `Agent`, then adding tools, handoffs, structured outputs, sandbox execution, and eval harnesses only when needed. Source: https://github.com/openai/plugins/blob/main/plugins/openai-developers/skills/agents-sdk/SKILL.md
+- `VERIFIED` OpenAI `openai-developers` `agents-sdk` skill recommends starting with one `Agent`, then adding tools, handoffs, structured outputs, sandbox execution, and eval systems only when needed. Source: https://github.com/openai/plugins/blob/main/plugins/openai-developers/skills/agents-sdk/SKILL.md
 
-## 6. Cross-platform Single-repo Strategies
+## 6. Cross-platform single-repo strategies
 
 **Sources**
 
@@ -206,36 +206,36 @@
    - `VERIFIED` OpenAI provides `init_skill.py` and `generate_openai_yaml.py` for generating `agents/openai.yaml`. Sources: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/init_skill.py and https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/generate_openai_yaml.py
    - `VERIFIED` Anthropic validates plugins with `claude plugin validate` according to Claude docs. Source: https://code.claude.com/docs/en/plugins.md
    - `HYPOTHESIS` A converter can lint a canonical skill tree, generate `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json`, OpenAI `agents/openai.yaml`, and Claude `agents/*.md` wrappers from a single declarative source.
-   - Trade-off: generated files must be checked or regenerated in CI; otherwise the two surfaces drift.
+   - Trade-off: generated files must be checked or regenerated in CI; otherwise the two platforms drift.
 
 **Recommended single-repo layout**
 
 ```text
 agentic-cognitive-writing-process/
-├── .claude-plugin/
-│   └── plugin.json
-├── .codex-plugin/
-│   └── plugin.json
-├── skills/
-│   ├── cognitive-writing-orchestrator/
-│   │   ├── SKILL.md
-│   │   ├── agents/
-│   │   │   └── openai.yaml
-│   │   ├── references/
-│   │   └── scripts/
-│   └── revision-evaluator/
-│       └── SKILL.md
-├── agents/
-│   ├── monitor.md
-│   ├── planner.md
-│   ├── translator.md
-│   └── reviewer.md
-└── docs/
+|-- .claude-plugin/
+|   `-- plugin.json
+|-- .codex-plugin/
+|   `-- plugin.json
+|-- skills/
+|   |-- cognitive-writing-orchestrator/
+|   |   |-- SKILL.md
+|   |   |-- agents/
+|   |   |   `-- openai.yaml
+|   |   |-- references/
+|   |   `-- scripts/
+|   `-- revision-evaluator/
+|       `-- SKILL.md
+|-- agents/
+|   |-- monitor.md
+|   |-- planner.md
+|   |-- translator.md
+|   `-- reviewer.md
+`-- docs/
 ```
 
 - `HYPOTHESIS` The root `agents/` directory should be Claude subagents, because Claude plugins natively load plugin-root `agents/`; Codex can treat these as reference prompts or convert them into custom agent files if Codex custom agent file schemas stabilize for local clients. Claude plugin agent behavior source: https://code.claude.com/docs/en/plugins-reference.md
 
-## 7. Academic & OSS Prior Art
+## 7. Academic and OSS prior art
 
 **Sources**
 
@@ -274,7 +274,7 @@ agentic-cognitive-writing-process/
 
 - `HYPOTHESIS` Existing systems operationalize pieces of writing cognition: STORM handles research/pre-writing, CoAuthor studies human-AI writing traces, and PaperDebugger embeds multi-agent help into an editor. The open gap is a cross-platform plugin that explicitly maps a classic cognitive writing-process theory to observable skill/subagent roles, state transitions, and experimentable ablations.
 
-## 8. Implications for the Agentic Cognitive Writing Process Plugin
+## 8. Implications for the agentic cognitive writing process plugin
 
 **Sources**
 
@@ -299,7 +299,7 @@ agentic-cognitive-writing-process/
 3. **Stateful process ledger**
    - `HYPOTHESIS` Use a structured writing ledger in `references/ledger-schema.md` or a script-generated JSON file to record rhetorical problem, audience, goals, content plan, source commitments, drafts, revisions, and monitor decisions.
    - Reuse: STORM's separation of research/outline/draft/polish as a pipeline reference, but add Flower & Hayes monitor decisions as first-class data.
-   - Avoid: final-output-only grading; it cannot show that cognitive-process scaffolding changed behavior.
+   - Avoid: final-output-only grading; it cannot show that cognitive-process support changed behavior.
 
 4. **Eval harness as a skill, not an afterthought**
    - `HYPOTHESIS` Implement `writing-eval-harness` using the Anthropic skill-creator pattern: with-skill vs baseline, assertions, grader, benchmark aggregation, and human review viewer concepts.
