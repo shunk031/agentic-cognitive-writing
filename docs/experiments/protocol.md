@@ -146,10 +146,9 @@ The runner must not train on or alter the student essays for this experiment. It
 
 [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) [^8] is optional and supplementary. It may be added only after the benchmark prompt-file license and provenance are cleared. If used, it is a length-control and robustness axis, not a fourth primary benchmark. The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) [^8] SFT data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
-The following benchmarks are excluded from this protocol because their licensing or metadata remains unresolved:
+The following benchmarks are excluded from this protocol because their licensing or metadata remains unresolved.
 
-- [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench)
-- [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17]
+The unresolved resources are [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench) and [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17].
 
 They must not enter a paper result, prompt manifest, or redistributed artifact without a new license review. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
@@ -174,10 +173,9 @@ The runner starts one top-level session per arm and prompt. In Codex A4 to A6 ru
 
 ### Generator and judge separation
 
-The judge assignment is explicit for each platform:
+The judge assignment is explicit for each platform.
 
-- Codex with GPT-family generators uses a Claude-family frontier judge and the same third-family Prometheus 2 [^9] style open evaluator used for replication.
-- Claude Code with Claude-family generators uses a GPT-family frontier judge and the same third-family Prometheus 2 [^9] style open evaluator.
+The Codex run with GPT-family generators uses a Claude-family frontier judge and the shared third-family Prometheus 2 [^9] style open evaluator. The Claude Code run with Claude-family generators uses a GPT-family frontier judge and the same open evaluator.
 
 The open evaluator must belong to a third model family. The assignment is symmetric across the two platform runs.
 
@@ -197,10 +195,9 @@ The runner must pin each value below. A placeholder blocks the run:
 | CLI and plugin versions | `REQUIRED_AT_RUNTIME: exact Codex version, Claude Code version, plugin commit, and runner commit` |
 | Generator and judge family audit | `REQUIRED_AT_RUNTIME: recorded base-model families and runtime verification that each frontier judge differs from the generator family and the open evaluator belongs to a third family` |
 
-The runner assigns judges with these pairs:
+The runner assigns judges with these pairs.
 
-- Codex outputs: Claude-family frontier judge and shared third-family open evaluator
-- Claude Code outputs: GPT-family frontier judge and shared third-family open evaluator
+The runner assigns the Claude-family frontier judge and shared third-family open evaluator to Codex outputs. It assigns the GPT-family frontier judge and the same open evaluator to Claude Code outputs.
 
 The runner records each judge's base-model family and the generator family for every scored output. It fails the run if a frontier judge shares the generator family or if the open evaluator does not belong to a third family. The audit verifies the family labels at runtime rather than trusting configuration names.
 
@@ -338,10 +335,7 @@ Length compliance is a standalone outcome for prompts with an explicit requested
 - Compliance rate, computed as the mean of the indicator
 - LongWriter [^8] style length score
 
-For `x > 0` and `y > 0`, use these LongWriter [^8] style cases, matching the [reference length evaluator](https://github.com/THUDM/LongWriter/blob/main/evaluation/eval_length.py):
-
-- `S = 100 * max(0, 1 - (y / x - 1) / 3)` when `y > x`
-- `S = 100 * max(0, 1 - (x / y - 1) / 2)` when `y <= x`
+For `x > 0` and `y > 0`, use the LongWriter [^8] style formula from the [reference length evaluator](https://github.com/THUDM/LongWriter/blob/main/evaluation/eval_length.py). When `y > x`, compute `S = 100 * max(0, 1 - (y / x - 1) / 3)`. When `y <= x`, compute `S = 100 * max(0, 1 - (x / y - 1) / 2)`.
 
 If `y = 0`, set `S = 0` and `D = 1`. If a prompt has no explicit length request, report these outcomes as `N/A`. Freeze the exact unit, formula, zero-output rule, and `tau` value in the runtime gate. Length compliance and the length score never enter either quality estimand.
 
@@ -627,10 +621,7 @@ The owner must close every gate below before the first scored run. Codex records
 
    Materialize prompt manifests and record final item counts.
 3. **LongBench-Write license.** Clear the [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) [^8] benchmark prompt-file license and provenance before any supplementary use. Otherwise keep the benchmark excluded.
-4. **PERSUADE 2.0 [^6] and ICLE++ [^7] access.** Record permitted use for these materials:
-
-   - The 15 [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] prompts
-   - The [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] calibration material
+4. **PERSUADE 2.0 [^6] and ICLE++ [^7] access.** Record permitted use for the 15 [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] prompts and the [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] calibration material.
 
    Do not redistribute material outside its permission.
 5. **Generator configuration.** Fill these values:
@@ -702,7 +693,7 @@ If a new source check contradicts a settled design item or the plugin's document
 [^3]: Yuning Wu, Jiahao Mei, Ming Yan, Chenliang Li, Shaopeng Lai, Yuran Ren, Zijia Wang, Ji Zhang, Mengyue Wu, Qin Jin, and Fei Huang, "WritingBench: A Comprehensive Benchmark for Generative Writing," arXiv preprint arXiv:2503.05244 (2025). [arXiv](https://arxiv.org/abs/2503.05244).
 [^4]: Haoran Que, Feiyu Duan, Liqun He, Yutao Mou, Wangchunshu Zhou, Jiaheng Liu, Wenge Rong, Zekun Moore Wang, Jian Yang, Ge Zhang, Junran Peng, Zhaoxiang Zhang, Songyang Zhang, and Kai Chen, "HelloBench: Evaluating Long Text Generation Capabilities of Large Language Models," arXiv preprint arXiv:2409.16191 (2024). [arXiv](https://arxiv.org/abs/2409.16191).
 [^5]: Chaitanya Malaviya, Priyanka Agrawal, Kuzman Ganchev, Pranesh Srinivasan, Fantine Huot, Jonathan Berant, Mark Yatskar, Dipanjan Das, Mirella Lapata, and Chris Alberti, "DOLOMITES: Domain-Specific Long-Form Methodical Tasks," arXiv preprint arXiv:2405.05938 (2024). [arXiv](https://arxiv.org/abs/2405.05938).
-[^6]: Scott Crossley, Perpetual Baffour, Tian Yu, Alex Franklin, Meg Benner, and Ulrich Boser, "A large-scale corpus for assessing written argumentation: PERSUADE 2.0," *Assessing Writing* 58 (2023): 100667. [DOI](https://doi.org/10.1016/j.asw.2023.100667).
+[^6]: S.A. Crossley, Yu Tian, Perpetual Baffour, Alex Franklin, Meg Benner, and Ulrich Boser, "A large-scale corpus for assessing written argumentation: PERSUADE 2.0," *Assessing Writing* 61 (2024): article 100865. [DOI](https://doi.org/10.1016/j.asw.2024.100865).
 [^7]: Shengjie Li and Vincent Ng, "ICLE++: Modeling Fine-Grained Traits for Holistic Essay Scoring," *Proceedings of NAACL-HLT* (2024). [ACL Anthology](https://aclanthology.org/2024.naacl-long.468/).
 [^8]: Yushi Bai, Jiajie Zhang, Xin Lv, Linzhi Zheng, Siqi Zhu, Lei Hou, Yuxiao Dong, Jie Tang, and Juanzi Li, "LongWriter: Unleashing 10,000+ Word Generation from Long Context LLMs," arXiv preprint arXiv:2408.07055 (2024). [arXiv](https://arxiv.org/abs/2408.07055).
 [^9]: Seungone Kim, Juyoung Suk, Shayne Longpre, Bill Yuchen Lin, Jamin Shin, Sean Welleck, Graham Neubig, Moontae Lee, Kyungjae Lee, and Minjoon Seo, "Prometheus 2: An Open Source Language Model Specialized in Evaluating Other Language Models," arXiv preprint arXiv:2405.01535 (2024). [arXiv](https://arxiv.org/abs/2405.01535).
