@@ -2,7 +2,7 @@
 
 ## Purpose and reading guide
 
-This report provides design evidence for turning Flower & Hayes (1981) Cognitive Process Theory of Writing into a skills + sub-agents implementation that works as a Claude Code plugin and from OpenAI Codex. Each section follows the same order: official non-GitHub sources, direct GitHub files, then differences and implications. Every claim about a file format, directory layout, or platform behavior is marked `VERIFIED` or `HYPOTHESIS`.
+This report provides design evidence for turning Flower & Hayes' Cognitive Process Theory of Writing [^1] into a skills + sub-agents implementation that works as a Claude Code plugin and from OpenAI Codex. Each section follows the same order: official non-GitHub sources, direct GitHub files, then differences and implications. Every claim about a file format, directory layout, or platform behavior is marked `VERIFIED` or `HYPOTHESIS`.
 
 Opening summary. The question is how to design a skill/sub-agent plugin for a cognitive writing process that works in both Claude Code and Codex. The method was to read official non-GitHub documentation first for each topic, then check direct GitHub files for implementation examples, then reconcile the differences. The conclusion is that the lowest-risk shared core is `SKILL.md` + `scripts/` + `references/` + `assets/`, with thin adapters layered on top: `.claude-plugin/` and `agents/*.md` for Claude, and `.codex-plugin/` and `agents/openai.yaml` for Codex. For the paper prototype, the design should center the `monitor / planner / translator / reviewer` roles and a process ledger that records each decision, so the evaluation can measure changes in the cognitive process as well as the final text.
 
@@ -239,35 +239,53 @@ agentic-cognitive-writing-process/
 
 **Sources**
 
-- Foundational theory: `VERIFIED` Flower & Hayes DOI/Crossref: https://doi.org/10.58680/ccc198115885
-- Foundational theory: `VERIFIED` Bereiter & Scardamalia book/reprint DOI/Crossref: https://doi.org/10.4324/9780203812310
-- STORM paper: `VERIFIED` NAACL DOI/Crossref and arXiv: https://doi.org/10.18653/v1/2024.naacl-long.347 and https://arxiv.org/abs/2402.14207
+- Foundational theory: `VERIFIED` Flower & Hayes DOI/Crossref: [^1]
+- Foundational theory: `VERIFIED` Bereiter & Scardamalia book/reprint DOI/Crossref: [^2]
+- STORM paper: `VERIFIED` NAACL DOI/Crossref and arXiv: [^3]
 - STORM code: `VERIFIED` engine and modules: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/engine.py, https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/knowledge_curation.py, https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/outline_generation.py, https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_generation.py, https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_polish.py
-- CoAuthor dataset: `VERIFIED` ACM DOI/Crossref: https://doi.org/10.1145/3491102.3502030
-- PaperDebugger: `VERIFIED` arXiv API result and GitHub code tree files: https://arxiv.org/abs/2512.02589 and https://github.com/PaperDebugger/PaperDebugger/blob/main/internal/api/chat/create_conversation_message_stream.go, https://github.com/PaperDebugger/PaperDebugger/blob/main/.claude/skills/developer/SKILL.md
+- CoAuthor dataset: `VERIFIED` ACM DOI/Crossref: [^4]
+- PaperDebugger: `VERIFIED` arXiv API result and GitHub code tree files: [^5] and https://github.com/PaperDebugger/PaperDebugger/blob/main/internal/api/chat/create_conversation_message_stream.go, https://github.com/PaperDebugger/PaperDebugger/blob/main/.claude/skills/developer/SKILL.md
 - PaperQA as research-agent prior art: `VERIFIED` GitHub code files: https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/main.py, https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/search.py, https://github.com/Future-House/paper-qa/blob/main/tests/test_agents.py
+- In2Writing venue sweep: `VERIFIED` ACL Anthology venue page and volume pages: https://aclanthology.org/venues/in2writing/, https://aclanthology.org/volumes/2022.in2writing-1/, https://aclanthology.org/volumes/2025.in2writing-1/
+- In2Writing cognitive-process design space: `VERIFIED` paper page and PDF: [^6]
+- In2Writing process-support additions: `VERIFIED` data-to-text writing environment, R3 iterative revision, writing-center prototype, and voice/reflection papers: [^7], [^8], [^9], [^10]
 
 **Writing theory to operationalize**
 
-- `VERIFIED` Flower & Hayes' 1981 article is the canonical source for a cognitive process theory of writing. Source: https://doi.org/10.58680/ccc198115885
-- `HYPOTHESIS` The model should map cleanly to agent roles: task environment/context, long-term memory/references, planning, translating/drafting, reviewing, and monitor/control. The mapping is an interpretation of the theory rather than a platform spec; source for the theory identity: https://doi.org/10.58680/ccc198115885
-- `VERIFIED` Bereiter & Scardamalia's written-composition work is a canonical source for knowledge-telling vs knowledge-transforming framing. Source: https://doi.org/10.4324/9780203812310
+- `VERIFIED` Flower & Hayes' 1981 article is the canonical source for a cognitive process theory of writing. Source: [^1]
+- `HYPOTHESIS` The model should map cleanly to agent roles: task environment/context, long-term memory/references, planning, translating/drafting, reviewing, and monitor/control. The mapping is an interpretation of the theory rather than a platform spec; source for the theory identity: [^1]
+- `VERIFIED` Bereiter & Scardamalia's written-composition work is a canonical source for knowledge-telling vs knowledge-transforming framing. Source: [^2]
 - `HYPOTHESIS` A novelty angle is to make knowledge-transforming explicit as an agentic loop: problem representation -> goal refinement -> content transformation -> rhetorical evaluation, rather than treating "revision" as a final polish step.
+- `VERIFIED` Gero et al.'s "A Design Space for Writing Support Tools Using a Cognitive Process Model of Writing" builds on Flower and Hayes' cognitive process model. The paper treats writing as a goal-directed, non-linear process with planning, translating, and reviewing components, then uses that model to define a design space for writing support tools. Source: [^6]
+- `VERIFIED` The Gero et al. design space covers which part of the writing process a tool supports and how constrained the supported writing goal is. The paper uses the space to review 30 papers from 2017-2021, identify under-studied highly constrained planning and reviewing, and propose shared evaluation methods and tasks. Sources: [^6]
+- `HYPOTHESIS` The Gero et al. paper gives this project the closest taxonomy, but the mechanism is different. That paper uses Flower and Hayes to classify and compare writing tools. Our plugin should turn the same model into an executable agent architecture, where monitor, planner, translator, and reviewer roles produce observable state transitions and ledger entries. Evidence: [^6]
+
+**In2Writing process-support sweep**
+
+- `VERIFIED` ACL Anthology lists In2Writing volumes for 2022 and 2025, with 15 and 11 papers respectively; this sweep screened those 26 ACL entries and selected five total additions, including the required Gero et al. design-space paper. Source: https://aclanthology.org/venues/in2writing/
+- `VERIFIED` Schneider et al.'s "Data-to-text systems as writing environment" compares NLG pipeline architecture with research on the human writing process and derives principles for data-to-text systems as writing environments. The paper argues that process optimization matters because evaluating all generated output is not feasible in mass text production. Source: [^7]
+- `HYPOTHESIS` Schneider et al. supports the plugin's ledger design: if output-scale evaluation is weak, the tool should expose the planning, configuration, generation, and quality-control decisions that produce the text. Evidence: [^7]
+- `VERIFIED` Du et al.'s "Read, Revise, Repeat" presents R3, a human-in-the-loop iterative text revision system where a model proposes edits, writers accept or reject them, and accepted edits feed the next revision iteration. The evaluation compares human-human, system-human, and system-only revision settings across ArXiv, Wikipedia, and Wikinews data. Source: [^8]
+- `HYPOTHESIS` R3 is useful as an evaluation pattern for our reviewer role because it measures revision depth, edit acceptance, and human control, not only final text quality. Evidence: [^8]
+- `VERIFIED` Liu and August's "From Crafting Text to Crafting Thought" studies writing center tutoring, interviews 10 current writing tutors, grounds their practices in writing-center literature, and uses those strategies to develop an intelligent writing tool prototype. Source: [^9]
+- `HYPOTHESIS` Liu and August help define user-facing behavior for the monitor and reviewer: ask what the writer wants to work on, prefer higher-order concerns before sentence-level edits, and keep the writer's ownership visible. Evidence: [^9]
+- `VERIFIED` Kim et al.'s voice-interaction paper argues that revision depends on reflection and proposes a formative study comparing spoken and written interaction with conversational agents. Source: [^10]
+- `HYPOTHESIS` The Kim et al. paper gives this project concrete process metrics for a human-in-the-loop experiment: reflection depth, higher-order concern frequency, turn structure, cognitive load, and revision depth. Evidence: [^10]
 
 **LLM long-form writing systems**
 
-- `VERIFIED` STORM frames long-form Wikipedia-like writing as a pre-writing problem: discover diverse perspectives, simulate perspective-specific question asking against a source-grounded expert, curate information, and create an outline; its paper reports evaluation on FreshWiki and feedback from experienced Wikipedia editors. Sources: https://arxiv.org/abs/2402.14207 and https://doi.org/10.18653/v1/2024.naacl-long.347
+- `VERIFIED` STORM frames long-form Wikipedia-like writing as a pre-writing problem: discover diverse perspectives, simulate perspective-specific question asking against a source-grounded expert, curate information, and create an outline; its paper reports evaluation on FreshWiki and feedback from experienced Wikipedia editors. Sources: [^3]
 - `VERIFIED` STORM code separates pipeline modules for knowledge curation, outline generation, article generation, and article polish. Sources: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/knowledge_curation.py, https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/outline_generation.py, https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_generation.py, https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_polish.py
 - `HYPOTHESIS` STORM is closest to the planning/research side of Flower & Hayes, but it is less directly a cognitive monitor model because it primarily packages source gathering, outline, generation, and polish as a pipeline.
-- `VERIFIED` PaperDebugger is described by its arXiv result as an in-editor, multi-agent, plugin-based academic writing assistant for Overleaf/LaTeX workflows. Source: https://arxiv.org/abs/2512.02589
+- `VERIFIED` PaperDebugger is described by its arXiv result as an in-editor, multi-agent, plugin-based academic writing assistant for Overleaf/LaTeX workflows. Source: [^5]
 - `VERIFIED` PaperDebugger's GitHub repo contains a Claude skill at `.claude/skills/developer/SKILL.md`, chat streaming API files, and project/instruction APIs, indicating an implementation that combines editor state, conversation, and agent guidance. Sources: https://github.com/PaperDebugger/PaperDebugger/blob/main/.claude/skills/developer/SKILL.md and https://github.com/PaperDebugger/PaperDebugger/blob/main/internal/api/chat/create_conversation_message_stream.go
 - `VERIFIED` PaperQA has an `agents` package with main/search/tools modules and tests, making it useful as a research-agent implementation pattern even though its primary task is question answering over papers rather than writing. Sources: https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/main.py and https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/search.py
 
 **Human-AI writing evaluation**
 
-- `VERIFIED` CoAuthor is an ACM CHI paper/dataset about human-AI collaborative writing for exploring language model capabilities. Source: https://doi.org/10.1145/3491102.3502030
+- `VERIFIED` CoAuthor is an ACM CHI paper/dataset about human-AI collaborative writing for exploring language model capabilities. Source: [^4]
 - `HYPOTHESIS` CoAuthor-style logged interaction data is valuable for evaluating process support because it observes writer prompts, model continuations, acceptance, and revision behavior rather than only final document quality.
-- `VERIFIED` STORM uses FreshWiki, outline assessments, generated article comparison, and expert Wikipedia-editor feedback. Source: https://arxiv.org/abs/2402.14207
+- `VERIFIED` STORM uses FreshWiki, outline assessments, generated article comparison, and expert Wikipedia-editor feedback. Source: [^3]
 - `HYPOTHESIS` For our paper, combine final-output metrics with process metrics: number of plan revisions, evidence coverage, goal satisfaction, revision depth, edit locality, self-identified uncertainties, and human acceptance of rhetorical choices.
 
 **Gap and novelty**
@@ -282,7 +300,7 @@ agentic-cognitive-writing-process/
 - Official non-GitHub: `VERIFIED` OpenAI skills/plugins/subagents: https://developers.openai.com/codex/build-skills.md, https://developers.openai.com/plugins/build/plugins.md, https://learn.chatgpt.com/docs/agent-configuration/subagents.md
 - GitHub code: `VERIFIED` Anthropic `feature-dev` orchestration: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
 - GitHub code: `VERIFIED` OpenAI `agents-sdk` skill: https://github.com/openai/plugins/blob/main/plugins/openai-developers/skills/agents-sdk/SKILL.md
-- Academic/OSS: `VERIFIED` STORM paper/code: https://arxiv.org/abs/2402.14207 and https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/engine.py
+- Academic/OSS: `VERIFIED` STORM paper/code: [^3] and https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/engine.py
 
 **Design options**
 
@@ -338,3 +356,16 @@ agentic-cognitive-writing-process/
 
 - `HYPOTHESIS` Start with a minimal dual-manifest plugin that contains three shared skills and four Claude-native agents. Codex support should initially rely on skills that instruct native Codex subagent delegation; do not invent a custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata until official custom-agent file details are stable enough to cite.
 - `HYPOTHESIS` The first paper prototype should privilege observability over maximal automation: every phase transition should write a ledger entry with the responsible agent, decision, evidence, and open uncertainty. This makes the Flower & Hayes mapping testable instead of just metaphorical.
+
+## Footnotes
+
+[^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication, 32(4), 1981. DOI: https://doi.org/10.58680/ccc198115885
+[^2]: Carl Bereiter and Marlene Scardamalia. The Psychology of Written Composition. Routledge, 1987. DOI/reprint: https://doi.org/10.4324/9780203812310
+[^3]: Yijia Shao, Yucheng Jiang, Theodore Kanell, Peter Xu, Omar Khattab, and Monica Lam. "Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models." Proceedings of NAACL-HLT 2024, 2024. DOI: https://doi.org/10.18653/v1/2024.naacl-long.347. arXiv: https://arxiv.org/abs/2402.14207
+[^4]: Mina Lee, Percy Liang, and Qian Yang. "CoAuthor: Designing a Human-AI Collaborative Writing Dataset for Exploring Language Model Capabilities." Proceedings of CHI 2022, 2022. DOI: https://doi.org/10.1145/3491102.3502030
+[^5]: Junyi Hou, Andre Lin Huikai, Nuo Chen, Yiwei Gong, and Bingsheng He. "PaperDebugger: A Plugin-Based Multi-Agent System for In-Editor Academic Writing, Review, and Editing." arXiv preprint, 2025, revised 2026. arXiv: https://arxiv.org/abs/2512.02589
+[^6]: Katy Gero, Alex Calderwood, Charlotte Li, and Lydia Chilton. "A Design Space for Writing Support Tools Using a Cognitive Process Model of Writing." Proceedings of the First Workshop on Intelligent and Interactive Writing Assistants (In2Writing 2022), 2022. DOI: https://doi.org/10.18653/v1/2022.in2writing-1.2. ACL: https://aclanthology.org/2022.in2writing-1.2/. PDF: https://aclanthology.org/2022.in2writing-1.2.pdf
+[^7]: Adela Schneider, Andreas Madsack, Johanna Heininger, Ching-Yi Chen, and Robert Weißgraeber. "Data-to-text systems as writing environment." Proceedings of the First Workshop on Intelligent and Interactive Writing Assistants (In2Writing 2022), 2022. DOI: https://doi.org/10.18653/v1/2022.in2writing-1.1. ACL: https://aclanthology.org/2022.in2writing-1.1/
+[^8]: Wanyu Du, Zae Myung Kim, Vipul Raheja, Dhruv Kumar, and Dongyeop Kang. "Read, Revise, Repeat: A System Demonstration for Human-in-the-loop Iterative Text Revision." Proceedings of the First Workshop on Intelligent and Interactive Writing Assistants (In2Writing 2022), 2022. DOI: https://doi.org/10.18653/v1/2022.in2writing-1.14. ACL: https://aclanthology.org/2022.in2writing-1.14/
+[^9]: Yijun Liu and Tal August. "From Crafting Text to Crafting Thought: Grounding Intelligent Writing Support to Writing Center Pedagogy." Proceedings of the Fourth Workshop on Intelligent and Interactive Writing Assistants (In2Writing 2025), 2025. DOI: https://doi.org/10.18653/v1/2025.in2writing-1.5. ACL: https://aclanthology.org/2025.in2writing-1.5/
+[^10]: Jiho Kim, Philippe Laban, Xiang Chen, and Kenneth C. Arnold. "Voice Interaction With Conversational AI Could Facilitate Thoughtful Reflection and Substantive Revision in Writing." Proceedings of the Fourth Workshop on Intelligent and Interactive Writing Assistants (In2Writing 2025), 2025. DOI: https://doi.org/10.18653/v1/2025.in2writing-1.7. ACL: https://aclanthology.org/2025.in2writing-1.7/
