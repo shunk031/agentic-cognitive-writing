@@ -25,7 +25,6 @@ Use these conditional fields when they apply:
 | `goal_id` | string | Goal affected by the event. |
 | `parent_goal_id` | string or null | Immediate parent in the goal network. |
 | `artifacts` | array | Project-relative files read or changed because of the event. |
-| `ablation` | string | Active experiment variant, if the run uses one. Omit for the normal loop. |
 
 `process_switch` entries must include `from_process` and `to_process`. Goal events must include `goal_id` and `parent_goal_id`. Every process switch and every goal creation, development, or regeneration must include `responsible_agent`, `decision`, `evidence`, and `open_uncertainty`.
 

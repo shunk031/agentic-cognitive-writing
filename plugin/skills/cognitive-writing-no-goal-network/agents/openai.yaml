@@ -1,0 +1,7 @@
+interface:
+  display_name: "No-goal-network comparison"
+  short_description: "Compare writing without hierarchical goals"
+  default_prompt: "Run a no-goal-network comparison using the shared writing state."
+
+policy:
+  allow_implicit_invocation: false

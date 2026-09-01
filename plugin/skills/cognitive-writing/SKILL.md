@@ -1,6 +1,6 @@
 ---
 name: cognitive-writing
-description: Use this skill whenever a user wants to plan, draft, translate, review, or revise writing. It runs Flower and Hayes' Monitor loop over the rhetorical problem, hierarchical goals, growing text, and writing memory, and coordinates planning, translating, and reviewing while preserving an observable process trace.
+description: Use this skill whenever a user wants to plan, draft, translate, review, or revise writing. It runs a Monitor loop over the rhetorical problem, hierarchical goals, growing text, and writing memory, and coordinates planning, translating, and reviewing while preserving an observable process trace.
 ---
 
 # Cognitive writing
@@ -61,4 +61,3 @@ Read these only when the corresponding operation needs them:
 
 - `references/trace-jsonl-schema.md` defines the trace fields and event types.
 - `references/goals-format.md` defines hierarchical goal notation and history records.
-- `references/ablation-variants.md` defines fixed-linear-order and no-goal-network runs without forking this skill.

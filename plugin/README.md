@@ -59,7 +59,7 @@ You can invoke the shared skill explicitly in Codex as `$cognitive-writing`. You
 
 ## Theory-to-architecture mapping
 
-The mapping interprets Figure 1 of Flower and Hayes. It is an implementation of the theory, not a claim that the paper specifies plugin files.
+The mapping interprets Figure 1 of Flower and Hayes.[^1] It is an implementation of the theory, not a claim that the paper specifies plugin files.[^1]
 
 | Category | Figure 1 model element | Plugin artifact |
 | --- | --- | --- |
@@ -118,7 +118,7 @@ flowchart TB
     memory <--> processes
 ```
 
-Figure 1's arrows represent information flow, not a fixed left-to-right sequence, as Flower and Hayes caution in footnote 11.
+Figure 1's arrows represent information flow, not a fixed left-to-right sequence, as Flower and Hayes caution in footnote 11.[^1]
 
 Claude Code cannot combine `disable-model-invocation` with subagent skill preloading, as documented in the [skill frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference) and [subagent preload documentation](https://code.claude.com/docs/en/sub-agents#preload-skills-into-subagents). This plugin therefore uses internal-use descriptions for the three Claude role skills and hard implicit-invocation suppression through Codex `agents/openai.yaml` policy.
 
@@ -141,7 +141,16 @@ The plugin creates or maintains this layout in the project where it is used:
 
 The plugin has no runtime dependency on files elsewhere in this repository. It does create and maintain `.writing/` in the user's writing project. That directory belongs to the user and should not be committed unless the user chooses to share the writing process.
 
-See [`skills/cognitive-writing/references/goals-format.md`](skills/cognitive-writing/references/goals-format.md) for goal notation and [`skills/cognitive-writing/references/ablation-variants.md`](skills/cognitive-writing/references/ablation-variants.md) for experiment settings.
+See [`skills/cognitive-writing/references/goals-format.md`](skills/cognitive-writing/references/goals-format.md) for goal notation.
+
+## Experiment variants
+
+The plugin includes two sibling skills for controlled comparisons. They reuse the shared Planning, Translating, and Reviewing skills and Claude adapters, keep the same project state and trace rules, and are not recommended defaults.
+
+- [`cognitive-writing-fixed-order`](skills/cognitive-writing-fixed-order/SKILL.md) runs Planning, then Translating, then Reviewing on each pass. Generate and Evaluate can interrupt, but the Monitor logs the interruption and returns to the prescribed order.
+- [`cognitive-writing-no-goal-network`](skills/cognitive-writing-no-goal-network/SKILL.md) treats the assignment as one implicit objective, leaves `.writing/goals.md` untouched, and continues to trace process switches.
+
+Select a variant explicitly when a comparison is needed. The variant skills contain their own seed prompts and use the same user-project `.writing/` layout as the recommended `cognitive-writing` skill.
 
 ## Trace JSONL schema
 
@@ -157,7 +166,7 @@ The Monitor appends one valid JSON object per line to `.writing/trace/process.js
 | `evidence` | Array of concrete supporting observations or project-relative files |
 | `open_uncertainty` | Array of unresolved questions or unsupported claims |
 
-Process switches also include `from_process` and `to_process`. Goal events include `goal_id` and `parent_goal_id`. Optional `artifacts` lists changed files and `ablation` names the active experiment variant.
+Process switches also include `from_process` and `to_process`. Goal events include `goal_id` and `parent_goal_id`. Optional `artifacts` lists changed files.
 
 Example line:
 
@@ -169,7 +178,7 @@ The field-by-field contract lives in [`skills/cognitive-writing/references/trace
 
 ## Evaluation seed
 
-The seed prompts for realistic writing tasks are in [`skills/cognitive-writing/evals/evals.json`](skills/cognitive-writing/evals/evals.json). They cover initial planning and drafting, review with possible goal regeneration, and the no-goal-network ablation.
+The seed prompts for the recommended workflow are in [`skills/cognitive-writing/evals/evals.json`](skills/cognitive-writing/evals/evals.json). Comparison prompts live with the [`fixed-order`](skills/cognitive-writing-fixed-order/evals/evals.json) and [`no-goal-network`](skills/cognitive-writing-no-goal-network/evals/evals.json) variants.
 
 ## Sources and scope
 
