@@ -559,8 +559,8 @@ agentic-cognitive-writing-process/
   - Reviewing.
   - Monitor/control.
   The mapping is an interpretation of the theory rather than a platform spec.
-- `VERIFIED` Bereiter & Scardamalia [^2] is the canonical source for knowledge-telling and knowledge-transforming framing.
-- `HYPOTHESIS` The knowledge-transforming model [^2] should become an agentic loop:
+- `VERIFIED` Bereiter & Scardamalia [^2] is the canonical source for knowledge-telling vs knowledge-transforming framing.
+- `HYPOTHESIS` A novelty angle is to make knowledge-transforming [^2] explicit as an agentic loop:
   - Problem representation.
   - Goal refinement.
   - Content transformation.
@@ -627,7 +627,7 @@ agentic-cognitive-writing-process/
 **Human-AI writing evaluation**
 
 - `VERIFIED` CoAuthor [^4] is an ACM CHI paper/dataset about human-AI collaborative writing for exploring language model capabilities.
-- `HYPOTHESIS` CoAuthor [^4] interaction logs are valuable for evaluating process support because they record writer prompts, model continuations, acceptance, and revision behavior rather than only final document quality.
+- `HYPOTHESIS` CoAuthor-style [^4] logged interaction data is valuable for evaluating process support because it observes writer prompts, model continuations, acceptance, and revision behavior rather than only final document quality.
 - `VERIFIED` STORM [^3] uses FreshWiki [^3], outline assessments, generated article comparison, and expert Wikipedia-editor feedback.
 - `HYPOTHESIS` For our paper, combine final-output metrics with these process metrics:
   - Number of plan revisions.
@@ -715,7 +715,7 @@ agentic-cognitive-writing-process/
    - Baselines:
      - Direct single-agent prompt.
      - Outline-then-draft prompt.
-     - STORM [^3] research-outline-draft pipeline.
+     - STORM-like [^3] research-outline-draft pipeline.
    - Treatment: full plugin with monitor/planner/translator/reviewer loop.
    - Metrics:
      - Expert ratings for organization.
@@ -724,7 +724,7 @@ agentic-cognitive-writing-process/
      - Expert ratings for factual grounding.
      - Process metrics from ledger.
      - Source precision/recall.
-   - Dataset: FreshWiki [^3] recent topics for expository writing plus domain-specific technical memos.
+   - Dataset: FreshWiki-like [^3] recent topics for expository writing plus domain-specific technical memos.
 
 2. **Ablation of monitor agent**
    - Baselines: full plugin without monitor; monitor replaced by static checklist.
@@ -746,7 +746,7 @@ agentic-cognitive-writing-process/
 
 4. **Human-in-the-loop writing support**
    - Baselines:
-     - CoAuthor [^4] autocomplete/continuation interface.
+     - CoAuthor-style [^4] autocomplete/continuation interface.
      - Direct chat writing assistant.
    - Treatment: plugin asks targeted monitor/planner questions only when ledger uncertainty is high.
    - Metrics:
