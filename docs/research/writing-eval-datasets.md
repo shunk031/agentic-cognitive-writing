@@ -13,6 +13,7 @@ Answer: use exactly three primary benchmarks.
   - Chat.
   - Completion.
   - Heuristic generation.
+
   VERIFIED: paper/repo/judge code checked. Paper: [^4] / Repo: https://github.com/Quehry/HelloBench / Judge code: https://github.com/Quehry/HelloBench/blob/main/llm_judge.py
 - DoLoMiTes [^7] covers structured expert writing. It fits research plans. It also fits reports and design documents better than fiction-heavy benchmarks. VERIFIED: paper/repo/data/license checked. Paper: [^7] / Repo: https://github.com/google-deepmind/dolomites / Data: https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_tasks_anon.jsonl / Examples: https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip
 
@@ -213,4 +214,4 @@ Optional supplementary axis: LongBench-Write [^6]
 [^16]: Raheja, Vipul, et al. "IteraTeR: Improving Text Revision by Learning Where to Edit from Other Revision Tasks." ACL, 2022. https://aclanthology.org/2022.acl-long.250/
 [^17]: Lin, Bill Yuchen, et al. "WildBench: Benchmarking LLMs with Challenging Tasks from Real Users in the Wild." arXiv, 2024. https://arxiv.org/abs/2406.04770
 [^18]: Bradley, Ralph Allan, and Milton E. Terry. "Rank Analysis of Incomplete Block Designs: I. The Method of Paired Comparisons." Biometrika, 1952. DOI: 10.1093/biomet/39.3-4.324. https://doi.org/10.1093/biomet/39.3-4.324
-[^19]: Crossley, Scott A., et al. "PERSUADE Corpus 2.0." Zenodo, 2023. DOI: 10.5281/zenodo.8221504. https://doi.org/10.5281/zenodo.8221504
+[^19]: Crossley, S.A., Yu Tian, Perpetual Baffour, Alex Franklin, Meg Benner, and Ulrich Boser. "A large-scale corpus for assessing written argumentation: PERSUADE 2.0." Assessing Writing, 2024. DOI: 10.1016/j.asw.2024.100865. https://doi.org/10.1016/j.asw.2024.100865
