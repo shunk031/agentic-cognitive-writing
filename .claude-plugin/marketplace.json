@@ -1,0 +1,12 @@
+{
+  "name": "agentic-cognitive-writing-process",
+  "owner": {
+    "name": "shunk031"
+  },
+  "plugins": [
+    {
+      "name": "cognitive-writing-process",
+      "source": "./plugin"
+    }
+  ]
+}
