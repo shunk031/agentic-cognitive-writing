@@ -1,6 +1,6 @@
 # Agentic cognitive writing
 
-`agentic-cognitive-writing` is a cross-platform plugin skeleton for Claude Code and OpenAI Codex. It operationalizes Flower and Hayes' 1981 cognitive process theory as a Monitor skill that coordinates Planning, Translating, and Reviewing. The plugin keeps the writing project's task environment and long-term memory in files owned by the user.
+`agentic-cognitive-writing` is a cross-platform plugin skeleton for Claude Code and OpenAI Codex. It operationalizes ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600) by Flower and Hayes (1981)[^1] as a Monitor skill that coordinates Planning, Translating, and Reviewing. The plugin keeps the writing project's task environment and long-term memory in files owned by the user.
 
 ## Install
 
@@ -55,30 +55,72 @@ codex plugin marketplace add .
 codex plugin add agentic-cognitive-writing@local-writing-plugins
 ```
 
-You can invoke the shared skill explicitly in Codex as `$cognitive-writing`. You can also select the plugin from the Codex or ChatGPT desktop Plugins Directory after registering the marketplace. For a personal install, copy the plugin to `~/.codex/plugins/agentic-cognitive-writing` and use `~/.agents/plugins/marketplace.json` with `"path": "./.codex/plugins/agentic-cognitive-writing"`; Codex resolves that path relative to the marketplace root. Restart the desktop app after changing a local marketplace. Codex uses the shared `plugin/skills/` tree; the Claude-only `plugin/agents/*.md` files document the native Claude roles, while the skill asks Codex to delegate those roles to native Codex subagents.
+You can invoke the shared skill explicitly in Codex as `$cognitive-writing`. You can also select the plugin from the Codex or ChatGPT desktop Plugins Directory after registering the marketplace. For a personal install, copy the plugin to `~/.codex/plugins/agentic-cognitive-writing` and use `~/.agents/plugins/marketplace.json` with `"path": "../../.codex/plugins/agentic-cognitive-writing"`; that relative path reaches the copied plugin from the marketplace file's directory. Restart the desktop app after changing a local marketplace. Codex uses the shared `plugin/skills/` tree; the Claude-only `plugin/agents/*.md` files are thin adapters that preload the same role skills, while the skill asks Codex to delegate those roles to native Codex subagents.
 
 ## Theory-to-architecture mapping
 
 The mapping interprets Figure 1 of Flower and Hayes. It is an implementation of the theory, not a claim that the paper specifies plugin files.
 
-| Figure 1 model element | Plugin artifact |
-| --- | --- |
-| Task environment | User project `.writing/assignment.md` and `.writing/draft.md` |
-| Rhetorical problem: topic, audience, exigency | Sections in `.writing/assignment.md` |
-| Produced text | User project `.writing/draft.md` |
-| Writer's long-term memory: topic and audience knowledge | User project `.writing/memory/` |
-| Writer's long-term memory: writing plans | Notes and plans in `.writing/memory/` plus `.writing/goals.md` |
-| Planning | Main Monitor skill plus `plugin/agents/planner.md` |
-| Generating ideas | Planner's embedded Generate sub-process |
-| Organizing ideas and presentation | Planner's embedded Organize sub-process |
-| Goal-setting | Planner's embedded Goal-setting sub-process and `.writing/goals.md` |
-| Translating | `plugin/agents/translator.md` |
-| Reviewing | `plugin/agents/reviewer.md` |
-| Evaluating | Reviewer's embedded Evaluate sub-process |
-| Revising | Reviewer's embedded Revise sub-process |
-| Monitor | `plugin/skills/cognitive-writing/SKILL.md`, executed by the main agent |
+| Category | Figure 1 model element | Plugin artifact |
+| --- | --- | --- |
+| Task environment | Task environment | User project `.writing/assignment.md` and `.writing/draft.md` |
+| Task environment | Rhetorical problem: topic, audience, exigency | Sections in `.writing/assignment.md` |
+| Task environment | Produced text | User project `.writing/draft.md` |
+| Writer's long-term memory | Writer's long-term memory: topic and audience knowledge | User project `.writing/memory/` |
+| Writer's long-term memory | Writer's long-term memory: writing plans | Notes and plans in `.writing/memory/` plus `.writing/goals.md` |
+| Planning | Planning | Shared `plugin/skills/planning/SKILL.md` plus Claude adapter `plugin/agents/planner.md` |
+| Planning | Generating ideas | Planning skill's embedded Generate sub-process |
+| Planning | Organizing ideas and presentation | Planning skill's embedded Organize sub-process |
+| Planning | Goal-setting | Planning skill's embedded Goal-setting sub-process and `.writing/goals.md` |
+| Translating | Translating | Shared `plugin/skills/translating/SKILL.md` plus Claude adapter `plugin/agents/translator.md` |
+| Reviewing | Reviewing | Shared `plugin/skills/reviewing/SKILL.md` plus Claude adapter `plugin/agents/reviewer.md` |
+| Reviewing | Evaluating | Reviewing skill's embedded Evaluate sub-process |
+| Reviewing | Revising | Reviewing skill's embedded Revise sub-process |
+| Monitor | Monitor | `plugin/skills/cognitive-writing/SKILL.md`, executed by the main agent |
 
 The Monitor treats these processes as a recursive toolkit. Generate and Evaluate may interrupt any process, and a resolved sub-goal returns control to its parent goal.
+
+```mermaid
+flowchart TB
+    subgraph task["TASK ENVIRONMENT"]
+        problem["THE RHETORICAL PROBLEM<br/>Topic<br/>Audience<br/>Exigency"]
+        text["TEXT PRODUCED SO FAR"]
+    end
+
+    subgraph memory["THE WRITER'S LONG-TERM MEMORY"]
+        knowledge["Knowledge of topic, audience,<br/>and writing plans"]
+    end
+
+    subgraph processes["WRITING PROCESSES"]
+        direction TB
+        planning["PLANNING"]
+        generating["Generating"]
+        organizing["Organizing"]
+        goalsetting["Goal-setting"]
+        translating["TRANSLATING"]
+        reviewing["REVIEWING"]
+        evaluating["Evaluating"]
+        revising["Revising"]
+        monitor["MONITOR"]
+
+        planning --> generating
+        planning --> organizing
+        planning --> goalsetting
+        reviewing --> evaluating
+        reviewing --> revising
+        monitor --> planning
+        monitor --> translating
+        monitor --> reviewing
+    end
+
+    task <--> memory
+    task <--> processes
+    memory <--> processes
+```
+
+Figure 1's arrows represent information flow, not a fixed left-to-right sequence, as Flower and Hayes caution in footnote 11.
+
+Claude Code cannot combine `disable-model-invocation` with subagent skill preloading, so this plugin uses internal-use descriptions for the three Claude role skills and hard implicit-invocation suppression through Codex `agents/openai.yaml` policy.[^7][^8]
 
 ## User project state
 
@@ -131,4 +173,13 @@ The seed prompts for realistic writing tasks are in [`skills/cognitive-writing/e
 
 ## Sources and scope
 
-The plugin follows the shared `SKILL.md` format supported by both hosts. Claude plugin structure and local marketplace behavior are documented in the [Claude Code plugins documentation](https://code.claude.com/docs/en/plugins) and [Claude Code marketplace documentation](https://code.claude.com/docs/en/plugin-marketplaces). Codex plugin packaging and local marketplace behavior are documented in [OpenAI's plugin packaging guide](https://developers.openai.com/plugins/build/plugins) and [Codex skill packaging guide](https://developers.openai.com/plugins/build/skills). The direct implementation patterns consulted were Anthropic's [`feature-dev` plugin manifest](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/.claude-plugin/plugin.json), its [`code-explorer` agent](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-explorer.md), OpenAI's [`build-web-apps` Codex manifest](https://github.com/openai/plugins/blob/main/plugins/build-web-apps/.codex-plugin/plugin.json), and its [`frontend-app-builder` skill](https://github.com/openai/plugins/blob/main/plugins/build-web-apps/skills/frontend-app-builder/SKILL.md).
+The plugin follows the shared `SKILL.md` format supported by both hosts.[^2] Claude plugin structure and local marketplace behavior are documented in the Claude Code plugins and marketplace references.[^3] Codex plugin packaging and local marketplace behavior are documented in OpenAI's plugin and skill packaging guides.[^4] The direct implementation patterns consulted were Anthropic's `feature-dev` plugin manifest and `code-explorer` agent,[^5] plus OpenAI's `build-web-apps` Codex manifest and `frontend-app-builder` skill.[^6]
+
+[^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387. Canonical DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885). The DOI endpoint returned HTTP 403 in this environment, so the title above links to the resolvable [JSTOR record](https://www.jstor.org/stable/356600).
+[^2]: [Claude Code skills documentation](https://code.claude.com/docs/en/skills) and [OpenAI Codex skill documentation](https://developers.openai.com/codex/build-skills).
+[^3]: [Claude Code plugins reference](https://code.claude.com/docs/en/plugins-reference) and [Claude Code marketplace documentation](https://code.claude.com/docs/en/plugin-marketplaces).
+[^4]: [OpenAI plugin packaging guide](https://developers.openai.com/plugins/build/plugins) and [Codex skill packaging guide](https://developers.openai.com/plugins/build/skills).
+[^5]: Anthropic's [`feature-dev` plugin manifest](https://github.com/anthropics/claude-code/blob/main/plugins/feature-dev/.claude-plugin/plugin.json) and [`code-explorer` agent](https://github.com/anthropics/claude-code/blob/main/plugins/feature-dev/agents/code-explorer.md).
+[^6]: OpenAI's [`build-web-apps` Codex manifest](https://github.com/openai/plugins/blob/main/plugins/build-web-apps/.codex-plugin/plugin.json) and [`frontend-app-builder` skill](https://github.com/openai/plugins/blob/main/plugins/build-web-apps/skills/frontend-app-builder/SKILL.md).
+[^7]: [Claude Code skill frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference).
+[^8]: [Claude Code subagent skill preloading](https://code.claude.com/docs/en/sub-agents#preload-skills-into-subagents).
