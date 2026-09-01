@@ -1,0 +1,6 @@
+interface:
+  display_name: "Translating role"
+  short_description: "Internal Monitor translating role instructions"
+
+policy:
+  allow_implicit_invocation: false

@@ -41,7 +41,7 @@ At each turn, the Monitor should:
 1. Identify the active goal and its parent. If a sub-goal resolves, pop back to the parent goal before choosing the next operation.
 2. Compare the active goal with the rhetorical problem, the current draft, retrieved memory, and open uncertainty. Use that comparison to select planning, translating, or reviewing. Planning may mean exploring, organizing, or setting a goal. Reviewing may mean evaluating or revising.
 3. Before every process switch, append a `process_switch` event naming the responsible process or agent, the decision, the evidence, and open uncertainty. Record a separate goal event whenever a goal is created, developed, or regenerated. Use the exact fields in the trace reference.
-4. Delegate the selected role. On Claude Code, use the bundled `planner`, `translator`, or `reviewer` agent. On Codex, request native Codex subagents for those roles. Do not write a script that spawns `codex exec` children. If native delegation is unavailable, the Monitor may perform the role itself and must record that fallback in the trace.
+4. Delegate the selected role. On Claude Code, use the bundled `planner`, `translator`, or `reviewer` agent; each agent preloads the matching shared role skill. On Codex, request a native Codex subagent and explicitly invoke the matching role skill, `$planning`, `$translating`, or `$reviewing`, inside that delegation. Do not write a script that spawns `codex exec` children. If native delegation is unavailable, the Monitor may perform the role itself and must record that fallback in the trace.
 5. Re-read the changed state, reconcile the agent's work with the active goal, and update `goals.md`, `draft.md`, or `memory/` as appropriate. Keep user-authored text and uncertain claims visible rather than silently normalizing them.
 6. Tell the user what changed, which goal is active, what remains uncertain, and which process the Monitor recommends next. Ask for a decision when the next move depends on the user's intent or factual authority.
 
@@ -53,7 +53,7 @@ When new writing changes what the author understands, use Goal-setting to develo
 
 ## Delegation briefs
 
-Pass the project root, active goal ID, parent goal ID, relevant uncertainty, and the requested output to each sub-agent. Ask agents to cite the files or draft passages that support their decisions. The Planner should leave a usable goal network or plan. The Translator should edit only the delegated draft scope and flag unsupported claims. The Reviewer should separate evaluation from revision and state whether the revision changes a goal, a claim, the organization, or only wording.
+Pass the project root, active goal ID, parent goal ID, relevant uncertainty, and the requested output to each sub-agent. Ask agents to cite the files or draft passages that support their decisions. The Planner should use `$planning` on Codex, or its preloaded Claude skill, and leave a usable goal network or plan. The Translator should use `$translating` on Codex, or its preloaded Claude skill, edit only the delegated draft scope, and flag unsupported claims. The Reviewer should use `$reviewing` on Codex, or its preloaded Claude skill, separate evaluation from revision, and state whether the revision changes a goal, a claim, the organization, or only wording.
 
 ## References
 
