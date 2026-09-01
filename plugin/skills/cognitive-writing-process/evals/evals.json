@@ -1,0 +1,38 @@
+{
+  "skill_name": "cognitive-writing-process",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need to write a 900-word memo for new engineering managers explaining why we are changing our on-call handoff. The audience is busy and skeptical, the exigency is a rise in missed handoffs, and my goal is to get them to adopt a short checklist. Help me plan and draft it in a project that currently has no .writing files.",
+      "expected_output": "The project contains an assignment, a hierarchical goal network, a growing draft, and an auditable trace. The response explains the active goal and why the Monitor chose planning or drafting next, while keeping unsupported operational facts visible.",
+      "files": [],
+      "expectations": [
+        "Creates or describes the required .writing state without overwriting existing content.",
+        "Represents the audience, exigency, and writer's goals before drafting.",
+        "Uses a parent-child goal relationship and records process or goal decisions with evidence and uncertainty."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Here is a rough two-paragraph grant introduction in .writing/draft.md. Review it for a public-health funder, revise the weakest paragraph, and tell me whether the revision changes the central goal. If the draft reveals a better framing than my original assignment, show how you would regenerate the goal instead of hiding the change.",
+      "expected_output": "The reviewer evaluates the draft against the funder's audience and the assignment, makes a scoped revision, and records any goal regeneration with the old and new rationale in goals.md and the trace.",
+      "files": [],
+      "expectations": [
+        "Separates evaluation from revision and ties findings to the rhetorical problem.",
+        "Preserves the user's claims and marks missing evidence rather than inventing it.",
+        "Records a goal regeneration only when the draft provides evidence for a changed framing."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Run the no-goal-network ablation on a short product announcement. Keep the assignment and draft state, avoid hierarchical goal IDs, and log every process switch. At the end, compare the result with what the full cognitive loop would have tracked.",
+      "expected_output": "The run follows the no-goal-network variant without forking the skill, keeps process-switch trace entries, does not add hierarchical goals, and states the resulting observability tradeoff.",
+      "files": [],
+      "expectations": [
+        "Activates the documented ablation variant and explains its scope.",
+        "Continues to log process switches with responsible actor, decision, evidence, and uncertainty.",
+        "Does not silently create or mix a hierarchical goal network into the ablation."
+      ]
+    }
+  ]
+}
