@@ -120,7 +120,7 @@ flowchart TB
 
 Figure 1's arrows represent information flow, not a fixed left-to-right sequence, as Flower and Hayes caution in footnote 11.
 
-Claude Code cannot combine `disable-model-invocation` with subagent skill preloading, so this plugin uses internal-use descriptions for the three Claude role skills and hard implicit-invocation suppression through Codex `agents/openai.yaml` policy.[^7][^8]
+Claude Code cannot combine `disable-model-invocation` with subagent skill preloading, as documented in the [skill frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference) and [subagent preload documentation](https://code.claude.com/docs/en/sub-agents#preload-skills-into-subagents). This plugin therefore uses internal-use descriptions for the three Claude role skills and hard implicit-invocation suppression through Codex `agents/openai.yaml` policy.
 
 ## User project state
 
@@ -173,13 +173,6 @@ The seed prompts for realistic writing tasks are in [`skills/cognitive-writing/e
 
 ## Sources and scope
 
-The plugin follows the shared `SKILL.md` format supported by both hosts.[^2] Claude plugin structure and local marketplace behavior are documented in the Claude Code plugins and marketplace references.[^3] Codex plugin packaging and local marketplace behavior are documented in OpenAI's plugin and skill packaging guides.[^4] The direct implementation patterns consulted were Anthropic's `feature-dev` plugin manifest and `code-explorer` agent,[^5] plus OpenAI's `build-web-apps` Codex manifest and `frontend-app-builder` skill.[^6]
+The plugin follows the shared [`SKILL.md`](https://code.claude.com/docs/en/skills) format supported by both hosts. Claude plugin structure and local marketplace behavior are documented in the [Claude Code plugins reference](https://code.claude.com/docs/en/plugins-reference) and [marketplace documentation](https://code.claude.com/docs/en/plugin-marketplaces). Codex plugin packaging and local marketplace behavior are documented in [OpenAI's plugin packaging guide](https://developers.openai.com/plugins/build/plugins) and [Codex skill packaging guide](https://developers.openai.com/plugins/build/skills). The direct implementation patterns consulted were Anthropic's [`feature-dev` plugin manifest](https://github.com/anthropics/claude-code/blob/main/plugins/feature-dev/.claude-plugin/plugin.json) and [`code-explorer` agent](https://github.com/anthropics/claude-code/blob/main/plugins/feature-dev/agents/code-explorer.md), plus OpenAI's [`build-web-apps` Codex manifest](https://github.com/openai/plugins/blob/main/plugins/build-web-apps/.codex-plugin/plugin.json) and [`frontend-app-builder` skill](https://github.com/openai/plugins/blob/main/plugins/build-web-apps/skills/frontend-app-builder/SKILL.md).
 
 [^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387. Canonical DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885). The DOI endpoint returned HTTP 403 in this environment, so the title above links to the resolvable [JSTOR record](https://www.jstor.org/stable/356600).
-[^2]: [Claude Code skills documentation](https://code.claude.com/docs/en/skills) and [OpenAI Codex skill documentation](https://developers.openai.com/codex/build-skills).
-[^3]: [Claude Code plugins reference](https://code.claude.com/docs/en/plugins-reference) and [Claude Code marketplace documentation](https://code.claude.com/docs/en/plugin-marketplaces).
-[^4]: [OpenAI plugin packaging guide](https://developers.openai.com/plugins/build/plugins) and [Codex skill packaging guide](https://developers.openai.com/plugins/build/skills).
-[^5]: Anthropic's [`feature-dev` plugin manifest](https://github.com/anthropics/claude-code/blob/main/plugins/feature-dev/.claude-plugin/plugin.json) and [`code-explorer` agent](https://github.com/anthropics/claude-code/blob/main/plugins/feature-dev/agents/code-explorer.md).
-[^6]: OpenAI's [`build-web-apps` Codex manifest](https://github.com/openai/plugins/blob/main/plugins/build-web-apps/.codex-plugin/plugin.json) and [`frontend-app-builder` skill](https://github.com/openai/plugins/blob/main/plugins/build-web-apps/skills/frontend-app-builder/SKILL.md).
-[^7]: [Claude Code skill frontmatter reference](https://code.claude.com/docs/en/skills#frontmatter-reference).
-[^8]: [Claude Code subagent skill preloading](https://code.claude.com/docs/en/sub-agents#preload-skills-into-subagents).
