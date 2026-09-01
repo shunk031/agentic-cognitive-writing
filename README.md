@@ -1,8 +1,8 @@
 # Agentic cognitive writing
 
-This project gives Claude Code and OpenAI Codex a writing assistant that plans, drafts, and revises recursively instead of generating text in one pass. It keeps the writing state as files in the writing project, so the work can be inspected and continued.
+This project gives Claude Code and OpenAI Codex a writing assistant that plans, drafts, and revises recursively. It can revise its own plans and goals as the draft teaches it more, instead of generating text in one pass. It keeps the writing state as files in the writing project, the directory where you are writing, so you can inspect and continue the work.
 
-It implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor coordinates three writing processes as the writer works:
+It implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor is the part that decides what to work on next. It coordinates three writing processes as the writer works:
 
 - Planning generates and organizes ideas and sets goals.
 - Translating turns selected meanings into words.
@@ -15,7 +15,7 @@ The diagram below reproduces Figure 1, "Structure of the writing model," from th
 ```mermaid
 flowchart TB
     subgraph task["TASK ENVIRONMENT"]
-        problem["THE RHETORICAL PROBLEM<br/>Topic<br/>Audience<br/>Exigency"]
+        problem["THE RHETORICAL PROBLEM<br/>(topic, audience, reason for writing)<br/>Topic<br/>Audience<br/>Exigency"]
         text["TEXT PRODUCED SO FAR"]
     end
 
@@ -40,24 +40,23 @@ flowchart TB
         planning --> goalsetting
         reviewing --> evaluating
         reviewing --> revising
-        monitor --> planning
-        monitor --> translating
-        monitor --> reviewing
+        monitor <--> planning
+        monitor <--> translating
+        monitor <--> reviewing
     end
 
-    task <--> memory
     task <--> processes
     memory <--> processes
 ```
 
-The arrows mean information flow, not a fixed left-to-right sequence, as the paper cautions in footnote 11.[^1]
+The arrows mean information flow, not a fixed left-to-right sequence, as the paper cautions in footnote 11[^1].
 
-The table maps each model element to the plugin artifact that carries out the corresponding work. The mapping is an implementation choice, not a claim that the paper specifies these files.
+The table maps each model element to the plugin artifact that carries out the corresponding work.
 
 | Category | Figure 1 model element | Plugin artifact |
 | --- | --- | --- |
 | Task environment | Task environment | User project `.writing/assignment.md` and `.writing/draft.md` |
-|  | Rhetorical problem: topic, audience, exigency | Sections in `.writing/assignment.md` |
+|  | Rhetorical problem (the topic, the audience, and the reason for writing): topic, audience, exigency (the situation that makes the writing necessary) | Sections in `.writing/assignment.md` |
 |  | Produced text | User project `.writing/draft.md` |
 | Writer's long-term memory | Writer's long-term memory: topic and audience knowledge | User project `.writing/memory/` |
 |  | Writer's long-term memory: writing plans | Notes and plans in `.writing/memory/` plus `.writing/goals.md` |
@@ -120,7 +119,7 @@ If the repository is private, GitHub installs require access to it.
    /plugin install agentic-cognitive-writing@agentic-cognitive-writing-process
    ```
 
-4. For a one-off session, load the plugin directory directly:
+4. To try it without installing, load the plugin directory directly:
 
    ```bash
    claude --plugin-dir "$PWD/plugin"

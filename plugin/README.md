@@ -1,12 +1,8 @@
 # Agentic cognitive writing
 
-This plugin gives Claude Code and OpenAI Codex a writing assistant that plans, drafts, and revises recursively instead of generating text in one pass. It keeps the writing state as files in the writing project.
+After installation, open a writing project, the directory where you are writing, and invoke this writing assistant in Claude Code or Codex. It plans, drafts, and revises recursively, meaning it can revise its own plans and goals as the draft teaches it more. It stores the work in project files so you can inspect and continue it.
 
-It implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). The model uses a monitor to coordinate three writing processes:
-
-- Planning generates and organizes ideas and sets goals.
-- Translating turns selected meanings into words.
-- Reviewing evaluates and revises the text.
+For the theory and architecture behind this plugin, see the [project README](https://github.com/shunk031/agentic-cognitive-writing#readme).
 
 ## Install
 
@@ -55,7 +51,7 @@ If the repository is private, GitHub installs require access to it.
    /plugin install agentic-cognitive-writing@agentic-cognitive-writing-process
    ```
 
-4. For a one-off session, load the plugin directory directly:
+4. To try it without installing, load the plugin directory directly:
 
    ```bash
    claude --plugin-dir "$PWD/plugin"
@@ -133,12 +129,10 @@ The plugin creates or maintains this layout in the project where it is used:
     └── process.jsonl   # append-only process log
 ```
 
-The monitor appends every process switch and goal change as one JSON line to `.writing/trace/process.jsonl`. Read the [field-by-field trace schema](skills/cognitive-writing/references/trace-jsonl-schema.md) before inspecting or extending the log.
+The monitor, the part that decides what to work on next, appends every process switch and goal change as one JSON line to `.writing/trace/process.jsonl`. Read the [field-by-field trace schema](skills/cognitive-writing/references/trace-jsonl-schema.md) before inspecting or extending the log.
 
 The main skill also uses [`goals-format.md`](skills/cognitive-writing/references/goals-format.md) for the hierarchical notation in `goals.md`.
 
 The plugin does not depend on other files in this repository at runtime. It does create and maintain `.writing/` in the user's writing project. That directory belongs to the user and should not be committed unless the user chooses to share the writing process.
 
 For research and experiment context, see the [project repository](https://github.com/shunk031/agentic-cognitive-writing).
-
-[^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387. DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885). JSTOR: [https://www.jstor.org/stable/356600](https://www.jstor.org/stable/356600).
