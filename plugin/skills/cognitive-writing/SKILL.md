@@ -1,9 +1,9 @@
 ---
-name: cognitive-writing-process
+name: cognitive-writing
 description: Use this skill whenever a user wants to plan, draft, translate, review, or revise writing. It runs Flower and Hayes' Monitor loop over the rhetorical problem, hierarchical goals, growing text, and writing memory, and coordinates planning, translating, and reviewing while preserving an observable process trace.
 ---
 
-# Cognitive writing process
+# Cognitive writing
 
 Use this skill in the user's writing project. The project root is the current working directory unless the user names another project. The Monitor is the main agent running this skill. It chooses the next writing process from the current goal network, draft, rhetorical problem, and uncertainty. It does not impose a fixed stage sequence.
 

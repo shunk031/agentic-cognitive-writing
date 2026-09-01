@@ -1,6 +1,6 @@
-# Cognitive writing process
+# Agentic cognitive writing
 
-`cognitive-writing-process` is a cross-platform plugin skeleton for Claude Code and OpenAI Codex. It operationalizes Flower and Hayes' 1981 cognitive process theory as a Monitor skill that coordinates Planning, Translating, and Reviewing. The plugin keeps the writing project's task environment and long-term memory in files owned by the user.
+`agentic-cognitive-writing` is a cross-platform plugin skeleton for Claude Code and OpenAI Codex. It operationalizes Flower and Hayes' 1981 cognitive process theory as a Monitor skill that coordinates Planning, Translating, and Reviewing. The plugin keeps the writing project's task environment and long-term memory in files owned by the user.
 
 ## Install
 
@@ -10,7 +10,7 @@ For a local marketplace install, run Claude Code from the repository root and ad
 
 ```text
 /plugin marketplace add .
-/plugin install cognitive-writing-process@agentic-cognitive-writing-process
+/plugin install agentic-cognitive-writing@agentic-cognitive-writing-process
 ```
 
 For a one-off local session, point Claude Code at the distributable plugin directory:
@@ -19,7 +19,7 @@ For a one-off local session, point Claude Code at the distributable plugin direc
 claude --plugin-dir /absolute/path/to/agentic-cognitive-writing-process/plugin
 ```
 
-Claude loads the manifest from `plugin/.claude-plugin/plugin.json`, discovers the component directories at the plugin root, and namespaces the skill as `/cognitive-writing-process:cognitive-writing-process`.
+Claude loads the manifest from `plugin/.claude-plugin/plugin.json`, discovers the component directories at the plugin root, and namespaces the skill as `/agentic-cognitive-writing:cognitive-writing`.
 
 ### OpenAI Codex
 
@@ -27,7 +27,7 @@ Codex reads the plugin manifest at `plugin/.codex-plugin/plugin.json`. For a loc
 
 ```bash
 mkdir -p ./plugins
-cp -R /absolute/path/to/agentic-cognitive-writing-process/plugin ./plugins/cognitive-writing-process
+cp -R /absolute/path/to/agentic-cognitive-writing-process/plugin ./plugins/agentic-cognitive-writing
 mkdir -p ./.agents/plugins
 ```
 
@@ -39,8 +39,8 @@ Create `$REPO_ROOT/.agents/plugins/marketplace.json` with an entry like this:
   "interface": { "displayName": "Local writing plugins" },
   "plugins": [
     {
-      "name": "cognitive-writing-process",
-      "source": { "source": "local", "path": "./plugins/cognitive-writing-process" },
+      "name": "agentic-cognitive-writing",
+      "source": { "source": "local", "path": "./plugins/agentic-cognitive-writing" },
       "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
       "category": "Productivity"
     }
@@ -52,10 +52,10 @@ Register the marketplace, then install the plugin as a separate step. The Codex 
 
 ```bash
 codex plugin marketplace add .
-codex plugin add cognitive-writing-process@local-writing-plugins
+codex plugin add agentic-cognitive-writing@local-writing-plugins
 ```
 
-You can also select the plugin from the Codex or ChatGPT desktop Plugins Directory after registering the marketplace. For a personal install, copy the plugin to `~/.codex/plugins/cognitive-writing-process` and use `~/.agents/plugins/marketplace.json` with `"path": "./.codex/plugins/cognitive-writing-process"`; Codex resolves that path relative to the marketplace root. Restart the desktop app after changing a local marketplace. Codex uses the shared `plugin/skills/` tree; the Claude-only `plugin/agents/*.md` files document the native Claude roles, while the skill asks Codex to delegate those roles to native Codex subagents.
+You can invoke the shared skill explicitly in Codex as `$cognitive-writing`. You can also select the plugin from the Codex or ChatGPT desktop Plugins Directory after registering the marketplace. For a personal install, copy the plugin to `~/.codex/plugins/agentic-cognitive-writing` and use `~/.agents/plugins/marketplace.json` with `"path": "./.codex/plugins/agentic-cognitive-writing"`; Codex resolves that path relative to the marketplace root. Restart the desktop app after changing a local marketplace. Codex uses the shared `plugin/skills/` tree; the Claude-only `plugin/agents/*.md` files document the native Claude roles, while the skill asks Codex to delegate those roles to native Codex subagents.
 
 ## Theory-to-architecture mapping
 
@@ -76,7 +76,7 @@ The mapping interprets Figure 1 of Flower and Hayes. It is an implementation of 
 | Reviewing | `plugin/agents/reviewer.md` |
 | Evaluating | Reviewer's embedded Evaluate sub-process |
 | Revising | Reviewer's embedded Revise sub-process |
-| Monitor | `plugin/skills/cognitive-writing-process/SKILL.md`, executed by the main agent |
+| Monitor | `plugin/skills/cognitive-writing/SKILL.md`, executed by the main agent |
 
 The Monitor treats these processes as a recursive toolkit. Generate and Evaluate may interrupt any process, and a resolved sub-goal returns control to its parent goal.
 
@@ -99,7 +99,7 @@ The plugin creates or maintains this layout in the project where it is used:
 
 The plugin has no runtime dependency on files elsewhere in this repository. It does create and maintain `.writing/` in the user's writing project. That directory belongs to the user and should not be committed unless the user chooses to share the writing process.
 
-See [`skills/cognitive-writing-process/references/goals-format.md`](skills/cognitive-writing-process/references/goals-format.md) for goal notation and [`skills/cognitive-writing-process/references/ablation-variants.md`](skills/cognitive-writing-process/references/ablation-variants.md) for experiment settings.
+See [`skills/cognitive-writing/references/goals-format.md`](skills/cognitive-writing/references/goals-format.md) for goal notation and [`skills/cognitive-writing/references/ablation-variants.md`](skills/cognitive-writing/references/ablation-variants.md) for experiment settings.
 
 ## Trace JSONL schema
 
@@ -123,11 +123,11 @@ Example line:
 {"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"monitor","process":"planning","from_process":"translating","to_process":"reviewing","decision":"Review the opening after it conflicted with the audience goal.","evidence":[".writing/draft.md: opening uses internal jargon",".writing/goals.md: G1 requires a first-time reader explanation"],"open_uncertainty":["Whether to keep the technical term with a definition"],"goal_id":"G1","parent_goal_id":"G0","artifacts":[".writing/draft.md",".writing/goals.md"]}
 ```
 
-The field-by-field contract lives in [`skills/cognitive-writing-process/references/trace-jsonl-schema.md`](skills/cognitive-writing-process/references/trace-jsonl-schema.md).
+The field-by-field contract lives in [`skills/cognitive-writing/references/trace-jsonl-schema.md`](skills/cognitive-writing/references/trace-jsonl-schema.md).
 
 ## Evaluation seed
 
-The seed prompts for realistic writing tasks are in [`skills/cognitive-writing-process/evals/evals.json`](skills/cognitive-writing-process/evals/evals.json). They cover initial planning and drafting, review with possible goal regeneration, and the no-goal-network ablation.
+The seed prompts for realistic writing tasks are in [`skills/cognitive-writing/evals/evals.json`](skills/cognitive-writing/evals/evals.json). They cover initial planning and drafting, review with possible goal regeneration, and the no-goal-network ablation.
 
 ## Sources and scope
 

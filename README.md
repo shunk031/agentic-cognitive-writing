@@ -1,1 +1,1 @@
-This repository contains the `cognitive-writing-process` plugin for Claude Code and OpenAI Codex; see [plugin/README.md](plugin/README.md) for installation, architecture, state files, and trace format, while the repository also hosts research and experiments.
+This repository contains the `agentic-cognitive-writing` plugin for Claude Code and OpenAI Codex; see [plugin/README.md](plugin/README.md) for installation, architecture, state files, and trace format, while the repository also hosts research and experiments.

@@ -5,7 +5,7 @@
   },
   "plugins": [
     {
-      "name": "cognitive-writing-process",
+      "name": "agentic-cognitive-writing",
       "source": "./plugin"
     }
   ]
