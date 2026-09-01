@@ -48,13 +48,14 @@ Create `$REPO_ROOT/.agents/plugins/marketplace.json` with an entry like this:
 }
 ```
 
-Add the marketplace and install the plugin from the Codex or ChatGPT desktop Plugins Directory:
+Register the marketplace, then install the plugin as a separate step. The Codex CLI help confirms the `PLUGIN@MARKETPLACE` selector syntax:
 
 ```bash
 codex plugin marketplace add .
+codex plugin add cognitive-writing-process@local-writing-plugins
 ```
 
-For a personal install, use `~/.codex/plugins/` and `~/.agents/plugins/marketplace.json` instead. Restart the desktop app after changing a local marketplace. Codex uses the shared `plugin/skills/` tree; the Claude-only `plugin/agents/*.md` files document the native Claude roles, while the skill asks Codex to delegate those roles to native Codex subagents.
+You can also select the plugin from the Codex or ChatGPT desktop Plugins Directory after registering the marketplace. For a personal install, copy the plugin to `~/.codex/plugins/cognitive-writing-process` and use `~/.agents/plugins/marketplace.json` with `"path": "./.codex/plugins/cognitive-writing-process"`; Codex resolves that path relative to the marketplace root. Restart the desktop app after changing a local marketplace. Codex uses the shared `plugin/skills/` tree; the Claude-only `plugin/agents/*.md` files document the native Claude roles, while the skill asks Codex to delegate those roles to native Codex subagents.
 
 ## Theory-to-architecture mapping
 
@@ -96,7 +97,7 @@ The plugin creates or maintains this layout in the project where it is used:
     └── process.jsonl   # append-only process log
 ```
 
-The plugin never needs files outside its own directory at runtime. The `.writing/` directory belongs to the user and should not be committed unless the user chooses to share the writing process.
+The plugin has no runtime dependency on files elsewhere in this repository. It does create and maintain `.writing/` in the user's writing project. That directory belongs to the user and should not be committed unless the user chooses to share the writing process.
 
 See [`skills/cognitive-writing-process/references/goals-format.md`](skills/cognitive-writing-process/references/goals-format.md) for goal notation and [`skills/cognitive-writing-process/references/ablation-variants.md`](skills/cognitive-writing-process/references/ablation-variants.md) for experiment settings.
 
