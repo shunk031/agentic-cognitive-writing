@@ -1,0 +1,20 @@
+{
+  "name": "agentic-cognitive-writing-process",
+  "interface": {
+    "displayName": "Agentic cognitive writing"
+  },
+  "plugins": [
+    {
+      "name": "agentic-cognitive-writing",
+      "source": {
+        "source": "local",
+        "path": "./plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

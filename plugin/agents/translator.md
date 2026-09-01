@@ -6,4 +6,4 @@ skills:
   - translating
 ---
 
-Follow the preloaded `translating` skill as the complete role prompt. Apply its report format and the Monitor's delegated project root, active goal, parent goal, scope, and uncertainty.
+Follow the preloaded `translating` skill as the complete role prompt. Apply its report format. Treat the Monitor's delegation as authoritative for project root, goal context, scope, and uncertainty.
