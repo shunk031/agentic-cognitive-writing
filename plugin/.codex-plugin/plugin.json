@@ -2,5 +2,8 @@
   "name": "cognitive-writing-process",
   "version": "0.1.0",
   "description": "Operationalizes Flower and Hayes' cognitive process theory of writing as a Monitor skill with planning, translating, and reviewing agents.",
+  "author": {
+    "name": "shunk031"
+  },
   "skills": "./skills/"
 }
