@@ -171,7 +171,7 @@ Survey constraint. The GitHub API began returning `403` during the work, so the 
 - `VERIFIED` VoltAgent's community `agent-installer` agent installs Claude subagents by fetching category lists and raw `.md` files into `~/.claude/agents/` or `.claude/agents/`. Source: https://github.com/VoltAgent/awesome-claude-code-subagents/blob/main/categories/09-meta-orchestration/agent-installer.md
 - `VERIFIED` contains-studio's `ai-engineer.md` uses Claude subagent frontmatter with `name`, long `description`, `color`, and `tools`. Source: https://github.com/contains-studio/agents/blob/main/engineering/ai-engineer.md
 - `VERIFIED` OpenAI `build-web-apps` plugin uses `.codex-plugin/plugin.json` to package multiple skills and top-level UI metadata, and its `frontend-app-builder` skill coordinates with other installed skills. Sources: https://github.com/openai/plugins/blob/main/plugins/build-web-apps/.codex-plugin/plugin.json and https://github.com/openai/plugins/blob/main/plugins/build-web-apps/skills/frontend-app-builder/SKILL.md
-- `VERIFIED` OpenAI `openai-developers` `agents-sdk` skill recommends starting with one `Agent`, then adding tools, handoffs, structured outputs, sandbox execution, and eval systems only when needed. Source: https://github.com/openai/plugins/blob/main/plugins/openai-developers/skills/agents-sdk/SKILL.md
+- `VERIFIED` OpenAI `openai-developers` `agents-sdk` skill recommends starting with one `Agent`, then adding tools, handoffs, structured outputs, sandbox execution, and eval harnesses only when needed. Source: https://github.com/openai/plugins/blob/main/plugins/openai-developers/skills/agents-sdk/SKILL.md
 
 ## 6. Cross-platform single-repo strategies
 
