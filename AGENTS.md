@@ -12,7 +12,7 @@ Published works use complete footnotes, while resource pointers use descriptive 
 
 ### Published works
 
-- Attach each GitHub-flavored footnote marker, `[^n]`, directly after the named entity at first mention and at any load-bearing mention. Keep footnote markers outside emphasis spans, as in `**Name**[^n]`, not `**Name [^n]**`. Define the marker with authors or organization, title, venue, year, and a DOI, arXiv, or ACL URL.
+- Attach each GitHub-flavored footnote marker, `[^n]`, directly after the named entity at first mention and at any load-bearing mention. Keep footnote markers outside emphasis spans, as in `**Name**[^n]`, not `**Name [^n]**`. Define the marker with authors or organization, title, venue, year, and a DOI, arXiv, or ACL URL. Keep footnote definitions at the end of the file without a manual heading such as `## Footnotes` or `## References`.
 - Use one marker per entity per unit, where a unit is a paragraph, table row, or contiguous list. Re-mark an entity in a distant load-bearing section with the same number when needed.
 - Give sibling names sharing one footnote a single group marker, and give every cited entity at least one marker somewhere in the document.
 - Do not add a labeled `Paper:` entry that duplicates a marker already attached to the entity in the same passage.
