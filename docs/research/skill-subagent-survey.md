@@ -2,32 +2,23 @@
 
 ## Purpose and reading guide
 
-The main plugin ships a Claude Code adapter ([plugin/.claude-plugin/plugin.json](../../plugin/.claude-plugin/plugin.json) and [plugin/agents/](../../plugin/agents/)) and a Codex adapter ([plugin/.codex-plugin/plugin.json](../../plugin/.codex-plugin/plugin.json) and [skill-local agents/openai.yaml metadata](../../plugin/skills/planning/agents/openai.yaml)). The separate experiment package ships its own manifests under [experiments/plugin/](../../experiments/plugin/) and requires the main plugin. The survey documents the platform formats and writing-system prior art behind those packages. The survey derives the design that the shipped packages implement: shared skills, adapter files that carry platform packaging and agent metadata, four writing-process roles, observable process state, and comparison variants outside the main plugin. Shipped package sources: [main plugin README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/README.md) / [experiment package README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/README.md).
+The survey's design answer is a two-package architecture with shared skills, host-specific adapters, four writing-process roles, observable process state, and comparison variants outside the main plugin. The main plugin ships a Claude Code adapter ([plugin/.claude-plugin/plugin.json](../../plugin/.claude-plugin/plugin.json) and [plugin/agents/](../../plugin/agents/)) and a Codex adapter ([plugin/.codex-plugin/plugin.json](../../plugin/.codex-plugin/plugin.json) and [skill-local agents/openai.yaml metadata](../../plugin/skills/planning/agents/openai.yaml)). The separate experiment package ships its own manifests under [experiments/plugin/](../../experiments/plugin/) and requires the main plugin. The shared skill core uses `SKILL.md`, `scripts/`, `references/`, and `assets/`. Shipped package sources: [main plugin README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/README.md) / [experiment package README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/README.md).
 
-The shared skill core uses `SKILL.md`, `scripts/`, `references/`, and `assets/`.
-
-The main plugin provides four skills:
+The main plugin exposes Flower & Hayes' Cognitive Process Theory of Writing [^1] as four roles. The monitor is a skill; the other three roles are Claude-native agent adapters. The main plugin provides these four skills:
 
 - `cognitive-writing`: main monitor skill
 - `planning`: internal role skill
 - `translating`: internal role skill
 - `reviewing`: internal role skill
 
-The experiment package provides two comparison-variant skills:
+The experiment package keeps controlled comparison variants outside the main plugin. It provides two comparison-variant skills:
 
 - `cognitive-writing-fixed-order`: fixed-process-order comparison
 - `cognitive-writing-no-goal-network`: no-goal-network comparison
 
-The adapter files hold each platform's packaging and agent metadata:
+The adapter files hold each platform's packaging and agent metadata. Claude Code uses [plugin/.claude-plugin/](../../plugin/.claude-plugin/) and [plugin/agents/](../../plugin/agents/). OpenAI Codex uses [plugin/.codex-plugin/](../../plugin/.codex-plugin/) and [skill-local agents/openai.yaml metadata](../../plugin/skills/planning/agents/openai.yaml).
 
-- Claude Code: [plugin/.claude-plugin/](../../plugin/.claude-plugin/) and [plugin/agents/](../../plugin/agents/)
-- OpenAI Codex: [plugin/.codex-plugin/](../../plugin/.codex-plugin/) and [skill-local agents/openai.yaml metadata](../../plugin/skills/planning/agents/openai.yaml)
-
-The shipped plugin uses four roles derived from Flower & Hayes' Cognitive Process Theory of Writing [^1]: `monitor`, `planner`, `translator`, and `reviewer`. The monitor is a skill; the other three are Claude-native agent adapters.
-
-The shipped process trace records phase changes, decisions, evidence, and unresolved questions. The design uses that trace to make writing-process changes measurable, not just final text quality.
-
-The sections below support these choices with official platform documentation, direct source links, and published writing-research citations.
+The shipped process trace makes writing-process changes measurable, not just final text quality. The trace records phase changes, decisions, evidence, and unresolved questions. The sections below support these choices with official platform documentation, direct source links, and published writing-research citations.
 
 ## Anthropic skill format and skill-creator
 
