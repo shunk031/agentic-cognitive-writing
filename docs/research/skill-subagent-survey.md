@@ -2,28 +2,28 @@
 
 ## Purpose and reading guide
 
-This report asks how to turn Flower & Hayes' Cognitive Process Theory of Writing [^1] into a skills + sub-agents plugin that runs in Claude Code and remains usable from OpenAI Codex. The answer is a shared Agent Skill core with thin platform adapters, backed by explicit writing-process roles and observable process state.
+This survey documents the platform formats and writing-system prior art behind the agentic-cognitive-writing plugin. It derives the design that the plugin implements: shared skills, small Claude Code and OpenAI Codex adapter files, four writing-process roles, and observable process state.
 
-The lowest-risk shared core is:
+The shared skills are the files both platforms can read without translation:
 
 - `SKILL.md`
 - `scripts/`
 - `references/`
 - `assets/`
 
-Thin adapters sit on top of that core:
+The adapter files hold each platform's packaging and agent metadata:
 
 - Claude Code: `.claude-plugin/` and `agents/*.md`
 - OpenAI Codex: `.codex-plugin/` and `agents/openai.yaml`
 
-For the paper prototype, the design should center these roles:
+The shipped plugin uses four roles derived from Flower & Hayes' Cognitive Process Theory of Writing [^1]:
 
 - `monitor`
 - `planner`
 - `translator`
 - `reviewer`
 
-A process ledger is a structured record of phase changes, decisions, evidence, and unresolved questions. It should record each decision so evaluation can measure changes in the writing process as well as the final text.
+A process ledger is a structured record of phase changes, decisions, evidence, and unresolved questions. The design uses it to make writing-process changes measurable, not just final text quality.
 
 The sections below support these choices with official platform documentation, direct source links, and published writing-research citations.
 
@@ -306,12 +306,12 @@ The sections below support these choices with official platform documentation, d
   - `code-architect`
   - `code-reviewer`
   Source: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
-- We infer that our writing-process plugin should represent Flower & Hayes' model [^1] as Claude Code plugin agents:
+- The shipped plugin represents Flower & Hayes' model [^1] as four Claude Code plugin agents:
   - `monitor`
   - `planner`
   - `translator`
   - `reviewer`
-  Top-level skills should orchestrate phase transitions, because official examples already use commands/skills to route subagents for structured workflows. Evidence: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
+  Top-level skills orchestrate phase transitions, matching the official pattern where commands and skills route subagents for structured workflows. Evidence: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
 
 ## 4. OpenAI Codex skill format and skill-creator
 
@@ -473,7 +473,7 @@ The sections below support these choices with official platform documentation, d
      Sources:
      - https://code.claude.com/docs/en/skills.md
      - https://developers.openai.com/codex/build-skills.md
-   - We infer that canonical skills should live under `skills/<skill-name>/SKILL.md`. Keep the shared layout strict:
+   - The plugin uses canonical skills under `skills/<skill-name>/SKILL.md` and keeps the shared layout strict:
      - Avoid Anthropic-only `compatibility`.
      - Add OpenAI-only `agents/openai.yaml`.
      - Keep Claude plugin metadata outside the skill directory.
@@ -541,7 +541,7 @@ agentic-cognitive-writing-process/
 `-- docs/
 ```
 
-- We infer that the root `agents/` directory should contain Claude subagents, because Claude plugins natively load plugin-root `agents/`; Codex can treat these as reference prompts or convert them into custom agent files if Codex custom agent file schemas stabilize for local clients. Claude plugin agent behavior source: https://code.claude.com/docs/en/plugins-reference.md
+- The root `agents/` directory contains Claude subagents, because Claude plugins natively load plugin-root `agents/`. Codex can treat these as reference prompts or convert them into custom agent files if Codex custom agent file schemas stabilize for local clients. Claude plugin agent behavior source: https://code.claude.com/docs/en/plugins-reference.md
 
 ## 7. Academic and open-source software (OSS) prior art
 
@@ -568,7 +568,7 @@ agentic-cognitive-writing-process/
 **Writing theory to operationalize**
 
 - Flower & Hayes' Cognitive Process Theory of Writing [^1] is the theory this plugin operationalizes, and it introduces the monitor/planning/translating/reviewing decomposition used throughout this survey.
-- We infer that Flower & Hayes' model should map cleanly to agent roles:
+- The plugin maps Flower & Hayes' model to agent roles:
   - Task environment/context
   - Long-term memory/references
   - Planning
@@ -589,12 +589,12 @@ agentic-cognitive-writing-process/
   - Reviewing
   It then uses that model to define a design space for writing support tools.
 - The Gero et al. design space covers which part of the writing process a tool supports and how constrained the supported writing goal is. The paper uses the space to review 30 papers from 2017-2021, identify under-studied highly constrained planning and reviewing, and propose shared evaluation methods and tasks.
-- We infer that the Gero et al. paper gives this project the closest taxonomy, but the mechanism is different. That paper uses Flower and Hayes to classify and compare writing tools. Our plugin should turn the same model into an executable agent architecture, where monitor, planner, translator, and reviewer roles produce observable state transitions and ledger entries.
+- The Gero et al. paper is likely the closest taxonomy for this project, but the mechanism is different. That paper uses Flower and Hayes to classify and compare writing tools. The plugin turns the same model into an executable agent architecture, where monitor, planner, translator, and reviewer roles produce observable state transitions and ledger entries.
 
 **In2Writing process-support sweep**
 
 - Schneider et al. [^7] compare natural language generation (NLG) pipeline architecture with research on the human writing process in "Data-to-text systems as writing environment." They derive principles for data-to-text systems as writing environments. The paper argues that process optimization matters because evaluating all generated output is not feasible in mass text production.
-- Schneider et al. likely support the plugin's ledger design. If output-scale evaluation is weak, the tool should expose the decisions that produce the text:
+- Schneider et al. likely support the plugin's ledger design. If output-scale evaluation is weak, the ledger can expose the decisions that produce the text:
   - Planning
   - Configuration
   - Generation
@@ -645,7 +645,7 @@ agentic-cognitive-writing-process/
 - CoAuthor [^4] is an Association for Computing Machinery (ACM) Conference on Human Factors in Computing Systems (CHI) paper/dataset about human-AI collaborative writing for exploring language model capabilities.
 - CoAuthor-style logged interaction data is likely valuable for evaluating process support because it observes writer prompts, model continuations, acceptance, and revision behavior rather than only final document quality.
 - STORM [^3] uses FreshWiki, outline assessments, generated article comparison, and expert Wikipedia-editor feedback.
-- For our paper, we should likely combine final-output metrics with these process metrics:
+- For a paper evaluation, the survey points to final-output metrics plus these process metrics:
   - Number of plan revisions
   - Evidence coverage
   - Goal satisfaction
@@ -667,19 +667,20 @@ agentic-cognitive-writing-process/
 **Design options**
 
 1. **Theory-first role decomposition**
-   - The plugin should likely ship these Claude subagents:
+   - The shipped plugin uses four Claude subagents:
      - `monitor`
      - `planner`
      - `translator`
      - `reviewer`
+   - Considered options, not part of the shipped plugin:
      - `source-curator`
      - `experiment-grader`
-     Top-level skills orchestrate them as a cognitive loop rather than a fixed waterfall.
+   - Top-level skills orchestrate the shipped roles as a cognitive loop rather than a fixed waterfall.
    - Reuse: Claude plugin `agents/` format for native role routing, Codex skill instructions for native subagent delegation.
    - Avoid: one giant `SKILL.md`; it will violate progressive disclosure and make process ablations hard.
 
 2. **Shared skills, platform-specific wrappers**
-   - Canonical instructions should likely live in:
+   - The derived design puts canonical instructions in:
      - `skills/cognitive-writing-orchestrator/SKILL.md`
      - `skills/knowledge-transforming-revision/SKILL.md`
      - `skills/writing-eval-harness/SKILL.md`
@@ -691,7 +692,7 @@ agentic-cognitive-writing-process/
    - Avoid: Anthropic-only `compatibility` field in shared `SKILL.md`, because OpenAI validator does not allow it.
 
 3. **Stateful process ledger**
-   - The plugin should use a structured writing ledger in `references/ledger-schema.md` or a script-generated JSON file to record:
+   - The plugin design uses a structured writing ledger in `references/ledger-schema.md` or a script-generated JSON file to record:
      - Rhetorical problem
      - Audience
      - Goals
@@ -703,8 +704,8 @@ agentic-cognitive-writing-process/
    - Reuse: STORM [^3] as a pipeline reference for research, outline, draft, and polish. Add Flower & Hayes' model [^1] monitor decisions as first-class data.
    - Avoid: final-output-only grading; it cannot show that cognitive-process support changed behavior.
 
-4. **Eval harness as a skill, not an afterthought**
-   - `writing-eval-harness` should likely use the Anthropic skill-creator pattern:
+4. **Eval harness as a considered skill**
+   - A `writing-eval-harness` skill remains a considered option. It can use the Anthropic skill-creator pattern:
      - With-skill vs baseline
      - Assertions
      - Grader
@@ -770,10 +771,10 @@ agentic-cognitive-writing-process/
      - Validation pass rate (`claude plugin validate`, OpenAI skill validator)
      - Drift between generated wrappers
 
-**Immediate implementation recommendation**
+**Implementation status and remaining options**
 
-- We infer that the first implementation should start with a minimal dual-manifest plugin that contains three shared skills and four Claude-native agents. Codex support should initially rely on skills that instruct native Codex subagent delegation; do not invent a custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata until official custom-agent file details are stable enough to cite.
-- We infer that the first paper prototype should privilege observability over maximal automation. Every phase transition should write a ledger entry with:
+- The shipped implementation starts with a minimal dual-manifest plugin that contains three shared skills and four Claude-native agents. Codex support relies on skills that instruct native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
+- The paper prototype design privileges observability over maximal automation. Every phase transition writes a ledger entry with:
   - Responsible agent
   - Decision
   - Evidence
