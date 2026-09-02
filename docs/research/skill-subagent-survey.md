@@ -395,7 +395,6 @@ The survey findings translate into the shipped architecture and the remaining ex
 3. **Stateful process trace**
    - The shipped monitor appends JSON Lines entries to `.writing/trace/process.jsonl` in the user's writing project. The schema lives at [`plugin/skills/cognitive-writing/references/trace-jsonl-schema.md`](../../plugin/skills/cognitive-writing/references/trace-jsonl-schema.md).
    - The trace records rhetorical problem, audience, goals, content plan, source commitments, drafts, revisions, and monitor decisions.
-   - The paper prototype prioritizes observable process state over full automation. Every phase transition writes a trace entry with the responsible agent, decision, evidence, and open uncertainty, making the Flower & Hayes [^1] mapping testable.
    - Reuse STORM [^3] as a pipeline reference for research, outline, draft, and polish. Add Flower & Hayes' model [^1] monitor decisions as first-class data.
    - Avoid final-output-only grading; it cannot show that cognitive-process support changed behavior.
 
