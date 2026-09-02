@@ -4,7 +4,7 @@
 
 The repository contains a cross-platform writing plugin, research surveys, and an experiment protocol.
 
-The writing contract covers those artifacts and every prose deliverable, including documents, READMEs, and pull request (PR) bodies.
+The writing contract covers those artifacts and every prose deliverable, including documents, READMEs, and pull request bodies.
 
 ## Citations and links
 
@@ -52,7 +52,7 @@ Writers format content for reader use: facts go in tables, reasoning in prose, a
 
 Writers produce all prose deliverables in English and apply the `unslop` skill to each one.
 
-- Expand abbreviations at first use, such as `question answering (QA)`. Leave universally understood tokens such as URL, JSON, HTTP, PDF, API, CLI, README, and DOI, as well as proper names and brands such as JSTOR, arXiv, and GitHub, unexpanded.
+- Expand abbreviations at first use, such as `question answering`. Leave universally understood tokens such as URL, JSON, HTTP, PDF, API, CLI, README, and DOI, as well as proper names and brands such as JSTOR, arXiv, and GitHub, unexpanded.
 - Avoid pronoun subjects such as "It", "This", and "They" unless the referent is the immediately preceding subject and unambiguous. Name the actor instead, as in "The survey derives ..." or "The monitor appends ...".
 - Describe an artifact by its function, not with self-assessed size or effort qualifiers such as "small", "thin", "simple", or "lightweight". State platform, support, and compatibility scope once as artifact-anchored facts with concrete boundaries, such as "The artifact ships adapters for named platforms", rather than promising that the artifact "supports" a platform.
 
