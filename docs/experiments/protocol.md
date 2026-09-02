@@ -351,7 +351,15 @@ The specificity analysis reports the coding rubric and double-codes a reliabilit
 
 **Goal regeneration.** Count `goal_regenerated` events. Verify that the old goal remains in history and that the replacement has a new ID when its meaning materially changes. Record the evidence and stated rationale.
 
-**Process-switch transitions.** Count transitions among the named processes. Include Embedded Generate events, Evaluate events, Organize events, Goal-setting events, and Revise events when the trace records them. Report transition counts and rates per run.
+**Process-switch transitions.** Count transitions among the named processes. Include these event types when the trace records them:
+
+- Embedded Generate
+- Evaluate
+- Organize
+- Goal-setting
+- Revise
+
+Report transition counts and rates per run.
 
 **Process-order entropy.** Compute Shannon entropy [^12] over normalized process sequences and over transition distributions. Report raw entropy, the number of observed states, and the normalization rule.
 
@@ -427,7 +435,7 @@ Mark exploratory subgroup results clearly. Do not use them to replace the confir
 
 ## Reproducible runs and artifacts
 
-All runs are scripted under [`experiments/`](../../experiments/). The planned layout is:
+The runner will script all runs under the planned experiments/ layout. The planned layout is:
 
 ```text
 experiments/
