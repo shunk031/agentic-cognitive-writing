@@ -1,12 +1,6 @@
 # Experiment protocol for the cognitive writing process
 
-This document defines the paper experiment and the future experiment runner. It fixes these rules before any result is collected:
-
-- Comparison
-- Data handling
-- Evaluation
-- Process analysis
-- Reporting
+This protocol defines the paper experiment and future runner. It fixes comparison, data handling, evaluation, process analysis, and reporting rules before any result is collected.
 
 The runner must fill every `REQUIRED_AT_RUNTIME` value before a run. An open value is a pre-run stop condition.
 
@@ -19,23 +13,13 @@ The protocol uses the benchmark and evaluation evidence in [`docs/research/writi
 - [`plugin/skills/cognitive-writing-no-goal-network/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing-no-goal-network/SKILL.md)
 - [`plugin/skills/cognitive-writing/references/trace-jsonl-schema.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
 
-## Overview and research questions
+## Theory test and research questions
 
-Flower and Hayes' *A Cognitive Process Theory of Writing* [^1] describes writing as a set of thinking processes that a writer coordinates during composing. The processes are hierarchical and can be embedded in one another. Writing is goal-directed, and writers can create, develop, and regenerate goals as they learn from the act of writing. The Monitor coordinates three processes:
+This protocol tests whether the theory-based recursive process improves writing and whether its traces show the predicted goal dynamics. Flower and Hayes' *A Cognitive Process Theory of Writing* [^1] describes writing as a set of thinking processes that a writer coordinates during composing. The processes are hierarchical and can be embedded in one another. Writing is goal-directed, and writers can create, develop, and regenerate goals as they learn from the act of writing. The Monitor coordinates Planning, Translating, and Reviewing.
 
-- Planning
-- Translating
-- Reviewing
+It tests that account as an agent process rather than treating it as a claim about human inner experience.
 
-This protocol tests that account as an agent process rather than treating it as a claim about human inner experience.
-
-The experiment holds these inputs constant across arms:
-
-- Assignment
-- Supplied context
-- Tool budget
-- Output budget
-- No-retrieval rule
+The experiment holds the assignment, supplied context, tool budget, output budget, and no-retrieval rule constant across arms.
 
 Only the process instructions and the resulting observable process differ. The benchmark and judge choices follow the [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
@@ -46,33 +30,17 @@ The questions are:
 3. **RQ3.** Do agent traces, analyzed as thinking-aloud protocols, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? This includes their prediction that the quantity and quality of middle-range goals, which connect broad rhetorical aims to local writing actions, relate to writing quality.
 4. **RQ4.** Does the mapping replicate across platforms?
 
-The pointwise two-judge composite is the sole CONFIRMATORY estimand, the prespecified quantity used for confirmatory tests. Holm correction [^15], which controls the family-wise error rate, uses one family per benchmark on the primary Codex pointwise composite. Each family contains the five comparisons of the theory-based A4 arm with the other arms, for 15 confirmatory tests total. The pairwise Bradley-Terry [^11] average, based on a model that estimates relative arm ability from pairwise choices, is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
+The pointwise two-judge composite is the sole CONFIRMATORY estimand. It is the prespecified quantity used for confirmatory tests. Holm correction [^15] controls the family-wise error rate. Use one correction family per benchmark on the primary Codex pointwise composite. Each family contains the five comparisons of the theory-based A4 arm with the other arms, for 15 confirmatory tests total. The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. It estimates relative arm ability from pairwise choices. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
 
-The primary process estimands are:
-
-- Goal event rates and distributions
-- Adaptive process-switch rates and distributions
-- Interruption rates and distributions
-- Pop-back event rates and distributions
+The primary process estimands are goal events, adaptive process switches, interruptions, and pop-back events. Report rates and distributions for each.
 
 The replication estimand is the direction and size of the A4 treatment effect under the secondary platform. Report it separately from the primary platform.
 
-## Arms
+## Six arms under equal information
 
-All six arms receive identical input context. The runner must expose the same settings to every arm:
+All six arms receive identical input context. The runner must expose the same local tools, context window policy, timeout, output budget, and number of allowed attempts to every arm.
 
-- Local tools
-- Context window policy
-- Timeout
-- Output budget
-- Number of allowed attempts
-
-No arm may use a source outside the supplied assignment and context. The no-retrieval policy forbids:
-
-- Web search
-- Network retrieval
-- External browsing
-- Any unprovided source
+No arm may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
 
 The A3 perspective and question steps use only the supplied assignment and context.
 
@@ -84,11 +52,7 @@ A3 uses these stages:
 - Draft
 - Polish
 
-A4 uses these processes:
-
-- Planning
-- Translating
-- Reviewing
+A4 uses the Planning, Translating, and Reviewing processes.
 
 | Arm | Process specification | Required trace behavior |
 | --- | --- | --- |
@@ -99,14 +63,9 @@ A4 uses these processes:
 | A5 no goal network | Invoke the `cognitive-writing-no-goal-network` skill. It uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. | Leave any existing `goals.md` untouched. Record process switches under the shared trace contract. Do not record goal events or goal fields. |
 | A6 fixed process order | Invoke the `cognitive-writing-fixed-order` skill. It runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, return to the prescribed order. | Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Do not add variant-specific fields. |
 
-A5 and A6 are sibling skills in the plugin. The runner invokes `cognitive-writing-no-goal-network` for A5. It invokes `cognitive-writing-fixed-order` for A6. Both skills share the role skills and use the common trace contract. All six arms use the same:
+A5 and A6 are sibling skills in the plugin. The runner invokes `cognitive-writing-no-goal-network` for A5. It invokes `cognitive-writing-fixed-order` for A6. Both skills share the role skills and use the common trace contract. All six arms use the same assignment, starting draft, model settings, and user decisions.
 
-- Assignment
-- Starting draft
-- Model settings
-- User decisions
-
-The plugin mapping is an implementation of the theory, not a claim that the 1981 paper [^1] specifies these files. The user owns:
+The plugin mapping implements the theory in *A Cognitive Process Theory of Writing* [^1], but that paper does not specify these files. The user owns:
 
 - Rhetorical intent
 - Factual authority
@@ -115,9 +74,11 @@ The plugin mapping is an implementation of the theory, not a claim that the 1981
 
 The Monitor owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/cognitive-writing/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/SKILL.md).
 
-## Benchmarks and data gates
+## Primary benchmarks and data gates
 
-### Primary benchmarks
+The protocol uses three fixed primary benchmarks and gates supplementary data on license and provenance.
+
+### Three primary benchmarks
 
 The primary set contains these benchmarks:
 
@@ -133,18 +94,11 @@ The evaluation survey supports this selection. See [`docs/research/writing-eval-
 | [HelloBench](https://github.com/Quehry/HelloBench) [^4] | Use the pinned testing set. The survey reports 647 samples across five tasks and 38 subcategories, with long-text and checklist-based evaluation support. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). | Use the complete pinned manifest. Keep blocked items in the run accounting. Report results by task and subcategory as well as in aggregate. Record the final count and the release commit or archive hash. |
 | [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5] | Use only the development subset after recomputing the split from the downloaded archive. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) reports two source counts. The paper/archive reports 820 dev and 1,037 test. The repository README reports 830 dev and 1,037 test. | Recompute the split before the first scored run. Save the archive hash, split script version, and observed counts. Do not use the test portion for primary analysis. The expected paper/archive count is 820 dev and 1,037 test, but the archive-derived count is authoritative. |
 
-The runner materializes one immutable prompt manifest per benchmark. Each row contains:
-
-- Stable prompt identifier (ID)
-- Benchmark name
-- Source version
-- Prompt text or a permitted source reference
-- Requested output constraints
-- Hash
+The runner materializes one immutable prompt manifest per benchmark. Each row contains a stable prompt identifier (ID), benchmark name, source version, prompt text or a permitted source reference, requested output constraints, and a hash.
 
 The manifest is the only prompt input used by a run.
 
-### Prompt sources and human anchors
+### Prompt sources for human anchors
 
 The prompt sources serve these roles:
 
@@ -158,9 +112,11 @@ The runner must not train on or alter the student essays for this experiment. It
 - The 15 [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] prompt templates as a separate argumentative anchor set
 - [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] as a calibration and generalization check unless its base-text access is cleared
 
-### Optional supplementary benchmark
+### Optional benchmark with a license gate
 
-[LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) is optional and supplementary. It may be added only after the benchmark prompt-file license and provenance are cleared. If used, it is a length-control and robustness axis, not a fourth primary benchmark. The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) [^8] supervised fine-tuning (SFT) data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+[LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) is optional and supplementary. It may be added only after the benchmark prompt-file license and provenance are cleared. If used, it is a length-control and robustness axis, not a fourth primary benchmark.
+
+The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) [^8] supervised fine-tuning (SFT) data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
 The following benchmarks are excluded from this protocol because their licensing or metadata remains unresolved.
 
@@ -171,11 +127,13 @@ The unresolved resources are:
 
 They must not enter a paper result, prompt manifest, or redistributed artifact without a new license review. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
-## Platforms and models
+## Codex primary and Claude Code replication
+
+Codex is the primary platform, and Claude Code provides a separate replication with explicit judge-family separation.
 
 ### Platform assignments
 
-The primary platform is OpenAI Codex headless, invoked with `codex exec`. All six arms run as skill or prompt variants over one pinned Generative Pre-trained Transformer (GPT)-family generator model. The secondary replication runs the same six arm specifications under Claude Code headless with one pinned Claude-family generator model. A4 to A6 use the plugin, while A1 to A3 use the corresponding prompt variants. The [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) describes the shared skill and platform-adapter design.
+The primary platform is OpenAI Codex headless, invoked with `codex exec`. All six arms run as skill or prompt variants over one pinned generator model from the Generative Pre-trained Transformer (GPT) family. The secondary replication runs the same six arm specifications under Claude Code headless with one pinned Claude-family generator model. A4 to A6 use the plugin, while A1 to A3 use the corresponding prompt variants. The [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) describes the shared skill and platform-adapter design.
 
 OpenAI documents [`codex exec`](https://developers.openai.com/codex/non-interactive-mode) as its non-interactive mode for scripts and continuous integration (CI), with final output on stdout and progress on stderr. Anthropic documents Claude Code headless execution with `claude -p` or `claude --print` in its [headless mode guide](https://docs.anthropic.com/en/docs/claude-code/headless). The runner must follow the installed CLI version's syntax and record that version.
 
@@ -218,27 +176,19 @@ The runner assigns the Claude-family frontier judge and shared third-family open
 
 The runner records each judge's base-model family and the generator family for every scored output. It fails the run if a frontier judge shares the generator family or if the open evaluator does not belong to a third family. The audit verifies the family labels at runtime rather than trusting configuration names.
 
-The no-retrieval rule applies to generators and judges. Judges receive only:
-
-- The assignment
-- The permitted supplied context
-- The blinded output or output pair
+The no-retrieval rule applies to generators and judges. Judges receive only the assignment, the permitted supplied context, and the blinded output or output pair.
 
 They do not receive agent traces, internal role names, or condition labels.
 
-## Product evaluation
+## Product quality and length outcomes
 
-The product unit combines:
+The runner measures output quality and length as separate outcomes.
 
-- One output
-- One prompt
-- One arm
-- One platform
-- One generator seed
+The product unit combines one output, one prompt, one arm, one platform, and one generator seed.
 
 The runner preserves the raw output byte-for-byte and also stores the normalized text used for token and word counts. Normalization may remove only transport wrappers defined in the runner specification. It must not rewrite content, repair claims, or change paragraph boundaries.
 
-### Pointwise quality
+### Pointwise quality from two judges
 
 Each assigned judge scores every output independently on five dimensions. Each raw score is an integer from 1 to 5. The judge returns a short evidence quote for each dimension. For each platform, the runner z-scores each dimension within each benchmark and judge. It then averages the five z-scores into that judge's level composite. For platform `p`, judge `j`, benchmark `b`, dimension `d`, and output `i`, the value is `z(i,p,j,b,d) = (raw(i,p,j,b,d) - mean(p,j,b,d)) / sd(p,j,b,d)`. A zero standard deviation uses the frozen zero-variance rule in the runtime gate. Length compliance never enters a quality score.
 
@@ -322,7 +272,7 @@ Every record must include the fields shown below.
 
 Group pairwise records on `(platform, judge_id)` before fitting each judge-specific Bradley-Terry [^11] model. Use `judge_family` to verify each group against the runtime judge manifest. Compute the equal-weight average from those per-judge fits within each platform. Do not combine records from different platforms or judges before fitting.
 
-The pointwise two-judge composite is the sole CONFIRMATORY estimand. The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. See Overview and research questions for the full classification and Holm family definition.
+The confirmatory classification and Holm family definition are stated in Theory test and research questions.
 
 Fit each Bradley-Terry [^11] model with a predeclared tie treatment. For arm `a`, let `theta_Codex(a, Claude)` and `theta_Codex(a, open)` be the judge-specific ability estimates under the same reference-arm constraint. The Codex pairwise average is `theta_primary(a) = 0.5 * theta_Codex(a, Claude) + 0.5 * theta_Codex(a, open)`. For the replication, use `theta_replication(a) = 0.5 * theta_ClaudeCode(a, GPT) + 0.5 * theta_ClaudeCode(a, open)`.
 
@@ -335,13 +285,9 @@ Fit and report the two platform models separately. Report these pairwise outputs
 
 If the selected implementation cannot fit ties, count each tie as half a win in the tie-aware win rate. Do not pool platforms.
 
-### Length and judge sensitivity
+### Length outcomes and judge sensitivity
 
-The runner records these length measures:
-
-- Raw word count
-- Model-token count when the pinned tokenizer makes it available
-- Output-length gap for every pair
+The runner records raw word count, model-token count when the pinned tokenizer makes it available, and output-length gap for every pair.
 
 Report every quality result both raw and length-stratified. The length strata and minimum cell size are `REQUIRED_AT_RUNTIME` and must be fixed before scoring.
 
@@ -354,37 +300,19 @@ Length compliance is a standalone outcome for prompts with an explicit requested
 
 For `x > 0` and `y > 0`, use the LongWriter [^8] style formula from the [reference length evaluator](https://github.com/THUDM/LongWriter/blob/main/evaluation/eval_length.py). When `y > x`, compute `S = 100 * max(0, 1 - (y / x - 1) / 3)`. When `y <= x`, compute `S = 100 * max(0, 1 - (x / y - 1) / 2)`.
 
-If `y = 0`, set `S = 0` and `D = 1`. If a prompt has no explicit length request, report these outcomes as `N/A`. Freeze these settings in the runtime gate:
-
-- Length unit
-- Formula
-- Zero-output rule
-- `tau` value
+If `y = 0`, set `S = 0` and `D = 1`. If a prompt has no explicit length request, report these outcomes as `N/A`. Freeze the length unit, formula, zero-output rule, and `tau` value in the runtime gate.
 
 Length compliance and the length score never enter either quality estimand.
 
 The runner performs a judge and generator family overlap audit. If any judge also generated an output, it runs the self-preference test on a blinded subset with the same A/B and B/A controls. The test estimates whether that judge family changes its choices for its own outputs. If the planned non-overlap assignment holds, the manifest records that the test was not triggered by direct overlap and reports swapped-judge rank agreement as the corresponding sensitivity check. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) recommends this diagnostic when overlap cannot be avoided.
 
-The covariate sensitivity analysis fits the prespecified quality and pairwise models with these terms where applicable:
+The covariate sensitivity analysis fits the prespecified quality and pairwise models with benchmark, prompt length, output length, output-length gap, presentation order, judge family, and platform where applicable.
 
-- Benchmark
-- Prompt length
-- Output length
-- Output-length gap
-- Presentation order
-- Judge family
-- Platform
-
-It compares the adjusted treatment estimates with the raw and length-stratified estimates. Freeze these terms as `REQUIRED_AT_RUNTIME`:
-
-- Model formula
-- Covariate coding
-- Missing-value rule
-- Interaction terms
+It compares the adjusted treatment estimates with the raw and length-stratified estimates. Freeze the model formula, covariate coding, missing-value rule, and interaction terms as `REQUIRED_AT_RUNTIME`.
 
 Put them in the analysis manifest before results are inspected.
 
-## Human validation
+## Human validation of pairwise judgments
 
 Human validation samples 180 to 240 pairwise comparisons from the primary results. It uses three recruited annotators per comparison. Sampling is stratified by these factors:
 
@@ -394,33 +322,13 @@ Human validation samples 180 to 240 pairwise comparisons from the primary result
 - Output-length gap
 - Automatic-decision margin
 
-The presentation order is randomized per annotator. Annotators see the assignment and two anonymized outputs. They do not see:
-
-- Arm names
-- Platform names
-- Judge names
-- Traces
-- Automatic labels
+The presentation order is randomized per annotator. Annotators see the assignment and two anonymized outputs. They do not see arm names, platform names, judge names, traces, or automatic labels.
 
 This design follows the scale and controls recommended in the [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
-The annotation form records these fields:
+The annotation form records `A`, `B`, or `tie`, an optional short reason, annotator ID, comparison ID, presentation seed, and adjudication status.
 
-- `A`, `B`, or `tie`
-- Optional short reason
-- Annotator ID
-- Comparison ID
-- Presentation seed
-- Adjudication status
-
-Annotators must not discuss cases during independent scoring. The study record must state:
-
-- Recruitment
-- Compensation
-- Instruction text
-- Consent
-- Data handling
-- Any review or ethics requirement
+Annotators must not discuss cases during independent scoring. The study record must state recruitment, compensation, instruction text, consent, data handling, and any review or ethics requirement.
 
 Record these details before collection.
 
@@ -431,18 +339,15 @@ Report these agreement measures:
 - Raw agreement
 - Agreement between each automatic judge family and the human majority
 
-Report disagreement by these factors:
-
-- Benchmark
-- Arm pair
-- Output-length gap
-- Automatic-decision margin
+Report disagreement by benchmark, arm pair, output-length gap, and automatic-decision margin.
 
 Do not discard ties or cases with disagreement.
 
-## Process analysis
+## Trace-based process analysis
 
-### Trace source and interpretation
+The trace analysis measures observable process behavior and relates it to product quality.
+
+### Trace sources and interpretation
 
 For A4, A5, and A6, the authoritative sources are:
 
@@ -452,25 +357,15 @@ For A4, A5, and A6, the authoritative sources are:
 
 A5 leaves any existing `goals.md` untouched. Do not use that file for A5 goal measures.
 
-Each trace line is one JSON object. The documented event types are:
+Each trace line is one JSON object. The documented event types are `process_switch`, `goal_created`, `goal_developed`, and `goal_regenerated`.
 
-- `process_switch`
-- `goal_created`
-- `goal_developed`
-- `goal_regenerated`
-
-Process-switch events include `from_process` and `to_process`. Goal events include `goal_id` and `parent_goal_id`. The plugin records these additional fields:
-
-- Responsible actor
-- Decision
-- Evidence
-- Uncertainty
+Process-switch events include `from_process` and `to_process`. Goal events include `goal_id` and `parent_goal_id`. The plugin records responsible actor, decision, evidence, and uncertainty.
 
 For A1, A2, and A3, the runner records only externally observed generation or stage events in the same per-run trace location. An adapter must not invent goals, hidden decisions, or internal reasoning. Plugin-specific fields that cannot be observed are `N/A` in the derived analysis. The baseline stage traces support structural comparisons. The goal-network estimands apply to A4 and A6. The recursive-monitor estimands apply to A4 to A6, with no goal events or goal fields for A5.
 
 The trace is an operational analogue of a thinking-aloud protocol, not a direct transcript of an agent's private state. The analysis therefore distinguishes logged actions from claims about cognition. An event that lacks enough evidence for a code is marked ambiguous and remains in the denominator for trace completeness.
 
-### Metrics
+### Process metrics from traces
 
 The analysis extracts these measures from the traces. It uses goal files only for A4 and A6.
 
@@ -490,9 +385,9 @@ The analysis extracts these measures from the traces. It uses goal files only fo
 
 The analysis correlates process measures with per-prompt product quality. It reports correlations for each judge family. It also reports correlations for the prespecified aggregate. It shows benchmark and output length as covariates. A correlation does not establish that the process caused the quality difference.
 
-## Statistical analysis
+## Confirmatory and exploratory analysis
 
-The prompt is the paired unit. Each arm receives the same prompt, and platform replications use the same prompt manifest. Invalid or missing outputs remain in the run accounting. The report gives the failure count and reason by arm and benchmark. It does not silently drop a condition that fails more often.
+The analysis keeps primary and replication inference separate and reserves confirmatory claims for the primary pointwise two-judge composite. The prompt is the paired unit. Each arm receives the same prompt, and platform replications use the same prompt manifest. Invalid or missing outputs remain in the run accounting. The report gives the failure count and reason by arm and benchmark. It does not silently drop a condition that fails more often.
 
 For pointwise quality, compute the primary equal-weight judge composite for each prompt and arm on each platform. The confirmatory contrasts compare A4 with each other arm. Use paired bootstrap intervals or a paired Wilcoxon signed-rank test [^16] across prompts. Report these results:
 
@@ -512,7 +407,7 @@ For pairwise quality, report these results on each platform:
 
 Use prompt-level paired resampling for uncertainty. Report the effect size on the selected Bradley-Terry [^11] scale or the paired difference in tie-aware win rate. Keep Codex and Claude Code inference separate.
 
-The pointwise two-judge composite is the sole CONFIRMATORY estimand. The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. See Overview and research questions for the full classification and Holm family definition.
+The confirmatory classification and Holm family definition are stated in Theory test and research questions.
 
 For RQ1 and RQ2, run the 15 confirmatory contrasts on the primary Codex pointwise composite. Compare A4 with each other arm within each primary benchmark. Report the same five contrasts on the Claude Code replication separately, without pooled or confirmatory inference. For RQ4, compare platforms descriptively by:
 
@@ -534,7 +429,7 @@ Apply Holm correction [^15] within each primary-benchmark family of five confirm
 
 Mark exploratory subgroup results clearly. Do not use them to replace the confirmatory estimates.
 
-## Reproducibility and artifact plan
+## Reproducible runs and artifacts
 
 All runs are scripted under `experiments/`. The planned layout is:
 
@@ -550,44 +445,15 @@ experiments/
 └── manifests/    # run manifests, checksums, and validation reports
 ```
 
-The runner writes a manifest before each run. The manifest records:
+The runner writes a manifest before each run. The manifest records the benchmark release and hash, prompt manifest hash, arm ID, platform, selected skill or prompt variant, CLI versions, plugin commit, generator and judge model IDs, system, arm, and judge prompt hashes, decoding parameters, output budget, tool policy, no-retrieval check, random seeds, retry policy, start time, and software environment identifiers that are safe to publish.
 
-- Benchmark release and hash
-- Prompt manifest hash
-- Arm ID, platform, and selected skill or prompt variant
-- CLI versions and plugin commit
-- Generator and judge model IDs
-- System, arm, and judge prompt hashes
-- Decoding parameters and output budget
-- Tool policy and no-retrieval check
-- Random seeds and retry policy
-- Start time
-- Software environment identifiers that are safe to publish
+The runner versions or content-hashes outputs, traces, judge responses, human judgments, derived scores, and analysis inputs.
 
-The runner versions or content-hashes these artifacts:
-
-- Outputs
-- Traces
-- Judge responses
-- Human judgments
-- Derived scores
-- Analysis inputs
-
-Raw benchmark files are redistributed only when their license allows it. If redistribution is not allowed, version these items instead:
-
-- Materialization script
-- Source version
-- Content hash
-- Clear acquisition instruction
+Raw benchmark files are redistributed only when their license allows it. If redistribution is not allowed, version the materialization script, source version, content hash, and clear acquisition instruction instead.
 
 Do not place credentials or private prompt material in the repository.
 
-The runner enforces the equal-tool and no-retrieval policy. It logs network-policy status and fails closed if a generator or judge requests an unpermitted retrieval action. It gives every arm the same timeout and retry budget. A retry cannot change:
-
-- The prompt
-- The tool policy
-- The model
-- The decoding parameters
+The runner enforces the equal-tool and no-retrieval policy. It logs network-policy status and fails closed if a generator or judge requests an unpermitted retrieval action. It gives every arm the same timeout and retry budget. A retry cannot change the prompt, tool policy, model, or decoding parameters.
 
 The runner validates these conditions:
 
@@ -599,18 +465,15 @@ The runner validates these conditions:
 
 A validation failure stops publication of the affected result.
 
-## Threats to validity
+## Main threats to validity
+
+The protocol limits claims with checks for construct, comparison, judge, length, platform, benchmark, trace, and licensing risks.
 
 **Construct validity.** A logged agent trace records actions selected by the plugin and runner. It does not prove that an agent has human-like thoughts. The RQ3 analysis uses the thinking-aloud analogy only to define observable process measures.
 
 **Comparison validity.** The equal-tool and no-retrieval policy makes the A3 arm a STORM [^2] style pipeline, not the full retrieval-based system. This limits claims about source-grounded research performance. It also prevents retrieval from becoming an unbalanced advantage for one arm.
 
-**Judge validity.** Pointwise and pairwise judges can show several biases:
-
-- Position bias
-- Verbosity bias
-- Self-preference bias
-- Model-family bias
+**Judge validity.** Pointwise and pairwise judges can show position, verbosity, self-preference, and model-family bias.
 
 The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) documents these risks. The protocol addresses them with:
 
@@ -652,13 +515,13 @@ The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/bl
 **Data and licensing.** The protocol has explicit gates for these unresolved items:
 
 - The [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5] split conflict
-- [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) [^8] licensing and provenance
+- [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) licensing and provenance
 - [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench) licensing
 - [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17] licensing and metadata
 
 See the [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) for the evidence. The analysis cannot use a source merely because a paper or repository mentions it.
 
-## Open TODO gates
+## Runtime gates before scoring
 
 The owner must close every gate below before the first scored run. Codex records the decision and the evidence in the run manifest.
 
@@ -670,7 +533,7 @@ The owner must close every gate below before the first scored run. Codex records
    - [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5]
 
    Materialize prompt manifests and record final item counts.
-3. **LongBench-Write license.** Clear the [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) [^8] benchmark prompt-file license and provenance before any supplementary use. Otherwise keep the benchmark excluded.
+3. **LongBench-Write license.** Clear the [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) benchmark prompt-file license and provenance before any supplementary use. Otherwise keep the benchmark excluded.
 4. **PERSUADE 2.0 [^6] and ICLE++ [^7] access.** Record permitted use for these materials:
 
    - The 15 [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) prompts
