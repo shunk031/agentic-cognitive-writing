@@ -26,6 +26,8 @@ If the repository is private, GitHub installs require access to it.
 
 ### GitHub install for Codex
 
+To bind each delegated role to a custom agent, see the [Codex custom-agent examples](examples/codex-agents/README.md).
+
 1. From the writing project, add the repository marketplace:
 
    ```bash
