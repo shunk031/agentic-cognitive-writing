@@ -47,8 +47,8 @@ Use this skill in the user's writing project. The project root is the current wo
    - constraints
 
    Do not silently invent a rhetorical problem.
-3. Keep `goals.md` in the notation described in `references/goals-format.md`. Update it whenever a goal is created, developed, or regenerated. Preserve the history instead of replacing an earlier goal without recording what changed.
-4. Read `references/trace-jsonl-schema.md` before writing the first trace entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
+3. Keep `goals.md` in the notation described in [`references/goals-format.md`](references/goals-format.md). Update it whenever a goal is created, developed, or regenerated. Preserve the history instead of replacing an earlier goal without recording what changed.
+4. Read [`references/trace-jsonl-schema.md`](references/trace-jsonl-schema.md) before writing the first trace entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
 
 ## Monitor loop
 
@@ -112,5 +112,5 @@ Do not write a script that spawns `codex exec` children. If native delegation is
 
 Read these only when the corresponding operation needs them:
 
-- `references/trace-jsonl-schema.md` defines the trace fields and event types.
-- `references/goals-format.md` defines hierarchical goal notation and history records.
+- [`references/trace-jsonl-schema.md`](references/trace-jsonl-schema.md) defines the trace fields and event types.
+- [`references/goals-format.md`](references/goals-format.md) defines hierarchical goal notation and history records.

@@ -1,6 +1,6 @@
 # Agentic cognitive writing
 
-In a writing project, the directory where the draft and process files live, the main `cognitive-writing` skill plans, drafts, and revises text recursively. Recursive revision means the assistant can revise its own plans and goals as the draft teaches it more, instead of generating text in one pass. The repository ships a Claude Code adapter in `plugin/.claude-plugin/plugin.json` and `plugin/agents/`, plus a Codex adapter in `plugin/.codex-plugin/plugin.json` and each skill's `agents/openai.yaml` metadata.
+In a writing project, the directory where the draft and process files live, the main `cognitive-writing` skill plans, drafts, and revises text recursively. Recursive revision means the assistant can revise its own plans and goals as the draft teaches it more, instead of generating text in one pass. The repository ships a Claude Code adapter in [`plugin/.claude-plugin/plugin.json`](plugin/.claude-plugin/plugin.json) and [`plugin/agents/`](plugin/agents/), plus a Codex adapter in [`plugin/.codex-plugin/plugin.json`](plugin/.codex-plugin/plugin.json) and per-skill metadata under [`plugin/skills/`](plugin/skills/).
 
 The plugin implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor decides what to work on next. The monitor coordinates three writing processes as the writer works:
 
@@ -62,15 +62,15 @@ The table maps each model element to the plugin artifact that carries out the co
 |  | Produced text | User project `.writing/draft.md` |
 | Writer's long-term memory | Topic and audience knowledge | User project `.writing/memory/` |
 |  | Writing plans | Notes and plans in `.writing/memory/` plus `.writing/goals.md` |
-| Planning | Process and embedded sub-processes | Shared `plugin/skills/planning/SKILL.md` plus Claude adapter `plugin/agents/planner.md` |
+| Planning | Process and embedded sub-processes | Shared [planning skill](plugin/skills/planning/SKILL.md) plus [Claude planner adapter](plugin/agents/planner.md) |
 |  | Generating ideas | Planning skill's embedded Generate sub-process |
 |  | Organizing ideas and presentation | Planning skill's embedded Organize sub-process |
 |  | Goal-setting | Planning skill's embedded Goal-setting sub-process and `.writing/goals.md` |
-| Translating | Process | Shared `plugin/skills/translating/SKILL.md` plus Claude adapter `plugin/agents/translator.md` |
-| Reviewing | Process and embedded sub-processes | Shared `plugin/skills/reviewing/SKILL.md` plus Claude adapter `plugin/agents/reviewer.md` |
+| Translating | Process | Shared [translating skill](plugin/skills/translating/SKILL.md) plus [Claude translator adapter](plugin/agents/translator.md) |
+| Reviewing | Process and embedded sub-processes | Shared [reviewing skill](plugin/skills/reviewing/SKILL.md) plus [Claude reviewer adapter](plugin/agents/reviewer.md) |
 |  | Evaluating | Reviewing skill's embedded Evaluate sub-process |
 |  | Revising | Reviewing skill's embedded Revise sub-process |
-| Monitor | Orchestration role | `plugin/skills/cognitive-writing/SKILL.md`, executed by the main agent |
+| Monitor | Orchestration role | [`plugin/skills/cognitive-writing/SKILL.md`](plugin/skills/cognitive-writing/SKILL.md), executed by the main agent |
 
 The main skill uses these processes recursively. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
 
@@ -131,7 +131,7 @@ If the repository is private, GitHub installs require access to it.
 
 ### Development install from a checkout in Codex
 
-1. Change to the repository root. The repository includes `.agents/plugins/marketplace.json` with a local `./plugin` source entry.
+1. Change to the repository root. The repository includes [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json) with a local source entry for the [`plugin/`](plugin/).
 2. Add the local marketplace:
 
    ```bash
@@ -198,19 +198,19 @@ The [`cognitive-writing-experiments`](experiments/plugin/README.md) plugin packa
 - [`cognitive-writing-fixed-order`](experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md) runs Planning, then Translating, then Reviewing on each pass. Generate and Evaluate can interrupt, but the Monitor logs the interruption and returns to the prescribed order.
 - [`cognitive-writing-no-goal-network`](experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md) treats the assignment as one implicit objective, leaves `.writing/goals.md` untouched, and continues to trace process switches.
 
-Select a variant only when a comparison is needed. The variants' seed prompts live beside the skills in `experiments/plugin/skills/`.
+Select a variant only when a comparison is needed. The variants' seed prompts live beside the skills in [`experiments/plugin/skills/`](experiments/plugin/skills/).
 
 ## Find code, research, and experiment material
 
 The repository keeps the main plugin, experiment package, research, and protocol in separate directories.
 
-- `plugin/` contains the installable main plugin, including shared skills and Claude adapters.
-- `experiments/plugin/` contains the installable controlled-comparison variants.
-- `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` define the local marketplace sources.
-- `docs/research/` contains the [skill and sub-agent survey](https://github.com/shunk031/agentic-cognitive-writing/blob/13d0ace703a301f0a4656034c2b03deddd30c665/docs/research/skill-subagent-survey.md).
-- `docs/experiments/` contains the [experiment protocol](https://github.com/shunk031/agentic-cognitive-writing/blob/fca4bdfd5d45a5345bcff6ed5f1ee9ea33353fe5/docs/experiments/protocol.md).
-- `tools/validate-skills.sh` runs the reproducible skill validators.
-- `plugin/skills/cognitive-writing/evals/evals.json` and `experiments/plugin/skills/*/evals/evals.json` contain skill eval seeds.
+- [`plugin/`](plugin/) contains the installable main plugin, including shared skills and Claude adapters.
+- [`experiments/plugin/`](experiments/plugin/) contains the installable controlled-comparison variants.
+- [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) and [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json) define the local marketplace sources.
+- [`docs/research/`](docs/research/) contains the [skill and sub-agent survey](https://github.com/shunk031/agentic-cognitive-writing/blob/13d0ace703a301f0a4656034c2b03deddd30c665/docs/research/skill-subagent-survey.md).
+- [`docs/experiments/`](docs/experiments/) contains the [experiment protocol](https://github.com/shunk031/agentic-cognitive-writing/blob/fca4bdfd5d45a5345bcff6ed5f1ee9ea33353fe5/docs/experiments/protocol.md).
+- [`tools/validate-skills.sh`](tools/validate-skills.sh) runs the reproducible skill validators.
+- [`plugin/skills/cognitive-writing/evals/evals.json`](plugin/skills/cognitive-writing/evals/evals.json) and the experiment skill eval files under [`experiments/plugin/skills/`](experiments/plugin/skills/) seed skill evaluations.
 
 For offline use after installation, read [`plugin/README.md`](plugin/README.md). For research and experiment context, browse the linked documents above.
 

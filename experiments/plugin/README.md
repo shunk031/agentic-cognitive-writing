@@ -2,7 +2,7 @@
 
 The package gives an experimenter two skills for comparing writing-process choices: one fixes the process order, and one removes the hierarchical goal network. The variants write to the `.writing/` directory in the writing project and keep the main package's role delegation contract.
 
-The package ships a Claude Code manifest at `.claude-plugin/plugin.json` and a Codex manifest at `.codex-plugin/plugin.json`; each manifest packages the two skill directories under `skills/`.
+The package ships a Claude Code manifest at [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and a Codex manifest at [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json); each manifest packages the two skill directories under [`skills/`](skills/).
 
 ## Install the required packages
 

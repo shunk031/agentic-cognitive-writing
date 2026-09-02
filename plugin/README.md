@@ -1,6 +1,6 @@
 # Agentic cognitive writing
 
-The installed `agentic-cognitive-writing` package adds the `cognitive-writing` skill. Invoke the skill in a writing project, the directory where the draft and process files live, to plan, draft, and revise a document while the skill updates its plans and goals as the draft develops. The package ships a Claude Code adapter in `.claude-plugin/plugin.json` and `agents/`, plus a Codex adapter in `.codex-plugin/plugin.json` and each skill's `agents/openai.yaml` metadata.
+The installed `agentic-cognitive-writing` package adds the `cognitive-writing` skill. Invoke the skill in a writing project, the directory where the draft and process files live, to plan, draft, and revise a document while the skill updates its plans and goals as the draft develops. The package ships a Claude Code adapter in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and [`agents/`](agents/), plus a Codex adapter in [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) and per-skill metadata under [`skills/`](skills/).
 
 For the theory and architecture behind this plugin, see the [project README](https://github.com/shunk031/agentic-cognitive-writing#readme).
 
@@ -61,7 +61,7 @@ If the repository is private, GitHub installs require access to it.
 
 ### Development install from a checkout in Codex
 
-1. Change to the repository root. The repository includes `.agents/plugins/marketplace.json` with a local `./plugin` source entry.
+1. Change to the repository root. The repository includes [`.agents/plugins/marketplace.json`](../.agents/plugins/marketplace.json) with a local source entry for the [`plugin/`](../plugin/).
 2. Add the local marketplace:
 
    ```bash
@@ -123,7 +123,7 @@ The monitor, the part that decides what to work on next, invokes these roles dur
 - `translating` handles delegated drafting.
 - `reviewing` handles delegated evaluation and revision.
 
-The separate [`cognitive-writing-experiments` package](https://github.com/shunk031/agentic-cognitive-writing) contains `cognitive-writing-fixed-order` and `cognitive-writing-no-goal-network` for controlled comparisons. See `experiments/plugin/` in the repository for context.
+The separate [`cognitive-writing-experiments` package](https://github.com/shunk031/agentic-cognitive-writing) contains `cognitive-writing-fixed-order` and `cognitive-writing-no-goal-network` for controlled comparisons. See the [`experiments/plugin/`](../experiments/plugin/) directory in the repository for context.
 
 ## Files maintained in your writing project
 
