@@ -7,7 +7,8 @@ The runner must fill every `REQUIRED_AT_RUNTIME` value before a run. An open val
 The protocol uses benchmark, evaluation, platform, and plugin evidence from these source snapshots:
 
 - Surveys: [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) / [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)
-- Plugin: [README](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/README.md) / [core skill](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/SKILL.md) / [fixed-order skill](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing-fixed-order/SKILL.md) / [no-goal-network skill](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing-no-goal-network/SKILL.md) / [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
+- Main plugin: [README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/README.md) / [core skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/SKILL.md) / [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
+- Experiments plugin: [fixed-order skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md) / [no-goal-network skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md)
 
 ## Theory test and research questions
 
@@ -50,14 +51,14 @@ A4 uses the Planning, Translating, and Reviewing processes.
 | A2 linear stages | One pass each through Pre-Write, Write, and Re-Write. The order is fixed and each stage hands its output to the next. | Record the three stage transitions and their outputs. Record no unobserved reasoning. |
 | A3 [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval | The pipeline follows the five stages above. STORM separates planning from writing. Condition A3 omits retrieval and source gathering. It also omits citation generation under the equal-information policy. The surveys describe this no-retrieval adaptation and the related STORM pipeline precedent. [Evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) / [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) | Record the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. |
 | A4 proposed plugin | The documented cognitive-writing plugin. The Monitor selects among the three processes above. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. | Use the plugin's append-only `.writing/trace/process.jsonl` and goal-network files. Record the normal loop under the shared trace contract. |
-| A5 no goal network | Invoke the `cognitive-writing-no-goal-network` skill. The `cognitive-writing-no-goal-network` skill uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. | Leave any existing `goals.md` untouched. Record process switches under the shared trace contract. Do not record goal events or goal fields. |
-| A6 fixed process order | Invoke the `cognitive-writing-fixed-order` skill. The `cognitive-writing-fixed-order` skill runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, return to the prescribed order. | Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Do not add variant-specific fields. |
+| A5 no goal network | Invoke `cognitive-writing-no-goal-network` from the `cognitive-writing-experiments` plugin. The variant uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. | Leave any existing `goals.md` untouched. Record process switches under the shared trace contract. Do not record goal events or goal fields. |
+| A6 fixed process order | Invoke `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin. The variant runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, return to the prescribed order. | Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Do not add variant-specific fields. |
 
-A5 and A6 are sibling skills in the plugin. The runner invokes `cognitive-writing-no-goal-network` for A5. It invokes `cognitive-writing-fixed-order` for A6. Both skills share the role skills and use the common trace contract. All six conditions use the same assignment, starting draft, model settings, and user decisions.
+The A5 and A6 variant skills are shipped by the separate `cognitive-writing-experiments` plugin. The runner invokes `cognitive-writing-no-goal-network` for A5 and `cognitive-writing-fixed-order` for A6. Both variants require the main `agentic-cognitive-writing` plugin for role skills and agents, and both use the common trace contract. All six conditions use the same assignment, starting draft, model settings, and user decisions.
 
 The plugin mapping implements the theory in *A Cognitive Process Theory of Writing* [^1], but that 1981 paper does not specify these files. The user owns rhetorical intent, factual authority, final wording, and publication.
 
-The Monitor owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/cognitive-writing/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/SKILL.md).
+The Monitor owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/cognitive-writing/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/SKILL.md).
 
 ## Primary benchmarks and data gates
 
@@ -112,7 +113,7 @@ The unresolved resources must not enter a paper result, prompt manifest, or redi
 ## Codex primary and Claude Code replication
 
 Codex is the primary platform, and Claude Code provides a separate replication with explicit judge-family separation.
-The plugin ships a Claude Code adapter through [`plugin/.claude-plugin/plugin.json`](../../plugin/.claude-plugin/plugin.json) and [`plugin/agents/`](../../plugin/agents/). It ships a Codex adapter through [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json) and the `agents/openai.yaml` files under [`plugin/skills/`](../../plugin/skills/).
+The plugin ships a Claude Code adapter through the [Claude Code manifest](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/.claude-plugin/plugin.json) and [Claude Code agents](https://github.com/shunk031/agentic-cognitive-writing/tree/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/agents/). It ships a Codex adapter through the [Codex manifest](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/.codex-plugin/plugin.json) and [Codex skill files](https://github.com/shunk031/agentic-cognitive-writing/tree/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/).
 
 ### Platform assignments
 
@@ -125,7 +126,9 @@ The runner uses these conceptual interfaces:
 - `PRIMARY_GENERATOR`: `codex exec <REQUIRED_AT_RUNTIME flags> <prompt or stdin>`
 - `SECONDARY_GENERATOR`: `claude --print <REQUIRED_AT_RUNTIME flags> <prompt or stdin>`
 
-The exact command flags are versioned in `experiments/conditions/` and recorded in every run manifest. The run must not silently fall back to an interactive mode.
+The exact command flags are versioned in [`experiments/conditions/`](../../experiments/conditions/) and recorded in every run manifest. The run must not silently fall back to an interactive mode.
+
+Before running A4, A5, or A6, the runner installs the main `agentic-cognitive-writing` plugin. Before running A5 or A6, the runner also installs the `cognitive-writing-experiments` plugin. The main plugin provides the role skills and agents that the experiment plugin uses. The runner records both plugin commits in the run manifest.
 
 The runner starts one top-level session per condition and prompt. In Codex A4 to A6 runs, the plugin may request native Codex subagents as documented. The plugin must not spawn nested `codex exec` children. If native delegation is unavailable and the Monitor performs a delegated role itself, the trace must record that fallback.
 
@@ -150,7 +153,7 @@ The runner must pin each value below. A placeholder blocks the run:
 | Judge prompts and JSON schemas | `REQUIRED_AT_RUNTIME: frozen prompt files, schema files, and hashes` |
 | Decoding parameters | `REQUIRED_AT_RUNTIME`: temperature<br>`REQUIRED_AT_RUNTIME`: top-p or equivalent<br>`REQUIRED_AT_RUNTIME`: max output tokens<br>`REQUIRED_AT_RUNTIME`: stop rules<br>`REQUIRED_AT_RUNTIME`: timeout |
 | Seeds | `REQUIRED_AT_RUNTIME`: generation seed<br>`REQUIRED_AT_RUNTIME`: judge seed<br>`REQUIRED_AT_RUNTIME`: sampling seed<br>`REQUIRED_AT_RUNTIME`: presentation seed where the platform allows it |
-| CLI and plugin versions | `REQUIRED_AT_RUNTIME`: Codex version<br>`REQUIRED_AT_RUNTIME`: Claude Code version<br>`REQUIRED_AT_RUNTIME`: plugin commit<br>`REQUIRED_AT_RUNTIME`: runner commit |
+| CLI and plugin versions | `REQUIRED_AT_RUNTIME`: Codex version<br>`REQUIRED_AT_RUNTIME`: Claude Code version<br>`REQUIRED_AT_RUNTIME`: main plugin commit<br>`REQUIRED_AT_RUNTIME`: experiments plugin commit<br>`REQUIRED_AT_RUNTIME`: runner commit |
 | Generator and judge family audit | `REQUIRED_AT_RUNTIME: recorded base-model families and runtime verification that each frontier judge differs from the generator family and the open evaluator belongs to a third family` |
 
 The runner records each judge's base-model family and the generator family for every scored output. It fails the run if a frontier judge shares the generator family or if the open evaluator does not belong to a third family. The audit verifies the family labels at runtime rather than trusting configuration names.
@@ -330,7 +333,7 @@ The trace analysis measures observable process behavior and relates it to produc
 
 For A4, A5, and A6, the authoritative sources are:
 
-- The plugin's append-only `.writing/trace/process.jsonl` [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
+- The plugin's append-only `.writing/trace/process.jsonl` [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
 - `.writing/goals.md` for A4 and A6
 - The final draft
 
@@ -410,7 +413,7 @@ Mark exploratory subgroup results clearly. Do not use them to replace the confir
 
 ## Reproducible runs and artifacts
 
-All runs are scripted under `experiments/`. The planned layout is:
+All runs are scripted under [`experiments/`](../../experiments/). The planned layout is:
 
 ```text
 experiments/
@@ -432,7 +435,8 @@ The runner writes a manifest before each run. The manifest records these fields:
 - Platform
 - Selected skill or prompt variant
 - CLI versions
-- Plugin commit
+- Main plugin commit
+- Experiments plugin commit
 - Generator and judge model IDs
 - System
 - Condition
@@ -458,7 +462,7 @@ The runner validates these conditions:
 
 - Every trace line is standalone JSON.
 - A4 to A6 contain the fields required by their selected plugin skill.
-- A5 and A6 manifests record the selected sibling skill.
+- A5 and A6 manifests record the selected skill from the experiments plugin.
 - Blind labels are independent of condition IDs.
 - All 15 unordered pairs have both presentation orders.
 
@@ -532,7 +536,8 @@ The owner must close every gate below before the first scored run. Codex records
 
    - Exact model IDs
    - CLI versions
-   - Plugin commit
+   - Main plugin commit
+   - Experiments plugin commit when A5 or A6 runs
    - Decoding parameters
    - Output budgets
    - Timeout
