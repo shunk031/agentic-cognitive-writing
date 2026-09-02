@@ -61,7 +61,7 @@ Choose a GitHub marketplace for normal use or a local checkout for development. 
 
 ### Development install from a checkout in Codex
 
-1. Change to the repository root. The repository includes [`.agents/plugins/marketplace.json`](../.agents/plugins/marketplace.json) with a local source entry for the [`plugin/`](../plugin/).
+1. Change to the repository root. The repository includes [`.agents/plugins/marketplace.json`](../.agents/plugins/marketplace.json) with a local source entry for the [`plugin/`](../plugin/) directory.
 2. Add the local marketplace:
 
    ```bash
@@ -150,6 +150,4 @@ The main skill also uses [`goals-format.md`](skills/cognitive-writing/references
 
 The shipped package contains the manifests, skills, and agents it reads at runtime; no other file in this repository is required.
 
-The skill creates and maintains `.writing/` in the user's writing project. The directory belongs to the user and should not be committed unless the user chooses to share the writing process.
-
-For research and experiment context, see the [project repository](https://github.com/shunk031/agentic-cognitive-writing).
+The directory belongs to the user and should not be committed unless the user chooses to share the writing process.

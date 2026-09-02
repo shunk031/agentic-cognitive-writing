@@ -19,7 +19,7 @@ The diagram below reproduces Figure 1, "Structure of the writing model," from th
 ```mermaid
 flowchart TB
     subgraph task["TASK ENVIRONMENT"]
-        problem["THE RHETORICAL PROBLEM<br/>(topic, audience, reason for writing)<br/>Topic<br/>Audience<br/>Exigency"]
+        problem["THE RHETORICAL PROBLEM<br/>Topic<br/>Audience<br/>Exigency"]
         text["TEXT PRODUCED SO FAR"]
     end
 
