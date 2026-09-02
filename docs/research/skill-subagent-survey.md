@@ -209,7 +209,8 @@ A dual-target repository works best when shared skills stay platform-neutral and
      - Avoid Anthropic-only `compatibility`
      - Add OpenAI-only `agents/openai.yaml`
      - Keep Claude plugin metadata outside the skill directory
-     The shared layout maximizes reuse because the common denominator is `SKILL.md` + support folders.
+
+   The shared layout maximizes reuse because the common denominator is `SKILL.md` + support folders.
    - **Trade-off.** Claude project discovery wants `.claude/skills/`, Codex wants `.agents/skills/`; a bare `skills/` root needs plugin manifests, symlinks, or install scripts.
 
 2. **Dual plugin manifests over one `skills/` tree**
