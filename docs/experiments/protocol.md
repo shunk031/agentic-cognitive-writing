@@ -4,11 +4,23 @@ This protocol defines the paper experiment and future runner. It fixes compariso
 
 The runner must fill every `REQUIRED_AT_RUNTIME` value before a run. An open value is a pre-run stop condition.
 
-**Source snapshots.** The protocol uses benchmark, evaluation, platform, and plugin evidence from these sources:
+**Repository sources.** The protocol uses benchmark, evaluation, platform, and plugin evidence from these repository files. The runner records each source commit in the run manifest when it starts a run.
 
-- **Survey snapshots.** [Evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) / [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)
-- **Main plugin snapshots.** [README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/README.md) / [core skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/SKILL.md) / [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
-- **Experiments plugin snapshots.** [Fixed-order skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md) / [no-goal-network skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md)
+The repository includes these survey files:
+
+- [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) for benchmark and evaluation evidence
+- [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) for platform evidence
+
+The repository includes these main-plugin files:
+
+- [`plugin/README.md`](../../plugin/README.md)
+- [`plugin/skills/cognitive-writing/SKILL.md`](../../plugin/skills/cognitive-writing/SKILL.md)
+- [`plugin/skills/cognitive-writing/references/trace-jsonl-schema.md`](../../plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
+
+The repository includes these experiments-plugin files:
+
+- [`experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md`](../../experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md)
+- [`experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md`](../../experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md)
 
 ## Theory test and research questions
 
@@ -18,7 +30,7 @@ Flower and Hayes' *A Cognitive Process Theory of Writing* [^1] describes writing
 
 The protocol tests that account as an agent process rather than treating the account as a claim about human inner experience.
 
-The experiment has six experimental conditions, identified as A1 through A6. The experiment holds the assignment, supplied context, tool budget, output budget, and no-retrieval rule constant across those conditions. Only the process instructions and the resulting observable process differ. The benchmark and judge choices follow the [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+The experiment has six experimental conditions, identified as A1 through A6. The experiment holds the assignment, supplied context, tool budget, output budget, and no-retrieval rule constant across those conditions. Only the process instructions and the resulting observable process differ. The benchmark and judge choices follow [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
 
 The research questions (RQ) are:
 
@@ -45,7 +57,10 @@ The equal-information policy gives all six conditions identical input context. T
 
 **STORM-style condition A3 without retrieval.** Condition A3 uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish, following [STORM](https://github.com/stanford-oval/storm)[^2]. Citation generation is omitted under the equal-information policy. The pipeline separates planning from writing and omits retrieval and source gathering.
 
-**A3 trace and evidence handling.** The runner records the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The evaluation survey ([evaluation survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)) and platform survey ([platform survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)) describe the no-retrieval adaptation.
+**A3 trace and evidence handling.** The runner records the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The no-retrieval adaptation follows these repository sources:
+
+- [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) for evaluation evidence
+- [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) for platform evidence
 
 **Proposed-plugin condition A4.** Condition A4 uses the documented cognitive-writing plugin. The Monitor selects among the Planning, Translating, and Reviewing processes. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. The runner uses the plugin's append-only `.writing/trace/process.jsonl` and goal-network files and records the normal loop under the shared trace contract.
 
@@ -59,7 +74,7 @@ The plugin mapping implements the theory in *A Cognitive Process Theory of Writi
 
 The user owns rhetorical intent, factual authority, final wording, and publication.
 
-The Monitor owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/cognitive-writing/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/SKILL.md).
+The Monitor owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/cognitive-writing/SKILL.md`](../../plugin/skills/cognitive-writing/SKILL.md).
 
 ## Primary benchmarks and data gates
 
@@ -73,13 +88,13 @@ The primary set contains these benchmarks:
 - [HelloBench](https://github.com/Quehry/HelloBench) [^4] for long-text generation
 - [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5] for structured expert writing
 
-The evaluation survey supports this selection. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+The evaluation survey supports this selection. See [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
 
-**[WritingBench](https://github.com/X-PLUG/WritingBench)**[^3]. Use the pinned curated release. The evaluation survey describes real-world writing queries across varied domains with query-specific criteria. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner uses the complete pinned query manifest unless a documented data failure blocks an item. The runner keeps blocked items in the run accounting and records the final count and release commit or archive hash.
+**[WritingBench](https://github.com/X-PLUG/WritingBench)**[^3]. Use the pinned curated release. The evaluation survey describes real-world writing queries across varied domains with query-specific criteria. See [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md). The runner uses the complete pinned query manifest unless a documented data failure blocks an item. The runner keeps blocked items in the run accounting and records the final count and release commit or archive hash.
 
-**[HelloBench](https://github.com/Quehry/HelloBench)**[^4]. Use the pinned testing set. The evaluation survey describes long-text tasks with checklist-based evaluation support across subcategories. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner uses the complete pinned manifest, keeps blocked items in the run accounting, reports results by task and subcategory as well as in aggregate, and records the final count and release commit or archive hash.
+**[HelloBench](https://github.com/Quehry/HelloBench)**[^4]. Use the pinned testing set. The evaluation survey describes long-text tasks with checklist-based evaluation support across subcategories. See [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md). The runner uses the complete pinned manifest, keeps blocked items in the run accounting, reports results by task and subcategory as well as in aggregate, and records the final count and release commit or archive hash.
 
-**[DoLoMiTes](https://github.com/google-deepmind/dolomites)**[^5]. Use only the development subset after recomputing the split from the downloaded archive. The evaluation survey reports two source counts. The paper and archive report 820 dev and 1,037 test. The repository README reports 830 dev and 1,037 test. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner recomputes the split before the first scored run, saves the archive hash, split script version, and observed counts, and does not use the test portion for primary analysis. The expected paper and archive count is 820 dev and 1,037 test, but the archive-derived count is authoritative.
+**[DoLoMiTes](https://github.com/google-deepmind/dolomites)**[^5]. Use only the development subset after recomputing the split from the downloaded archive. The evaluation survey reports two source counts. The paper and archive report 820 dev and 1,037 test. The repository README reports 830 dev and 1,037 test. See [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md). The runner recomputes the split before the first scored run, saves the archive hash, split script version, and observed counts, and does not use the test portion for primary analysis. The expected paper and archive count is 820 dev and 1,037 test, but the archive-derived count is authoritative.
 
 The runner materializes one immutable prompt manifest per benchmark. The manifest is the only prompt input used by a run. Each row contains the stable prompt identifier (ID), benchmark name, source version, prompt text or a permitted source reference, requested output constraints, and hash.
 
@@ -90,7 +105,7 @@ The prompt sources serve these roles:
 - [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] supplies 15 argumentative prompt templates. Its human scores provide calibration anchors, not target labels for model outputs.
 - [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] supplies an external persuasive-writing anchor for rubric calibration and cross-prompt checks.
 
-The survey recommends both datasets for this role and cautions against treating student essay scores as directly comparable to the new model-quality scores. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+The survey recommends both datasets for this role and cautions against treating student essay scores as directly comparable to the new model-quality scores. See [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
 
 The runner must not train on or alter the student essays for this experiment. The runner may use these anchor materials after recording the permitted source reference and license status:
 
@@ -101,19 +116,24 @@ The runner must not train on or alter the student essays for this experiment. Th
 
 [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) is optional and supplementary. The benchmark may be added only after the benchmark prompt-file license and provenance are cleared. If included, the benchmark is a length-control and robustness axis, not a fourth primary benchmark.
 
-The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) [^8] supervised fine-tuning (SFT) data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) [^8] supervised fine-tuning (SFT) data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
 
-This protocol excludes [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench) and [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17] because their licensing or metadata remains unresolved. The unresolved resources must not enter a paper result, prompt manifest, or redistributed artifact without a new license review. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+This protocol excludes [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench) and [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17] because their licensing or metadata remains unresolved. The unresolved resources must not enter a paper result, prompt manifest, or redistributed artifact without a new license review. See [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
 
 ## Codex primary and Claude Code replication
 
 The experiment uses separate primary and replication inference with explicit judge-family separation.
 
-The plugin ships a Claude Code adapter through the [Claude Code manifest](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/.claude-plugin/plugin.json) and [Claude Code agents](https://github.com/shunk031/agentic-cognitive-writing/tree/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/agents/), and a Codex adapter through the [Codex manifest](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/.codex-plugin/plugin.json) and [Codex skill files](https://github.com/shunk031/agentic-cognitive-writing/tree/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/).
+The plugin ships its adapters through these repository files:
+
+- [`plugin/.claude-plugin/plugin.json`](../../plugin/.claude-plugin/plugin.json) for the Claude Code manifest
+- [`plugin/agents/`](../../plugin/agents/) for Claude Code agents
+- [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json) for the Codex manifest
+- [`plugin/skills/`](../../plugin/skills/) for Codex skill files
 
 ### Platform assignments
 
-The primary platform is OpenAI Codex headless, invoked with `codex exec`, with all six conditions running as skill or prompt variants over one pinned generator model from the Generative Pre-trained Transformer (GPT) family. The [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) describes the primary platform's skill and adapter design.
+The primary platform is OpenAI Codex headless, invoked with `codex exec`, with all six conditions running as skill or prompt variants over one pinned generator model from the Generative Pre-trained Transformer (GPT) family. The [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) describes the primary platform's skill and adapter design.
 
 The secondary replication runs the same six condition specifications under Claude Code headless with one pinned Claude-family generator model. A4 to A6 use the plugin, while A1 to A3 use the corresponding prompt variants.
 
@@ -234,7 +254,7 @@ The six conditions produce 15 unordered condition pairs. For every prompt and as
 - Randomize output order with a recorded seed.
 - Record ties as explicit outcomes.
 
-These controls follow the evaluation survey's [judge design](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) and its position and verbosity bias mitigations.
+These controls follow the evaluation survey's judge design in [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) and its position and verbosity bias mitigations.
 
 The pairwise JSON object follows this contract, and every record must include the fields shown below.
 
@@ -285,13 +305,13 @@ For `x > 0` and `y > 0`, use the LongWriter [^8] style formula from the [referen
 
 Length compliance and the length score never enter either quality estimand.
 
-The runner performs a judge and generator family overlap audit. If any judge also generated an output, it runs the self-preference test on a blinded subset with the same A/B and B/A controls. The test estimates whether that judge family changes its choices for its own outputs. If the planned non-overlap assignment holds, the manifest records that the test was not triggered by direct overlap and reports swapped-judge rank agreement as the corresponding sensitivity check. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) recommends this diagnostic when overlap cannot be avoided.
+The runner performs a judge and generator family overlap audit. If any judge also generated an output, it runs the self-preference test on a blinded subset with the same A/B and B/A controls. The test estimates whether that judge family changes its choices for its own outputs. If the planned non-overlap assignment holds, the manifest records that the test was not triggered by direct overlap and reports swapped-judge rank agreement as the corresponding sensitivity check. The [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) recommends this diagnostic when overlap cannot be avoided.
 
 The covariate sensitivity analysis fits the prespecified quality and pairwise models with benchmark, prompt length, output length, output-length gap, presentation order, judge family, and platform where applicable. The analysis compares the adjusted treatment estimates with the raw and length-stratified estimates. Freeze the model formula, covariate coding, missing-value rule, and interaction terms as `REQUIRED_AT_RUNTIME`. The runner must record those settings in the analysis manifest before inspecting results.
 
 ## Human validation of pairwise judgments
 
-Human validation samples 180 to 240 pairwise comparisons from the primary results. The study uses three recruited annotators per comparison. Sampling is stratified by benchmark, condition pair, prompt length, output-length gap, and automatic-decision margin. The human-validation design follows the scale and controls recommended in the [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+Human validation samples 180 to 240 pairwise comparisons from the primary results. The study uses three recruited annotators per comparison. Sampling is stratified by benchmark, condition pair, prompt length, output-length gap, and automatic-decision margin. The human-validation design follows the scale and controls recommended in the [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
 
 The presentation order is randomized per annotator. Annotators see the assignment and two anonymized outputs. They do not see condition names, platform names, judge names, traces, or automatic labels.
 
@@ -316,7 +336,7 @@ The trace analysis measures observable process behavior and relates it to produc
 
 ### Trace sources and interpretation
 
-**Trace sources.** For A4, A5, and A6, use the plugin's append-only `.writing/trace/process.jsonl` and its [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md). Use `.writing/goals.md` for A4 and A6 and the final draft for all three conditions. A5 leaves any existing `goals.md` untouched, so the analysis does not use that file for A5 goal measures.
+**Trace sources.** For A4, A5, and A6, the runner uses the plugin's append-only `.writing/trace/process.jsonl` and [`plugin/skills/cognitive-writing/references/trace-jsonl-schema.md`](../../plugin/skills/cognitive-writing/references/trace-jsonl-schema.md). The runner uses `.writing/goals.md` for A4 and A6 and the final draft for all three conditions. A5 leaves any existing `goals.md` untouched, so the analysis does not use that file for A5 goal measures.
 
 Each trace line is one JSON object. The documented event types are `process_switch`, `goal_created`, `goal_developed`, and `goal_regenerated`. Process-switch events include `from_process` and `to_process`. Goal events include `goal_id` and `parent_goal_id`. The plugin records responsible actor, decision, evidence, and uncertainty.
 
@@ -375,7 +395,7 @@ Report transition counts and rates per run.
 - Style changes
 - Meaning changes
 
-Record the edit operation and the evidence in the trace or draft diff. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) identifies IteraTeR as the process-level revision precedent.
+Record the edit operation and the evidence in the trace or draft diff. The [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) identifies IteraTeR as the process-level revision precedent.
 
 **A3 outline and QA structure.** Count these structures:
 
@@ -483,7 +503,7 @@ The protocol limits claims with checks for construct, comparison, judge, length,
 
 **Judge validity.** Pointwise and pairwise judges can show position, verbosity, self-preference, and model-family bias.
 
-The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) documents these risks. The protocol addresses them with:
+The [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) documents these risks. The protocol addresses them with:
 
 - Blind labels
 - Both presentation orders
@@ -495,7 +515,7 @@ The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/bl
 
 The listed controls cannot remove every bias.
 
-**Length confounding.** A longer answer may appear better to a judge even when it adds little value. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) describes this risk. The protocol records length, reports raw and length-stratified results, and keeps length compliance out of the quality score.
+**Length confounding.** A longer answer may appear better to a judge even when it adds little value. The [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) describes this risk. The protocol records length, reports raw and length-stratified results, and keeps length compliance out of the quality score.
 
 **Platform confounding.** Codex and Claude Code differ in several ways:
 
@@ -503,7 +523,7 @@ The listed controls cannot remove every bias.
 - Codex and Claude Code have different native delegation.
 - Codex and Claude Code use different model families.
 
-The [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) describes the adapter differences. The replication keeps the task and process mapping fixed while reporting platforms separately. A cross-platform result is a replication of the direction and process signature, not proof that the systems are identical.
+The [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) describes the adapter differences. The replication keeps the task and process mapping fixed while reporting platforms separately. A cross-platform result is a replication of the direction and process signature, not proof that the systems are identical.
 
 **Benchmark coverage.** The primary benchmarks cover different writing settings:
 
@@ -516,7 +536,7 @@ The primary benchmarks do not represent every genre or language. The argumentati
 - [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] provides argumentative prompts and human-score anchors, not complete coverage.
 - [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] provides a persuasive-writing anchor, not complete coverage.
 
-The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) supports this scope assessment.
+The [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) supports this scope assessment.
 
 **Trace completeness.** A crash, truncation, or adapter gap can hide a process event. The runner reports trace completeness and treats ambiguous or missing events as data-quality findings. The runner does not impute a goal or process switch.
 
@@ -527,13 +547,13 @@ The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/bl
 - [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench) licensing
 - [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17] licensing and metadata
 
-The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) provides the evidence for these gates. The analysis cannot use a source merely because a paper or repository mentions it.
+The [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) provides the evidence for these gates. The analysis cannot use a source merely because a paper or repository mentions it.
 
 ## Runtime gates before scoring
 
 The owner must close every gate below before the first scored run. The runner records the decision and the evidence in the run manifest.
 
-1. **DoLoMiTes split.** Download the released [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5] archive. Recompute dev and test counts. Save the script and archive hash. Cite the resulting count in the paper. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) reports expected paper/archive counts of 820 dev and 1,037 test. The archive result controls if it differs.
+1. **DoLoMiTes split.** Download the released [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5] archive. Recompute dev and test counts. Save the script and archive hash. Cite the resulting count in the paper. The [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) reports expected paper/archive counts of 820 dev and 1,037 test. The archive result controls if it differs.
 2. **Benchmark materialization.** Pin releases or commits for [WritingBench](https://github.com/X-PLUG/WritingBench) [^3] / [HelloBench](https://github.com/Quehry/HelloBench) [^4] / [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5]. Materialize prompt manifests and record final item counts.
 3. **LongBench-Write license.** Clear the [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) benchmark prompt-file license and provenance before any supplementary use. Otherwise keep the benchmark excluded.
 4. Record permitted use for **PERSUADE 2.0**[^6] ([15 prompts](https://github.com/scrosseye/persuade_corpus_2.0)) / **ICLE++**[^7] ([calibration material](https://github.com/samlee946/ICLE-PlusPlus)). Do not redistribute material outside its permission.
