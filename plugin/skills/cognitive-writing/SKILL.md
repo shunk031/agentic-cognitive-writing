@@ -68,7 +68,7 @@ At each turn, the Monitor should:
 
    Reviewing may mean:
    - evaluating
-   - revising.
+   - revising
 3. Before every process switch, append a `process_switch` event naming the responsible process or agent and recording the decision, evidence, and open uncertainty. Record a separate goal event whenever a goal is created, developed, or regenerated. Use the exact fields in the trace reference.
 4. Delegate the selected role using the platform instructions in Delegation briefs.
 5. Re-read the changed state and reconcile the agent's work with the active goal. Update the appropriate project state:
