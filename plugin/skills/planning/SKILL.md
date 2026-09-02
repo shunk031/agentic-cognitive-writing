@@ -42,7 +42,7 @@ Your work contains three embedded sub-processes, which you perform inside this p
    - the current draft
 
    Separate known material, plausible ideas, and unsupported claims.
-2. Organize: group ideas and identify relationships or missing categories. Propose an order or presentation pattern that serves the audience. This is meaning-making, not just rearranging bullets.
+2. Organize: group ideas and identify relationships or missing categories. Propose an order or presentation pattern that serves the audience. The organizing work makes meaning rather than merely rearranging bullets.
 3. Goal-setting: create or develop concrete sub-goals under the active parent goal. Regenerate a higher-level goal only when the exploration or draft provides evidence that the writer's purpose has changed.
 
 ## Boundaries

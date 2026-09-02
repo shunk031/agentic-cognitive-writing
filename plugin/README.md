@@ -1,6 +1,6 @@
 # Agentic cognitive writing
 
-After installation, open the writing project, the directory where you are writing. Use this assistant to plan, draft, and revise a document while it updates its plans and goals as the draft develops.
+The plugin supports Claude Code and OpenAI Codex. After installation, open the writing project, the directory where you are writing. Use this assistant to plan, draft, and revise a document while the assistant updates its plans and goals as the draft develops.
 
 For the theory and architecture behind this plugin, see the [project README](https://github.com/shunk031/agentic-cognitive-writing#readme).
 
@@ -107,14 +107,26 @@ Invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognit
 
 ## Skills you can use
 
-Use `cognitive-writing` for normal writing tasks. Choose a variant only when you need a comparison.
+Use `cognitive-writing` for normal writing tasks. The other entries support delegated roles or controlled comparisons.
 
-- `cognitive-writing` is the recommended skill. It coordinates the writing process from the current project state.
-- `planning` is an internal role skill for delegated planning work. Do not invoke it directly.
-- `translating` is an internal role skill for delegated drafting work. Do not invoke it directly.
-- `reviewing` is an internal role skill for delegated evaluation and revision. Do not invoke it directly.
-- `cognitive-writing-fixed-order` is an experiment-comparison variant that runs the processes in a fixed order. It is not the recommended default.
-- `cognitive-writing-no-goal-network` is an experiment-comparison variant that omits hierarchical goals. It is not the recommended default.
+### The skill you use
+
+- `cognitive-writing` coordinates planning, drafting, and revision for the current writing project.
+
+### Internal role skills
+
+The monitor, the part that decides what to work on next, invokes these roles during delegated work. Do not invoke them directly.
+
+- `planning` handles delegated idea generation and goal setting.
+- `translating` handles delegated drafting.
+- `reviewing` handles delegated evaluation and revision.
+
+### Experiment variants
+
+Use these skills only for controlled comparisons. See the [repository README](https://github.com/shunk031/agentic-cognitive-writing#readme) for context.
+
+- `cognitive-writing-fixed-order` runs Planning, Translating, and Reviewing in a fixed order.
+- `cognitive-writing-no-goal-network` uses the assignment as one implicit objective and leaves `goals.md` untouched.
 
 ## Files maintained in your writing project
 
@@ -122,7 +134,7 @@ The plugin creates or maintains this layout in the project where it is used:
 
 ```text
 .writing/
-├── assignment.md       # topic, audience, exigency, writer's goals, constraints
+├── assignment.md       # topic, audience, exigency (reason for writing), writer's goals, constraints
 ├── goals.md            # hierarchical goal network and history
 ├── draft.md            # growing text
 ├── memory/

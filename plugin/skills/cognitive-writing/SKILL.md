@@ -103,11 +103,8 @@ For every delegation, pass:
 
 Ask each agent to cite the files or draft passages that support its decisions. Use the platform path that matches the host:
 
-- Claude Code: delegate to the bundled role agent. It preloads the matching role skill.
-- Codex: spawn a native Codex subagent and instruct it to use the explicit role skill:
-  - `$planning`
-  - `$translating`
-  - `$reviewing`
+- Claude Code: delegate to the bundled role agent. The bundled role agent preloads the matching role skill.
+- Codex: spawn a native Codex subagent and instruct it to use the explicit role skill: `$planning`, `$translating`, or `$reviewing`.
 
 Do not write a script that spawns `codex exec` children. If native delegation is unavailable, perform the role as Monitor and record that fallback in the trace.
 

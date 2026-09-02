@@ -1,8 +1,8 @@
 # Agentic cognitive writing
 
-This project gives Claude Code and OpenAI Codex a writing assistant that plans, drafts, and revises recursively. It can revise its own plans and goals as the draft teaches it more, instead of generating text in one pass. It keeps the writing state as files in the writing project, the directory where you are writing, so you can inspect and continue the work.
+The plugin supports Claude Code and OpenAI Codex. This project gives you a writing assistant that plans, drafts, and revises recursively. The assistant can revise its own plans and goals as the draft teaches it more, instead of generating text in one pass. The plugin keeps the writing state as files in the writing project, the directory where you are writing, so you can inspect and continue the work.
 
-It implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor is the part that decides what to work on next. It coordinates three writing processes as the writer works:
+The project implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor is the part that decides what to work on next. The monitor coordinates three writing processes as the writer works:
 
 - Planning generates and organizes ideas and sets goals.
 - Translating turns selected meanings into words.
@@ -193,12 +193,12 @@ The monitor reads this state before each operation. You can inspect or edit it b
 
 ## Compare experiment variants
 
-The plugin includes two sibling skills for controlled comparisons. They reuse the shared role skills and Claude adapters. They keep the project state and trace rules. They are not recommended defaults.
+The plugin includes two sibling skills for controlled comparisons. The two variants reuse the shared role skills and Claude adapters. The variants keep the project state and trace rules. The variants are not recommended defaults.
 
 - [`cognitive-writing-fixed-order`](plugin/skills/cognitive-writing-fixed-order/SKILL.md) runs Planning, then Translating, then Reviewing on each pass. Generate and Evaluate can interrupt, but the Monitor logs the interruption and returns to the prescribed order.
 - [`cognitive-writing-no-goal-network`](plugin/skills/cognitive-writing-no-goal-network/SKILL.md) treats the assignment as one implicit objective, leaves `.writing/goals.md` untouched, and continues to trace process switches.
 
-Select a variant only when a comparison is needed. Their seed prompts live beside the skills in `plugin/skills/`.
+Select a variant only when a comparison is needed. The variants' seed prompts live beside the skills in `plugin/skills/`.
 
 ## Find code, research, and experiment material
 
@@ -211,7 +211,7 @@ The repository keeps the installable plugin separate from its research and exper
 - `tools/validate-skills.sh` runs the reproducible skill validators.
 - `plugin/skills/*/evals/evals.json` contains skill eval seeds.
 
-For offline use after installation, read [`plugin/README.md`](plugin/README.md). For research and experiment context, browse the linked branch directories above.
+For offline use after installation, read [`plugin/README.md`](plugin/README.md). For research and experiment context, browse the linked documents above.
 
 [^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387.
     - DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885)

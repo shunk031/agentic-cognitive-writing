@@ -21,7 +21,7 @@ Use this skill only when the user explicitly requests a controlled no-goal-netwo
 
 ## Read the state first
 
-Create missing files and directories without overwriting existing content. This variant never creates or edits `goals.md`. Treat these files as the user's externalized task environment and long-term memory:
+Create missing files and directories without overwriting existing content. The no-goal-network variant never creates or edits `goals.md`. Treat these files as the user's externalized task environment and long-term memory:
 
 ```text
 .writing/
@@ -55,7 +55,7 @@ Do not silently invent a rhetorical problem. Read the trace field contract below
 At each turn, the Monitor must:
 
 1. Compare the assignment's implicit objective with the current project state and open uncertainty. Choose Planning, Translating, or Reviewing from that comparison. Do not consult or construct a hierarchical goal network.
-2. Before every process switch, append a `process_switch` event naming the responsible process or agent, its decision, its evidence, and open uncertainty. This variant records no goal-created, goal-developed, or goal-regenerated events.
+2. Before every process switch, append a `process_switch` event naming the responsible process or agent, its decision, its evidence, and open uncertainty. The no-goal-network variant records no goal-created, goal-developed, or goal-regenerated events.
 3. Delegate the selected role using the Delegation section.
 4. For a Planning delegation, request problem representation, Generate, and Organize. Do not request Goal-setting or ask the agent to write `goals.md`. If the agent proposes a hierarchical goal, report it as an observation without changing the file.
 5. Re-read changed state and reconcile the role's work with the assignment. Update `draft.md` or `memory/` as appropriate. Keep user-authored text and uncertain claims visible.
@@ -82,7 +82,7 @@ For every delegation, pass:
 
 Ask the delegated agent to cite the files or draft passages that support its decisions. Use the platform path that matches the host:
 
-- Claude Code: delegate to the bundled planner, translator, or reviewer agent. It preloads the matching role skill.
+- Claude Code: delegate to the bundled planner, translator, or reviewer agent. The bundled agent preloads the matching role skill.
 - Codex: spawn a native Codex subagent and instruct it to use `$planning`, `$translating`, or `$reviewing`.
 
 Do not write a script that spawns `codex exec` children. If native delegation is unavailable, perform the role as Monitor and record that fallback in the trace.

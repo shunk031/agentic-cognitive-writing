@@ -8,7 +8,7 @@ Every event has these fields:
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `timestamp` | string | ISO 8601 timestamp with a timezone offset, recorded when the event is written. |
+| `timestamp` | string | International Organization for Standardization (ISO) 8601 timestamp with a timezone offset, recorded when the event is written. |
 | `event_type` | string | One of `process_switch`, `goal_created`, `goal_developed`, or `goal_regenerated`. |
 | `responsible_agent` | string | Actor responsible for the decision, such as `monitor`, `planner`, `translator`, `reviewer`, or `user`. |
 | `process` | string | Process that made or owns the decision, such as `planning`, `generate`, `organize`, `goal-setting`, `translating`, `reviewing`, `evaluate`, or `revise`. |
