@@ -4,6 +4,11 @@
 A hex token is exempt from the prose-SHA check only when it is part of a
 complete DOI matching ``10.<digits>/<hex>(.<hex>)*`` with a non-continuation
 boundary. A hyphen, slash, or alphanumeric continuation prevents the exemption.
+
+In-repository GitHub blob/tree links must use relative links when branch-qualified.
+A commit-pinned link is allowed only when its commit is reachable from
+``origin/main`` or the local ``main`` branch; unknown or unreachable pins are
+findings because squash-merging will break them.
 """
 
 from __future__ import annotations
@@ -193,6 +198,51 @@ def _is_in_repository_url(match: re.Match[str], repository_slug: str | None) -> 
     return candidate == repository_slug
 
 
+def _git_ref_exists(root: Path, ref: str) -> bool:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--verify", f"{ref}^{{commit}}"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return False
+    return result.returncode == 0
+
+
+def _default_branch_ref(root: Path) -> str | None:
+    for ref in ("origin/main", "main"):
+        if _git_ref_exists(root, ref):
+            return ref
+    return None
+
+
+def _is_reachable_from_default_branch(
+    root: Path, revision: str, default_branch_ref: str | None
+) -> bool:
+    if default_branch_ref is None:
+        return False
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "merge-base",
+                "--is-ancestor",
+                revision,
+                default_branch_ref,
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return False
+    return result.returncode == 0
+
+
 def _mask_excluded_regions(line: str) -> str:
     masked = list(line)
     spans = [
@@ -224,6 +274,7 @@ def _findings(
         if identifier.lower().startswith("cognitive-writing-")
     }
     findings: list[str] = []
+    default_branch_ref = _default_branch_ref(root)
 
     for path in _documentation_files(root):
         relative_path = path.relative_to(root).as_posix()
@@ -285,7 +336,15 @@ def _findings(
                 if not HEX_REVISION_PATTERN.fullmatch(revision):
                     findings.append(
                         f"{location}: branch-qualified in-repo GitHub URL uses '{revision}'; "
-                        "use a 7-40 character commit SHA"
+                        "use a relative link"
+                    )
+                elif not _is_reachable_from_default_branch(
+                    root, revision, default_branch_ref
+                ):
+                    findings.append(
+                        f"{location}: commit-pinned in-repo GitHub URL uses '{revision}' "
+                        "that is not reachable from the default branch; the pin will "
+                        "break after squash-merge, use a relative link"
                     )
 
     return findings

@@ -64,6 +64,61 @@ class CheckDocConsistencyTests(unittest.TestCase):
             check=True,
         )
 
+    def _initialize_committed_git_fixture(self) -> None:
+        subprocess.run(
+            ["git", "init", "--quiet", str(self.root)],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.root), "symbolic-ref", "HEAD", "refs/heads/main"],
+            check=True,
+        )
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(self.root),
+                "config",
+                "remote.origin.url",
+                f"https://github.com/{REPOSITORY_SLUG}.git",
+            ],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.root), "config", "user.name", "Checker Test"],
+            check=True,
+        )
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(self.root),
+                "config",
+                "user.email",
+                "checker-test@example.invalid",
+            ],
+            check=True,
+        )
+
+    def _commit_fixture(self, message: str) -> str:
+        subprocess.run(["git", "-C", str(self.root), "add", "."], check=True)
+        subprocess.run(
+            ["git", "-C", str(self.root), "commit", "--quiet", "-m", message],
+            check=True,
+        )
+        return subprocess.run(
+            ["git", "-C", str(self.root), "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+    def _checkout_new_branch(self, branch: str) -> None:
+        subprocess.run(
+            ["git", "-C", str(self.root), "checkout", "--quiet", "-b", branch],
+            check=True,
+        )
+
     def _run_checker(self) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [sys.executable, str(CHECKER), "--repo-root", str(self.root)],
@@ -227,7 +282,59 @@ class CheckDocConsistencyTests(unittest.TestCase):
         ]
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertEqual(len(findings), 2, result.stdout)
-        self.assertEqual(result.stdout.count("branch-qualified in-repo GitHub URL"), 2)
+        self.assertEqual(result.stdout.count("use a relative link"), 2)
+
+    def test_in_repo_commit_pinned_url_on_default_branch_is_clean(self) -> None:
+        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._write_readme("baseline\n")
+        self._initialize_committed_git_fixture()
+        baseline_commit = self._commit_fixture("baseline")
+        self._write_readme(
+            f"Pinned snapshot: https://github.com/{REPOSITORY_SLUG}/blob/"
+            f"{baseline_commit}/README.md\n"
+        )
+
+        result = self._run_checker()
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("commit-pinned in-repo GitHub URL", result.stdout)
+
+    def test_in_repo_commit_pinned_url_off_default_branch_is_flagged(self) -> None:
+        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._write_readme("baseline\n")
+        self._initialize_committed_git_fixture()
+        self._commit_fixture("baseline")
+        self._checkout_new_branch("feature")
+        (self.root / "feature.txt").write_text("feature\n", encoding="utf-8")
+        feature_commit = self._commit_fixture("feature")
+        self._write_readme(
+            f"Pinned snapshot: https://github.com/{REPOSITORY_SLUG}/tree/"
+            f"{feature_commit}/plugin\n"
+        )
+
+        result = self._run_checker()
+
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn(
+            "the pin will break after squash-merge, use a relative link",
+            result.stdout,
+        )
+
+    def test_unknown_in_repo_commit_pin_is_flagged(self) -> None:
+        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._add_origin_remote()
+        self._write_readme(
+            f"Unknown snapshot: https://github.com/{REPOSITORY_SLUG}/blob/"
+            "d0d6da7/README.md\n"
+        )
+
+        result = self._run_checker()
+
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn(
+            "the pin will break after squash-merge, use a relative link",
+            result.stdout,
+        )
 
     def test_no_remote_external_links_are_clean_with_notice(self) -> None:
         self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
@@ -244,7 +351,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         )
         self.assertNotIn("branch-qualified in-repo GitHub URL", result.stdout)
 
-    def test_seven_to_forty_hex_revisions_are_excluded(self) -> None:
+    def test_unknown_commit_pins_are_findings(self) -> None:
         self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
         self._add_origin_remote()
         revisions = ("abcdef0", "a" * 40, "ABCDEF0", "ABCDEF123456")
@@ -258,8 +365,8 @@ class CheckDocConsistencyTests(unittest.TestCase):
 
         result = self._run_checker()
 
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertNotIn("branch-qualified in-repo GitHub URL", result.stdout)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertEqual(result.stdout.count("commit-pinned in-repo GitHub URL"), 4)
 
     def test_standalone_prose_sha_is_flagged(self) -> None:
         self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
