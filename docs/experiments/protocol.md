@@ -19,7 +19,7 @@ This protocol tests whether the theory-based recursive process improves writing 
 
 It tests that account as an agent process rather than treating it as a claim about human inner experience.
 
-The experiment holds the assignment, supplied context, tool budget, output budget, and no-retrieval rule constant across arms.
+The experiment has six experimental arms. An arm is one comparison condition. The experiment holds the assignment, supplied context, tool budget, output budget, and no-retrieval rule constant across those arms.
 
 Only the process instructions and the resulting observable process differ. The benchmark and judge choices follow the [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
