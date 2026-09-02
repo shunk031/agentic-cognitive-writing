@@ -411,7 +411,7 @@ The analysis correlates process measures with per-prompt product quality. It rep
 
 ## Confirmatory and exploratory analysis
 
-The analysis keeps primary and replication inference separate and reserves confirmatory claims for the primary pointwise two-judge composite. The classification is defined in Theory test and research questions.
+The analysis keeps primary and replication inference separate and reserves confirmatory claims for the primary pointwise two-judge composite.
 
 The prompt is the paired unit. Each condition receives the same prompt, and platform replications use the same prompt manifest. Invalid or missing outputs remain in the run accounting. The report gives the failure count and reason by condition and benchmark. The report does not silently drop a condition that fails more often.
 
