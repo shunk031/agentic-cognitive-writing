@@ -2,7 +2,7 @@
 
 These files are for a Codex user of the agentic-cognitive-writing plugin who wants stronger per-role binding. Each TOML file points one custom agent at the plugin's matching role skill, tells it to read the `.writing/` state first, and preserves that skill's report format.
 
-They are optional. The plugin works without these files because its Monitor already delegates to native Codex subagents.
+The main skill's delegation instructions call native Codex subagents, so the plugin does not require these custom-agent files.
 
 ## Copy the files
 

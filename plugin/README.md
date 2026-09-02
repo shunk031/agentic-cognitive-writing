@@ -1,6 +1,6 @@
 # Agentic cognitive writing
 
-The plugin supports Claude Code and OpenAI Codex. After installation, open the writing project, the directory where you are writing. Use this assistant to plan, draft, and revise a document while the assistant updates its plans and goals as the draft develops.
+The installed `agentic-cognitive-writing` package adds the `cognitive-writing` skill. Invoke the skill in a writing project, the directory where the draft and process files live, to plan, draft, and revise a document while the skill updates its plans and goals as the draft develops. The package ships a Claude Code adapter in `.claude-plugin/plugin.json` and `agents/`, plus a Codex adapter in `.codex-plugin/plugin.json` and each skill's `agents/openai.yaml` metadata.
 
 For the theory and architecture behind this plugin, see the [project README](https://github.com/shunk031/agentic-cognitive-writing#readme).
 
@@ -25,8 +25,6 @@ If the repository is private, GitHub installs require access to it.
    ```
 
 ### GitHub install for Codex
-
-To bind each delegated role to a custom agent, see the [Codex custom-agent examples](examples/codex-agents/README.md).
 
 1. From the writing project, add the repository marketplace:
 
@@ -105,11 +103,13 @@ To bind each delegated role to a custom agent, see the [Codex custom-agent examp
 
 ## Start a writing task
 
-Invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognitive-writing` in Codex. You can also describe a writing task and let the host invoke the main skill.
+Invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognitive-writing` in Codex. The main skill also describes the implicit-invocation path for a writing task.
+
+To bind a delegated role to a custom Codex agent, use the [Codex custom-agent examples](examples/codex-agents/README.md).
 
 ## Skills you can use
 
-Use `cognitive-writing` for normal writing tasks. The other entries support delegated roles or controlled comparisons.
+Use `cognitive-writing` for normal writing tasks. The list below separates that entry from the internal role skills.
 
 ### The skill you use
 
@@ -123,12 +123,7 @@ The monitor, the part that decides what to work on next, invokes these roles dur
 - `translating` handles delegated drafting.
 - `reviewing` handles delegated evaluation and revision.
 
-### Experiment variants
-
-Use these skills only for controlled comparisons. See the [repository README](https://github.com/shunk031/agentic-cognitive-writing#readme) for context.
-
-- `cognitive-writing-fixed-order` runs Planning, Translating, and Reviewing in a fixed order.
-- `cognitive-writing-no-goal-network` uses the assignment as one implicit objective and leaves `goals.md` untouched.
+The separate [`cognitive-writing-experiments` package](https://github.com/shunk031/agentic-cognitive-writing) contains `cognitive-writing-fixed-order` and `cognitive-writing-no-goal-network` for controlled comparisons. See `experiments/plugin/` in the repository for context.
 
 ## Files maintained in your writing project
 
@@ -151,6 +146,6 @@ The monitor, the part that decides what to work on next, appends every process s
 
 The main skill also uses [`goals-format.md`](skills/cognitive-writing/references/goals-format.md) for the hierarchical notation in `goals.md`.
 
-The plugin does not depend on other files in this repository at runtime. It does create and maintain `.writing/` in the user's writing project. That directory belongs to the user and should not be committed unless the user chooses to share the writing process.
+The shipped package contains the manifests, skills, and agents it reads at runtime; no other file in this repository is required. The skill creates and maintains `.writing/` in the user's writing project. That directory belongs to the user and should not be committed unless the user chooses to share the writing process.
 
 For research and experiment context, see the [project repository](https://github.com/shunk031/agentic-cognitive-writing).

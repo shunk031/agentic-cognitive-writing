@@ -1,8 +1,8 @@
 # Agentic cognitive writing
 
-The plugin supports Claude Code and OpenAI Codex. This project gives you a writing assistant that plans, drafts, and revises recursively. The assistant can revise its own plans and goals as the draft teaches it more, instead of generating text in one pass. The plugin keeps the writing state as files in the writing project, the directory where you are writing, so you can inspect and continue the work.
+In a writing project, the directory where the draft and process files live, the main `cognitive-writing` skill plans, drafts, and revises text recursively. Recursive revision means the assistant can revise its own plans and goals as the draft teaches it more, instead of generating text in one pass. The repository ships a Claude Code adapter in `plugin/.claude-plugin/plugin.json` and `plugin/agents/`, plus a Codex adapter in `plugin/.codex-plugin/plugin.json` and each skill's `agents/openai.yaml` metadata.
 
-The project implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor is the part that decides what to work on next. The monitor coordinates three writing processes as the writer works:
+The plugin implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor decides what to work on next. The monitor coordinates three writing processes as the writer works:
 
 - Planning generates and organizes ideas and sets goals.
 - Translating turns selected meanings into words.
@@ -191,25 +191,26 @@ The main skill turns your task into a file-backed writing session that you can i
 
 The monitor reads this state before each operation. You can inspect or edit it between turns.
 
-## Compare experiment variants
+## Compare the separate experiment variants
 
-The plugin includes two sibling skills for controlled comparisons. The two variants reuse the shared role skills and Claude adapters. The variants keep the project state and trace rules. The variants are not recommended defaults.
+The [`cognitive-writing-experiments`](experiments/plugin/README.md) plugin packages two skills for controlled comparisons. Install the main `agentic-cognitive-writing` plugin first because both variants delegate to its shared role skills and Claude agents.
 
-- [`cognitive-writing-fixed-order`](plugin/skills/cognitive-writing-fixed-order/SKILL.md) runs Planning, then Translating, then Reviewing on each pass. Generate and Evaluate can interrupt, but the Monitor logs the interruption and returns to the prescribed order.
-- [`cognitive-writing-no-goal-network`](plugin/skills/cognitive-writing-no-goal-network/SKILL.md) treats the assignment as one implicit objective, leaves `.writing/goals.md` untouched, and continues to trace process switches.
+- [`cognitive-writing-fixed-order`](experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md) runs Planning, then Translating, then Reviewing on each pass. Generate and Evaluate can interrupt, but the Monitor logs the interruption and returns to the prescribed order.
+- [`cognitive-writing-no-goal-network`](experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md) treats the assignment as one implicit objective, leaves `.writing/goals.md` untouched, and continues to trace process switches.
 
-Select a variant only when a comparison is needed. The variants' seed prompts live beside the skills in `plugin/skills/`.
+Select a variant only when a comparison is needed. The variants' seed prompts live beside the skills in `experiments/plugin/skills/`.
 
 ## Find code, research, and experiment material
 
-The repository keeps the installable plugin separate from its research and experiment material.
+The repository keeps the main plugin, experiment package, research, and protocol in separate directories.
 
-- `plugin/` contains the installable Claude Code and Codex plugin, including shared skills and Claude adapters.
+- `plugin/` contains the installable main plugin, including shared skills and Claude adapters.
+- `experiments/plugin/` contains the installable controlled-comparison variants.
 - `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` define the local marketplace sources.
 - `docs/research/` contains the [skill and sub-agent survey](https://github.com/shunk031/agentic-cognitive-writing/blob/13d0ace703a301f0a4656034c2b03deddd30c665/docs/research/skill-subagent-survey.md).
 - `docs/experiments/` contains the [experiment protocol](https://github.com/shunk031/agentic-cognitive-writing/blob/fca4bdfd5d45a5345bcff6ed5f1ee9ea33353fe5/docs/experiments/protocol.md).
 - `tools/validate-skills.sh` runs the reproducible skill validators.
-- `plugin/skills/*/evals/evals.json` contains skill eval seeds.
+- `plugin/skills/cognitive-writing/evals/evals.json` and `experiments/plugin/skills/*/evals/evals.json` contain skill eval seeds.
 
 For offline use after installation, read [`plugin/README.md`](plugin/README.md). For research and experiment context, browse the linked documents above.
 
