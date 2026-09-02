@@ -14,7 +14,7 @@ Bereiter and Scardamalia's knowledge-telling versus knowledge-transforming disti
 
 STORM[^3] is a long-form Wikipedia-like writing system organized as a research-to-draft pipeline. The system discovers perspectives, asks simulated perspective-specific questions, and curates information. It then builds an outline, generates an article, and polishes the result. The released STORM implementation[^18] separates these stages into modules. The paper reports results on FreshWiki plus feedback from experienced Wikipedia editors. Those results characterize STORM's retrieval-grounded setup, so they do not establish the behavior of a retrieval-free comparator.
 
-The A3 comparator is explicitly STORM-style without retrieval under the equal-information policy. A3 receives only the supplied assignment and context, runs perspective discovery, simulated question answering, outlining, drafting, and polishing, and omits citation generation. Claims about STORM's retrieval-grounded results do not transfer to A3. The experiment uses A3 to compare stage organization under common information.
+The STORM-style baseline is explicitly retrieval-free under the equal-information policy. The baseline receives only the supplied assignment and context, runs perspective discovery, simulated question answering, outlining, drafting, and polishing, and omits citation generation. Claims about STORM's retrieval-grounded results do not transfer to this baseline. The experiment uses the baseline to compare stage organization under common information.
 
 ### Adjacent research and editor-integrated systems
 
@@ -24,7 +24,7 @@ PaperQA[^5] is a retrieval-augmented research agent for scientific-literature qu
 
 For the surveyed set that includes these adjacent systems, the supporting system survey (see Artifact availability) does not identify the specific theory-to-plugin operationalization of Flower and Hayes' Monitor[^1], goal network, and recursive process organization.
 
-The comparison concerns process control rather than the presence of multiple agents. For systems that implement research or planning, drafting, and polishing as named stages, the released STORM implementation[^3] provides a concrete pipeline reference. A2 and A3 make fixed stage organization explicit under the common-information policy. The experiment compares those baselines with a recursive Monitor that records process switches and goal changes.
+The comparison concerns process control rather than the presence of multiple agents. For systems that implement research or planning, drafting, and polishing as named stages, the released STORM implementation[^3] provides a concrete pipeline reference. The linear Pre-Write/Write/Re-Write baseline and the STORM-style baseline without retrieval make fixed stage organization explicit under the common-information policy. The experiment compares those baselines with a recursive Monitor that records process switches and goal changes.
 
 ## Human and artificial intelligence (AI) co-writing and writing-support tools
 
