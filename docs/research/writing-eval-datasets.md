@@ -1,6 +1,6 @@
 # Dataset and benchmark survey for large language model (LLM) long-form writing quality evaluation
 
-## 0. Summary
+## Summary
 
 Question: which benchmarks and judge setup should the 6-arm long-form writing experiment use?
 
@@ -30,7 +30,7 @@ Use PERSUADE 2.0 [^19] and International Corpus of Learner English++ (ICLE++) [^
 
 Keep LongBench-Write [^6] outside the primary benchmark set, and use it only as an optional length-control axis after the team clears benchmark prompt-file license and provenance. A length-control axis tests whether results hold across target output lengths.
 
-The planned comparison has 6 arms. The settled arm specification lives in `docs/experiments/protocol.md` on the protocol branch: https://github.com/shunk031/agentic-cognitive-writing/blob/docs/experiment-protocol/docs/experiments/protocol.md
+The planned comparison has 6 arms. The settled arm specification lives in `docs/experiments/protocol.md`.
 
 - A1: single-shot generation
 - A2: linear Pre-Write/Write/Re-Write
@@ -41,16 +41,11 @@ The planned comparison has 6 arms. The settled arm specification lives in `docs/
 
 All arms receive the same input context and no arm uses web access or retrieval.
 
-Use at least two judge families. Each prompt has:
-
-- 15 arm pairs
-- 30 A/B plus B/A judgments per judge
-
-Validate the automatic judges with about 180-240 human comparisons and 3 annotators per comparison.
+Use at least two judge families. Each prompt has 15 arm pairs and 30 A/B plus B/A judgments per judge. Validate the automatic judges with about 180-240 human comparisons and 3 annotators per comparison.
 
 Separate product quality from process analysis. Judges should see final outputs only. Analyze planning traces, revision behavior, goal references, and Monitor transitions separately.
 
-## 1. Long-form / creative / general writing benchmarks
+## Long-form, creative, and general writing benchmarks
 
 WritingBench [^3], HelloBench [^4], and DoLoMiTes [^7] are the primary benchmark choices; the other benchmarks are secondary, supplementary, or blocked by license/provenance risk.
 
@@ -66,7 +61,7 @@ WritingBench [^3], HelloBench [^4], and DoLoMiTes [^7] are the primary benchmark
 | LongGenBench [^9] | Evaluates long-form generation in long-context LMs.<br>Uses four scenarios.<br>Prompt lengths are 16K/32K.<br>Task examples include:<br>Urban planning<br>Diary entries<br>Menu-planning-like constrained long outputs<br>Sources:<br>Repo: https://github.com/mozhu621/LongGenBench <br>HF data: https://huggingface.co/datasets/mozhu/LongGenBench | Focus is long-context prompt instruction following, not only output length.<br>HF license is Creative Commons Attribution-NoDerivatives (CC BY-ND) 4.0.<br>Sources:<br>Repo: https://github.com/mozhu621/LongGenBench <br>HF data: https://huggingface.co/datasets/mozhu/LongGenBench | Repo has evaluation scripts under `Evalution`.<br>The detailed judge rubric needs further inspection before use.<br>Source: https://github.com/mozhu621/LongGenBench | HF card says CC-BY-ND-4.0.<br>Source: https://huggingface.co/datasets/mozhu/LongGenBench | We expect medium-low fit as a primary benchmark because it stresses long instruction adherence more than writing process quality. Use it only for supplementary robustness. |
 | LongJudgeBench [^10] | Not a generation benchmark.<br>It is a 2026 meta-evaluation benchmark for LLM-as-a-judge on long-form outputs.<br>It has:<br>6 datasets<br>Pointwise/pairwise/listwise protocols<br>4 prompt modes<br>8 judge models<br>Sources:<br>Repo: https://github.com/cjj826/LongJudgeBench | Documents range from avg 3,053 to 28,758 tokens depending on source dataset.<br>Source: https://github.com/cjj826/LongJudgeBench | Metrics include:<br>Pairwise accuracy (ACC)<br>Spearman<br>Kendall's tau<br>Prompt modes include:<br>vanilla<br>rubric<br>reference<br>rubric+reference<br>README reports that rubric/reference can help or hurt depending on task.<br>Sources:<br>Repo: https://github.com/cjj826/LongJudgeBench <br>Reliability script: https://github.com/cjj826/LongJudgeBench/blob/main/src/evaluation/compute_reliability.py | Repository LICENSE is MIT.<br>Source: https://github.com/cjj826/LongJudgeBench/blob/main/LICENSE | We expect this to work for judge validation only. It should not replace product-quality benchmarks, but it directly informs judge choice for long outputs. |
 
-## 2. Essay / argumentative writing datasets with quality annotations
+## Essay and argumentative writing datasets with quality annotations
 
 Use essay datasets as prompt sources and human-score references, not as primary generation benchmarks.
 
@@ -78,93 +73,51 @@ Use essay datasets as prompt sources and human-score references, not as primary 
 | ArgRewrite V.2 [^11] | Annotated argumentative revisions corpus.<br>Studies student interactions with a natural language processing (NLP)-based revision assistant.<br>Studies whether feedback forms encourage effective revisions.<br>Source: https://github.com/omidkashefi/ArgRewrite | Process-level precedent rather than prompt bank. Useful for defining revision intent categories and for evaluating whether our reviewer/monitor produces useful revision operations. |
 | Revision Quality Prediction [^12] | Predicts whether argumentative revisions are successful.<br>Uses annotated elementary essays and a college revision desirability corpus.<br>Code asks users to obtain data from PETAL Pittsburgh.<br>Sources:<br>Repo: https://github.com/ZhexiongLiu/Revision-Quality-Prediction <br>PETAL data page: https://petal-cs-pitt.github.io/data.html | Useful for process trace analysis. Compare agent reviewer actions against human notions of successful argument revision. This is not a primary product-quality benchmark. |
 
-## 3. LLM-as-judge methodology for writing quality
+## LLM-as-judge methodology for writing quality
 
 The judge design should pair rubric scoring with balanced pairwise comparisons, then validate the automatic judges against a small human sample.
 
-### 3.1 Biases and mitigations
+### Biases and mitigations
 
-- MT-Bench / Chatbot Arena [^13] paper identifies judge biases:
-  - Position bias
-  - Verbosity bias
-  - Self-enhancement bias
-  - Limited reasoning ability
+- MT-Bench / Chatbot Arena [^13] paper identifies position bias, verbosity bias, self-enhancement bias, and limited reasoning ability.
 
   GPT-4 matched human preferences above 80% agreement in their studied setup. The released setup included 80 MT-Bench questions, 3K expert votes, and 30K arena conversations.
 
   Sources:
   - Judge code: https://github.com/lm-sys/FastChat/tree/main/fastchat/llm_judge
-- The judge prompt file in the FastChat repository explicitly instructs the judge to avoid:
-  - Position bias
-  - Length influence
-  - Assistant-name bias
+- The judge prompt file in the FastChat repository explicitly instructs the judge to avoid position bias, length influence, and assistant-name bias.
 
   The implementation supports single grading, pairwise-baseline mode, and pairwise-all mode.
 
   Sources:
   - Judge prompts: https://github.com/lm-sys/FastChat/blob/main/fastchat/llm_judge/data/judge_prompts.jsonl
   - Judgment script: https://github.com/lm-sys/FastChat/blob/main/fastchat/llm_judge/gen_judgment.py
-- G-Eval [^14] uses:
-  - Task definition
-  - Criteria
-  - Chain-of-Thought (CoT)-generated evaluation steps
-  - Form-filling scores
+- G-Eval [^14] uses task definition, criteria, Chain-of-Thought (CoT)-generated evaluation steps, and form-filling scores.
 
   It reports stronger Spearman correlation with human judgments on summarization than prior metrics. It also warns that LLM evaluators can prefer LLM-generated summaries over human-written summaries. Sources:
   - Repo: https://github.com/nlpyang/geval
-- Prometheus 2 [^15] supports:
-  - Direct assessment
-  - Pairwise ranking with user-defined rubrics
+- Prometheus 2 [^15] supports direct assessment and pairwise ranking with user-defined rubrics.
 
   The paper/repo emphasize open evaluator transparency and report human/proprietary-judge correlation/agreement. Sources:
   - Repo: https://github.com/prometheus-eval/prometheus-eval
-- LongJudgeBench [^10] specifically studies long-form judge reliability. It reports:
-  - Task-specific length sensitivity
-  - Rubric/reference modes can help on some datasets and hurt on others
-  - No single judge is universally reliable
+- LongJudgeBench [^10] specifically studies long-form judge reliability. It reports task-specific length sensitivity, mixed effects from rubric/reference modes, and no universally reliable judge.
 
   Sources:
   - Repo: https://github.com/cjj826/LongJudgeBench
 
-### 3.2 Recommended judge design for our experiment
+### Recommended judge design for our experiment
 
 Recommended protocol:
 
-1. Product-quality pointwise score. For each output, ask two judge families to score independently on 5 dimensions:
-   - Instruction Fulfillment
-   - Organization/Global Coherence
-   - Content Adequacy/Depth
-   - Style/Voice/Audience Fit
-   - Factuality/Constraint Fidelity
-   Use a 1-5 anchored rubric with JSON output and a short evidence quote/rationale.
-2. Pairwise preference score. For every prompt, compare the 6 arms in a balanced tournament:
-   - 15 unordered arm pairs
-   - A/B and B/A orders
-   - 30 pairwise judgments per prompt per judge
-   Count ties explicitly. This controls position bias and reduces scale compression.
+1. Product-quality pointwise score. For each output, ask two judge families to score independently on Instruction Fulfillment, Organization/Global Coherence, Content Adequacy/Depth, Style/Voice/Audience Fit, and Factuality/Constraint Fidelity. Use a 1-5 anchored rubric with JSON output and a short evidence quote/rationale.
+2. Pairwise preference score. For every prompt, compare the 6 arms in a balanced tournament: 15 unordered arm pairs, A/B and B/A orders, and 30 pairwise judgments per prompt per judge. Count ties explicitly. This controls position bias and reduces scale compression.
 3. Blinding and presentation controls. Hide condition names from judges and human annotators. Use neutral labels such as Output A/B or randomized anonymous identifiers (IDs). The human annotation user interface (UI) should randomize output order per comparison and hide benchmark/source names when feasible.
-4. Judge/generator separation. Pin exact run details:
-   - Judge model versions
-   - Prompts
-   - Decoding parameters
-   - Seeds
-   Prefer judge models that are not used as generators. If overlap is unavoidable, run an explicit self-preference test by comparing judge-family outputs against non-overlapping outputs under swapped order.
+4. Judge/generator separation. Pin the exact run details: judge model versions, prompts, decoding parameters, and seeds. Prefer judge models that are not used as generators. If overlap is unavoidable, run an explicit self-preference test by comparing judge-family outputs against non-overlapping outputs under swapped order.
 5. Length control. Record word/token length. Report quality both raw and length-stratified. Add length-matched sensitivity analysis where possible. Otherwise include output length as a covariate in regression or Bradley-Terry [^18] analysis, a paired-comparison model that estimates relative strength from wins and losses. Do not include length compliance in the same score as literary/content quality unless the benchmark requires it.
 6. Multi-judge aggregation. Use one strong proprietary judge and one open evaluator or smaller verifier. If budgets allow, add a third judge specialized in writing. Aggregate pointwise scores by z-scored dimension average, meaning each dimension is standardized before averaging. Aggregate pairwise scores by majority vote or Bradley-Terry analysis.
-7. Human validation. Sample 180-240 pairwise comparisons. Stratify the sample by:
-   - Benchmark
-   - Arm pair
-   - Prompt length
-   - Output length gap
-   - Close-vs-clear automatic decisions
-   With 6 arms, this gives 12-16 human-checked examples for each of the 15 arm pairs. Use 3 annotators per comparison. Report:
-   - Human-human agreement
-   - Judge-human agreement
-   - Disagreement analysis
+7. Human validation. Sample 180-240 pairwise comparisons. Stratify the sample by benchmark, arm pair, prompt length, output length gap, and close-vs-clear automatic decisions. With 6 arms, this gives 12-16 human-checked examples for each of the 15 arm pairs. Use 3 annotators per comparison. Report human-human agreement, judge-human agreement, and disagreement analysis. This mirrors the 200-pair DoLoMiTes [^7] validation scale and the MT-Bench [^13] controlled preference protocol without making human annotation the whole experiment.
 
-   This mirrors the 200-pair DoLoMiTes [^7] validation scale and the MT-Bench [^13] controlled preference protocol without making human annotation the whole experiment.
-
-## 4. Process-level evaluation precedents
+## Process-level evaluation precedents
 
 Product-only evaluation misses the central claim of a Flower & Hayes [^1]-inspired writing agent. Evaluate the process trace separately from final product quality.
 
@@ -179,7 +132,7 @@ Product-only evaluation misses the central claim of a Flower & Hayes [^1]-inspir
 
 Process fairness policy: all 6 arms receive identical input context, tools, and output budget.
 
-The protocol makes the equality rule and no-retrieval rule binding for all 6 arms: https://github.com/shunk031/agentic-cognitive-writing/blob/docs/experiment-protocol/docs/experiments/protocol.md
+The protocol in `docs/experiments/protocol.md` makes the equality rule and no-retrieval rule binding for all 6 arms.
 
 No arm uses web access or retrieval. The A3 STORM [^2]-style arm follows the protocol's five stages:
 
@@ -194,10 +147,7 @@ It is not the full retrieval-based STORM system. Retrieval, evidence gathering, 
 For the 6-arm experiment, the process metrics should follow the protocol-backed trace contracts:
 
 - Planning trace. Count goals and rate their specificity. Check whether goals cover audience, purpose, content, organization, and style. Check whether later steps refer back to goals.
-- Translation trace. Check whether drafts:
-  - Ground claims in plan items
-  - Expand sections in a coherent order
-  - Preserve constraints
+- Translation trace. Check whether drafts ground claims in plan items, expand sections in a coherent order, and preserve constraints.
 - Review trace. Count detected issues and issue types. Map revision intent to clarity, fluency, coherence, style, and meaning change. Check whether fixes improve final rubric scores.
 - Monitor trace. Measure process order entropy, meaning how varied the sequence of planning, translating, and reviewing steps is. Check whether transitions respond to detected problems rather than a fixed sequence.
 - A3 STORM [^2]-style arm trace. Record completion of each protocol stage:
@@ -211,11 +161,11 @@ For the 6-arm experiment, the process metrics should follow the protocol-backed 
 - A6 `cognitive-writing-fixed-order` trace. Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Permit Generate and Evaluate interruptions, then return to the prescribed order.
 - Hypotheses to test. The no-goal-network arm should show fewer explicit goal references. The fixed-process-order arm should show lower adaptive transitions even if final quality is similar.
 
-## 5. Final recommendation
+## Final recommendation
 
 Use WritingBench [^3], HelloBench [^4], and DoLoMiTes [^7] as the primary benchmark set, with PERSUADE 2.0 [^19] and ICLE++ [^5] as calibration datasets.
 
-### 5.1 Primary benchmark shortlist
+### Primary benchmark shortlist
 
 1. WritingBench [^3]
    - Why: closest match to general-purpose writing among the surveyed benchmarks because it has broad domains, explicit criteria, and current leaderboard/evaluation scripts
@@ -237,7 +187,7 @@ Optional supplementary axis: LongBench-Write [^6]
 - Use only for length-control analysis after clearing benchmark prompt-file license/provenance.
 - Do not count it as a primary benchmark.
 
-### 5.2 Prompt-source / human-anchor datasets
+### Prompt-source and human-anchor datasets
 
 1. PERSUADE 2.0 [^19]
    - Use 15 prompts as argumentative writing prompt templates.
@@ -248,38 +198,18 @@ Optional supplementary axis: LongBench-Write [^6]
    - Use as external validation of essay-trait rubrics and cross-prompt generalization
    - Good for argumentative/persuasive writing traits, weaker for creative/general writing
 
-### 5.3 Judge setup
+### Judge setup
 
 - Run pointwise rubric with JSON schema on all outputs.
 - Run pairwise A/B and B/A on all 15 condition pairs for the primary subset: 30 judgments per prompt per judge.
 - Blind condition labels and randomize presentation order for human annotators.
 - Use at least two judges: a strong frontier judge for main numbers and a Prometheus 2 [^15]-style open evaluator for reproducibility/sensitivity.
-- Pin exact run details:
-  - Model versions
-  - Prompts
-  - Decoding parameters
-  - Seeds
+- Pin the exact run details: model versions, prompts, decoding parameters, and seeds.
 - Avoid judge/generator overlap where possible; otherwise run a self-preference diagnostic.
-- Automatic evaluation reports should include:
-  - Per-dimension score
-  - Aggregate score
-  - Pairwise win rate
-  - Length-normalized or covariate-adjusted score
-  - Judge agreement
-- Human validation should use:
-  - 180-240 pairwise comparisons
-  - 3 annotators each
-- Stratify human validation by:
-  - Benchmark
-  - Arm pair
-  - Automatic-decision margin
-  - Output-length gap
-- Human validation reports should include:
-  - Krippendorff's alpha/Fleiss' kappa
-  - Raw agreement
-  - Judge-human agreement
+- Automatic evaluation reports should include per-dimension scores, the aggregate score, pairwise win rate, a length-normalized or covariate-adjusted score, and judge agreement.
+- Human validation should use 180-240 pairwise comparisons with 3 annotators each. Stratify by benchmark, arm pair, automatic-decision margin, and output-length gap. Report Krippendorff's alpha, Fleiss' kappa, raw agreement, and judge-human agreement.
 
-## 6. Inaccessible / unresolved items
+## Inaccessible and unresolved items
 
 The main unresolved items are benchmark-file licensing, source-count conflicts, and raw-path reliability.
 
