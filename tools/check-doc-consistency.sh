@@ -6,6 +6,7 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
 
@@ -83,6 +84,30 @@ def _repository_slug(root: Path) -> str | None:
     return f"{match.group('owner')}/{match.group('repo').removesuffix('.git')}".lower()
 
 
+def _git_repository_root(start: Path) -> Path | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(start), "rev-parse", "--show-toplevel"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return None
+
+    discovered = result.stdout.strip()
+    if result.returncode != 0 or not discovered:
+        return None
+    return Path(discovered).resolve()
+
+
+def _repository_root(cli_root: Path | None) -> Path:
+    source_root = Path(__file__).resolve().parents[1]
+    if cli_root is not None:
+        return cli_root.expanduser().resolve()
+    return _git_repository_root(source_root) or source_root
+
+
 def _documentation_files(root: Path) -> list[Path]:
     files: set[Path] = set()
     for relative in ("README.md", "AGENTS.md"):
@@ -154,8 +179,15 @@ def _findings(
     return findings
 
 
-def main() -> int:
-    root = Path(__file__).resolve().parent.parent
+def main(argv: list[str] | None = None) -> int:
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--repo-root",
+        type=Path,
+        help="repository root to scan (defaults to git discovery)",
+    )
+    arguments = parser.parse_args(argv)
+    root = _repository_root(arguments.repo_root)
     plugin_directory = root / "plugin"
     if not plugin_directory.is_dir():
         print("plugin/: missing; skipping documentation consistency checks")
