@@ -116,7 +116,7 @@ The unresolved resources must not enter a paper result, prompt manifest, or redi
 ## Codex primary and Claude Code replication
 
 Codex is the primary platform, and Claude Code provides a separate replication with explicit judge-family separation.
-The plugin supports Claude Code and OpenAI Codex.
+The plugin ships a Claude Code adapter through [`plugin/.claude-plugin/plugin.json`](../../plugin/.claude-plugin/plugin.json) and [`plugin/agents/`](../../plugin/agents/). It ships a Codex adapter through [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json) and the `agents/openai.yaml` files under [`plugin/skills/`](../../plugin/skills/).
 
 ### Platform assignments
 
