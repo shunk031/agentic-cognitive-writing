@@ -2,14 +2,23 @@
 
 ## Purpose and reading guide
 
-This survey documents the platform formats and writing-system prior art behind the agentic-cognitive-writing plugin. It derives the design that the plugin implements: shared skills, small Claude Code and OpenAI Codex adapter files, four writing-process roles, and observable process state.
+This survey documents the platform formats and writing-system prior art behind the agentic-cognitive-writing plugin. It derives the design that the shipped plugin implements: shared skills, small Claude Code and OpenAI Codex adapter files, four writing-process roles, and observable process state. Shipped plugin source: https://github.com/shunk031/agentic-cognitive-writing/blob/b119e32738dae1768d78d8fe25a172c7a851d6c8/plugin/README.md
 
-The shared skills are the files both platforms can read without translation:
+A shared skill uses files both platforms can read without translation:
 
 - `SKILL.md`
 - `scripts/`
 - `references/`
 - `assets/`
+
+The shipped plugin provides six skills:
+
+- `cognitive-writing`: main monitor skill
+- `planning`: internal role skill
+- `translating`: internal role skill
+- `reviewing`: internal role skill
+- `cognitive-writing-fixed-order`: experiment-comparison variant
+- `cognitive-writing-no-goal-network`: experiment-comparison variant
 
 The adapter files hold each platform's packaging and agent metadata:
 
@@ -23,7 +32,7 @@ The shipped plugin uses four roles derived from Flower & Hayes' Cognitive Proces
 - `translator`
 - `reviewer`
 
-A process ledger is a structured record of phase changes, decisions, evidence, and unresolved questions. The design uses it to make writing-process changes measurable, not just final text quality.
+The shipped process trace records phase changes, decisions, evidence, and unresolved questions. The design uses that trace to make writing-process changes measurable, not just final text quality.
 
 The sections below support these choices with official platform documentation, direct source links, and published writing-research citations.
 
@@ -516,7 +525,7 @@ The sections below support these choices with official platform documentation, d
      - Claude `agents/*.md` wrappers
    - Trade-off: generated files must be checked or regenerated in continuous integration (CI); otherwise the two platforms drift.
 
-**Recommended single-repo layout**
+**Shipped single-repo layout**
 
 ```text
 agentic-cognitive-writing-process/
@@ -525,13 +534,21 @@ agentic-cognitive-writing-process/
 |-- .codex-plugin/
 |   `-- plugin.json
 |-- skills/
-|   |-- cognitive-writing-orchestrator/
+|   |-- cognitive-writing/
 |   |   |-- SKILL.md
 |   |   |-- agents/
 |   |   |   `-- openai.yaml
 |   |   |-- references/
 |   |   `-- scripts/
-|   `-- revision-evaluator/
+|   |-- planning/
+|   |   `-- SKILL.md
+|   |-- translating/
+|   |   `-- SKILL.md
+|   |-- reviewing/
+|   |   `-- SKILL.md
+|   |-- cognitive-writing-fixed-order/
+|   |   `-- SKILL.md
+|   `-- cognitive-writing-no-goal-network/
 |       `-- SKILL.md
 |-- agents/
 |   |-- monitor.md
@@ -680,19 +697,23 @@ agentic-cognitive-writing-process/
    - Avoid: one giant `SKILL.md`; it will violate progressive disclosure and make process ablations hard.
 
 2. **Shared skills, platform-specific wrappers**
-   - The derived design puts canonical instructions in:
-     - `skills/cognitive-writing-orchestrator/SKILL.md`
-     - `skills/knowledge-transforming-revision/SKILL.md`
-     - `skills/writing-eval-harness/SKILL.md`
-     Add these wrapper files:
+   - The shipped plugin puts canonical instructions in six skills:
+     - `skills/cognitive-writing/SKILL.md`: main monitor skill
+     - `skills/planning/SKILL.md`: internal role skill
+     - `skills/translating/SKILL.md`: internal role skill
+     - `skills/reviewing/SKILL.md`: internal role skill
+     - `skills/cognitive-writing-fixed-order/SKILL.md`: experiment-comparison variant
+     - `skills/cognitive-writing-no-goal-network/SKILL.md`: experiment-comparison variant
+   - The adapter layer adds these wrapper files:
      - `.claude-plugin/plugin.json`
      - `.codex-plugin/plugin.json`
      - OpenAI `agents/openai.yaml`
    - Reuse: common Agent Skill layout accepted by both platforms.
    - Avoid: Anthropic-only `compatibility` field in shared `SKILL.md`, because OpenAI validator does not allow it.
 
-3. **Stateful process ledger**
-   - The plugin design uses a structured writing ledger in `references/ledger-schema.md` or a script-generated JSON file to record:
+3. **Stateful process trace**
+   - The shipped monitor appends JSON Lines (JSONL) entries to `.writing/trace/process.jsonl` in the user's writing project. The schema lives at `plugin/skills/cognitive-writing/references/trace-jsonl-schema.md`: https://github.com/shunk031/agentic-cognitive-writing/blob/b119e32738dae1768d78d8fe25a172c7a851d6c8/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md
+   - The trace records:
      - Rhetorical problem
      - Audience
      - Goals
@@ -773,8 +794,8 @@ agentic-cognitive-writing-process/
 
 **Implementation status and remaining options**
 
-- The shipped implementation starts with a minimal dual-manifest plugin that contains three shared skills and four Claude-native agents. Codex support relies on skills that instruct native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
-- The paper prototype design privileges observability over maximal automation. Every phase transition writes a ledger entry with:
+- The shipped implementation starts with a minimal dual-manifest plugin that contains six shared skills and four Claude-native agents. Codex support relies on skills that instruct native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
+- The paper prototype design privileges observability over maximal automation. Every phase transition writes a trace entry with:
   - Responsible agent
   - Decision
   - Evidence
