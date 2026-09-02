@@ -4,8 +4,8 @@
 
 The survey's design answer is a two-package architecture. The main plugin ships two platform adapters:
 
-- Claude Code adapter: [`plugin/.claude-plugin/plugin.json`](../../plugin/.claude-plugin/plugin.json) and [`plugin/agents/`](../../plugin/agents/)
-- Codex adapter: [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json) and [`plugin/skills/planning/agents/openai.yaml`](../../plugin/skills/planning/agents/openai.yaml)
+- Claude Code adapter: [`plugin/.claude-plugin/`](../../plugin/.claude-plugin/), [`plugin/.claude-plugin/plugin.json`](../../plugin/.claude-plugin/plugin.json), and [`plugin/agents/`](../../plugin/agents/)
+- Codex adapter: [`plugin/.codex-plugin/`](../../plugin/.codex-plugin/), [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json), and [`plugin/skills/planning/agents/openai.yaml`](../../plugin/skills/planning/agents/openai.yaml)
 
 The separate experiment package ships its own manifests under [`experiments/plugin/`](../../experiments/plugin/) and requires the main plugin.
 
@@ -23,9 +23,7 @@ The experiment package keeps controlled comparison variants outside the main plu
 - `cognitive-writing-fixed-order`: fixed-process-order comparison
 - `cognitive-writing-no-goal-network`: no-goal-network comparison
 
-The adapter files hold each platform's packaging and agent metadata. Claude Code uses [`plugin/.claude-plugin/`](../../plugin/.claude-plugin/) and [`plugin/agents/`](../../plugin/agents/). OpenAI Codex uses [`plugin/.codex-plugin/`](../../plugin/.codex-plugin/) and [`plugin/skills/planning/agents/openai.yaml`](../../plugin/skills/planning/agents/openai.yaml).
-
-The shipped process trace makes writing-process changes measurable, not just final text quality. The trace records phase changes, decisions, evidence, and unresolved questions. The sections below support these choices with official platform documentation, direct source links, and published writing-research citations.
+The shipped process trace makes writing-process changes measurable, not just final text quality. The trace records phase changes, decisions, evidence, and unresolved questions.
 
 ## Anthropic skill format and skill-creator
 
@@ -390,6 +388,7 @@ The survey findings translate into the shipped architecture and the remaining ex
      - [`experiments/plugin/.claude-plugin/plugin.json`](../../experiments/plugin/.claude-plugin/plugin.json)
      - [`experiments/plugin/.codex-plugin/plugin.json`](../../experiments/plugin/.codex-plugin/plugin.json)
    - The skill-local OpenAI adapter metadata remains in [`plugin/skills/planning/agents/openai.yaml`](../../plugin/skills/planning/agents/openai.yaml).
+   - A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
    - Reuse the common Agent Skill layout documented above for both platform skill systems.
    - Avoid the Anthropic-only `compatibility` field in shared `SKILL.md`, because OpenAI validator does not allow it.
 
@@ -472,11 +471,6 @@ The survey findings translate into the shipped architecture and the remaining ex
      - Platform-specific failure modes
      - Validation pass rate (`claude plugin validate`, OpenAI skill validator)
      - Drift between generated wrappers
-
-**Implementation status and remaining options**
-
-- The shipped main plugin has two manifests and four shared skills. The main skill owns the monitor role. Three Claude-native agent adapters cover the planner, translator, and reviewer roles. The separate experiment package contains the two comparison variants and its own manifests under [`experiments/plugin/`](../../experiments/plugin/). The Codex adapters consist of [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json), [`experiments/plugin/.codex-plugin/plugin.json`](../../experiments/plugin/.codex-plugin/plugin.json), and [`plugin/skills/planning/agents/openai.yaml`](../../plugin/skills/planning/agents/openai.yaml). The skill instructions describe native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
-- The paper prototype design prioritizes observable process state over full automation. Every phase transition writes a trace entry with responsible agent, decision, evidence, and open uncertainty. The trace makes the Flower & Hayes [^1] mapping testable instead of metaphorical.
 
 [^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication, 32(4), 1981. DOI: https://doi.org/10.58680/ccc198115885
 [^2]: Carl Bereiter and Marlene Scardamalia. The Psychology of Written Composition. Routledge, 1987. DOI/reprint: https://doi.org/10.4324/9780203812310
