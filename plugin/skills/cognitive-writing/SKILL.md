@@ -34,13 +34,13 @@ The Monitor is the main agent running this skill. The Monitor chooses the next w
    ```
 
 2. Read these before choosing an operation:
-   - `assignment.md`
-   - `goals.md`
-   - `draft.md`
-   - relevant files in `memory/`
-   - the latest trace entries
+   - `.writing/assignment.md`
+   - `.writing/goals.md`
+   - `.writing/draft.md`
+   - relevant files in `.writing/memory/`
+   - the latest entries in `.writing/trace/process.jsonl`
 
-   If `assignment.md` is missing or underspecified, ask the user for:
+   If `.writing/assignment.md` is missing or underspecified, ask the user for:
    - topic
    - audience
    - exigency
@@ -89,7 +89,9 @@ At each turn, the Monitor should:
 
 ## Non-linear control rules
 
-The writing processes form a recursive loop, not a pipeline. A process may call another process to solve a local problem, and that process may call the whole loop again. Generate and Evaluate may interrupt any process when new information or a conflict in the growing text demands it. Log the interruption as a process switch, then resume the interrupted parent goal after the sub-goal resolves.
+The writing processes form a recursive loop, not a pipeline. A process may call another process to solve a local problem, and that process may call the whole loop again.
+
+Generate and Evaluate may interrupt any process when new information or a conflict in the growing text demands it. Log the interruption as a process switch, then resume the interrupted parent goal after the sub-goal resolves.
 
 When new writing changes what the author understands, use Goal-setting to develop or regenerate the goal network. A regenerated goal is not a failure of the earlier plan; it is part of learning through composing. Keep both the prior record and the new rationale in `goals.md` and the trace.
 

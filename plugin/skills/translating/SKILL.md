@@ -21,7 +21,7 @@ Read these before editing:
 - relevant files in `.writing/memory/`
 - recent trace entries
 
-Translate the selected ideas into linear written language without treating the current wording as the author's final meaning. Keep the active goal visible while drafting, and use the existing text as a constraint without letting a fluent sentence override the rhetorical purpose.
+Translate the selected ideas into prose while treating the current wording as provisional. Keep the active goal visible while drafting. Preserve a useful existing sentence when it serves that goal; do not let fluent wording override the rhetorical purpose.
 
 ## Drafting rules
 

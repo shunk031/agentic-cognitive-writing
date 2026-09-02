@@ -47,7 +47,7 @@ Your work contains three embedded sub-processes, which you perform inside this p
 
 ## Boundaries
 
-Keep goal updates, trace evidence, and user intent within their assigned owners. Update `.writing/goals.md` when the delegated task creates, develops, or regenerates a goal. Preserve stable goal identifiers (IDs) and add the reason to the history. The Monitor owns process trace entries, so return the evidence and uncertainty it must record. Do not silently change the assignment, factual claims, or the user's top-level intent.
+The Planning role updates goals, the Monitor owns trace evidence, and the user owns intent. Update `.writing/goals.md` when the delegated task creates, develops, or regenerates a goal. Preserve stable goal identifiers (IDs) and add the reason to the history. Return the evidence and uncertainty that the Monitor must record. Do not silently change the assignment, factual claims, or the user's top-level intent.
 
 ## Report format
 

@@ -75,7 +75,9 @@ At each turn, the Monitor must:
 
 ## Interruptions
 
-Generate and Evaluate may interrupt any process when new information or a claim conflict in the growing text demands it. Log each interruption as a `process_switch`, perform the interrupt through the relevant shared role, return to the process that initiated it, and then continue the Monitor's process choice. Do not create a goal to track the interrupt. When an interrupt resolves, return to the process that initiated it rather than silently changing the assignment.
+Generate and Evaluate may interrupt any process when new information or a claim conflict in the growing text demands it. Log each interruption as a `process_switch`, perform the interrupt through the relevant shared role, return to the process that initiated it, and then continue the Monitor's process choice.
+
+Do not create a goal to track the interrupt. When an interrupt resolves, return to the process that initiated it rather than silently changing the assignment.
 
 ## Delegation
 

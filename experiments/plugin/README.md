@@ -1,8 +1,8 @@
 # Cognitive writing experiments
 
-The package gives an experimenter two skills for comparing writing-process choices: one fixes the process order, and one removes the hierarchical goal network.
+The package gives an experimenter two skills for comparing writing-process choices: `cognitive-writing-fixed-order` fixes the process order, and `cognitive-writing-no-goal-network` removes the hierarchical goal network.
 
-The variants write to the `.writing/` directory in the writing project and keep the main package's role delegation contract.
+The variants write to the project's `.writing/` directory and require the main `agentic-cognitive-writing` package. Claude delegates through the main package's bundled agents, while Codex delegates to native subagents that use the shared role skills.
 
 The package ships a Claude Code manifest at [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and a Codex manifest at [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json); each manifest packages the two skill directories under [`skills/`](skills/).
 
@@ -10,7 +10,7 @@ The package ships a Claude Code manifest at [`.claude-plugin/plugin.json`](.clau
 
 Install the [`agentic-cognitive-writing` package](https://github.com/shunk031/agentic-cognitive-writing) before installing this package. If the repository is private, GitHub installs require access to it.
 
-The variant skills delegate planning, translating, and reviewing to the role skills and Claude agents shipped in that package.
+The variants delegate planning, translating, and reviewing to the shared role skills. Claude uses the main package's bundled agents, while Codex uses native subagents.
 
 ### Claude Code
 

@@ -82,7 +82,9 @@ At each pass, the Monitor must:
 
 ## Interruptions
 
-Generate and Evaluate may interrupt any process when new information or a conflict in the growing text demands it. Log each interruption as a `process_switch`, perform the interrupt through the relevant shared role, return to the interrupted process, and then continue with the next process in the prescribed order. An interruption must not select a new order. After any sub-goal resolves, return to its parent goal.
+Generate and Evaluate may interrupt any process when new information or a conflict in the growing text demands it. Log each interruption as a `process_switch`, perform the interrupt through the relevant shared role, return to the interrupted process, and then continue with the next process in the prescribed order.
+
+An interruption must not select a new order. After any sub-goal resolves, return to its parent goal.
 
 ## Delegation
 

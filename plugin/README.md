@@ -1,6 +1,6 @@
 # Agentic cognitive writing
 
-The installed `agentic-cognitive-writing` package lets you invoke the `cognitive-writing` skill in the directory where your draft lives. The skill plans, drafts, and revises a document while it updates its goals as the draft develops.
+The installed `agentic-cognitive-writing` package lets you invoke the `cognitive-writing` skill in a writing project. The skill plans, drafts, and revises a document while it updates goals and other process state in the project's `.writing/` directory.
 
 The package ships a Claude Code adapter in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and [`agents/`](agents/), plus a Codex adapter in [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) and per-skill metadata under [`skills/`](skills/).
 
@@ -103,7 +103,7 @@ Choose a GitHub marketplace for normal use or a local checkout for development. 
 
 ## Start a writing task
 
-Invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognitive-writing` in Codex. The main skill also describes the implicit-invocation path for a writing task.
+Invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognitive-writing` in Codex. The main skill can also start when your request clearly asks for writing help, without the explicit command.
 
 To bind a delegated role to a custom Codex agent, use the [Codex custom-agent examples](examples/codex-agents/README.md).
 
@@ -117,7 +117,7 @@ Use `cognitive-writing` for normal writing tasks. The list below separates that 
 
 ### Internal role skills
 
-The monitor, the part that decides what to work on next, invokes these roles during delegated work. Do not invoke them directly.
+The Monitor is the part of the skill that decides what to work on next and invokes these roles during delegated work. Do not invoke them directly.
 
 - `planning` handles delegated idea generation and goal setting.
 - `translating` handles delegated drafting.
@@ -125,7 +125,7 @@ The monitor, the part that decides what to work on next, invokes these roles dur
 
 The separate [`cognitive-writing-experiments` package](https://github.com/shunk031/agentic-cognitive-writing) contains `cognitive-writing-fixed-order` and `cognitive-writing-no-goal-network` for controlled comparisons.
 
-Read the linked [`experiments/plugin/`](../experiments/plugin/) directory for experiment context.
+Read the [project repository](https://github.com/shunk031/agentic-cognitive-writing) for experiment context.
 
 ## Files maintained in your writing project
 
@@ -144,7 +144,7 @@ The plugin creates or maintains this layout in the project where it is used:
     └── process.jsonl   # append-only process log
 ```
 
-The monitor, the part that decides what to work on next, appends every process switch and goal change as one JSON line to `.writing/trace/process.jsonl`. Read the [field-by-field trace schema](skills/cognitive-writing/references/trace-jsonl-schema.md) before inspecting or extending the log.
+The Monitor appends every process switch and goal change as one JSON line to `.writing/trace/process.jsonl`. Read the [field-by-field trace schema](skills/cognitive-writing/references/trace-jsonl-schema.md) before inspecting or extending the log.
 
 The main skill also uses [`goals-format.md`](skills/cognitive-writing/references/goals-format.md) for the hierarchical notation in `goals.md`.
 

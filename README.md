@@ -1,6 +1,6 @@
 # Agentic cognitive writing
 
-This project gives you a writing assistant for Claude Code and Codex that plans, drafts, and revises long-form text the way human writers do, keeping its goals, drafts, notes, and decision log as files in your project. Instead of generating text in one pass, the assistant revisits and rewrites its own plans and goals as the draft develops.
+This project gives you a writing assistant for Claude Code and Codex that plans, drafts, and revises long-form text the way human writers do. The assistant keeps its goals, drafts, notes, and decision log as files in the directory where you write. Instead of generating text in one pass, the assistant revisits and rewrites its own plans and goals as the draft develops.
 
 The plugin implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor decides what to work on next. The monitor coordinates three writing processes as the writer works:
 
@@ -12,9 +12,7 @@ The plugin implements the writing model in ["A Cognitive Process Theory of Writi
 
 The architecture turns the writing model into a main skill, shared role skills, and file-backed project state.
 
-**Claude Code.** The adapter uses the manifest at [`plugin/.claude-plugin/plugin.json`](plugin/.claude-plugin/plugin.json) and agents in [`plugin/agents/`](plugin/agents/).
-
-**Codex.** The adapter uses the manifest at [`plugin/.codex-plugin/plugin.json`](plugin/.codex-plugin/plugin.json) and per-skill metadata under [`plugin/skills/`](plugin/skills/).
+The plugin ships a Claude Code adapter through [`plugin/.claude-plugin/plugin.json`](plugin/.claude-plugin/plugin.json) and [`plugin/agents/`](plugin/agents/), and a Codex adapter through [`plugin/.codex-plugin/plugin.json`](plugin/.codex-plugin/plugin.json) and [`plugin/skills/`](plugin/skills/).
 
 The diagram below reproduces Figure 1, "Structure of the writing model," from the paper:
 
@@ -55,14 +53,16 @@ flowchart TB
     memory <--> processes
 ```
 
-The arrows mean information flow, not a fixed left-to-right sequence, as the paper cautions in footnote 11[^1].
+The paper's footnote 11 cautions that the arrows mean information flow, not a fixed left-to-right sequence[^1].
 
 The table maps each model element to the plugin artifact that carries out the corresponding work.
+
+The rhetorical problem is the topic, audience, and reason for writing. Exigency is the situation that makes writing necessary.
 
 | Category | Figure 1 model element | Plugin artifact |
 | --- | --- | --- |
 | Task environment | Rhetorical problem and produced text | User project `.writing/assignment.md` and `.writing/draft.md` |
-|  | Rhetorical problem (the topic, the audience, and the reason for writing): topic, audience, exigency (the situation that makes the writing necessary) | Sections in `.writing/assignment.md` |
+|  | Rhetorical problem: topic, audience, exigency | Sections in `.writing/assignment.md` |
 |  | Produced text | User project `.writing/draft.md` |
 | Writer's long-term memory | Topic and audience knowledge | User project `.writing/memory/` |
 |  | Writing plans | Notes and plans in `.writing/memory/` plus `.writing/goals.md` |
@@ -76,7 +76,7 @@ The table maps each model element to the plugin artifact that carries out the co
 |  | Revising | Reviewing skill's embedded Revise sub-process |
 | Monitor | Orchestration role | [`plugin/skills/cognitive-writing/SKILL.md`](plugin/skills/cognitive-writing/SKILL.md), executed by the main agent |
 
-The main skill uses these processes recursively. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
+The main skill follows the recursive writing process described in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1]. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
 
 ## Install from GitHub or a checkout
 
@@ -195,7 +195,7 @@ The monitor reads this state before each operation. You can inspect or edit it b
 
 ## Compare the separate experiment variants
 
-The [`cognitive-writing-experiments`](experiments/plugin/README.md) plugin packages two skills for controlled comparisons. Install the main `agentic-cognitive-writing` plugin first because both variants delegate to its shared role skills and Claude agents.
+The [`cognitive-writing-experiments`](experiments/plugin/README.md) plugin packages two skills for controlled comparisons. Install the main `agentic-cognitive-writing` plugin first because both variants delegate to its shared role skills; Claude uses its bundled agents, and Codex uses native subagents.
 
 - [`cognitive-writing-fixed-order`](experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md) runs Planning, then Translating, then Reviewing on each pass. Generate and Evaluate can interrupt, but the Monitor logs the interruption and returns to the prescribed order.
 - [`cognitive-writing-no-goal-network`](experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md) treats the assignment as one implicit objective, leaves `.writing/goals.md` untouched, and continues to trace process switches.
