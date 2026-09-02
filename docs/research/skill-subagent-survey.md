@@ -2,9 +2,9 @@
 
 ## Purpose and reading guide
 
-The plugin supports Claude Code and OpenAI Codex. The survey documents the platform formats and writing-system prior art behind the agentic-cognitive-writing plugin. The survey derives the design that the shipped plugin implements: shared skills, adapter files that carry platform packaging and agent metadata, four writing-process roles, and observable process state. Shipped plugin source: [agentic-cognitive-writing plugin README](https://github.com/shunk031/agentic-cognitive-writing/blob/b119e32738dae1768d78d8fe25a172c7a851d6c8/plugin/README.md).
+The plugin ships a Claude Code adapter (`.claude-plugin/plugin.json` and `agents/*.md`) and a Codex adapter (`.codex-plugin/plugin.json` and `agents/openai.yaml`). The survey documents the platform formats and writing-system prior art behind the agentic-cognitive-writing plugin. The survey derives the design that the shipped plugin implements: shared skills, adapter files that carry platform packaging and agent metadata, four writing-process roles, and observable process state. Shipped plugin source: [agentic-cognitive-writing plugin README](https://github.com/shunk031/agentic-cognitive-writing/blob/b119e32738dae1768d78d8fe25a172c7a851d6c8/plugin/README.md).
 
-A shared skill uses files both platforms can read without translation: `SKILL.md`, `scripts/`, `references/`, and `assets/`.
+The shared skill core uses `SKILL.md`, `scripts/`, `references/`, and `assets/`.
 
 The shipped plugin provides six skills:
 
@@ -424,7 +424,7 @@ The shipped plugin follows the survey's strongest finding: keep the writing proc
      - `skills/cognitive-writing-fixed-order/SKILL.md`: experiment-comparison variant
      - `skills/cognitive-writing-no-goal-network/SKILL.md`: experiment-comparison variant
    - The adapter layer adds `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and OpenAI `agents/openai.yaml`.
-   - Reuse the common Agent Skill layout accepted by both platforms.
+   - Reuse the common Agent Skill layout documented above for both platform skill systems.
    - Avoid the Anthropic-only `compatibility` field in shared `SKILL.md`, because OpenAI validator does not allow it.
 
 3. **Stateful process trace**
@@ -497,7 +497,7 @@ The shipped plugin follows the survey's strongest finding: keep the writing proc
 
 **Implementation status and remaining options**
 
-- The shipped implementation starts with a dual-manifest plugin that contains six shared skills, one monitor role in the main skill, and three Claude-native agent adapters. Codex support relies on skills that instruct native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
+- The shipped implementation starts with a dual-manifest plugin that contains six shared skills, one monitor role in the main skill, and three Claude-native agent adapters. The Codex adapter consists of `.codex-plugin/plugin.json` plus skill-local `agents/openai.yaml` metadata, while the skill instructions describe native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
 - The paper prototype design privileges observability over maximal automation. Every phase transition writes a trace entry with responsible agent, decision, evidence, and open uncertainty. The trace makes the Flower & Hayes [^1] mapping testable instead of metaphorical.
 
 ## Footnotes
