@@ -4,11 +4,11 @@ This protocol defines the paper experiment and future runner. It fixes compariso
 
 The runner must fill every `REQUIRED_AT_RUNTIME` value before a run. An open value is a pre-run stop condition.
 
-The protocol uses benchmark, evaluation, platform, and plugin evidence from these source snapshots:
+**Source snapshots.** The protocol uses benchmark, evaluation, platform, and plugin evidence from these sources:
 
-- Surveys: [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) / [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)
-- Main plugin: [README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/README.md) / [core skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/SKILL.md) / [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
-- Experiments plugin: [fixed-order skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md) / [no-goal-network skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md)
+- **Survey snapshots.** [Evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) / [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)
+- **Main plugin snapshots.** [README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/README.md) / [core skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/SKILL.md) / [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
+- **Experiments plugin snapshots.** [Fixed-order skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md) / [no-goal-network skill](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md)
 
 ## Theory test and research questions
 
@@ -41,17 +41,17 @@ All six conditions receive identical input context. The runner must expose the s
 
 No condition may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
 
-**Condition A1: single-shot.** Condition A1 makes one generation pass from the assignment and supplied context. The condition has no explicit planning or review stage. The runner records the externally visible generation event and does not infer hidden goals or stages.
+**Single-shot condition A1.** Condition A1 makes one generation pass from the assignment and supplied context. The condition has no explicit planning or review stage. The runner records the externally visible generation event and does not infer hidden goals or stages.
 
-**Condition A2: linear stages.** Condition A2 makes one pass through Pre-Write, Write, and Re-Write. The order is fixed, and each stage hands its output to the next. The runner records the three stage transitions and their outputs. The runner records no unobserved reasoning.
+**Linear-stages condition A2.** Condition A2 makes one pass through Pre-Write, Write, and Re-Write. The order is fixed, and each stage hands its output to the next. The runner records the three stage transitions and their outputs. The runner records no unobserved reasoning.
 
-**Condition A3: [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval.** Condition A3 uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, polish, and citation generation. The pipeline separates planning from writing and omits retrieval and source gathering. The runner records the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The evaluation survey ([evaluation survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)) and platform survey ([platform survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)) describe the no-retrieval adaptation.
+**[STORM](https://github.com/stanford-oval/storm) [^2]-style condition A3 without retrieval.** Condition A3 uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, polish, and citation generation. The pipeline separates planning from writing and omits retrieval and source gathering. The runner records the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The evaluation survey ([evaluation survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)) and platform survey ([platform survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)) describe the no-retrieval adaptation.
 
-**Condition A4: proposed plugin.** Condition A4 uses the documented cognitive-writing plugin. The Monitor selects among the Planning, Translating, and Reviewing processes. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. The runner uses the plugin's append-only `.writing/trace/process.jsonl` and goal-network files and records the normal loop under the shared trace contract.
+**Proposed-plugin condition A4.** Condition A4 uses the documented cognitive-writing plugin. The Monitor selects among the Planning, Translating, and Reviewing processes. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. The runner uses the plugin's append-only `.writing/trace/process.jsonl` and goal-network files and records the normal loop under the shared trace contract.
 
-**Condition A5: no goal network.** Condition A5 invokes `cognitive-writing-no-goal-network` from the `cognitive-writing-experiments` plugin. The variant uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. The runner leaves any existing `.writing/goals.md` untouched, records process switches under the shared trace contract, and records no goal events or goal fields.
+**No-goal-network condition A5.** Condition A5 invokes `cognitive-writing-no-goal-network` from the `cognitive-writing-experiments` plugin. The variant uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. The runner leaves any existing `.writing/goals.md` untouched, records process switches under the shared trace contract, and records no goal events or goal fields.
 
-**Condition A6: fixed process order.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin. The variant runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, the Monitor returns to the prescribed order. The runner keeps the ordinary goal network, records process switches and goal events under the shared trace contract, and adds no variant-specific fields.
+**Fixed-order condition A6.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin. The variant runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, the Monitor returns to the prescribed order. The runner keeps the ordinary goal network, records process switches and goal events under the shared trace contract, and adds no variant-specific fields.
 
 All six conditions use the same assignment, starting draft, model settings, and user decisions.
 
@@ -112,7 +112,7 @@ The unresolved resources must not enter a paper result, prompt manifest, or redi
 ## Codex primary and Claude Code replication
 
 Codex is the primary platform, and Claude Code provides a separate replication with explicit judge-family separation.
-The plugin ships a Claude Code adapter through the [Claude Code manifest](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/.claude-plugin/plugin.json) and [Claude Code agents](https://github.com/shunk031/agentic-cognitive-writing/tree/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/agents/). It ships a Codex adapter through the [Codex manifest](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/.codex-plugin/plugin.json) and [Codex skill files](https://github.com/shunk031/agentic-cognitive-writing/tree/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/).
+The plugin ships a Claude Code adapter through the [Claude Code manifest](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/.claude-plugin/plugin.json) and [Claude Code agents](https://github.com/shunk031/agentic-cognitive-writing/tree/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/agents/), and a Codex adapter through the [Codex manifest](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/.codex-plugin/plugin.json) and [Codex skill files](https://github.com/shunk031/agentic-cognitive-writing/tree/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/).
 
 ### Platform assignments
 
@@ -306,13 +306,7 @@ The runner must record those settings in the analysis manifest before inspecting
 
 ## Human validation of pairwise judgments
 
-Human validation samples 180 to 240 pairwise comparisons from the primary results. It uses three recruited annotators per comparison. Sampling is stratified by these factors:
-
-- Benchmark
-- Condition pair
-- Prompt length
-- Output-length gap
-- Automatic-decision margin
+Human validation samples 180 to 240 pairwise comparisons from the primary results. The study uses three recruited annotators per comparison. Sampling is stratified by benchmark, condition pair, prompt length, output-length gap, and automatic-decision margin.
 
 The presentation order is randomized per annotator. Annotators see the assignment and two anonymized outputs. They do not see condition names, platform names, judge names, traces, or automatic labels.
 
@@ -341,11 +335,7 @@ The trace analysis measures observable process behavior and relates it to produc
 
 ### Trace sources and interpretation
 
-For A4, A5, and A6, the authoritative sources are:
-
-- The plugin's append-only `.writing/trace/process.jsonl` [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
-- `.writing/goals.md` for A4 and A6
-- The final draft
+**Trace sources.** For A4, A5, and A6, use the plugin's append-only `.writing/trace/process.jsonl` [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md) / `.writing/goals.md` for A4 and A6 / the final draft.
 
 A5 leaves any existing `goals.md` untouched. Do not use that file for A5 goal measures.
 
@@ -484,26 +474,9 @@ experiments/
 
 The runner writes a manifest before each run. The manifest records these fields:
 
-- Benchmark release and hash
-- Prompt manifest hash
-- Condition ID
-- Platform
-- Selected skill or prompt variant
-- CLI versions
-- Main plugin commit
-- Experiments plugin commit
-- Generator and judge model IDs
-- System
-- Condition
-- Judge prompt hashes
-- Decoding parameters
-- Output budget
-- Tool policy
-- No-retrieval check
-- Random seeds
-- Retry policy
-- Start time
-- Software environment identifiers that are safe to publish
+- **Inputs.** Benchmark release and hash / prompt manifest hash / condition ID / platform / selected skill or prompt variant
+- **Models and execution.** CLI versions / main plugin commit / experiments plugin commit / generator and judge model IDs / system / condition / judge prompt hashes / decoding parameters / output budget / tool policy / no-retrieval check
+- **Reproducibility and environment.** Random seeds / retry policy / start time / software environment identifiers that are safe to publish
 
 The runner versions or content-hashes outputs, traces, judge responses, human judgments, derived scores, and analysis inputs.
 
