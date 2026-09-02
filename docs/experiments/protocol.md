@@ -65,7 +65,7 @@ A4 uses the Planning, Translating, and Reviewing processes.
 
 A5 and A6 are sibling skills in the plugin. The runner invokes `cognitive-writing-no-goal-network` for A5. It invokes `cognitive-writing-fixed-order` for A6. Both skills share the role skills and use the common trace contract. All six arms use the same assignment, starting draft, model settings, and user decisions.
 
-The plugin mapping implements the theory in *A Cognitive Process Theory of Writing* [^1], but that paper does not specify these files. The user owns:
+The plugin mapping implements the theory in *A Cognitive Process Theory of Writing* [^1], but that 1981 paper does not specify these files. The user owns:
 
 - Rhetorical intent
 - Factual authority
