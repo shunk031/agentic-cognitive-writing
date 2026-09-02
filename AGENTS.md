@@ -44,6 +44,7 @@ Deliverables contain durable guidance for readers, not a transcript of the resea
 
 - Do not use bookkeeping tokens or session narration such as `VERIFIED`, `HYPOTHESIS`, or `Unverified:`. Omit research-session mechanics such as fetch fallbacks and review history.
 - Express uncertainty with plain-language hedges. Keep caveats durable and reader-facing. State the criterion for inferred or evaluative claims, or hedge them, rather than asserting them without support.
+- Omit volatile external facts from durable prose unless the facts are load-bearing. Prefer category statements with descriptive Markdown links to live sources, and anchor load-bearing volatile facts to repository artifacts or pinned snapshots.
 
 ## Review judgment-bearing edits
 
