@@ -42,6 +42,16 @@ SKILL_TOKEN_PATTERN = re.compile(
     r"(?<![A-Za-z0-9_-])cognitive-writing-[A-Za-z0-9][A-Za-z0-9_-]*",
     re.IGNORECASE,
 )
+SHA_TOKEN_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9_])[0-9a-f]{7,40}(?![A-Za-z0-9_])",
+    re.IGNORECASE,
+)
+FENCE_PATTERN = re.compile(r"^[ \t]{0,3}(?P<marker>`{3,}|~{3,})")
+INLINE_CODE_PATTERN = re.compile(r"`+[^`\n]*`+")
+MARKDOWN_LINK_TARGET_PATTERN = re.compile(
+    r"\]\(\s*(?:<[^>\n]*>|[^)\n\s]+)"
+)
+URL_PATTERN = re.compile(r"https?://[^\s<>()\]]+", re.IGNORECASE)
 GITHUB_BLOB_OR_TREE_PATTERN = re.compile(
     r"https?://github\.com/(?P<owner>[^/\s?#]+)/(?P<repo>[^/\s?#]+)"
     r"/(?:blob|tree)/(?P<revision>[^/\s?#]+)/",
@@ -173,6 +183,22 @@ def _is_in_repository_url(match: re.Match[str], repository_slug: str | None) -> 
     return candidate == repository_slug
 
 
+def _mask_excluded_regions(line: str) -> str:
+    masked = list(line)
+    spans = [
+        match.span()
+        for pattern in (
+            INLINE_CODE_PATTERN,
+            MARKDOWN_LINK_TARGET_PATTERN,
+            URL_PATTERN,
+        )
+        for match in pattern.finditer(line)
+    ]
+    for start, end in spans:
+        masked[start:end] = [" "] * (end - start)
+    return "".join(masked)
+
+
 def _findings(
     root: Path, ground_truth: dict[str, object], repository_slug: str | None
 ) -> list[str]:
@@ -190,6 +216,7 @@ def _findings(
 
     for path in _documentation_files(root):
         relative_path = path.relative_to(root).as_posix()
+        fence: tuple[str, int] | None = None
         try:
             lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
         except OSError as error:
@@ -198,6 +225,19 @@ def _findings(
 
         for line_number, line in enumerate(lines, start=1):
             location = f"{relative_path}:{line_number}"
+            fence_match = FENCE_PATTERN.match(line)
+            in_fenced_code = fence is not None or fence_match is not None
+            if fence is not None:
+                if (
+                    fence_match is not None
+                    and fence_match.group("marker")[0] == fence[0]
+                    and len(fence_match.group("marker")) >= fence[1]
+                ):
+                    fence = None
+            elif fence_match is not None:
+                marker = fence_match.group("marker")
+                fence = (marker[0], len(marker))
+
             for identifier, pattern in DENY_PATTERNS:
                 if pattern.search(line):
                     findings.append(f"{location}: stale identifier '{identifier}'")
@@ -212,6 +252,19 @@ def _findings(
                 if token not in known_names:
                     findings.append(
                         f"{location}: unknown skill name '{token}' (not found under plugin/skills/)"
+                    )
+
+            if not in_fenced_code:
+                seen_shas: set[str] = set()
+                for match in SHA_TOKEN_PATTERN.finditer(_mask_excluded_regions(line)):
+                    token = match.group(0)
+                    normalized_token = token.lower()
+                    if normalized_token in seen_shas:
+                        continue
+                    seen_shas.add(normalized_token)
+                    findings.append(
+                        f"{location}: commit SHA '{token}' appears in prose; "
+                        "keep SHAs in URLs or code"
                     )
 
             for match in GITHUB_BLOB_OR_TREE_PATTERN.finditer(line):
