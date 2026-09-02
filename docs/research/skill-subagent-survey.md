@@ -57,7 +57,11 @@ Anthropic's skill format centers on `SKILL.md`, progressive disclosure, and supp
 
 **Skill-creator workflow is evaluation-first**
 
-- Anthropic skill-creator prescribes an evaluation-first authoring workflow. The workflow has four phases: define intent and write `SKILL.md`; create 2-3 realistic test prompts and run with-skill and baseline subagents; grade, aggregate a benchmark, and open an evaluation viewer; then use human feedback to improve and optionally optimize the description. Source: [Anthropic skill-creator SKILL.md](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md).
+- Anthropic skill-creator prescribes an evaluation-first authoring workflow. Source: [Anthropic skill-creator SKILL.md](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md). The workflow has four phases:
+  - Define intent and write `SKILL.md`
+  - Create 2-3 realistic test prompts and run with-skill and baseline subagents
+  - Grade, aggregate a benchmark, and open an evaluation viewer
+  - Use human feedback to improve and optionally optimize the description
 - `evals/evals.json` schema includes `skill_name`, `evals[].id`, `prompt`, `expected_output`, optional `files`, and `expectations`. Source: [Anthropic skill-creator schemas](https://github.com/anthropics/skills/blob/main/skills/skill-creator/references/schemas.md).
 - `grading.json` expects each assertion under `expectations[]` to use `text`, `passed`, and `evidence`. The viewer depends on these exact field names. Sources: [Anthropic skill-creator schemas](https://github.com/anthropics/skills/blob/main/skills/skill-creator/references/schemas.md) / [Anthropic evaluation viewer generator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/eval-viewer/generate_review.py).
 - `package_skill.py` creates a `.skill` zip archive after running validation and excludes `__pycache__`, `node_modules`, `.DS_Store`, `*.pyc`, and root-level `evals`. Source: [Anthropic package script](https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/package_skill.py).
@@ -161,7 +165,7 @@ The name and description constraints have the same effective shape across both v
 
 User interface metadata is the main file-format difference. Anthropic's skill-creator anatomy does not require a skill UI metadata file; OpenAI recommends `agents/openai.yaml` for UI metadata and dependencies, so the plugin keeps that file as OpenAI-only metadata and lets Claude treat it as an ordinary support file.
 
-The authoring workflows push different habits. Anthropic emphasizes an evaluation loop with with-skill/baseline subagents, viewer, and grader/comparator/analyzer. OpenAI emphasizes lean skills, degree-of-freedom choice, `init_skill.py`, `quick_validate.py`, and real usage iteration. **Design consequence.** Adopt Anthropic's evaluation workflow and OpenAI's lean/context-budget discipline. Sources: [Anthropic skill-creator SKILL.md](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) / [OpenAI skill-creator SKILL.md](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md).
+The authoring workflows push different habits. Anthropic emphasizes an evaluation loop with the with-skill and baseline subagents, viewer, and grader/comparator/analyzer. OpenAI emphasizes lean skills, degree-of-freedom choice, `init_skill.py`, `quick_validate.py`, and real usage iteration. **Design consequence.** Adopt Anthropic's evaluation workflow and OpenAI's lean/context-budget discipline. Sources: [Anthropic skill-creator SKILL.md](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) / [OpenAI skill-creator SKILL.md](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md).
 
 ## Codex multi-agent and sub-agent construction
 
@@ -302,7 +306,7 @@ Within the platform sources and writing-system prior art cited in this section, 
 
 - Flower & Hayes' Cognitive Process Theory of Writing [^1] is the theory this plugin operationalizes, and it introduces the monitor/planning/translating/reviewing decomposition used throughout this survey.
 - The plugin maps Flower & Hayes' model to task environment/context, long-term memory/references, planning, translating/drafting, reviewing, and monitor/control. The mapping is an interpretation of the theory rather than a platform spec.
-- Bereiter & Scardamalia [^2] is the canonical source for knowledge-telling vs knowledge-transforming framing.
+- Bereiter and Scardamalia's work [^2] is the canonical source for knowledge-telling vs knowledge-transforming framing.
 - A likely novelty angle is to make knowledge-transforming explicit as an agentic loop over problem representation, goal refinement, content transformation, and rhetorical evaluation. The loop treats revision as more than final polish.
 - Gero et al. [^6] build on Flower & Hayes' cognitive process model in "A Design Space for Writing Support Tools Using a Cognitive Process Model of Writing." The paper treats writing as a goal-directed, non-linear process with planning, translating, and reviewing components, then uses that model to define a design space for writing support tools.
 - The Gero et al. design space covers which part of the writing process a tool supports and how constrained the supported writing goal is. The paper uses the space to review 30 papers from 2017-2021, identify under-studied highly constrained planning and reviewing, and propose shared evaluation methods and tasks.
@@ -457,7 +461,7 @@ The survey findings translate into the shipped architecture and the remaining ex
 
 **Implementation status and remaining options**
 
-- The shipped implementation has a dual-manifest main plugin with four shared skills, one monitor role in the main skill, and three Claude-native agent adapters. The separate experiment package contains the two comparison variants and its own manifests under [`experiments/plugin/`](../../experiments/plugin/). The Codex adapters consist of [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json), [`experiments/plugin/.codex-plugin/plugin.json`](../../experiments/plugin/.codex-plugin/plugin.json), and [`plugin/skills/planning/agents/openai.yaml`](../../plugin/skills/planning/agents/openai.yaml), while the skill instructions describe native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
+- The shipped implementation has a dual-manifest main plugin with four shared skills, one monitor role in the main skill, and three Claude-native agent adapters. The separate experiment package contains the two comparison variants and its own manifests under [`experiments/plugin/`](../../experiments/plugin/). The Codex adapters consist of [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json), [`experiments/plugin/.codex-plugin/plugin.json`](../../experiments/plugin/.codex-plugin/plugin.json), and [`plugin/skills/planning/agents/openai.yaml`](../../plugin/skills/planning/agents/openai.yaml). The skill instructions describe native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
 - The paper prototype design prioritizes observable process state over full automation. Every phase transition writes a trace entry with responsible agent, decision, evidence, and open uncertainty. The trace makes the Flower & Hayes [^1] mapping testable instead of metaphorical.
 
 ## Footnotes
