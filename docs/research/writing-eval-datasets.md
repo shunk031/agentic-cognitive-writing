@@ -2,7 +2,7 @@
 
 ## Summary
 
-Question: which benchmarks and judge setup should the 6-arm long-form writing experiment use?
+Question: which benchmarks and judge setup should the six-condition long-form writing experiment use?
 
 Answer: use exactly three primary benchmarks.
 
@@ -30,7 +30,7 @@ Use PERSUADE 2.0 [^19] and International Corpus of Learner English++ (ICLE++) [^
 
 Keep LongBench-Write [^6] outside the primary benchmark set, and use it only as an optional length-control axis after the team clears benchmark prompt-file license and provenance. A length-control axis tests whether results hold across target output lengths.
 
-The planned comparison has 6 arms. The settled arm specification lives in `docs/experiments/protocol.md`.
+The planned comparison has 6 arms. An arm is one comparison condition. The settled arm specification lives in `docs/experiments/protocol.md`.
 
 - A1: single-shot generation
 - A2: linear Pre-Write/Write/Re-Write
