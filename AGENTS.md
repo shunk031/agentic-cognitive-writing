@@ -1,6 +1,6 @@
 # Repository writing guidance
 
-This repository contains a writing plugin, research surveys, and an experiment protocol. These rules apply to all of them and to every prose deliverable, including documents, READMEs, and pull request (PR) bodies. Write those deliverables in English and use the `unslop` skill for every one.
+This repository contains a cross-platform writing plugin, research surveys, and an experiment protocol. These rules apply to all of them and to every prose deliverable, including documents, READMEs, and pull request (PR) bodies. Write those deliverables in English and use the `unslop` skill for every one.
 
 ## Cite works and link resources
 
@@ -33,7 +33,7 @@ Readers should get the main answer and top caveats from a 30-second skim of the 
 
 - Use sentence-case headings and no manual section numbers. Refer to sections by name or link.
 - Open each major section with its takeaway. Match the format to the content rather than forcing every point into a list.
-- Expand abbreviations at first use, such as `Question Answering (QA)`. You may leave universally understood tokens such as URL, JSON, HTTP, PDF, API, CLI, README, and DOI, as well as proper names and brands such as JSTOR, arXiv, and GitHub, unexpanded.
+- Expand abbreviations at first use, such as `Question Answering (QA)`. Leave universally understood tokens such as URL, JSON, HTTP, PDF, API, CLI, README, and DOI, as well as proper names and brands such as JSTOR, arXiv, and GitHub, unexpanded.
 - Avoid pronoun subjects such as "It", "This", and "They" unless the referent is the immediately preceding subject and unambiguous. Name the actor instead, as in "The survey derives ..." or "The monitor appends ...".
 - Describe an artifact by its function, not with self-assessed size or effort qualifiers such as "small", "thin", "simple", or "lightweight". State platform and support scope once as a fact with concrete boundaries, rather than wording that leaves scope questions unanswered.
 
