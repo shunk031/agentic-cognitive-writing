@@ -17,20 +17,22 @@ The protocol uses the benchmark and evaluation evidence in [`docs/research/writi
 
 This protocol tests whether the theory-based recursive process improves writing and whether its traces show the predicted goal dynamics. Flower and Hayes' *A Cognitive Process Theory of Writing* [^1] describes writing as a set of thinking processes that a writer coordinates during composing. The processes are hierarchical and can be embedded in one another. Writing is goal-directed, and writers can create, develop, and regenerate goals as they learn from the act of writing. The Monitor coordinates Planning, Translating, and Reviewing.
 
-It tests that account as an agent process rather than treating it as a claim about human inner experience.
+The protocol tests that account as an agent process rather than treating the account as a claim about human inner experience.
 
-The experiment has six experimental conditions. The experiment holds the assignment, supplied context, tool budget, output budget, and no-retrieval rule constant across those conditions.
+The experiment has six experimental conditions, identified as A1 through A6. The experiment holds the assignment, supplied context, tool budget, output budget, and no-retrieval rule constant across those conditions.
 
 Only the process instructions and the resulting observable process differ. The benchmark and judge choices follow the [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
 The research questions (RQ) are:
 
-1. **RQ1.** Does the theory-based recursive Monitor and goal-network architecture produce better writing than a single-shot system and linear-stage pipelines?
-2. **RQ2.** Which components matter? We compare the full plugin with ablation conditions A5 and A6.
-3. **RQ3.** Do agent traces, analyzed as thinking-aloud protocols, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? This includes their prediction that the quantity and quality of middle-range goals, which connect broad rhetorical aims to local writing actions, relate to writing quality.
+1. **RQ1.** Does the theory-based recursive Monitor and goal-network architecture produce better writing than a single-shot system and linear-stage pipelines? A goal network is a hierarchy of writing goals that the Monitor coordinates during drafting.
+2. **RQ2.** Which components matter? We compare the full plugin with ablation conditions A5 and A6. An ablation condition removes or constrains one component of the full design.
+3. **RQ3.** Do agent traces, analyzed as thinking-aloud protocols that record observable writing actions, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? The RQ3 analysis includes Flower and Hayes' prediction that the quantity and quality of middle-range goals, which connect broad rhetorical aims to local writing actions, relate to writing quality.
 4. **RQ4.** Does the mapping replicate across platforms?
 
-The pointwise two-judge composite is the sole CONFIRMATORY estimand. It is the prespecified quantity used for confirmatory tests. Holm correction [^15] controls the family-wise error rate. Use one correction family per benchmark on the primary Codex pointwise composite. Each family contains the five comparisons of the theory-based condition A4 with the other conditions, for 15 confirmatory tests total. The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. It estimates the relative ability of the conditions from pairwise choices. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
+An estimand is the quantity that the analysis plans to estimate. Pointwise scoring gives each output an independent rubric score. A Bradley-Terry model [^11] estimates relative condition abilities from pairwise choices. Holm correction [^15] controls the family-wise error rate.
+
+The pointwise two-judge composite is the sole CONFIRMATORY estimand. It is the prespecified quantity used for confirmatory tests. Use one correction family per benchmark on the primary Codex pointwise composite. Each family contains the five comparisons of the theory-based condition A4 with the other conditions, for 15 confirmatory tests total. The pairwise Bradley-Terry average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. The pairwise average estimates the relative ability of the conditions from pairwise choices. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
 
 The primary process estimands are goal events, adaptive process switches, interruptions, and pop-back events. Report rates and distributions for each.
 
@@ -42,15 +44,7 @@ All six conditions receive identical input context. The runner must expose the s
 
 No condition may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
 
-The A3 perspective and question steps use only the supplied assignment and context.
-
-A3 uses these stages:
-
-- Perspective discovery
-- Simulated question answering (QA)
-- Outline
-- Draft
-- Polish
+The A3 condition uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish. This no-retrieval implementation follows the STORM [^2] pipeline precedent and omits retrieval and source gathering. The evaluation survey ([evaluation survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)) and platform survey ([platform survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)) describe this adaptation.
 
 A4 uses the Planning, Translating, and Reviewing processes.
 
@@ -58,19 +52,14 @@ A4 uses the Planning, Translating, and Reviewing processes.
 | --- | --- | --- |
 | A1 single-shot | One generation pass from the assignment and supplied context. No explicit planning or review stage. | Record the externally visible generation event. Do not infer hidden goals or stages. |
 | A2 linear stages | One pass each through Pre-Write, Write, and Re-Write. The order is fixed and each stage hands its output to the next. | Record the three stage transitions and their outputs. Record no unobserved reasoning. |
-| A3 [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval | The pipeline follows the five stages above. STORM separates planning from writing. This condition omits retrieval and source gathering. It also omits citation generation under the equal-information policy. The surveys describe this no-retrieval adaptation and the related STORM pipeline precedent.<br>Evaluation survey: [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)<br>Platform survey: [`docs/research/skill-subagent-survey.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) | Record the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. |
+| A3 [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval | The pipeline follows the five stages above. STORM separates planning from writing. Condition A3 omits retrieval and source gathering. It also omits citation generation under the equal-information policy. The surveys describe this no-retrieval adaptation and the related STORM pipeline precedent.<br>Evaluation survey: [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)<br>Platform survey: [`docs/research/skill-subagent-survey.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) | Record the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. |
 | A4 proposed plugin | The documented cognitive-writing plugin. The Monitor selects among the three processes above. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. | Use the plugin's append-only `.writing/trace/process.jsonl` and goal-network files. Record the normal loop under the shared trace contract. |
-| A5 no goal network | Invoke the `cognitive-writing-no-goal-network` skill. It uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. | Leave any existing `goals.md` untouched. Record process switches under the shared trace contract. Do not record goal events or goal fields. |
-| A6 fixed process order | Invoke the `cognitive-writing-fixed-order` skill. It runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, return to the prescribed order. | Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Do not add variant-specific fields. |
+| A5 no goal network | Invoke the `cognitive-writing-no-goal-network` skill. The `cognitive-writing-no-goal-network` skill uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. | Leave any existing `goals.md` untouched. Record process switches under the shared trace contract. Do not record goal events or goal fields. |
+| A6 fixed process order | Invoke the `cognitive-writing-fixed-order` skill. The `cognitive-writing-fixed-order` skill runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, return to the prescribed order. | Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Do not add variant-specific fields. |
 
 A5 and A6 are sibling skills in the plugin. The runner invokes `cognitive-writing-no-goal-network` for A5. It invokes `cognitive-writing-fixed-order` for A6. Both skills share the role skills and use the common trace contract. All six conditions use the same assignment, starting draft, model settings, and user decisions.
 
-The plugin mapping implements the theory in *A Cognitive Process Theory of Writing* [^1], but that 1981 paper does not specify these files. The user owns:
-
-- Rhetorical intent
-- Factual authority
-- Final wording
-- Publication
+The plugin mapping implements the theory in *A Cognitive Process Theory of Writing* [^1], but that 1981 paper does not specify these files. The user owns rhetorical intent, factual authority, final wording, and publication.
 
 The Monitor owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/cognitive-writing/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/SKILL.md).
 
@@ -125,11 +114,12 @@ The unresolved resources are:
 - [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench)
 - [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17]
 
-They must not enter a paper result, prompt manifest, or redistributed artifact without a new license review. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+The unresolved resources must not enter a paper result, prompt manifest, or redistributed artifact without a new license review. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
 ## Codex primary and Claude Code replication
 
 Codex is the primary platform, and Claude Code provides a separate replication with explicit judge-family separation.
+The plugin supports Claude Code and OpenAI Codex.
 
 ### Platform assignments
 
@@ -237,11 +227,11 @@ The runner rejects a response when it has any of these problems:
 - Scores outside 1 to 5
 - Evidence quotes that do not occur in the judged output or supplied context
 
-It retries an invalid judge response only under the fixed retry count in the run manifest. It never gives a failed condition extra content or attempts.
+The runner retries an invalid judge response only under the fixed retry count in the run manifest. The runner never gives a failed condition extra content or attempts.
 
 ### Balanced pairwise tournament
 
-The six conditions produce 15 unordered condition pairs. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. This produces 30 judgments per prompt per judge. Apply these controls:
+The six conditions produce 15 unordered condition pairs. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. The two presentations produce 30 judgments per prompt per judge. Apply these controls:
 
 - Blind the condition labels.
 - Randomize output order with a recorded seed.
@@ -308,7 +298,7 @@ The runner performs a judge and generator family overlap audit. If any judge als
 
 The covariate sensitivity analysis fits the prespecified quality and pairwise models with benchmark, prompt length, output length, output-length gap, presentation order, judge family, and platform where applicable.
 
-It compares the adjusted treatment estimates with the raw and length-stratified estimates. Freeze the model formula, covariate coding, missing-value rule, and interaction terms as `REQUIRED_AT_RUNTIME`.
+The covariate sensitivity analysis compares the adjusted treatment estimates with the raw and length-stratified estimates. Freeze the model formula, covariate coding, missing-value rule, and interaction terms as `REQUIRED_AT_RUNTIME`.
 
 Put them in the analysis manifest before results are inspected.
 
@@ -324,7 +314,7 @@ Human validation samples 180 to 240 pairwise comparisons from the primary result
 
 The presentation order is randomized per annotator. Annotators see the assignment and two anonymized outputs. They do not see condition names, platform names, judge names, traces, or automatic labels.
 
-This design follows the scale and controls recommended in the [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+The human-validation design follows the scale and controls recommended in the [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
 The annotation form records `A`, `B`, or `tie`, an optional short reason, annotator ID, comparison ID, presentation seed, and adjudication status.
 
@@ -471,7 +461,7 @@ The protocol limits claims with checks for construct, comparison, judge, length,
 
 **Construct validity.** A logged agent trace records actions selected by the plugin and runner. It does not prove that an agent has human-like thoughts. The RQ3 analysis uses the thinking-aloud analogy only to define observable process measures.
 
-**Comparison validity.** The equal-tool and no-retrieval policy makes the A3 condition a STORM [^2] style pipeline, not the full retrieval-based system. This limits claims about source-grounded research performance. It also prevents retrieval from becoming an unbalanced advantage for one condition.
+**Comparison validity.** The equal-tool and no-retrieval policy makes the A3 condition a STORM [^2] style pipeline, not the full retrieval-based system. The policy limits claims about source-grounded research performance. The policy also prevents retrieval from becoming an unbalanced advantage for one condition.
 
 **Judge validity.** Pointwise and pairwise judges can show position, verbosity, self-preference, and model-family bias.
 
@@ -503,7 +493,7 @@ The [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob
 - [HelloBench](https://github.com/Quehry/HelloBench) [^4] covers long-text generation.
 - [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5] covers structured writing.
 
-The primary benchmarks do not represent every genre or language. These argumentative anchors add limited coverage:
+The primary benchmarks do not represent every genre or language. The argumentative anchors add limited coverage:
 
 - [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] provides argumentative prompts and human-score anchors, not complete coverage.
 - [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] provides a persuasive-writing anchor, not complete coverage.
