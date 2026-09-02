@@ -158,7 +158,7 @@ Claude Code subagents are Markdown files with YAML frontmatter, and plugins ship
 **Subagents are Markdown plus frontmatter**
 
 - File-based subagents use Markdown files with YAML frontmatter followed by the system prompt body; the body becomes the subagent's system prompt. Source: https://code.claude.com/docs/en/sub-agents.md
-- Supported frontmatter has required `name` and `description` plus optional controls for tools, model, permissions, turns, skills, MCP servers, hooks, memory, background mode, effort, isolation, color, initial prompt, and cache TTL. Source: https://code.claude.com/docs/en/sub-agents.md
+- Supported frontmatter keys are `name`, `description`, `tools`, `disallowedTools`, `model`, `permissionMode`, `maxTurns`, `skills`, `mcpServers`, `hooks`, `memory`, `background`, `effort`, `isolation`, `color`, `initialPrompt`, and `experimental.cacheTtl`. Source: https://code.claude.com/docs/en/sub-agents.md
 - `name` uses lowercase letters and hyphens; `:` is invalid in the name because plugin-scoped identifiers use colons. Source: https://code.claude.com/docs/en/sub-agents.md
 - Claude Code supports project subagents in `.claude/agents/`, user subagents in `~/.claude/agents/`, plugin subagents in a plugin `agents/` directory, and CLI-defined subagents passed as JSON via `--agents`. Source: https://code.claude.com/docs/en/sub-agents.md
 - Plugin subagents support `name`, `description`, `model`, `effort`, `maxTurns`, `tools`, `disallowedTools`, `skills`, `memory`, `background`, and `isolation`. They do not support `hooks`, `mcpServers`, or `permissionMode`. Source: https://code.claude.com/docs/en/plugins-reference.md
@@ -167,7 +167,7 @@ Claude Code subagents are Markdown files with YAML frontmatter, and plugins ship
 
 - A non-fork subagent starts with fresh isolated context, a task message, relevant `CLAUDE.md` hierarchy, git status, and full content of skills named in the subagent `skills` field. Source: https://code.claude.com/docs/en/sub-agents.md
 - The `skills` field preloads full skill content into the subagent at startup; subagents can still invoke unlisted project, user, and plugin skills through the Skill tool. Source: https://code.claude.com/docs/en/sub-agents.md
-- Background subagents retain a filtered built-in tool set of 17 tools spanning file, search, shell, web, task, skill, worktree, monitor, messaging, and artifact operations. Source: https://code.claude.com/docs/en/sub-agents.md
+- Background subagents retain a filtered built-in tool set of 19 tools spanning file, search, shell, notebook, web, task, skill, worktree, monitor, messaging, and artifact operations. Source: https://code.claude.com/docs/en/sub-agents.md
 - `feature-dev/commands/feature-dev.md` uses a command skill to launch `code-explorer`, `code-architect`, and `code-reviewer` across discovery, design, and quality review phases. Source: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
 - The shipped plugin represents Flower & Hayes' model [^1] as one monitor skill plus three Claude Code plugin agents:
   - `cognitive-writing`: monitor role, executed by the main agent
@@ -372,7 +372,7 @@ agentic-cognitive-writing-process/
 
 ## 7. Academic and open-source software (OSS) prior art
 
-Prior systems cover planning, revision, tutoring, and long-form research pipelines, but none of the surveyed systems ships this exact Flower-and-Hayes-to-plugin role architecture.
+Among the systems surveyed here, we did not find one that maps Flower & Hayes' Cognitive Process Theory of Writing [^1] roles onto an installable plugin; this appears to be a gap.
 
 **Sources for prior art**
 
