@@ -36,7 +36,7 @@ Readers should get the main answer and top caveats from a 30-second skim of the 
 - Open each major section with its takeaway. Match the format to the content rather than forcing every point into a list.
 - Expand abbreviations at first use, such as `Question Answering (QA)`. Leave universally understood tokens such as URL, JSON, HTTP, PDF, API, CLI, README, and DOI, as well as proper names and brands such as JSTOR, arXiv, and GitHub, unexpanded.
 - Avoid pronoun subjects such as "It", "This", and "They" unless the referent is the immediately preceding subject and unambiguous. Name the actor instead, as in "The survey derives ..." or "The monitor appends ...".
-- Describe an artifact by its function, not with self-assessed size or effort qualifiers such as "small", "thin", "simple", or "lightweight". State platform and support scope once as a fact with concrete boundaries, rather than wording that leaves scope questions unanswered.
+- Describe an artifact by its function, not with self-assessed size or effort qualifiers such as "small", "thin", "simple", or "lightweight". State platform, support, and compatibility scope once as artifact-anchored facts with concrete boundaries, such as "The artifact ships adapters for named platforms", rather than promising that the artifact "supports" a platform. Avoid durable claims that depend on external changes unless a repository artifact anchors them.
 
 ## Keep evidence reader-facing
 
