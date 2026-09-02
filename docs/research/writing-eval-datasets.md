@@ -10,13 +10,7 @@ Answer: use exactly three primary benchmarks.
   - Repo: https://github.com/X-PLUG/WritingBench
   - Data: https://github.com/X-PLUG/WritingBench/blob/main/benchmark_query/benchmark_all.jsonl
   - Eval prompt: https://github.com/X-PLUG/WritingBench/blob/main/prompt.py
-- HelloBench [^4] targets long text generation. It has 647 samples across 5 tasks and 38 subcategories. It selects or wraps these task types for long text generation.
-  - Task types:
-    - Question answering (QA)
-    - Summarization
-    - Chat
-    - Completion
-    - Heuristic generation
+- HelloBench [^4] targets long text generation. It has 647 samples across 5 tasks and 38 subcategories. It selects or wraps question answering (QA), summarization, chat, completion, and heuristic generation for long text generation.
   - Repo: https://github.com/Quehry/HelloBench
   - Judge code: https://github.com/Quehry/HelloBench/blob/main/llm_judge.py
 - DoLoMiTes [^7] is the closest surveyed match for structured expert writing because it uses expert-authored methodical tasks. It fits research plans, reports, and design documents better than fiction-heavy benchmarks.
@@ -54,28 +48,27 @@ Use at least two judge families. Each prompt has:
 
 Validate the automatic judges with about 180-240 human comparisons and 3 annotators per comparison.
 
-Separate product quality from process analysis. Judges should see final outputs only. Analyze these process signals separately:
-
-- Planning traces
-- Revision behavior
-- Goal references
-- Monitor transitions
+Separate product quality from process analysis. Judges should see final outputs only. Analyze planning traces, revision behavior, goal references, and Monitor transitions separately.
 
 ## 1. Long-form / creative / general writing benchmarks
 
+WritingBench [^3], HelloBench [^4], and DoLoMiTes [^7] are the primary benchmark choices; the other benchmarks are secondary, supplementary, or blocked by license/provenance risk.
+
 | Benchmark | task types / prompt count | output length range | evaluation method | license | agentic system fairness |
 |---|---|---|---|---|---|
-| WritingBench [^3] | 1,000 real-world writing queries<br>6 primary domains<br>100 subdomains<br>First release: 1,239 queries<br>Later update: 1,000 reduced/curated queries<br>Domains:<br>Academic & Engineering<br>Finance & Business<br>Politics & Law<br>Literature & Art<br>Education<br>Advertising & Marketing<br>Sources:<br>Repo: https://github.com/X-PLUG/WritingBench <br>Data: https://github.com/X-PLUG/WritingBench/blob/main/benchmark_query/benchmark_all.jsonl | Average query length is 1,500+ tokens.<br>Generation config recommends max_length 16,000 or max allowed.<br>Source: https://github.com/X-PLUG/WritingBench#-whats-new | Each query has 5 instance-specific criteria.<br>The evaluator assigns a 1-10 score and reason per criterion.<br>The code supports Claude or critic model.<br>Sources:<br>Eval prompt: https://github.com/X-PLUG/WritingBench/blob/main/prompt.py <br>Eval script: https://github.com/X-PLUG/WritingBench/blob/main/evaluate_benchmark.py | Repository LICENSE is Apache-2.0.<br>Source: https://github.com/X-PLUG/WritingBench/blob/main/LICENSE | We expect high fairness because each arm can submit a final response to the same query. If judges do not see internal traces, single-shot and agentic systems face the same product-level condition. |
-| HelloBench / HelloEval [^4] | 647 testing samples<br>5 tasks<br>38 subcategories<br>The benchmark is dedicated to long text generation.<br>Task types selected or wrapped for long text generation:<br>Open-ended QA<br>Summarization<br>Chat<br>Text completion<br>Heuristic text generation<br>Source:<br>Repo: https://github.com/Quehry/HelloBench | HelloBench selects/wraps tasks for long text generation.<br>Length-constrained heuristic generation includes 2k/4k/8k/16k variants in README.<br>Source: https://github.com/Quehry/HelloBench#repository-contents | HelloEval uses checklist-wise scoring from 0 to 1.<br>It reports an overall LLM eval score from 0-10.<br>The code runs GPT-4o three retries and stores checklist-wise evaluations.<br>Sources:<br>Judge code: https://github.com/Quehry/HelloBench/blob/main/llm_judge.py <br>Regression code: https://github.com/Quehry/HelloBench/blob/main/regression.py | Repository LICENSE is Massachusetts Institute of Technology (MIT).<br>Source: https://github.com/Quehry/HelloBench/blob/main/LICENSE | We expect high fairness because long-output requirements should expose planner/reviewer effects. Main caveat: summarization and chat tasks can have long input context. Fix context windows and retrieval handling across arms. |
-| LongBench-Write / LongWrite-Ruler / LongWriter [^6] | LongWriter repo introduces LongBench-Write and LongWrite-Ruler.<br>Raw evaluation files contain:<br>120 LongBench-Write prompts<br>60 English subset prompts<br>48 LongWrite-Ruler prompts<br>Sources:<br>Repo: https://github.com/THUDM/LongWriter <br>LongBench-Write data: https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write.jsonl <br>LongWrite-Ruler data: https://github.com/THUDM/LongWriter/blob/main/evaluation/longwrite_ruler.jsonl | LongWriter-6k Supervised Fine-Tuning (SFT) data ranges 2k-32k words.<br>That license label applies to the SFT dataset, not automatically to benchmark prompt files.<br>Sources:<br>SFT data: https://huggingface.co/datasets/THUDM/LongWriter-6k <br>English evaluation data: https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl | Quality score uses GPT-4o judge over:<br>Relevance<br>Accuracy<br>Coherence<br>Clarity<br>Breadth and Depth<br>Reading Experience<br>Each dimension uses 1-5.<br>The script computes the length score separately from requested vs produced length.<br>The quality prompt explicitly excludes length compliance.<br>Sources:<br>Quality script: https://github.com/THUDM/LongWriter/blob/main/evaluation/eval_quality.py <br>Length script: https://github.com/THUDM/LongWriter/blob/main/evaluation/eval_length.py <br>Judge prompt: https://github.com/THUDM/LongWriter/blob/main/evaluation/judge.txt | Benchmark-file license/provenance remains unresolved.<br>The repository does not publish a license file in the expected GitHub LICENSE path.<br>The Hugging Face (HF) Apache-2.0 label covers LongWriter-6k SFT data rather than the `evaluation/*.jsonl` benchmark prompt files.<br>Before use, clear:<br>License for `evaluation/longbench_write*.jsonl` and `longwrite_ruler.jsonl`<br>Provenance of prompts and whether redistribution is allowed<br>Whether derived benchmark results can be published | After clearance, use it only for supplementary analysis of target output length.<br>Do not count it among the 3 primary benchmarks. |
-| EQ-Bench Creative Writing v3 [^20] | 32 prompts × 3 iterations = 96 items.<br>Genres include:<br>Historical fiction<br>Epistolary<br>Romance<br>Comedy<br>Horror<br>Sources:<br>Repo: https://github.com/EQ-bench/creative-writing-bench <br>Prompts: https://github.com/EQ-bench/creative-writing-bench/blob/main/data/creative_writing_prompts_v3.json | Prompt examples commonly request about 1,000 words.<br>The harness truncates outputs to 4,000 characters for length-bias mitigation according to README.<br>Sources:<br>Repo: https://github.com/EQ-bench/creative-writing-bench <br>Judge prompt: https://github.com/EQ-bench/creative-writing-bench/blob/main/data/creative_writing_judging_prompt.txt | Hybrid rubric score plus pairwise Elo/Glicko-2.<br>README states Sonnet 4.6 for leaderboard parity.<br>README lists mitigations for:<br>Length<br>Position<br>Verbosity/poetic incoherence<br>Sources:<br>Repo: https://github.com/EQ-bench/creative-writing-bench <br>Script: https://github.com/EQ-bench/creative-writing-bench/blob/main/creative_writing_bench.py | The repository does not publish a license file at the listed license URL. Confirm the license with the maintainers or repository metadata before using it. | We expect medium fit because creative writing is central, but 32 prompts is small and Elo requires historical run files for comparability. Use it as a secondary benchmark for subjective/literary quality. |
-| WildBench v2 [^17] writing-relevant subset | HF dataset v2 has 1,024 test examples.<br>V2-hard has 256 examples.<br>Fields include:<br>checklist<br>primary_tag<br>secondary_tags<br>intent<br>Sources:<br>HF data: https://huggingface.co/datasets/allenai/WildBench <br>Repo: https://github.com/allenai/WildBench | Not a pure long-form benchmark.<br>It is collected from real-user tasks and includes long/writing-like tasks.<br>Source: https://github.com/allenai/WildBench | V2 uses:<br>5-10 example-specific checklist questions<br>GPT-4-turbo scoring<br>Pairwise reward<br>Length-penalized Elo/reward-mix<br>Sources:<br>Repo: https://github.com/allenai/WildBench <br>HF data: https://huggingface.co/datasets/allenai/WildBench | HF card says Creative Commons Attribution (CC BY) 4.0 for dataset.<br>Repo LICENSE is Apache-2.0.<br>Sources:<br>HF data: https://huggingface.co/datasets/allenai/WildBench <br>License: https://github.com/allenai/WildBench/blob/main/LICENSE | We expect medium fit because real-user diversity is useful, but writing tasks must be filtered by `primary_tag`/`intent`. Otherwise the benchmark measures broad assistant behavior rather than writing quality. |
-| DoLoMiTes [^7] | 519 methodical tasks from 266 experts across 25 fields.<br>1,857 expert post-edited examples.<br>The sources disagree on split size.<br>Paper/archive-derived reporting gives 820 dev / 1,037 test.<br>Repo README says 830 dev examples and 1,037 test examples.<br>Use 820/1,037 only after recomputing from the released archive in the experiment repository.<br>Sources:<br>Released archive: https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip <br>Conflicting README: https://github.com/google-deepmind/dolomites/blob/main/README.md | Reference outputs average 341.42 tokens.<br>Tasks are methodical long-form writing with structured output sections.<br>Generation uses up to 4,096 tokens.<br>Source: https://github.com/google-deepmind/dolomites | Evaluation includes:<br>Pairwise language model (LM) preference against GPT-4<br>Fine-grained 1-5 absolute evaluation<br>Absolute dimensions:<br>Task adherence<br>Factual correctness<br>Depth<br>Completeness<br>Coherence<br>Human validation used 200 pairs.<br>Two annotators agreed on 75% of 100 examples.<br>Claude-3 Opus agreement was 67% with ties and 77% without ties.<br>Source: https://github.com/google-deepmind/dolomites | Software Apache-2.0.<br>Other materials CC-BY 4.0.<br>Source: https://github.com/google-deepmind/dolomites/blob/main/README.md | We expect high fit for research/report tasks because DoLoMiTes uses structured expert tasks. We expect medium fit for creative writing because the task set is not fiction-centered. |
-| WritingPreferenceBench [^8] | 1,800 human-validated preference pairs<br>1,200 English pairs<br>600 Chinese pairs<br>8 creative writing genres<br>51 categories<br>Sources:<br>Project: https://WritingPreferenceBench.github.io/ <br>HF data: https://huggingface.co/datasets/m-a-p/Writing-Preference-Bench <br>Repo: https://github.com/WritingPreferenceBench/Writing-Preference-Bench | HF/repo report mean response lengths around 1,450 words for English chosen and 840 for English rejected.<br>Pair data include completion_tokens and word_len.<br>Sources:<br>HF data: https://huggingface.co/datasets/m-a-p/Writing-Preference-Bench <br>Repo: https://github.com/WritingPreferenceBench/Writing-Preference-Bench | Construction uses:<br>Human-in-the-loop preference construction<br>11 expert annotators<br>8-hour rubric calibration<br>0-3 creative-writing scale<br>Retained pairs with >=2/3 agreement and score gap >=1<br>LLM-as-judge chooses the preferred response based on:<br>Creativity<br>Emotional resonance<br>Stylistic flair<br>Sources:<br>HF data: https://huggingface.co/datasets/m-a-p/Writing-Preference-Bench <br>Repo: https://github.com/WritingPreferenceBench/Writing-Preference-Bench | License metadata disagrees.<br>GitHub README says Open Data Commons Attribution License (ODC-BY).<br>HF metadata says Apache-2.0.<br>Resolve the license before redistribution.<br>Sources:<br>Repo: https://github.com/WritingPreferenceBench/Writing-Preference-Bench <br>HF data: https://huggingface.co/datasets/m-a-p/Writing-Preference-Bench | We expect medium fit as a primary benchmark because it validates judge sensitivity to subjective style, but it is not a clean generation benchmark. Its labels are preference pairs of existing model outputs. |
+| WritingBench [^3] | 1,000 real-world writing queries<br>6 primary domains<br>100 subdomains<br>First release: 1,239 queries<br>Later update: 1,000 reduced/curated queries<br>Domains: Academic & Engineering, Finance & Business, Politics & Law, Literature & Art, Education, Advertising & Marketing<br>Sources:<br>Repo: https://github.com/X-PLUG/WritingBench <br>Data: https://github.com/X-PLUG/WritingBench/blob/main/benchmark_query/benchmark_all.jsonl | Average query length is 1,500+ tokens.<br>Generation config recommends max_length 16,000 or max allowed.<br>Source: https://github.com/X-PLUG/WritingBench#-whats-new | Each query has 5 instance-specific criteria.<br>The evaluator assigns a 1-10 score and reason per criterion.<br>The code supports Claude or critic model.<br>Sources:<br>Eval prompt: https://github.com/X-PLUG/WritingBench/blob/main/prompt.py <br>Eval script: https://github.com/X-PLUG/WritingBench/blob/main/evaluate_benchmark.py | Repository LICENSE is Apache-2.0.<br>Source: https://github.com/X-PLUG/WritingBench/blob/main/LICENSE | We expect high fairness because each arm can submit a final response to the same query. If judges do not see internal traces, single-shot and agentic systems face the same product-level condition. |
+| HelloBench / HelloEval [^4] | 647 testing samples<br>5 tasks<br>38 subcategories<br>The benchmark is dedicated to long text generation.<br>Task types selected or wrapped for long text generation: open-ended QA, summarization, chat, text completion, and heuristic text generation<br>Source:<br>Repo: https://github.com/Quehry/HelloBench | HelloBench selects/wraps tasks for long text generation.<br>Length-constrained heuristic generation includes 2k/4k/8k/16k variants in README.<br>Source: https://github.com/Quehry/HelloBench#repository-contents | HelloEval uses checklist-wise scoring from 0 to 1.<br>It reports an overall LLM eval score from 0-10.<br>The code runs GPT-4o three retries and stores checklist-wise evaluations.<br>Sources:<br>Judge code: https://github.com/Quehry/HelloBench/blob/main/llm_judge.py <br>Regression code: https://github.com/Quehry/HelloBench/blob/main/regression.py | Repository LICENSE is Massachusetts Institute of Technology (MIT).<br>Source: https://github.com/Quehry/HelloBench/blob/main/LICENSE | We expect high fairness because long-output requirements should expose planner/reviewer effects. Main caveat: summarization and chat tasks can have long input context. Fix context windows and retrieval handling across arms. |
+| LongBench-Write / LongWrite-Ruler / LongWriter [^6] | LongWriter repo introduces LongBench-Write and LongWrite-Ruler.<br>Raw evaluation files contain 120 LongBench-Write prompts, 60 English subset prompts, and 48 LongWrite-Ruler prompts.<br>Sources:<br>Repo: https://github.com/THUDM/LongWriter <br>LongBench-Write data: https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write.jsonl <br>LongWrite-Ruler data: https://github.com/THUDM/LongWriter/blob/main/evaluation/longwrite_ruler.jsonl | LongWriter-6k Supervised Fine-Tuning (SFT) data ranges 2k-32k words.<br>That license label applies to the SFT dataset, not automatically to benchmark prompt files.<br>Sources:<br>SFT data: https://huggingface.co/datasets/THUDM/LongWriter-6k <br>English evaluation data: https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl | Quality score uses GPT-4o judge over Relevance, Accuracy, Coherence, Clarity, Breadth and Depth, and Reading Experience. Each dimension uses 1-5.<br>The script computes the length score separately from requested vs produced length.<br>The quality prompt explicitly excludes length compliance.<br>Sources:<br>Quality script: https://github.com/THUDM/LongWriter/blob/main/evaluation/eval_quality.py <br>Length script: https://github.com/THUDM/LongWriter/blob/main/evaluation/eval_length.py <br>Judge prompt: https://github.com/THUDM/LongWriter/blob/main/evaluation/judge.txt | Benchmark-file license/provenance remains unresolved.<br>The repository does not publish a license file in the expected GitHub LICENSE path.<br>The Hugging Face (HF) Apache-2.0 label covers LongWriter-6k SFT data rather than the `evaluation/*.jsonl` benchmark prompt files.<br>Before use, clear:<br>License for `evaluation/longbench_write*.jsonl` and `longwrite_ruler.jsonl`<br>Provenance of prompts and whether redistribution is allowed<br>Whether derived benchmark results can be published | After clearance, use it only for supplementary analysis of target output length.<br>Do not count it among the 3 primary benchmarks. |
+| EQ-Bench Creative Writing v3 [^20] | 32 prompts × 3 iterations = 96 items.<br>Genres include historical fiction, epistolary, romance, comedy, and horror.<br>Sources:<br>Repo: https://github.com/EQ-bench/creative-writing-bench <br>Prompts: https://github.com/EQ-bench/creative-writing-bench/blob/main/data/creative_writing_prompts_v3.json | Prompt examples commonly request about 1,000 words.<br>The harness truncates outputs to 4,000 characters for length-bias mitigation according to README.<br>Sources:<br>Repo: https://github.com/EQ-bench/creative-writing-bench <br>Judge prompt: https://github.com/EQ-bench/creative-writing-bench/blob/main/data/creative_writing_judging_prompt.txt | Hybrid rubric score plus pairwise Elo/Glicko-2.<br>README states Sonnet 4.6 for leaderboard parity.<br>README lists mitigations for length, position, and verbosity/poetic incoherence.<br>Sources:<br>Repo: https://github.com/EQ-bench/creative-writing-bench <br>Script: https://github.com/EQ-bench/creative-writing-bench/blob/main/creative_writing_bench.py | The repository does not publish a license file at the listed license URL. Confirm the license with the maintainers or repository metadata before using it. | We expect medium fit because creative writing is central, but 32 prompts is small and Elo requires historical run files for comparability. Use it as a secondary benchmark for subjective/literary quality. |
+| WildBench v2 [^17] writing-relevant subset | HF dataset v2 has 1,024 test examples.<br>V2-hard has 256 examples.<br>Fields include `checklist`, `primary_tag`, `secondary_tags`, and `intent`.<br>Sources:<br>HF data: https://huggingface.co/datasets/allenai/WildBench <br>Repo: https://github.com/allenai/WildBench | Not a pure long-form benchmark.<br>It is collected from real-user tasks and includes long/writing-like tasks.<br>Source: https://github.com/allenai/WildBench | V2 uses 5-10 example-specific checklist questions, GPT-4-turbo scoring, pairwise reward, and length-penalized Elo/reward-mix.<br>Sources:<br>Repo: https://github.com/allenai/WildBench <br>HF data: https://huggingface.co/datasets/allenai/WildBench | HF card says Creative Commons Attribution (CC BY) 4.0 for dataset.<br>Repo LICENSE is Apache-2.0.<br>Sources:<br>HF data: https://huggingface.co/datasets/allenai/WildBench <br>License: https://github.com/allenai/WildBench/blob/main/LICENSE | We expect medium fit because real-user diversity is useful, but writing tasks must be filtered by `primary_tag`/`intent`. Otherwise the benchmark measures broad assistant behavior rather than writing quality. |
+| DoLoMiTes [^7] | 519 methodical tasks from 266 experts across 25 fields.<br>1,857 expert post-edited examples.<br>The sources disagree on split size.<br>Paper/archive-derived reporting gives 820 dev / 1,037 test.<br>Repo README says 830 dev examples and 1,037 test examples.<br>Use 820/1,037 only after recomputing from the released archive in the experiment repository.<br>Sources:<br>Released archive: https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip <br>Conflicting README: https://github.com/google-deepmind/dolomites/blob/main/README.md | Reference outputs average 341.42 tokens.<br>Tasks are methodical long-form writing with structured output sections.<br>Generation uses up to 4,096 tokens.<br>Source: https://github.com/google-deepmind/dolomites | Evaluation includes pairwise language model (LM) preference against GPT-4 and fine-grained 1-5 absolute evaluation.<br>Absolute dimensions are task adherence, factual correctness, depth, completeness, and coherence.<br>Human validation used 200 pairs.<br>Two annotators agreed on 75% of 100 examples.<br>Claude-3 Opus agreement was 67% with ties and 77% without ties.<br>Source: https://github.com/google-deepmind/dolomites | Software Apache-2.0.<br>Other materials CC-BY 4.0.<br>Source: https://github.com/google-deepmind/dolomites/blob/main/README.md | We expect high fit for research/report tasks because DoLoMiTes uses structured expert tasks. We expect medium fit for creative writing because the task set is not fiction-centered. |
+| WritingPreferenceBench [^8] | 1,800 human-validated preference pairs<br>1,200 English pairs<br>600 Chinese pairs<br>8 creative writing genres<br>51 categories<br>Sources:<br>Project: https://WritingPreferenceBench.github.io/ <br>HF data: https://huggingface.co/datasets/m-a-p/Writing-Preference-Bench <br>Repo: https://github.com/WritingPreferenceBench/Writing-Preference-Bench | HF/repo report mean response lengths around 1,450 words for English chosen and 840 for English rejected.<br>Pair data include completion_tokens and word_len.<br>Sources:<br>HF data: https://huggingface.co/datasets/m-a-p/Writing-Preference-Bench <br>Repo: https://github.com/WritingPreferenceBench/Writing-Preference-Bench | Construction uses human-in-the-loop preference construction, 11 expert annotators, 8-hour rubric calibration, a 0-3 creative-writing scale, and retained pairs with >=2/3 agreement and score gap >=1.<br>LLM-as-judge chooses the preferred response based on creativity, emotional resonance, and stylistic flair.<br>Sources:<br>HF data: https://huggingface.co/datasets/m-a-p/Writing-Preference-Bench <br>Repo: https://github.com/WritingPreferenceBench/Writing-Preference-Bench | License metadata disagrees.<br>GitHub README says Open Data Commons Attribution License (ODC-BY).<br>HF metadata says Apache-2.0.<br>Resolve the license before redistribution.<br>Sources:<br>Repo: https://github.com/WritingPreferenceBench/Writing-Preference-Bench <br>HF data: https://huggingface.co/datasets/m-a-p/Writing-Preference-Bench | We expect medium fit as a primary benchmark because it validates judge sensitivity to subjective style, but it is not a clean generation benchmark. Its labels are preference pairs of existing model outputs. |
 | LongGenBench [^9] | Evaluates long-form generation in long-context LMs.<br>Uses four scenarios.<br>Prompt lengths are 16K/32K.<br>Task examples include:<br>Urban planning<br>Diary entries<br>Menu-planning-like constrained long outputs<br>Sources:<br>Repo: https://github.com/mozhu621/LongGenBench <br>HF data: https://huggingface.co/datasets/mozhu/LongGenBench | Focus is long-context prompt instruction following, not only output length.<br>HF license is Creative Commons Attribution-NoDerivatives (CC BY-ND) 4.0.<br>Sources:<br>Repo: https://github.com/mozhu621/LongGenBench <br>HF data: https://huggingface.co/datasets/mozhu/LongGenBench | Repo has evaluation scripts under `Evalution`.<br>The detailed judge rubric needs further inspection before use.<br>Source: https://github.com/mozhu621/LongGenBench | HF card says CC-BY-ND-4.0.<br>Source: https://huggingface.co/datasets/mozhu/LongGenBench | We expect medium-low fit as a primary benchmark because it stresses long instruction adherence more than writing process quality. Use it only for supplementary robustness. |
 | LongJudgeBench [^10] | Not a generation benchmark.<br>It is a 2026 meta-evaluation benchmark for LLM-as-a-judge on long-form outputs.<br>It has:<br>6 datasets<br>Pointwise/pairwise/listwise protocols<br>4 prompt modes<br>8 judge models<br>Sources:<br>Repo: https://github.com/cjj826/LongJudgeBench | Documents range from avg 3,053 to 28,758 tokens depending on source dataset.<br>Source: https://github.com/cjj826/LongJudgeBench | Metrics include:<br>Pairwise accuracy (ACC)<br>Spearman<br>Kendall's tau<br>Prompt modes include:<br>vanilla<br>rubric<br>reference<br>rubric+reference<br>README reports that rubric/reference can help or hurt depending on task.<br>Sources:<br>Repo: https://github.com/cjj826/LongJudgeBench <br>Reliability script: https://github.com/cjj826/LongJudgeBench/blob/main/src/evaluation/compute_reliability.py | Repository LICENSE is MIT.<br>Source: https://github.com/cjj826/LongJudgeBench/blob/main/LICENSE | We expect this to work for judge validation only. It should not replace product-quality benchmarks, but it directly informs judge choice for long outputs. |
 
 ## 2. Essay / argumentative writing datasets with quality annotations
+
+Use essay datasets as prompt sources and human-score references, not as primary generation benchmarks.
 
 | Dataset | claims and sources | usefulness for this paper |
 |---|---|---|
@@ -87,6 +80,8 @@ Separate product quality from process analysis. Judges should see final outputs 
 
 ## 3. LLM-as-judge methodology for writing quality
 
+The judge design should pair rubric scoring with balanced pairwise comparisons, then validate the automatic judges against a small human sample.
+
 ### 3.1 Biases and mitigations
 
 - MT-Bench / Chatbot Arena [^13] paper identifies judge biases:
@@ -95,10 +90,7 @@ Separate product quality from process analysis. Judges should see final outputs 
   - Self-enhancement bias
   - Limited reasoning ability
 
-  GPT-4 matched human preferences above 80% agreement in their studied setup. The released setup included:
-  - 80 MT-Bench questions
-  - 3K expert votes
-  - 30K arena conversations
+  GPT-4 matched human preferences above 80% agreement in their studied setup. The released setup included 80 MT-Bench questions, 3K expert votes, and 30K arena conversations.
 
   Sources:
   - Judge code: https://github.com/lm-sys/FastChat/tree/main/fastchat/llm_judge
@@ -107,10 +99,7 @@ Separate product quality from process analysis. Judges should see final outputs 
   - Length influence
   - Assistant-name bias
 
-  The implementation supports:
-  - Single grading
-  - Pairwise-baseline mode
-  - Pairwise-all mode
+  The implementation supports single grading, pairwise-baseline mode, and pairwise-all mode.
 
   Sources:
   - Judge prompts: https://github.com/lm-sys/FastChat/blob/main/fastchat/llm_judge/data/judge_prompts.jsonl
@@ -179,31 +168,16 @@ Recommended protocol:
 
 Product-only evaluation misses the central claim of a Flower & Hayes [^1]-inspired writing agent. Evaluate the process trace separately from final product quality.
 
-- IteraTeR [^16] is a large-scale, multi-domain, edit-intention annotated corpus of iteratively revised text. It models:
-  - Revision depths
-  - Granularities
-  - Edit intentions
-
-  It connects edit intentions to writing quality. Sources:
+- IteraTeR [^16] is a large-scale, multi-domain, edit-intention annotated corpus of iteratively revised text. It models revision depths, granularities, and edit intentions. It connects edit intentions to writing quality. Sources:
   - Repo: https://github.com/vipulraheja/IteraTeR
   - Dataset README: https://github.com/vipulraheja/IteraTeR/blob/main/dataset/README.md
-- IteraTeR-HUMAN [^16] document-level split includes 481 train, 27 dev, and 51 test documents. Sentence-level split includes 3,254 train, 400 dev, and 364 test examples. Edit actions include:
-  - Add/delete/replace
-  - Spans
-  - Majority intent
-  - Raw intents from 3 annotators
-
-  Source: https://github.com/vipulraheja/IteraTeR/blob/main/dataset/README.md
+- IteraTeR-HUMAN [^16] document-level split includes 481 train, 27 dev, and 51 test documents. Sentence-level split includes 3,254 train, 400 dev, and 364 test examples. Edit actions include add/delete/replace, spans, majority intent, and raw intents from 3 annotators. Source: https://github.com/vipulraheja/IteraTeR/blob/main/dataset/README.md
 - ArgRewrite V.2 [^11] was built around student-driven revision sessions for argumentative writing, including interaction with an NLP-based revision assistant. Sources:
   - Repo: https://github.com/omidkashefi/ArgRewrite
 - Revision Quality Prediction [^12] frames argumentative revision quality as success/failure dependent on argument context and uses chain-of-thought generated argument contexts for prediction. Sources:
   - Repo: https://github.com/ZhexiongLiu/Revision-Quality-Prediction
 
-Process fairness policy: all 6 arms receive identical:
-
-- Input context
-- Tools
-- Output budget
+Process fairness policy: all 6 arms receive identical input context, tools, and output budget.
 
 The protocol makes the equality rule and no-retrieval rule binding for all 6 arms: https://github.com/shunk031/agentic-cognitive-writing/blob/docs/experiment-protocol/docs/experiments/protocol.md
 
@@ -215,32 +189,16 @@ No arm uses web access or retrieval. The A3 STORM [^2]-style arm follows the pro
 - Draft
 - Polish
 
-It is not the full retrieval-based STORM system. These trace metrics are not applicable (N/A) by design for every arm:
-
-- Retrieval
-- Evidence gathering
-- Citation tracing
+It is not the full retrieval-based STORM system. Retrieval, evidence gathering, and citation tracing are not applicable (N/A) by design for every arm.
 
 For the 6-arm experiment, the process metrics should follow the protocol-backed trace contracts:
 
-- Planning trace. Count goals and rate their specificity. Check whether goals cover:
-  - Audience
-  - Purpose
-  - Content
-  - Organization
-  - Style
-  Check whether later steps refer back to goals.
+- Planning trace. Count goals and rate their specificity. Check whether goals cover audience, purpose, content, organization, and style. Check whether later steps refer back to goals.
 - Translation trace. Check whether drafts:
   - Ground claims in plan items
   - Expand sections in a coherent order
   - Preserve constraints
-- Review trace. Count detected issues and issue types. Map revision intent to:
-  - Clarity
-  - Fluency
-  - Coherence
-  - Style
-  - Meaning change
-  Check whether fixes improve final rubric scores.
+- Review trace. Count detected issues and issue types. Map revision intent to clarity, fluency, coherence, style, and meaning change. Check whether fixes improve final rubric scores.
 - Monitor trace. Measure process order entropy, meaning how varied the sequence of planning, translating, and reviewing steps is. Check whether transitions respond to detected problems rather than a fixed sequence.
 - A3 STORM [^2]-style arm trace. Record completion of each protocol stage:
   - Perspective discovery
@@ -254,6 +212,8 @@ For the 6-arm experiment, the process metrics should follow the protocol-backed 
 - Hypotheses to test. The no-goal-network arm should show fewer explicit goal references. The fixed-process-order arm should show lower adaptive transitions even if final quality is similar.
 
 ## 5. Final recommendation
+
+Use WritingBench [^3], HelloBench [^4], and DoLoMiTes [^7] as the primary benchmark set, with PERSUADE 2.0 [^19] and ICLE++ [^5] as calibration datasets.
 
 ### 5.1 Primary benchmark shortlist
 
@@ -320,6 +280,8 @@ Optional supplementary axis: LongBench-Write [^6]
   - Judge-human agreement
 
 ## 6. Inaccessible / unresolved items
+
+The main unresolved items are benchmark-file licensing, source-count conflicts, and raw-path reliability.
 
 - HelloBench [^4] raw data file paths listed in README are not reliable. Do not rely on raw file path names until the experiment team checks cloning or HF/OpenCompass integration.
 - Keep the dataset previously labeled `ASAP++` out of the dataset table until the team verifies a direct official paper/code/data URL.
