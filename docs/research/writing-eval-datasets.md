@@ -36,14 +36,14 @@ Use PERSUADE 2.0 [^19] and International Corpus of Learner English++ (ICLE++) [^
 
 Keep LongBench-Write [^6] outside the primary benchmark set, and use it only as an optional length-control axis after the team clears benchmark prompt-file license and provenance. A length-control axis tests whether results hold across target output lengths.
 
-The planned comparison has 6 arms, pending final user confirmation.
+The planned comparison has 6 arms. The settled arm specification lives in `docs/experiments/protocol.md` on the protocol branch: https://github.com/shunk031/agentic-cognitive-writing/blob/docs/experiment-protocol/docs/experiments/protocol.md
 
-- Single-shot generation
-- Linear Pre-Write/Write/Re-Write
-- Synthesis of Topic Outlines through Retrieval and Multi-perspective Question Asking (STORM) [^2]-style linear pipeline without retrieval
-- Flower & Hayes [^1]-inspired agent
-- Ablation A with no goal network, meaning the arm removes the explicit goal structure
-- Ablation B with fixed process order
+- A1: single-shot generation
+- A2: linear Pre-Write/Write/Re-Write
+- A3: Synthesis of Topic Outlines through Retrieval and Multi-perspective Question Asking (STORM) [^2]-style linear pipeline without retrieval
+- A4: `cognitive-writing`, the cognitive-writing skill where the Monitor coordinates Planner, Translator, and Reviewer role skills
+- A5: `cognitive-writing-no-goal-network`, the cognitive-writing ablation that removes the explicit goal network
+- A6: `cognitive-writing-fixed-order`, the cognitive-writing ablation that keeps the goal network and prescribes process order
 
 All arms receive the same input context and no arm uses web access or retrieval.
 
@@ -205,13 +205,23 @@ Process fairness policy: all 6 arms receive identical:
 - Tools
 - Output budget
 
-No arm uses web access or retrieval. The STORM [^2]-style arm is therefore a linear outline/write/revise pipeline inspired by STORM, not the full retrieval-based STORM system. These trace metrics are not applicable (N/A) by design for every arm:
+The protocol makes the equality rule and no-retrieval rule binding for all 6 arms: https://github.com/shunk031/agentic-cognitive-writing/blob/docs/experiment-protocol/docs/experiments/protocol.md
+
+No arm uses web access or retrieval. The A3 STORM [^2]-style arm follows the protocol's five stages:
+
+- Perspective discovery
+- Simulated question answering
+- Outline
+- Draft
+- Polish
+
+It is not the full retrieval-based STORM system. These trace metrics are not applicable (N/A) by design for every arm:
 
 - Retrieval
 - Evidence gathering
 - Citation tracing
 
-For the 6-arm experiment, process metrics should be:
+For the 6-arm experiment, the process metrics should follow the protocol-backed trace contracts:
 
 - Planning trace. Count goals and rate their specificity. Check whether goals cover:
   - Audience
@@ -232,13 +242,16 @@ For the 6-arm experiment, process metrics should be:
   - Meaning change
   Check whether fixes improve final rubric scores.
 - Monitor trace. Measure process order entropy, meaning how varied the sequence of planning, translating, and reviewing steps is. Check whether transitions respond to detected problems rather than a fixed sequence.
-- STORM [^2]-style arm trace. Record:
-  - Outline structure
-  - Simulated question/answer or perspective decomposition if used
-  - Section allocation
-  - Linear handoff completeness
+- A3 STORM [^2]-style arm trace. Record completion of each protocol stage:
+  - Perspective discovery
+  - Simulated question answering
+  - Outline
+  - Draft
+  - Polish
   Retrieval/evidence/citation traces are explicitly N/A under the no-retrieval policy.
-- Ablation-specific checks. The no-goal-network arm should show fewer explicit goal references. The fixed-process-order arm should show lower adaptive transitions even if final quality is similar.
+- A5 `cognitive-writing-no-goal-network` trace. Leave `goals.md` untouched. Record process switches under the shared trace contract. Record no goal events or goal fields.
+- A6 `cognitive-writing-fixed-order` trace. Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Permit Generate and Evaluate interruptions, then return to the prescribed order.
+- Hypotheses to test. The no-goal-network arm should show fewer explicit goal references. The fixed-process-order arm should show lower adaptive transitions even if final quality is similar.
 
 ## 5. Final recommendation
 
@@ -320,11 +333,11 @@ Optional supplementary axis: LongBench-Write [^6]
 [^1]: Flower, Linda, and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication, 1981. DOI: 10.2307/356600. https://doi.org/10.2307/356600
 [^2]: Yijia Shao, Yucheng Jiang, Theodore A. Kanell, Peter Xu, Omar Khattab, and Monica S. Lam. "Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models." Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, 2024. https://aclanthology.org/2024.naacl-long.347/ arXiv: https://arxiv.org/abs/2402.14207
 [^3]: Yuning Wu, Jiahao Mei, Ming Yan, Chenliang Li, Shaopeng Lai, Yuran Ren, Zijia Wang, Ji Zhang, Mengyue Wu, Qin Jin, and Fei Huang. "WritingBench: A Comprehensive Benchmark for Generative Writing." arXiv, 2025. https://arxiv.org/abs/2503.05244
-[^4]: Haoran Que, Feiyu Duan, Liqun He, Yutao Mou, Wangchunshu Zhou, Jiaheng Liu, Wenge Rong, Zekun Moore Wang, Jian Yang, Ge Zhang, Junran Peng, Zhaoxiang Zhang, and Songyang Zhang. "HelloBench: Evaluating Long Text Generation Capabilities of Large Language Models." arXiv, 2024. https://arxiv.org/abs/2409.16191
+[^4]: Haoran Que, Feiyu Duan, Liqun He, Yutao Mou, Wangchunshu Zhou, Jiaheng Liu, Wenge Rong, Zekun Moore Wang, Jian Yang, Ge Zhang, Junran Peng, Zhaoxiang Zhang, Songyang Zhang, and Kai Chen. "HelloBench: Evaluating Long Text Generation Capabilities of Large Language Models." arXiv, 2024. https://arxiv.org/abs/2409.16191
 [^5]: Shengjie Li and Vincent Ng. "ICLE++: Modeling Fine-Grained Traits for Holistic Essay Scoring." Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, 2024. DOI: 10.18653/v1/2024.naacl-long.468. https://aclanthology.org/2024.naacl-long.468/
 [^6]: Yushi Bai, Jiajie Zhang, Xin Lv, Linzhi Zheng, Siqi Zhu, Lei Hou, Yuxiao Dong, Jie Tang, and Juanzi Li. "LongWriter: Unleashing 10,000+ Word Generation from Long Context LLMs." arXiv, 2024. https://arxiv.org/abs/2408.07055
 [^7]: Chaitanya Malaviya, Priyanka Agrawal, Kuzman Ganchev, Pranesh Srinivasan, Fantine Huot, Jonathan Berant, Mark Yatskar, Dipanjan Das, Mirella Lapata, and Chris Alberti. "DOLOMITES: Domain-Specific Long-Form Methodical Tasks." arXiv, 2024. https://arxiv.org/abs/2405.05938
-[^8]: Shuangshuang Ying, Yunwen Li, Xingwei Qu, Xin Li, Sheng Jin, Minghao Liu, Zhoufutu Wen, Xeron Du, Tianyu Zheng, Yichi Zhang, Letian Ni, Yuyang Cheng, and Zhenzhu Yang. "Beyond Correctness: Evaluating Subjective Writing Preferences Across Cultures." arXiv, 2025. https://arxiv.org/abs/2510.14616
+[^8]: Shuangshuang Ying, Yunwen Li, Xingwei Qu, Xin Li, Sheng Jin, Minghao Liu, Zhoufutu Wen, Xeron Du, Tianyu Zheng, Yichi Zhang, Letian Ni, Yuyang Cheng, Zhenzhu Yang, Qiguang Chen, Jingzhe Ding, Shengda Long, Wangchunshu Zhou, Jiazhan Feng, Wanjun Zhong, Libo Qin, Ge Zhang, Wenhao Huang, Wanxiang Che, and Chenghua Lin. "Beyond Correctness: Evaluating Subjective Writing Preferences Across Cultures." arXiv, 2025. https://arxiv.org/abs/2510.14616
 [^9]: Yuhao Wu, Ming Shan Hee, Zhiqing Hu, and Roy Ka-Wei Lee. "LongGenBench: Benchmarking Long-Form Generation in Long Context LLMs." International Conference on Learning Representations (ICLR), 2025. https://arxiv.org/abs/2409.02076
 [^10]: Junjie Chen, Yuxi Dong, Haitao Li, Weihang Su, Yujia Zhou, Min Zhang, Yiqun Liu, and Qingyao Ai. "Benchmarking LLM-as-a-Judge for Long-Form Output Evaluation." Empirical Methods in Natural Language Processing (EMNLP), 2026. https://arxiv.org/abs/2606.01629
 [^11]: Omid Kashefi, Tazin Afrin, Meghan Dale, Christopher Olshefski, Amanda Godley, Diane Litman, and Rebecca Hwa. "ArgRewrite V.2: An Annotated Argumentative Revisions Corpus." Language Resources and Evaluation, 2022. DOI: 10.1007/s10579-021-09567-z. https://doi.org/10.1007/s10579-021-09567-z
