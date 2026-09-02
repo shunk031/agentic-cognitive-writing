@@ -42,16 +42,17 @@ Evidence rule. Unsupported paths are not evidence for platform behavior.
 **Sources**
 
 - Official non-GitHub: Claude Code Skills docs: https://code.claude.com/docs/en/skills.md
-- GitHub code: Anthropic skill-creator `SKILL.md`: https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md
-- GitHub code: validator: https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py
-- GitHub code: schemas: https://github.com/anthropics/skills/blob/main/skills/skill-creator/references/schemas.md
-- GitHub code: grader agent: https://github.com/anthropics/skills/blob/main/skills/skill-creator/agents/grader.md
-- GitHub code: comparator agent: https://github.com/anthropics/skills/blob/main/skills/skill-creator/agents/comparator.md
-- GitHub code: analyzer agent: https://github.com/anthropics/skills/blob/main/skills/skill-creator/agents/analyzer.md
-- GitHub code: package script: https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/package_skill.py
-- GitHub code: benchmark aggregation script: https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/aggregate_benchmark.py
-- GitHub code: eval script: https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/run_eval.py
-- GitHub code: eval loop script: https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/run_loop.py
+- GitHub code: Anthropic skill-creator
+  - `SKILL.md`: https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md
+  - validator: https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py
+  - schemas: https://github.com/anthropics/skills/blob/main/skills/skill-creator/references/schemas.md
+  - grader agent: https://github.com/anthropics/skills/blob/main/skills/skill-creator/agents/grader.md
+  - comparator agent: https://github.com/anthropics/skills/blob/main/skills/skill-creator/agents/comparator.md
+  - analyzer agent: https://github.com/anthropics/skills/blob/main/skills/skill-creator/agents/analyzer.md
+  - package script: https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/package_skill.py
+  - benchmark aggregation script: https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/aggregate_benchmark.py
+  - eval script: https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/run_eval.py
+  - eval loop script: https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/run_loop.py
 
 **Format and constraints**
 
@@ -152,10 +153,11 @@ Evidence rule. Unsupported paths are not evidence for platform behavior.
 - Official non-GitHub: Plugin marketplaces: https://code.claude.com/docs/en/plugin-marketplaces.md
 - GitHub code: official marketplace: https://github.com/anthropics/claude-plugins-official/blob/main/.claude-plugin/marketplace.json
 - GitHub code: `skill-creator` plugin manifest: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/skill-creator/.claude-plugin/plugin.json
-- GitHub code: `feature-dev` plugin manifest: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/.claude-plugin/plugin.json
-- GitHub code: `feature-dev` code-explorer agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-explorer.md
-- GitHub code: `feature-dev` code-architect agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-architect.md
-- GitHub code: `feature-dev` code-reviewer agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-reviewer.md
+- GitHub code: `feature-dev`
+  - plugin manifest: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/.claude-plugin/plugin.json
+  - code-explorer agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-explorer.md
+  - code-architect agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-architect.md
+  - code-reviewer agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-reviewer.md
 - GitHub code: command-as-skill example: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/code-review/commands/code-review.md
 - GitHub code: hook example: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/hookify/hooks/hooks.json
 
@@ -230,10 +232,11 @@ Evidence rule. Unsupported paths are not evidence for platform behavior.
 
 - Official non-GitHub: Subagents docs: https://code.claude.com/docs/en/sub-agents.md
 - Official non-GitHub: Plugins reference, agents component: https://code.claude.com/docs/en/plugins-reference.md
-- GitHub code: `feature-dev` code-explorer agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-explorer.md
-- GitHub code: `feature-dev` code-architect agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-architect.md
-- GitHub code: `feature-dev` code-reviewer agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-reviewer.md
-- GitHub code: `feature-dev` command invoking agents: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
+- GitHub code: `feature-dev`
+  - code-explorer agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-explorer.md
+  - code-architect agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-architect.md
+  - code-reviewer agent: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/agents/code-reviewer.md
+  - command invoking agents: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
 - GitHub code: VoltAgent community example: https://github.com/VoltAgent/awesome-claude-code-subagents/blob/main/categories/09-meta-orchestration/agent-installer.md
 - GitHub code: contains-studio community example: https://github.com/contains-studio/agents/blob/main/engineering/ai-engineer.md
 - GitHub code: 0xfurai community example: https://github.com/0xfurai/claude-code-subagents/blob/main/agents/openai-api-expert.md
@@ -327,11 +330,12 @@ Evidence rule. Unsupported paths are not evidence for platform behavior.
 - Official non-GitHub: Codex build skills: https://developers.openai.com/codex/build-skills.md
 - Official non-GitHub: plugin build skills: https://developers.openai.com/plugins/build/skills.md
 - Official non-GitHub: Codex build plugins: https://developers.openai.com/codex/build-plugins.md
-- GitHub code: OpenAI system skill-creator: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md
-- GitHub code: OpenAI validator: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/quick_validate.py
-- GitHub code: `agents/openai.yaml` reference: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/references/openai_yaml.md
-- GitHub code: OpenAI skill initializer: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/init_skill.py
-- GitHub code: OpenAI metadata generator: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/generate_openai_yaml.py
+- GitHub code: OpenAI skill-creator
+  - system `SKILL.md`: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md
+  - validator: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/quick_validate.py
+  - `agents/openai.yaml` reference: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/references/openai_yaml.md
+  - skill initializer: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/init_skill.py
+  - metadata generator: https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/generate_openai_yaml.py
 
 **Codex skill anatomy and discovery**
 
@@ -402,9 +406,10 @@ Evidence rule. Unsupported paths are not evidence for platform behavior.
 - GitHub code: OpenAI frontend-app-builder skill: https://github.com/openai/plugins/blob/main/plugins/build-web-apps/skills/frontend-app-builder/SKILL.md
 - GitHub code: OpenAI agents-sdk skill: https://github.com/openai/plugins/blob/main/plugins/openai-developers/skills/agents-sdk/SKILL.md
 - GitHub code: Codex GitHub Action security docs as automation pattern: https://github.com/openai/codex-action/blob/main/docs/security.md
-- GitHub code: STORM [^3] engine: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/engine.py
-- GitHub code: STORM [^3] outline generation module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/outline_generation.py
-- GitHub code: STORM [^3] article generation module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_generation.py
+- GitHub code: STORM [^3]
+  - engine: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/engine.py
+  - outline generation module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/outline_generation.py
+  - article generation module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_generation.py
 
 **Native Codex capabilities**
 
@@ -463,8 +468,9 @@ Evidence rule. Unsupported paths are not evidence for platform behavior.
   - https://developers.openai.com/plugins/build/plugins.md
 - GitHub code: OpenAI `build-web-apps` plugin manifest: https://github.com/openai/plugins/blob/main/plugins/build-web-apps/.codex-plugin/plugin.json
 - GitHub code: OpenAI `frontend-app-builder` skill: https://github.com/openai/plugins/blob/main/plugins/build-web-apps/skills/frontend-app-builder/SKILL.md
-- GitHub code: Anthropic `skill-creator` plugin manifest: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/skill-creator/.claude-plugin/plugin.json
-- GitHub code: Anthropic `skill-creator` Agent Skill: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/skill-creator/skills/skill-creator/SKILL.md
+- GitHub code: Anthropic `skill-creator`
+  - plugin manifest: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/skill-creator/.claude-plugin/plugin.json
+  - Agent Skill: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/skill-creator/skills/skill-creator/SKILL.md
 - GitHub code: Adobe Claude plugin manifest pointing at `skills`: https://github.com/adobe/skills/blob/main/plugins/creative-cloud/adobe-for-creativity/.claude-plugin/plugin.json
 
 **Strategies**
@@ -551,24 +557,28 @@ agentic-cognitive-writing-process/
 
 **Sources**
 
-- STORM [^3] code: engine: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/engine.py
-- STORM [^3] code: knowledge curation module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/knowledge_curation.py
-- STORM [^3] code: outline generation module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/outline_generation.py
-- STORM [^3] code: article generation module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_generation.py
-- STORM [^3] code: article polish module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_polish.py
-- PaperDebugger [^5] code: chat streaming API file: https://github.com/PaperDebugger/PaperDebugger/blob/main/internal/api/chat/create_conversation_message_stream.go
-- PaperDebugger [^5]: Claude skill file: https://github.com/PaperDebugger/PaperDebugger/blob/main/.claude/skills/developer/SKILL.md
-- PaperQA [^12] as research-agent prior art: main agent code: https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/main.py
-- PaperQA [^12] as research-agent prior art: search agent code: https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/search.py
-- PaperQA [^12] as research-agent prior art: agent tests: https://github.com/Future-House/paper-qa/blob/main/tests/test_agents.py
-- In2Writing venue sweep: Association for Computational Linguistics (ACL) Anthology venue page: https://aclanthology.org/venues/in2writing/
-- In2Writing venue sweep: 2022 volume page: https://aclanthology.org/volumes/2022.in2writing-1/
-- In2Writing venue sweep: 2025 volume page: https://aclanthology.org/volumes/2025.in2writing-1/
+- STORM [^3] code:
+  - engine: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/engine.py
+  - knowledge curation module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/knowledge_curation.py
+  - outline generation module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/outline_generation.py
+  - article generation module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_generation.py
+  - article polish module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_polish.py
+- PaperDebugger [^5]:
+  - chat streaming API file: https://github.com/PaperDebugger/PaperDebugger/blob/main/internal/api/chat/create_conversation_message_stream.go
+  - Claude skill file: https://github.com/PaperDebugger/PaperDebugger/blob/main/.claude/skills/developer/SKILL.md
+- PaperQA [^12] as research-agent prior art:
+  - main agent code: https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/main.py
+  - search agent code: https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/search.py
+  - agent tests: https://github.com/Future-House/paper-qa/blob/main/tests/test_agents.py
+- In2Writing venue sweep:
+  - Association for Computational Linguistics (ACL) Anthology venue page: https://aclanthology.org/venues/in2writing/
+  - 2022 volume page: https://aclanthology.org/volumes/2022.in2writing-1/
+  - 2025 volume page: https://aclanthology.org/volumes/2025.in2writing-1/
 
 **Writing theory to operationalize**
 
-- Flower & Hayes' Cognitive Process Theory of Writing [^1] is the canonical source for a cognitive process theory of writing.
-- We infer that Flower & Hayes' model [^1] should map cleanly to agent roles:
+- Flower & Hayes' Cognitive Process Theory of Writing [^1] is the theory this plugin operationalizes, and it introduces the monitor/planning/translating/reviewing decomposition used throughout this survey.
+- We infer that Flower & Hayes' model should map cleanly to agent roles:
   - Task environment/context
   - Long-term memory/references
   - Planning
@@ -577,25 +587,25 @@ agentic-cognitive-writing-process/
   - Monitor/control
   The mapping is an interpretation of the theory rather than a platform spec.
 - Bereiter & Scardamalia [^2] is the canonical source for knowledge-telling vs knowledge-transforming framing.
-- A likely novelty angle is to make knowledge-transforming [^2] explicit as an agentic loop:
+- A likely novelty angle is to make knowledge-transforming explicit as an agentic loop:
   - Problem representation
   - Goal refinement
   - Content transformation
   - Rhetorical evaluation
   This treats revision as more than final polish.
-- Gero et al. [^6] build on Flower & Hayes' cognitive process model [^1] in "A Design Space for Writing Support Tools Using a Cognitive Process Model of Writing." The paper treats writing as a goal-directed, non-linear process with these components:
+- Gero et al. [^6] build on Flower & Hayes' cognitive process model in "A Design Space for Writing Support Tools Using a Cognitive Process Model of Writing." The paper treats writing as a goal-directed, non-linear process with these components:
   - Planning
   - Translating
   - Reviewing
   It then uses that model to define a design space for writing support tools.
-- The Gero et al. [^6] design space covers which part of the writing process a tool supports and how constrained the supported writing goal is. The paper uses the space to review 30 papers from 2017-2021, identify under-studied highly constrained planning and reviewing, and propose shared evaluation methods and tasks.
-- We infer that the Gero et al. [^6] paper gives this project the closest taxonomy, but the mechanism is different. That paper uses Flower and Hayes [^1] to classify and compare writing tools. Our plugin should turn the same model into an executable agent architecture, where monitor, planner, translator, and reviewer roles produce observable state transitions and ledger entries.
+- The Gero et al. design space covers which part of the writing process a tool supports and how constrained the supported writing goal is. The paper uses the space to review 30 papers from 2017-2021, identify under-studied highly constrained planning and reviewing, and propose shared evaluation methods and tasks.
+- We infer that the Gero et al. paper gives this project the closest taxonomy, but the mechanism is different. That paper uses Flower and Hayes to classify and compare writing tools. Our plugin should turn the same model into an executable agent architecture, where monitor, planner, translator, and reviewer roles produce observable state transitions and ledger entries.
 
 **In2Writing process-support sweep**
 
 - ACL Anthology lists In2Writing volumes for 2022 and 2025, with 15 and 11 papers respectively; this sweep screened those 26 ACL entries and selected five total additions, including the required Gero et al. design-space paper [^6]. Source: https://aclanthology.org/venues/in2writing/
 - Schneider et al. [^7] compare natural language generation (NLG) pipeline architecture with research on the human writing process in "Data-to-text systems as writing environment." They derive principles for data-to-text systems as writing environments. The paper argues that process optimization matters because evaluating all generated output is not feasible in mass text production.
-- We infer that Schneider et al. [^7] support the plugin's ledger design. If output-scale evaluation is weak, the tool should expose the decisions that produce the text:
+- We infer that Schneider et al. support the plugin's ledger design. If output-scale evaluation is weak, the tool should expose the decisions that produce the text:
   - Planning
   - Configuration
   - Generation
@@ -605,11 +615,11 @@ agentic-cognitive-writing-process/
   - System-human revision
   - System-only revision
   It uses ArXiv, Wikipedia, and Wikinews data.
-- R3 [^8] is likely useful as an evaluation pattern for our reviewer role because it measures revision depth, edit acceptance, and human control, not only final text quality.
+- R3 is likely useful as an evaluation pattern for our reviewer role because it measures revision depth, edit acceptance, and human control, not only final text quality.
 - Liu and August [^9] study writing center tutoring in "From Crafting Text to Crafting Thought." They interview 10 current writing tutors, ground their practices in writing-center literature, and use those strategies to develop an intelligent writing tool prototype.
-- We infer that Liu and August [^9] help define user-facing behavior for the monitor and reviewer: ask what the writer wants to work on, prefer higher-order concerns before sentence-level edits, and keep the writer's ownership visible.
+- We infer that Liu and August help define user-facing behavior for the monitor and reviewer: ask what the writer wants to work on, prefer higher-order concerns before sentence-level edits, and keep the writer's ownership visible.
 - Kim et al. [^10] argue that revision depends on reflection in their voice-interaction paper. They propose a formative study comparing spoken and written interaction with conversational agents.
-- We infer that the Kim et al. [^10] paper gives this project concrete process metrics for a human-in-the-loop experiment:
+- We infer that the Kim et al. paper gives this project concrete process metrics for a human-in-the-loop experiment:
   - Reflection depth
   - Higher-order concern frequency
   - Turn structure
@@ -624,14 +634,14 @@ agentic-cognitive-writing-process/
   - Curate information
   - Create an outline
   The STORM paper reports evaluation on FreshWiki [^3] and feedback from experienced Wikipedia editors.
-- STORM [^3] code separates pipeline modules for:
+- STORM code separates pipeline modules for:
   - Knowledge curation: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/knowledge_curation.py
   - Outline generation: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/outline_generation.py
   - Article generation: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_generation.py
   - Article polish: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_polish.py
-- We infer that STORM [^3] is closest to the planning/research side of Flower & Hayes [^1], but it is less directly a cognitive monitor model because it primarily packages source gathering, outline, generation, and polish as a pipeline.
+- We infer that STORM is closest to the planning/research side of Flower & Hayes [^1], but it is less directly a cognitive monitor model because it primarily packages source gathering, outline, generation, and polish as a pipeline.
 - PaperDebugger [^5] is described by its arXiv result as an in-editor, multi-agent, plugin-based academic writing assistant for Overleaf/LaTeX workflows.
-- The PaperDebugger [^5] GitHub repo contains:
+- The PaperDebugger GitHub repo contains:
   - A Claude skill at `.claude/skills/developer/SKILL.md`: https://github.com/PaperDebugger/PaperDebugger/blob/main/.claude/skills/developer/SKILL.md
   - Chat streaming API files: https://github.com/PaperDebugger/PaperDebugger/blob/main/internal/api/chat/create_conversation_message_stream.go
   - Project/instruction APIs
@@ -644,7 +654,7 @@ agentic-cognitive-writing-process/
 **Human and artificial intelligence (AI) writing evaluation**
 
 - CoAuthor [^4] is an Association for Computing Machinery (ACM) Conference on Human Factors in Computing Systems (CHI) paper/dataset about human-AI collaborative writing for exploring language model capabilities.
-- CoAuthor-style [^4] logged interaction data is likely valuable for evaluating process support because it observes writer prompts, model continuations, acceptance, and revision behavior rather than only final document quality.
+- CoAuthor-style logged interaction data is likely valuable for evaluating process support because it observes writer prompts, model continuations, acceptance, and revision behavior rather than only final document quality.
 - STORM [^3] uses FreshWiki [^3], outline assessments, generated article comparison, and expert Wikipedia-editor feedback.
 - For our paper, we should likely combine final-output metrics with these process metrics:
   - Number of plan revisions
