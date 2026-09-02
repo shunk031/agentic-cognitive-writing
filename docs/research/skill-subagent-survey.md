@@ -2,7 +2,7 @@
 
 ## Purpose and reading guide
 
-The main plugin ships a Claude Code adapter (`.claude-plugin/plugin.json` and `agents/*.md`) and a Codex adapter (`.codex-plugin/plugin.json` and `agents/openai.yaml`). The separate experiment package ships its own manifests under `experiments/plugin/` and requires the main plugin. The survey documents the platform formats and writing-system prior art behind those packages. The survey derives the design that the shipped packages implement: shared skills, adapter files that carry platform packaging and agent metadata, four writing-process roles, observable process state, and comparison variants outside the main plugin. Shipped package sources: [main plugin README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/README.md) / [experiment package README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/README.md).
+The main plugin ships a Claude Code adapter ([plugin/.claude-plugin/plugin.json](../../plugin/.claude-plugin/plugin.json) and [plugin/agents/](../../plugin/agents/)) and a Codex adapter ([plugin/.codex-plugin/plugin.json](../../plugin/.codex-plugin/plugin.json) and [skill-local agents/openai.yaml metadata](../../plugin/skills/planning/agents/openai.yaml)). The separate experiment package ships its own manifests under [experiments/plugin/](../../experiments/plugin/) and requires the main plugin. The survey documents the platform formats and writing-system prior art behind those packages. The survey derives the design that the shipped packages implement: shared skills, adapter files that carry platform packaging and agent metadata, four writing-process roles, observable process state, and comparison variants outside the main plugin. Shipped package sources: [main plugin README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/README.md) / [experiment package README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/README.md).
 
 The shared skill core uses `SKILL.md`, `scripts/`, `references/`, and `assets/`.
 
@@ -20,8 +20,8 @@ The experiment package provides two comparison-variant skills:
 
 The adapter files hold each platform's packaging and agent metadata:
 
-- Claude Code: `.claude-plugin/` and `agents/*.md`
-- OpenAI Codex: `.codex-plugin/` and `agents/openai.yaml`
+- Claude Code: [plugin/.claude-plugin/](../../plugin/.claude-plugin/) and [plugin/agents/](../../plugin/agents/)
+- OpenAI Codex: [plugin/.codex-plugin/](../../plugin/.codex-plugin/) and [skill-local agents/openai.yaml metadata](../../plugin/skills/planning/agents/openai.yaml)
 
 The shipped plugin uses four roles derived from Flower & Hayes' Cognitive Process Theory of Writing [^1]: `monitor`, `planner`, `translator`, and `reviewer`. The monitor is a skill; the other three are Claude-native agent adapters.
 
@@ -49,7 +49,7 @@ Anthropic's skill format centers on `SKILL.md`, progressive disclosure, and supp
 - `name` must be a string and kebab-case with lowercase letters, digits, and hyphens. It must not start with `-`, end with `-`, contain `--`, or exceed 64 characters. Source: [Anthropic skill validator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py).
 - `description` must be a string, must not contain `<` or `>`, and must not exceed 1024 characters. Source: [Anthropic skill validator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py).
 - `compatibility` is optional in the validator and, when present, must be a string no longer than 500 characters. Source: [Anthropic skill validator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py).
-- Claude Code docs also show a minimal project skill with only `description` frontmatter; the separate Anthropic skill-creator validator is stricter because it requires `name`. Reconciliation: for portability and package validation, include both `name` and `description`; do not rely on Claude Code's fallback tolerance. Sources: [Claude Code Skills docs](https://code.claude.com/docs/en/skills.md) / [Anthropic skill validator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py).
+- Claude Code docs also show a minimal project skill with only `description` frontmatter; the separate Anthropic skill-creator validator is stricter because it requires `name`. **Reconciliation.** For portability and package validation, include both `name` and `description`; do not rely on Claude Code's fallback tolerance. Sources: [Claude Code Skills docs](https://code.claude.com/docs/en/skills.md) / [Anthropic skill validator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py).
 
 **Directory conventions and progressive disclosure**
 
@@ -159,14 +159,9 @@ Codex uses the same basic `SKILL.md` anatomy as Claude skills, but its validator
 
 **Field-by-field diff vs Anthropic**
 
-| Area | Anthropic skill-creator | OpenAI Codex skill-creator | Design consequence |
-| --- | --- | --- | --- |
-| Required `SKILL.md` fields | Required by validator: `name`, `description`<br>[Anthropic skill validator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py) | Required by docs and validator: `name`, `description`<br>[Codex build skills docs](https://developers.openai.com/codex/build-skills.md)<br>[OpenAI skill validator](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/quick_validate.py) | Use both everywhere. |
-| Allowed frontmatter keys | Allowed by validator: `name`, `description`, `license`, `allowed-tools`, `metadata`, `compatibility`<br>[Anthropic skill validator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py) | Allowed by validator: `name`, `description`, `license`, `allowed-tools`, `metadata`<br>[OpenAI skill validator](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/quick_validate.py) | Avoid `compatibility` if the same file must validate under OpenAI's creator. |
-| Name rules | Kebab-case; no leading hyphen, trailing hyphen, or consecutive hyphen; max 64 characters<br>[Anthropic skill validator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py) | Hyphen-case; no leading hyphen, trailing hyphen, or consecutive hyphen; max 64 characters<br>[OpenAI skill validator](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/quick_validate.py) | Same effective rule. |
-| Description rules | String; no angle brackets; max 1024 characters<br>[Anthropic skill validator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py) | String; no angle brackets; max 1024 characters<br>[OpenAI skill validator](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/quick_validate.py) | Same effective rule. |
-| UI metadata | No Anthropic skill UI metadata file is required by the skill-creator anatomy.<br>[Anthropic skill-creator SKILL.md](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) | `agents/openai.yaml` is recommended by OpenAI for UI metadata and dependencies.<br>[OpenAI skill-creator SKILL.md](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md) | Add `agents/openai.yaml` as OpenAI-only metadata; Claude should ignore it as an ordinary support file. |
-| Creation workflow | Emphasizes an evaluation loop, with-skill/baseline subagents, viewer, and grader/comparator/analyzer.<br>[Anthropic skill-creator SKILL.md](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) | Emphasizes lean skills, degree-of-freedom choice, `init_skill.py`, `quick_validate.py`, and real usage iteration.<br>[OpenAI skill-creator SKILL.md](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md) | Adopt Anthropic's evaluation workflow and OpenAI's lean/context-budget discipline. |
+The core `SKILL.md` constraints mostly match. Anthropic's validator requires `name` and `description`; OpenAI's docs and validator also require `name` and `description`, so shared skills should use both fields everywhere. The allowed key sets differ by one field: Anthropic's validator allows `name`, `description`, `license`, `allowed-tools`, `metadata`, and `compatibility`; OpenAI's validator allows `name`, `description`, `license`, `allowed-tools`, and `metadata`, so shared files should avoid `compatibility`. Name and description constraints have the same effective shape: both validators enforce hyphenated/kebab-case names with no leading hyphen, trailing hyphen, or consecutive hyphen, a maximum of 64 characters for `name`, no angle brackets in `description`, and a maximum of 1024 characters for `description`. Sources: [Anthropic skill validator](https://github.com/anthropics/skills/blob/main/skills/skill-creator/scripts/quick_validate.py) / [Codex build skills docs](https://developers.openai.com/codex/build-skills.md) / [OpenAI skill validator](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/quick_validate.py).
+
+User interface metadata and authoring workflow are the meaningful differences. Anthropic's skill-creator anatomy does not require a skill UI metadata file; OpenAI recommends `agents/openai.yaml` for UI metadata and dependencies, so the plugin keeps that file as OpenAI-only metadata and lets Claude treat it as an ordinary support file. Anthropic emphasizes an evaluation loop with with-skill/baseline subagents, viewer, and grader/comparator/analyzer. OpenAI emphasizes lean skills, degree-of-freedom choice, `init_skill.py`, `quick_validate.py`, and real usage iteration. **Design consequence.** Adopt Anthropic's evaluation workflow and OpenAI's lean/context-budget discipline. Sources: [Anthropic skill-creator SKILL.md](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) / [OpenAI skill-creator SKILL.md](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md).
 
 ## Codex multi-agent and sub-agent construction
 
@@ -215,7 +210,7 @@ A dual-target repository works best when shared skills stay platform-neutral and
      - Add OpenAI-only `agents/openai.yaml`
      - Keep Claude plugin metadata outside the skill directory
      The shared layout maximizes reuse because the common denominator is `SKILL.md` + support folders.
-   - Trade-off: Claude project discovery wants `.claude/skills/`, Codex wants `.agents/skills/`; a bare `skills/` root needs plugin manifests, symlinks, or install scripts.
+   - **Trade-off.** Claude project discovery wants `.claude/skills/`, Codex wants `.agents/skills/`; a bare `skills/` root needs plugin manifests, symlinks, or install scripts.
 
 2. **Dual plugin manifests over one `skills/` tree**
    - Claude plugins use `.claude-plugin/plugin.json`; OpenAI plugins use `.codex-plugin/plugin.json`.
@@ -223,20 +218,20 @@ A dual-target repository works best when shared skills stay platform-neutral and
    - OpenAI plugin manifests can point `skills` at `./skills/`; Claude plugin docs likewise load `skills/` at plugin root.
      Sources: [OpenAI plugin build skills docs](https://developers.openai.com/plugins/build/skills.md) / [Claude Code plugins reference](https://code.claude.com/docs/en/plugins-reference.md).
    - We infer that a single repo can contain `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` at plugin root. Both can point to `./skills/`, with platform-specific metadata files in their respective manifest directories.
-   - Trade-off: marketplace schemas, install commands, UI metadata, and subagent definitions still diverge.
+   - **Trade-off.** Marketplace schemas, install commands, UI metadata, and subagent definitions still diverge.
 
 3. **Symlinked local authoring**
    - Claude follows symlinked skill folders in personal/project skill locations; Codex follows symlink targets when scanning skill folders.
      Sources: [Claude Code skills docs](https://code.claude.com/docs/en/skills.md) / [Codex build skills docs](https://developers.openai.com/codex/build-skills.md).
    - During development, teams can likely symlink `.claude/skills/<name>` and `.agents/skills/<name>` to the same canonical `skills/<name>` folder.
-   - Trade-off: plugin packaging and cache copy semantics can break references outside the plugin directory; avoid `../shared` runtime dependencies in distributed packages. Claude install-cache warning: [Claude Code plugin marketplaces docs](https://code.claude.com/docs/en/plugin-marketplaces.md).
+   - **Trade-off.** Plugin packaging and cache copy semantics can break references outside the plugin directory; avoid `../shared` runtime dependencies in distributed packages. Claude install-cache warning: [Claude Code plugin marketplaces docs](https://code.claude.com/docs/en/plugin-marketplaces.md).
 
 4. **Adapter generation**
    - OpenAI provides `init_skill.py` and `generate_openai_yaml.py` for generating `agents/openai.yaml`.
      Sources: [skill initializer](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/init_skill.py) / [metadata generator](https://github.com/openai/skills/blob/main/skills/.system/skill-creator/scripts/generate_openai_yaml.py).
    - Anthropic validates plugins with `claude plugin validate` according to Claude docs. Source: [Claude Code create plugins docs](https://code.claude.com/docs/en/plugins.md).
    - We infer that a converter can lint a canonical skill tree and generate `.codex-plugin/plugin.json`, `.claude-plugin/plugin.json`, OpenAI `agents/openai.yaml`, and Claude `agents/*.md` wrappers from a single declarative source.
-   - Trade-off: generated files must be checked or regenerated in continuous integration (CI); otherwise the two platforms drift.
+   - **Trade-off.** Generated files must be checked or regenerated in continuous integration (CI); otherwise the two platforms drift.
 
 **Shipped single-repo layout**
 
@@ -282,11 +277,10 @@ agentic-cognitive-writing-process/
 |       |       |-- agents/openai.yaml
 |       |       `-- evals/
 |       `-- README.md
-`-- docs/research/skill-subagent-survey.md
 ```
 
 - The main plugin's `agents/` directory contains Claude subagents for `planner`, `translator`, and `reviewer`, because Claude plugins natively load plugin-root `agents/`. Codex can treat these as reference prompts or convert them into custom agent files if Codex custom agent file schemas stabilize for local clients. Claude plugin agent behavior source: [Claude Code plugins reference](https://code.claude.com/docs/en/plugins-reference.md).
-- The experiment package under `experiments/plugin/` ships its own manifests and the two comparison variants. It relies on the main plugin for role skills and Claude agents. Source: [experiment package README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/README.md).
+- The experiment package under [experiments/plugin/](../../experiments/plugin/) ships its own manifests and the two comparison variants. It relies on the main plugin for role skills and Claude agents. Source: [experiment package README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/README.md).
 
 ## Academic and open-source software (OSS) prior art
 
@@ -377,15 +371,15 @@ The shipped plugin follows the survey's strongest finding: keep the writing proc
 
 2. **Shared skills, platform-specific wrappers**
    - The main plugin puts canonical instructions in four skills:
-     - `skills/cognitive-writing/SKILL.md`: main monitor skill
-     - `skills/planning/SKILL.md`: internal role skill
-     - `skills/translating/SKILL.md`: internal role skill
-     - `skills/reviewing/SKILL.md`: internal role skill
-   - The experiment package puts comparison variants in its own `experiments/plugin/skills/` tree:
-     - `experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md`: fixed-process-order comparison
-     - `experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md`: no-goal-network comparison
+     - [plugin/skills/cognitive-writing/SKILL.md](../../plugin/skills/cognitive-writing/SKILL.md): main monitor skill
+     - [plugin/skills/planning/SKILL.md](../../plugin/skills/planning/SKILL.md): internal role skill
+     - [plugin/skills/translating/SKILL.md](../../plugin/skills/translating/SKILL.md): internal role skill
+     - [plugin/skills/reviewing/SKILL.md](../../plugin/skills/reviewing/SKILL.md): internal role skill
+   - The experiment package puts comparison variants in its own [experiments/plugin/skills/](../../experiments/plugin/skills/) tree:
+     - [experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md](../../experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md): fixed-process-order comparison
+     - [experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md](../../experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md): no-goal-network comparison
    - The two experiment skills require the main plugin because they reuse its role skills and Claude agents. Source: [experiment package README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/README.md).
-   - Each package has its own `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`; the skill-local OpenAI adapter metadata remains in `agents/openai.yaml`.
+   - Each package has its own Claude and Codex plugin manifests: [main Claude manifest](../../plugin/.claude-plugin/plugin.json) / [main Codex manifest](../../plugin/.codex-plugin/plugin.json) / [experiment Claude manifest](../../experiments/plugin/.claude-plugin/plugin.json) / [experiment Codex manifest](../../experiments/plugin/.codex-plugin/plugin.json). The skill-local OpenAI adapter metadata remains in [agents/openai.yaml](../../plugin/skills/planning/agents/openai.yaml).
    - Reuse the common Agent Skill layout documented above for both platform skill systems.
    - Avoid the Anthropic-only `compatibility` field in shared `SKILL.md`, because OpenAI validator does not allow it.
 
@@ -407,7 +401,7 @@ The shipped plugin follows the survey's strongest finding: keep the writing proc
      - Direct single-agent prompt
      - Outline-then-draft prompt
      - STORM-like [^3] research-outline-draft pipeline
-   - Treatment: full plugin with monitor/planner/translator/reviewer loop.
+   - **Treatment.** Full plugin with monitor/planner/translator/reviewer loop.
    - Metrics:
      - Expert ratings for organization
      - Expert ratings for audience fit
@@ -415,11 +409,11 @@ The shipped plugin follows the survey's strongest finding: keep the writing proc
      - Expert ratings for factual grounding
      - Process metrics from trace
      - Source precision/recall
-   - Dataset: FreshWiki-like recent topics for expository writing plus domain-specific technical memos.
+   - **Dataset.** FreshWiki-like recent topics for expository writing plus domain-specific technical memos.
 
 2. **Ablation of monitor agent**
-   - Baselines: full plugin without monitor; monitor replaced by static checklist.
-   - Treatment: monitor subagent controls phase switching, goal conflict detection, and revision triggers.
+   - **Baselines.** Full plugin without monitor; monitor replaced by static checklist.
+   - **Treatment.** Monitor subagent controls phase switching, goal conflict detection, and revision triggers.
    - Metrics:
      - Number of unresolved goal conflicts
      - Revision depth
@@ -427,8 +421,8 @@ The shipped plugin follows the survey's strongest finding: keep the writing proc
      - Unnecessary token/time overhead
 
 3. **Knowledge-telling vs knowledge-transforming revision**
-   - Baselines: add facts to draft; generic "improve this" revision.
-   - Treatment: explicit knowledge-transforming skill that revises the problem representation and audience/rhetorical goals before editing text.
+   - **Baselines.** Add facts to draft; generic "improve this" revision.
+   - **Treatment.** Explicit knowledge-transforming skill that revises the problem representation and audience/rhetorical goals before editing text.
    - Metrics:
      - Expert judgments of conceptual transformation
      - Expert judgments of argument novelty
@@ -439,7 +433,7 @@ The shipped plugin follows the survey's strongest finding: keep the writing proc
    - Baselines:
      - CoAuthor-style [^4] autocomplete/continuation interface
      - Direct chat writing assistant
-   - Treatment: plugin asks targeted monitor/planner questions only when trace uncertainty is high.
+   - **Treatment.** Plugin asks targeted monitor/planner questions only when trace uncertainty is high.
    - Metrics:
      - Accepted suggestions
      - User edits after model output
@@ -448,8 +442,8 @@ The shipped plugin follows the survey's strongest finding: keep the writing proc
      - Qualitative interview coding
 
 5. **Cross-platform reproducibility**
-   - Baselines: Claude-only plugin and Codex-only skill prompts.
-   - Treatment: shared skill repo with generated Claude/OpenAI wrappers.
+   - **Baselines.** Claude-only plugin and Codex-only skill prompts.
+   - **Treatment.** Shared skill repo with generated Claude/OpenAI wrappers.
    - Metrics:
      - Activation accuracy
      - Output quality parity
@@ -459,7 +453,7 @@ The shipped plugin follows the survey's strongest finding: keep the writing proc
 
 **Implementation status and remaining options**
 
-- The shipped implementation starts with a dual-manifest main plugin that contains four shared skills, one monitor role in the main skill, and three Claude-native agent adapters. The separate experiment package contains the two comparison variants and its own manifests under `experiments/plugin/`. The Codex adapters consist of `.codex-plugin/plugin.json` plus skill-local `agents/openai.yaml` metadata, while the skill instructions describe native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
+- The shipped implementation starts with a dual-manifest main plugin that contains four shared skills, one monitor role in the main skill, and three Claude-native agent adapters. The separate experiment package contains the two comparison variants and its own manifests under [experiments/plugin/](../../experiments/plugin/). The Codex adapters consist of [plugin/.codex-plugin/plugin.json](../../plugin/.codex-plugin/plugin.json), [experiments/plugin/.codex-plugin/plugin.json](../../experiments/plugin/.codex-plugin/plugin.json), and [skill-local agents/openai.yaml metadata](../../plugin/skills/planning/agents/openai.yaml), while the skill instructions describe native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
 - The paper prototype design privileges observability over maximal automation. Every phase transition writes a trace entry with responsible agent, decision, evidence, and open uncertainty. The trace makes the Flower & Hayes [^1] mapping testable instead of metaphorical.
 
 ## Footnotes
