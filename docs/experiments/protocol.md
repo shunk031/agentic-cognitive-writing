@@ -1,6 +1,14 @@
 # Experiment protocol for the cognitive writing process
 
-This document defines the paper experiment and the future experiment runner. It fixes the comparison, data handling, evaluation, process analysis, and reporting rules before any result is collected. The runner must fill every `REQUIRED_AT_RUNTIME` value before a run. An open value is a pre-run stop condition.
+This document defines the paper experiment and the future experiment runner. It fixes these rules before any result is collected:
+
+- Comparison
+- Data handling
+- Evaluation
+- Process analysis
+- Reporting
+
+The runner must fill every `REQUIRED_AT_RUNTIME` value before a run. An open value is a pre-run stop condition.
 
 The primary evidence base is the independently reviewed and ACCEPTED survey in [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). Platform and plugin claims use these resources:
 
@@ -13,9 +21,9 @@ The primary evidence base is the independently reviewed and ACCEPTED survey in [
 
 The cited survey and plugin files are supplied by prerequisite pull requests:
 
-- [PR #1](https://github.com/shunk031/agentic-cognitive-writing/pull/1)
-- [PR #2](https://github.com/shunk031/agentic-cognitive-writing/pull/2)
-- [PR #3](https://github.com/shunk031/agentic-cognitive-writing/pull/3)
+- [Pull request 1](https://github.com/shunk031/agentic-cognitive-writing/pull/1)
+- [Pull request 2](https://github.com/shunk031/agentic-cognitive-writing/pull/2)
+- [Pull request 3](https://github.com/shunk031/agentic-cognitive-writing/pull/3)
 
 They land on `main` only after those pull requests merge. Until then, the resource links above use stable accepted commit snapshots.
 
@@ -41,7 +49,7 @@ Only the process instructions and the resulting observable process differ. The b
 
 The questions are:
 
-1. **RQ1.** Does the theory-based recursive Monitor and goal-network architecture produce better writing than a single-shot system and linear-stage pipelines?
+1. **Research question 1 (RQ1).** Does the theory-based recursive Monitor and goal-network architecture produce better writing than a single-shot system and linear-stage pipelines?
 2. **RQ2.** Which components matter? We compare the full plugin with the no-goal-network and fixed-process-order ablations.
 3. **RQ3.** Do agent traces, analyzed as thinking-aloud protocols, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? This includes their prediction that the quantity and quality of middle-range goals relate to writing quality.
 4. **RQ4.** Does the mapping replicate across platforms?
@@ -67,12 +75,19 @@ All six arms receive identical input context. The runner must expose the same se
 - Output budget
 - Number of allowed attempts
 
-No arm may use web search, network retrieval, external browsing, or an unprovided source. The A3 perspective and question steps use only the supplied assignment and context.
+No arm may use a source outside the supplied assignment and context. The no-retrieval policy forbids:
+
+- Web search
+- Network retrieval
+- External browsing
+- Any unprovided source
+
+The A3 perspective and question steps use only the supplied assignment and context.
 
 A3 uses these stages:
 
 - Perspective discovery
-- Simulated question and answer
+- Simulated question answering (QA)
 - Outline
 - Draft
 - Polish
@@ -87,7 +102,7 @@ A4 uses these processes:
 | --- | --- | --- |
 | A1 single-shot | One generation pass from the assignment and supplied context. No explicit planning or review stage. | Record the externally visible generation event. Do not infer hidden goals or stages. |
 | A2 linear stages | One pass each through Pre-Write, Write, and Re-Write. The order is fixed and each stage hands its output to the next. | Record the three stage transitions and their outputs. Record no unobserved reasoning. |
-| A3 [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval | The pipeline follows the five stages above. STORM [^2] separates planning from writing. This arm omits retrieval, source gathering, and citation generation under the equal-information policy. The surveys describe this no-retrieval adaptation and the related STORM pipeline precedent.<br>Evaluation survey: [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)<br>Platform survey: [`docs/research/skill-subagent-survey.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) | Record the five stages. Retrieval, evidence-gathering, and citation traces are `N/A` by design. |
+| A3 [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval | The pipeline follows the five stages above. STORM [^2] separates planning from writing. This arm omits retrieval and source gathering. It also omits citation generation under the equal-information policy. The surveys describe this no-retrieval adaptation and the related STORM pipeline precedent.<br>Evaluation survey: [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)<br>Platform survey: [`docs/research/skill-subagent-survey.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) | Record the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. |
 | A4 proposed plugin | The documented cognitive-writing plugin. The Monitor selects among the three processes above. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. | Use the plugin's append-only `.writing/trace/process.jsonl` and goal-network files. Record the normal loop under the shared trace contract. |
 | A5 no goal network | Invoke the `cognitive-writing-no-goal-network` skill. It uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. | Leave any existing `goals.md` untouched. Record process switches under the shared trace contract. Do not record goal events or goal fields. |
 | A6 fixed process order | Invoke the `cognitive-writing-fixed-order` skill. It runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, return to the prescribed order. | Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Do not add variant-specific fields. |
@@ -128,7 +143,7 @@ The evaluation survey supports this selection. See [`docs/research/writing-eval-
 
 The runner materializes one immutable prompt manifest per benchmark. Each row contains:
 
-- Stable prompt ID
+- Stable prompt identifier (ID)
 - Benchmark name
 - Source version
 - Prompt text or a permitted source reference
@@ -153,7 +168,7 @@ The runner must not train on or alter the student essays for this experiment. It
 
 ### Optional supplementary benchmark
 
-[LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) [^8] is optional and supplementary. It may be added only after the benchmark prompt-file license and provenance are cleared. If used, it is a length-control and robustness axis, not a fourth primary benchmark. The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) [^8] SFT data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+[LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) [^8] is optional and supplementary. It may be added only after the benchmark prompt-file license and provenance are cleared. If used, it is a length-control and robustness axis, not a fourth primary benchmark. The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) [^8] supervised fine-tuning (SFT) data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
 The following benchmarks are excluded from this protocol because their licensing or metadata remains unresolved.
 
@@ -168,9 +183,9 @@ They must not enter a paper result, prompt manifest, or redistributed artifact w
 
 ### Platform assignments
 
-The primary platform is OpenAI Codex headless, invoked with `codex exec`. All six arms run as skill or prompt variants over one pinned GPT-family generator model. The secondary replication runs the same six arm specifications under Claude Code headless with one pinned Claude-family generator model. A4 to A6 use the plugin, while A1 to A3 use the corresponding prompt variants. The [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) describes the shared skill and platform-adapter design.
+The primary platform is OpenAI Codex headless, invoked with `codex exec`. All six arms run as skill or prompt variants over one pinned Generative Pre-trained Transformer (GPT)-family generator model. The secondary replication runs the same six arm specifications under Claude Code headless with one pinned Claude-family generator model. A4 to A6 use the plugin, while A1 to A3 use the corresponding prompt variants. The [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) describes the shared skill and platform-adapter design.
 
-`VERIFIED 2026-09-02`: OpenAI documents [`codex exec`](https://developers.openai.com/codex/non-interactive-mode) as its non-interactive mode for scripts and CI, with final output on stdout and progress on stderr. Anthropic documents Claude Code headless execution with `claude -p` or `claude --print` in its [headless mode guide](https://docs.anthropic.com/en/docs/claude-code/headless). The runner must follow the installed CLI version's syntax and record that version.
+OpenAI documents [`codex exec`](https://developers.openai.com/codex/non-interactive-mode) as its non-interactive mode for scripts and continuous integration (CI), with final output on stdout and progress on stderr. Anthropic documents Claude Code headless execution with `claude -p` or `claude --print` in its [headless mode guide](https://docs.anthropic.com/en/docs/claude-code/headless). The runner must follow the installed CLI version's syntax and record that version.
 
 The runner uses these conceptual interfaces:
 
@@ -200,9 +215,9 @@ The runner must pin each value below. A placeholder blocks the run:
 | Shared open evaluator | `REQUIRED_AT_RUNTIME`: exact third-family Prometheus 2 [^9] style evaluator checkpoint, revision, and serving configuration |
 | Generator system and arm prompts | `REQUIRED_AT_RUNTIME: frozen prompt files and hashes` |
 | Judge prompts and JSON schemas | `REQUIRED_AT_RUNTIME: frozen prompt files, schema files, and hashes` |
-| Decoding parameters | `REQUIRED_AT_RUNTIME: temperature, top-p or equivalent, max output tokens, stop rules, and timeout` |
-| Seeds | `REQUIRED_AT_RUNTIME: fixed generation, judge, sampling, and presentation seeds where the platform allows them` |
-| CLI and plugin versions | `REQUIRED_AT_RUNTIME: exact Codex version, Claude Code version, plugin commit, and runner commit` |
+| Decoding parameters | `REQUIRED_AT_RUNTIME`: temperature<br>`REQUIRED_AT_RUNTIME`: top-p or equivalent<br>`REQUIRED_AT_RUNTIME`: max output tokens<br>`REQUIRED_AT_RUNTIME`: stop rules<br>`REQUIRED_AT_RUNTIME`: timeout |
+| Seeds | `REQUIRED_AT_RUNTIME`: generation seed<br>`REQUIRED_AT_RUNTIME`: judge seed<br>`REQUIRED_AT_RUNTIME`: sampling seed<br>`REQUIRED_AT_RUNTIME`: presentation seed where the platform allows it |
+| CLI and plugin versions | `REQUIRED_AT_RUNTIME`: Codex version<br>`REQUIRED_AT_RUNTIME`: Claude Code version<br>`REQUIRED_AT_RUNTIME`: plugin commit<br>`REQUIRED_AT_RUNTIME`: runner commit |
 | Generator and judge family audit | `REQUIRED_AT_RUNTIME: recorded base-model families and runtime verification that each frontier judge differs from the generator family and the open evaluator belongs to a third family` |
 
 The runner assigns judges with these pairs.
@@ -284,7 +299,7 @@ It retries an invalid judge response only under the fixed retry count in the run
 
 ### Balanced pairwise tournament
 
-The six arms produce 15 unordered arm pairs. For every prompt and assigned judge, run both A/B and B/A presentations. This produces 30 judgments per prompt per judge. Apply these controls:
+The six arms produce 15 unordered arm pairs. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. This produces 30 judgments per prompt per judge. Apply these controls:
 
 - Blind the condition labels.
 - Randomize output order with a recorded seed.
@@ -347,7 +362,14 @@ Length compliance is a standalone outcome for prompts with an explicit requested
 
 For `x > 0` and `y > 0`, use the LongWriter [^8] style formula from the [reference length evaluator](https://github.com/THUDM/LongWriter/blob/main/evaluation/eval_length.py). When `y > x`, compute `S = 100 * max(0, 1 - (y / x - 1) / 3)`. When `y <= x`, compute `S = 100 * max(0, 1 - (x / y - 1) / 2)`.
 
-If `y = 0`, set `S = 0` and `D = 1`. If a prompt has no explicit length request, report these outcomes as `N/A`. Freeze the exact unit, formula, zero-output rule, and `tau` value in the runtime gate. Length compliance and the length score never enter either quality estimand.
+If `y = 0`, set `S = 0` and `D = 1`. If a prompt has no explicit length request, report these outcomes as `N/A`. Freeze these settings in the runtime gate:
+
+- Length unit
+- Formula
+- Zero-output rule
+- `tau` value
+
+Length compliance and the length score never enter either quality estimand.
 
 The runner performs a judge and generator family overlap audit. If any judge also generated an output, it runs the self-preference test on a blinded subset with the same A/B and B/A controls. The test estimates whether that judge family changes its choices for its own outputs. If the planned non-overlap assignment holds, the manifest records that the test was not triggered by direct overlap and reports swapped-judge rank agreement as the corresponding sensitivity check. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) recommends this diagnostic when overlap cannot be avoided.
 
@@ -361,7 +383,14 @@ The covariate sensitivity analysis fits the prespecified quality and pairwise mo
 - Judge family
 - Platform
 
-It compares the adjusted treatment estimates with the raw and length-stratified estimates. Freeze the model formula, covariate coding, missing-value rule, and interaction terms as `REQUIRED_AT_RUNTIME`. Put them in the analysis manifest before results are inspected.
+It compares the adjusted treatment estimates with the raw and length-stratified estimates. Freeze these terms as `REQUIRED_AT_RUNTIME`:
+
+- Model formula
+- Covariate coding
+- Missing-value rule
+- Interaction terms
+
+Put them in the analysis manifest before results are inspected.
 
 ## Human validation
 
@@ -584,7 +613,14 @@ A validation failure stops publication of the affected result.
 
 **Comparison validity.** The equal-tool and no-retrieval policy makes the A3 arm a STORM [^2] style pipeline, not the full retrieval-based STORM [^2] system. This limits claims about source-grounded research performance. It also prevents retrieval from becoming an unbalanced advantage for one arm.
 
-**Judge validity.** Pointwise and pairwise judges can show position, verbosity, self-preference, and model-family bias. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) documents these risks. The protocol addresses them with:
+**Judge validity.** Pointwise and pairwise judges can show several biases:
+
+- Position bias
+- Verbosity bias
+- Self-preference bias
+- Model-family bias
+
+The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) documents these risks. The protocol addresses them with:
 
 - Blind labels
 - Both presentation orders
@@ -680,7 +716,7 @@ The owner must close every gate below before the first scored run. Codex records
    - Zero-variance z-score rule
 8. **Trace conformance.** Run one smoke test for each arm and platform. Validate these properties:
 
-   - Trace JSONL
+   - Trace JSON Lines (JSONL)
    - Goal-state handling for each selected skill
    - Correct variant skill invocation
    - Stage events
