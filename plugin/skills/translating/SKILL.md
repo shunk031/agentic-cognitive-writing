@@ -46,4 +46,4 @@ Return a concise report with:
 - what prose was added or changed;
 - claims that need evidence or user confirmation;
 - how the draft now serves the audience;
-- whether the result exposed a new planning or review need.
+- whether the result exposed a new planning or review need

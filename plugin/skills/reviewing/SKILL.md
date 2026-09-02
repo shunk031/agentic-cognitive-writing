@@ -50,4 +50,4 @@ Return a concise report with:
 - evidence from the relevant assignment, goal, memory, or draft state;
 - revisions made and their scope;
 - unsupported claims and open uncertainty;
-- whether the Monitor should pop to the parent goal, plan, translate, or review again.
+- whether the Monitor should pop to the parent goal, plan, translate, or review again

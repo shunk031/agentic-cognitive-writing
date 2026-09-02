@@ -58,4 +58,4 @@ Return a concise report with:
 - the proposed organization and why it fits the audience;
 - goal changes and their evidence;
 - unresolved uncertainty;
-- whether the Monitor should continue planning, translate, or review.
+- whether the Monitor should continue planning, translate, or review
