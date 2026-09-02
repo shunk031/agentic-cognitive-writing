@@ -262,44 +262,20 @@ The tree shows the shipped package directories that matter for this survey, not 
 agentic-cognitive-writing-process/
 |-- plugin/
 |   |-- .claude-plugin/
-|   |   `-- plugin.json
 |   |-- .codex-plugin/
-|   |   `-- plugin.json
 |   |-- agents/
-|   |   |-- planner.md
-|   |   |-- reviewer.md
-|   |   `-- translator.md
 |   |-- skills/
 |   |   |-- cognitive-writing/
-|   |   |   |-- SKILL.md
-|   |   |   |-- evals/
-|   |   |   `-- references/
 |   |   |-- planning/
-|   |   |   |-- SKILL.md
-|   |   |   `-- agents/openai.yaml
 |   |   |-- translating/
-|   |   |   |-- SKILL.md
-|   |   |   `-- agents/openai.yaml
 |   |   `-- reviewing/
-|   |       |-- SKILL.md
-|   |       `-- agents/openai.yaml
-|   `-- README.md
 |-- experiments/
 |   `-- plugin/
 |       |-- .claude-plugin/
-|       |   `-- plugin.json
 |       |-- .codex-plugin/
-|       |   `-- plugin.json
 |       |-- skills/
 |       |   |-- cognitive-writing-fixed-order/
-|       |   |   |-- SKILL.md
-|       |   |   |-- agents/openai.yaml
-|       |   |   `-- evals/
 |       |   `-- cognitive-writing-no-goal-network/
-|       |       |-- SKILL.md
-|       |       |-- agents/openai.yaml
-|       |       `-- evals/
-|       `-- README.md
 ```
 
 - The main plugin's `agents/` directory contains Claude subagents for `planner`, `translator`, and `reviewer`, because Claude plugins natively load plugin-root `agents/`. Codex can treat these as reference prompts or convert them into custom agent files if Codex custom agent file schemas stabilize for local clients. Claude plugin agent behavior source: [Claude Code plugins reference](https://code.claude.com/docs/en/plugins-reference.md).
@@ -426,44 +402,53 @@ The survey findings translate into the shipped architecture and the remaining ex
 **Candidate experiment designs**
 
 1. **Full cognitive-loop vs direct drafting**
-   - Baselines:
+   - **Baselines**
      - Direct single-agent prompt
      - Outline-then-draft prompt
      - STORM-like [^3] research-outline-draft pipeline
-   - **Treatment.** Full plugin with monitor/planner/translator/reviewer loop.
-   - Metrics:
+   - **Treatment**
+     - Full plugin with monitor/planner/translator/reviewer loop
+   - **Metrics**
      - Expert ratings for organization
      - Expert ratings for audience fit
      - Expert ratings for argument quality
      - Expert ratings for factual grounding
      - Process metrics from trace
      - Source precision/recall
-   - **Dataset.** FreshWiki-like recent topics for expository writing plus domain-specific technical memos.
+   - **Dataset**
+     - FreshWiki-like recent topics for expository writing plus domain-specific technical memos
 
 2. **Ablation of monitor agent**
-   - **Baselines.** Full plugin without monitor; monitor replaced by static checklist.
-   - **Treatment.** Monitor subagent controls phase switching, goal conflict detection, and revision triggers.
-   - Metrics:
+   - **Baselines**
+     - Full plugin without monitor
+     - Monitor replaced by static checklist
+   - **Treatment**
+     - Monitor subagent controls phase switching, goal conflict detection, and revision triggers
+   - **Metrics**
      - Number of unresolved goal conflicts
      - Revision depth
      - Final coherence
      - Unnecessary token/time overhead
 
 3. **Knowledge-telling vs knowledge-transforming revision**
-   - **Baselines.** Add facts to draft; generic "improve this" revision.
-   - **Treatment.** Explicit knowledge-transforming skill that revises the problem representation and audience/rhetorical goals before editing text.
-   - Metrics:
+   - **Baselines**
+     - Add facts to draft
+     - Generic "improve this" revision
+   - **Treatment**
+     - Explicit knowledge-transforming skill that revises the problem representation and audience/rhetorical goals before editing text
+   - **Metrics**
      - Expert judgments of conceptual transformation
      - Expert judgments of argument novelty
      - Expert judgments of paragraph-level purpose clarity
      - Trace-coded plan changes
 
 4. **Human-in-the-loop writing support**
-   - Baselines:
+   - **Baselines**
      - CoAuthor-style [^4] autocomplete/continuation interface
      - Direct chat writing assistant
-   - **Treatment.** Plugin asks targeted monitor/planner questions only when trace uncertainty is high.
-   - Metrics:
+   - **Treatment**
+     - Plugin asks targeted monitor/planner questions only when trace uncertainty is high
+   - **Metrics**
      - Accepted suggestions
      - User edits after model output
      - Time to acceptable draft
@@ -471,9 +456,12 @@ The survey findings translate into the shipped architecture and the remaining ex
      - Qualitative interview coding
 
 5. **Cross-platform reproducibility**
-   - **Baselines.** Claude-only plugin and Codex-only skill prompts.
-   - **Treatment.** Shared skill repo with generated Claude/OpenAI wrappers.
-   - Metrics:
+   - **Baselines**
+     - Claude-only plugin
+     - Codex-only skill prompts
+   - **Treatment**
+     - Shared skill repo with generated Claude/OpenAI wrappers
+   - **Metrics**
      - Activation accuracy
      - Output quality parity
      - Platform-specific failure modes
@@ -482,10 +470,8 @@ The survey findings translate into the shipped architecture and the remaining ex
 
 **Implementation status and remaining options**
 
-- The shipped implementation has a dual-manifest main plugin with four shared skills, one monitor role in the main skill, and three Claude-native agent adapters. The separate experiment package contains the two comparison variants and its own manifests under [`experiments/plugin/`](../../experiments/plugin/). The Codex adapters consist of [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json), [`experiments/plugin/.codex-plugin/plugin.json`](../../experiments/plugin/.codex-plugin/plugin.json), and [`plugin/skills/planning/agents/openai.yaml`](../../plugin/skills/planning/agents/openai.yaml). The skill instructions describe native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
+- The shipped main plugin has two manifests and four shared skills. The main skill owns the monitor role. Three Claude-native agent adapters cover the planner, translator, and reviewer roles. The separate experiment package contains the two comparison variants and its own manifests under [`experiments/plugin/`](../../experiments/plugin/). The Codex adapters consist of [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json), [`experiments/plugin/.codex-plugin/plugin.json`](../../experiments/plugin/.codex-plugin/plugin.json), and [`plugin/skills/planning/agents/openai.yaml`](../../plugin/skills/planning/agents/openai.yaml). The skill instructions describe native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
 - The paper prototype design prioritizes observable process state over full automation. Every phase transition writes a trace entry with responsible agent, decision, evidence, and open uncertainty. The trace makes the Flower & Hayes [^1] mapping testable instead of metaphorical.
-
-## Footnotes
 
 [^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication, 32(4), 1981. DOI: https://doi.org/10.58680/ccc198115885
 [^2]: Carl Bereiter and Marlene Scardamalia. The Psychology of Written Composition. Routledge, 1987. DOI/reprint: https://doi.org/10.4324/9780203812310
