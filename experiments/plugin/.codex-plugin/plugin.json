@@ -1,0 +1,9 @@
+{
+  "name": "cognitive-writing-experiments",
+  "version": "0.1.0",
+  "description": "Controlled-comparison variants of the cognitive-writing skill.",
+  "author": {
+    "name": "shunk031"
+  },
+  "skills": "./skills/"
+}

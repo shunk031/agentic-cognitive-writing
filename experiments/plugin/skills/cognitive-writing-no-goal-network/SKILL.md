@@ -82,7 +82,7 @@ For every delegation, pass:
 
 Ask the delegated agent to cite the files or draft passages that support its decisions. Use the platform path that matches the host:
 
-- Claude Code: delegate to the bundled planner, translator, or reviewer agent. The bundled agent preloads the matching role skill.
+- Claude Code: delegate to the planner, translator, or reviewer agent shipped in the `agentic-cognitive-writing` plugin. That agent preloads the matching role skill.
 - Codex: spawn a native Codex subagent and instruct it to use `$planning`, `$translating`, or `$reviewing`.
 
 Do not write a script that spawns `codex exec` children. If native delegation is unavailable, perform the role as Monitor and record that fallback in the trace.
