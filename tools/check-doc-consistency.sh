@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Check reader-facing documents against the plugin's current names and paths."""
+"""Check reader-facing documents against the plugin's current names and paths.
+
+A hex token is exempt from the prose-SHA check only when it is part of a
+complete DOI matching ``10.<digits>/<hex>(.<hex>)*`` with a non-continuation
+boundary. A hyphen, slash, or alphanumeric continuation prevents the exemption.
+"""
 
 from __future__ import annotations
 
@@ -47,7 +52,8 @@ SHA_TOKEN_PATTERN = re.compile(
     re.IGNORECASE,
 )
 DOI_TOKEN_PATTERN = re.compile(
-    r"(?<![A-Za-z0-9_])10\.\d+/[0-9a-f]{7,40}(?![A-Za-z0-9_])",
+    r"(?<![A-Za-z0-9_])10\.\d+/[0-9a-f]+(?:\.[0-9a-f]+)*"
+    r"(?!(?:[A-Za-z0-9_/-]|\.(?=[A-Za-z0-9])))",
     re.IGNORECASE,
 )
 FENCE_PATTERN = re.compile(r"^[ \t]{0,3}(?P<marker>`{3,}|~{3,})")

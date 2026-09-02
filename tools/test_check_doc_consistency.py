@@ -285,6 +285,17 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertNotIn("commit SHA", result.stdout)
 
+    def test_dotted_doi_is_clean(self) -> None:
+        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._write_readme(
+            "Bibliography DOI: 10.1145/3290605.3300233.\n"
+        )
+
+        result = self._run_checker()
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("commit SHA", result.stdout)
+
     def test_bare_doi_suffix_without_prefix_is_flagged(self) -> None:
         self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
         self._write_readme("The snapshot at ccc198115885 is documented.\n")
@@ -294,6 +305,20 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn(
             "README.md:1: commit SHA 'ccc198115885' appears in prose",
+            result.stdout,
+        )
+
+    def test_hyphenated_doi_like_suffix_is_flagged(self) -> None:
+        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._write_readme(
+            "The snapshot at 10.1234/d0d6da7-not-a-doi is documented.\n"
+        )
+
+        result = self._run_checker()
+
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn(
+            "README.md:1: commit SHA 'd0d6da7' appears in prose",
             result.stdout,
         )
 
