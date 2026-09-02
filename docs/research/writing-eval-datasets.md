@@ -2,7 +2,7 @@
 
 ## Summary
 
-Question: which benchmarks and judge setup should the six-condition long-form writing experiment use?
+This survey selects benchmarks and a judge setup for this repository's long-form writing experiment. The experiment compares six ways of producing long-form text with an LLM writing agent, from single-shot generation and linear pipelines to a cognitive-theory-based plugin and its two variants. See `docs/experiments/protocol.md` for the full condition definitions.
 
 Answer: use exactly three primary benchmarks.
 
