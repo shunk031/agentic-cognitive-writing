@@ -10,7 +10,7 @@ This document defines the paper experiment and the future experiment runner. It 
 
 The runner must fill every `REQUIRED_AT_RUNTIME` value before a run. An open value is a pre-run stop condition.
 
-The primary evidence base is the independently reviewed and ACCEPTED survey in [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). Platform and plugin claims use these resources:
+The protocol uses the benchmark and evaluation evidence in [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). Platform and plugin claims use these source snapshots:
 
 - [`docs/research/skill-subagent-survey.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)
 - [`plugin/README.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/README.md)
@@ -18,14 +18,6 @@ The primary evidence base is the independently reviewed and ACCEPTED survey in [
 - [`plugin/skills/cognitive-writing-fixed-order/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing-fixed-order/SKILL.md)
 - [`plugin/skills/cognitive-writing-no-goal-network/SKILL.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing-no-goal-network/SKILL.md)
 - [`plugin/skills/cognitive-writing/references/trace-jsonl-schema.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/79fb5c4b8756a799a3656a4d223248766d9054dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
-
-The cited survey and plugin files are supplied by prerequisite pull requests:
-
-- [Pull request 1](https://github.com/shunk031/agentic-cognitive-writing/pull/1)
-- [Pull request 2](https://github.com/shunk031/agentic-cognitive-writing/pull/2)
-- [Pull request 3](https://github.com/shunk031/agentic-cognitive-writing/pull/3)
-
-They land on `main` only after those pull requests merge. Until then, the resource links above use stable accepted commit snapshots.
 
 ## Overview and research questions
 
@@ -51,10 +43,10 @@ The questions are:
 
 1. **Research question 1 (RQ1).** Does the theory-based recursive Monitor and goal-network architecture produce better writing than a single-shot system and linear-stage pipelines?
 2. **RQ2.** Which components matter? We compare the full plugin with the no-goal-network and fixed-process-order ablations.
-3. **RQ3.** Do agent traces, analyzed as thinking-aloud protocols, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? This includes their prediction that the quantity and quality of middle-range goals relate to writing quality.
+3. **RQ3.** Do agent traces, analyzed as thinking-aloud protocols, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? This includes their prediction that the quantity and quality of middle-range goals, which connect broad rhetorical aims to local writing actions, relate to writing quality.
 4. **RQ4.** Does the mapping replicate across platforms?
 
-The pointwise two-judge composite is the sole CONFIRMATORY estimand. Holm correction [^15] uses one family per benchmark on the primary Codex pointwise composite. Each family contains the five comparisons of the theory-based A4 arm with the other arms, for 15 confirmatory tests total. The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
+The pointwise two-judge composite is the sole CONFIRMATORY estimand, the prespecified quantity used for confirmatory tests. Holm correction [^15], which controls the family-wise error rate, uses one family per benchmark on the primary Codex pointwise composite. Each family contains the five comparisons of the theory-based A4 arm with the other arms, for 15 confirmatory tests total. The pairwise Bradley-Terry [^11] average, based on a model that estimates relative arm ability from pairwise choices, is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
 
 The primary process estimands are:
 
@@ -168,7 +160,7 @@ The runner must not train on or alter the student essays for this experiment. It
 
 ### Optional supplementary benchmark
 
-[LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) is optional and supplementary. It may be added only after the benchmark prompt-file license and provenance are cleared. If used, it is a length-control and robustness axis, not a fourth primary benchmark. The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) [^8] supervised fine-tuning (SFT) data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+[LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) [^8] is optional and supplementary. It may be added only after the benchmark prompt-file license and provenance are cleared. If used, it is a length-control and robustness axis, not a fourth primary benchmark. The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) supervised fine-tuning (SFT) data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
 The following benchmarks are excluded from this protocol because their licensing or metadata remains unresolved.
 
@@ -330,7 +322,7 @@ Every record must include the fields shown below.
 
 Group pairwise records on `(platform, judge_id)` before fitting each judge-specific Bradley-Terry [^11] model. Use `judge_family` to verify each group against the runtime judge manifest. Compute the equal-weight average from those per-judge fits within each platform. Do not combine records from different platforms or judges before fitting.
 
-The pointwise two-judge composite is the sole CONFIRMATORY estimand. Holm correction [^15] uses one family per benchmark on the primary Codex pointwise composite. Each family contains the five comparisons of the theory-based A4 arm with the other arms, for 15 confirmatory tests total. The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
+The pointwise two-judge composite is the sole CONFIRMATORY estimand. The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. See Overview and research questions for the full classification and Holm family definition.
 
 Fit each Bradley-Terry [^11] model with a predeclared tie treatment. For arm `a`, let `theta_Codex(a, Claude)` and `theta_Codex(a, open)` be the judge-specific ability estimates under the same reference-arm constraint. The Codex pairwise average is `theta_primary(a) = 0.5 * theta_Codex(a, Claude) + 0.5 * theta_Codex(a, open)`. For the replication, use `theta_replication(a) = 0.5 * theta_ClaudeCode(a, GPT) + 0.5 * theta_ClaudeCode(a, open)`.
 
@@ -485,16 +477,16 @@ The analysis extracts these measures from the traces. It uses goal files only fo
 | Process measure | Operational definition |
 | --- | --- |
 | Goal count | For A4 and A6, count all three goal event types. Add the unique active goal IDs in `goals.md`. For A5, report zero because the variant records no goal events and leaves `goals.md` untouched. Report a total. When the kind is available, also report content, process, and criterion goals. |
-| Goal specificity | Code whether each goal defines an operational action. Code whether it names a content target. Code whether it names an audience or purpose target. Code whether it states an evaluative criterion. Report the coding rubric and double-code a reliability sample. Do not treat goal length alone as specificity. |
+| Goal specificity | Code whether each goal defines an operational action.<br>Code whether it names a content target.<br>Code whether it names an audience or purpose target.<br>Code whether it states an evaluative criterion.<br>Report the coding rubric and double-code a reliability sample.<br>Do not treat goal length alone as specificity. |
 | Middle-range goal quantity | Count goals that connect a high-level rhetorical intention to a local prose or process action. The coding rule and examples are frozen before analysis. |
-| Middle-range goal quality | Score whether each middle-range goal gives concrete direction. Score whether it covers the rhetorical problem. Score whether it can be checked against the output. Report the mean and distribution with coder agreement. |
+| Middle-range goal quality | Score whether each middle-range goal gives concrete direction.<br>Score whether it covers the rhetorical problem.<br>Score whether it can be checked against the output.<br>Report the mean and distribution with coder agreement. |
 | Goal regeneration | Count `goal_regenerated` events and verify that the old goal remains in history and the replacement has a new ID when its meaning materially changes. Record the evidence and stated rationale. |
-| Process-switch transitions | Count transitions among the named processes. Include embedded Generate events. Include Evaluate events. Include Organize events. Include Goal-setting events. Include Revise events when the trace names them. Report transition counts and rates per run. |
+| Process-switch transitions | Count transitions among the named processes.<br>Include embedded Generate events.<br>Include Evaluate events.<br>Include Organize events.<br>Include Goal-setting events.<br>Include Revise events when the trace names them.<br>Report transition counts and rates per run. |
 | Process-order entropy | Compute Shannon entropy [^12] over normalized process sequences and over transition distributions. Report raw entropy, the number of observed states, and the normalization rule. |
 | Generate and Evaluate interruptions | Count process switches into Generate or Evaluate while another process is active, using the process fields and explicit decision or evidence markers. Do not infer an interruption from text alone when the event is ambiguous. |
 | Pop-back events | Count returns to an immediate parent goal after a child goal resolves. Use the child and parent IDs, status or history, and the next process event. Report unresolved parent links as trace-quality failures. |
-| Revision intent | Map each revision to the IteraTeR [^10]-informed categories. Record clarity changes. Record fluency changes. Record coherence changes. Record style changes. Record meaning changes. Record the edit operation and the evidence in the trace or draft diff. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) identifies IteraTeR as the process-level revision precedent. |
-| A3 outline and QA structure | Count discovered perspectives. Count simulated questions and answers. Count outline nodes. Count section handoffs. Count polish passes. Retrieval and citation metrics are `N/A` under the common policy. |
+| Revision intent | Map each revision to the IteraTeR [^10]-informed categories.<br>Record clarity changes.<br>Record fluency changes.<br>Record coherence changes.<br>Record style changes.<br>Record meaning changes.<br>Record the edit operation and the evidence in the trace or draft diff.<br>The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) identifies IteraTeR as the process-level revision precedent. |
+| A3 outline and QA structure | Count discovered perspectives.<br>Count simulated questions and answers.<br>Count outline nodes.<br>Count section handoffs.<br>Count polish passes.<br>Retrieval and citation metrics are `N/A` under the common policy. |
 
 The analysis correlates process measures with per-prompt product quality. It reports correlations for each judge family. It also reports correlations for the prespecified aggregate. It shows benchmark and output length as covariates. A correlation does not establish that the process caused the quality difference.
 
@@ -520,7 +512,7 @@ For pairwise quality, report these results on each platform:
 
 Use prompt-level paired resampling for uncertainty. Report the effect size on the selected Bradley-Terry [^11] scale or the paired difference in tie-aware win rate. Keep Codex and Claude Code inference separate.
 
-The pointwise two-judge composite is the sole CONFIRMATORY estimand. Holm correction [^15] uses one family per benchmark on the primary Codex pointwise composite. Each family contains the five comparisons of the theory-based A4 arm with the other arms, for 15 confirmatory tests total. The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
+The pointwise two-judge composite is the sole CONFIRMATORY estimand. The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. See Overview and research questions for the full classification and Holm family definition.
 
 For RQ1 and RQ2, run the 15 confirmatory contrasts on the primary Codex pointwise composite. Compare A4 with each other arm within each primary benchmark. Report the same five contrasts on the Claude Code replication separately, without pooled or confirmatory inference. For RQ4, compare platforms descriptively by:
 
@@ -634,7 +626,13 @@ These controls cannot remove every bias.
 
 **Length confounding.** A longer answer may appear better to a judge even when it adds little value. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) describes this risk. The protocol records length, reports raw and length-stratified results, and keeps length compliance out of the quality score.
 
-**Platform confounding.** Codex and Claude Code differ in several ways. Their CLI behavior differs. Their native delegation differs. Their model families differ. The [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) describes the adapter differences. The replication keeps the task and process mapping fixed while reporting platforms separately. A cross-platform result is a replication of the direction and process signature, not proof that the systems are identical.
+**Platform confounding.** Codex and Claude Code differ in several ways:
+
+- Their CLI behavior differs.
+- Their native delegation differs.
+- Their model families differ.
+
+The [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) describes the adapter differences. The replication keeps the task and process mapping fixed while reporting platforms separately. A cross-platform result is a replication of the direction and process signature, not proof that the systems are identical.
 
 **Benchmark coverage.** The primary benchmarks cover different writing settings:
 
@@ -675,8 +673,8 @@ The owner must close every gate below before the first scored run. Codex records
 3. **LongBench-Write license.** Clear the [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) [^8] benchmark prompt-file license and provenance before any supplementary use. Otherwise keep the benchmark excluded.
 4. **PERSUADE 2.0 [^6] and ICLE++ [^7] access.** Record permitted use for these materials:
 
-   - The 15 [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] prompts
-   - The [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] calibration material
+   - The 15 [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) prompts
+   - The [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) calibration material
 
    Do not redistribute material outside its permission.
 5. **Generator configuration.** Fill these values:
