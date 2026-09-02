@@ -214,5 +214,4 @@ The repository keeps the installable plugin separate from its research and exper
 For offline use after installation, read [`plugin/README.md`](plugin/README.md). For research and experiment context, browse the linked documents above.
 
 [^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387.
-    - DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885)
-    - JSTOR: [https://www.jstor.org/stable/356600](https://www.jstor.org/stable/356600)
+    DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885) / JSTOR: [https://www.jstor.org/stable/356600](https://www.jstor.org/stable/356600)
