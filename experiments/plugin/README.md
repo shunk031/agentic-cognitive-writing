@@ -1,12 +1,16 @@
 # Cognitive writing experiments
 
-The package gives an experimenter two skills for comparing writing-process choices: one fixes the process order, and one removes the hierarchical goal network. The variants write to the `.writing/` directory in the writing project and keep the main package's role delegation contract.
+The package gives an experimenter two skills for comparing writing-process choices: one fixes the process order, and one removes the hierarchical goal network.
+
+The variants write to the `.writing/` directory in the writing project and keep the main package's role delegation contract.
 
 The package ships a Claude Code manifest at [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and a Codex manifest at [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json); each manifest packages the two skill directories under [`skills/`](skills/).
 
 ## Install the required packages
 
-Install the [`agentic-cognitive-writing` package](https://github.com/shunk031/agentic-cognitive-writing) before installing this package. The variant skills delegate planning, translating, and reviewing to the role skills and Claude agents shipped in that package.
+Install the [`agentic-cognitive-writing` package](https://github.com/shunk031/agentic-cognitive-writing) before installing this package. If the repository is private, GitHub installs require access to it.
+
+The variant skills delegate planning, translating, and reviewing to the role skills and Claude agents shipped in that package.
 
 ### Claude Code
 
@@ -48,17 +52,17 @@ Install the [`agentic-cognitive-writing` package](https://github.com/shunk031/ag
    codex plugin add cognitive-writing-experiments@agentic-cognitive-writing-process
    ```
 
-If the repository is private, GitHub installs require access to it.
-
 ## Choose a variant
+
+Use these skills only for controlled comparisons. They are not recommended defaults.
 
 - `cognitive-writing-fixed-order` runs Planning, Translating, and Reviewing in a fixed order on each pass. Generate and Evaluate may interrupt the order, after which the Monitor returns to the prescribed sequence.
 - `cognitive-writing-no-goal-network` treats the assignment as one implicit objective, leaves `.writing/goals.md` untouched, and traces process switches.
-
-Use these skills only for controlled comparisons. They are not recommended defaults.
 
 ## Invoke a variant
 
 In Claude Code, invoke `/cognitive-writing-experiments:cognitive-writing-fixed-order` or `/cognitive-writing-experiments:cognitive-writing-no-goal-network`. In Codex, invoke `$cognitive-writing-fixed-order` or `$cognitive-writing-no-goal-network`.
 
-The variants reuse the main package's role skills and Claude agents. Read the [project repository](https://github.com/shunk031/agentic-cognitive-writing) for the main plugin README, shared `.writing/` state layout, trace contract, research protocol, and experiment context.
+The variants reuse the main package's role skills and Claude agents.
+
+Read the [project repository](https://github.com/shunk031/agentic-cognitive-writing) for the main plugin README, shared `.writing/` state layout, trace contract, research protocol, and experiment context.

@@ -5,7 +5,9 @@ description: Use this skill whenever a user needs help with writing. It runs a M
 
 # Cognitive writing
 
-Use this skill in the user's writing project. The project root is the current working directory unless the user names another project. The Monitor is the main agent running this skill. It chooses the next writing process from the project state and open uncertainty. It does not impose a fixed stage sequence.
+Use this skill in the user's writing project. The project root is the current working directory unless the user names another project.
+
+The Monitor is the main agent running this skill. The Monitor chooses the next writing process from the project state and open uncertainty. The Monitor does not impose a fixed stage sequence.
 
 ## Monitor responsibilities
 
@@ -101,12 +103,16 @@ For every delegation, pass:
 - relevant uncertainty
 - the requested output
 
-Ask each agent to cite the files or draft passages that support its decisions. Use the platform path that matches the host:
+Ask each agent to cite the files or draft passages that support its decisions.
+
+Use the platform path that matches the host:
 
 - Claude Code: delegate to the bundled role agent. The bundled role agent preloads the matching role skill.
 - Codex: spawn a native Codex subagent and instruct it to use the explicit role skill: `$planning`, `$translating`, or `$reviewing`.
 
-Do not write a script that spawns `codex exec` children. If native delegation is unavailable, perform the role as Monitor and record that fallback in the trace.
+Do not write a script that spawns `codex exec` children.
+
+If native delegation is unavailable, perform the role as Monitor and record that fallback in the trace.
 
 ## References
 

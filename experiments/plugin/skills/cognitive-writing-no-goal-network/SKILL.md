@@ -39,7 +39,11 @@ Read these before choosing a process:
 - relevant files in `.writing/memory/`
 - the latest entries in `.writing/trace/process.jsonl`
 
-Leave `goals.md` untouched, whether it exists or not. Treat the assignment as the single implicit objective. Do not use a hierarchical goal to fill missing user intent. If `assignment.md` is missing or underspecified, ask for:
+Leave `goals.md` untouched, whether it exists or not.
+
+Treat the assignment as the single implicit objective. Do not use a hierarchical goal to fill missing user intent.
+
+If `assignment.md` is missing or underspecified, ask for:
 
 - topic
 - audience
@@ -48,7 +52,9 @@ Leave `goals.md` untouched, whether it exists or not. Treat the assignment as th
 - genre
 - constraints
 
-Do not silently invent a rhetorical problem. Read the trace field contract below before writing the first entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
+Do not silently invent a rhetorical problem.
+
+Read the trace field contract below before writing the first entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
 
 ## Monitor loop
 

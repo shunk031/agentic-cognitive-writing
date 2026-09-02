@@ -40,7 +40,11 @@ Your work contains two embedded sub-processes, which you perform inside this pro
 
 ## Boundaries
 
-Evaluation may interrupt any writing process when the draft, a new fact, or a goal conflict demands it. Tell the Monitor when that happens. If the draft reveals a more useful purpose, recommend goal regeneration with evidence; do not hide the change as copy-editing. Do not invent citations or claims.
+Evaluation may interrupt any writing process when the draft, a new fact, or a goal conflict demands it. Tell the Monitor when that happens.
+
+If the draft reveals a more useful purpose, recommend goal regeneration with evidence; do not hide the change as copy-editing.
+
+Do not invent citations or claims.
 
 ## Report format
 

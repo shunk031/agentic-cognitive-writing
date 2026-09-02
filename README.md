@@ -12,7 +12,9 @@ The plugin implements the writing model in ["A Cognitive Process Theory of Writi
 
 The architecture turns the writing model into a main skill, shared role skills, and file-backed project state.
 
-**Claude Code.** The adapter uses the manifest at [`plugin/.claude-plugin/plugin.json`](plugin/.claude-plugin/plugin.json) and agents in [`plugin/agents/`](plugin/agents/). **Codex.** The adapter uses the manifest at [`plugin/.codex-plugin/plugin.json`](plugin/.codex-plugin/plugin.json) and per-skill metadata under [`plugin/skills/`](plugin/skills/).
+**Claude Code.** The adapter uses the manifest at [`plugin/.claude-plugin/plugin.json`](plugin/.claude-plugin/plugin.json) and agents in [`plugin/agents/`](plugin/agents/).
+
+**Codex.** The adapter uses the manifest at [`plugin/.codex-plugin/plugin.json`](plugin/.codex-plugin/plugin.json) and per-skill metadata under [`plugin/skills/`](plugin/skills/).
 
 The diagram below reproduces Figure 1, "Structure of the writing model," from the paper:
 
@@ -78,9 +80,7 @@ The main skill uses these processes recursively. Generate and Evaluate may inter
 
 ## Install from GitHub or a checkout
 
-Choose a GitHub marketplace for a normal install or a local checkout for development.
-
-If the repository is private, GitHub installs require access to it.
+Choose a GitHub marketplace for a normal install or a local checkout for development. If the repository is private, GitHub installs require access to it.
 
 ### GitHub install for Claude Code
 
@@ -200,7 +200,9 @@ The [`cognitive-writing-experiments`](experiments/plugin/README.md) plugin packa
 - [`cognitive-writing-fixed-order`](experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md) runs Planning, then Translating, then Reviewing on each pass. Generate and Evaluate can interrupt, but the Monitor logs the interruption and returns to the prescribed order.
 - [`cognitive-writing-no-goal-network`](experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md) treats the assignment as one implicit objective, leaves `.writing/goals.md` untouched, and continues to trace process switches.
 
-Select a variant only when a comparison is needed. The variants' seed prompts live beside the skills in [`experiments/plugin/skills/`](experiments/plugin/skills/).
+Select a variant only when a comparison is needed.
+
+The variants' seed prompts live beside the skills in [`experiments/plugin/skills/`](experiments/plugin/skills/).
 
 ## Find code, research, and experiment material
 
@@ -214,7 +216,9 @@ The repository keeps the main plugin, experiment package, research, and protocol
 - [`tools/validate-skills.sh`](tools/validate-skills.sh) runs the reproducible skill validators.
 - [`plugin/skills/cognitive-writing/evals/evals.json`](plugin/skills/cognitive-writing/evals/evals.json) and the experiment skill eval files under [`experiments/plugin/skills/`](experiments/plugin/skills/) seed skill evaluations.
 
-For offline use after installation, read [`plugin/README.md`](plugin/README.md). For research and experiment context, browse the linked documents above.
+For offline use after installation, read [`plugin/README.md`](plugin/README.md).
+
+For research and experiment context, browse the linked documents above.
 
 [^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387.
     DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885) / JSTOR: [https://www.jstor.org/stable/356600](https://www.jstor.org/stable/356600)

@@ -1,14 +1,14 @@
 # Agentic cognitive writing
 
-The installed `agentic-cognitive-writing` package adds the `cognitive-writing` skill. Invoke the skill in a writing project, the directory where the draft and process files live, to plan, draft, and revise a document while the skill updates its plans and goals as the draft develops. The package ships a Claude Code adapter in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and [`agents/`](agents/), plus a Codex adapter in [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) and per-skill metadata under [`skills/`](skills/).
+The installed `agentic-cognitive-writing` package lets you invoke the `cognitive-writing` skill in the directory where your draft lives. The skill plans, drafts, and revises a document while it updates its goals as the draft develops.
+
+The package ships a Claude Code adapter in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and [`agents/`](agents/), plus a Codex adapter in [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) and per-skill metadata under [`skills/`](skills/).
 
 For the theory and architecture behind this plugin, see the [project README](https://github.com/shunk031/agentic-cognitive-writing#readme).
 
 ## Install the plugin
 
-Choose a GitHub marketplace for normal use or a local checkout for development.
-
-If the repository is private, GitHub installs require access to it.
+Choose a GitHub marketplace for normal use or a local checkout for development. If the repository is private, GitHub installs require access to it.
 
 ### GitHub install for Claude Code
 
@@ -123,7 +123,9 @@ The monitor, the part that decides what to work on next, invokes these roles dur
 - `translating` handles delegated drafting.
 - `reviewing` handles delegated evaluation and revision.
 
-The separate [`cognitive-writing-experiments` package](https://github.com/shunk031/agentic-cognitive-writing) contains `cognitive-writing-fixed-order` and `cognitive-writing-no-goal-network` for controlled comparisons. See the [`experiments/plugin/`](../experiments/plugin/) directory in the repository for context.
+The separate [`cognitive-writing-experiments` package](https://github.com/shunk031/agentic-cognitive-writing) contains `cognitive-writing-fixed-order` and `cognitive-writing-no-goal-network` for controlled comparisons.
+
+Read the linked [`experiments/plugin/`](../experiments/plugin/) directory for experiment context.
 
 ## Files maintained in your writing project
 
@@ -146,6 +148,8 @@ The monitor, the part that decides what to work on next, appends every process s
 
 The main skill also uses [`goals-format.md`](skills/cognitive-writing/references/goals-format.md) for the hierarchical notation in `goals.md`.
 
-The shipped package contains the manifests, skills, and agents it reads at runtime; no other file in this repository is required. The skill creates and maintains `.writing/` in the user's writing project. That directory belongs to the user and should not be committed unless the user chooses to share the writing process.
+The shipped package contains the manifests, skills, and agents it reads at runtime; no other file in this repository is required.
+
+The skill creates and maintains `.writing/` in the user's writing project. The directory belongs to the user and should not be committed unless the user chooses to share the writing process.
 
 For research and experiment context, see the [project repository](https://github.com/shunk031/agentic-cognitive-writing).
