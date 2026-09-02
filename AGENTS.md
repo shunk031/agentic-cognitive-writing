@@ -4,7 +4,7 @@
 
 The repository contains a cross-platform writing plugin, research surveys, and an experiment protocol.
 
-The writing contract covers those artifacts and every prose deliverable, including documents, READMEs, and pull request (PR) bodies; writers produce those deliverables in English with the `unslop` skill.
+The writing contract covers those artifacts and every prose deliverable, including documents, READMEs, and pull request (PR) bodies.
 
 ## Citations and links
 
