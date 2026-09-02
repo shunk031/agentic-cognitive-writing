@@ -3,15 +3,20 @@
 
 from __future__ import annotations
 
+import io
+import runpy
 import subprocess
 import sys
+import tarfile
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 
 CHECKER = Path(__file__).resolve().with_name("check-doc-consistency.sh")
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_SLUG = "shunk031/agentic-cognitive-writing"
+ACTUAL_PLUGIN_COMMIT = "d0d6da7d0607f9d54b35973c2cf4e10d779a15dd"
 
 
 class CheckDocConsistencyTests(unittest.TestCase):
@@ -67,6 +72,61 @@ class CheckDocConsistencyTests(unittest.TestCase):
             text=True,
         )
 
+    def _materialize_actual_plugin_tree(self) -> None:
+        ref = f"{ACTUAL_PLUGIN_COMMIT}^{{commit}}"
+        object_check = subprocess.run(
+            ["git", "-C", str(REPOSITORY_ROOT), "cat-file", "-e", ref],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if object_check.returncode != 0:
+            fetch = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(REPOSITORY_ROOT),
+                    "fetch",
+                    "origin",
+                    "feat/cognitive-writing-plugin",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(
+                fetch.returncode,
+                0,
+                fetch.stdout + fetch.stderr,
+            )
+
+        archive = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(REPOSITORY_ROOT),
+                "archive",
+                "--format=tar",
+                ACTUAL_PLUGIN_COMMIT,
+                "README.md",
+                "plugin",
+                "experiments/plugin",
+            ],
+            check=False,
+            capture_output=True,
+        )
+        self.assertEqual(archive.returncode, 0, archive.stderr.decode())
+        with tarfile.open(fileobj=io.BytesIO(archive.stdout), mode="r:") as archive_file:
+            for member in archive_file.getmembers():
+                target = self.root / Path(member.name)
+                if member.isdir():
+                    target.mkdir(parents=True, exist_ok=True)
+                elif member.isfile():
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    source = archive_file.extractfile(member)
+                    self.assertIsNotNone(source)
+                    target.write_bytes(source.read())
+
     def test_both_plugin_roots_union_skills_agents_and_trace_path(self) -> None:
         self._create_plugin(
             Path("plugin"), skills=("cognitive-writing",), agents=("planner",)
@@ -86,6 +146,27 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertNotIn("missing; skipping plugin root", result.stdout)
         self.assertNotIn("unknown skill name", result.stdout)
+
+        checker_globals = runpy.run_path(str(CHECKER))
+        ground_truth = checker_globals["_ground_truth"](
+            [self.root / "plugin", self.root / "experiments/plugin"]
+        )
+        self.assertEqual(ground_truth["agents"], {"planner", "reviewer"})
+        self.assertEqual(ground_truth["trace_paths"], {".writing/trace/process.jsonl"})
+
+    def test_actual_plugin_tree_at_d0d6da7_is_clean(self) -> None:
+        self._materialize_actual_plugin_tree()
+
+        result = self._run_checker()
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("unknown skill name", result.stdout)
+
+        checker_globals = runpy.run_path(str(CHECKER))
+        ground_truth = checker_globals["_ground_truth"](
+            [self.root / "plugin", self.root / "experiments/plugin"]
+        )
+        self.assertIn("cognitive-writing-experiments", ground_truth["packages"])
 
     def test_no_plugin_roots_print_notices_and_exit_zero(self) -> None:
         result = self._run_checker()
@@ -139,7 +220,9 @@ class CheckDocConsistencyTests(unittest.TestCase):
 
         result = self._run_checker()
 
-        findings = [line for line in result.stdout.splitlines() if line.startswith("README.md:")]
+        findings = [
+            line for line in result.stdout.splitlines() if line.startswith("README.md:")
+        ]
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertEqual(len(findings), 2, result.stdout)
         self.assertEqual(result.stdout.count("branch-qualified in-repo GitHub URL"), 2)
@@ -153,7 +236,10 @@ class CheckDocConsistencyTests(unittest.TestCase):
         result = self._run_checker()
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("in-repo GitHub URL check skipped: repository slug is unknown", result.stdout)
+        self.assertIn(
+            "in-repo GitHub URL check skipped: repository slug is unknown",
+            result.stdout,
+        )
         self.assertNotIn("branch-qualified in-repo GitHub URL", result.stdout)
 
     def test_seven_to_forty_hex_revisions_are_excluded(self) -> None:

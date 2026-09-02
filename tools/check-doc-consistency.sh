@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -12,6 +13,10 @@ from pathlib import Path
 
 TRACE_PATH = ".writing/trace/process.jsonl"
 PLUGIN_RELATIVE_ROOTS = (Path("plugin"), Path("experiments") / "plugin")
+PACKAGE_MANIFEST_RELATIVE_PATHS = (
+    Path(".claude-plugin") / "plugin.json",
+    Path(".codex-plugin") / "plugin.json",
+)
 
 DENY_LIST = (
     "cognitive-writing-orchestrator",
@@ -69,17 +74,36 @@ def _plugin_roots(root: Path) -> tuple[list[Path], list[Path]]:
     return found, missing
 
 
+def _package_names(plugin_directory: Path) -> set[str]:
+    names: set[str] = set()
+    for relative_manifest in PACKAGE_MANIFEST_RELATIVE_PATHS:
+        manifest = plugin_directory / relative_manifest
+        if not manifest.is_file():
+            continue
+        try:
+            data = json.loads(manifest.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        name = data.get("name") if isinstance(data, dict) else None
+        if isinstance(name, str) and name:
+            names.add(name)
+    return names
+
+
 def _ground_truth(plugin_directories: list[Path]) -> dict[str, object]:
     skills: set[str] = set()
     agents: set[str] = set()
+    packages: set[str] = set()
     trace_paths: set[str] = set()
     for plugin_directory in plugin_directories:
         skills.update(_names_under(plugin_directory / "skills", file_stems=False))
         agents.update(_names_under(plugin_directory / "agents", file_stems=True))
+        packages.update(_package_names(plugin_directory))
         trace_paths.add(TRACE_PATH)
     return {
         "skills": skills,
         "agents": agents,
+        "packages": packages,
         "trace_paths": trace_paths,
     }
 
@@ -153,6 +177,9 @@ def _findings(
 ) -> list[str]:
     skills = ground_truth["skills"]
     assert isinstance(skills, set)
+    packages = ground_truth["packages"]
+    assert isinstance(packages, set)
+    known_names = skills | packages
     known_stale_skills = {
         identifier.lower()
         for identifier in DENY_LIST
@@ -181,7 +208,7 @@ def _findings(
                 if normalized_token in known_stale_skills or normalized_token in seen_skills:
                     continue
                 seen_skills.add(normalized_token)
-                if token not in skills:
+                if token not in known_names:
                     findings.append(
                         f"{location}: unknown skill name '{token}' (not found under plugin/skills/)"
                     )
