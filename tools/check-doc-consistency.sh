@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 TRACE_PATH = ".writing/trace/process.jsonl"
+PLUGIN_RELATIVE_ROOTS = (Path("plugin"), Path("experiments") / "plugin")
 
 DENY_LIST = (
     "cognitive-writing-orchestrator",
@@ -56,11 +57,30 @@ def _names_under(directory: Path, *, file_stems: bool) -> set[str]:
     return names
 
 
-def _ground_truth(plugin_directory: Path) -> dict[str, object]:
+def _plugin_roots(root: Path) -> tuple[list[Path], list[Path]]:
+    found: list[Path] = []
+    missing: list[Path] = []
+    for relative_root in PLUGIN_RELATIVE_ROOTS:
+        plugin_root = root / relative_root
+        if plugin_root.is_dir():
+            found.append(plugin_root)
+        else:
+            missing.append(relative_root)
+    return found, missing
+
+
+def _ground_truth(plugin_directories: list[Path]) -> dict[str, object]:
+    skills: set[str] = set()
+    agents: set[str] = set()
+    trace_paths: set[str] = set()
+    for plugin_directory in plugin_directories:
+        skills.update(_names_under(plugin_directory / "skills", file_stems=False))
+        agents.update(_names_under(plugin_directory / "agents", file_stems=True))
+        trace_paths.add(TRACE_PATH)
     return {
-        "skills": _names_under(plugin_directory / "skills", file_stems=False),
-        "agents": _names_under(plugin_directory / "agents", file_stems=True),
-        "trace_path": TRACE_PATH,
+        "skills": skills,
+        "agents": agents,
+        "trace_paths": trace_paths,
     }
 
 
@@ -188,12 +208,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     arguments = parser.parse_args(argv)
     root = _repository_root(arguments.repo_root)
-    plugin_directory = root / "plugin"
-    if not plugin_directory.is_dir():
-        print("plugin/: missing; skipping documentation consistency checks")
+    plugin_directories, missing_roots = _plugin_roots(root)
+    for missing_root in missing_roots:
+        print(f"{missing_root.as_posix()}/: missing; skipping plugin root")
+    if not plugin_directories:
+        print("no plugin roots found; skipping documentation consistency checks")
         return 0
 
-    ground_truth = _ground_truth(plugin_directory)
+    ground_truth = _ground_truth(plugin_directories)
     repository_slug = _repository_slug(root)
     if repository_slug is None:
         print("in-repo GitHub URL check skipped: repository slug is unknown")
