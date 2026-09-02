@@ -26,8 +26,10 @@ Format content according to how readers need to use it: facts in tables, reasoni
 - Use bullets for separate decisions, claims, steps, or multi-word structure. For longer same-entity link runs or labels needing qualifiers, group links into a few sub-bullets, each with a category label and an inline slash-separated run; do not put a single resource link on each line. For short runs of two to four briefly labeled links, name the shared entity once and use inline slash-separated Markdown links.
 - Keep short atomic-token reference lists inline regardless of count. When an exact enumeration is not load-bearing, summarize it with a source link, but never summarize away content that is the claim, such as exact schema keys. Summarize third-party procedures in prose with a descriptive source link; use step lists only for procedures the reader executes.
 - Within a scope, omit an established name from children under a lead-in, cells after a row header, and sentences inside an entity's own section. Labels carry only the differentiating part.
-- When a table cell must hold several entries, separate them with `<br>` because bullet lists do not render inside cells; when a cell accumulates more than a few entries, restructure the table instead. Right-align only purely numeric columns and left-align text columns.
+- Use tables for atomic, comparable values. When a table cell must hold several entries, separate them with `<br>` because bullet lists do not render inside cells; when a cell needs sentences or more than about two `<br>`-separated lines, move the content to per-item subsections or prose and keep at most a compact table of atomic-value summaries. Right-align only purely numeric columns and left-align text columns.
 - Fragment bullets take no trailing period. Sentence bullets are punctuated. Keep each list internally consistent, and keep two-item enumerations in prose when a list adds no value.
+- Keep sentences that continue one topic in one paragraph. Merge runs of single-sentence paragraphs created by list-to-prose conversion, and use blank lines only for genuine topic shifts.
+- Use bold lead-ins ending with a period for labeled prose groups, as in **Label.** New detail ..., rather than "Label:" pseudo-headers. Keep colons for genuine lists and examples.
 
 ## Make documents easy to scan
 
