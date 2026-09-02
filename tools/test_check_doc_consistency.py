@@ -127,7 +127,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
                     self.assertIsNotNone(source)
                     target.write_bytes(source.read())
 
-    def test_both_plugin_roots_union_skills_agents_and_trace_path(self) -> None:
+    def test_both_plugin_roots_union_skills_agents_and_trace_doc_token(self) -> None:
         self._create_plugin(
             Path("plugin"), skills=("cognitive-writing",), agents=("planner",)
         )
@@ -152,7 +152,9 @@ class CheckDocConsistencyTests(unittest.TestCase):
             [self.root / "plugin", self.root / "experiments/plugin"]
         )
         self.assertEqual(ground_truth["agents"], {"planner", "reviewer"})
-        self.assertEqual(ground_truth["trace_paths"], {".writing/trace/process.jsonl"})
+        self.assertEqual(
+            ground_truth["trace_doc_tokens"], {".writing/trace/process.jsonl"}
+        )
 
     def test_actual_plugin_tree_at_d0d6da7_is_clean(self) -> None:
         self._materialize_actual_plugin_tree()

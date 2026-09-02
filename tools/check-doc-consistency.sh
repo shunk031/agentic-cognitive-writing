@@ -11,7 +11,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 
-TRACE_PATH = ".writing/trace/process.jsonl"
+# This token is matched against document text and must remain a string.
+TRACE_DOC_TOKEN = ".writing/trace/process.jsonl"
 PLUGIN_RELATIVE_ROOTS = (Path("plugin"), Path("experiments") / "plugin")
 PACKAGE_MANIFEST_RELATIVE_PATHS = (
     Path(".claude-plugin") / "plugin.json",
@@ -94,17 +95,17 @@ def _ground_truth(plugin_directories: list[Path]) -> dict[str, object]:
     skills: set[str] = set()
     agents: set[str] = set()
     packages: set[str] = set()
-    trace_paths: set[str] = set()
+    trace_doc_tokens: set[str] = set()
     for plugin_directory in plugin_directories:
         skills.update(_names_under(plugin_directory / "skills", file_stems=False))
         agents.update(_names_under(plugin_directory / "agents", file_stems=True))
         packages.update(_package_names(plugin_directory))
-        trace_paths.add(TRACE_PATH)
+        trace_doc_tokens.add(TRACE_DOC_TOKEN)
     return {
         "skills": skills,
         "agents": agents,
         "packages": packages,
-        "trace_paths": trace_paths,
+        "trace_doc_tokens": trace_doc_tokens,
     }
 
 
