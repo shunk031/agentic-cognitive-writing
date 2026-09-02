@@ -23,9 +23,9 @@ The experiment has six experimental arms. An arm is one comparison condition. Th
 
 Only the process instructions and the resulting observable process differ. The benchmark and judge choices follow the [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
-The questions are:
+The research questions (RQ) are:
 
-1. **Research question 1 (RQ1).** Does the theory-based recursive Monitor and goal-network architecture produce better writing than a single-shot system and linear-stage pipelines?
+1. **RQ1.** Does the theory-based recursive Monitor and goal-network architecture produce better writing than a single-shot system and linear-stage pipelines?
 2. **RQ2.** Which components matter? We compare the full plugin with the no-goal-network and fixed-process-order ablations.
 3. **RQ3.** Do agent traces, analyzed as thinking-aloud protocols, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? This includes their prediction that the quantity and quality of middle-range goals, which connect broad rhetorical aims to local writing actions, relate to writing quality.
 4. **RQ4.** Does the mapping replicate across platforms?
