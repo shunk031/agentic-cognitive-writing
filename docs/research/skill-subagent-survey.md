@@ -564,7 +564,7 @@ agentic-cognitive-writing-process/
   - article generation module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_generation.py
   - article polish module: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_polish.py
 - PaperDebugger [^5]:
-  - chat streaming API file: https://github.com/PaperDebugger/PaperDebugger/blob/main/internal/api/chat/create_conversation_message_stream.go
+  - code: chat streaming API file: https://github.com/PaperDebugger/PaperDebugger/blob/main/internal/api/chat/create_conversation_message_stream.go
   - Claude skill file: https://github.com/PaperDebugger/PaperDebugger/blob/main/.claude/skills/developer/SKILL.md
 - PaperQA [^12] as research-agent prior art:
   - main agent code: https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/main.py
