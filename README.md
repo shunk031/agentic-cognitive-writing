@@ -206,8 +206,8 @@ The repository keeps the installable plugin separate from its research and exper
 
 - `plugin/` contains the installable Claude Code and Codex plugin, including shared skills and Claude adapters.
 - `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` define the local marketplace sources.
-- `docs/research/` contains research notes on the [research branches](https://github.com/shunk031/agentic-cognitive-writing/tree/research/skill-subagent-survey/docs/research).
-- `docs/experiments/` contains experiment material on the [experiment branch](https://github.com/shunk031/agentic-cognitive-writing/tree/docs/experiment-protocol/docs/experiments).
+- `docs/research/` contains the [skill and sub-agent survey](https://github.com/shunk031/agentic-cognitive-writing/blob/13d0ace703a301f0a4656034c2b03deddd30c665/docs/research/skill-subagent-survey.md).
+- `docs/experiments/` contains the [experiment protocol](https://github.com/shunk031/agentic-cognitive-writing/blob/fca4bdfd5d45a5345bcff6ed5f1ee9ea33353fe5/docs/experiments/protocol.md).
 - `tools/validate-skills.sh` runs the reproducible skill validators.
 - `plugin/skills/*/evals/evals.json` contains skill eval seeds.
 
