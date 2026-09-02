@@ -710,8 +710,9 @@ The owner must close every gate below before the first scored run. Codex records
    - Length unit for prompts with an explicit length constraint
    - Relative deviation `D = |y - x| / x`
    - Compliance indicator `I(D <= 0.20)`
-   - LongWriter [^8] style score `100 * max(0, 1 - (y / x - 1) / 3)` for `y > x`
-   - LongWriter [^8] style score `100 * max(0, 1 - (x / y - 1) / 2)` for `0 < y <= x`
+   - LongWriter [^8] style score
+     - `100 * max(0, 1 - (y / x - 1) / 3)` for `y > x`
+     - `100 * max(0, 1 - (x / y - 1) / 2)` for `0 < y <= x`
    - Score `0` when `y = 0`
    - Zero-variance z-score rule
 8. **Trace conformance.** Run one smoke test for each arm and platform. Validate these properties:
