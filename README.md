@@ -57,20 +57,20 @@ The table maps each model element to the plugin artifact that carries out the co
 
 | Category | Figure 1 model element | Plugin artifact |
 | --- | --- | --- |
-| Task environment | Task environment | User project `.writing/assignment.md` and `.writing/draft.md` |
+| Task environment | Rhetorical problem and produced text | User project `.writing/assignment.md` and `.writing/draft.md` |
 |  | Rhetorical problem (the topic, the audience, and the reason for writing): topic, audience, exigency (the situation that makes the writing necessary) | Sections in `.writing/assignment.md` |
 |  | Produced text | User project `.writing/draft.md` |
-| Writer's long-term memory | Writer's long-term memory: topic and audience knowledge | User project `.writing/memory/` |
-|  | Writer's long-term memory: writing plans | Notes and plans in `.writing/memory/` plus `.writing/goals.md` |
-| Planning | Planning | Shared `plugin/skills/planning/SKILL.md` plus Claude adapter `plugin/agents/planner.md` |
+| Writer's long-term memory | Topic and audience knowledge | User project `.writing/memory/` |
+|  | Writing plans | Notes and plans in `.writing/memory/` plus `.writing/goals.md` |
+| Planning | Process and embedded sub-processes | Shared `plugin/skills/planning/SKILL.md` plus Claude adapter `plugin/agents/planner.md` |
 |  | Generating ideas | Planning skill's embedded Generate sub-process |
 |  | Organizing ideas and presentation | Planning skill's embedded Organize sub-process |
 |  | Goal-setting | Planning skill's embedded Goal-setting sub-process and `.writing/goals.md` |
-| Translating | Translating | Shared `plugin/skills/translating/SKILL.md` plus Claude adapter `plugin/agents/translator.md` |
-| Reviewing | Reviewing | Shared `plugin/skills/reviewing/SKILL.md` plus Claude adapter `plugin/agents/reviewer.md` |
+| Translating | Process | Shared `plugin/skills/translating/SKILL.md` plus Claude adapter `plugin/agents/translator.md` |
+| Reviewing | Process and embedded sub-processes | Shared `plugin/skills/reviewing/SKILL.md` plus Claude adapter `plugin/agents/reviewer.md` |
 |  | Evaluating | Reviewing skill's embedded Evaluate sub-process |
 |  | Revising | Reviewing skill's embedded Revise sub-process |
-| Monitor | Monitor | `plugin/skills/cognitive-writing/SKILL.md`, executed by the main agent |
+| Monitor | Orchestration role | `plugin/skills/cognitive-writing/SKILL.md`, executed by the main agent |
 
 The main skill uses these processes recursively. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
 
@@ -82,7 +82,7 @@ If the repository is private, GitHub installs require access to it.
 
 ### GitHub install for Claude Code
 
-1. In Claude Code, add the repository marketplace:
+1. Add the repository marketplace:
 
    ```text
    /plugin marketplace add shunk031/agentic-cognitive-writing
