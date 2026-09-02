@@ -1,6 +1,6 @@
 # Agentic cognitive writing
 
-In a writing project, the directory where the draft and process files live, the main `cognitive-writing` skill plans, drafts, and revises text recursively. Recursive revision means the assistant can revise its own plans and goals as the draft teaches it more, instead of generating text in one pass. The repository ships a Claude Code adapter in [`plugin/.claude-plugin/plugin.json`](plugin/.claude-plugin/plugin.json) and [`plugin/agents/`](plugin/agents/), plus a Codex adapter in [`plugin/.codex-plugin/plugin.json`](plugin/.codex-plugin/plugin.json) and per-skill metadata under [`plugin/skills/`](plugin/skills/).
+This project gives you a writing assistant for Claude Code and Codex that plans, drafts, and revises long-form text the way human writers do, keeping its goals, drafts, notes, and decision log as files in your project. Instead of generating text in one pass, the assistant revisits and rewrites its own plans and goals as the draft develops.
 
 The plugin implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor decides what to work on next. The monitor coordinates three writing processes as the writer works:
 
@@ -11,6 +11,8 @@ The plugin implements the writing model in ["A Cognitive Process Theory of Writi
 ## How the writing model maps to the plugin
 
 The architecture turns the writing model into a main skill, shared role skills, and file-backed project state.
+
+**Claude Code.** The adapter uses the manifest at [`plugin/.claude-plugin/plugin.json`](plugin/.claude-plugin/plugin.json) and agents in [`plugin/agents/`](plugin/agents/). **Codex.** The adapter uses the manifest at [`plugin/.codex-plugin/plugin.json`](plugin/.codex-plugin/plugin.json) and per-skill metadata under [`plugin/skills/`](plugin/skills/).
 
 The diagram below reproduces Figure 1, "Structure of the writing model," from the paper:
 
