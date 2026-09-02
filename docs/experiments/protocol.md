@@ -160,7 +160,7 @@ The runner must not train on or alter the student essays for this experiment. It
 
 ### Optional supplementary benchmark
 
-[LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) [^8] is optional and supplementary. It may be added only after the benchmark prompt-file license and provenance are cleared. If used, it is a length-control and robustness axis, not a fourth primary benchmark. The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) supervised fine-tuning (SFT) data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+[LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) is optional and supplementary. It may be added only after the benchmark prompt-file license and provenance are cleared. If used, it is a length-control and robustness axis, not a fourth primary benchmark. The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) [^8] supervised fine-tuning (SFT) data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
 The following benchmarks are excluded from this protocol because their licensing or metadata remains unresolved.
 
