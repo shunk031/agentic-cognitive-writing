@@ -25,7 +25,7 @@ The adapter files hold each platform's packaging and agent metadata:
 - Claude Code: `.claude-plugin/` and `agents/*.md`
 - OpenAI Codex: `.codex-plugin/` and `agents/openai.yaml`
 
-The shipped plugin uses four roles derived from Flower & Hayes' Cognitive Process Theory of Writing [^1]:
+The shipped plugin uses four roles derived from Flower & Hayes' Cognitive Process Theory of Writing [^1]: one monitor skill plus three Claude-native agent adapters.
 
 - `monitor`
 - `planner`
@@ -315,11 +315,11 @@ The sections below support these choices with official platform documentation, d
   - `code-architect`
   - `code-reviewer`
   Source: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
-- The shipped plugin represents Flower & Hayes' model [^1] as four Claude Code plugin agents:
-  - `monitor`
-  - `planner`
-  - `translator`
-  - `reviewer`
+- The shipped plugin represents Flower & Hayes' model [^1] as one monitor skill plus three Claude Code plugin agents:
+  - `cognitive-writing`: monitor role, executed by the main agent
+  - `planner`: Claude-native agent adapter
+  - `translator`: Claude-native agent adapter
+  - `reviewer`: Claude-native agent adapter
   Top-level skills orchestrate phase transitions, matching the official pattern where commands and skills route subagents for structured workflows. Evidence: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
 
 ## 4. OpenAI Codex skill format and skill-creator
@@ -529,36 +529,42 @@ The sections below support these choices with official platform documentation, d
 
 ```text
 agentic-cognitive-writing-process/
-|-- .claude-plugin/
-|   `-- plugin.json
-|-- .codex-plugin/
-|   `-- plugin.json
-|-- skills/
-|   |-- cognitive-writing/
-|   |   |-- SKILL.md
-|   |   |-- agents/
-|   |   |   `-- openai.yaml
-|   |   |-- references/
-|   |   `-- scripts/
-|   |-- planning/
-|   |   `-- SKILL.md
-|   |-- translating/
-|   |   `-- SKILL.md
-|   |-- reviewing/
-|   |   `-- SKILL.md
-|   |-- cognitive-writing-fixed-order/
-|   |   `-- SKILL.md
-|   `-- cognitive-writing-no-goal-network/
-|       `-- SKILL.md
-|-- agents/
-|   |-- monitor.md
-|   |-- planner.md
-|   |-- translator.md
-|   `-- reviewer.md
-`-- docs/
+|-- plugin/
+|   |-- .claude-plugin/
+|   |   `-- plugin.json
+|   |-- .codex-plugin/
+|   |   `-- plugin.json
+|   |-- agents/
+|   |   |-- planner.md
+|   |   |-- reviewer.md
+|   |   `-- translator.md
+|   |-- skills/
+|   |   |-- cognitive-writing/
+|   |   |   |-- SKILL.md
+|   |   |   |-- evals/
+|   |   |   `-- references/
+|   |   |-- planning/
+|   |   |   |-- SKILL.md
+|   |   |   `-- agents/openai.yaml
+|   |   |-- translating/
+|   |   |   |-- SKILL.md
+|   |   |   `-- agents/openai.yaml
+|   |   |-- reviewing/
+|   |   |   |-- SKILL.md
+|   |   |   `-- agents/openai.yaml
+|   |   |-- cognitive-writing-fixed-order/
+|   |   |   |-- SKILL.md
+|   |   |   |-- agents/openai.yaml
+|   |   |   `-- evals/
+|   |   `-- cognitive-writing-no-goal-network/
+|   |       |-- SKILL.md
+|   |       |-- agents/openai.yaml
+|   |       `-- evals/
+|   `-- README.md
+`-- docs/research/skill-subagent-survey.md
 ```
 
-- The root `agents/` directory contains Claude subagents, because Claude plugins natively load plugin-root `agents/`. Codex can treat these as reference prompts or convert them into custom agent files if Codex custom agent file schemas stabilize for local clients. Claude plugin agent behavior source: https://code.claude.com/docs/en/plugins-reference.md
+- The plugin-root `agents/` directory contains Claude subagents for `planner`, `translator`, and `reviewer`, because Claude plugins natively load plugin-root `agents/`. Codex can treat these as reference prompts or convert them into custom agent files if Codex custom agent file schemas stabilize for local clients. Claude plugin agent behavior source: https://code.claude.com/docs/en/plugins-reference.md
 
 ## 7. Academic and open-source software (OSS) prior art
 
@@ -606,12 +612,12 @@ agentic-cognitive-writing-process/
   - Reviewing
   It then uses that model to define a design space for writing support tools.
 - The Gero et al. design space covers which part of the writing process a tool supports and how constrained the supported writing goal is. The paper uses the space to review 30 papers from 2017-2021, identify under-studied highly constrained planning and reviewing, and propose shared evaluation methods and tasks.
-- The Gero et al. paper is likely the closest taxonomy for this project, but the mechanism is different. That paper uses Flower and Hayes to classify and compare writing tools. The plugin turns the same model into an executable agent architecture, where monitor, planner, translator, and reviewer roles produce observable state transitions and ledger entries.
+- The Gero et al. paper is likely the closest taxonomy for this project, but the mechanism is different. That paper uses Flower and Hayes to classify and compare writing tools. The plugin turns the same model into an executable agent architecture, where monitor, planner, translator, and reviewer roles produce observable state transitions and trace entries.
 
 **In2Writing process-support sweep**
 
 - Schneider et al. [^7] compare natural language generation (NLG) pipeline architecture with research on the human writing process in "Data-to-text systems as writing environment." They derive principles for data-to-text systems as writing environments. The paper argues that process optimization matters because evaluating all generated output is not feasible in mass text production.
-- Schneider et al. likely support the plugin's ledger design. If output-scale evaluation is weak, the ledger can expose the decisions that produce the text:
+- Schneider et al. likely support the plugin's trace design. If output-scale evaluation is weak, the trace can expose the decisions that produce the text:
   - Planning
   - Configuration
   - Generation
@@ -684,11 +690,11 @@ agentic-cognitive-writing-process/
 **Design options**
 
 1. **Theory-first role decomposition**
-   - The shipped plugin uses four Claude subagents:
-     - `monitor`
-     - `planner`
-     - `translator`
-     - `reviewer`
+   - The shipped plugin uses four writing-process roles:
+     - `monitor`: main `cognitive-writing` skill, executed by the main agent
+     - `planner`: Claude-native agent adapter
+     - `translator`: Claude-native agent adapter
+     - `reviewer`: Claude-native agent adapter
    - Considered options, not part of the shipped plugin:
      - `source-curator`
      - `experiment-grader`
@@ -748,7 +754,7 @@ agentic-cognitive-writing-process/
      - Expert ratings for audience fit
      - Expert ratings for argument quality
      - Expert ratings for factual grounding
-     - Process metrics from ledger
+     - Process metrics from trace
      - Source precision/recall
    - Dataset: FreshWiki-like recent topics for expository writing plus domain-specific technical memos.
 
@@ -774,7 +780,7 @@ agentic-cognitive-writing-process/
    - Baselines:
      - CoAuthor-style [^4] autocomplete/continuation interface
      - Direct chat writing assistant
-   - Treatment: plugin asks targeted monitor/planner questions only when ledger uncertainty is high.
+   - Treatment: plugin asks targeted monitor/planner questions only when trace uncertainty is high.
    - Metrics:
      - Accepted suggestions
      - User edits after AI output
@@ -794,7 +800,7 @@ agentic-cognitive-writing-process/
 
 **Implementation status and remaining options**
 
-- The shipped implementation starts with a minimal dual-manifest plugin that contains six shared skills and four Claude-native agents. Codex support relies on skills that instruct native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
+- The shipped implementation starts with a minimal dual-manifest plugin that contains six shared skills, one monitor role in the main skill, and three Claude-native agent adapters. Codex support relies on skills that instruct native Codex subagent delegation. A custom Codex agent-file format beyond documented `agents/openai.yaml` UI/dependency metadata remains a considered option until official custom-agent file details are stable enough to cite.
 - The paper prototype design privileges observability over maximal automation. Every phase transition writes a trace entry with:
   - Responsible agent
   - Decision
