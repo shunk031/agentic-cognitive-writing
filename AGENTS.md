@@ -1,6 +1,8 @@
 # Repository writing guidance
 
-This repository contains a cross-platform writing plugin, research surveys, and an experiment protocol. These rules apply to all of them and to every prose deliverable, including documents, READMEs, and pull request (PR) bodies. Write those deliverables in English and use the `unslop` skill for every one.
+The repository contains a cross-platform writing plugin, research surveys, and an experiment protocol.
+
+The writing contract applies to those artifacts and every prose deliverable, including documents, READMEs, and pull request (PR) bodies; writers produce those deliverables in English with the `unslop` skill.
 
 ## Cite works and link resources
 
@@ -28,7 +30,7 @@ Format content according to how readers need to use it: facts in tables, reasoni
 - Within a scope, omit an established name from children under a lead-in, cells after a row header, and sentences inside an entity's own section. Labels carry only the differentiating part.
 - Use tables for atomic, comparable values. When a table cell must hold several entries, separate them with `<br>` because bullet lists do not render inside cells; when a cell needs sentences or more than about two `<br>`-separated lines, move the content to per-item subsections or prose and keep at most a compact table of atomic-value summaries. Right-align only purely numeric columns and left-align text columns.
 - Fragment bullets take no trailing period. Sentence bullets are punctuated. Keep each list internally consistent, and keep two-item enumerations in prose when a list adds no value.
-- Keep sentences that continue one topic in one paragraph. Merge runs of single-sentence paragraphs created by list-to-prose conversion, and use blank lines only for genuine topic shifts.
+- Open each paragraph with a topic sentence stating its one point. Keep following sentences on that point, start a new paragraph for a new point, and make the first sentences alone carry the full argument. Merge runs of single-sentence paragraphs created by list-to-prose conversion, and use blank lines only for genuine topic shifts.
 - Use bold lead-ins ending with a period for labeled prose groups, as in **Label.** New detail ..., rather than "Label:" pseudo-headers. Keep colons for genuine lists and examples.
 
 ## Make documents easy to scan
