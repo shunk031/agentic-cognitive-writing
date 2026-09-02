@@ -43,7 +43,7 @@ The equal-information policy gives all six conditions identical input context. T
 
 **Linear-stages condition A2.** Condition A2 makes one pass through Pre-Write, Write, and Re-Write. The order is fixed, and each stage hands its output to the next. The runner records the three stage transitions and their outputs. The runner records no unobserved reasoning.
 
-**[STORM](https://github.com/stanford-oval/storm) [^2]-style condition A3 without retrieval.** Condition A3 uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish. Citation generation is omitted under the equal-information policy. The pipeline separates planning from writing and omits retrieval and source gathering.
+**[STORM](https://github.com/stanford-oval/storm)**[^2]-style condition A3 without retrieval. Condition A3 uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish. Citation generation is omitted under the equal-information policy. The pipeline separates planning from writing and omits retrieval and source gathering.
 
 **A3 trace and evidence handling.** The runner records the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The evaluation survey ([evaluation survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)) and platform survey ([platform survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)) describe the no-retrieval adaptation.
 
@@ -75,20 +75,13 @@ The primary set contains these benchmarks:
 
 The evaluation survey supports this selection. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
-**[WritingBench](https://github.com/X-PLUG/WritingBench) [^3].** Use the pinned curated release. The evaluation survey describes real-world writing queries across varied domains with query-specific criteria. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner uses the complete pinned query manifest unless a documented data failure blocks an item. The runner keeps blocked items in the run accounting and records the final count and release commit or archive hash.
+**[WritingBench](https://github.com/X-PLUG/WritingBench)**[^3]. Use the pinned curated release. The evaluation survey describes real-world writing queries across varied domains with query-specific criteria. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner uses the complete pinned query manifest unless a documented data failure blocks an item. The runner keeps blocked items in the run accounting and records the final count and release commit or archive hash.
 
-**[HelloBench](https://github.com/Quehry/HelloBench) [^4].** Use the pinned testing set. The evaluation survey describes long-text tasks with checklist-based evaluation support across subcategories. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner uses the complete pinned manifest, keeps blocked items in the run accounting, reports results by task and subcategory as well as in aggregate, and records the final count and release commit or archive hash.
+**[HelloBench](https://github.com/Quehry/HelloBench)**[^4]. Use the pinned testing set. The evaluation survey describes long-text tasks with checklist-based evaluation support across subcategories. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner uses the complete pinned manifest, keeps blocked items in the run accounting, reports results by task and subcategory as well as in aggregate, and records the final count and release commit or archive hash.
 
-**[DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5].** Use only the development subset after recomputing the split from the downloaded archive. The evaluation survey reports two source counts. The paper and archive report 820 dev and 1,037 test. The repository README reports 830 dev and 1,037 test. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner recomputes the split before the first scored run, saves the archive hash, split script version, and observed counts, and does not use the test portion for primary analysis. The expected paper and archive count is 820 dev and 1,037 test, but the archive-derived count is authoritative.
+**[DoLoMiTes](https://github.com/google-deepmind/dolomites)**[^5]. Use only the development subset after recomputing the split from the downloaded archive. The evaluation survey reports two source counts. The paper and archive report 820 dev and 1,037 test. The repository README reports 830 dev and 1,037 test. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner recomputes the split before the first scored run, saves the archive hash, split script version, and observed counts, and does not use the test portion for primary analysis. The expected paper and archive count is 820 dev and 1,037 test, but the archive-derived count is authoritative.
 
-The runner materializes one immutable prompt manifest per benchmark. The manifest is the only prompt input used by a run. Each row contains these fields:
-
-- Stable prompt identifier (ID)
-- Benchmark name
-- Source version
-- Prompt text or a permitted source reference
-- Requested output constraints
-- Hash
+The runner materializes one immutable prompt manifest per benchmark. The manifest is the only prompt input used by a run. Each row contains the stable prompt identifier (ID), benchmark name, source version, prompt text or a permitted source reference, requested output constraints, and hash.
 
 ### Prompt sources for human anchors
 
@@ -535,7 +528,7 @@ The owner must close every gate below before the first scored run. Codex records
 1. **DoLoMiTes split.** Download the released [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5] archive. Recompute dev and test counts. Save the script and archive hash. Cite the resulting count in the paper. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) reports expected paper/archive counts of 820 dev and 1,037 test. The archive result controls if it differs.
 2. **Benchmark materialization.** Pin releases or commits for [WritingBench](https://github.com/X-PLUG/WritingBench) [^3] / [HelloBench](https://github.com/Quehry/HelloBench) [^4] / [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5]. Materialize prompt manifests and record final item counts.
 3. **LongBench-Write license.** Clear the [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) benchmark prompt-file license and provenance before any supplementary use. Otherwise keep the benchmark excluded.
-4. Record permitted use for **PERSUADE 2.0 [^6]** ([15 prompts](https://github.com/scrosseye/persuade_corpus_2.0)) / **ICLE++ [^7]** ([calibration material](https://github.com/samlee946/ICLE-PlusPlus)). Do not redistribute material outside its permission.
+4. Record permitted use for **PERSUADE 2.0**[^6] ([15 prompts](https://github.com/scrosseye/persuade_corpus_2.0)) / **ICLE++**[^7] ([calibration material](https://github.com/samlee946/ICLE-PlusPlus)). Do not redistribute material outside its permission.
 5. **Generator configuration.** Fill these values:
 
    - Exact model IDs
