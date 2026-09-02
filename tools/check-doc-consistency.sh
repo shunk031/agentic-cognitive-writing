@@ -34,9 +34,9 @@ SKILL_TOKEN_PATTERN = re.compile(
     r"(?<![A-Za-z0-9_-])cognitive-writing-[A-Za-z0-9][A-Za-z0-9_-]*",
     re.IGNORECASE,
 )
-GITHUB_BLOB_PATTERN = re.compile(
+GITHUB_BLOB_OR_TREE_PATTERN = re.compile(
     r"https?://github\.com/(?P<owner>[^/\s?#]+)/(?P<repo>[^/\s?#]+)"
-    r"/blob/(?P<revision>[^/\s?#]+)/",
+    r"/(?:blob|tree)/(?P<revision>[^/\s?#]+)/",
     re.IGNORECASE,
 )
 HEX_REVISION_PATTERN = re.compile(r"[0-9a-f]{7,40}", re.IGNORECASE)
@@ -98,12 +98,14 @@ def _documentation_files(root: Path) -> list[Path]:
 
 def _is_in_repository_url(match: re.Match[str], repository_slug: str | None) -> bool:
     if repository_slug is None:
-        return True
+        return False
     candidate = f"{match.group('owner')}/{match.group('repo').removesuffix('.git')}".lower()
     return candidate == repository_slug
 
 
-def _findings(root: Path, ground_truth: dict[str, object]) -> list[str]:
+def _findings(
+    root: Path, ground_truth: dict[str, object], repository_slug: str | None
+) -> list[str]:
     skills = ground_truth["skills"]
     assert isinstance(skills, set)
     known_stale_skills = {
@@ -111,7 +113,6 @@ def _findings(root: Path, ground_truth: dict[str, object]) -> list[str]:
         for identifier in DENY_LIST
         if identifier.lower().startswith("cognitive-writing-")
     }
-    repository_slug = _repository_slug(root)
     findings: list[str] = []
 
     for path in _documentation_files(root):
@@ -140,7 +141,7 @@ def _findings(root: Path, ground_truth: dict[str, object]) -> list[str]:
                         f"{location}: unknown skill name '{token}' (not found under plugin/skills/)"
                     )
 
-            for match in GITHUB_BLOB_PATTERN.finditer(line):
+            for match in GITHUB_BLOB_OR_TREE_PATTERN.finditer(line):
                 if not _is_in_repository_url(match, repository_slug):
                     continue
                 revision = match.group("revision")
@@ -161,7 +162,10 @@ def main() -> int:
         return 0
 
     ground_truth = _ground_truth(plugin_directory)
-    findings = _findings(root, ground_truth)
+    repository_slug = _repository_slug(root)
+    if repository_slug is None:
+        print("in-repo GitHub URL check skipped: repository slug is unknown")
+    findings = _findings(root, ground_truth, repository_slug)
     for finding in findings:
         print(finding)
     return 1 if findings else 0
