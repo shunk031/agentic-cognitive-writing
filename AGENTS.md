@@ -12,16 +12,16 @@ Published works use complete footnotes, while resource pointers use descriptive 
 
 ### Published works
 
-- Attach each GitHub-flavored footnote marker, `[^n]`, directly after the named entity at first mention and at any load-bearing mention. Define the marker with authors or organization, title, venue, year, and a DOI, arXiv, or ACL URL.
+- Attach each GitHub-flavored footnote marker, `[^n]`, directly after the named entity at first mention and at any load-bearing mention. Keep footnote markers outside emphasis spans, as in `**Name**[^n]`, not `**Name [^n]`. Define the marker with authors or organization, title, venue, year, and a DOI, arXiv, or ACL URL.
 - Use one marker per entity per unit, where a unit is a paragraph, table row, or contiguous list. Re-mark an entity in a distant load-bearing section with the same number when needed.
 - Give sibling names sharing one footnote a single group marker, and give every cited entity at least one marker somewhere in the document.
 - Do not add a labeled `Paper:` entry that duplicates a marker already attached to the entity in the same passage.
 
 ### Resource links
 
-- Use descriptive Markdown links for resource pointers, including repositories, code or data files, docs pages, dataset cards, and licenses. A name may carry both its footnote marker and nearby resource links. Leave a URL bare only when its literal string is what readers must copy or type, such as in a command, an endpoint, or a DOI identifier in a bibliography entry.
+- Use inline descriptive Markdown links for resource pointers, including repositories, code or data files, docs pages, dataset cards, and licenses. A name may carry both its footnote marker and nearby resource links. Leave a URL bare only when its literal string is what readers must copy or type, such as in a command, an endpoint, or a DOI identifier in a bibliography entry.
 - Write short runs of two to four briefly labeled links inline with slash separators, such as `[Repo](url) / [data](url) / [eval prompt](url)`.
-- For longer same-entity link runs or labels needing qualifiers, use a lead-in that names the shared entity once and carries its marker, followed by a few sub-bullets. Give each sub-bullet a category label and an inline slash-separated run, and do not put a single resource link on each line.
+- For longer same-entity link runs or labels needing qualifiers, name the shared entity once in a lead-in; attach a footnote marker there only when the shared entity is a published work. Follow the lead-in with a few sub-bullets. Give each sub-bullet a category label and an inline slash-separated run, and do not put a single resource link on each line.
 - For in-repository links, use repo-relative paths for living references or commit-pinned URLs for snapshots. Never use branch-qualified URLs such as `blob/<branch>/...`, because a branch name is a movable pointer that can be deleted or rewritten, while a commit-pinned URL and a repository-relative path stay resolvable. Commit identifiers appear only inside link URLs as pinned snapshot targets under descriptive labels; prose never contains a SHA and states the design as a current fact.
 - Writers turn bare in-repository file-path mentions into code-formatted relative Markdown links, such as [`experiments/plugin/`](./experiments/plugin/). Writers keep runtime or user-environment paths, ground-truth tokens, and copyable command paths as plain text.
 
