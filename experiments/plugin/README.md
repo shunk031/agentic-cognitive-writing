@@ -63,6 +63,6 @@ Use these skills only for controlled comparisons. They are not recommended defau
 
 In Claude Code, invoke `/cognitive-writing-experiments:cognitive-writing-fixed-order` or `/cognitive-writing-experiments:cognitive-writing-no-goal-network`. In Codex, invoke `$cognitive-writing-fixed-order` or `$cognitive-writing-no-goal-network`.
 
-The variants reuse the main package's role skills and Claude agents.
+The variants reuse the main package's role skills; Claude uses its bundled agents, while Codex uses native subagents.
 
 Read the [project repository](https://github.com/shunk031/agentic-cognitive-writing) for the main plugin README, shared `.writing/` state layout, trace contract, research protocol, and experiment context.
