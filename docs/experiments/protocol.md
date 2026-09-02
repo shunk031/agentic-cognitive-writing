@@ -34,8 +34,8 @@ The experiment has six experimental conditions, identified as A1 through A6. The
 
 The research questions (RQ) are:
 
-1. **RQ1.** Does the theory-based recursive Monitor and goal-network architecture produce better writing than a single-shot system and linear-stage pipelines? A goal network is a hierarchy of writing goals that the Monitor coordinates during drafting.
-2. **RQ2.** Which components matter? We compare the full plugin with ablation conditions A5 and A6. An ablation condition removes or constrains one component of the full design.
+1. **RQ1.** Does the theory-based recursive Monitor and goal-network architecture, a hierarchy of writing goals that the Monitor coordinates during drafting, produce better writing than a single-shot system and linear-stage pipelines?
+2. **RQ2.** Which components matter? We compare the full plugin with ablation conditions A5 and A6, each of which removes or constrains one component of the full design.
 3. **RQ3.** Do agent traces, treated as operational analogues of thinking-aloud protocols rather than direct transcripts of private state, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? The RQ3 analysis includes Flower and Hayes' prediction that the quantity and quality of middle-range goals, which connect broad rhetorical aims to local writing actions, relate to writing quality.
 4. **RQ4.** Does the mapping replicate across platforms?
 
