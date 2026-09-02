@@ -28,9 +28,11 @@ Run rubric pointwise scoring plus balanced pairwise comparison.
 
 Use PERSUADE 2.0 [^19] and International Corpus of Learner English++ (ICLE++) [^5] as prompt-source and human-anchor datasets, not as primary benchmarks. PERSUADE 2.0 provides argumentative prompts and human score distributions; ICLE++ provides persuasive-essay trait scores outside Automated Student Assessment Prize (ASAP).
 
-- PERSUADE 2.0 repo: https://github.com/scrosseye/persuade_corpus_2.0
-- PERSUADE 2.0 Zenodo record: https://zenodo.org/records/8221504
-- ICLE++ repo: https://github.com/samlee946/ICLE-PlusPlus
+- PERSUADE 2.0 [^19]
+  - Repo: https://github.com/scrosseye/persuade_corpus_2.0
+  - Zenodo record: https://zenodo.org/records/8221504
+- ICLE++ [^5]
+  - Repo: https://github.com/samlee946/ICLE-PlusPlus
 
 Keep LongBench-Write [^6] outside the primary benchmark set, and use it only as an optional length-control axis after the team clears benchmark prompt-file license and provenance.
 
