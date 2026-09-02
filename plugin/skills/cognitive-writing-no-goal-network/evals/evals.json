@@ -7,7 +7,7 @@
       "expected_output": "The run uses the no-goal-network comparison skill, keeps the assignment, draft, memory, and trace state, leaves goals.md unchanged, and reports process decisions with evidence and uncertainty.",
       "files": [],
       "expectations": [
-        "Treats the assignment as the implicit objective and does not create hierarchical goal IDs.",
+        "Treats the assignment as the implicit objective and does not create hierarchical goal identifiers (IDs).",
         "Leaves .writing/goals.md untouched, including when a planning delegation proposes a goal change.",
         "Continues to log process switches with the responsible actor, decision, evidence, and uncertainty."
       ]

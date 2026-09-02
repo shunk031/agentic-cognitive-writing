@@ -49,7 +49,7 @@ If `assignment.md` is missing or underspecified, ask for:
 - genre
 - constraints
 
-Do not invent a rhetorical problem. Keep `goals.md` in the project's hierarchical notation. Use stable IDs. Put one goal on each line. Indent child goals beneath their parent. Keep a history section. Update the file whenever a goal is created, developed, or regenerated. Preserve earlier history and record the reason for each change. Read the trace field contract below before writing the first entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
+Do not invent a rhetorical problem. Keep `goals.md` in the project's hierarchical notation. Use stable goal identifiers (IDs). Put one goal on each line. Indent child goals beneath their parent. Keep a history section. Update the file whenever a goal is created, developed, or regenerated. Preserve earlier history and record the reason for each change. Read the trace field contract below before writing the first entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
 
 ## Fixed Monitor loop
 

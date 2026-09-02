@@ -1,4 +1,4 @@
-# Trace JSONL schema
+# Trace JSON Lines (JSONL) schema
 
 The Monitor writes one JSON object per line to `.writing/trace/process.jsonl`. A line must be valid JSON on its own. The log is append-only so a later reader can reconstruct process switches, goal changes, evidence, and uncertainty without relying on a chat transcript.
 
@@ -13,7 +13,7 @@ Every event has these fields:
 | `responsible_agent` | string | Actor responsible for the decision, such as `monitor`, `planner`, `translator`, `reviewer`, or `user`. |
 | `process` | string | Process that made or owns the decision, such as `planning`, `generate`, `organize`, `goal-setting`, `translating`, `reviewing`, `evaluate`, or `revise`. |
 | `decision` | string | Plain-language decision or action. State what changed or why the process moved. |
-| `evidence` | array | Facts, file paths, draft excerpts, goal IDs, or observations supporting the decision. Keep entries concrete. |
+| `evidence` | array | Facts, file paths, draft excerpts, goal identifiers (IDs), or observations supporting the decision. Keep entries concrete. |
 | `open_uncertainty` | array | Questions, unsupported claims, unresolved conflicts, or missing information left open after the decision. Use an empty array when none remains. |
 
 Use these conditional fields when they apply:

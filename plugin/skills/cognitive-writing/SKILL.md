@@ -96,7 +96,7 @@ When new writing changes what the author understands, use Goal-setting to develo
 For every delegation, pass:
 
 - the project root
-- the active goal ID
+- the active goal identifier (ID)
 - the parent goal ID
 - relevant uncertainty
 - the requested output
