@@ -119,6 +119,12 @@ class CheckDocConsistencyTests(unittest.TestCase):
             check=True,
         )
 
+    def _update_ref(self, ref: str, revision: str) -> None:
+        subprocess.run(
+            ["git", "-C", str(self.root), "update-ref", ref, revision],
+            check=True,
+        )
+
     def _run_checker(self) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [sys.executable, str(CHECKER), "--repo-root", str(self.root)],
@@ -292,6 +298,24 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self._write_readme(
             f"Pinned snapshot: https://github.com/{REPOSITORY_SLUG}/blob/"
             f"{baseline_commit}/README.md\n"
+        )
+
+        result = self._run_checker()
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("commit-pinned in-repo GitHub URL", result.stdout)
+
+    def test_commit_pin_accepted_when_either_default_branch_ref_reaches_it(self) -> None:
+        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._write_readme("base\n")
+        self._initialize_committed_git_fixture()
+        base_commit = self._commit_fixture("base")
+        (self.root / "descendant.txt").write_text("descendant\n", encoding="utf-8")
+        descendant_commit = self._commit_fixture("descendant")
+        self._update_ref("refs/remotes/origin/main", base_commit)
+        self._write_readme(
+            f"Pinned snapshot: https://github.com/{REPOSITORY_SLUG}/blob/"
+            f"{descendant_commit}/README.md\n"
         )
 
         result = self._run_checker()

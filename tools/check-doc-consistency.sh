@@ -6,9 +6,9 @@ complete DOI matching ``10.<digits>/<hex>(.<hex>)*`` with a non-continuation
 boundary. A hyphen, slash, or alphanumeric continuation prevents the exemption.
 
 In-repository GitHub blob/tree links must use relative links when branch-qualified.
-A commit-pinned link is allowed only when its commit is reachable from
-``origin/main`` or the local ``main`` branch; unknown or unreachable pins are
-findings because squash-merging will break them.
+A commit-pinned link is allowed when its commit is reachable from either
+available ref, ``origin/main`` or the local ``main`` branch; unknown or
+unreachable pins are findings because squash-merging will break them.
 """
 
 from __future__ import annotations
@@ -211,36 +211,34 @@ def _git_ref_exists(root: Path, ref: str) -> bool:
     return result.returncode == 0
 
 
-def _default_branch_ref(root: Path) -> str | None:
-    for ref in ("origin/main", "main"):
-        if _git_ref_exists(root, ref):
-            return ref
-    return None
+def _default_branch_refs(root: Path) -> tuple[str, ...]:
+    return tuple(ref for ref in ("origin/main", "main") if _git_ref_exists(root, ref))
 
 
 def _is_reachable_from_default_branch(
-    root: Path, revision: str, default_branch_ref: str | None
+    root: Path, revision: str, default_branch_refs: tuple[str, ...]
 ) -> bool:
-    if default_branch_ref is None:
-        return False
-    try:
-        result = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(root),
-                "merge-base",
-                "--is-ancestor",
-                revision,
-                default_branch_ref,
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-    except OSError:
-        return False
-    return result.returncode == 0
+    for default_branch_ref in default_branch_refs:
+        try:
+            result = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    str(root),
+                    "merge-base",
+                    "--is-ancestor",
+                    revision,
+                    default_branch_ref,
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+        except OSError:
+            continue
+        if result.returncode == 0:
+            return True
+    return False
 
 
 def _mask_excluded_regions(line: str) -> str:
@@ -274,7 +272,7 @@ def _findings(
         if identifier.lower().startswith("cognitive-writing-")
     }
     findings: list[str] = []
-    default_branch_ref = _default_branch_ref(root)
+    default_branch_refs = _default_branch_refs(root)
 
     for path in _documentation_files(root):
         relative_path = path.relative_to(root).as_posix()
@@ -339,7 +337,7 @@ def _findings(
                         "use a relative link"
                     )
                 elif not _is_reachable_from_default_branch(
-                    root, revision, default_branch_ref
+                    root, revision, default_branch_refs
                 ):
                     findings.append(
                         f"{location}: commit-pinned in-repo GitHub URL uses '{revision}' "
