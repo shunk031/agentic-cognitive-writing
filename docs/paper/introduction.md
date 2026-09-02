@@ -2,11 +2,11 @@
 
 Long-form large language model (LLM) writing requires systems to coordinate planning, drafting, and revision, but how these processes should be organized remains an open empirical question. A fixed-stage pipeline completes them in a predetermined sequence. A recursive architecture can instead revisit processes and goals as the text develops. We study whether this difference in process organization is associated with output quality and observable process behavior under a controlled comparison.
 
-The comparison instantiates two fixed-stage baselines. A2 passes through Pre-Write, Write, and Re-Write, whereas A3 uses a STORM-style sequence of perspective discovery, simulated question answering, outlining, drafting, and polishing without retrieval under the equal-information policy. The comparison uses STORM[^2] as the research-to-draft reference for this stage sequence, while Flower and Hayes' theory[^1] was formulated in response to stage models of human composing. Neither baseline is treated as a universal description of LLM writing.
+The comparison instantiates two fixed-stage baselines, conditions A2 and A3 of our protocol. A2 passes through Pre-Write, Write, and Re-Write, whereas A3 uses a STORM-style sequence of perspective discovery, simulated question answering, outlining, drafting, and polishing without retrieval under the equal-information policy. The comparison uses STORM[^2] as the research-to-draft reference for this stage sequence, while Flower and Hayes' theory[^1] was formulated in response to stage models of human composing. Neither baseline is treated as a universal description of LLM writing.
 
 Flower and Hayes' Cognitive Process Theory of Writing[^1] treats composing as a goal-directed organization of thinking processes rather than a sequence of completed stages. Planning generates and organizes ideas and sets goals, Translating turns represented meanings into written language, and Reviewing evaluates and revises text or plans. A Monitor coordinates these processes, which may be embedded within one another, while a hierarchical network of goals connects broad rhetorical aims to more operational sub-goals. Writers may regenerate higher-level goals as the developing text and new understanding change the rhetorical problem.
 
-We operationalize this account in an installable writing plugin for Claude Code and OpenAI Codex. The system maps the Monitor, Planning, Translating, and Reviewing to executable roles and project state. It externalizes the assignment, goals, draft, memory, and plans in project files and maintains an append-only JSON Lines decision trace containing process switches, decisions, evidence, and unresolved questions. This mapping is an implementation interpretation of the theory, not a claim that the 1981 paper specifies software files.
+We operationalize this account in an installable writing plugin whose adapters target two agentic coding platforms: Claude Code and OpenAI Codex. The system maps the Monitor, Planning, Translating, and Reviewing to executable roles and project state. It externalizes the assignment, goals, draft, memory, and plans in project files and maintains an append-only JSON Lines decision trace containing process switches, decisions, evidence, and unresolved questions. This mapping is an implementation interpretation of the theory, not a claim that the 1981 paper specifies software files.
 
 The experiment evaluates process organization under equal information and fixed resource policies. We define a goal network as a hierarchy of writing goals that the Monitor coordinates during drafting and pose four research questions:
 
@@ -18,9 +18,9 @@ The experiment evaluates process organization under equal information and fixed 
 Our contributions are fourfold:
 
 1. We present an executable operationalization of a cognitive writing-process theory in which process selection, goal changes, and revision can be inspected.
-2. We instantiate the same process mapping for Claude Code and Codex through host-specific manifests and adapters.
+2. We instantiate the same process mapping for both host platforms through host-specific manifests and adapters.
 3. We treat externalized project state and an append-only decision trace as objects of process analysis alongside final text quality.
-4. To our knowledge, among the systems surveyed in the supporting system survey, no system maps Flower and Hayes' roles[^1] onto an installable plugin.
+4. To our knowledge, among the systems surveyed in the supporting system survey (see Artifact availability), no system maps Flower and Hayes' roles[^1] onto an installable plugin.
 
 **Artifact availability.** The repository provides the [plugin installation and adapter documentation](../../plugin/README.md), the [theory-to-artifact mapping](../../README.md), the [experiment protocol](../../docs/experiments/protocol.md), and the [supporting system survey](../../docs/research/skill-subagent-survey.md).
 
