@@ -9,6 +9,7 @@ Use footnotes for published works and inline links for resources.
 - Give each published work a GitHub-flavored footnote marker, `[^n]`, attached directly after the named entity at first mention and at any load-bearing mention. Define the marker with the authors or organization, title, venue, year, and a DOI, arXiv, or ACL URL.
 - Use descriptive Markdown links for resource pointers, including repositories, code or data files, docs pages, dataset cards, and licenses. Write a short run of two to four briefly labeled links inline with slash separators, such as `[Repo](url) / [data](url) / [eval prompt](url)`. Use a lead-in and sub-bullets for longer runs or labels that need qualifiers. A name may carry both a footnote marker and nearby resource links. Leave a URL bare only when its literal string is what readers must copy or type, such as in a command, an endpoint, or a DOI identifier in a bibliography entry.
 - For in-repository links, use repo-relative paths for living references or commit-pinned URLs for snapshots. Never use branch-qualified URLs such as `blob/<branch>/...`, because a branch name is a movable pointer that can be deleted or rewritten, while a commit-pinned URL and a repository-relative path stay resolvable.
+- Writers turn bare in-repository file-path mentions into relative Markdown links computed from the mentioning file's location. Writers keep runtime or user-environment paths, ground-truth tokens, and copyable command paths as plain text.
 
 ## Keep citations sparse but complete
 
