@@ -286,13 +286,14 @@ agentic-cognitive-writing-process/
 
 ## Academic and open-source software prior art
 
-Within the platform sources and writing-system prior art cited in this section, we did not find one that maps Flower & Hayes' Cognitive Process Theory of Writing [^1] roles onto an installable plugin; this appears to be a gap.
+CogWriter [^13] narrows but does not close the survey's prior-art gap. Systems have begun invoking cognitive-writing theory, but the surveyed set still lacks an installable plugin with persistent artifacts for an explicit goal network, Monitor-mediated dynamic process selection, append-only process traces, and tests of the theory's predictions.
 
 **Sources for prior art**
 
 - STORM [^3] code:
   - Core: [engine](https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/engine.py)
   - Modules: [knowledge curation](https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/knowledge_curation.py) / [outline generation](https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/outline_generation.py) / [article generation](https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_generation.py) / [article polish](https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_polish.py)
+- CogWriter [^13] code: [entry point](https://github.com/KaiyangWan/CogWriter/blob/dc3bf084e8733c951172cddd89fa4d7337121fdd/main.py) / [planning agent](https://github.com/KaiyangWan/CogWriter/blob/dc3bf084e8733c951172cddd89fa4d7337121fdd/CogWriter_model/Agents/PlanningAgent.py) / [generation agent](https://github.com/KaiyangWan/CogWriter/blob/dc3bf084e8733c951172cddd89fa4d7337121fdd/CogWriter_model/Agents/GenerationAgent.py) / [evaluation script](https://github.com/KaiyangWan/CogWriter/blob/dc3bf084e8733c951172cddd89fa4d7337121fdd/longGenBench_output/eval_cogwriter.py)
 - PaperDebugger [^5]: [code: chat streaming API file](https://github.com/PaperDebugger/PaperDebugger/blob/main/internal/api/chat/create_conversation_message_stream.go) / [Claude skill file](https://github.com/PaperDebugger/PaperDebugger/blob/main/.claude/skills/developer/SKILL.md)
 - PaperQA [^12] as research-agent prior art: [main agent code](https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/main.py) / [search agent code](https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/search.py) / [agent tests](https://github.com/Future-House/paper-qa/blob/main/tests/test_agents.py)
 - In2Writing venue sweep: [Association for Computational Linguistics (ACL) Anthology venue page](https://aclanthology.org/venues/in2writing/) / [2022 volume page](https://aclanthology.org/volumes/2022.in2writing-1/) / [2025 volume page](https://aclanthology.org/volumes/2025.in2writing-1/)
@@ -328,6 +329,9 @@ Within the platform sources and writing-system prior art cited in this section, 
 - STORM [^3] frames long-form Wikipedia-like writing as a pre-writing problem: discover diverse perspectives, ask questions from those perspectives against a source-grounded expert, curate information, and create an outline. The STORM paper reports evaluation on FreshWiki and feedback from experienced Wikipedia editors.
 - STORM code separates pipeline modules: [knowledge curation](https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/knowledge_curation.py) / [outline generation](https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/outline_generation.py) / [article generation](https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_generation.py) / [article polish](https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/article_polish.py).
 - By cognitive-process coverage, we infer that STORM is closest to the planning/research side of Flower & Hayes [^1]. STORM is less directly a cognitive monitor model because it primarily packages source gathering, outline, generation, and polish as a pipeline.
+- CogWriter [^13] explicitly cites Flower's 1981 cognitive writing theory [^1] as its anchor for constrained long-form generation. The paper frames planning, monitoring, and reviewing as cognitive writing; its framework has a Planning Agent that produces structured JSON plans and parallel Generation Agents that execute them.
+- The CogWriter repository is a code framework run through `main.py`, not an installable tool. The pinned code shows PlanningAgent and GenerationAgent modules, checkpoint/output JSON, and LongGenBench evaluation scripts; the agent package contains no separate Monitor module.
+- We infer that CogWriter's monitoring/reviewing is plan revision and length repair, not a persistent monitor role. The paper reports LongGenBench-16K [^14] output metrics and component ablations; it does not analyze process logs or model goal objects, task-environment objects, long-term-memory analogues, goal networks, or goal regeneration.
 - PaperDebugger [^5] is described by its arXiv result as an in-editor, multi-agent, plugin-based academic writing assistant for Overleaf/LaTeX workflows.
 - The PaperDebugger GitHub repo contains a [Claude skill at `.claude/skills/developer/SKILL.md`](https://github.com/PaperDebugger/PaperDebugger/blob/main/.claude/skills/developer/SKILL.md), a [chat streaming API file](https://github.com/PaperDebugger/PaperDebugger/blob/main/internal/api/chat/create_conversation_message_stream.go), and endpoints for project metadata and writing instructions. The repository indicates an implementation that combines editor state, conversation, and agent guidance.
 - PaperQA [^12] has an `agents` package with main/search/tools modules and tests, making it useful as a research-agent implementation pattern even though its primary task is question answering over papers rather than writing. Sources: [main agent code](https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/main.py) / [search agent code](https://github.com/Future-House/paper-qa/blob/main/src/paperqa/agents/search.py).
@@ -350,10 +354,11 @@ Within the platform sources and writing-system prior art cited in this section, 
 
 - Existing systems likely operationalize pieces of writing cognition:
   - STORM [^3] handles research/pre-writing
+  - CogWriter [^13] applies a cognitive-writing frame to fixed-order plan-then-generate long-form output
   - CoAuthor [^4] studies human-AI writing traces
   - PaperDebugger [^5] embeds multi-agent help into an editor
 
-Among the systems surveyed here, a candidate gap appears to be a cross-platform plugin that explicitly maps a classic cognitive writing-process theory to observable skill/subagent roles, state transitions, and component-removal experiments (ablations).
+Among the systems surveyed here, a candidate gap appears to be a cross-platform plugin that turns a classic cognitive writing-process theory into persistent artifacts: an explicit goal network, Monitor-mediated dynamic process selection, append-only process traces, and component-removal experiments (ablations) that test theory-specific claims.
 
 ## Implications for the agentic cognitive writing process plugin
 
@@ -484,3 +489,5 @@ The survey findings translate into the shipped architecture and the remaining ex
 [^10]: Jiho Kim, Philippe Laban, Xiang Chen, and Kenneth C. Arnold. "Voice Interaction With Conversational AI Could Facilitate Thoughtful Reflection and Substantive Revision in Writing." Proceedings of the Fourth Workshop on Intelligent and Interactive Writing Assistants (In2Writing 2025), 2025. DOI: https://doi.org/10.18653/v1/2025.in2writing-1.7. ACL: https://aclanthology.org/2025.in2writing-1.7/
 [^11]: Sandra G. Hart and Lowell E. Staveland. "Development of NASA-TLX (Task Load Index): Results of Empirical and Theoretical Research." Advances in Psychology, 52, 1988. DOI: https://doi.org/10.1016/S0166-4115(08)62386-9.
 [^12]: Andrew D. White. "PaperQA: Retrieval-Augmented Generative Agent for Scientific Research." arXiv preprint, 2023. arXiv: https://arxiv.org/abs/2312.07559
+[^13]: Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen. "A Cognitive Writing Perspective for Constrained Long-Form Text Generation." Findings of the Association for Computational Linguistics: ACL 2025, 2025. DOI: https://doi.org/10.18653/v1/2025.findings-acl.511. ACL: https://aclanthology.org/2025.findings-acl.511/. arXiv: https://arxiv.org/abs/2502.12568
+[^14]: Yuhao Wu, Ming Shan Hee, Zhiqing Hu, and Roy Ka-Wei Lee. "LongGenBench: Benchmarking Long-Form Generation in Long Context LLMs." arXiv preprint, 2024. arXiv: https://arxiv.org/abs/2409.02076
