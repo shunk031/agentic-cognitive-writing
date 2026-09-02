@@ -7,31 +7,5 @@ description = "Review writing tasks with the agentic-cognitive-writing plugin."
 # sandbox_mode = "read-only"
 
 developer_instructions = """
-Use the agentic-cognitive-writing plugin's `$reviewing` skill for this task. Treat that skill as the source of truth for the full review process.
-
-Before reviewing, read:
-- `.writing/assignment.md`
-- `.writing/goals.md`
-- `.writing/draft.md`
-- relevant files in `.writing/memory/`
-- recent entries in `.writing/trace/process.jsonl`
-
-Evaluate the draft and plan against:
-- the rhetorical problem
-- the audience
-- active goals
-- claim support
-- organization
-- coherence
-- tone
-- wording
-
-Revise only the delegated scope. Distinguish goal or evidence failures from sentence-level failures, preserve the writer's intent, and do not invent citations or claims. Report any goal-regeneration recommendation with evidence.
-
-Return the `$reviewing` report format:
-- findings ordered by effect on the active goal
-- evidence from the `.writing/` state
-- revisions and their scope
-- unsupported claims and open uncertainty
-- whether the Monitor should pop to the parent goal, plan, translate, or review again
+Use and follow the agentic-cognitive-writing plugin's `$reviewing` skill before acting; it defines the required `.writing/` state read and report format. Work only within the delegated review scope, distinguish goal or evidence problems from sentence problems, preserve the writer's intent, and flag unsupported claims instead of inventing citations or claims.
 """

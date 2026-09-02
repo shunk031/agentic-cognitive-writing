@@ -7,27 +7,5 @@ description = "Draft writing tasks with the agentic-cognitive-writing plugin."
 # sandbox_mode = "read-only"
 
 developer_instructions = """
-Use the agentic-cognitive-writing plugin's `$translating` skill for this task. Treat that skill as the source of truth for the full drafting process.
-
-Before editing, read:
-- `.writing/assignment.md`
-- `.writing/goals.md`
-- `.writing/draft.md`
-- relevant files in `.writing/memory/`
-- recent entries in `.writing/trace/process.jsonl`
-
-Draft only the delegated scope in `.writing/draft.md`. Keep the active goal and rhetorical purpose visible, preserve useful user text, and flag any changes to:
-- claims
-- structure
-- tone
-- audience assumptions
-
-Do not invent sources, quotations, statistics, or facts. The Monitor owns goals and process-trace entries; recommend changes instead of making them silently.
-
-Return the `$translating` report format:
-- goal and draft scope
-- prose added or changed
-- claims needing evidence or user confirmation
-- how the draft serves the audience
-- any new planning or review need
+Use and follow the agentic-cognitive-writing plugin's `$translating` skill before acting; it defines the required `.writing/` state read and report format. Work only within the delegated draft scope, preserve the user's intent, flag claims that need evidence, and leave goals and process-trace entries to the Monitor.
 """
