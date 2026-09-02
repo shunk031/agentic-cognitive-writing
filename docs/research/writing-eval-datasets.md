@@ -207,8 +207,6 @@ The main unresolved items are benchmark-file licensing, source-count conflicts, 
 - Confirm the EQ-Bench Creative Writing [^20] license before using prompts in a paper artifact. The repository does not publish a license file at the [expected EQ-Bench Creative Writing license path](https://github.com/EQ-bench/creative-writing-bench/blob/main/LICENSE).
 - WritingPreferenceBench [^8] has inconsistent license metadata. GitHub README says ODC-BY, while Hugging Face metadata says Apache-2.0. Reconcile before redistribution.
 
-## References
-
 [^1]: Flower, Linda, and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication, 1981. DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885). [JSTOR](https://www.jstor.org/stable/356600)
 [^2]: Yijia Shao, Yucheng Jiang, Theodore A. Kanell, Peter Xu, Omar Khattab, and Monica S. Lam. "Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models." Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, 2024. https://aclanthology.org/2024.naacl-long.347/ arXiv: https://arxiv.org/abs/2402.14207
 [^3]: Yuning Wu, Jiahao Mei, Ming Yan, Chenliang Li, Shaopeng Lai, Yuran Ren, Zijia Wang, Ji Zhang, Mengyue Wu, Qin Jin, and Fei Huang. "WritingBench: A Comprehensive Benchmark for Generative Writing." arXiv, 2025. https://arxiv.org/abs/2503.05244
