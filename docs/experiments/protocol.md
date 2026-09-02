@@ -52,7 +52,7 @@ A4 uses the Planning, Translating, and Reviewing processes.
 | --- | --- | --- |
 | A1 single-shot | One generation pass from the assignment and supplied context. No explicit planning or review stage. | Record the externally visible generation event. Do not infer hidden goals or stages. |
 | A2 linear stages | One pass each through Pre-Write, Write, and Re-Write. The order is fixed and each stage hands its output to the next. | Record the three stage transitions and their outputs. Record no unobserved reasoning. |
-| A3 [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval | The pipeline follows the five stages above. STORM separates planning from writing. Condition A3 omits retrieval and source gathering. It also omits citation generation under the equal-information policy. The surveys describe this no-retrieval adaptation and the related STORM pipeline precedent.<br>Evaluation survey: [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)<br>Platform survey: [`docs/research/skill-subagent-survey.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) | Record the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. |
+| A3 [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval | The pipeline follows the five stages above. STORM separates planning from writing. Condition A3 omits retrieval and source gathering. It also omits citation generation under the equal-information policy. The surveys describe this no-retrieval adaptation and the related STORM pipeline precedent. [Evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) / [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) | Record the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. |
 | A4 proposed plugin | The documented cognitive-writing plugin. The Monitor selects among the three processes above. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. | Use the plugin's append-only `.writing/trace/process.jsonl` and goal-network files. Record the normal loop under the shared trace contract. |
 | A5 no goal network | Invoke the `cognitive-writing-no-goal-network` skill. The `cognitive-writing-no-goal-network` skill uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. | Leave any existing `goals.md` untouched. Record process switches under the shared trace contract. Do not record goal events or goal fields. |
 | A6 fixed process order | Invoke the `cognitive-writing-fixed-order` skill. The `cognitive-writing-fixed-order` skill runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, return to the prescribed order. | Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Do not add variant-specific fields. |
@@ -109,10 +109,7 @@ The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUD
 
 The following benchmarks are excluded from this protocol because their licensing or metadata remains unresolved.
 
-The unresolved resources are:
-
-- [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench)
-- [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17]
+The unresolved resources are [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench) / [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17].
 
 The unresolved resources must not enter a paper result, prompt manifest, or redistributed artifact without a new license review. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
@@ -159,10 +156,6 @@ The runner must pin each value below. A placeholder blocks the run:
 | Seeds | `REQUIRED_AT_RUNTIME`: generation seed<br>`REQUIRED_AT_RUNTIME`: judge seed<br>`REQUIRED_AT_RUNTIME`: sampling seed<br>`REQUIRED_AT_RUNTIME`: presentation seed where the platform allows it |
 | CLI and plugin versions | `REQUIRED_AT_RUNTIME`: Codex version<br>`REQUIRED_AT_RUNTIME`: Claude Code version<br>`REQUIRED_AT_RUNTIME`: plugin commit<br>`REQUIRED_AT_RUNTIME`: runner commit |
 | Generator and judge family audit | `REQUIRED_AT_RUNTIME: recorded base-model families and runtime verification that each frontier judge differs from the generator family and the open evaluator belongs to a third family` |
-
-The runner assigns judges with these pairs.
-
-The runner assigns the Claude-family frontier judge and shared third-family open evaluator to Codex outputs. It assigns the GPT-family frontier judge and the same open evaluator to Claude Code outputs.
 
 The runner records each judge's base-model family and the generator family for every scored output. It fails the run if a frontier judge shares the generator family or if the open evaluator does not belong to a third family. The audit verifies the family labels at runtime rather than trusting configuration names.
 
@@ -300,7 +293,7 @@ The covariate sensitivity analysis fits the prespecified quality and pairwise mo
 
 The covariate sensitivity analysis compares the adjusted treatment estimates with the raw and length-stratified estimates. Freeze the model formula, covariate coding, missing-value rule, and interaction terms as `REQUIRED_AT_RUNTIME`.
 
-Put them in the analysis manifest before results are inspected.
+The runner must record those settings in the analysis manifest before inspecting results.
 
 ## Human validation of pairwise judgments
 
@@ -435,7 +428,27 @@ experiments/
 └── manifests/    # run manifests, checksums, and validation reports
 ```
 
-The runner writes a manifest before each run. The manifest records the benchmark release and hash, prompt manifest hash, condition ID, platform, selected skill or prompt variant, CLI versions, plugin commit, generator and judge model IDs, system, condition, and judge prompt hashes, decoding parameters, output budget, tool policy, no-retrieval check, random seeds, retry policy, start time, and software environment identifiers that are safe to publish.
+The runner writes a manifest before each run. The manifest records these fields:
+
+- Benchmark release and hash
+- Prompt manifest hash
+- Condition ID
+- Platform
+- Selected skill or prompt variant
+- CLI versions
+- Plugin commit
+- Generator and judge model IDs
+- System
+- Condition
+- Judge prompt hashes
+- Decoding parameters
+- Output budget
+- Tool policy
+- No-retrieval check
+- Random seeds
+- Retry policy
+- Start time
+- Software environment identifiers that are safe to publish
 
 The runner versions or content-hashes outputs, traces, judge responses, human judgments, derived scores, and analysis inputs.
 
@@ -516,20 +529,9 @@ See the [evaluation survey](https://github.com/shunk031/agentic-cognitive-writin
 The owner must close every gate below before the first scored run. Codex records the decision and the evidence in the run manifest.
 
 1. **DoLoMiTes split.** Download the released [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5] archive. Recompute dev and test counts. Save the script and archive hash. Cite the resulting count in the paper. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) reports expected paper/archive counts of 820 dev and 1,037 test. The archive result controls if it differs.
-2. **Benchmark materialization.** Pin releases or commits for these benchmarks:
-
-   - [WritingBench](https://github.com/X-PLUG/WritingBench) [^3]
-   - [HelloBench](https://github.com/Quehry/HelloBench) [^4]
-   - [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5]
-
-   Materialize prompt manifests and record final item counts.
+2. **Benchmark materialization.** Pin releases or commits for [WritingBench](https://github.com/X-PLUG/WritingBench) [^3] / [HelloBench](https://github.com/Quehry/HelloBench) [^4] / [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5]. Materialize prompt manifests and record final item counts.
 3. **LongBench-Write license.** Clear the [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) benchmark prompt-file license and provenance before any supplementary use. Otherwise keep the benchmark excluded.
-4. **PERSUADE 2.0 [^6] and ICLE++ [^7] access.** Record permitted use for these materials:
-
-   - The 15 [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) prompts
-   - The [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) calibration material
-
-   Do not redistribute material outside its permission.
+4. Record permitted use for **PERSUADE 2.0 [^6]** ([15 prompts](https://github.com/scrosseye/persuade_corpus_2.0)) / **ICLE++ [^7]** ([calibration material](https://github.com/samlee946/ICLE-PlusPlus)). Do not redistribute material outside its permission.
 5. **Generator configuration.** Fill these values:
 
    - Exact model IDs
@@ -595,9 +597,7 @@ The owner must close every gate below before the first scored run. Codex records
 
 If a new source check contradicts a settled design item or the plugin's documented behavior, stop the experiment and record the conflict. Do not resolve it by changing a condition after results exist.
 
-[^1]: Linda S. Flower and John R. Hayes, "A Cognitive Process Theory of Writing," *College Composition and Communication* 32, no. 4 (1981): 365-387.
-    - [DOI](https://doi.org/10.58680/ccc198115885)
-    - [JSTOR](https://www.jstor.org/stable/356600)
+[^1]: Linda S. Flower and John R. Hayes, "A Cognitive Process Theory of Writing," *College Composition and Communication* 32, no. 4 (1981): 365-387. [DOI](https://doi.org/10.58680/ccc198115885) / [JSTOR](https://www.jstor.org/stable/356600).
 [^2]: Yijia Shao, Yucheng Jiang, Theodore A. Kanell, Peter Xu, Omar Khattab, and Monica S. Lam, "Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models," arXiv preprint arXiv:2402.14207 (2024). [arXiv](https://arxiv.org/abs/2402.14207).
 [^3]: Yuning Wu, Jiahao Mei, Ming Yan, Chenliang Li, Shaopeng Lai, Yuran Ren, Zijia Wang, Ji Zhang, Mengyue Wu, Qin Jin, and Fei Huang, "WritingBench: A Comprehensive Benchmark for Generative Writing," arXiv preprint arXiv:2503.05244 (2025). [arXiv](https://arxiv.org/abs/2503.05244).
 [^4]: Haoran Que, Feiyu Duan, Liqun He, Yutao Mou, Wangchunshu Zhou, Jiaheng Liu, Wenge Rong, Zekun Moore Wang, Jian Yang, Ge Zhang, Junran Peng, Zhaoxiang Zhang, Songyang Zhang, and Kai Chen, "HelloBench: Evaluating Long Text Generation Capabilities of Large Language Models," arXiv preprint arXiv:2409.16191 (2024). [arXiv](https://arxiv.org/abs/2409.16191).
