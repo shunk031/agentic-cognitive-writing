@@ -12,7 +12,7 @@ Published works use complete footnotes, while resource pointers use descriptive 
 
 ### Published works
 
-- Attach each GitHub-flavored footnote marker, `[^n]`, directly after the named entity at first mention and at any load-bearing mention. Keep footnote markers outside emphasis spans, as in `**Name**[^n]`, not `**Name [^n]`. Define the marker with authors or organization, title, venue, year, and a DOI, arXiv, or ACL URL.
+- Attach each GitHub-flavored footnote marker, `[^n]`, directly after the named entity at first mention and at any load-bearing mention. Keep footnote markers outside emphasis spans, as in `**Name**[^n]`, not `**Name [^n]**`. Define the marker with authors or organization, title, venue, year, and a DOI, arXiv, or ACL URL.
 - Use one marker per entity per unit, where a unit is a paragraph, table row, or contiguous list. Re-mark an entity in a distant load-bearing section with the same number when needed.
 - Give sibling names sharing one footnote a single group marker, and give every cited entity at least one marker somewhere in the document.
 - Do not add a labeled `Paper:` entry that duplicates a marker already attached to the entity in the same passage.
@@ -52,7 +52,7 @@ Writers format content for reader use: facts go in tables, reasoning in prose, a
 
 Writers produce all prose deliverables in English and apply the `unslop` skill to each one.
 
-- Expand abbreviations at first use, such as `Question Answering (QA)`. Leave universally understood tokens such as URL, JSON, HTTP, PDF, API, CLI, README, and DOI, as well as proper names and brands such as JSTOR, arXiv, and GitHub, unexpanded.
+- Expand abbreviations at first use, such as `question answering (QA)`. Leave universally understood tokens such as URL, JSON, HTTP, PDF, API, CLI, README, and DOI, as well as proper names and brands such as JSTOR, arXiv, and GitHub, unexpanded.
 - Avoid pronoun subjects such as "It", "This", and "They" unless the referent is the immediately preceding subject and unambiguous. Name the actor instead, as in "The survey derives ..." or "The monitor appends ...".
 - Describe an artifact by its function, not with self-assessed size or effort qualifiers such as "small", "thin", "simple", or "lightweight". State platform, support, and compatibility scope once as artifact-anchored facts with concrete boundaries, such as "The artifact ships adapters for named platforms", rather than promising that the artifact "supports" a platform.
 
