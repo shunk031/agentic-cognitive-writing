@@ -156,20 +156,13 @@ class CheckDocConsistencyTests(unittest.TestCase):
             ground_truth["trace_doc_tokens"], {".writing/trace/process.jsonl"}
         )
 
-    def test_actual_plugin_tree_at_d0d6da7_has_only_known_sha_finding(self) -> None:
+    def test_actual_plugin_tree_at_d0d6da7_is_clean(self) -> None:
         self._materialize_actual_plugin_tree()
 
         result = self._run_checker()
 
-        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertNotIn("unknown skill name", result.stdout)
-        self.assertEqual(
-            [line for line in result.stdout.splitlines() if line.startswith("README.md:")],
-            [
-                "README.md:218: commit SHA 'ccc198115885' appears in prose; "
-                "keep SHAs in URLs or code"
-            ],
-        )
 
         checker_globals = runpy.run_path(str(CHECKER))
         ground_truth = checker_globals["_ground_truth"](
@@ -277,6 +270,30 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn(
             "README.md:1: commit SHA 'd0d6da7' appears in prose",
+            result.stdout,
+        )
+
+    def test_doi_suffixes_in_bibliography_are_clean(self) -> None:
+        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._write_readme(
+            "[^1]: DOI: [10.58680/ccc198115885]("
+            "https://doi.org/10.58680/ccc198115885) and 10.58680/ccc198115885.\n"
+        )
+
+        result = self._run_checker()
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("commit SHA", result.stdout)
+
+    def test_bare_doi_suffix_without_prefix_is_flagged(self) -> None:
+        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._write_readme("The snapshot at ccc198115885 is documented.\n")
+
+        result = self._run_checker()
+
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn(
+            "README.md:1: commit SHA 'ccc198115885' appears in prose",
             result.stdout,
         )
 

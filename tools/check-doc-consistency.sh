@@ -46,6 +46,10 @@ SHA_TOKEN_PATTERN = re.compile(
     r"(?<![A-Za-z0-9_])[0-9a-f]{7,40}(?![A-Za-z0-9_])",
     re.IGNORECASE,
 )
+DOI_TOKEN_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9_])10\.\d+/[0-9a-f]{7,40}(?![A-Za-z0-9_])",
+    re.IGNORECASE,
+)
 FENCE_PATTERN = re.compile(r"^[ \t]{0,3}(?P<marker>`{3,}|~{3,})")
 INLINE_CODE_PATTERN = re.compile(r"`+[^`\n]*`+")
 MARKDOWN_LINK_TARGET_PATTERN = re.compile(
@@ -191,6 +195,7 @@ def _mask_excluded_regions(line: str) -> str:
             INLINE_CODE_PATTERN,
             MARKDOWN_LINK_TARGET_PATTERN,
             URL_PATTERN,
+            DOI_TOKEN_PATTERN,
         )
         for match in pattern.finditer(line)
     ]
