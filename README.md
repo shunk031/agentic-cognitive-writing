@@ -207,8 +207,8 @@ The repository keeps the main plugin, experiment package, research, and protocol
 - [`plugin/`](plugin/) contains the installable main plugin, including shared skills and Claude adapters.
 - [`experiments/plugin/`](experiments/plugin/) contains the installable controlled-comparison variants.
 - [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) and [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json) define the local marketplace sources.
-- [`docs/research/`](docs/research/) contains the [skill and sub-agent survey](https://github.com/shunk031/agentic-cognitive-writing/blob/13d0ace703a301f0a4656034c2b03deddd30c665/docs/research/skill-subagent-survey.md).
-- [`docs/experiments/`](docs/experiments/) contains the [experiment protocol](https://github.com/shunk031/agentic-cognitive-writing/blob/fca4bdfd5d45a5345bcff6ed5f1ee9ea33353fe5/docs/experiments/protocol.md).
+- The [skill and sub-agent survey](https://github.com/shunk031/agentic-cognitive-writing/blob/371b33bf5c1ac4c4ec89c6bfa9f0648c490af094/docs/research/skill-subagent-survey.md) documents the research basis.
+- The [experiment protocol](https://github.com/shunk031/agentic-cognitive-writing/blob/84fc36e1a8e96b740752890e61762fe4c3f7f162/docs/experiments/protocol.md) defines the comparison procedure.
 - [`tools/validate-skills.sh`](tools/validate-skills.sh) runs the reproducible skill validators.
 - [`plugin/skills/cognitive-writing/evals/evals.json`](plugin/skills/cognitive-writing/evals/evals.json) and the experiment skill eval files under [`experiments/plugin/skills/`](experiments/plugin/skills/) seed skill evaluations.
 
