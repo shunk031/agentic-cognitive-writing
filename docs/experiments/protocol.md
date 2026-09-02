@@ -41,20 +41,19 @@ All six conditions receive identical input context. The runner must expose the s
 
 No condition may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
 
-The A3 condition uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish. This no-retrieval implementation follows the STORM [^2] pipeline precedent and omits retrieval and source gathering. The evaluation survey ([evaluation survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)) and platform survey ([platform survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)) describe this adaptation.
+**Condition A1: single-shot.** Condition A1 makes one generation pass from the assignment and supplied context. The condition has no explicit planning or review stage. The runner records the externally visible generation event and does not infer hidden goals or stages.
 
-A4 uses the Planning, Translating, and Reviewing processes.
+**Condition A2: linear stages.** Condition A2 makes one pass through Pre-Write, Write, and Re-Write. The order is fixed, and each stage hands its output to the next. The runner records the three stage transitions and their outputs. The runner records no unobserved reasoning.
 
-| Condition | Process specification | Required trace behavior |
-| --- | --- | --- |
-| A1 single-shot | One generation pass from the assignment and supplied context. No explicit planning or review stage. | Record the externally visible generation event. Do not infer hidden goals or stages. |
-| A2 linear stages | One pass each through Pre-Write, Write, and Re-Write. The order is fixed and each stage hands its output to the next. | Record the three stage transitions and their outputs. Record no unobserved reasoning. |
-| A3 [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval | The pipeline follows the five stages above. STORM separates planning from writing. Condition A3 omits retrieval and source gathering. It also omits citation generation under the equal-information policy. The surveys describe this no-retrieval adaptation and the related STORM pipeline precedent. [Evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) / [platform survey](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) | Record the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. |
-| A4 proposed plugin | The documented cognitive-writing plugin. The Monitor selects among the three processes above. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. | Use the plugin's append-only `.writing/trace/process.jsonl` and goal-network files. Record the normal loop under the shared trace contract. |
-| A5 no goal network | Invoke `cognitive-writing-no-goal-network` from the `cognitive-writing-experiments` plugin. The variant uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. | Leave any existing `goals.md` untouched. Record process switches under the shared trace contract. Do not record goal events or goal fields. |
-| A6 fixed process order | Invoke `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin. The variant runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, return to the prescribed order. | Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Do not add variant-specific fields. |
+**Condition A3: [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval.** Condition A3 uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, polish, and citation generation. The pipeline separates planning from writing and omits retrieval and source gathering. The runner records the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The evaluation survey ([evaluation survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)) and platform survey ([platform survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)) describe the no-retrieval adaptation.
 
-The A5 and A6 variant skills are shipped by the separate `cognitive-writing-experiments` plugin. The runner invokes `cognitive-writing-no-goal-network` for A5 and `cognitive-writing-fixed-order` for A6. Both variants require the main `agentic-cognitive-writing` plugin for role skills and agents, and both use the common trace contract. All six conditions use the same assignment, starting draft, model settings, and user decisions.
+**Condition A4: proposed plugin.** Condition A4 uses the documented cognitive-writing plugin. The Monitor selects among the Planning, Translating, and Reviewing processes. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. The runner uses the plugin's append-only `.writing/trace/process.jsonl` and goal-network files and records the normal loop under the shared trace contract.
+
+**Condition A5: no goal network.** Condition A5 invokes `cognitive-writing-no-goal-network` from the `cognitive-writing-experiments` plugin. The variant uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. The runner leaves any existing `.writing/goals.md` untouched, records process switches under the shared trace contract, and records no goal events or goal fields.
+
+**Condition A6: fixed process order.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin. The variant runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, the Monitor returns to the prescribed order. The runner keeps the ordinary goal network, records process switches and goal events under the shared trace contract, and adds no variant-specific fields.
+
+All six conditions use the same assignment, starting draft, model settings, and user decisions.
 
 The plugin mapping implements the theory in *A Cognitive Process Theory of Writing* [^1], but that 1981 paper does not specify these files. The user owns rhetorical intent, factual authority, final wording, and publication.
 
@@ -74,11 +73,11 @@ The primary set contains these benchmarks:
 
 The evaluation survey supports this selection. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
-| Benchmark | Planned material | Run rule and gate |
-| --- | --- | --- |
-| [WritingBench](https://github.com/X-PLUG/WritingBench) [^3] | Use the pinned curated release. The survey describes real-world writing queries across varied domains, with query-specific criteria. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). | Use the complete pinned query manifest unless a documented data failure blocks an item. Keep blocked items in the run accounting. Record the final count and the release commit or archive hash. |
-| [HelloBench](https://github.com/Quehry/HelloBench) [^4] | Use the pinned testing set. The survey describes long-text tasks with checklist-based evaluation support across subcategories. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). | Use the complete pinned manifest. Keep blocked items in the run accounting. Report results by task and subcategory as well as in aggregate. Record the final count and the release commit or archive hash. |
-| [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5] | Use only the development subset after recomputing the split from the downloaded archive. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) reports two source counts. The paper/archive reports 820 dev and 1,037 test. The repository README reports 830 dev and 1,037 test. | Recompute the split before the first scored run. Save the archive hash, split script version, and observed counts. Do not use the test portion for primary analysis. The expected paper/archive count is 820 dev and 1,037 test, but the archive-derived count is authoritative. |
+**[WritingBench](https://github.com/X-PLUG/WritingBench) [^3].** Use the pinned curated release. The evaluation survey describes real-world writing queries across varied domains with query-specific criteria. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner uses the complete pinned query manifest unless a documented data failure blocks an item. The runner keeps blocked items in the run accounting and records the final count and release commit or archive hash.
+
+**[HelloBench](https://github.com/Quehry/HelloBench) [^4].** Use the pinned testing set. The evaluation survey describes long-text tasks with checklist-based evaluation support across subcategories. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner uses the complete pinned manifest, keeps blocked items in the run accounting, reports results by task and subcategory as well as in aggregate, and records the final count and release commit or archive hash.
+
+**[DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5].** Use only the development subset after recomputing the split from the downloaded archive. The evaluation survey reports two source counts. The paper and archive report 820 dev and 1,037 test. The repository README reports 830 dev and 1,037 test. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md). The runner recomputes the split before the first scored run, saves the archive hash, split script version, and observed counts, and does not use the test portion for primary analysis. The expected paper and archive count is 820 dev and 1,037 test, but the archive-derived count is authoritative.
 
 The runner materializes one immutable prompt manifest per benchmark. Each row contains a stable prompt identifier (ID), benchmark name, source version, prompt text or a permitted source reference, requested output constraints, and a hash.
 
@@ -151,9 +150,20 @@ The runner must pin each value below. A placeholder blocks the run:
 | Shared open evaluator | `REQUIRED_AT_RUNTIME`: exact third-family Prometheus 2 [^9] style evaluator checkpoint, revision, and serving configuration |
 | Generator system and condition prompts | `REQUIRED_AT_RUNTIME: frozen prompt files and hashes` |
 | Judge prompts and JSON schemas | `REQUIRED_AT_RUNTIME: frozen prompt files, schema files, and hashes` |
-| Decoding parameters | `REQUIRED_AT_RUNTIME`: temperature<br>`REQUIRED_AT_RUNTIME`: top-p or equivalent<br>`REQUIRED_AT_RUNTIME`: max output tokens<br>`REQUIRED_AT_RUNTIME`: stop rules<br>`REQUIRED_AT_RUNTIME`: timeout |
-| Seeds | `REQUIRED_AT_RUNTIME`: generation seed<br>`REQUIRED_AT_RUNTIME`: judge seed<br>`REQUIRED_AT_RUNTIME`: sampling seed<br>`REQUIRED_AT_RUNTIME`: presentation seed where the platform allows it |
-| CLI and plugin versions | `REQUIRED_AT_RUNTIME`: Codex version<br>`REQUIRED_AT_RUNTIME`: Claude Code version<br>`REQUIRED_AT_RUNTIME`: main plugin commit<br>`REQUIRED_AT_RUNTIME`: experiments plugin commit<br>`REQUIRED_AT_RUNTIME`: runner commit |
+| Temperature | `REQUIRED_AT_RUNTIME`: temperature |
+| Top-p or equivalent | `REQUIRED_AT_RUNTIME`: top-p or equivalent |
+| Maximum output tokens | `REQUIRED_AT_RUNTIME`: max output tokens |
+| Stop rules | `REQUIRED_AT_RUNTIME`: stop rules |
+| Timeout | `REQUIRED_AT_RUNTIME`: timeout |
+| Generation seed | `REQUIRED_AT_RUNTIME`: generation seed |
+| Judge seed | `REQUIRED_AT_RUNTIME`: judge seed |
+| Sampling seed | `REQUIRED_AT_RUNTIME`: sampling seed |
+| Presentation seed | `REQUIRED_AT_RUNTIME`: presentation seed where the platform allows it |
+| Codex version | `REQUIRED_AT_RUNTIME`: Codex version |
+| Claude Code version | `REQUIRED_AT_RUNTIME`: Claude Code version |
+| Main plugin commit | `REQUIRED_AT_RUNTIME`: main plugin commit |
+| Experiments plugin commit | `REQUIRED_AT_RUNTIME`: experiments plugin commit |
+| Runner commit | `REQUIRED_AT_RUNTIME`: runner commit |
 | Generator and judge family audit | `REQUIRED_AT_RUNTIME: recorded base-model families and runtime verification that each frontier judge differs from the generator family and the open evaluator belongs to a third family` |
 
 The runner records each judge's base-model family and the generator family for every scored output. It fails the run if a frontier judge shares the generator family or if the open evaluator does not belong to a third family. The audit verifies the family labels at runtime rather than trusting configuration names.
@@ -351,19 +361,64 @@ The trace is an operational analogue of a thinking-aloud protocol, not a direct 
 
 The analysis extracts these measures from the traces. It uses goal files only for A4 and A6.
 
-| Process measure | Operational definition |
-| --- | --- |
-| Goal count | For A4 and A6, count all three goal event types. Add the unique active goal IDs in `goals.md`. For A5, report zero because the variant records no goal events and leaves `goals.md` untouched. Report a total. When the kind is available, also report content, process, and criterion goals. |
-| Goal specificity | Code whether each goal defines an operational action.<br>Code whether it names a content target.<br>Code whether it names an audience or purpose target.<br>Code whether it states an evaluative criterion.<br>Report the coding rubric and double-code a reliability sample.<br>Do not treat goal length alone as specificity. |
-| Middle-range goal quantity | Count goals that connect a high-level rhetorical intention to a local prose or process action. The coding rule and examples are frozen before analysis. |
-| Middle-range goal quality | Score whether each middle-range goal gives concrete direction.<br>Score whether it covers the rhetorical problem.<br>Score whether it can be checked against the output.<br>Report the mean and distribution with coder agreement. |
-| Goal regeneration | Count `goal_regenerated` events and verify that the old goal remains in history and the replacement has a new ID when its meaning materially changes. Record the evidence and stated rationale. |
-| Process-switch transitions | Count transitions among the named processes.<br>Include embedded Generate events.<br>Include Evaluate events.<br>Include Organize events.<br>Include Goal-setting events.<br>Include Revise events when the trace names them.<br>Report transition counts and rates per run. |
-| Process-order entropy | Compute Shannon entropy [^12] over normalized process sequences and over transition distributions. Report raw entropy, the number of observed states, and the normalization rule. |
-| Generate and Evaluate interruptions | Count process switches into Generate or Evaluate while another process is active, using the process fields and explicit decision or evidence markers. Do not infer an interruption from text alone when the event is ambiguous. |
-| Pop-back events | Count returns to an immediate parent goal after a child goal resolves. Use the child and parent IDs, status or history, and the next process event. Report unresolved parent links as trace-quality failures. |
-| Revision intent | Map each revision to the IteraTeR [^10]-informed categories.<br>Record clarity changes.<br>Record fluency changes.<br>Record coherence changes.<br>Record style changes.<br>Record meaning changes.<br>Record the edit operation and the evidence in the trace or draft diff.<br>The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) identifies IteraTeR as the process-level revision precedent. |
-| A3 outline and QA structure | Count discovered perspectives.<br>Count simulated questions and answers.<br>Count outline nodes.<br>Count section handoffs.<br>Count polish passes.<br>Retrieval and citation metrics are `N/A` under the common policy. |
+**Goal count.** For A4 and A6, count all three goal event types and add the unique active goal IDs in `.writing/goals.md`. For A5, report zero because the variant records no goal events and leaves `.writing/goals.md` untouched. Report a total. When the kind is available, also report content, process, and criterion goals.
+
+**Goal specificity.** Code whether each goal has these properties:
+
+- Defines an operational action
+- Names a content target
+- Names an audience or purpose target
+- States an evaluative criterion
+
+Report the coding rubric and double-code a reliability sample. Do not treat goal length alone as specificity.
+
+**Middle-range goal quantity.** Count goals that connect a high-level rhetorical intention to a local prose or process action. Freeze the coding rule and examples before analysis.
+
+**Middle-range goal quality.** Score each middle-range goal on these properties:
+
+- Gives concrete direction
+- Covers the rhetorical problem
+- Can be checked against the output
+
+Report the mean and distribution with coder agreement.
+
+**Goal regeneration.** Count `goal_regenerated` events. Verify that the old goal remains in history and that the replacement has a new ID when its meaning materially changes. Record the evidence and stated rationale.
+
+**Process-switch transitions.** Count transitions among the named processes. Include these event types when the trace records them:
+
+- Embedded Generate events
+- Evaluate events
+- Organize events
+- Goal-setting events
+- Revise events
+
+Report transition counts and rates per run.
+
+**Process-order entropy.** Compute Shannon entropy [^12] over normalized process sequences and over transition distributions. Report raw entropy, the number of observed states, and the normalization rule.
+
+**Generate and Evaluate interruptions.** Count process switches into Generate or Evaluate while another process is active, using the process fields and explicit decision or evidence markers. Do not infer an interruption from text alone when the event is ambiguous.
+
+**Pop-back events.** Count returns to an immediate parent goal after a child goal resolves. Use the child and parent IDs, status or history, and the next process event. Report unresolved parent links as trace-quality failures.
+
+**Revision intent.** Map each revision to the IteraTeR [^10]-informed categories:
+
+- Clarity changes
+- Fluency changes
+- Coherence changes
+- Style changes
+- Meaning changes
+
+Record the edit operation and the evidence in the trace or draft diff. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) identifies IteraTeR as the process-level revision precedent.
+
+**A3 outline and QA structure.** Count these structures:
+
+- Discovered perspectives
+- Simulated questions and answers
+- Outline nodes
+- Section handoffs
+- Polish passes
+
+Retrieval and citation metrics are `N/A` under the common policy.
 
 The analysis correlates process measures with per-prompt product quality. It reports correlations for each judge family. It also reports correlations for the prespecified aggregate. It shows benchmark and output length as covariates. A correlation does not establish that the process caused the quality difference.
 
