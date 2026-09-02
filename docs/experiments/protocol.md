@@ -87,7 +87,7 @@ A4 uses these processes:
 | --- | --- | --- |
 | A1 single-shot | One generation pass from the assignment and supplied context. No explicit planning or review stage. | Record the externally visible generation event. Do not infer hidden goals or stages. |
 | A2 linear stages | One pass each through Pre-Write, Write, and Re-Write. The order is fixed and each stage hands its output to the next. | Record the three stage transitions and their outputs. Record no unobserved reasoning. |
-| A3 [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval | The pipeline follows the five stages above. STORM [^2] separates planning from writing. This arm omits retrieval, source gathering, and citation generation under the equal-information policy. The surveys describe this no-retrieval adaptation and the related STORM pipeline precedent. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) and [`docs/research/skill-subagent-survey.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md). | Record the five stages. Retrieval, evidence-gathering, and citation traces are `N/A` by design. |
+| A3 [STORM](https://github.com/stanford-oval/storm) [^2]-style linear pipeline without retrieval | The pipeline follows the five stages above. STORM [^2] separates planning from writing. This arm omits retrieval, source gathering, and citation generation under the equal-information policy. The surveys describe this no-retrieval adaptation and the related STORM pipeline precedent.<br>Evaluation survey: [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)<br>Platform survey: [`docs/research/skill-subagent-survey.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md) | Record the five stages. Retrieval, evidence-gathering, and citation traces are `N/A` by design. |
 | A4 proposed plugin | The documented cognitive-writing plugin. The Monitor selects among the three processes above. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. | Use the plugin's append-only `.writing/trace/process.jsonl` and goal-network files. Record the normal loop under the shared trace contract. |
 | A5 no goal network | Invoke the `cognitive-writing-no-goal-network` skill. It uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. | Leave any existing `goals.md` untouched. Record process switches under the shared trace contract. Do not record goal events or goal fields. |
 | A6 fixed process order | Invoke the `cognitive-writing-fixed-order` skill. It runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, return to the prescribed order. | Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Do not add variant-specific fields. |
@@ -139,9 +139,17 @@ The manifest is the only prompt input used by a run.
 
 ### Prompt sources and human anchors
 
-[PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] supplies 15 argumentative prompt templates. Its human scores provide calibration anchors, not target labels for model outputs. [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] supplies an external persuasive-writing anchor for rubric calibration and cross-prompt checks. The survey recommends both datasets for this role and cautions against treating student essay scores as directly comparable to the new model-quality scores. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+The prompt sources serve these roles:
 
-The runner must not train on or alter the student essays for this experiment. It may use the 15 [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] prompt templates as a separate argumentative anchor set after recording the permitted source reference and license status. [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] remains a calibration and generalization check unless its base-text access is cleared.
+- [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] supplies 15 argumentative prompt templates. Its human scores provide calibration anchors, not target labels for model outputs.
+- [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] supplies an external persuasive-writing anchor for rubric calibration and cross-prompt checks.
+
+The survey recommends both datasets for this role and cautions against treating student essay scores as directly comparable to the new model-quality scores. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
+
+The runner must not train on or alter the student essays for this experiment. It may use these anchor materials after recording the permitted source reference and license status:
+
+- The 15 [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] prompt templates as a separate argumentative anchor set
+- [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] as a calibration and generalization check unless its base-text access is cleared
 
 ### Optional supplementary benchmark
 
@@ -149,7 +157,10 @@ The runner must not train on or alter the student essays for this experiment. It
 
 The following benchmarks are excluded from this protocol because their licensing or metadata remains unresolved.
 
-The unresolved resources are [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench) and [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17].
+The unresolved resources are:
+
+- [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench)
+- [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17]
 
 They must not enter a paper result, prompt manifest, or redistributed artifact without a new license review. See [`docs/research/writing-eval-datasets.md`](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md).
 
@@ -163,10 +174,8 @@ The primary platform is OpenAI Codex headless, invoked with `codex exec`. All si
 
 The runner uses these conceptual interfaces:
 
-```text
-PRIMARY_GENERATOR: codex exec <REQUIRED_AT_RUNTIME flags> <prompt or stdin>
-SECONDARY_GENERATOR: claude --print <REQUIRED_AT_RUNTIME flags> <prompt or stdin>
-```
+- `PRIMARY_GENERATOR`: `codex exec <REQUIRED_AT_RUNTIME flags> <prompt or stdin>`
+- `SECONDARY_GENERATOR`: `claude --print <REQUIRED_AT_RUNTIME flags> <prompt or stdin>`
 
 The exact command flags are versioned in `experiments/arms/` and recorded in every run manifest. The run must not silently fall back to an interactive mode.
 
@@ -597,7 +606,12 @@ These controls cannot remove every bias.
 - [HelloBench](https://github.com/Quehry/HelloBench) [^4] covers long-text generation.
 - [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5] covers structured writing.
 
-They do not represent every genre or language. [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] and [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] provide argumentative anchors, not complete coverage. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) supports this scope assessment.
+The primary benchmarks do not represent every genre or language. These argumentative anchors add limited coverage:
+
+- [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] provides argumentative prompts and human-score anchors, not complete coverage.
+- [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] provides a persuasive-writing anchor, not complete coverage.
+
+The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) supports this scope assessment.
 
 **Trace completeness.** A crash, truncation, or adapter gap can hide a process event. The runner reports trace completeness and treats ambiguous or missing events as data-quality findings. It does not impute a goal or process switch.
 
@@ -623,7 +637,10 @@ The owner must close every gate below before the first scored run. Codex records
 
    Materialize prompt manifests and record final item counts.
 3. **LongBench-Write license.** Clear the [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) [^8] benchmark prompt-file license and provenance before any supplementary use. Otherwise keep the benchmark excluded.
-4. **PERSUADE 2.0 [^6] and ICLE++ [^7] access.** Record permitted use for the 15 [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] prompts and the [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] calibration material.
+4. **PERSUADE 2.0 [^6] and ICLE++ [^7] access.** Record permitted use for these materials:
+
+   - The 15 [PERSUADE 2.0](https://github.com/scrosseye/persuade_corpus_2.0) [^6] prompts
+   - The [ICLE++](https://github.com/samlee946/ICLE-PlusPlus) [^7] calibration material
 
    Do not redistribute material outside its permission.
 5. **Generator configuration.** Fill these values:
@@ -690,7 +707,9 @@ The owner must close every gate below before the first scored run. Codex records
 
 If a new source check contradicts a settled design item or the plugin's documented behavior, stop the experiment and record the conflict. Do not resolve it by changing an arm after results exist.
 
-[^1]: Linda S. Flower and John R. Hayes, "A Cognitive Process Theory of Writing," *College Composition and Communication* 32, no. 4 (1981): 365-387. [DOI](https://doi.org/10.58680/ccc198115885) and [JSTOR](https://www.jstor.org/stable/356600).
+[^1]: Linda S. Flower and John R. Hayes, "A Cognitive Process Theory of Writing," *College Composition and Communication* 32, no. 4 (1981): 365-387.
+    - [DOI](https://doi.org/10.58680/ccc198115885)
+    - [JSTOR](https://www.jstor.org/stable/356600)
 [^2]: Yijia Shao, Yucheng Jiang, Theodore A. Kanell, Peter Xu, Omar Khattab, and Monica S. Lam, "Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models," arXiv preprint arXiv:2402.14207 (2024). [arXiv](https://arxiv.org/abs/2402.14207).
 [^3]: Yuning Wu, Jiahao Mei, Ming Yan, Chenliang Li, Shaopeng Lai, Yuran Ren, Zijia Wang, Ji Zhang, Mengyue Wu, Qin Jin, and Fei Huang, "WritingBench: A Comprehensive Benchmark for Generative Writing," arXiv preprint arXiv:2503.05244 (2025). [arXiv](https://arxiv.org/abs/2503.05244).
 [^4]: Haoran Que, Feiyu Duan, Liqun He, Yutao Mou, Wangchunshu Zhou, Jiaheng Liu, Wenge Rong, Zekun Moore Wang, Jian Yang, Ge Zhang, Junran Peng, Zhaoxiang Zhang, Songyang Zhang, and Kai Chen, "HelloBench: Evaluating Long Text Generation Capabilities of Large Language Models," arXiv preprint arXiv:2409.16191 (2024). [arXiv](https://arxiv.org/abs/2409.16191).
