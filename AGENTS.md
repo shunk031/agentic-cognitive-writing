@@ -7,7 +7,7 @@ This repository contains a cross-platform writing plugin, research surveys, and 
 Use footnotes for published works and inline links for resources.
 
 - Give each published work a GitHub-flavored footnote marker, `[^n]`, attached directly after the named entity at first mention and at any load-bearing mention. Define the marker with the authors or organization, title, venue, year, and a DOI, arXiv, or ACL URL.
-- Use inline Markdown links with descriptive labels wherever resource pointers occur, including repositories, code or data files, docs pages, dataset cards, and licenses. A name may carry both a footnote marker and nearby resource links. Leave a URL bare only when its literal string is what readers must copy or type, such as in a command, an endpoint, or a DOI identifier in a bibliography entry.
+- Use descriptive Markdown links for resource pointers, including repositories, code or data files, docs pages, dataset cards, and licenses. Write a short run of two to four briefly labeled links inline with slash separators, such as `[Repo](url) / [data](url) / [eval prompt](url)`. Use a lead-in and sub-bullets for longer runs or labels that need qualifiers. A name may carry both a footnote marker and nearby resource links. Leave a URL bare only when its literal string is what readers must copy or type, such as in a command, an endpoint, or a DOI identifier in a bibliography entry.
 - For in-repository links, use repo-relative paths for living references or commit-pinned URLs for snapshots. Never use branch-qualified URLs such as `blob/<branch>/...`, because merged branches are deleted.
 
 ## Keep citations sparse but complete
@@ -24,7 +24,8 @@ Format content according to how readers need to use it: facts in tables, reasoni
 
 - Use bullets for separate decisions, claims, steps, or multi-word structure. For a run of labeled links with repeated entity prefixes, use one lead-in with its marker and sub-bullets.
 - Keep short atomic-token reference lists inline regardless of count. When an exact enumeration is not load-bearing, summarize it with a source link, but never summarize away content that is the claim, such as exact schema keys. Summarize third-party procedures in prose with a descriptive source link; use step lists only for procedures the reader executes.
-- Put separate lines in table cells with `<br>`. Right-align only purely numeric columns; left-align text columns.
+- Within a scope, omit an established name from children under a lead-in, cells after a row header, and sentences inside an entity's own section. Labels carry only the differentiating part.
+- When a table cell must hold several entries, separate them with `<br>` because bullet lists do not render inside cells; when a cell accumulates more than a few entries, restructure the table instead. Right-align only purely numeric columns and left-align text columns.
 - Fragment bullets take no trailing period. Sentence bullets are punctuated. Keep each list internally consistent, and keep two-item enumerations in prose when a list adds no value.
 
 ## Make documents easy to scan
