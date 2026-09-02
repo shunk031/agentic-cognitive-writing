@@ -24,7 +24,7 @@ The research questions (RQ) are:
 
 1. **RQ1.** Does the theory-based recursive Monitor and goal-network architecture produce better writing than a single-shot system and linear-stage pipelines? A goal network is a hierarchy of writing goals that the Monitor coordinates during drafting.
 2. **RQ2.** Which components matter? We compare the full plugin with ablation conditions A5 and A6. An ablation condition removes or constrains one component of the full design.
-3. **RQ3.** Do agent traces, analyzed as thinking-aloud protocols that record observable writing actions, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? The RQ3 analysis includes Flower and Hayes' prediction that the quantity and quality of middle-range goals, which connect broad rhetorical aims to local writing actions, relate to writing quality.
+3. **RQ3.** Do agent traces, treated as operational analogues of thinking-aloud protocols rather than direct transcripts of private state, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? The RQ3 analysis includes Flower and Hayes' prediction that the quantity and quality of middle-range goals, which connect broad rhetorical aims to local writing actions, relate to writing quality.
 4. **RQ4.** Does the mapping replicate across platforms?
 
 The protocol defines the analysis terms used below. An estimand is the quantity that the analysis plans to estimate. Pointwise scoring gives each output an independent rubric score. A Bradley-Terry model [^11] estimates relative condition abilities from pairwise choices. Holm correction [^15] controls the family-wise error rate.
@@ -43,7 +43,7 @@ The equal-information policy gives all six conditions identical input context. T
 
 **Linear-stages condition A2.** Condition A2 makes one pass through Pre-Write, Write, and Re-Write. The order is fixed, and each stage hands its output to the next. The runner records the three stage transitions and their outputs. The runner records no unobserved reasoning.
 
-**[STORM](https://github.com/stanford-oval/storm)**[^2]-style condition A3 without retrieval. Condition A3 uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish. Citation generation is omitted under the equal-information policy. The pipeline separates planning from writing and omits retrieval and source gathering.
+**STORM-style condition A3 without retrieval.** Condition A3 uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish, following [STORM](https://github.com/stanford-oval/storm)[^2]. Citation generation is omitted under the equal-information policy. The pipeline separates planning from writing and omits retrieval and source gathering.
 
 **A3 trace and evidence handling.** The runner records the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The evaluation survey ([evaluation survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md)) and platform survey ([platform survey snapshot](https://github.com/shunk031/agentic-cognitive-writing/blob/711cf41142b13f5174ecdfb10dd1ade272c5a118/docs/research/skill-subagent-survey.md)) describe the no-retrieval adaptation.
 
@@ -140,13 +140,13 @@ The runner must pin each value below. A placeholder blocks the run:
 
 | Value | Required setting |
 | --- | --- |
-| Codex generator model | `REQUIRED_AT_RUNTIME: exact GPT-family model ID and release` |
-| Claude Code generator model | `REQUIRED_AT_RUNTIME: exact Claude-family model ID and release` |
-| Codex frontier judge | `REQUIRED_AT_RUNTIME: exact Claude-family frontier model ID and release` |
-| Claude Code frontier judge | `REQUIRED_AT_RUNTIME: exact GPT-family frontier model ID and release` |
+| Codex generator model | `REQUIRED_AT_RUNTIME`: exact GPT-family model ID and release |
+| Claude Code generator model | `REQUIRED_AT_RUNTIME`: exact Claude-family model ID and release |
+| Codex frontier judge | `REQUIRED_AT_RUNTIME`: exact Claude-family frontier model ID and release |
+| Claude Code frontier judge | `REQUIRED_AT_RUNTIME`: exact GPT-family frontier model ID and release |
 | Shared open evaluator | `REQUIRED_AT_RUNTIME`: exact third-family Prometheus 2 [^9] style evaluator checkpoint, revision, and serving configuration |
-| Generator system and condition prompts | `REQUIRED_AT_RUNTIME: frozen prompt files and hashes` |
-| Judge prompts and JSON schemas | `REQUIRED_AT_RUNTIME: frozen prompt files, schema files, and hashes` |
+| Generator system and condition prompts | `REQUIRED_AT_RUNTIME`: frozen prompt files and hashes |
+| Judge prompts and JSON schemas | `REQUIRED_AT_RUNTIME`: frozen prompt files, schema files, and hashes |
 | Temperature | `REQUIRED_AT_RUNTIME`: temperature |
 | Top-p or equivalent | `REQUIRED_AT_RUNTIME`: top-p or equivalent |
 | Maximum output tokens | `REQUIRED_AT_RUNTIME`: max output tokens |
@@ -161,7 +161,7 @@ The runner must pin each value below. A placeholder blocks the run:
 | Main plugin commit | `REQUIRED_AT_RUNTIME`: main plugin commit |
 | Experiments plugin commit | `REQUIRED_AT_RUNTIME`: experiments plugin commit |
 | Runner commit | `REQUIRED_AT_RUNTIME`: runner commit |
-| Generator and judge family audit | `REQUIRED_AT_RUNTIME: recorded base-model families and runtime verification that each frontier judge differs from the generator family and the open evaluator belongs to a third family` |
+| Generator and judge family audit | `REQUIRED_AT_RUNTIME`: recorded base-model families and runtime verification that each frontier judge differs from the generator family and the open evaluator belongs to a third family |
 
 The runner records each judge's base-model family and the generator family for every scored output. It fails the run if a frontier judge shares the generator family or if the open evaluator does not belong to a third family. The audit verifies the family labels at runtime rather than trusting configuration names.
 
@@ -316,7 +316,7 @@ The trace analysis measures observable process behavior and relates it to produc
 
 ### Trace sources and interpretation
 
-**Trace sources.** For A4, A5, and A6, use the plugin's append-only `.writing/trace/process.jsonl` [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md) / `.writing/goals.md` for A4 and A6 / the final draft. A5 leaves any existing `goals.md` untouched, so the analysis does not use that file for A5 goal measures.
+**Trace sources.** For A4, A5, and A6, use the plugin's append-only `.writing/trace/process.jsonl` and its [trace schema](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/skills/cognitive-writing/references/trace-jsonl-schema.md). Use `.writing/goals.md` for A4 and A6 and the final draft for all three conditions. A5 leaves any existing `goals.md` untouched, so the analysis does not use that file for A5 goal measures.
 
 Each trace line is one JSON object. The documented event types are `process_switch`, `goal_created`, `goal_developed`, and `goal_regenerated`. Process-switch events include `from_process` and `to_process`. Goal events include `goal_id` and `parent_goal_id`. The plugin records responsible actor, decision, evidence, and uncertainty.
 
@@ -531,7 +531,7 @@ The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/bl
 
 ## Runtime gates before scoring
 
-The owner must close every gate below before the first scored run. Codex records the decision and the evidence in the run manifest.
+The owner must close every gate below before the first scored run. The runner records the decision and the evidence in the run manifest.
 
 1. **DoLoMiTes split.** Download the released [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5] archive. Recompute dev and test counts. Save the script and archive hash. Cite the resulting count in the paper. The [evaluation survey](https://github.com/shunk031/agentic-cognitive-writing/blob/b66284dc47574987932c3be350e21b461e8fb397/docs/research/writing-eval-datasets.md) reports expected paper/archive counts of 820 dev and 1,037 test. The archive result controls if it differs.
 2. **Benchmark materialization.** Pin releases or commits for [WritingBench](https://github.com/X-PLUG/WritingBench) [^3] / [HelloBench](https://github.com/Quehry/HelloBench) [^4] / [DoLoMiTes](https://github.com/google-deepmind/dolomites) [^5]. Materialize prompt manifests and record final item counts.
@@ -593,13 +593,13 @@ The owner must close every gate below before the first scored run. Codex records
    - Any required ethics review
 10. **Statistical lock.** Freeze these settings:
 
-   - Confirmatory contrast families
-   - Paired bootstrap or paired Wilcoxon signed-rank test [^16] settings
-   - Holm correction [^15]
-   - Confidence level
-   - Effect sizes
-   - Tie handling
-   - Missing-value rules
+    - Confirmatory contrast families
+    - Paired bootstrap or paired Wilcoxon signed-rank test [^16] settings
+    - Holm correction [^15]
+    - Confidence level
+    - Effect sizes
+    - Tie handling
+    - Missing-value rules
 
 If a new source check contradicts a settled design item or the plugin's documented behavior, stop the experiment and record the conflict. Do not resolve it by changing a condition after results exist.
 
