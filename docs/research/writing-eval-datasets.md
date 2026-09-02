@@ -2,7 +2,7 @@
 
 ## Summary
 
-This survey selects benchmarks and a judge setup for this repository's long-form writing experiment. The experiment compares six ways of producing long-form text with an LLM writing agent, from single-shot generation and linear pipelines to a cognitive-theory-based plugin and its two variants. See `docs/experiments/protocol.md` for the full condition definitions.
+This survey selects benchmarks and a judge setup for this repository's long-form writing experiment. The experiment compares six ways of producing long-form text with an LLM writing agent, from single-shot generation and linear pipelines to the main cognitive-writing plugin and two comparison variants in the experiments package. See `docs/experiments/protocol.md` for the full condition definitions.
 
 Answer: use exactly three primary benchmarks.
 
@@ -23,9 +23,11 @@ The planned comparison has 6 conditions. The settled condition specification liv
 - A1: single-shot generation
 - A2: linear Pre-Write/Write/Re-Write
 - A3: Synthesis of Topic Outlines through Retrieval and Multi-perspective Question Asking (STORM) [^2]-style linear pipeline without retrieval
-- A4: `cognitive-writing`, the cognitive-writing skill where the Monitor coordinates Planner, Translator, and Reviewer role skills
-- A5: `cognitive-writing-no-goal-network`, the cognitive-writing ablation that removes the explicit goal network
-- A6: `cognitive-writing-fixed-order`, the cognitive-writing ablation that keeps the goal network and prescribes process order
+- A4: `cognitive-writing`, the main plugin skill where the Monitor coordinates Planner, Translator, and Reviewer role skills
+- A5: `cognitive-writing-no-goal-network`, the experiments package skill that removes the explicit goal network
+- A6: `cognitive-writing-fixed-order`, the experiments package skill that keeps the goal network and prescribes process order
+
+The architecture snapshot at `d0d6da7` has the main plugin under `plugin/` with `cognitive-writing`, `planning`, `translating`, and `reviewing`. The snapshot has the comparison package under `experiments/plugin/`, and the comparison package requires the main plugin. [Main plugin manifest](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/plugin/.codex-plugin/plugin.json) / [experiments plugin manifest](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/.codex-plugin/plugin.json) / [experiments README](https://github.com/shunk031/agentic-cognitive-writing/blob/d0d6da7d0607f9d54b35973c2cf4e10d779a15dd/experiments/plugin/README.md)
 
 All conditions receive the same input context and no condition uses web access or retrieval.
 
@@ -123,8 +125,8 @@ For the six-condition experiment, the process metrics should follow the protocol
 - Review trace. Count detected issues and issue types. Map revision intent to clarity, fluency, coherence, style, and meaning change. Check whether fixes improve final rubric scores.
 - Monitor trace. Measure process order entropy, meaning how varied the sequence of planning, translating, and reviewing steps is. Check whether transitions respond to detected problems rather than a fixed sequence.
 - Condition A3 STORM [^2]-style trace. Record completion of the five protocol stages: Perspective discovery, Simulated question answering, Outline, Draft, and Polish. Retrieval/evidence/citation traces are explicitly N/A under the no-retrieval policy.
-- A5 `cognitive-writing-no-goal-network` trace. Leave `goals.md` untouched. Record process switches under the shared trace contract. Record no goal events or goal fields.
-- A6 `cognitive-writing-fixed-order` trace. Keep the ordinary goal network. Record process switches and goal events under the shared trace contract. Permit Generate and Evaluate interruptions, then return to the prescribed order.
+- A5 `cognitive-writing-no-goal-network` trace. This experiments package skill leaves `goals.md` untouched. Record process switches under the shared trace contract. Record no goal events or goal fields.
+- A6 `cognitive-writing-fixed-order` trace. This experiments package skill keeps the ordinary goal network. Record process switches and goal events under the shared trace contract. Permit Generate and Evaluate interruptions, then return to the prescribed order.
 - Hypotheses to test. The no-goal-network condition should show fewer explicit goal references. The fixed-process-order condition should show lower adaptive transitions even if final quality is similar.
 
 ## Final recommendation
