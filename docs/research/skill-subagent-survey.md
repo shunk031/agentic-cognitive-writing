@@ -2,7 +2,12 @@
 
 ## Purpose and reading guide
 
-The survey's design answer is a two-package architecture. The main plugin ships a Claude Code adapter ([`plugin/.claude-plugin/plugin.json`](../../plugin/.claude-plugin/plugin.json) and [`plugin/agents/`](../../plugin/agents/)) and a Codex adapter ([`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json) and [`plugin/skills/planning/agents/openai.yaml`](../../plugin/skills/planning/agents/openai.yaml)). The separate experiment package ships its own manifests under [`experiments/plugin/`](../../experiments/plugin/) and requires the main plugin.
+The survey's design answer is a two-package architecture. The main plugin ships two platform adapters:
+
+- Claude Code adapter: [`plugin/.claude-plugin/plugin.json`](../../plugin/.claude-plugin/plugin.json) and [`plugin/agents/`](../../plugin/agents/)
+- Codex adapter: [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json) and [`plugin/skills/planning/agents/openai.yaml`](../../plugin/skills/planning/agents/openai.yaml)
+
+The separate experiment package ships its own manifests under [`experiments/plugin/`](../../experiments/plugin/) and requires the main plugin.
 
 The two-package design keeps shared skills separate from host-specific adapters and comparison variants. The shared skill core uses `SKILL.md`, `scripts/`, `references/`, and `assets/`. The architecture preserves four writing-process roles and observable process state while keeping the comparison variants outside the main plugin. The package evidence lives in [`plugin/README.md`](../../plugin/README.md) and [`experiments/plugin/README.md`](../../experiments/plugin/README.md).
 
