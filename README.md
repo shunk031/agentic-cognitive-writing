@@ -8,7 +8,9 @@ It implements the writing model in ["A Cognitive Process Theory of Writing"](htt
 - Translating turns selected meanings into words.
 - Reviewing evaluates and revises the text.
 
-## Theory and architecture
+## How the writing model maps to the plugin
+
+The architecture turns the writing model into a main skill, shared role skills, and file-backed project state.
 
 The diagram below reproduces Figure 1, "Structure of the writing model," from the paper:
 
@@ -72,7 +74,9 @@ The table maps each model element to the plugin artifact that carries out the co
 
 The main skill uses these processes recursively. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
 
-## Install
+## Install from GitHub or a checkout
+
+Choose a GitHub marketplace for a normal install or a local checkout for development.
 
 If the repository is private, GitHub installs require access to it.
 
@@ -171,15 +175,12 @@ If the repository is private, GitHub installs require access to it.
 
 Open a writing project and invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognitive-writing` in Codex. The main skill asks for the rhetorical problem when needed, then coordinates the writing work through the project files.
 
-## Quickstart
+## Try it in a writing project
+
+The main skill turns your task into a file-backed writing session that you can inspect between turns.
 
 1. Start in the project where the writing should live.
-2. Invoke the main skill and describe:
-
-   - the topic
-   - the audience
-   - the reason for writing
-   - the desired result
+2. Invoke the main skill and describe the topic, audience, reason for writing, and desired result.
 3. Review the files the skill creates or updates:
 
    - `.writing/assignment.md` records the rhetorical problem and constraints.
@@ -190,7 +191,7 @@ Open a writing project and invoke `/agentic-cognitive-writing:cognitive-writing`
 
 The monitor reads this state before each operation. You can inspect or edit it between turns.
 
-## Experiment variants
+## Compare experiment variants
 
 The plugin includes two sibling skills for controlled comparisons. They reuse the shared role skills and Claude adapters. They keep the project state and trace rules. They are not recommended defaults.
 
@@ -199,7 +200,9 @@ The plugin includes two sibling skills for controlled comparisons. They reuse th
 
 Select a variant only when a comparison is needed. Their seed prompts live beside the skills in `plugin/skills/`.
 
-## Repository layout
+## Find code, research, and experiment material
+
+The repository keeps the installable plugin separate from its research and experiment material.
 
 - `plugin/` contains the installable Claude Code and Codex plugin, including shared skills and Claude adapters.
 - `.claude-plugin/marketplace.json` and `.agents/plugins/marketplace.json` define the local marketplace sources.

@@ -1,10 +1,12 @@
 # Agentic cognitive writing
 
-After installation, open a writing project, the directory where you are writing, and invoke this writing assistant in Claude Code or Codex. It plans, drafts, and revises recursively, meaning it can revise its own plans and goals as the draft teaches it more. It stores the work in project files so you can inspect and continue it.
+After installation, open the writing project, the directory where you are writing. Use this assistant to plan, draft, and revise a document while it updates its plans and goals as the draft develops.
 
 For the theory and architecture behind this plugin, see the [project README](https://github.com/shunk031/agentic-cognitive-writing#readme).
 
-## Install
+## Install the plugin
+
+Choose a GitHub marketplace for normal use or a local checkout for development.
 
 If the repository is private, GitHub installs require access to it.
 
@@ -99,11 +101,13 @@ If the repository is private, GitHub installs require access to it.
    codex plugin add agentic-cognitive-writing@agentic-cognitive-writing-process
    ```
 
-## Use the plugin
+## Start a writing task
 
 Invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognitive-writing` in Codex. You can also describe a writing task and let the host invoke the main skill.
 
-## Skills provided
+## Skills you can use
+
+Use `cognitive-writing` for normal writing tasks. Choose a variant only when you need a comparison.
 
 - `cognitive-writing` is the recommended skill. It coordinates the writing process from the current project state.
 - `planning` is an internal role skill for delegated planning work. Do not invoke it directly.
@@ -112,7 +116,7 @@ Invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognit
 - `cognitive-writing-fixed-order` is an experiment-comparison variant that runs the processes in a fixed order. It is not the recommended default.
 - `cognitive-writing-no-goal-network` is an experiment-comparison variant that omits hierarchical goals. It is not the recommended default.
 
-## Project state
+## Files maintained in your writing project
 
 The plugin creates or maintains this layout in the project where it is used:
 
