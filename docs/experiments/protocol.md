@@ -116,7 +116,7 @@ The runner must not train on or alter the student essays for this experiment. Th
 
 [LongBench-Write English](https://github.com/THUDM/LongWriter/blob/main/evaluation/longbench_write_en.jsonl) is optional and supplementary. The benchmark may be added only after the benchmark prompt-file license and provenance are cleared. If included, the benchmark is a length-control and robustness axis, not a fourth primary benchmark.
 
-The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) [^8] supervised fine-tuning (SFT) data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
+The survey reports that the [LongWriter-6k](https://huggingface.co/datasets/THUDM/LongWriter-6k) [^8] supervised fine-tuning data license does not automatically establish permission for the benchmark prompt files. See [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
 
 This protocol excludes [EQ-Bench Creative Writing](https://github.com/EQ-bench/creative-writing-bench) and [WritingPreferenceBench](https://github.com/WritingPreferenceBench/Writing-Preference-Bench) [^17] because their licensing or metadata remains unresolved. The unresolved resources must not enter a paper result, prompt manifest, or redistributed artifact without a new license review. See [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
 
@@ -596,7 +596,7 @@ The owner must close every gate below before the first scored run. The runner re
    - Zero-variance z-score rule
 8. **Trace conformance.** Run one smoke test for each condition and platform. Validate these properties:
 
-   - Trace JSON Lines (JSONL)
+   - Trace JSON Lines
    - Goal-state handling for each selected skill
    - Correct variant skill invocation
    - Stage events
