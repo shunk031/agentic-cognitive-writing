@@ -2,40 +2,30 @@
 
 ## Purpose and reading guide
 
-This report provides design evidence for turning Flower & Hayes' Cognitive Process Theory of Writing [^1] into a skills + sub-agents implementation that works as a Claude Code plugin and from OpenAI Codex. Each section follows the same order:
+This report asks how to turn Flower & Hayes' Cognitive Process Theory of Writing [^1] into a skills + sub-agents plugin that runs in Claude Code and remains usable from OpenAI Codex. The answer is a shared Agent Skill core with thin platform adapters, backed by explicit writing-process roles and observable process state.
 
-- Official non-GitHub sources
-- Direct GitHub files
-- Differences and implications
-
-Opening summary. The question is how to design a skill/sub-agent plugin for a cognitive writing process that works in both Claude Code and Codex. The method was:
-
-- Read official non-GitHub documentation first for each topic.
-- Check direct GitHub files for implementation examples.
-- Reconcile the differences.
-
-The conclusion is that the lowest-risk shared core is:
+The lowest-risk shared core is:
 
 - `SKILL.md`
 - `scripts/`
 - `references/`
 - `assets/`
 
-Thin adapters sit on top:
+Thin adapters sit on top of that core:
 
-- Claude: `.claude-plugin/` and `agents/*.md`
-- Codex: `.codex-plugin/` and `agents/openai.yaml`
+- Claude Code: `.claude-plugin/` and `agents/*.md`
+- OpenAI Codex: `.codex-plugin/` and `agents/openai.yaml`
 
-For the paper prototype, the design should center four roles:
+For the paper prototype, the design should center these roles:
 
 - `monitor`
 - `planner`
 - `translator`
 - `reviewer`
 
-A process ledger should record each decision, so the evaluation can measure changes in the cognitive process as well as the final text.
+A process ledger is a structured record of phase changes, decisions, evidence, and unresolved questions. It should record each decision so evaluation can measure changes in the writing process as well as the final text.
 
-Evidence rule. Unsupported paths are not evidence for platform behavior.
+The sections below support these choices with official platform documentation, direct source links, and published writing-research citations.
 
 ## 1. Anthropic skill format and skill-creator
 
@@ -350,7 +340,7 @@ Evidence rule. Unsupported paths are not evidence for platform behavior.
   - https://developers.openai.com/codex/build-skills.md
   - https://github.com/openai/skills/blob/main/skills/.system/skill-creator/SKILL.md
 - Codex loads local skills from:
-  - `$CWD/.agents/skills`
+  - Current working directory (CWD): `$CWD/.agents/skills`
   - Parent `.agents/skills` directories up to the repo root
   - `$HOME/.agents/skills`
   - `/etc/codex/skills`
@@ -524,7 +514,7 @@ Evidence rule. Unsupported paths are not evidence for platform behavior.
      - `.claude-plugin/plugin.json`
      - OpenAI `agents/openai.yaml`
      - Claude `agents/*.md` wrappers
-   - Trade-off: generated files must be checked or regenerated in CI; otherwise the two platforms drift.
+   - Trade-off: generated files must be checked or regenerated in continuous integration (CI); otherwise the two platforms drift.
 
 **Recommended single-repo layout**
 
@@ -603,23 +593,22 @@ agentic-cognitive-writing-process/
 
 **In2Writing process-support sweep**
 
-- ACL Anthology lists In2Writing volumes for 2022 and 2025, with 15 and 11 papers respectively; this sweep screened those 26 ACL entries and selected five total additions, including the required Gero et al. design-space paper [^6]. Source: https://aclanthology.org/venues/in2writing/
 - Schneider et al. [^7] compare natural language generation (NLG) pipeline architecture with research on the human writing process in "Data-to-text systems as writing environment." They derive principles for data-to-text systems as writing environments. The paper argues that process optimization matters because evaluating all generated output is not feasible in mass text production.
-- We infer that Schneider et al. support the plugin's ledger design. If output-scale evaluation is weak, the tool should expose the decisions that produce the text:
+- Schneider et al. likely support the plugin's ledger design. If output-scale evaluation is weak, the tool should expose the decisions that produce the text:
   - Planning
   - Configuration
   - Generation
   - Quality control
-- Du et al. [^8] present R3 [^8] in "Read, Revise, Repeat." R3 is a human-in-the-loop iterative text revision system where a model proposes edits, writers accept or reject them, and accepted edits feed the next revision iteration. The evaluation compares:
+- Du et al. present Read, Revise, Repeat (R3) [^8]. R3 is a human-in-the-loop iterative text revision system where a model proposes edits, writers accept or reject them, and accepted edits feed the next revision iteration. The evaluation compares:
   - Human-human revision
   - System-human revision
   - System-only revision
   It uses ArXiv, Wikipedia, and Wikinews data.
 - R3 is likely useful as an evaluation pattern for our reviewer role because it measures revision depth, edit acceptance, and human control, not only final text quality.
 - Liu and August [^9] study writing center tutoring in "From Crafting Text to Crafting Thought." They interview 10 current writing tutors, ground their practices in writing-center literature, and use those strategies to develop an intelligent writing tool prototype.
-- We infer that Liu and August help define user-facing behavior for the monitor and reviewer: ask what the writer wants to work on, prefer higher-order concerns before sentence-level edits, and keep the writer's ownership visible.
+- Liu and August likely help define user-facing behavior for the monitor and reviewer: ask what the writer wants to work on, prefer higher-order concerns before sentence-level edits, and keep the writer's ownership visible.
 - Kim et al. [^10] argue that revision depends on reflection in their voice-interaction paper. They propose a formative study comparing spoken and written interaction with conversational agents.
-- We infer that the Kim et al. paper gives this project concrete process metrics for a human-in-the-loop experiment:
+- The Kim et al. paper gives this project concrete candidate process metrics for a human-in-the-loop experiment:
   - Reflection depth
   - Higher-order concern frequency
   - Turn structure
@@ -633,7 +622,7 @@ agentic-cognitive-writing-process/
   - Simulate perspective-specific question asking against a source-grounded expert
   - Curate information
   - Create an outline
-  The STORM paper reports evaluation on FreshWiki [^3] and feedback from experienced Wikipedia editors.
+  The STORM paper reports evaluation on FreshWiki and feedback from experienced Wikipedia editors.
 - STORM code separates pipeline modules for:
   - Knowledge curation: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/knowledge_curation.py
   - Outline generation: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/modules/outline_generation.py
@@ -655,7 +644,7 @@ agentic-cognitive-writing-process/
 
 - CoAuthor [^4] is an Association for Computing Machinery (ACM) Conference on Human Factors in Computing Systems (CHI) paper/dataset about human-AI collaborative writing for exploring language model capabilities.
 - CoAuthor-style logged interaction data is likely valuable for evaluating process support because it observes writer prompts, model continuations, acceptance, and revision behavior rather than only final document quality.
-- STORM [^3] uses FreshWiki [^3], outline assessments, generated article comparison, and expert Wikipedia-editor feedback.
+- STORM [^3] uses FreshWiki, outline assessments, generated article comparison, and expert Wikipedia-editor feedback.
 - For our paper, we should likely combine final-output metrics with these process metrics:
   - Number of plan revisions
   - Evidence coverage
@@ -671,26 +660,14 @@ agentic-cognitive-writing-process/
   - STORM [^3] handles research/pre-writing
   - CoAuthor [^4] studies human-AI writing traces
   - PaperDebugger [^5] embeds multi-agent help into an editor
-  The open gap is a cross-platform plugin that explicitly maps a classic cognitive writing-process theory to observable skill/subagent roles, state transitions, and experimentable ablations.
+  Among the systems surveyed here, a candidate gap appears to be a cross-platform plugin that explicitly maps a classic cognitive writing-process theory to observable skill/subagent roles, state transitions, and component-removal experiments (ablations).
 
 ## 8. Implications for the agentic cognitive writing process plugin
-
-**Sources**
-
-- Official non-GitHub: Claude skills: https://code.claude.com/docs/en/skills.md
-- Official non-GitHub: Claude plugins: https://code.claude.com/docs/en/plugins.md
-- Official non-GitHub: Claude subagents: https://code.claude.com/docs/en/sub-agents.md
-- Official non-GitHub: OpenAI skills: https://developers.openai.com/codex/build-skills.md
-- Official non-GitHub: OpenAI plugins: https://developers.openai.com/plugins/build/plugins.md
-- Official non-GitHub: OpenAI subagents: https://learn.chatgpt.com/docs/agent-configuration/subagents.md
-- GitHub code: Anthropic `feature-dev` orchestration: https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md
-- GitHub code: OpenAI `agents-sdk` skill: https://github.com/openai/plugins/blob/main/plugins/openai-developers/skills/agents-sdk/SKILL.md
-- Academic/open-source software (OSS): STORM [^3] code: https://github.com/stanford-oval/storm/blob/main/knowledge_storm/storm_wiki/engine.py
 
 **Design options**
 
 1. **Theory-first role decomposition**
-   - We infer that the plugin should ship these Claude subagents:
+   - The plugin should likely ship these Claude subagents:
      - `monitor`
      - `planner`
      - `translator`
@@ -702,7 +679,7 @@ agentic-cognitive-writing-process/
    - Avoid: one giant `SKILL.md`; it will violate progressive disclosure and make process ablations hard.
 
 2. **Shared skills, platform-specific wrappers**
-   - We infer that canonical instructions should live in:
+   - Canonical instructions should likely live in:
      - `skills/cognitive-writing-orchestrator/SKILL.md`
      - `skills/knowledge-transforming-revision/SKILL.md`
      - `skills/writing-eval-harness/SKILL.md`
@@ -714,7 +691,7 @@ agentic-cognitive-writing-process/
    - Avoid: Anthropic-only `compatibility` field in shared `SKILL.md`, because OpenAI validator does not allow it.
 
 3. **Stateful process ledger**
-   - We infer that the plugin should use a structured writing ledger in `references/ledger-schema.md` or a script-generated JSON file to record:
+   - The plugin should use a structured writing ledger in `references/ledger-schema.md` or a script-generated JSON file to record:
      - Rhetorical problem
      - Audience
      - Goals
@@ -727,7 +704,7 @@ agentic-cognitive-writing-process/
    - Avoid: final-output-only grading; it cannot show that cognitive-process support changed behavior.
 
 4. **Eval harness as a skill, not an afterthought**
-   - We infer that `writing-eval-harness` should use the Anthropic skill-creator pattern:
+   - `writing-eval-harness` should likely use the Anthropic skill-creator pattern:
      - With-skill vs baseline
      - Assertions
      - Grader
@@ -751,7 +728,7 @@ agentic-cognitive-writing-process/
      - Expert ratings for factual grounding
      - Process metrics from ledger
      - Source precision/recall
-   - Dataset: FreshWiki-like [^3] recent topics for expository writing plus domain-specific technical memos.
+   - Dataset: FreshWiki-like recent topics for expository writing plus domain-specific technical memos.
 
 2. **Ablation of monitor agent**
    - Baselines: full plugin without monitor; monitor replaced by static checklist.
