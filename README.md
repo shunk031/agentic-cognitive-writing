@@ -1,6 +1,6 @@
 # Agentic cognitive writing
 
-This project gives you a writing assistant for Claude Code and Codex that plans, drafts, and revises long-form text the way human writers do. The assistant keeps its goals, drafts, notes, and decision log as files in the directory where you write. Instead of generating text in one pass, the assistant revisits and rewrites its own plans and goals as the draft develops.
+This project gives you a writing assistant that plans, drafts, and revises long-form text the way human writers do. The assistant keeps its goals, drafts, notes, and decision log as files in the directory where you write. Instead of generating text in one pass, the assistant revisits and rewrites its own plans and goals as the draft develops.
 
 The plugin implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor decides what to work on next. The monitor coordinates three writing processes as the writer works:
 
@@ -53,11 +53,9 @@ flowchart TB
     memory <--> processes
 ```
 
-The paper's footnote 11 cautions that the arrows mean information flow, not a fixed left-to-right sequence[^1].
+In the original figure, the arrows indicate information flow between processes, not a fixed left-to-right sequence[^1].
 
-The table maps each model element to the plugin artifact that carries out the corresponding work.
-
-The rhetorical problem is the topic, audience, and reason for writing. Exigency is the situation that makes writing necessary.
+The table maps each model element to the plugin artifact that carries out the corresponding work. The rhetorical problem means the topic, audience, and reason for writing; exigency is the situation that makes writing necessary.
 
 | Category | Figure 1 model element | Plugin artifact |
 | --- | --- | --- |
@@ -78,9 +76,9 @@ The rhetorical problem is the topic, audience, and reason for writing. Exigency 
 
 The main skill follows the recursive writing process described in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1]. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
 
-## Install from GitHub or a checkout
+## Install from GitHub
 
-Choose a GitHub marketplace for a normal install or a local checkout for development. If the repository is private, GitHub installs require access to it.
+Use the GitHub marketplace for the main install path. If the repository is private, GitHub installs require access to it. For development checkouts and personal Codex installs, read [`docs/installation.md`](./docs/installation.md).
 
 ### GitHub install for Claude Code
 
@@ -110,79 +108,12 @@ Choose a GitHub marketplace for a normal install or a local checkout for develop
    codex plugin add agentic-cognitive-writing@agentic-cognitive-writing-process
    ```
 
-### Development install from a checkout in Claude Code
-
-1. Change to the repository root.
-2. Add the local marketplace:
-
-   ```text
-   /plugin marketplace add .
-   ```
-
-3. Install the plugin:
-
-   ```text
-   /plugin install agentic-cognitive-writing@agentic-cognitive-writing-process
-   ```
-
-4. To try it without installing, load the plugin directory directly:
-
-   ```bash
-   claude --plugin-dir "$PWD/plugin"
-   ```
-
-### Development install from a checkout in Codex
-
-1. Change to the repository root. The repository includes [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json) with a local source entry for the [`plugin/`](plugin/).
-2. Add the local marketplace:
-
-   ```bash
-   codex plugin marketplace add .
-   ```
-
-3. Install the plugin:
-
-   ```bash
-   codex plugin add agentic-cognitive-writing@agentic-cognitive-writing-process
-   ```
-
-### Personal Codex install
-
-1. Copy the plugin directory to `~/.codex/plugins/agentic-cognitive-writing`.
-2. Create `~/.agents/plugins/marketplace.json`:
-
-   ```json
-   {
-     "name": "agentic-cognitive-writing-process",
-     "plugins": [
-       {
-         "name": "agentic-cognitive-writing",
-         "source": {
-           "source": "local",
-           "path": "../../.codex/plugins/agentic-cognitive-writing"
-         }
-       }
-     ]
-   }
-   ```
-
-3. Add that marketplace and install the plugin:
-
-   ```bash
-   codex plugin marketplace add ~/.agents/plugins
-   codex plugin add agentic-cognitive-writing@agentic-cognitive-writing-process
-   ```
-
-## Use the plugin
-
-Open a writing project and invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognitive-writing` in Codex. The main skill asks for the rhetorical problem when needed, then coordinates the writing work through the project files.
-
 ## Try it in a writing project
 
 The main skill turns your task into a file-backed writing session that you can inspect between turns.
 
 1. Start in the project where the writing should live.
-2. Invoke the main skill and describe the topic, audience, reason for writing, and desired result.
+2. Invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognitive-writing` in Codex. Describe the topic, audience, reason for writing, and desired result. The main skill asks for the rhetorical problem when needed, then coordinates the writing work through the project files.
 3. Review the files the skill creates or updates:
 
    - `.writing/assignment.md` records the rhetorical problem and constraints.
@@ -195,12 +126,10 @@ The monitor reads this state before each operation. You can inspect or edit it b
 
 ## Compare the separate experiment variants
 
-The [`cognitive-writing-experiments`](experiments/plugin/README.md) plugin packages two skills for controlled comparisons. Install the main `agentic-cognitive-writing` plugin first because both variants delegate to its shared role skills; Claude uses its bundled agents, and Codex uses native subagents.
+The [`cognitive-writing-experiments`](experiments/plugin/README.md) plugin packages two skills for controlled comparisons. Install the main `agentic-cognitive-writing` plugin first because both variants delegate to its shared role skills on both platforms.
 
 - [`cognitive-writing-fixed-order`](experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md) runs Planning, then Translating, then Reviewing on each pass. Generate and Evaluate can interrupt, but the Monitor logs the interruption and returns to the prescribed order.
 - [`cognitive-writing-no-goal-network`](experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md) treats the assignment as one implicit objective, leaves `.writing/goals.md` untouched, and continues to trace process switches.
-
-Select a variant only when a comparison is needed.
 
 The variants' seed prompts live beside the skills in [`experiments/plugin/skills/`](experiments/plugin/skills/).
 
@@ -208,7 +137,7 @@ The variants' seed prompts live beside the skills in [`experiments/plugin/skills
 
 The repository keeps the main plugin, experiment package, research, and protocol in separate directories.
 
-- [`plugin/`](plugin/) contains the installable main plugin, including shared skills and Claude adapters.
+- [`plugin/`](plugin/) contains the installable main plugin, including shared skills and adapter files.
 - [`experiments/plugin/`](experiments/plugin/) contains the installable controlled-comparison variants.
 - [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) and [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json) define the local marketplace sources.
 - The [`docs/research/skill-subagent-survey.md`](./docs/research/skill-subagent-survey.md) documents the research basis.
@@ -216,9 +145,7 @@ The repository keeps the main plugin, experiment package, research, and protocol
 - [`tools/validate-skills.sh`](tools/validate-skills.sh) runs the reproducible skill validators.
 - [`plugin/skills/cognitive-writing/evals/evals.json`](plugin/skills/cognitive-writing/evals/evals.json) and the experiment skill eval files under [`experiments/plugin/skills/`](experiments/plugin/skills/) seed skill evaluations.
 
-For offline use after installation, read [`plugin/README.md`](plugin/README.md).
-
-For research and experiment context, browse the linked documents above.
+For offline use after installation, read [`plugin/README.md`](plugin/README.md); for research and experiment context, browse the linked documents above.
 
 [^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387.
     DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885) / JSTOR: [https://www.jstor.org/stable/356600](https://www.jstor.org/stable/356600)

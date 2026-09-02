@@ -6,9 +6,9 @@ The package ships a Claude Code adapter in [`.claude-plugin/plugin.json`](.claud
 
 For the theory and architecture behind this plugin, see the [project README](https://github.com/shunk031/agentic-cognitive-writing#readme).
 
-## Install the plugin
+## Install from GitHub
 
-Choose a GitHub marketplace for normal use or a local checkout for development. If the repository is private, GitHub installs require access to it.
+Use the GitHub marketplace for the main install path. If the repository is private, GitHub installs require access to it. For development checkouts and personal Codex installs, read the `docs/installation.md` guide in the [project repository](https://github.com/shunk031/agentic-cognitive-writing).
 
 ### GitHub install for Claude Code
 
@@ -38,69 +38,6 @@ Choose a GitHub marketplace for normal use or a local checkout for development. 
    codex plugin add agentic-cognitive-writing@agentic-cognitive-writing-process
    ```
 
-### Development install from a checkout in Claude Code
-
-1. Change to the repository root.
-2. Add the local marketplace:
-
-   ```text
-   /plugin marketplace add .
-   ```
-
-3. Install the plugin:
-
-   ```text
-   /plugin install agentic-cognitive-writing@agentic-cognitive-writing-process
-   ```
-
-4. To try it without installing, load the plugin directory directly:
-
-   ```bash
-   claude --plugin-dir "$PWD/plugin"
-   ```
-
-### Development install from a checkout in Codex
-
-1. Change to the repository root. The repository includes [`.agents/plugins/marketplace.json`](../.agents/plugins/marketplace.json) with a local source entry for the [`plugin/`](../plugin/) directory.
-2. Add the local marketplace:
-
-   ```bash
-   codex plugin marketplace add .
-   ```
-
-3. Install the plugin:
-
-   ```bash
-   codex plugin add agentic-cognitive-writing@agentic-cognitive-writing-process
-   ```
-
-### Personal Codex install
-
-1. Copy the plugin directory to `~/.codex/plugins/agentic-cognitive-writing`.
-2. Create `~/.agents/plugins/marketplace.json`:
-
-   ```json
-   {
-     "name": "agentic-cognitive-writing-process",
-     "plugins": [
-       {
-         "name": "agentic-cognitive-writing",
-         "source": {
-           "source": "local",
-           "path": "../../.codex/plugins/agentic-cognitive-writing"
-         }
-       }
-     ]
-   }
-   ```
-
-3. Add that marketplace and install the plugin:
-
-   ```bash
-   codex plugin marketplace add ~/.agents/plugins
-   codex plugin add agentic-cognitive-writing@agentic-cognitive-writing-process
-   ```
-
 ## Start a writing task
 
 Invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognitive-writing` in Codex. The main skill can also start when your request clearly asks for writing help, without the explicit command.
@@ -124,8 +61,6 @@ The Monitor is the part of the skill that decides what to work on next and invok
 - `reviewing` handles delegated evaluation and revision.
 
 The separate [`cognitive-writing-experiments` package](https://github.com/shunk031/agentic-cognitive-writing) contains `cognitive-writing-fixed-order` and `cognitive-writing-no-goal-network` for controlled comparisons.
-
-Read the [project repository](https://github.com/shunk031/agentic-cognitive-writing) for experiment context.
 
 ## Files maintained in your writing project
 

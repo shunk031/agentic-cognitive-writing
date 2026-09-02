@@ -4,7 +4,7 @@ The goal network in `.writing/goals.md` is the working representation of the wri
 
 ## Network notation
 
-Use stable goal identifiers (IDs), one goal per line, and indentation for parent-child relationships:
+Use stable goal identifiers, one goal per line, and indentation for parent-child relationships:
 
 ```markdown
 # Goal network

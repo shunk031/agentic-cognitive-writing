@@ -10,8 +10,6 @@ The package ships a Claude Code manifest at [`.claude-plugin/plugin.json`](.clau
 
 Install the [`agentic-cognitive-writing` package](https://github.com/shunk031/agentic-cognitive-writing) before installing this package. If the repository is private, GitHub installs require access to it.
 
-The variants delegate planning, translating, and reviewing to the shared role skills. Claude uses the main package's bundled agents, while Codex uses native subagents.
-
 ### Claude Code
 
 1. Add the repository marketplace:
@@ -62,7 +60,5 @@ Use these skills only for controlled comparisons. They are not recommended defau
 ## Invoke a variant
 
 In Claude Code, invoke `/cognitive-writing-experiments:cognitive-writing-fixed-order` or `/cognitive-writing-experiments:cognitive-writing-no-goal-network`. In Codex, invoke `$cognitive-writing-fixed-order` or `$cognitive-writing-no-goal-network`.
-
-The variants reuse the main package's role skills; Claude uses its bundled agents, while Codex uses native subagents.
 
 Read the [project repository](https://github.com/shunk031/agentic-cognitive-writing) for the main plugin README, shared `.writing/` state layout, trace contract, research protocol, and experiment context.
