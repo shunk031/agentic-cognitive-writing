@@ -10,12 +10,12 @@ Agentic CogWriter is the writing system evaluated by this runner. To prepare a s
 | [`prompts/`](prompts/) | One immutable manifest per benchmark |
 | [`conditions/`](conditions/) | A1 to A6 and B1 to B2 wrapper configs, frozen baseline prompt files, and platform adapters |
 | [`src/agentic_cogwriter/runner/`](src/agentic_cogwriter/runner/) | Python subpackage for execution, manifests, budgets, and trace collection |
-| [`judge/`](judge/) | Reserved for judge prompts and runners |
+| [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) | API judge client, fail-closed validators, artifact scorer, and CLI |
 | [`human/`](human/) | Reserved for human validation |
 | [`analysis/`](analysis/) | Reserved for scoring and statistics |
 | [`manifests/`](manifests/) | Run-artifact documentation and generated output |
 
-The judge, human, and analysis directories are reserved and empty. They do not score or inspect experiment outputs.
+The human and analysis directories remain reserved. The judge package scores completed run artifacts with one OpenAI-compatible API call per judgment.
 
 ## Install and test
 
@@ -73,6 +73,34 @@ The run manifest records absolute execution paths and SHA-256 hashes for the sta
 The final response must contain the complete product text. For A2 to A6, `.writing/draft.md` must exist and the final response must contain at least half of its characters. B1 and B2 use the same draft gate. A1 is the only no-draft baseline and uses a non-empty completeness floor, measured in the configured output unit, with a 10-unit minimum or half of an explicitly requested length when that length is larger. The runner never substitutes `.writing/draft.md` for the response.
 
 The wrapper TOMLs are the source of truth for trace contracts. Each declares the allowed event types, goal-event policy, event-count bounds, process values, and any exact process-transition order. The runner rejects events outside those declarations; `process_switch` events always require `from_process` and `to_process`, and forbidden-goal conditions also require `.writing/goals.md` to remain untouched.
+
+## Score a completed run
+
+The scorer reads a completed run's `run-manifest.json`, `prompt.txt`, and `output.normalized.txt`, then writes `scores.jsonl` and `scores-manifest.json` beside the run artifacts. The manifest records the versioned template hash, source-run hashes, API usage counters, response hash, attempt count, and score-record hash. The scorer never writes the credential or endpoint value to an artifact.
+
+The private judge configuration supplies the model, judge ID and family, the names of the endpoint and credential environment variables, the template path, the fixed seed, decoding settings, timeout, and retry count. Use a configuration outside the repository. The `template_path` may point to [`pointwise-v1.txt`](prompts/judges/pointwise-v1.txt) or [`pairwise-v1.txt`](prompts/judges/pairwise-v1.txt).
+
+Run one pointwise judgment with the `agentic-cogwriter-score` entry point:
+
+```bash
+uv run --project experiments agentic-cogwriter-score \
+  --run-dir /path/to/completed-run \
+  --config /path/to/private-judge-config.json
+```
+
+The pointwise record follows the five-dimension contract in [`protocol.md`](../docs/experiments/protocol.md). Invalid JSON, missing dimensions, scores outside 1 to 5, and evidence quotes absent from the output or supplied context are rejected. The configured retry count bounds every additional API call, and every attempt keeps the same prompt and decoding payload.
+
+Run each pairwise presentation explicitly. The caller owns the presentation order and should invoke the command once with `A|B` and once with `B|A`, choosing a new output path for the second record:
+
+```bash
+uv run --project experiments agentic-cogwriter-score \
+  --run-dir /path/to/run-a \
+  --compare-run-dir /path/to/run-b \
+  --presentation 'A|B' \
+  --config /path/to/private-pairwise-config.json
+```
+
+The pairwise record follows the balanced tournament contract in [`protocol.md`](../docs/experiments/protocol.md), including a winner of `A`, `B`, or `tie` and verbatim evidence for both outputs. WritingBench criteria and HelloBench checklists are outside this judge stage; a benchmark-native judge can be added as a follow-up after the generic contracts are validated.
 
 ## Policy enforcement
 
