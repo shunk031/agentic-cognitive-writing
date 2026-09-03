@@ -17,7 +17,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DOCS_ROOT = REPO_ROOT / "docs"
-OUTPUT_ROOT = REPO_ROOT / ".docs-site"
+OUTPUT_ROOT = REPO_ROOT / ".cache" / "docs-site"
 
 REPOSITORY_URL = "https://github.com/shunk031/agentic-cognitive-writing"
 BRANCH = "main"
