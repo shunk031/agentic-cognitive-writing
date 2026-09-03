@@ -20,6 +20,26 @@ class BudgetExceeded(RunnerError):
 class RetrievalViolation(RunnerError):
     """A generator or judge produced evidence of an unpermitted retrieval."""
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        matched_pattern: str | None = None,
+        matching_line: str | None = None,
+        stream: str | None = None,
+        payload: bytes = b"",
+    ) -> None:
+        self.matched_pattern = matched_pattern
+        self.matching_line = matching_line
+        self.stream = stream
+        self.payload = payload
+        if matched_pattern is not None and matching_line is not None:
+            message = (
+                f"{message}; matched_pattern={matched_pattern!r}; "
+                f"matching_line={matching_line!r}"
+            )
+        super().__init__(message)
+
 
 class ExecutionError(RunnerError):
     """A headless command failed, timed out, or returned unusable output."""

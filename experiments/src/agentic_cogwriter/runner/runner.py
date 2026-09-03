@@ -15,7 +15,12 @@ from .adapters import PlatformAdapter
 from .budget import OutputBudget
 from .conditions import ConditionSpec, load_condition_registry
 from .config import RuntimeConfig
-from .errors import ConfigurationError, ExecutionError, ManifestError
+from .errors import (
+    ConfigurationError,
+    ExecutionError,
+    ManifestError,
+    RetrievalViolation,
+)
 from .execution import (
     ExecutionResult,
     SubprocessExecutor,
@@ -243,6 +248,22 @@ class ExperimentRunner:
                 run_dir, manifest_path, output_path, trace_path, checksums_path, run_id
             )
         except Exception as exc:
+            failure: dict[str, Any] = {
+                "type": type(exc).__name__,
+                "message": str(exc),
+            }
+            if isinstance(exc, RetrievalViolation):
+                stream = exc.stream or "stdout"
+                artifact_name = f"rejected-output.{stream}"
+                artifact_path = run_dir / artifact_name
+                artifact_path.write_bytes(exc.payload)
+                failure["retrieval"] = {
+                    "artifact": artifact_name,
+                    "matched_pattern": exc.matched_pattern,
+                    "matching_line": exc.matching_line,
+                    "sha256": f"sha256:{sha256_bytes(exc.payload)}",
+                    "stream": stream,
+                }
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -258,7 +279,7 @@ class ExperimentRunner:
                     budget=budget,
                     stage_prompt_hashes=stage_prompt_hashes,
                     benchmark_provenance=benchmark_provenance,
-                    failure={"type": type(exc).__name__, "message": str(exc)},
+                    failure=failure,
                 ),
             )
             raise
@@ -452,7 +473,7 @@ class ExperimentRunner:
         benchmark_provenance: Mapping[str, Any] | None = None,
         output_hash: str | None = None,
         trace_hash: str | None = None,
-        failure: dict[str, str] | None = None,
+        failure: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         manifest: dict[str, Any] = {

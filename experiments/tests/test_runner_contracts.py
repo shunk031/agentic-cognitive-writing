@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -190,6 +191,42 @@ def test_retrieval_tripwire_recognizes_generic_event_key() -> None:
     assert _retrieval_marker({"event": "web_search"}) == "web_search"
     with pytest.raises(RetrievalViolation, match="retrieval marker"):
         reject_retrieval(b'{"event":"web_search"}', b"")
+
+
+def test_runner_preserves_retrieval_evidence_in_artifact_and_manifest(
+    tmp_path: Path,
+) -> None:
+    rejected = b'{"event":"web_search","query":"example"}\n'
+    result = ExecutionResult(
+        returncode=0,
+        stdout=rejected,
+        stderr=b"",
+        session_id="session-1",
+    )
+    runner = ExperimentRunner(
+        _config(), output_root=tmp_path, executor=_RetryExecutor([result])
+    )
+
+    with pytest.raises(RetrievalViolation) as captured:
+        runner.run_prompt(
+            _prompt(), condition_id="A1", platform="codex-primary", run_id="evidence"
+        )
+
+    violation = captured.value
+    assert violation.matched_pattern == "web_search"
+    assert violation.matching_line == rejected.decode().rstrip("\n")
+    assert "matched_pattern='web_search'" in str(violation)
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "evidence"
+    artifact = run_dir / "rejected-output.stdout"
+    assert artifact.read_bytes() == rejected
+    manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    assert manifest["failure"]["retrieval"] == {
+        "artifact": "rejected-output.stdout",
+        "matched_pattern": "web_search",
+        "matching_line": rejected.decode().rstrip("\n"),
+        "sha256": "sha256:" + hashlib.sha256(rejected).hexdigest(),
+        "stream": "stdout",
+    }
 
 
 def test_trace_validation_requires_contract_fields(tmp_path: Path) -> None:

@@ -11,6 +11,15 @@ from typing import Any
 
 from .errors import ExecutionError, RetrievalViolation
 
+RAW_RETRIEVAL_PATTERN = (
+    r"(?i)https?://|www\.|\b(?:web[_-]?search|websearch|browser|"
+    r"mcp[_-]?tool[_-]?call|network[_-]?request)\b|"
+    r"\b(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)\b|"
+    r"\b(?:git\s+clone|python\s+-m\s+http\.client|urllib|requests\.get|"
+    r"socket\.create_connection)\b"
+)
+_RAW_RETRIEVAL_RE = re.compile(RAW_RETRIEVAL_PATTERN)
+
 
 @dataclass(frozen=True)
 class ExecutionResult:
@@ -171,22 +180,31 @@ def _retrieval_marker(value: Any) -> str | None:
 def reject_retrieval(stdout: bytes, stderr: bytes) -> None:
     """Fail closed on raw URL/network markers and structured retrieval events."""
 
-    for payload in (stdout, stderr):
+    for stream, payload in (("stdout", stdout), ("stderr", stderr)):
         decoded = payload.decode("utf-8", errors="replace")
-        if re.search(
-            r"(?i)https?://|www\.|\b(?:web[_-]?search|websearch|browser|"
-            r"mcp[_-]?tool[_-]?call|network[_-]?request)\b|"
-            r"\b(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)\b|"
-            r"\b(?:git\s+clone|python\s+-m\s+http\.client|urllib|requests\.get|"
-            r"socket\.create_connection)\b",
-            decoded,
-        ):
-            raise RetrievalViolation(
-                "Unpermitted retrieval marker observed in raw output"
-            )
-        for value in _json_objects(payload):
+        for line in decoded.splitlines():
+            match = _RAW_RETRIEVAL_RE.search(line)
+            if match:
+                raise RetrievalViolation(
+                    "Unpermitted retrieval marker observed in raw output",
+                    matched_pattern=match.group(0),
+                    matching_line=line,
+                    stream=stream,
+                    payload=payload,
+                )
+        for line in decoded.splitlines():
+            try:
+                value = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(value, dict):
+                continue
             marker = _retrieval_marker(value)
             if marker:
                 raise RetrievalViolation(
-                    f"Unpermitted retrieval event observed: {marker}"
+                    f"Unpermitted retrieval event observed: {marker}",
+                    matched_pattern=marker,
+                    matching_line=line,
+                    stream=stream,
+                    payload=payload,
                 )
