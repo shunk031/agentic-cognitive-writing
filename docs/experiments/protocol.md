@@ -41,7 +41,7 @@ The research questions (RQ) are:
 
 The protocol defines the analysis terms used below. An estimand is the quantity that the analysis plans to estimate. Pointwise scoring gives each output an independent rubric score. A Bradley-Terry model [^11] estimates relative condition abilities from pairwise choices. Holm correction [^15] controls the family-wise error rate.
 
-The pointwise two-judge composite is the sole CONFIRMATORY estimand. The composite is the prespecified quantity used for confirmatory tests. Use one correction family per benchmark on the primary Codex pointwise composite. Each family contains the five comparisons of the theory-based condition A4 with the other conditions, for 15 confirmatory tests total.
+The pointwise two-judge composite is the sole CONFIRMATORY estimand. The composite is the prespecified quantity used for confirmatory tests. Use one correction family per benchmark on the primary Codex pointwise composite. Each family contains the five comparisons of the theory-based condition A4 with the five other core conditions A1, A2, A3, A5, and A6, for 15 confirmatory tests total.
 
 The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. The pairwise average estimates the relative ability of the conditions from pairwise choices. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
 
@@ -418,7 +418,7 @@ The analysis keeps primary and replication inference separate and reserves confi
 
 The prompt is the paired unit. Each condition receives the same prompt, and platform replications use the same prompt manifest. Invalid or missing outputs remain in the run accounting. The report gives the failure count and reason by condition and benchmark. The report does not silently drop a condition that fails more often.
 
-For pointwise quality, compute the primary equal-weight judge composite for each prompt and condition on each platform. The confirmatory contrasts compare condition A4 with each other condition. Use paired bootstrap intervals or a paired Wilcoxon signed-rank test [^16] across prompts. Report these results:
+For pointwise quality, compute the primary equal-weight judge composite for each prompt and condition on each platform. The confirmatory contrasts compare condition A4 with the five other core conditions A1, A2, A3, A5, and A6. Use paired bootstrap intervals or a paired Wilcoxon signed-rank test [^16] across prompts. Report these results:
 
 - Mean and median paired differences
 - Confidence intervals
@@ -436,7 +436,7 @@ For pairwise quality, report these results on each platform:
 
 Use prompt-level paired resampling for uncertainty. Report the effect size on the selected Bradley-Terry [^11] scale or the paired difference in tie-aware win rate. Keep Codex and Claude Code inference separate.
 
-For RQ1 and RQ2, run the 15 confirmatory contrasts on the primary Codex pointwise composite. Compare condition A4 with each other condition within each primary benchmark. Report the same five contrasts on the Claude Code replication separately, without pooled or confirmatory inference.
+For RQ1 and RQ2, run the 15 confirmatory contrasts on the primary Codex pointwise composite. Compare condition A4 with the five other core conditions A1, A2, A3, A5, and A6 within each primary benchmark. Report the same five contrasts on the Claude Code replication separately, without pooled or confirmatory inference.
 
 For RQ4, compare platforms descriptively by the following measures and do not pool platforms:
 
