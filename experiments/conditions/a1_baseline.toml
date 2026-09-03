@@ -1,6 +1,7 @@
 condition_id = "A1"
 skill = "writing-single-shot"
 analysis_family = "confirmatory"
+product_requires_draft = false
 
 [package]
 name = "cognitive-writing-baselines"
@@ -23,3 +24,4 @@ claude_code_replication = ["/plugin marketplace add .", "/plugin install cogniti
 retrieval = "not_applicable"
 evidence = "plugin_recorded"
 citation = "plugin_recorded"
+processes = ["generate"]

@@ -49,7 +49,9 @@ def _runner(tmp_path, *, config=None, **kwargs):
 
 
 class FakeExecutor:
-    def __init__(self, *, output="final output", retrieval=False, write_trace=True):
+    def __init__(
+        self, *, output="final output " * 10, retrieval=False, write_trace=True
+    ):
         self.calls = []
         self.output = output
         self.retrieval = retrieval
@@ -77,39 +79,48 @@ class FakeExecutor:
                 "",
             )
             stages = {
-                "writing-single-shot": ("single_shot",),
-                "writing-linear": ("pre_write", "write", "re_write"),
+                "writing-single-shot": (("single_shot", "generate"),),
+                "writing-linear": (
+                    ("pre_write", "pre-write"),
+                    ("write", "write"),
+                    ("re_write", "re-write"),
+                ),
                 "writing-adaptive-task-planning": (
-                    "task-decomposition",
-                    "task-execution",
-                    "task-revision",
+                    ("task-decomposition", "task-decomposition"),
+                    ("task-execution", "task-execution"),
+                    ("task-revision", "task-revision"),
                 ),
                 "writing-storm-style": (
-                    "perspective_discovery",
-                    "simulated_qa",
-                    "outline",
-                    "draft",
-                    "polish",
+                    ("perspective_discovery", "perspective-discovery"),
+                    ("simulated_qa", "simulated-question-answering"),
+                    ("outline", "outline"),
+                    ("draft", "per-section-draft"),
+                    ("polish", "polish"),
                 ),
-            }.get(skill, ("single_shot",))
+            }.get(skill, (("single_shot", "generate"),))
             trace_path.write_text(
                 "".join(
                     json.dumps(
                         {
                             "event_type": "stage_event",
-                            "stage_id": stage,
+                            "stage_id": stage_id,
                             "timestamp": "2026-01-01T00:00:00+00:00",
                             "responsible_agent": "writer",
-                            "process": "writing",
+                            "process": process,
                             "decision": "continue",
                             "evidence": ["supplied context"],
                             "open_uncertainty": [],
                         }
                     )
                     + "\n"
-                    for stage in stages
+                    for stage_id, process in stages
                 )
             )
+            if skill in {
+                "writing-adaptive-task-planning",
+                "writing-storm-style",
+            }:
+                (cwd / ".writing" / "draft.md").write_text(self.output)
         session_id = "session-1"
         payload = {
             "thread_id": session_id,
@@ -118,9 +129,15 @@ class FakeExecutor:
         }
         if self.retrieval:
             payload["type"] = "web_search"
+        payload_stream = [
+            payload,
+            {"type": "turn.completed", "usage": {"output_tokens": 1}},
+        ]
         return ExecutionResult(
             returncode=0,
-            stdout=(json.dumps(payload) + "\n").encode(),
+            stdout=(
+                "\n".join(json.dumps(event) for event in payload_stream) + "\n"
+            ).encode(),
             stderr=b"",
             session_id=session_id,
         )
@@ -219,6 +236,28 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         registry[condition].analysis_family == "exploratory"
         for condition in ("B1", "B2")
     )
+    assert registry["A1"].trace_processes == ("generate",)
+    assert registry["A2"].trace_processes == ("pre-write", "write", "re-write")
+    assert registry["A3"].trace_processes == (
+        "task-decomposition",
+        "task-execution",
+        "task-revision",
+    )
+    assert registry["B2"].trace_processes == (
+        "perspective-discovery",
+        "simulated-question-answering",
+        "outline",
+        "per-section-draft",
+        "polish",
+    )
+    assert [registry[f"A{index}"].product_requires_draft for index in range(1, 7)] == [
+        False,
+        False,
+        True,
+        True,
+        True,
+        True,
+    ]
 
 
 def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
@@ -237,7 +276,11 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
     result = runner.run_prompt(prompt, condition_id="A2", platform="codex-primary")
 
     events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
-    assert [event["stage_id"] for event in events] == ["pre_write", "write", "re_write"]
+    assert [event["process"] for event in events] == [
+        "pre-write",
+        "write",
+        "re-write",
+    ]
     assert len(executor.calls) == 1
     assert "resume" not in executor.calls[0][0]
     assert any(
@@ -267,7 +310,7 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
     result = runner.run_prompt(prompt, condition_id="A3", platform="codex-primary")
 
     events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
-    assert [event["stage_id"] for event in events] == [
+    assert [event["process"] for event in events] == [
         "task-decomposition",
         "task-execution",
         "task-revision",

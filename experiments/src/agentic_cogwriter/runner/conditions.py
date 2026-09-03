@@ -39,6 +39,8 @@ class ConditionSpec:
     stages: tuple[StageSpec, ...]
     plugin_config: Path
     trace_policy: tuple[tuple[str, str], ...]
+    trace_processes: tuple[str, ...]
+    product_requires_draft: bool
 
     @property
     def trace_policy_dict(self) -> dict[str, str]:
@@ -117,7 +119,7 @@ def _load_wrapper(
     *,
     condition_id: str,
     analysis_family: str,
-) -> tuple[str, str, tuple[tuple[str, str], ...]]:
+) -> tuple[str, str, tuple[tuple[str, str], ...], tuple[str, ...], bool]:
     wrapper = _load_toml(wrapper_path)
     if wrapper.get("condition_id") != condition_id:
         raise ConfigurationError(f"Wrapper {wrapper_path} has the wrong condition_id")
@@ -128,6 +130,11 @@ def _load_wrapper(
         )
 
     skill_name = _required_string(wrapper, "skill", label=str(wrapper_path))
+    product_requires_draft = wrapper.get("product_requires_draft")
+    if not isinstance(product_requires_draft, bool):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} product_requires_draft must be a boolean"
+        )
     package = wrapper.get("package")
     if not isinstance(package, Mapping):
         raise ConfigurationError(f"Wrapper {wrapper_path} must define a package table")
@@ -202,7 +209,22 @@ def _load_wrapper(
         (key, str(trace.get(key, "not_applicable")))
         for key in ("retrieval", "evidence", "citation")
     )
-    return skill_name, package_name, trace_policy
+    processes = trace.get("processes")
+    if not isinstance(processes, list) or not processes:
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} trace.processes must be a non-empty list"
+        )
+    if not all(isinstance(process, str) and process.strip() for process in processes):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} trace.processes must contain strings"
+        )
+    return (
+        skill_name,
+        package_name,
+        trace_policy,
+        tuple(processes),
+        product_requires_draft,
+    )
 
 
 def load_condition_registry(path: Path | None = None) -> dict[str, ConditionSpec]:
@@ -248,7 +270,13 @@ def load_condition_registry(path: Path | None = None) -> dict[str, ConditionSpec
             raise ConfigurationError(
                 f"Missing condition wrapper config: {wrapper_path}"
             )
-        skill_name, package_name, trace_policy = _load_wrapper(
+        (
+            skill_name,
+            package_name,
+            trace_policy,
+            trace_processes,
+            product_requires_draft,
+        ) = _load_wrapper(
             wrapper_path,
             condition_id=condition_id,
             analysis_family=analysis_family,
@@ -263,5 +291,7 @@ def load_condition_registry(path: Path | None = None) -> dict[str, ConditionSpec
             stages=_load_stages(entry, registry_path, condition_id),
             plugin_config=wrapper_path,
             trace_policy=trace_policy,
+            trace_processes=trace_processes,
+            product_requires_draft=product_requires_draft,
         )
     return result

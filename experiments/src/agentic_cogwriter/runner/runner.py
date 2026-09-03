@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import math
 import os
+import re
 import shutil
 import tomllib
 import uuid
@@ -18,10 +20,12 @@ from .budget import OutputBudget
 from .conditions import ConditionSpec, load_condition_registry
 from .config import RuntimeConfig
 from .errors import (
+    BudgetExceeded,
     ConfigurationError,
     ExecutionError,
     ManifestError,
     RetrievalViolation,
+    UnscoredRun,
 )
 from .execution import (
     ExecutionResult,
@@ -64,6 +68,7 @@ class RunResult:
 
 
 FINAL_OUTPUT_DRAFT_RATIO = 0.5
+DEFAULT_PRODUCT_FLOOR = 10
 
 
 def _safe_component(value: str) -> str:
@@ -73,7 +78,13 @@ def _safe_component(value: str) -> str:
 
 
 def _validate_final_product(
-    output: str, draft: str | None, *, condition_id: str
+    output: str,
+    draft: str | None,
+    *,
+    condition_id: str,
+    requires_draft: bool,
+    minimum_units: int | None,
+    count_units: Callable[[str], int],
 ) -> None:
     """Require the response channel to carry the complete product text."""
 
@@ -83,15 +94,110 @@ def _validate_final_product(
             f"Condition {condition_id} produced no final response; "
             "draft.md is not accepted as a substitute"
         )
-    if draft is None:
-        return
-    draft_chars = len(draft.strip())
-    if final_chars < draft_chars * FINAL_OUTPUT_DRAFT_RATIO:
+    if requires_draft and draft is None:
         raise ExecutionError(
-            f"Condition {condition_id} final response is less than "
-            f"{FINAL_OUTPUT_DRAFT_RATIO:.0%} of draft.md; "
-            f"final_chars={final_chars}, draft_chars={draft_chars}"
+            f"Condition {condition_id} requires workspace/.writing/draft.md; "
+            "the final response cannot substitute for a missing draft"
         )
+    if requires_draft and draft is not None:
+        draft_chars = len(draft.strip())
+        if final_chars < draft_chars * FINAL_OUTPUT_DRAFT_RATIO:
+            raise ExecutionError(
+                f"Condition {condition_id} final response is less than "
+                f"{FINAL_OUTPUT_DRAFT_RATIO:.0%} of draft.md; "
+                f"final_chars={final_chars}, draft_chars={draft_chars}"
+            )
+    if requires_draft or minimum_units is None:
+        return
+    output_units = count_units(output)
+    if output_units < minimum_units:
+        raise ExecutionError(
+            f"Condition {condition_id} final response fails the completeness floor; "
+            f"output_units={output_units}, minimum_units={minimum_units}"
+        )
+
+
+def _requested_length(prompt: PromptRecord) -> int | None:
+    """Extract a numeric requested length from constraints or assignment text."""
+
+    candidates: list[str] = []
+    constraints = prompt.requested_output_constraints
+    if isinstance(constraints, Mapping):
+        for key in (
+            "min_words",
+            "minimum_words",
+            "target_words",
+            "word_count",
+            "max_words",
+            "min_tokens",
+            "minimum_tokens",
+            "target_tokens",
+            "max_tokens",
+        ):
+            value = constraints.get(key)
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                return max(1, math.ceil(value))
+    candidates.append(json.dumps(constraints, ensure_ascii=False))
+    if prompt.prompt_text is not None:
+        candidates.append(prompt.prompt_text)
+    match = re.search(
+        r"(?i)\b(\d[\d,]*)\s*[- ]?(?:word|words|token|tokens)\b",
+        "\n".join(candidates),
+    )
+    if match is None:
+        return None
+    return int(match.group(1).replace(",", ""))
+
+
+def _product_gate(
+    prompt: PromptRecord, condition: ConditionSpec, config: RuntimeConfig
+) -> dict[str, Any]:
+    """Describe the product completeness rule persisted in each run manifest."""
+
+    if condition.product_requires_draft:
+        return {
+            "requires_draft": True,
+            "rule": (
+                "workspace/.writing/draft.md must exist and the final response "
+                "must be at least 50% of its characters"
+            ),
+            "minimum_units": None,
+            "unit": config.output_unit,
+        }
+    requested_length = _requested_length(prompt)
+    if requested_length is None:
+        return {
+            "requires_draft": False,
+            "rule": (
+                "at least 10 output units when the assignment has no requested length"
+            ),
+            "minimum_units": DEFAULT_PRODUCT_FLOOR,
+            "unit": config.output_unit,
+        }
+    return {
+        "requires_draft": False,
+        "rule": "at least 50% of the requested length, with a 10-unit minimum",
+        "minimum_units": max(DEFAULT_PRODUCT_FLOOR, math.ceil(requested_length * 0.5)),
+        "unit": config.output_unit,
+    }
+
+
+@dataclass(frozen=True)
+class SessionSnapshot:
+    """State of the Codex rollout directory at one attempt boundary."""
+
+    files: Mapping[Path, str]
+    present: bool
+    error: str | None
+
+
+@dataclass(frozen=True)
+class SessionCollection:
+    """Result of collecting rollout files created or changed by an attempt."""
+
+    hashes: dict[str, str]
+    status: str
+    reason: str | None = None
 
 
 class ExperimentRunner:
@@ -172,11 +278,23 @@ class ExperimentRunner:
         }
         started_at = timestamp()
         budget = OutputBudget(self.runtime_config.output_budget_tokens)
+        product_gate = _product_gate(prompt, condition, self.runtime_config)
         attempts = 0
         evidence_hashes: dict[str, str] = {}
         staged_files: dict[str, str] = {}
         token_usage: dict[str, int] | None = None
+        token_accounting_error: str | None = None
         subagent_spawn_ids: set[str] = set()
+        rollout_collection: dict[str, Any] = {
+            "status": "absent",
+            "reason": "no Codex rollout files collected",
+            "source": "CODEX_HOME/sessions",
+        }
+        spawn_extraction: dict[str, Any] = {
+            "status": "absent",
+            "reason": "no attempt event stream collected",
+            "source": "Codex JSONL event stream",
+        }
         cli_version = "not_probed"
         stage_prompt_hashes = self._stage_prompt_hashes(condition)
         benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
@@ -205,6 +323,10 @@ class ExperimentRunner:
                 staged_files=staged_files,
                 token_usage=token_usage,
                 subagent_spawn_count=len(subagent_spawn_ids),
+                product_gate=product_gate,
+                token_accounting_error=token_accounting_error,
+                rollout_collection=rollout_collection,
+                spawn_extraction=spawn_extraction,
             ),
         )
 
@@ -237,6 +359,10 @@ class ExperimentRunner:
                     staged_files=staged_files,
                     token_usage=token_usage,
                     subagent_spawn_count=len(subagent_spawn_ids),
+                    product_gate=product_gate,
+                    token_accounting_error=token_accounting_error,
+                    rollout_collection=rollout_collection,
+                    spawn_extraction=spawn_extraction,
                 ),
             )
             command_prompt = self._plugin_prompt(
@@ -265,34 +391,89 @@ class ExperimentRunner:
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
                     staged_files=staged_files,
+                    product_gate=product_gate,
                     token_usage=token_usage,
+                    token_accounting_error=token_accounting_error,
+                    subagent_spawn_count=len(subagent_spawn_ids),
+                    rollout_collection=rollout_collection,
+                    spawn_extraction=spawn_extraction,
                 ),
             )
 
             def record_attempt(
                 attempt_number: int,
                 result: ExecutionResult | None,
-                session_before: Mapping[Path, str] | None,
+                session_before: SessionSnapshot | None,
             ) -> None:
-                nonlocal attempts, token_usage
+                nonlocal attempts, rollout_collection, spawn_extraction
+                nonlocal token_usage, token_accounting_error
                 attempts = max(attempts, attempt_number)
                 evidence_hashes.update(
                     self._persist_attempt_evidence(run_dir, attempt_number, result)
                 )
                 if platform == "codex-primary":
-                    evidence_hashes.update(
-                        self._collect_codex_sessions(
-                            run_dir, attempt_number, session_before or {}
-                        )
+                    collection = self._collect_codex_sessions(
+                        run_dir,
+                        attempt_number,
+                        session_before
+                        or SessionSnapshot(files={}, present=False, error=None),
                     )
+                    evidence_hashes.update(collection.hashes)
+                    if collection.status == "error":
+                        rollout_collection = {
+                            "status": collection.status,
+                            "reason": collection.reason,
+                            "source": "CODEX_HOME/sessions",
+                        }
+                        raise UnscoredRun(
+                            collection.reason or "Codex rollout collection failed"
+                        )
+                    elif rollout_collection["status"] != "error":
+                        if collection.status == "complete":
+                            rollout_collection = {
+                                "status": "complete",
+                                "reason": None,
+                                "source": "CODEX_HOME/sessions",
+                            }
+                        elif rollout_collection["status"] != "complete":
+                            rollout_collection = {
+                                "status": "absent",
+                                "reason": collection.reason,
+                                "source": "CODEX_HOME/sessions",
+                            }
                 attempt_events_path = (
                     run_dir / f"attempt-{attempt_number:03d}.events.jsonl"
                 )
-                subagent_spawn_ids.update(
-                    _subagent_spawn_ids(attempt_events_path.read_bytes())
-                )
-                if result is not None:
-                    observed_usage = extract_token_usage(result.stdout)
+                if result is None:
+                    spawn_extraction = {
+                        "status": "absent",
+                        "reason": "executor produced no event stream",
+                        "source": "Codex JSONL event stream",
+                    }
+                else:
+                    reject_retrieval(result.stdout, result.stderr)
+                    try:
+                        subagent_spawn_ids.update(
+                            _subagent_spawn_ids(attempt_events_path.read_bytes())
+                        )
+                    except ExecutionError as exc:
+                        spawn_extraction = {
+                            "status": "error",
+                            "reason": str(exc),
+                            "source": "Codex JSONL event stream",
+                        }
+                        raise
+                    spawn_extraction = {
+                        "status": "complete",
+                        "reason": None,
+                        "source": "Codex JSONL event stream",
+                    }
+                if result is not None and platform == "codex-primary":
+                    try:
+                        observed_usage = extract_token_usage(result.stdout)
+                    except ExecutionError as exc:
+                        token_accounting_error = str(exc)
+                        observed_usage = None
                     if observed_usage is not None:
                         if token_usage is None:
                             token_usage = {
@@ -302,6 +483,23 @@ class ExperimentRunner:
                             }
                         for key, value in observed_usage.items():
                             token_usage[key] += value
+                        if token_usage["total_tokens"] > budget.limit:
+                            raise BudgetExceeded(
+                                "Codex turn usage exceeds the shared output "
+                                f"budget: used={token_usage['total_tokens']}, "
+                                f"limit={budget.limit}"
+                            )
+                    if (
+                        result.returncode == 0
+                        and not result.timed_out
+                        and token_accounting_error is not None
+                    ):
+                        raise UnscoredRun(token_accounting_error)
+                if subagent_spawn_ids and rollout_collection["status"] != "complete":
+                    raise UnscoredRun(
+                        "Subagent spawn events were observed but no complete "
+                        "Codex rollout collection is available"
+                    )
                 self._write_json(
                     checksums_path,
                     checksums_for_files(run_dir, ["prompt.txt", *evidence_hashes]),
@@ -326,6 +524,10 @@ class ExperimentRunner:
                         staged_files=staged_files,
                         token_usage=token_usage,
                         subagent_spawn_count=len(subagent_spawn_ids),
+                        product_gate=product_gate,
+                        token_accounting_error=token_accounting_error,
+                        rollout_collection=rollout_collection,
+                        spawn_extraction=spawn_extraction,
                     ),
                 )
 
@@ -355,13 +557,24 @@ class ExperimentRunner:
                     raise ExecutionError(
                         f"Cannot read workspace draft {draft_path}: {exc}"
                     ) from exc
-                reject_retrieval(draft.encode("utf-8"), b"", scan_artifact_text=True)
+                reject_retrieval(
+                    draft.encode("utf-8"),
+                    b"",
+                    scan_artifact_text=True,
+                    artifact_source="draft",
+                )
             reject_retrieval(output.encode("utf-8"), b"")
-            _validate_final_product(output, draft, condition_id=condition.condition_id)
             budget.consume(
                 self.runtime_config.count_output_units(output), stage="final_output"
             )
-
+            _validate_final_product(
+                output,
+                draft,
+                condition_id=condition.condition_id,
+                requires_draft=condition.product_requires_draft,
+                minimum_units=product_gate["minimum_units"],
+                count_units=self.runtime_config.count_output_units,
+            )
             if condition.condition_id == "A5":
                 assert_untouched(protected_goals, goals_before)
             required_trace = ".writing/trace/process.jsonl"
@@ -381,7 +594,7 @@ class ExperimentRunner:
             validate_trace(
                 copied_trace,
                 condition_id=condition.condition_id,
-                expected_stage_ids=tuple(stage.stage_id for stage in condition.stages),
+                declared_processes=condition.trace_processes,
             )
 
             output_path.write_bytes(output.encode("utf-8"))
@@ -417,6 +630,10 @@ class ExperimentRunner:
                     staged_files=staged_files,
                     token_usage=token_usage,
                     subagent_spawn_count=len(subagent_spawn_ids),
+                    product_gate=product_gate,
+                    token_accounting_error=token_accounting_error,
+                    rollout_collection=rollout_collection,
+                    spawn_extraction=spawn_extraction,
                 ),
             )
             return RunResult(
@@ -439,7 +656,12 @@ class ExperimentRunner:
             }
             if isinstance(exc, RetrievalViolation):
                 stream = exc.stream or "stdout"
-                artifact_name = f"rejected-output.{stream}"
+                artifact_suffix = (
+                    exc.artifact_source
+                    if exc.artifact_source != "transport"
+                    else stream
+                )
+                artifact_name = f"rejected-output.{artifact_suffix}"
                 artifact_path = run_dir / artifact_name
                 artifact_path.write_bytes(exc.payload)
                 failure["retrieval"] = {
@@ -448,10 +670,16 @@ class ExperimentRunner:
                     "matching_line": exc.matching_line,
                     "sha256": f"sha256:{sha256_bytes(exc.payload)}",
                     "stream": stream,
+                    "artifact_source": exc.artifact_source,
                 }
             failure_artifacts = ["prompt.txt", *evidence_hashes]
             if isinstance(exc, RetrievalViolation):
-                failure_artifacts.append(f"rejected-output.{exc.stream or 'stdout'}")
+                artifact_suffix = (
+                    exc.artifact_source
+                    if exc.artifact_source != "transport"
+                    else (exc.stream or "stdout")
+                )
+                failure_artifacts.append(f"rejected-output.{artifact_suffix}")
             failure_checksums = checksums_for_files(
                 run_dir, list(dict.fromkeys(failure_artifacts))
             )
@@ -465,7 +693,14 @@ class ExperimentRunner:
                     platform=platform,
                     adapter=adapter,
                     run_id=run_id,
-                    status="failed",
+                    status=(
+                        "unscored"
+                        if isinstance(exc, UnscoredRun)
+                        or token_accounting_error is not None
+                        or rollout_collection["status"] == "error"
+                        or spawn_extraction["status"] == "error"
+                        else "failed"
+                    ),
                     started_at=started_at,
                     cli_version=cli_version,
                     attempts=attempts,
@@ -477,6 +712,10 @@ class ExperimentRunner:
                     staged_files=staged_files,
                     token_usage=token_usage,
                     subagent_spawn_count=len(subagent_spawn_ids),
+                    product_gate=product_gate,
+                    token_accounting_error=token_accounting_error,
+                    rollout_collection=rollout_collection,
+                    spawn_extraction=spawn_extraction,
                     failure=failure,
                 ),
             )
@@ -510,8 +749,11 @@ class ExperimentRunner:
         cwd: Path,
         attempts: int,
         plugin_dirs: tuple[str, ...] = (),
-        record_attempt: Callable[[int, ExecutionResult | None], None] | None = None,
-        snapshot_sessions: Callable[[], dict[Path, str]] | None = None,
+        record_attempt: Callable[
+            [int, ExecutionResult | None, SessionSnapshot | None], None
+        ]
+        | None = None,
+        snapshot_sessions: Callable[[], SessionSnapshot] | None = None,
     ) -> tuple[ExecutionResult, int]:
         """Run one skill turn, retrying only with the identical command policy."""
 
@@ -785,8 +1027,21 @@ class ExperimentRunner:
         staged_files: Mapping[str, str] | None = None,
         token_usage: Mapping[str, int] | None = None,
         subagent_spawn_count: int = 0,
+        product_gate: Mapping[str, Any] | None = None,
+        token_accounting_error: str | None = None,
+        rollout_collection: Mapping[str, Any] | None = None,
+        spawn_extraction: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
+        if platform == "codex-primary":
+            if token_accounting_error is not None:
+                token_accounting_status = "unscored"
+            elif token_usage is not None:
+                token_accounting_status = "observed"
+            else:
+                token_accounting_status = "monitored-only"
+        else:
+            token_accounting_status = "not_applicable"
         manifest: dict[str, Any] = {
             "schema_version": 1,
             "run_id": run_id,
@@ -863,7 +1118,10 @@ class ExperimentRunner:
                 },
                 "no_retrieval": {
                     "generator": adapter.network_enforcement,
-                    "secondary_tripwire": "raw URL and network-command scan",
+                    "secondary_tripwire": (
+                        "parsed retrieval/tool-invocation and executed-command "
+                        "scan; explicit network-command scan for draft artifacts"
+                    ),
                     "judge_side": "out-of-scope pending judge module",
                 },
                 "judge_verification": {
@@ -903,7 +1161,7 @@ class ExperimentRunner:
             "output_units_used": budget.used if budget else 0,
             "subagent_spawn_count": subagent_spawn_count,
             "token_accounting": {
-                "status": "observed" if token_usage is not None else "monitored-only",
+                "status": token_accounting_status,
                 "source": "Codex turn.completed usage",
                 "output_tokens": (
                     token_usage.get("output_tokens")
@@ -919,6 +1177,34 @@ class ExperimentRunner:
                     token_usage.get("total_tokens") if token_usage is not None else None
                 ),
             },
+            "product_gate": dict(
+                product_gate or _product_gate(prompt, condition, self.runtime_config)
+            ),
+            "rollout_collection": dict(
+                rollout_collection
+                or {
+                    "status": "absent",
+                    "reason": "no Codex rollout files collected",
+                    "source": "CODEX_HOME/sessions",
+                }
+            ),
+            "spawn_extraction": dict(
+                spawn_extraction
+                or {
+                    "status": "absent",
+                    "reason": "no attempt event stream collected",
+                    "source": "Codex JSONL event stream",
+                }
+            ),
+            "scoring": {
+                "status": (
+                    "eligible"
+                    if status == "completed"
+                    else "pending"
+                    if status == "started"
+                    else "excluded"
+                )
+            },
             "execution_paths": dict(execution_paths or {}),
             "evidence_hashes": dict(evidence_hashes or {}),
             "staged_files": dict(staged_files or {}),
@@ -929,6 +1215,8 @@ class ExperimentRunner:
             manifest["trace_hash"] = trace_hash
         if failure is not None:
             manifest["failure"] = failure
+        if token_accounting_error is not None:
+            manifest["token_accounting"]["error"] = token_accounting_error
         return manifest
 
     @staticmethod
@@ -958,36 +1246,59 @@ class ExperimentRunner:
             hashes[name] = f"sha256:{sha256_bytes(payload)}"
         return hashes
 
-    def _snapshot_codex_sessions(self) -> dict[Path, str]:
-        """Hash regular files currently under CODEX_HOME/sessions."""
+    def _snapshot_codex_sessions(self) -> SessionSnapshot:
+        """Hash readable files currently under CODEX_HOME/sessions."""
 
         sessions_root = self.codex_home / "sessions"
-        if not sessions_root.is_dir():
-            return {}
+        try:
+            present = sessions_root.is_dir()
+        except OSError as exc:
+            return SessionSnapshot(files={}, present=True, error=str(exc))
+        if not present:
+            return SessionSnapshot(files={}, present=False, error=None)
         snapshot: dict[Path, str] = {}
-        for path in sessions_root.rglob("*"):
-            if not path.is_file() or path.is_symlink():
-                continue
-            try:
-                snapshot[path.resolve()] = sha256_file(path)
-            except OSError:
-                continue
-        return snapshot
+        error: str | None = None
+        try:
+            paths = sessions_root.rglob("*")
+            for path in paths:
+                if not path.is_file() or path.is_symlink():
+                    continue
+                try:
+                    snapshot[path.resolve()] = sha256_file(path)
+                except OSError as exc:
+                    error = error or f"Cannot read rollout {path}: {exc}"
+        except OSError as exc:
+            error = error or f"Cannot inspect rollout directory {sessions_root}: {exc}"
+        return SessionSnapshot(files=snapshot, present=True, error=error)
 
     def _collect_codex_sessions(
         self,
         run_dir: Path,
         attempt_number: int,
-        before: Mapping[Path, str],
-    ) -> dict[str, str]:
+        before: SessionSnapshot,
+    ) -> SessionCollection:
         """Copy only new or changed Codex rollout files into this run."""
 
         sessions_root = (self.codex_home / "sessions").resolve()
         after = self._snapshot_codex_sessions()
+        if before.error is not None or after.error is not None:
+            return SessionCollection(
+                hashes={},
+                status="error",
+                reason=before.error or after.error,
+            )
+        if not after.present:
+            return SessionCollection(
+                hashes={},
+                status="absent",
+                reason="CODEX_HOME/sessions is absent",
+            )
         run_root = run_dir.resolve()
         hashes: dict[str, str] = {}
-        for source, digest in sorted(after.items(), key=lambda item: str(item[0])):
-            if before.get(source) == digest:
+        for source, digest in sorted(
+            after.files.items(), key=lambda item: str(item[0])
+        ):
+            if before.files.get(source) == digest:
                 continue
             try:
                 relative = source.relative_to(sessions_root)
@@ -1002,8 +1313,28 @@ class ExperimentRunner:
                     f"Refusing to collect a Codex session outside run directory: "
                     f"{source}"
                 )
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, destination)
+            try:
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, destination)
+            except OSError as exc:
+                return SessionCollection(
+                    hashes=hashes,
+                    status="error",
+                    reason=f"Cannot collect rollout {source}: {exc}",
+                )
             key = relative_destination.as_posix()
-            hashes[key] = f"sha256:{sha256_file(destination)}"
-        return hashes
+            try:
+                hashes[key] = f"sha256:{sha256_file(destination)}"
+            except OSError as exc:
+                return SessionCollection(
+                    hashes=hashes,
+                    status="error",
+                    reason=f"Cannot hash collected rollout {destination}: {exc}",
+                )
+        if not hashes:
+            return SessionCollection(
+                hashes={},
+                status="absent",
+                reason="No new or changed Codex rollout files were collected",
+            )
+        return SessionCollection(hashes=hashes, status="complete")

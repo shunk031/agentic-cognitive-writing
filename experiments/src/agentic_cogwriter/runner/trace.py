@@ -69,13 +69,17 @@ def validate_trace(
     path: Path,
     *,
     condition_id: str,
-    expected_stage_ids: tuple[str, ...] = (),
+    declared_processes: tuple[str, ...],
 ) -> list[dict[str, Any]]:
     """Validate event fields and the condition-specific trace contract."""
 
+    if not declared_processes:
+        raise TraceValidationError(
+            f"{condition_id} must declare at least one trace process"
+        )
     events = _read_trace_events(path)
     goal_event_count = 0
-    observed_stages: list[str] = []
+    observed_processes: list[str] = []
     for line_number, event in enumerate(events, start=1):
         event_type = event.get("event_type")
         if not isinstance(event_type, str) or event_type not in TRACE_EVENT_TYPES:
@@ -92,6 +96,12 @@ def validate_trace(
                 raise TraceValidationError(
                     f"Trace {path}:{line_number} field {field} must be a string"
                 )
+        if event["process"] not in declared_processes:
+            raise TraceValidationError(
+                f"Trace {path}:{line_number} process {event['process']!r} is not "
+                f"declared for {condition_id}"
+            )
+        observed_processes.append(event["process"])
         for field in ("evidence", "open_uncertainty"):
             if not isinstance(event[field], list):
                 raise TraceValidationError(
@@ -119,32 +129,35 @@ def validate_trace(
         if event_type in GOAL_EVENT_TYPES:
             goal_event_count += 1
             _validate_goal_fields(event, path=path, line_number=line_number)
-        if event_type in {"stage_event", "generation"}:
-            stage_id = event.get("stage_id", event.get("stage"))
-            if not isinstance(stage_id, str) or not stage_id.strip():
-                raise TraceValidationError(
-                    f"Trace {path}:{line_number} stage event needs stage_id"
-                )
-            observed_stages.append(stage_id)
-
-    if condition_id in {"A1", "A2", "A3"}:
-        if len(events) != len(expected_stage_ids):
+    if condition_id in {"A1", "A2", "B1", "B2"}:
+        if len(events) != len(declared_processes):
             raise TraceValidationError(
-                f"{condition_id} requires {len(expected_stage_ids)} stage events, "
+                f"{condition_id} requires {len(declared_processes)} events, "
                 f"observed {len(events)}"
             )
-        if observed_stages != list(expected_stage_ids):
+        if observed_processes != list(declared_processes):
             raise TraceValidationError(
-                f"{condition_id} stage order mismatch: expected {expected_stage_ids}, "
-                f"observed {tuple(observed_stages)}"
+                f"{condition_id} process order mismatch: "
+                f"expected {declared_processes}, "
+                f"observed {tuple(observed_processes)}"
             )
         if goal_event_count:
             raise TraceValidationError(f"{condition_id} must not contain goal events")
-    elif condition_id in {"A4", "A6"} and goal_event_count == 0:
+    elif condition_id in {"A3", "A4", "A5", "A6"} and not events:
+        raise TraceValidationError(f"{condition_id} requires at least one event")
+    if condition_id == "A3" and set(declared_processes) != {
+        "task-decomposition",
+        "task-execution",
+        "task-revision",
+    }:
+        raise TraceValidationError(
+            "A3 must declare task-decomposition, task-execution, and task-revision"
+        )
+    if condition_id in {"A4", "A6"} and goal_event_count == 0:
         raise TraceValidationError(
             f"{condition_id} requires goal fields in goal events"
         )
-    elif condition_id in {"A5", "B1", "B2"}:
+    if condition_id in {"A5", "B1", "B2"}:
         if goal_event_count:
             raise TraceValidationError(f"{condition_id} must not contain goal events")
         if any(

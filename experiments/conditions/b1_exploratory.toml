@@ -1,6 +1,7 @@
 condition_id = "B1"
 skill = "writing-cogwriter-style"
 analysis_family = "exploratory"
+product_requires_draft = true
 
 [package]
 name = "cognitive-writing-baselines"
@@ -23,3 +24,4 @@ claude_code_replication = ["/plugin marketplace add .", "/plugin install cogniti
 retrieval = "not_applicable"
 evidence = "plugin_recorded"
 citation = "plugin_recorded"
+processes = ["initial-planning", "immediate-plan-revision", "parallel-segment-generation", "length-review"]

@@ -9,7 +9,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .errors import ExecutionError, RetrievalViolation
+from .errors import (
+    ExecutionError,
+    RetrievalViolation,
+    SpawnEventError,
+    TokenAccountingError,
+)
 
 RETRIEVAL_EVENT_TYPES = frozenset(
     {
@@ -122,21 +127,28 @@ def _json_objects(data: bytes) -> list[dict[str, Any]]:
     return objects
 
 
-def extract_token_usage(data: bytes) -> dict[str, int] | None:
-    """Sum generated-token usage reported by Codex turn-completion events."""
+def extract_token_usage(data: bytes) -> dict[str, int]:
+    """Sum valid usage from every Codex ``turn.completed`` event.
+
+    A completed turn without a valid usage object is a data-quality failure,
+    not an indication that the turn used zero tokens.
+    """
 
     totals = {
         "output_tokens": 0,
         "reasoning_output_tokens": 0,
         "total_tokens": 0,
     }
-    observed = False
+    completed_turns = 0
     for value in _json_objects(data):
         if value.get("type") != "turn.completed":
             continue
+        completed_turns += 1
         usage = value.get("usage")
         if not isinstance(usage, dict):
-            continue
+            raise TokenAccountingError(
+                "malformed token usage: turn.completed has no usage object"
+            )
         output_tokens = usage.get("output_tokens")
         reasoning_tokens = usage.get("reasoning_output_tokens", 0)
         if (
@@ -147,12 +159,18 @@ def extract_token_usage(data: bytes) -> dict[str, int] | None:
             or not isinstance(reasoning_tokens, int)
             or reasoning_tokens < 0
         ):
-            continue
+            raise TokenAccountingError(
+                "malformed token usage: turn.completed token fields must be "
+                "non-negative integers"
+            )
         totals["output_tokens"] += output_tokens
         totals["reasoning_output_tokens"] += reasoning_tokens
         totals["total_tokens"] += output_tokens + reasoning_tokens
-        observed = True
-    return totals if observed else None
+    if not completed_turns:
+        raise TokenAccountingError(
+            "missing token usage: Codex stream contains no turn.completed event"
+        )
+    return totals
 
 
 def extract_output(data: bytes) -> str:
@@ -224,8 +242,11 @@ def _subagent_spawn_ids(data: bytes) -> set[str]:
         if _event_name(str(item.get("tool", ""))) != "spawn_agent":
             continue
         item_id = item.get("id")
-        if isinstance(item_id, str) and item_id.strip():
-            spawn_ids.add(item_id)
+        if not isinstance(item_id, str) or not item_id.strip():
+            raise SpawnEventError(
+                "malformed spawn_agent event: collab_tool_call needs a non-empty id"
+            )
+        spawn_ids.add(item_id)
     return spawn_ids
 
 
@@ -303,7 +324,11 @@ def _retrieval_marker(value: Any) -> str | None:
 
 
 def reject_retrieval(
-    stdout: bytes, stderr: bytes, *, scan_artifact_text: bool = False
+    stdout: bytes,
+    stderr: bytes,
+    *,
+    scan_artifact_text: bool = False,
+    artifact_source: str = "transport",
 ) -> None:
     """Reject parsed retrieval events and explicit commands in fallback text.
 
@@ -323,6 +348,7 @@ def reject_retrieval(
                         matched_pattern=match.group(0),
                         matching_line=line,
                         stream=stream,
+                        artifact_source=artifact_source,
                         payload=payload,
                     )
             try:
@@ -338,5 +364,6 @@ def reject_retrieval(
                     matched_pattern=marker,
                     matching_line=line,
                     stream=stream,
+                    artifact_source=artifact_source,
                     payload=payload,
                 )

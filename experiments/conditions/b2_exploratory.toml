@@ -1,6 +1,7 @@
 condition_id = "B2"
 skill = "writing-storm-style"
 analysis_family = "exploratory"
+product_requires_draft = true
 
 [package]
 name = "cognitive-writing-baselines"
@@ -23,3 +24,4 @@ claude_code_replication = ["/plugin marketplace add .", "/plugin install cogniti
 retrieval = "N/A"
 evidence = "N/A"
 citation = "N/A"
+processes = ["perspective-discovery", "simulated-question-answering", "outline", "per-section-draft", "polish"]

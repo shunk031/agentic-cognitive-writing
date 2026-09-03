@@ -1,6 +1,7 @@
 condition_id = "A4"
 skill = "agentic-cog-writer"
 analysis_family = "confirmatory"
+product_requires_draft = true
 
 [package]
 name = "agentic-cognitive-writing"
@@ -23,3 +24,4 @@ claude_code_replication = ["/plugin marketplace add .", "/plugin install agentic
 retrieval = "not_applicable"
 evidence = "plugin_recorded"
 citation = "plugin_recorded"
+processes = ["planning", "generate", "organize", "goal-setting", "translating", "reviewing", "evaluate", "revise"]

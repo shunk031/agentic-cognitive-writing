@@ -12,7 +12,11 @@ import pytest
 from agentic_cogwriter.runner.adapters import PlatformAdapter
 from agentic_cogwriter.runner.conditions import load_condition_registry
 from agentic_cogwriter.runner.config import RuntimeConfig
-from agentic_cogwriter.runner.errors import ExecutionError, RetrievalViolation
+from agentic_cogwriter.runner.errors import (
+    BudgetExceeded,
+    ExecutionError,
+    RetrievalViolation,
+)
 from agentic_cogwriter.runner.execution import (
     ExecutionResult,
     _retrieval_marker,
@@ -21,8 +25,19 @@ from agentic_cogwriter.runner.execution import (
     reject_retrieval,
 )
 from agentic_cogwriter.runner.manifest import PromptRecord
-from agentic_cogwriter.runner.runner import ExperimentRunner
+from agentic_cogwriter.runner.runner import ExperimentRunner, SessionSnapshot
 from agentic_cogwriter.runner.trace import TraceValidationError, validate_trace
+
+WRITING_TRACE_PROCESSES = (
+    "planning",
+    "generate",
+    "organize",
+    "goal-setting",
+    "translating",
+    "reviewing",
+    "evaluate",
+    "revise",
+)
 
 
 def _runtime_values() -> dict[str, object]:
@@ -115,13 +130,16 @@ def _runner(tmp_path: Path, config: RuntimeConfig | None = None, **kwargs):
 
 
 def _event(
-    event_type: str = "process_switch", *, stage_id: str | None = None
+    event_type: str = "process_switch",
+    *,
+    process: str = "planning",
+    stage_id: str | None = None,
 ) -> dict[str, object]:
     event: dict[str, object] = {
         "event_type": event_type,
         "timestamp": "2026-01-01T00:00:00+00:00",
         "responsible_agent": "writer",
-        "process": "writing",
+        "process": process,
         "decision": "continue",
         "evidence": ["supplied context"],
         "open_uncertainty": [],
@@ -264,6 +282,7 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
                 + json.dumps(_event("goal_created"))
                 + "\n"
             )
+            (cwd / ".writing" / "draft.md").write_text("final output " * 10)
             return _result()
 
     runner = ExperimentRunner(
@@ -311,7 +330,15 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
 
 
 def test_run_records_unique_codex_subagent_spawns(tmp_path: Path) -> None:
-    executor = _RetryExecutor([_result(subagent_spawns=2)])
+    class SpawnRolloutExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds):
+            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+            rollout = tmp_path / "codex-home" / "sessions" / "attempt.jsonl"
+            rollout.parent.mkdir(parents=True, exist_ok=True)
+            rollout.write_bytes(result.stdout)
+            return result
+
+    executor = SpawnRolloutExecutor([_result(subagent_spawns=2)])
     runner = _runner(tmp_path, executor=executor)
 
     result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
@@ -381,6 +408,34 @@ def test_collects_only_new_or_changed_codex_rollouts_under_run_dir(
     assert checksums["sessions/attempt-001/2026/new.jsonl"] == (
         "sha256:" + hashlib.sha256(b"created during attempt").hexdigest()
     )
+
+
+def test_rollout_status_remains_complete_across_retry_without_new_files(
+    tmp_path: Path,
+) -> None:
+    codex_home = tmp_path / "codex-home"
+
+    class FirstAttemptRolloutExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds):
+            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+            if len(self.calls) == 1:
+                rollout = codex_home / "sessions" / "attempt.jsonl"
+                rollout.parent.mkdir(parents=True, exist_ok=True)
+                rollout.write_bytes(result.stdout)
+            return result
+
+    runner = _runner(
+        tmp_path / "runs",
+        config=_config(retry_policy=1),
+        executor=FirstAttemptRolloutExecutor([_result(returncode=1), _result()]),
+        codex_home=codex_home,
+    )
+
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["rollout_collection"]["status"] == "complete"
+    assert (result.run_dir / "sessions" / "attempt-001" / "attempt.jsonl").is_file()
 
 
 @pytest.mark.parametrize(
@@ -466,6 +521,7 @@ def test_runner_preserves_retrieval_evidence_in_artifact_and_manifest(
         "matching_line": rejected.decode().rstrip("\n"),
         "sha256": "sha256:" + hashlib.sha256(rejected).hexdigest(),
         "stream": "stdout",
+        "artifact_source": "transport",
     }
 
 
@@ -474,37 +530,86 @@ def test_trace_validation_requires_contract_fields(tmp_path: Path) -> None:
     path.write_text(json.dumps({"event_type": "process_switch"}) + "\n")
 
     with pytest.raises(TraceValidationError, match="evidence"):
-        validate_trace(path, condition_id="A4")
+        validate_trace(
+            path,
+            condition_id="A4",
+            declared_processes=WRITING_TRACE_PROCESSES,
+        )
 
 
 def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -> None:
     a2_path = tmp_path / "a2.jsonl"
     a2_path.write_text(
         "".join(
-            json.dumps(_event("stage_event", stage_id=stage)) + "\n"
-            for stage in ("pre_write", "write", "re_write")
+            json.dumps(
+                _event("stage_event", process=stage, stage_id=stage.replace("-", "_"))
+            )
+            + "\n"
+            for stage in ("pre-write", "write", "re-write")
         )
     )
     validate_trace(
         a2_path,
         condition_id="A2",
-        expected_stage_ids=("pre_write", "write", "re_write"),
+        declared_processes=("pre-write", "write", "re-write"),
     )
+
+    a3_path = tmp_path / "a3.jsonl"
+    a3_path.write_text(
+        "".join(
+            json.dumps(_event("stage_event", process=process)) + "\n"
+            for process in (
+                "task-decomposition",
+                "task-execution",
+                "task-revision",
+            )
+        )
+    )
+    validate_trace(
+        a3_path,
+        condition_id="A3",
+        declared_processes=(
+            "task-decomposition",
+            "task-execution",
+            "task-revision",
+        ),
+    )
+
+    invalid_a3 = tmp_path / "a3-invalid-process.jsonl"
+    invalid_a3.write_text(json.dumps(_event("stage_event", process="writing")) + "\n")
+    with pytest.raises(TraceValidationError, match="not declared"):
+        validate_trace(
+            invalid_a3,
+            condition_id="A3",
+            declared_processes=(
+                "task-decomposition",
+                "task-execution",
+                "task-revision",
+            ),
+        )
 
     a4_path = tmp_path / "a4.jsonl"
     a4_path.write_text(json.dumps(_event("process_switch")) + "\n")
     with pytest.raises(TraceValidationError, match="A4 requires goal fields"):
-        validate_trace(a4_path, condition_id="A4")
+        validate_trace(
+            a4_path,
+            condition_id="A4",
+            declared_processes=WRITING_TRACE_PROCESSES,
+        )
 
-    valid_a4_events = _event("process_switch")
+    valid_a4_events = _event("process_switch", process="planning")
     valid_a4_path = tmp_path / "a4-valid.jsonl"
     valid_a4_path.write_text(
         json.dumps(valid_a4_events) + "\n" + json.dumps(_event("goal_created")) + "\n"
     )
-    validate_trace(valid_a4_path, condition_id="A4")
+    validate_trace(
+        valid_a4_path,
+        condition_id="A4",
+        declared_processes=WRITING_TRACE_PROCESSES,
+    )
 
     invalid_goal_path = tmp_path / "a4-invalid-goal.jsonl"
-    invalid_goal = _event("goal_created")
+    invalid_goal = _event("goal_created", process="goal-setting")
     invalid_goal.pop("parent_goal_id")
     invalid_goal_path.write_text(
         json.dumps(_event("process_switch")) + "\n" + json.dumps(invalid_goal) + "\n"
@@ -512,12 +617,22 @@ def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -
     with pytest.raises(
         TraceValidationError, match="goal-aware event needs parent_goal_id"
     ):
-        validate_trace(invalid_goal_path, condition_id="A4")
+        validate_trace(
+            invalid_goal_path,
+            condition_id="A4",
+            declared_processes=WRITING_TRACE_PROCESSES,
+        )
 
     a5_path = tmp_path / "a5.jsonl"
-    a5_path.write_text(json.dumps(_event("goal_created")) + "\n")
+    a5_path.write_text(
+        json.dumps(_event("goal_created", process="goal-setting")) + "\n"
+    )
     with pytest.raises(TraceValidationError, match="A5"):
-        validate_trace(a5_path, condition_id="A5")
+        validate_trace(
+            a5_path,
+            condition_id="A5",
+            declared_processes=WRITING_TRACE_PROCESSES,
+        )
 
 
 def test_run_fails_on_schema_invalid_plugin_trace(tmp_path: Path) -> None:
@@ -546,18 +661,22 @@ class _RetryExecutor:
         trace_path = cwd / ".writing" / "trace" / "process.jsonl"
         trace_path.parent.mkdir(parents=True, exist_ok=True)
         trace_path.write_text(
-            json.dumps(_event("stage_event", stage_id="single_shot")) + "\n"
+            json.dumps(
+                _event("stage_event", process="generate", stage_id="single_shot")
+            )
+            + "\n"
         )
         return self.results.pop(0)
 
 
 def _result(
     *,
-    output: str = "final",
+    output: str = "final output " * 10,
     returncode: int = 0,
     timed_out: bool = False,
     usage: dict[str, int] | None = None,
     subagent_spawns: int = 0,
+    include_usage: bool = True,
 ) -> ExecutionResult:
     payload = {
         "type": "item.completed",
@@ -577,7 +696,8 @@ def _result(
                 {"type": "item.completed", "item": item},
             ]
         )
-    if usage is not None:
+    if include_usage:
+        usage = usage or {"output_tokens": 1}
         stream.append({"type": "turn.completed", "usage": usage})
     return ExecutionResult(
         returncode=returncode,
@@ -639,6 +759,7 @@ def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
         def run(self, command, *, cwd, timeout_seconds):
             result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
             goals = cwd / ".writing" / "goals.md"
+            (cwd / ".writing" / "draft.md").write_text("final output " * 10)
             goals.write_text("should not exist")
             return result
 
@@ -661,6 +782,14 @@ def test_runner_rejects_retrieval_in_draft_fallback(tmp_path: Path) -> None:
     with pytest.raises(RetrievalViolation, match="retrieval marker"):
         runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
 
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary"
+    manifest = json.loads(
+        next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
+    )
+    assert manifest["failure"]["retrieval"]["artifact_source"] == "draft"
+    assert manifest["failure"]["retrieval"]["artifact"] == "rejected-output.draft"
+    assert (next(run_dir.iterdir()) / "rejected-output.draft").is_file()
+
 
 def test_runner_rejects_a_summary_when_workspace_draft_is_the_product(
     tmp_path: Path,
@@ -680,12 +809,12 @@ def test_runner_rejects_a_summary_when_workspace_draft_is_the_product(
     with pytest.raises(ExecutionError, match="less than 50% of draft.md"):
         runner.run_prompt(
             _prompt(),
-            condition_id="A1",
+            condition_id="A3",
             platform="codex-primary",
             run_id="summary-output",
         )
 
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "summary-output"
+    run_dir = tmp_path / "WritingBench" / "A3" / "codex-primary" / "summary-output"
     assert not (run_dir / "output.raw").exists()
     assert (
         (run_dir / "workspace" / ".writing" / "draft.md")
@@ -784,24 +913,202 @@ def test_runner_accounts_for_codex_event_usage_and_marks_missing_usage(
         "reasoning_output_tokens": 1,
         "total_tokens": 6,
     }
-    assert extract_token_usage(b'{"type":"item.completed"}\n') is None
+    with pytest.raises(ExecutionError, match="missing token usage"):
+        extract_token_usage(b'{"type":"item.completed"}\n')
 
     no_usage_runner = _runner(
         tmp_path / "no-usage",
-        executor=_RetryExecutor([_result()]),
+        executor=_RetryExecutor([_result(include_usage=False)]),
     )
-    no_usage_result = no_usage_runner.run_prompt(
-        _prompt(), condition_id="A1", platform="codex-primary"
+    with pytest.raises(ExecutionError, match="token usage"):
+        no_usage_runner.run_prompt(
+            _prompt(), condition_id="A1", platform="codex-primary"
+        )
+    no_usage_manifest = json.loads(
+        (
+            tmp_path
+            / "no-usage"
+            / "WritingBench"
+            / "A1"
+            / "codex-primary"
+            / next(
+                path.name
+                for path in (
+                    tmp_path / "no-usage" / "WritingBench" / "A1" / "codex-primary"
+                ).iterdir()
+                if path.is_dir()
+            )
+            / "run-manifest.json"
+        ).read_text()
     )
-    no_usage_manifest = json.loads(no_usage_result.manifest_path.read_text())
+    assert no_usage_manifest["status"] == "unscored"
+    assert no_usage_manifest["scoring"]["status"] == "excluded"
     assert no_usage_manifest["budget_used_tokens"] is None
     assert no_usage_manifest["subagent_spawn_count"] == 0
     assert no_usage_manifest["token_accounting"] == {
-        "status": "monitored-only",
+        "status": "unscored",
         "source": "Codex turn.completed usage",
         "output_tokens": None,
         "reasoning_output_tokens": None,
         "total_tokens": None,
+        "error": "missing token usage: Codex stream contains no turn.completed event",
+    }
+
+
+def test_extract_token_usage_rejects_missing_or_malformed_usage() -> None:
+    with pytest.raises(ExecutionError, match="token usage"):
+        extract_token_usage(b'{"type":"item.completed"}\n')
+    with pytest.raises(ExecutionError, match="malformed"):
+        extract_token_usage(
+            b'{"type":"turn.completed","usage":{"output_tokens":"many"}}\n'
+        )
+
+
+def test_runner_fails_on_over_budget_turn_usage(tmp_path: Path) -> None:
+    runner = _runner(
+        tmp_path,
+        executor=_RetryExecutor(
+            [_result(usage={"output_tokens": 80, "reasoning_output_tokens": 21})]
+        ),
+    )
+
+    with pytest.raises(BudgetExceeded, match="budget"):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+
+
+def test_non_draft_condition_has_a_nontrivial_product_floor(tmp_path: Path) -> None:
+    prompt = PromptRecord(
+        prompt_id="p-1",
+        benchmark_name="WritingBench",
+        source_version="test",
+        prompt_text="Write a memo.",
+        requested_output_constraints={"min_words": 20},
+        row_hash="row-hash",
+    )
+    runner = _runner(
+        tmp_path,
+        executor=_RetryExecutor(
+            [_result(output="too short", usage={"output_tokens": 2})]
+        ),
+    )
+
+    with pytest.raises(ExecutionError, match="completeness floor"):
+        runner.run_prompt(prompt, condition_id="A1", platform="codex-primary")
+
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary"
+    manifest = json.loads(
+        next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
+    )
+    assert manifest["product_gate"] == {
+        "requires_draft": False,
+        "rule": "at least 50% of the requested length, with a 10-unit minimum",
+        "minimum_units": 10,
+        "unit": "words",
+    }
+
+
+def test_a3_production_shaped_trace_and_draft_gate(tmp_path: Path) -> None:
+    class A3Executor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds):
+            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+            trace_path = cwd / ".writing" / "trace" / "process.jsonl"
+            trace_path.write_text(
+                "".join(
+                    json.dumps(
+                        _event(
+                            "process_switch",
+                            process=process,
+                        )
+                    )
+                    + "\n"
+                    for process in (
+                        "task-decomposition",
+                        "task-execution",
+                        "task-revision",
+                    )
+                )
+            )
+            (cwd / ".writing" / "draft.md").write_text("final " * 60)
+            return result
+
+    output = "final " * 60
+    runner = _runner(
+        tmp_path,
+        executor=A3Executor([_result(output=output, usage={"output_tokens": 60})]),
+    )
+    result = runner.run_prompt(_prompt(), condition_id="A3", platform="codex-primary")
+    events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
+    assert [event["process"] for event in events] == [
+        "task-decomposition",
+        "task-execution",
+        "task-revision",
+    ]
+
+
+def test_spawn_count_without_rollout_is_unscored(tmp_path: Path) -> None:
+    runner = _runner(
+        tmp_path,
+        executor=_RetryExecutor(
+            [_result(subagent_spawns=1, usage={"output_tokens": 1})]
+        ),
+    )
+
+    with pytest.raises(ExecutionError, match="rollout"):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary"
+    manifest = json.loads(
+        next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
+    )
+    assert manifest["status"] == "unscored"
+    assert manifest["rollout_collection"]["status"] == "absent"
+    assert manifest["spawn_extraction"]["status"] == "complete"
+
+
+def test_spawn_extraction_rejects_malformed_spawn_agent_event() -> None:
+    malformed = (
+        b'{"type":"item.completed","item":{"type":"collab_tool_call",'
+        b'"tool":"spawn_agent"}}\n'
+    )
+    with pytest.raises(ExecutionError, match="malformed spawn_agent"):
+        extract_subagent_spawn_count(malformed)
+
+
+def test_unreadable_rollout_file_marks_run_unscored(
+    tmp_path: Path, monkeypatch
+) -> None:
+    runner = _runner(tmp_path, executor=_RetryExecutor([_result()]))
+    snapshots = iter(
+        [
+            SessionSnapshot(files={}, present=True, error=None),
+            SessionSnapshot(files={}, present=True, error="rollout is unreadable"),
+        ]
+    )
+    monkeypatch.setattr(runner, "_snapshot_codex_sessions", lambda: next(snapshots))
+
+    with pytest.raises(ExecutionError, match="rollout"):
+        runner.run_prompt(
+            _prompt(),
+            condition_id="A1",
+            platform="codex-primary",
+            run_id="unreadable-rollout",
+        )
+
+    manifest = json.loads(
+        (
+            tmp_path
+            / "WritingBench"
+            / "A1"
+            / "codex-primary"
+            / "unreadable-rollout"
+            / "run-manifest.json"
+        ).read_text()
+    )
+    assert manifest["status"] == "unscored"
+    assert manifest["rollout_collection"] == {
+        "status": "error",
+        "reason": "rollout is unreadable",
+        "source": "CODEX_HOME/sessions",
     }
 
 

@@ -1,6 +1,7 @@
 condition_id = "A5"
 skill = "cognitive-writing-no-goal-network"
 analysis_family = "confirmatory"
+product_requires_draft = true
 
 [package]
 name = "cognitive-writing-experiments"
@@ -23,3 +24,4 @@ claude_code_replication = ["/plugin marketplace add .", "/plugin install agentic
 retrieval = "not_applicable"
 evidence = "plugin_recorded"
 citation = "plugin_recorded"
+processes = ["planning", "generate", "organize", "goal-setting", "translating", "reviewing", "evaluate", "revise"]
