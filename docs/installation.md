@@ -1,6 +1,6 @@
-# Install Agentic CogWriter for development or personal use
+# Install `Agentic CogWriter` for development or personal use
 
-Use this guide to install Agentic CogWriter from a development checkout or as a personal Codex install. Use the GitHub marketplace steps in [`README.md`](../README.md) for the main install path.
+Use this guide to install `Agentic CogWriter` from a development checkout or as a personal Codex install. Use the GitHub marketplace steps in [`README.md`](../README.md) for the main install path.
 
 ## Claude Code development install
 
@@ -64,3 +64,5 @@ Use this guide to install Agentic CogWriter from a development checkout or as a 
    codex plugin marketplace add ~/.agents/plugins
    codex plugin add agentic-cognitive-writing@agentic-cognitive-writing-process
    ```
+
+For marketplace discovery and portable package details, read the [OpenAI plugin packaging guide](https://developers.openai.com/plugins/build/plugins.md) / [Agent Plugins specification](https://agent-plugins.org/).

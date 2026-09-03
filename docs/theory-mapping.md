@@ -1,8 +1,6 @@
-# How the theory maps to Agentic CogWriter
+# How the theory maps to `Agentic CogWriter`
 
-Agentic CogWriter maps the writing model to a main skill, shared role skills, and file-backed project state.
-
-The diagram below reproduces Figure 1, "Structure of the writing model," from ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1]:
+`Agentic CogWriter` maps the writing model to a main skill, shared role skills, and file-backed project state.
 
 ```mermaid
 flowchart TB
@@ -41,9 +39,11 @@ flowchart TB
     memory <--> processes
 ```
 
-Footnote 11 of ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] explains that the original figure's arrows indicate information flow between processes, not a fixed left-to-right sequence.
+The diagram above reproduces Figure 1, "Structure of the writing model," from ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1].
 
-The table maps each model element to the plugin artifact that carries out the corresponding work. The rhetorical problem means the topic, audience, and reason for writing; exigency is the situation that makes writing necessary.
+In the original figure, the arrows indicate information flow between processes, not a fixed left-to-right sequence[^1].
+
+The following table maps each element of the writing model to the plugin artifact that realizes it. In this table, the rhetorical problem is the topic, audience, and reason for writing, while exigency is the situation that makes writing necessary.
 
 | Category | Figure 1 model element | Plugin artifact |
 | --- | --- | --- |
@@ -62,7 +62,7 @@ The table maps each model element to the plugin artifact that carries out the co
 |  | Revising | `Reviewing` skill's embedded Revise sub-process |
 | `Monitor` | Orchestration role | [`plugin/skills/agentic-cog-writer/SKILL.md`](../plugin/skills/agentic-cog-writer/SKILL.md), executed by the main agent |
 
-Agentic CogWriter follows the recursive writing process described in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1]. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
+`Agentic CogWriter` follows the recursive writing process described in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1]. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
 
 [^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387.
     DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885) / JSTOR: [https://www.jstor.org/stable/356600](https://www.jstor.org/stable/356600)

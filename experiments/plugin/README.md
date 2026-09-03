@@ -1,6 +1,6 @@
-# Agentic CogWriter experiment variants
+# `Agentic CogWriter` experiment variants
 
-The Agentic CogWriter experiment package gives experimenters two skills for comparing writing-process choices: `cognitive-writing-fixed-order` fixes the process order, and `cognitive-writing-no-goal-network` removes the hierarchical goal network.
+The `Agentic CogWriter` experiment package gives experimenters two skills for comparing writing-process choices: `cognitive-writing-fixed-order` fixes the process order, and `cognitive-writing-no-goal-network` removes the hierarchical goal network.
 
 The variants write to the project's `.writing/` directory and require the main `agentic-cognitive-writing` package. Claude delegates through the main package's bundled agents, while Codex delegates to native subagents that use the shared role skills.
 
