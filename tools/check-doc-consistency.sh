@@ -49,7 +49,10 @@ DENY_PATTERNS += (
 )
 
 SKILL_TOKEN_PATTERN = re.compile(
-    r"(?<![A-Za-z0-9_-])cognitive-writing-[A-Za-z0-9][A-Za-z0-9_-]*",
+    r"(?<![A-Za-z0-9_-])(?:"
+    r"cognitive-writing-[A-Za-z0-9][A-Za-z0-9_-]*|"
+    r"agentic-cog-writer(?:-[A-Za-z0-9][A-Za-z0-9_-]*)?"
+    r")",
     re.IGNORECASE,
 )
 SHA_TOKEN_PATTERN = re.compile(

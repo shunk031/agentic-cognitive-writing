@@ -17,6 +17,7 @@ CHECKER = Path(__file__).resolve().with_name("check-doc-consistency.sh")
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_SLUG = "shunk031/agentic-cognitive-writing"
 ACTUAL_PLUGIN_COMMIT = "d0d6da7d0607f9d54b35973c2cf4e10d779a15dd"
+MAIN_SKILL = "agentic-cog-writer"
 
 
 class CheckDocConsistencyTests(unittest.TestCase):
@@ -190,7 +191,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
 
     def test_both_plugin_roots_union_skills_agents_and_trace_doc_token(self) -> None:
         self._create_plugin(
-            Path("plugin"), skills=("cognitive-writing",), agents=("planner",)
+            Path("plugin"), skills=(MAIN_SKILL,), agents=("planner",)
         )
         self._create_plugin(
             Path("experiments/plugin"),
@@ -198,7 +199,8 @@ class CheckDocConsistencyTests(unittest.TestCase):
             agents=("reviewer",),
         )
         self._write_readme(
-            "cognitive-writing cognitive-writing-fixed-order "
+            f"{MAIN_SKILL} /agentic-cognitive-writing:{MAIN_SKILL} ${MAIN_SKILL} "
+            "cognitive-writing-fixed-order "
             ".writing/trace/process.jsonl\n"
         )
 
@@ -240,7 +242,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertIn("no plugin roots found; skipping", result.stdout)
 
     def test_one_plugin_root_prints_optional_root_notice_and_continues(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
 
         result = self._run_checker()
 
@@ -262,7 +264,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertNotIn("unknown skill name", result.stdout)
 
     def test_variant_is_flagged_when_neither_plugin_root_contains_it(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme("cognitive-writing-fixed-order\n")
 
         result = self._run_checker()
@@ -273,8 +275,20 @@ class CheckDocConsistencyTests(unittest.TestCase):
             result.stdout,
         )
 
+    def test_unknown_agentic_cog_writer_skill_is_flagged(self) -> None:
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
+        self._write_readme("agentic-cog-writer-unavailable\n")
+
+        result = self._run_checker()
+
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn(
+            "README.md:1: unknown skill name 'agentic-cog-writer-unavailable'",
+            result.stdout,
+        )
+
     def test_in_repo_blob_and_tree_branch_urls_are_findings(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._add_origin_remote()
         self._write_readme(
             f"blob: https://github.com/{REPOSITORY_SLUG}/blob/main/README.md\n"
@@ -291,7 +305,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertEqual(result.stdout.count("use a relative link"), 2)
 
     def test_in_repo_commit_pinned_url_on_default_branch_is_clean(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme("baseline\n")
         self._initialize_committed_git_fixture()
         baseline_commit = self._commit_fixture("baseline")
@@ -306,7 +320,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertNotIn("commit-pinned in-repo GitHub URL", result.stdout)
 
     def test_commit_pin_accepted_when_either_default_branch_ref_reaches_it(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme("base\n")
         self._initialize_committed_git_fixture()
         base_commit = self._commit_fixture("base")
@@ -324,7 +338,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertNotIn("commit-pinned in-repo GitHub URL", result.stdout)
 
     def test_in_repo_commit_pinned_url_off_default_branch_is_flagged(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme("baseline\n")
         self._initialize_committed_git_fixture()
         self._commit_fixture("baseline")
@@ -345,7 +359,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         )
 
     def test_unknown_in_repo_commit_pin_is_flagged(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._add_origin_remote()
         self._write_readme(
             f"Unknown snapshot: https://github.com/{REPOSITORY_SLUG}/blob/"
@@ -361,7 +375,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         )
 
     def test_no_remote_external_links_are_clean_with_notice(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme(
             "External: https://github.com/example/external-project/blob/main/README.md\n"
         )
@@ -376,7 +390,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertNotIn("branch-qualified in-repo GitHub URL", result.stdout)
 
     def test_unknown_commit_pins_are_findings(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._add_origin_remote()
         revisions = ("abcdef0", "a" * 40, "ABCDEF0", "ABCDEF123456")
         self._write_readme(
@@ -393,7 +407,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertEqual(result.stdout.count("commit-pinned in-repo GitHub URL"), 4)
 
     def test_standalone_prose_sha_is_flagged(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme("The snapshot at d0d6da7 uses the shipped plugin.\n")
 
         result = self._run_checker()
@@ -405,7 +419,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         )
 
     def test_doi_suffixes_in_bibliography_are_clean(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme(
             "[^1]: DOI: [10.58680/ccc198115885]("
             "https://doi.org/10.58680/ccc198115885) and 10.58680/ccc198115885.\n"
@@ -417,7 +431,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertNotIn("commit SHA", result.stdout)
 
     def test_dotted_doi_is_clean(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme(
             "Bibliography DOI: 10.1145/3290605.3300233.\n"
         )
@@ -428,7 +442,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertNotIn("commit SHA", result.stdout)
 
     def test_bare_doi_suffix_without_prefix_is_flagged(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme("The snapshot at ccc198115885 is documented.\n")
 
         result = self._run_checker()
@@ -440,7 +454,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         )
 
     def test_hyphenated_doi_like_suffix_is_flagged(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme(
             "The snapshot at 10.1234/d0d6da7-not-a-doi is documented.\n"
         )
@@ -454,7 +468,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         )
 
     def test_sha_inside_pinned_markdown_link_url_is_clean(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme(
             "Pinned [snapshot](https://github.com/example/project/blob/"
             "d0d6da7/README.md) is documented.\n"
@@ -466,7 +480,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertNotIn("commit SHA", result.stdout)
 
     def test_code_spans_and_fenced_code_are_clean(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme(
             "Use `deadbeef` and `d0d6da7` as fixture values.\n"
             "```text\n"
@@ -480,7 +494,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self.assertNotIn("commit SHA", result.stdout)
 
     def test_short_hex_fragments_are_ignored(self) -> None:
-        self._create_plugin(Path("plugin"), skills=("cognitive-writing",))
+        self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme("Short fragments abcdef and 123456 are ignored.\n")
 
         result = self._run_checker()
