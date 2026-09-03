@@ -73,9 +73,11 @@ Deliverables contain durable guidance for readers, not a transcript of the resea
 - Do not use bookkeeping tokens or session narration such as `VERIFIED`, `HYPOTHESIS`, or `Unverified:`. Omit research-session mechanics such as fetch fallbacks and review history.
 - Express uncertainty with plain-language hedges. Keep caveats durable and reader-facing. State the criterion for inferred or evaluative claims, or hedge them, rather than asserting them without support.
 - Avoid durable claims that depend on external changes unless a repository artifact anchors them. Omit volatile external facts unless the facts are load-bearing; prefer category statements with descriptive Markdown links to live sources, and anchor load-bearing volatile facts to repository artifacts or pinned snapshots.
+- Public repository artifacts never reference non-public repositories, internal hostnames, private mount paths, or private-repository URLs. When a private source must be acknowledged, write an unlinked plain-text provenance note carrying no repository name, path, or commit identifier.
 
 ## Review judgment-bearing edits
 
 Cross-cutting edits require local judgment at every occurrence.
 
 - Edit one occurrence at a time and review each hunk before continuing. Do not use bulk find-and-replace for judgment-bearing edits.
+- When a defect or unnecessary passage is flagged in a deliverable, treat it as an instance of a class: survey the whole deliverable and sibling deliverables that can carry the class, fix every instance, and report found and fixed counts. Never fix only the quoted spot.
