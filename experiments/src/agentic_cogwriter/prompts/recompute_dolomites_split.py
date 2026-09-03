@@ -6,8 +6,8 @@ import argparse
 import sys
 from pathlib import Path
 
+from agentic_cogwriter.paths import BENCHMARK_CACHE_DIR, DOLOMITES_SPLIT_PATH
 from agentic_cogwriter.prompts.materialize import (
-    DEFAULT_CACHE_DIR,
     DOLOMITES_ARCHIVE,
     DOLOMITES_COMMIT,
     acquire,
@@ -18,8 +18,8 @@ from agentic_cogwriter.prompts.materialize import (
 )
 
 SCRIPT_VERSION = "1.0.0"
-PROMPTS_ROOT = Path(__file__).resolve().parents[3] / "prompts"
-DEFAULT_OUTPUT = PROMPTS_ROOT / "dolomites_split.json"
+DEFAULT_CACHE_DIR = BENCHMARK_CACHE_DIR
+DEFAULT_OUTPUT = DOLOMITES_SPLIT_PATH
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+import tomllib
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -10,6 +11,15 @@ from typing import Any
 import agentic_cogwriter.prompts.materialize as materialize_module
 import agentic_cogwriter.prompts.recompute_dolomites_split as split_module
 import pytest
+from agentic_cogwriter.paths import (
+    BENCHMARK_CACHE_DIR,
+    DOLOMITES_SPLIT_PATH,
+    EXPERIMENTS_ROOT,
+    MANIFESTS_DIR,
+    PROMPT_DATA_ROOT,
+    PROVENANCE_PATH,
+    REPOSITORY_ROOT,
+)
 from agentic_cogwriter.prompts.materialize import (
     BENCHMARKS,
     DOLOMITES_DEV_MEMBER,
@@ -31,8 +41,8 @@ from agentic_cogwriter.prompts.materialize import (
     write_immutable,
 )
 
-PROMPTS_ROOT = Path(__file__).resolve().parents[1] / "prompts"
-MANIFEST_DIR = PROMPTS_ROOT / "manifests"
+PROMPTS_ROOT = PROMPT_DATA_ROOT
+MANIFEST_DIR = MANIFESTS_DIR
 
 
 def _test_manifest_row(prompt_id: str = "p1") -> dict[str, Any]:
@@ -79,6 +89,19 @@ def test_agentic_cogwriter_is_a_regular_package() -> None:
     assert namespace.__spec__ is not None
     assert namespace.__spec__.origin == namespace.__file__
     assert (namespace_path / "__init__.py").exists()
+
+
+def test_paths_are_anchored_at_the_repository_root() -> None:
+    root_pyproject = REPOSITORY_ROOT / "pyproject.toml"
+    config = tomllib.loads(root_pyproject.read_text())
+
+    assert config["tool"]["uv"]["workspace"]["members"] == ["experiments"]
+    assert EXPERIMENTS_ROOT == REPOSITORY_ROOT / "experiments"
+    assert PROMPT_DATA_ROOT == EXPERIMENTS_ROOT / "prompts"
+    assert MANIFESTS_DIR == PROMPT_DATA_ROOT / "manifests"
+    assert PROVENANCE_PATH == PROMPT_DATA_ROOT / "provenance.json"
+    assert DOLOMITES_SPLIT_PATH == PROMPT_DATA_ROOT / "dolomites_split.json"
+    assert BENCHMARK_CACHE_DIR == REPOSITORY_ROOT / ".cache" / "benchmarks"
 
 
 def test_hash_is_canonical_and_excludes_hash_field() -> None:

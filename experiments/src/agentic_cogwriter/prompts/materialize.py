@@ -13,11 +13,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-EXPERIMENTS_ROOT = Path(__file__).resolve().parents[3]
-PROMPTS_ROOT = EXPERIMENTS_ROOT / "prompts"
-REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
-DEFAULT_OUTPUT_DIR = PROMPTS_ROOT / "manifests"
-DEFAULT_CACHE_DIR = REPOSITORY_ROOT / ".cache" / "benchmarks"
+from agentic_cogwriter.paths import BENCHMARK_CACHE_DIR, MANIFESTS_DIR
+
+DEFAULT_OUTPUT_DIR = MANIFESTS_DIR
+DEFAULT_CACHE_DIR = BENCHMARK_CACHE_DIR
 
 WRITINGBENCH_COMMIT = "9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad"
 HELLOBENCH_COMMIT = "92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57"
