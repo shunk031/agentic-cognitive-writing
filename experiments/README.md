@@ -76,9 +76,30 @@ The wrapper TOMLs are the source of truth for trace contracts. Each declares the
 
 ## Score a completed run
 
-The scorer reads a completed run's `run-manifest.json`, `prompt.txt`, and `output.normalized.txt`, then writes `scores.jsonl` and `scores-manifest.json` beside the run artifacts. The manifest records the versioned template hash, source-run hashes, API usage counters, response hash, attempt count, and score-record hash. The scorer never writes the credential or endpoint value to an artifact.
+The scorer in [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) reads a completed run's `run-manifest.json`, `prompt.txt`, and `output.normalized.txt`, then writes `scores.jsonl` and `scores-manifest.json` beside the run artifacts. The manifest records the versioned template hash, source-run hashes, API usage counters, response hash, attempt count, and score-record hash. The scorer never writes the credential or endpoint value to an artifact. A successful command prints the `scores.jsonl` path.
 
-The private judge configuration supplies the model, judge ID and family, the names of the endpoint and credential environment variables, the template path, the fixed seed, decoding settings, timeout, and retry count. Use a configuration outside the repository. The `template_path` may point to [`pointwise-v1.txt`](prompts/judges/pointwise-v1.txt) or [`pairwise-v1.txt`](prompts/judges/pairwise-v1.txt).
+The private judge configuration supplies the model, judge ID and family, the names of the endpoint and credential environment variables, the template path, the fixed seed, decoding settings, timeout, and retry count. Use a configuration outside the repository. Replace every angle-bracket value in the following example with a value you supply at runtime; the template path must point to [`pointwise-v1.txt`](prompts/judges/pointwise-v1.txt) or [`pairwise-v1.txt`](prompts/judges/pairwise-v1.txt).
+
+```json
+{
+  "task": "pointwise",
+  "model": "<judge-model-id>",
+  "judge_id": "<judge-id>",
+  "judge_family": "open_evaluator",
+  "base_url_env": "<base-url-environment-variable>",
+  "credential_env": "<credential-environment-variable>",
+  "template_path": "/path/to/repository/experiments/prompts/judges/pointwise-v1.txt",
+  "seed": 12345,
+  "temperature": 0,
+  "top_p_or_equivalent": 1,
+  "maximum_output_tokens": 512,
+  "stop_rules": [],
+  "timeout": 120,
+  "retry_policy": {"max_retries": 2}
+}
+```
+
+The base URL and credential environment variables named in the private configuration must be set before the command runs. The scorer resolves both values at call time and never copies either value into a score artifact.
 
 Run one pointwise judgment with the `agentic-cogwriter-score` entry point:
 

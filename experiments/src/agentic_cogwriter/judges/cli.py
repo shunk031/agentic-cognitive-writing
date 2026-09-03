@@ -25,7 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Score one run and print the resulting JSONL path."""
+    """Score one run and print the resulting JSON Lines path."""
 
     args = build_parser().parse_args(argv)
     config = JudgeConfig.load(args.config)

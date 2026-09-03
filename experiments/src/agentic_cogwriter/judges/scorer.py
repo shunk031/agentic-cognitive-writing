@@ -174,7 +174,7 @@ def score_run(
     output_path: Path | None = None,
     transport: ChatTransport | None = None,
 ) -> ScoreRunResult:
-    """Score one run and write an exact protocol JSONL record plus manifest."""
+    """Score one run and write an exact protocol JSON Lines record plus manifest."""
 
     first = load_run_artifacts(run_dir)
     source_runs: tuple[RunArtifacts, ...]
