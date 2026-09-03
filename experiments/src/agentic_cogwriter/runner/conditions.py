@@ -15,6 +15,15 @@ from .hashing import sha256_bytes
 
 CONDITION_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2")
 PLATFORMS = ("codex-primary", "claude-code-replication")
+KNOWN_TRACE_EVENT_TYPES = frozenset(
+    {
+        "process_switch",
+        "goal_created",
+        "goal_developed",
+        "goal_regenerated",
+    }
+)
+GOAL_EVENT_POLICIES = frozenset({"allowed", "forbidden"})
 
 
 @dataclass(frozen=True)
@@ -40,6 +49,12 @@ class ConditionSpec:
     plugin_config: Path
     trace_policy: tuple[tuple[str, str], ...]
     trace_processes: tuple[str, ...]
+    goal_events: str
+    event_types: tuple[str, ...]
+    min_events: int
+    max_events: int | None
+    process_order: tuple[str, ...] | None
+    require_goal_events: bool
     product_requires_draft: bool
 
     @property
@@ -119,7 +134,19 @@ def _load_wrapper(
     *,
     condition_id: str,
     analysis_family: str,
-) -> tuple[str, str, tuple[tuple[str, str], ...], tuple[str, ...], bool]:
+) -> tuple[
+    str,
+    str,
+    tuple[tuple[str, str], ...],
+    tuple[str, ...],
+    str,
+    tuple[str, ...],
+    int,
+    int | None,
+    tuple[str, ...] | None,
+    bool,
+    bool,
+]:
     wrapper = _load_toml(wrapper_path)
     if wrapper.get("condition_id") != condition_id:
         raise ConfigurationError(f"Wrapper {wrapper_path} has the wrong condition_id")
@@ -209,6 +236,44 @@ def _load_wrapper(
         (key, str(trace.get(key, "not_applicable")))
         for key in ("retrieval", "evidence", "citation")
     )
+    goal_events = trace.get("goal_events")
+    if goal_events not in GOAL_EVENT_POLICIES:
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} trace.goal_events must be allowed or forbidden"
+        )
+    event_types = trace.get("event_types")
+    if not isinstance(event_types, list) or not event_types:
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} trace.event_types must be a non-empty list"
+        )
+    if not all(isinstance(event_type, str) for event_type in event_types):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} trace.event_types must contain strings"
+        )
+    unknown_event_types = set(event_types) - KNOWN_TRACE_EVENT_TYPES
+    if unknown_event_types:
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} has unknown trace event types: "
+            + ", ".join(sorted(unknown_event_types))
+        )
+    min_events = trace.get("min_events", 1)
+    if (
+        isinstance(min_events, bool)
+        or not isinstance(min_events, int)
+        or min_events < 1
+    ):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} trace.min_events must be a positive integer"
+        )
+    max_events = trace.get("max_events")
+    if max_events is not None and (
+        isinstance(max_events, bool)
+        or not isinstance(max_events, int)
+        or max_events < min_events
+    ):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} trace.max_events must be at least min_events"
+        )
     processes = trace.get("processes")
     if not isinstance(processes, list) or not processes:
         raise ConfigurationError(
@@ -218,11 +283,43 @@ def _load_wrapper(
         raise ConfigurationError(
             f"Wrapper {wrapper_path} trace.processes must contain strings"
         )
+    process_order = trace.get("process_order")
+    if process_order is not None:
+        if not isinstance(process_order, list) or not process_order:
+            raise ConfigurationError(
+                f"Wrapper {wrapper_path} trace.process_order must be a non-empty list"
+            )
+        if not all(
+            isinstance(process, str) and process.strip() for process in process_order
+        ):
+            raise ConfigurationError(
+                f"Wrapper {wrapper_path} trace.process_order must contain strings"
+            )
+        if any(process not in processes for process in process_order):
+            raise ConfigurationError(
+                f"Wrapper {wrapper_path} trace.process_order must use "
+                "declared processes"
+            )
+    require_goal_events = trace.get("require_goal_events", False)
+    if not isinstance(require_goal_events, bool):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} trace.require_goal_events must be a boolean"
+        )
+    if require_goal_events and goal_events != "allowed":
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} cannot require forbidden goal events"
+        )
     return (
         skill_name,
         package_name,
         trace_policy,
         tuple(processes),
+        goal_events,
+        tuple(event_types),
+        min_events,
+        max_events,
+        tuple(process_order) if process_order is not None else None,
+        require_goal_events,
         product_requires_draft,
     )
 
@@ -275,6 +372,12 @@ def load_condition_registry(path: Path | None = None) -> dict[str, ConditionSpec
             package_name,
             trace_policy,
             trace_processes,
+            goal_events,
+            event_types,
+            min_events,
+            max_events,
+            process_order,
+            require_goal_events,
             product_requires_draft,
         ) = _load_wrapper(
             wrapper_path,
@@ -292,6 +395,12 @@ def load_condition_registry(path: Path | None = None) -> dict[str, ConditionSpec
             plugin_config=wrapper_path,
             trace_policy=trace_policy,
             trace_processes=trace_processes,
+            goal_events=goal_events,
+            event_types=event_types,
+            min_events=min_events,
+            max_events=max_events,
+            process_order=process_order,
+            require_goal_events=require_goal_events,
             product_requires_draft=product_requires_draft,
         )
     return result

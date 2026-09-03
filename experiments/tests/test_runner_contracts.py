@@ -134,6 +134,8 @@ def _event(
     *,
     process: str = "planning",
     stage_id: str | None = None,
+    from_process: str | None = None,
+    to_process: str | None = None,
 ) -> dict[str, object]:
     event: dict[str, object] = {
         "event_type": event_type,
@@ -145,7 +147,12 @@ def _event(
         "open_uncertainty": [],
     }
     if event_type == "process_switch":
-        event.update({"from_process": "Planning", "to_process": "Translating"})
+        event.update(
+            {
+                "from_process": from_process,
+                "to_process": to_process or process,
+            }
+        )
     if event_type in {"goal_created", "goal_developed", "goal_regenerated"}:
         event.update({"goal_id": "g1", "parent_goal_id": None})
     if stage_id is not None:
@@ -542,22 +549,35 @@ def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -
     a2_path.write_text(
         "".join(
             json.dumps(
-                _event("stage_event", process=stage, stage_id=stage.replace("-", "_"))
+                _event(
+                    "process_switch",
+                    process=stage,
+                    from_process=previous,
+                )
             )
             + "\n"
-            for stage in ("pre-write", "write", "re-write")
+            for previous, stage in (
+                (None, "pre-write"),
+                ("pre-write", "write"),
+                ("write", "re-write"),
+            )
         )
     )
     validate_trace(
         a2_path,
         condition_id="A2",
         declared_processes=("pre-write", "write", "re-write"),
+        goal_events="forbidden",
+        allowed_event_types=("process_switch",),
+        min_events=3,
+        max_events=3,
+        process_order=("pre-write", "write", "re-write"),
     )
 
     a3_path = tmp_path / "a3.jsonl"
     a3_path.write_text(
         "".join(
-            json.dumps(_event("stage_event", process=process)) + "\n"
+            json.dumps(_event("process_switch", process=process)) + "\n"
             for process in (
                 "task-decomposition",
                 "task-execution",
@@ -573,10 +593,14 @@ def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -
             "task-execution",
             "task-revision",
         ),
+        goal_events="forbidden",
+        allowed_event_types=("process_switch",),
     )
 
     invalid_a3 = tmp_path / "a3-invalid-process.jsonl"
-    invalid_a3.write_text(json.dumps(_event("stage_event", process="writing")) + "\n")
+    invalid_a3.write_text(
+        json.dumps(_event("process_switch", process="writing")) + "\n"
+    )
     with pytest.raises(TraceValidationError, match="not declared"):
         validate_trace(
             invalid_a3,
@@ -586,15 +610,44 @@ def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -
                 "task-execution",
                 "task-revision",
             ),
+            goal_events="forbidden",
+            allowed_event_types=("process_switch",),
+        )
+
+    invalid_a3_event_type = tmp_path / "a3-invalid-event-type.jsonl"
+    invalid_a3_event_type.write_text(
+        json.dumps(_event("stage_event", process="task-decomposition")) + "\n"
+    )
+    with pytest.raises(TraceValidationError, match="not allowed"):
+        validate_trace(
+            invalid_a3_event_type,
+            condition_id="A3",
+            declared_processes=(
+                "task-decomposition",
+                "task-execution",
+                "task-revision",
+            ),
+            goal_events="forbidden",
+            allowed_event_types=("process_switch",),
         )
 
     a4_path = tmp_path / "a4.jsonl"
     a4_path.write_text(json.dumps(_event("process_switch")) + "\n")
-    with pytest.raises(TraceValidationError, match="A4 requires goal fields"):
+    with pytest.raises(
+        TraceValidationError, match="A4 requires at least one goal event"
+    ):
         validate_trace(
             a4_path,
             condition_id="A4",
             declared_processes=WRITING_TRACE_PROCESSES,
+            goal_events="allowed",
+            allowed_event_types=(
+                "process_switch",
+                "goal_created",
+                "goal_developed",
+                "goal_regenerated",
+            ),
+            require_goal_events=True,
         )
 
     valid_a4_events = _event("process_switch", process="planning")
@@ -606,6 +659,14 @@ def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -
         valid_a4_path,
         condition_id="A4",
         declared_processes=WRITING_TRACE_PROCESSES,
+        goal_events="allowed",
+        allowed_event_types=(
+            "process_switch",
+            "goal_created",
+            "goal_developed",
+            "goal_regenerated",
+        ),
+        require_goal_events=True,
     )
 
     invalid_goal_path = tmp_path / "a4-invalid-goal.jsonl"
@@ -621,6 +682,14 @@ def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -
             invalid_goal_path,
             condition_id="A4",
             declared_processes=WRITING_TRACE_PROCESSES,
+            goal_events="allowed",
+            allowed_event_types=(
+                "process_switch",
+                "goal_created",
+                "goal_developed",
+                "goal_regenerated",
+            ),
+            require_goal_events=True,
         )
 
     a5_path = tmp_path / "a5.jsonl"
@@ -632,6 +701,13 @@ def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -
             a5_path,
             condition_id="A5",
             declared_processes=WRITING_TRACE_PROCESSES,
+            goal_events="forbidden",
+            allowed_event_types=(
+                "process_switch",
+                "goal_created",
+                "goal_developed",
+                "goal_regenerated",
+            ),
         )
 
 
@@ -661,10 +737,7 @@ class _RetryExecutor:
         trace_path = cwd / ".writing" / "trace" / "process.jsonl"
         trace_path.parent.mkdir(parents=True, exist_ok=True)
         trace_path.write_text(
-            json.dumps(
-                _event("stage_event", process="generate", stage_id="single_shot")
-            )
-            + "\n"
+            json.dumps(_event("process_switch", process="generate")) + "\n"
         )
         return self.results.pop(0)
 
@@ -824,6 +897,42 @@ def test_runner_rejects_a_summary_when_workspace_draft_is_the_product(
     manifest = json.loads((run_dir / "run-manifest.json").read_text())
     assert manifest["failure"]["type"] == "ExecutionError"
     assert manifest["failure"]["message"].endswith("final_chars=13, draft_chars=599")
+
+
+def test_a2_rejects_short_response_against_its_draft(tmp_path: Path) -> None:
+    class A2DraftExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds):
+            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+            trace_path = cwd / ".writing" / "trace" / "process.jsonl"
+            trace_path.write_text(
+                "".join(
+                    json.dumps(
+                        _event(
+                            "process_switch",
+                            process=process,
+                            from_process=previous,
+                        )
+                    )
+                    + "\n"
+                    for previous, process in (
+                        (None, "pre-write"),
+                        ("pre-write", "write"),
+                        ("write", "re-write"),
+                    )
+                )
+            )
+            (cwd / ".writing" / "draft.md").write_text("draft " * 300)
+            return result
+
+    runner = _runner(
+        tmp_path,
+        executor=A2DraftExecutor(
+            [_result(output="one two three four five six seven eight nine ten")]
+        ),
+    )
+
+    with pytest.raises(ExecutionError, match="less than 50% of draft.md"):
+        runner.run_prompt(_prompt(), condition_id="A2", platform="codex-primary")
 
 
 def test_runner_does_not_substitute_draft_for_empty_final_response(
@@ -1043,6 +1152,49 @@ def test_a3_production_shaped_trace_and_draft_gate(tmp_path: Path) -> None:
         "task-execution",
         "task-revision",
     ]
+
+
+def test_a3_rejects_goal_events_and_goal_fields(tmp_path: Path) -> None:
+    trace_path = tmp_path / "a3-goal.jsonl"
+    trace_path.write_text(
+        json.dumps(_event("goal_created", process="task-decomposition")) + "\n"
+    )
+    with pytest.raises(TraceValidationError, match="forbids goal events"):
+        validate_trace(
+            trace_path,
+            condition_id="A3",
+            declared_processes=(
+                "task-decomposition",
+                "task-execution",
+                "task-revision",
+            ),
+            goal_events="forbidden",
+            allowed_event_types=(
+                "process_switch",
+                "goal_created",
+                "goal_developed",
+                "goal_regenerated",
+            ),
+        )
+
+
+def test_a3_rejects_created_goals_file(tmp_path: Path) -> None:
+    class A3GoalsExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds):
+            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+            trace_path = cwd / ".writing" / "trace" / "process.jsonl"
+            trace_path.write_text(
+                json.dumps(_event("process_switch", process="task-decomposition"))
+                + "\n"
+            )
+            (cwd / ".writing" / "draft.md").write_text("final " * 20)
+            (cwd / ".writing" / "goals.md").write_text("should not exist")
+            return result
+
+    runner = _runner(tmp_path, executor=A3GoalsExecutor([_result()]))
+
+    with pytest.raises(TraceValidationError, match="protected file goals.md"):
+        runner.run_prompt(_prompt(), condition_id="A3", platform="codex-primary")
 
 
 def test_spawn_count_without_rollout_is_unscored(tmp_path: Path) -> None:

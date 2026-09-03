@@ -575,7 +575,7 @@ class ExperimentRunner:
                 minimum_units=product_gate["minimum_units"],
                 count_units=self.runtime_config.count_output_units,
             )
-            if condition.condition_id == "A5":
+            if condition.goal_events == "forbidden":
                 assert_untouched(protected_goals, goals_before)
             required_trace = ".writing/trace/process.jsonl"
             if not trace_path.is_file():
@@ -595,6 +595,12 @@ class ExperimentRunner:
                 copied_trace,
                 condition_id=condition.condition_id,
                 declared_processes=condition.trace_processes,
+                goal_events=condition.goal_events,
+                allowed_event_types=condition.event_types,
+                min_events=condition.min_events,
+                max_events=condition.max_events,
+                process_order=condition.process_order,
+                require_goal_events=condition.require_goal_events,
             )
 
             output_path.write_bytes(output.encode("utf-8"))
@@ -1064,6 +1070,19 @@ class ExperimentRunner:
                     for stage in condition.stages
                 },
                 "trace_policy": condition.trace_policy_dict,
+                "trace_contract": {
+                    "goal_events": condition.goal_events,
+                    "event_types": list(condition.event_types),
+                    "min_events": condition.min_events,
+                    "max_events": condition.max_events,
+                    "processes": list(condition.trace_processes),
+                    "process_order": (
+                        list(condition.process_order)
+                        if condition.process_order is not None
+                        else None
+                    ),
+                    "require_goal_events": condition.require_goal_events,
+                },
                 "benchmark_provenance": dict(benchmark_provenance or {}),
             },
             "models_and_execution": {

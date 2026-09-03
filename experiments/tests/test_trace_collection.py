@@ -79,44 +79,46 @@ class FakeExecutor:
                 "",
             )
             stages = {
-                "writing-single-shot": (("single_shot", "generate"),),
+                "writing-single-shot": (("generate",),),
                 "writing-linear": (
-                    ("pre_write", "pre-write"),
-                    ("write", "write"),
-                    ("re_write", "re-write"),
+                    ("pre-write",),
+                    ("write",),
+                    ("re-write",),
                 ),
                 "writing-adaptive-task-planning": (
-                    ("task-decomposition", "task-decomposition"),
-                    ("task-execution", "task-execution"),
-                    ("task-revision", "task-revision"),
+                    ("task-decomposition",),
+                    ("task-execution",),
+                    ("task-revision",),
                 ),
                 "writing-storm-style": (
-                    ("perspective_discovery", "perspective-discovery"),
-                    ("simulated_qa", "simulated-question-answering"),
-                    ("outline", "outline"),
-                    ("draft", "per-section-draft"),
-                    ("polish", "polish"),
+                    ("perspective-discovery",),
+                    ("simulated-question-answering",),
+                    ("outline",),
+                    ("per-section-draft",),
+                    ("polish",),
                 ),
-            }.get(skill, (("single_shot", "generate"),))
+            }.get(skill, (("generate",),))
             trace_path.write_text(
                 "".join(
                     json.dumps(
                         {
-                            "event_type": "stage_event",
-                            "stage_id": stage_id,
+                            "event_type": "process_switch",
                             "timestamp": "2026-01-01T00:00:00+00:00",
                             "responsible_agent": "writer",
                             "process": process,
+                            "from_process": (stages[index - 1][0] if index else None),
+                            "to_process": process,
                             "decision": "continue",
                             "evidence": ["supplied context"],
                             "open_uncertainty": [],
                         }
                     )
                     + "\n"
-                    for stage_id, process in stages
+                    for index, (process,) in enumerate(stages)
                 )
             )
             if skill in {
+                "writing-linear",
                 "writing-adaptive-task-planning",
                 "writing-storm-style",
             }:
@@ -252,12 +254,33 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     )
     assert [registry[f"A{index}"].product_requires_draft for index in range(1, 7)] == [
         False,
-        False,
+        True,
         True,
         True,
         True,
         True,
     ]
+    assert registry["A1"].goal_events == "forbidden"
+    assert registry["A2"].goal_events == "forbidden"
+    assert registry["A3"].goal_events == "forbidden"
+    assert registry["A4"].goal_events == "allowed"
+    assert registry["A4"].require_goal_events is True
+    assert registry["A5"].goal_events == "forbidden"
+    assert registry["A6"].goal_events == "allowed"
+    assert registry["A6"].require_goal_events is True
+    assert registry["A1"].event_types == ("process_switch",)
+    assert registry["A4"].event_types == (
+        "process_switch",
+        "goal_created",
+        "goal_developed",
+        "goal_regenerated",
+    )
+    assert registry["A2"].process_order == (
+        "pre-write",
+        "write",
+        "re-write",
+    )
+    assert registry["A3"].process_order is None
 
 
 def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
@@ -320,6 +343,19 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
         "citation": "N/A",
         "evidence": "N/A",
         "retrieval": "N/A",
+    }
+    assert manifest["inputs"]["trace_contract"] == {
+        "event_types": ["process_switch"],
+        "goal_events": "forbidden",
+        "max_events": None,
+        "min_events": 1,
+        "process_order": None,
+        "processes": [
+            "task-decomposition",
+            "task-execution",
+            "task-revision",
+        ],
+        "require_goal_events": False,
     }
 
 

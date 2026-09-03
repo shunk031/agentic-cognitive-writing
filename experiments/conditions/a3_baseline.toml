@@ -25,4 +25,7 @@ claude_code_replication = ["/plugin marketplace add .", "/plugin install cogniti
 retrieval = "N/A"
 evidence = "N/A"
 citation = "N/A"
+goal_events = "forbidden"
+event_types = ["process_switch"]
+min_events = 1
 processes = ["task-decomposition", "task-execution", "task-revision"]
