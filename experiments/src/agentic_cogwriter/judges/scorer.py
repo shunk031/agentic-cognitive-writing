@@ -28,6 +28,8 @@ class RunArtifacts:
     output: str
     manifest: Mapping[str, Any]
     blind_condition_id: str
+    generator_model_id: str
+    generator_family: str
 
 
 @dataclass(frozen=True)
@@ -37,6 +39,7 @@ class ScoreRunResult:
     scores_path: Path
     manifest_path: Path
     result: JudgeResult
+    results: tuple[JudgeResult, ...]
 
 
 def blind_condition_id(condition_id: str) -> str:
@@ -68,6 +71,18 @@ def _platform(manifest: Mapping[str, Any], run_dir: Path) -> str:
     if value not in mapping:
         raise RunArtifactError("run manifest does not identify a supported platform")
     return mapping[value]
+
+
+def _generator_evidence(manifest: Mapping[str, Any]) -> tuple[str, str]:
+    models = manifest.get("models_and_execution")
+    if not isinstance(models, Mapping):
+        raise RunArtifactError("run manifest needs models_and_execution evidence")
+    model_id = _required_text(models.get("generator_model_id"), "generator_model_id")
+    family_value = models.get("generator_model_family")
+    if family_value is None:
+        family_value = models.get("generator_family")
+    family = _required_text(family_value, "generator_model_family")
+    return model_id, family
 
 
 def _prompt_parts(path: Path) -> tuple[str, str]:
@@ -133,6 +148,7 @@ def load_run_artifacts(run_dir: Path) -> RunArtifacts:
     except (OSError, UnicodeError) as exc:
         raise RunArtifactError(f"Cannot read normalized output {output_path}") from exc
     assignment, context = _prompt_parts(prompt_path)
+    generator_model_id, generator_family = _generator_evidence(manifest)
     return RunArtifacts(
         run_dir=run_dir,
         prompt_id=prompt_id,
@@ -143,6 +159,8 @@ def load_run_artifacts(run_dir: Path) -> RunArtifacts:
         output=output,
         manifest=manifest,
         blind_condition_id=blind_condition_id(condition_id),
+        generator_model_id=generator_model_id,
+        generator_family=generator_family,
     )
 
 
@@ -161,82 +179,85 @@ def _pair_presentation(
     raise RunArtifactError("pairwise presentation must be A|B or B|A")
 
 
-def _manifest_path(scores_path: Path) -> Path:
-    return scores_path.with_name(scores_path.stem + "-manifest.json")
+def _presentation_orders(pair_id: str, seed: int) -> tuple[str, str]:
+    """Derive a stable invocation order while retaining both presentations."""
+
+    orders = ("A|B", "B|A")
+    digest = sha256_bytes(f"{seed}:{pair_id}".encode())
+    return orders if int(digest[-1], 16) % 2 == 0 else (orders[1], orders[0])
 
 
-def score_run(
-    run_dir: Path,
+def _family_audit(
+    config: JudgeConfig, result: JudgeResult, run: RunArtifacts
+) -> dict[str, str]:
+    config.validate_family_audit(result.judge_identity, run.generator_family)
+    return {
+        "reported_model_id": result.judge_identity.reported_model_id,
+        "mapped_family": result.judge_identity.mapped_family,
+        "judge_family": result.judge_identity.judge_family,
+        "generator_model_id": run.generator_model_id,
+        "generator_family": run.generator_family,
+    }
+
+
+def _score_pairwise_presentation(
+    first: RunArtifacts,
+    second: RunArtifacts,
     config: JudgeConfig,
     *,
-    compare_run_dir: Path | None = None,
-    presentation: str | None = None,
-    output_path: Path | None = None,
-    transport: ChatTransport | None = None,
+    pair_id: str,
+    presentation: str,
+    transport: ChatTransport | None,
+) -> JudgeResult:
+    output_a, output_b = _pair_presentation(first, second, presentation)
+    return judge_pairwise(
+        config,
+        assignment=first.assignment,
+        context=first.context,
+        output_a=output_a,
+        output_b=output_b,
+        prompt_id=first.prompt_id,
+        pair_id=pair_id,
+        presentation=presentation,
+        platform=first.platform,
+        transport=transport,
+    )
+
+
+def _write_score_artifacts(
+    scores_path: Path,
+    config: JudgeConfig,
+    source_runs: tuple[RunArtifacts, ...],
+    results: tuple[JudgeResult, ...],
+    family_audit: dict[str, str],
+    tournament: dict[str, Any] | None = None,
 ) -> ScoreRunResult:
-    """Score one run and write an exact protocol JSON Lines record plus manifest."""
+    """Write score records only after every required judgment has succeeded."""
 
-    first = load_run_artifacts(run_dir)
-    source_runs: tuple[RunArtifacts, ...]
-    if config.task == "pointwise":
-        if compare_run_dir is not None or presentation is not None:
-            raise RunArtifactError("pointwise scoring does not accept a comparison run")
-        result = judge_pointwise(
-            config,
-            assignment=first.assignment,
-            context=first.context,
-            output=first.output,
-            prompt_id=first.prompt_id,
-            blind_condition_id=first.blind_condition_id,
-            platform=first.platform,
-            transport=transport,
-        )
-        source_runs = (first,)
-    else:
-        if compare_run_dir is None or presentation is None:
-            raise RunArtifactError(
-                "pairwise scoring needs --compare-run-dir and --presentation"
-            )
-        second = load_run_artifacts(compare_run_dir)
-        if first.prompt_id != second.prompt_id or first.platform != second.platform:
-            raise RunArtifactError("pairwise runs must share prompt ID and platform")
-        if first.assignment != second.assignment or first.context != second.context:
-            raise RunArtifactError("pairwise runs must share assignment and context")
-        output_a, output_b = _pair_presentation(first, second, presentation)
-        result = judge_pairwise(
-            config,
-            assignment=first.assignment,
-            context=first.context,
-            output_a=output_a,
-            output_b=output_b,
-            prompt_id=first.prompt_id,
-            pair_id=_pair_id(first, second),
-            presentation=presentation,
-            platform=first.platform,
-            transport=transport,
-        )
-        source_runs = (first, second)
-
-    scores_path = (output_path or first.run_dir / "scores.jsonl").resolve()
     manifest_path = _manifest_path(scores_path)
     if scores_path.exists() or manifest_path.exists():
         raise RunArtifactError(
             "scoring output already exists; choose a new output path"
         )
-    record_bytes = (
-        json.dumps(result.record, ensure_ascii=False, sort_keys=True) + "\n"
-    ).encode("utf-8")
+    record_bytes = b"".join(
+        (json.dumps(result.record, ensure_ascii=False, sort_keys=True) + "\n").encode(
+            "utf-8"
+        )
+        for result in results
+    )
     scores_path.parent.mkdir(parents=True, exist_ok=True)
     scores_path.write_bytes(record_bytes)
-    score_manifest = {
+    first_result = results[0]
+    score_manifest: dict[str, Any] = {
         "schema_version": 1,
         "task": config.task,
         "scores_sha256": "sha256:" + sha256_file(scores_path),
-        "template_sha256": "sha256:" + result.template_sha256,
+        "template_sha256": "sha256:" + first_result.template_sha256,
         "judge": {
             "model": config.model,
             "judge_id": config.judge_id,
-            "judge_family": config.judge_family,
+            "judge_family": first_result.judge_identity.judge_family,
+            "reported_model_id": first_result.judge_identity.reported_model_id,
             "seed": config.seed,
             "temperature": config.temperature,
             "top_p": config.top_p,
@@ -244,6 +265,7 @@ def score_run(
             "stop_rules": list(config.stop_rules),
             "max_retries": config.max_retries,
         },
+        "family_audit": family_audit,
         "source_runs": [
             {
                 "run_manifest_sha256": "sha256:"
@@ -255,14 +277,17 @@ def score_run(
         ],
         "records": [
             {
-                "line": 1,
+                "line": line,
                 "record_sha256": "sha256:" + sha256_json(result.record),
                 "response_sha256": "sha256:" + result.response_sha256,
                 "attempts": result.attempts,
                 "usage": result.usage,
             }
+            for line, result in enumerate(results, start=1)
         ],
     }
+    if tournament is not None:
+        score_manifest["tournament"] = tournament
     manifest_path.write_text(
         json.dumps(score_manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -270,5 +295,101 @@ def score_run(
     return ScoreRunResult(
         scores_path=scores_path,
         manifest_path=manifest_path,
-        result=result,
+        result=first_result,
+        results=results,
+    )
+
+
+def _manifest_path(scores_path: Path) -> Path:
+    return scores_path.with_name(scores_path.stem + "-manifest.json")
+
+
+def score_run(
+    run_dir: Path,
+    config: JudgeConfig,
+    *,
+    compare_run_dir: Path | None = None,
+    output_path: Path | None = None,
+    transport: ChatTransport | None = None,
+) -> ScoreRunResult:
+    """Score one run or a complete pairwise tournament and write its manifest."""
+
+    first = load_run_artifacts(run_dir)
+    if config.task == "pointwise":
+        if compare_run_dir is not None:
+            raise RunArtifactError("pointwise scoring does not accept a comparison run")
+        result = judge_pointwise(
+            config,
+            assignment=first.assignment,
+            context=first.context,
+            output=first.output,
+            prompt_id=first.prompt_id,
+            blind_condition_id=first.blind_condition_id,
+            platform=first.platform,
+            transport=transport,
+        )
+        return _write_score_artifacts(
+            (output_path or first.run_dir / "scores.jsonl").resolve(),
+            config,
+            (first,),
+            (result,),
+            _family_audit(config, result, first),
+        )
+
+    if compare_run_dir is None:
+        raise RunArtifactError(
+            "pairwise scoring needs --compare-run-dir for both presentations"
+        )
+    if config.presentation_seed is None:
+        raise RunArtifactError("pairwise scoring needs a presentation seed")
+    second = load_run_artifacts(compare_run_dir)
+    if first.prompt_id != second.prompt_id or first.platform != second.platform:
+        raise RunArtifactError("pairwise runs must share prompt ID and platform")
+    if first.assignment != second.assignment or first.context != second.context:
+        raise RunArtifactError("pairwise runs must share assignment and context")
+    if (
+        first.generator_model_id != second.generator_model_id
+        or first.generator_family != second.generator_family
+    ):
+        raise RunArtifactError("pairwise runs must share generator model evidence")
+
+    pair_id = _pair_id(first, second)
+    orders = _presentation_orders(pair_id, config.presentation_seed)
+    results = tuple(
+        _score_pairwise_presentation(
+            first,
+            second,
+            config,
+            pair_id=pair_id,
+            presentation=order,
+            transport=transport,
+        )
+        for order in orders
+    )
+    family_audit = _family_audit(config, results[0], first)
+    for result in results[1:]:
+        if result.judge_identity != results[0].judge_identity:
+            raise RunArtifactError(
+                "pairwise presentations reported different judge model identities"
+            )
+        _family_audit(config, result, first)
+    tournament = {
+        "presentation_seed": config.presentation_seed,
+        "orders": list(orders),
+        "order_mapping": [
+            {
+                "presentation": order,
+                "first_output": "first_run" if order == "A|B" else "compare_run",
+                "second_output": "compare_run" if order == "A|B" else "first_run",
+            }
+            for order in orders
+        ],
+    }
+    return _write_score_artifacts(
+        (output_path or first.run_dir / "scores.jsonl").resolve(),
+        config,
+        (first, second),
+        results,
+        family_audit,
+        tournament=tournament,
     )

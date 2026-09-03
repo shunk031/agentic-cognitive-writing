@@ -6,12 +6,31 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from .errors import JudgeConfigurationError
 
 JudgeTask = Literal["pointwise", "pairwise"]
 JudgeFamily = Literal["claude_frontier", "gpt_frontier", "open_evaluator"]
+JudgeRole = Literal["frontier", "open_evaluator"]
+
+
+@dataclass(frozen=True)
+class ModelFamilyMapping:
+    """One frozen model identifier, family, and judging role mapping."""
+
+    family: str
+    role: JudgeRole
+
+
+@dataclass(frozen=True)
+class JudgeIdentity:
+    """The family identity derived from the endpoint-reported model ID."""
+
+    reported_model_id: str
+    mapped_family: str
+    role: JudgeRole
+    judge_family: JudgeFamily
 
 
 def _required_string(values: Mapping[str, Any], *names: str) -> str:
@@ -51,6 +70,85 @@ def _decoding_value(
     return None
 
 
+def _mapping_entry(value: Any, model_id: str) -> ModelFamilyMapping:
+    if isinstance(value, str):
+        family = value.strip()
+        normalized = family.casefold()
+        if normalized.endswith("_frontier"):
+            base_family = normalized.removesuffix("_frontier")
+            if base_family not in {"claude", "gpt"}:
+                raise JudgeConfigurationError(
+                    f"model_family_map entry {model_id} has an invalid frontier family"
+                )
+            return ModelFamilyMapping(family=base_family, role="frontier")
+        if normalized == "open_evaluator":
+            return ModelFamilyMapping(family=family, role="open_evaluator")
+        inferred_role: JudgeRole = (
+            "frontier" if normalized in {"claude", "gpt"} else "open_evaluator"
+        )
+        return ModelFamilyMapping(family=family, role=inferred_role)
+    if not isinstance(value, Mapping):
+        raise JudgeConfigurationError(
+            f"model_family_map entry {model_id} must be a family string or object"
+        )
+    family = _required_string(value, "family", "model_family")
+    normalized = family.casefold()
+    role_value = value.get("role")
+    if role_value is None:
+        role_value = (
+            "frontier"
+            if normalized in {"claude", "gpt", "claude_frontier", "gpt_frontier"}
+            else "open_evaluator"
+        )
+    if not isinstance(role_value, str) or role_value not in {
+        "frontier",
+        "open_evaluator",
+    }:
+        raise JudgeConfigurationError(
+            f"model_family_map entry {model_id} has an invalid role"
+        )
+    mapping_role = cast(JudgeRole, role_value)
+    if mapping_role == "frontier":
+        normalized_frontier_family = {
+            "claude": "claude",
+            "claude_frontier": "claude",
+            "gpt": "gpt",
+            "gpt_frontier": "gpt",
+        }.get(normalized)
+        if normalized_frontier_family is None:
+            raise JudgeConfigurationError(
+                f"model_family_map entry {model_id} has an invalid frontier family"
+            )
+        return ModelFamilyMapping(family=normalized_frontier_family, role=mapping_role)
+    return ModelFamilyMapping(family=family, role=mapping_role)
+
+
+def _model_family_map(
+    values: Mapping[str, Any],
+) -> tuple[tuple[str, ModelFamilyMapping], ...]:
+    raw = values.get("model_family_map", values.get("model_id_to_family"))
+    if not isinstance(raw, Mapping) or not raw:
+        raise JudgeConfigurationError(
+            "model_family_map must map reported model IDs to families"
+        )
+    result: list[tuple[str, ModelFamilyMapping]] = []
+    for model_id, value in raw.items():
+        if not isinstance(model_id, str) or not model_id.strip():
+            raise JudgeConfigurationError(
+                "model_family_map keys must be non-empty model IDs"
+            )
+        result.append((model_id.strip(), _mapping_entry(value, model_id)))
+    return tuple(result)
+
+
+def _base_family(value: str) -> str:
+    normalized = value.strip().casefold()
+    return {
+        "claude_frontier": "claude",
+        "gpt_frontier": "gpt",
+    }.get(normalized, normalized)
+
+
 @dataclass(frozen=True)
 class JudgeConfig:
     """Immutable settings for one pointwise or pairwise judge."""
@@ -58,7 +156,7 @@ class JudgeConfig:
     task: JudgeTask
     model: str
     judge_id: str
-    judge_family: JudgeFamily
+    model_family_map: tuple[tuple[str, ModelFamilyMapping], ...]
     base_url_env: str
     credential_env: str
     template_path: Path
@@ -69,6 +167,7 @@ class JudgeConfig:
     stop_rules: tuple[str, ...]
     timeout_seconds: float
     max_retries: int
+    presentation_seed: int | None
     source_path: Path | None = None
 
     @classmethod
@@ -100,16 +199,7 @@ class JudgeConfig:
         judge_id = str(values.get("judge_id", model)).strip()
         if not judge_id:
             raise JudgeConfigurationError("judge_id must be a non-empty string")
-        family_value = values.get("judge_family", "open_evaluator")
-        if family_value not in {
-            "claude_frontier",
-            "gpt_frontier",
-            "open_evaluator",
-        }:
-            raise JudgeConfigurationError(
-                "judge_family must be claude_frontier, gpt_frontier, or open_evaluator"
-            )
-        family: JudgeFamily = family_value
+        model_family_map = _model_family_map(values)
 
         base_url_env = _required_string(values, "base_url_env", "base_url_env_name")
         credential_env = _required_string(
@@ -182,11 +272,22 @@ class JudgeConfig:
             retry_value = 0
         max_retries = _integer(retry_value, "max_retries", minimum=0)
 
+        presentation_seed_value = values.get("presentation_seed")
+        if task == "pairwise" and presentation_seed_value is None:
+            raise JudgeConfigurationError(
+                "presentation_seed is required for pairwise judging"
+            )
+        presentation_seed = (
+            _integer(presentation_seed_value, "presentation_seed")
+            if presentation_seed_value is not None
+            else None
+        )
+
         return cls(
             task=task,
             model=model,
             judge_id=judge_id,
-            judge_family=family,
+            model_family_map=model_family_map,
             base_url_env=base_url_env,
             credential_env=credential_env,
             template_path=template_path,
@@ -197,5 +298,66 @@ class JudgeConfig:
             stop_rules=stop_rules,
             timeout_seconds=timeout_seconds,
             max_retries=max_retries,
+            presentation_seed=presentation_seed,
             source_path=source_path,
         )
+
+    def resolve_model_identity(self, reported_model_id: str) -> JudgeIdentity:
+        """Map the endpoint's reported model ID to a protocol judge family."""
+
+        mapping = dict(self.model_family_map).get(reported_model_id)
+        if mapping is None:
+            raise JudgeConfigurationError(
+                "reported model is not present in model_family_map"
+            )
+        base_family = _base_family(mapping.family)
+        if mapping.role == "frontier":
+            if base_family not in {"claude", "gpt"}:
+                raise JudgeConfigurationError(
+                    "model_family_map has an invalid frontier family"
+                )
+            judge_family = cast(JudgeFamily, f"{base_family}_frontier")
+        else:
+            judge_family = "open_evaluator"
+        return JudgeIdentity(
+            reported_model_id=reported_model_id,
+            mapped_family=base_family,
+            role=mapping.role,
+            judge_family=judge_family,
+        )
+
+    def validate_family_audit(
+        self, identity: JudgeIdentity, generator_family: str
+    ) -> None:
+        """Reject family overlap and incomplete third-family mappings."""
+
+        generator_base = _base_family(generator_family)
+        if not generator_base:
+            raise JudgeConfigurationError(
+                "run manifest needs a non-empty generator model family"
+            )
+        mappings = tuple(self.model_family_map)
+        frontier_families = {
+            _base_family(mapping.family)
+            for _, mapping in mappings
+            if mapping.role == "frontier"
+        }
+        if not {"claude", "gpt"}.issubset(frontier_families):
+            raise JudgeConfigurationError(
+                "model_family_map must include both frontier families"
+            )
+        open_families = {
+            _base_family(mapping.family)
+            for _, mapping in mappings
+            if mapping.role == "open_evaluator"
+        }
+        if not open_families:
+            raise JudgeConfigurationError(
+                "model_family_map must include an open evaluator family"
+            )
+        if any(family in frontier_families for family in open_families):
+            raise JudgeConfigurationError(
+                "open evaluator family must be a third family"
+            )
+        if identity.mapped_family == generator_base:
+            raise JudgeConfigurationError("judge and generator model families overlap")

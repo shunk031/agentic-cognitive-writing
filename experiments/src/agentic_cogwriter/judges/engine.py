@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .client import ChatResponse, ChatTransport, OpenAICompatibleClient
-from .config import JudgeConfig
+from .config import JudgeConfig, JudgeIdentity
 from .errors import JudgeError, JudgeValidationError
 from .templates import JudgeTemplate
 from .validation import validate_pairwise, validate_pointwise
@@ -24,6 +24,7 @@ class JudgeResult:
     attempts: int
     response_sha256: str
     template_sha256: str
+    judge_identity: JudgeIdentity
 
 
 def _response_sha256(response: ChatResponse) -> str:
@@ -54,27 +55,41 @@ def _run(
     for attempt in range(1, config.max_retries + 2):
         try:
             response = client.complete(prompt)
+            identity = config.resolve_model_identity(response.reported_model_id or "")
             payload = _parse_json(response.content)
+            if not isinstance(payload, Mapping) or not isinstance(
+                payload.get("judge_family"), str
+            ):
+                raise JudgeValidationError(
+                    "Judge response must include a string judge_family field"
+                )
+            response_expected = {
+                field: value
+                for field, value in expected.items()
+                if field != "judge_family"
+            }
             if pairwise_texts is None:
                 record = validator(
                     payload,
-                    expected=expected,
+                    expected=response_expected,
                     searchable_texts=searchable_texts or (),
                 )
             else:
                 record = validator(
                     payload,
-                    expected=expected,
+                    expected=response_expected,
                     output_a=pairwise_texts[0],
                     output_b=pairwise_texts[1],
                     context=pairwise_texts[2],
                 )
+            record["judge_family"] = identity.judge_family
             return JudgeResult(
                 record=record,
                 usage=dict(response.usage),
                 attempts=attempt,
                 response_sha256=_response_sha256(response),
                 template_sha256=template.sha256,
+                judge_identity=identity,
             )
         except JudgeValidationError as exc:
             last_error = exc
@@ -106,14 +121,13 @@ def judge_pointwise(
         "condition_id": blind_condition_id,
         "platform": platform,
         "judge_id": config.judge_id,
-        "judge_family": config.judge_family,
     }
     values = {
         "prompt_id": prompt_id,
         "condition_id": blind_condition_id,
         "platform": platform,
         "judge_id": config.judge_id,
-        "judge_family": config.judge_family,
+        "judge_family": "runtime-verified",
         "assignment": assignment,
         "context": context or "(none)",
         "output": output,
@@ -141,7 +155,7 @@ def judge_pairwise(
     platform: str,
     transport: ChatTransport | None = None,
 ) -> JudgeResult:
-    """Compare two blinded outputs in the caller-selected presentation order."""
+    """Compare two blinded outputs in the supplied presentation order."""
 
     if config.task != "pairwise":
         raise JudgeValidationError("Judge configuration task is not pairwise")
@@ -151,7 +165,6 @@ def judge_pairwise(
         "prompt_id": prompt_id,
         "platform": platform,
         "judge_id": config.judge_id,
-        "judge_family": config.judge_family,
         "pair_id": pair_id,
         "presentation": presentation,
     }
@@ -161,7 +174,7 @@ def judge_pairwise(
         "presentation": presentation,
         "platform": platform,
         "judge_id": config.judge_id,
-        "judge_family": config.judge_family,
+        "judge_family": "runtime-verified",
         "assignment": assignment,
         "context": context or "(none)",
         "answer_a": output_a,

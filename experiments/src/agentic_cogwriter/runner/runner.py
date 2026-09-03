@@ -71,6 +71,21 @@ FINAL_OUTPUT_DRAFT_RATIO = 0.5
 DEFAULT_PRODUCT_FLOOR = 10
 
 
+def _generator_model_family(runtime_config: RuntimeConfig, platform: str) -> str | None:
+    """Read the generator family from the runtime family-audit settings."""
+
+    audit = runtime_config.get("generator_and_judge_family_audit")
+    if not isinstance(audit, Mapping):
+        return None
+    families = audit.get("generator_families")
+    if not isinstance(families, Mapping):
+        return None
+    value = families.get(platform)
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return None
+
+
 def _safe_component(value: str) -> str:
     return "".join(
         char if char.isalnum() or char in {"-", "_", "."} else "_" for char in value
@@ -1083,6 +1098,9 @@ class ExperimentRunner:
                 "cli": adapter.executable,
                 "cli_version": cli_version,
                 "generator_model_id": self.runtime_config.model_for(platform),
+                "generator_model_family": _generator_model_family(
+                    self.runtime_config, platform
+                ),
                 "frontier_judge_model_id": self.runtime_config.get(
                     "codex_frontier_judge"
                     if platform == "codex"
@@ -1135,13 +1153,14 @@ class ExperimentRunner:
                         "parsed retrieval/tool-invocation and executed-command "
                         "scan; explicit network-command scan for draft artifacts"
                     ),
-                    "judge_side": "out-of-scope pending judge module",
+                    "judge_side": (
+                        "API judge client has no retrieval or tool interface; "
+                        "score-stage validation is recorded in the score manifest"
+                    ),
                 },
                 "judge_verification": {
-                    "judge_families": "declared-unverified pending judge module",
-                    "family_overlap_audit": (
-                        "declared-unverified pending judge module"
-                    ),
+                    "judge_families": "runtime-verified in the score manifest",
+                    "family_overlap_audit": "runtime-verified in the score manifest",
                     "declared_audit": self.runtime_config.get(
                         "generator_and_judge_family_audit"
                     ),

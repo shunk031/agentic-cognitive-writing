@@ -19,7 +19,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--task", choices=("pointwise", "pairwise"), default=None)
     parser.add_argument("--compare-run-dir", type=Path, default=None)
-    parser.add_argument("--presentation", choices=("A|B", "B|A"), default=None)
     parser.add_argument("--output", type=Path, default=None)
     return parser
 
@@ -35,7 +34,6 @@ def main(argv: list[str] | None = None) -> int:
         args.run_dir,
         config,
         compare_run_dir=args.compare_run_dir,
-        presentation=args.presentation,
         output_path=args.output,
     )
     print(result.scores_path)

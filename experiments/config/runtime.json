@@ -20,7 +20,12 @@
   "main_plugin_commit": "REQUIRED_AT_RUNTIME",
   "experiments_plugin_commit": "REQUIRED_AT_RUNTIME",
   "runner_commit": "REQUIRED_AT_RUNTIME",
-  "generator_and_judge_family_audit": "REQUIRED_AT_RUNTIME",
+  "generator_and_judge_family_audit": {
+    "generator_families": {
+      "codex-primary": "REQUIRED_AT_RUNTIME",
+      "claude-code-replication": "REQUIRED_AT_RUNTIME"
+    }
+  },
   "retry_policy": "REQUIRED_AT_RUNTIME",
   "length_strata": "REQUIRED_AT_RUNTIME",
   "minimum_cell_size": "REQUIRED_AT_RUNTIME",

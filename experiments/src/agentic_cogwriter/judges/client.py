@@ -21,6 +21,7 @@ class ChatResponse:
     content: str
     usage: Mapping[str, int]
     raw: Mapping[str, Any]
+    reported_model_id: str | None = None
 
 
 class ChatTransport(Protocol):
@@ -49,9 +50,16 @@ def normalize_usage(value: Mapping[str, Any]) -> dict[str, int]:
             raise JudgeTransportError(f"Judge usage has negative {field}")
         result[field] = token_value
     for field in ("reasoning_tokens", "cached_tokens"):
-        token_value = value.get(field)
-        if isinstance(token_value, int) and not isinstance(token_value, bool):
-            result[field] = token_value
+        if field not in value:
+            continue
+        token_value = value[field]
+        if (
+            isinstance(token_value, bool)
+            or not isinstance(token_value, int)
+            or token_value < 0
+        ):
+            raise JudgeTransportError(f"Judge usage has invalid integer {field}")
+        result[field] = token_value
     return result
 
 
@@ -91,6 +99,13 @@ def _content(response: Mapping[str, Any]) -> str:
         if chunks:
             return "".join(chunks)
     raise JudgeTransportError("Judge response has no text content")
+
+
+def _reported_model(response: Mapping[str, Any]) -> str:
+    model = response.get("model")
+    if not isinstance(model, str) or not model.strip():
+        raise JudgeTransportError("Judge response has no reported model identifier")
+    return model.strip()
 
 
 class UrllibChatTransport:
@@ -133,6 +148,7 @@ class UrllibChatTransport:
             content=_content(decoded),
             usage=_usage(decoded),
             raw=decoded,
+            reported_model_id=_reported_model(decoded),
         )
 
 
@@ -187,8 +203,12 @@ class OpenAICompatibleClient:
             usage = normalize_usage(response.usage)
         except (AttributeError, TypeError) as exc:
             raise JudgeTransportError("Judge response has invalid usage") from exc
+        reported_model_id = response.reported_model_id
+        if not isinstance(reported_model_id, str) or not reported_model_id.strip():
+            reported_model_id = _reported_model(response.raw)
         return ChatResponse(
             content=response.content,
             usage=usage,
             raw=response.raw,
+            reported_model_id=reported_model_id.strip(),
         )
