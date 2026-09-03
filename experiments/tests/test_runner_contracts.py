@@ -711,6 +711,55 @@ def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -
         )
 
 
+@pytest.mark.parametrize(
+    ("condition_id", "process"),
+    (("A1", "generate"), ("A3", "task-decomposition")),
+)
+def test_trace_validation_rejects_undeclared_process_switch_endpoints(
+    tmp_path: Path, condition_id: str, process: str
+) -> None:
+    for name, endpoint_kwargs in (
+        (
+            "from",
+            {"from_process": "not-declared", "to_process": process},
+        ),
+        (
+            "to",
+            {"from_process": None, "to_process": "also-not-declared"},
+        ),
+    ):
+        path = tmp_path / f"{condition_id}-{name}.jsonl"
+        path.write_text(
+            json.dumps(
+                _event(
+                    "process_switch",
+                    process=process,
+                    **endpoint_kwargs,
+                )
+            )
+            + "\n"
+        )
+        with pytest.raises(
+            TraceValidationError,
+            match=f"process_switch {name}_process .*not declared",
+        ):
+            validate_trace(
+                path,
+                condition_id=condition_id,
+                declared_processes=(
+                    ("generate",)
+                    if condition_id == "A1"
+                    else (
+                        "task-decomposition",
+                        "task-execution",
+                        "task-revision",
+                    )
+                ),
+                goal_events="forbidden",
+                allowed_event_types=("process_switch",),
+            )
+
+
 def test_run_fails_on_schema_invalid_plugin_trace(tmp_path: Path) -> None:
     class InvalidTraceExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds):

@@ -165,6 +165,11 @@ def validate_trace(
                     raise TraceValidationError(
                         f"Trace {path}:{line_number} process_switch needs {field}"
                     )
+                if event[field] is not None and event[field] not in declared_processes:
+                    raise TraceValidationError(
+                        f"Trace {path}:{line_number} process_switch {field} "
+                        f"{event[field]!r} is not declared for {condition_id}"
+                    )
         has_goal_fields = any(field in event for field in ("goal_id", "parent_goal_id"))
         if goal_events == "forbidden" and (
             event_type in GOAL_EVENT_TYPES or has_goal_fields
