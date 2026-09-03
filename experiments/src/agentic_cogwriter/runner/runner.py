@@ -127,7 +127,7 @@ class ExperimentRunner:
         manifest_path = run_dir / "run-manifest.json"
         output_path = run_dir / "output.raw"
         normalized_path = run_dir / "output.normalized.txt"
-        trace_path = run_dir / ".writing" / "trace" / "process.jsonl"
+        trace_path = workspace / ".writing" / "trace" / "process.jsonl"
         checksums_path = run_dir / "checksums.json"
         prompt_path = run_dir / "prompt.txt"
         execution_paths = {
@@ -265,14 +265,19 @@ class ExperimentRunner:
 
             if condition.condition_id == "A5":
                 assert_untouched(protected_goals, goals_before)
-            trace_files = collect_plugin_trace(workspace, run_dir)
             required_trace = ".writing/trace/process.jsonl"
-            if required_trace not in trace_files:
+            if not trace_path.is_file():
                 raise ExecutionError(
                     f"Condition {condition.condition_id} produced no plugin trace at "
-                    f"{required_trace}"
+                    f"{trace_path}"
                 )
+            trace_files = collect_plugin_trace(workspace, run_dir)
             copied_trace = run_dir / required_trace
+            if required_trace not in trace_files or not copied_trace.is_file():
+                raise ExecutionError(
+                    f"Condition {condition.condition_id} could not collect plugin "
+                    f"trace from {trace_path}"
+                )
             reject_retrieval(copied_trace.read_bytes(), b"")
             validate_trace(
                 copied_trace,
@@ -314,7 +319,12 @@ class ExperimentRunner:
                 ),
             )
             return RunResult(
-                run_dir, manifest_path, output_path, trace_path, checksums_path, run_id
+                run_dir,
+                manifest_path,
+                output_path,
+                copied_trace,
+                checksums_path,
+                run_id,
             )
         except Exception as exc:
             if isinstance(exc, ExecutionError) and attempts == 0:

@@ -297,7 +297,9 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         (result.run_dir / "workspace").resolve()
     )
     assert manifest["execution_paths"]["trace_path"] == str(
-        (result.run_dir / ".writing" / "trace" / "process.jsonl").resolve()
+        (
+            result.run_dir / "workspace" / ".writing" / "trace" / "process.jsonl"
+        ).resolve()
     )
 
 

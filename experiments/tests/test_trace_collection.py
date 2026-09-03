@@ -338,7 +338,9 @@ def test_missing_trace_preserves_transport_evidence_and_absolute_paths(tmp_path)
     assert manifest["execution_paths"] == {
         "cwd": str((run_dir / "workspace").resolve()),
         "prompt": str((run_dir / "prompt.txt").resolve()),
-        "trace_path": str((run_dir / ".writing" / "trace" / "process.jsonl").resolve()),
+        "trace_path": str(
+            (run_dir / "workspace" / ".writing" / "trace" / "process.jsonl").resolve()
+        ),
     }
     evidence_hashes = manifest["evidence_hashes"]
     assert evidence_hashes["attempt-001.events.jsonl"] == (
@@ -351,6 +353,34 @@ def test_missing_trace_preserves_transport_evidence_and_absolute_paths(tmp_path)
     assert evidence_hashes["attempt-001.stderr.raw"] == (
         "sha256:" + hashlib.sha256(b"").hexdigest()
     )
+
+
+def test_trace_path_is_derived_from_codex_cwd(tmp_path):
+    prompt = PromptRecord(
+        prompt_id="p-1",
+        benchmark_name="WritingBench",
+        source_version="test",
+        prompt_text="Write a memo.",
+        requested_output_constraints={},
+        row_hash="row-hash",
+    )
+    executor = FakeExecutor()
+    runner = _runner(tmp_path, executor=executor)
+
+    result = runner.run_prompt(
+        prompt,
+        condition_id="A1",
+        platform="codex-primary",
+        run_id="trace-cwd",
+    )
+
+    _, cwd, _ = executor.calls[0]
+    manifest = json.loads(result.manifest_path.read_text())
+    expected_trace = cwd / ".writing" / "trace" / "process.jsonl"
+    assert manifest["execution_paths"]["cwd"] == str(cwd.resolve())
+    assert manifest["execution_paths"]["trace_path"] == str(expected_trace.resolve())
+    assert expected_trace.is_file()
+    assert result.trace_path == result.run_dir / ".writing" / "trace" / "process.jsonl"
 
 
 def test_executor_start_failure_preserves_empty_transport_evidence(tmp_path):
