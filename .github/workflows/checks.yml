@@ -1,0 +1,119 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  doc-consistency:
+    # Breaking this job means reader-facing documents can drift from plugin contents.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect documentation checker and plugin roots
+        id: doc_inputs
+        shell: bash
+        run: |
+          if [[ ! -f tools/check-doc-consistency.sh ]]; then
+            echo "::notice::tools/check-doc-consistency.sh is absent; skipping documentation consistency checks."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          elif [[ -d plugin || -d experiments/plugin ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No plugin root (plugin/ or experiments/plugin/) exists; skipping documentation consistency checks."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run documentation consistency checker
+        if: ${{ steps.doc_inputs.outputs.available == 'true' }}
+        run: python3 tools/check-doc-consistency.sh
+
+  skill-validation:
+    # Breaking this job means bundled skills or plugin manifests are invalid.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Detect skill validator
+        id: validator
+        shell: bash
+        run: |
+          if [[ -f tools/validate-skills.sh ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::tools/validate-skills.sh is absent; skipping skill validation."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up uv for pinned skill validators
+        if: ${{ steps.validator.outputs.available == 'true' }}
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: false
+
+      - name: Run skill validators
+        if: ${{ steps.validator.outputs.available == 'true' }}
+        run: tools/validate-skills.sh
+
+      - name: Validate plugin manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifests=()
+          for root in plugin experiments/plugin; do
+            [[ -d "$root" ]] || continue
+            while IFS= read -r -d '' manifest; do
+              manifests+=("$manifest")
+            done < <(find "$root" -type f \( -path '*/.claude-plugin/plugin.json' -o -path '*/.codex-plugin/plugin.json' \) -print0)
+          done
+
+          if (( ${#manifests[@]} == 0 )); then
+            echo "::notice::No plugin manifests found; skipping JSON validation."
+            exit 0
+          fi
+
+          for manifest in "${manifests[@]}"; do
+            echo "Validating $manifest"
+            python3 -m json.tool "$manifest" > /dev/null
+          done
+
+  python-tests:
+    # Breaking this job means the root Python workspace tests are failing.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Detect root uv workspace
+        id: workspace
+        shell: bash
+        run: |
+          if [[ -f uv.lock ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No root uv.lock found; skipping Python workspace tests."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up uv
+        if: ${{ steps.workspace.outputs.available == 'true' }}
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run Python tests
+        if: ${{ steps.workspace.outputs.available == 'true' }}
+        run: uv run pytest
