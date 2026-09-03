@@ -2,8 +2,8 @@ import hashlib
 import json
 
 import pytest
-from experiment_runner.errors import ManifestError
-from experiment_runner.manifest import load_prompt_manifest
+from agentic_cogwriter.runner.errors import ManifestError
+from agentic_cogwriter.runner.manifest import load_prompt_manifest
 
 
 def _digest(value: object) -> str:

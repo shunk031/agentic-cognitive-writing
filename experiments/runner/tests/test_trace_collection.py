@@ -1,12 +1,12 @@
 import json
 
 import pytest
-from experiment_runner.conditions import load_condition_registry
-from experiment_runner.config import RuntimeConfig
-from experiment_runner.errors import BudgetExceeded, RetrievalViolation
-from experiment_runner.execution import ExecutionResult
-from experiment_runner.manifest import PromptRecord
-from experiment_runner.runner import ExperimentRunner
+from agentic_cogwriter.runner.conditions import load_condition_registry
+from agentic_cogwriter.runner.config import RuntimeConfig
+from agentic_cogwriter.runner.errors import BudgetExceeded, RetrievalViolation
+from agentic_cogwriter.runner.execution import ExecutionResult
+from agentic_cogwriter.runner.manifest import PromptRecord
+from agentic_cogwriter.runner.runner import ExperimentRunner
 
 
 class FakeExecutor:

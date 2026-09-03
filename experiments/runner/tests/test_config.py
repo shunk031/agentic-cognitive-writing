@@ -1,8 +1,8 @@
 import json
 
 import pytest
-from experiment_runner.config import REQUIRED_RUNTIME_FIELDS, RuntimeConfig
-from experiment_runner.errors import ConfigurationError
+from agentic_cogwriter.runner.config import REQUIRED_RUNTIME_FIELDS, RuntimeConfig
+from agentic_cogwriter.runner.errors import ConfigurationError
 
 
 def test_runtime_placeholders_block_scored_runs(tmp_path):

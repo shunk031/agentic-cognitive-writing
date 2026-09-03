@@ -1,6 +1,6 @@
 import pytest
-from experiment_runner.budget import OutputBudget
-from experiment_runner.errors import BudgetExceeded
+from agentic_cogwriter.runner.budget import OutputBudget
+from agentic_cogwriter.runner.errors import BudgetExceeded
 
 
 def test_output_budget_tracks_total_across_sequential_stages():

@@ -71,7 +71,7 @@ class ExperimentRunner:
         self.adapters = adapters or self._load_adapters()
 
     def _load_adapters(self) -> dict[str, PlatformAdapter]:
-        root = Path(__file__).resolve().parents[3] / "conditions" / "adapters"
+        root = Path(__file__).resolve().parents[4] / "conditions" / "adapters"
         return {
             "codex-primary": PlatformAdapter.load(root / "codex_exec.toml"),
             "claude-code-replication": PlatformAdapter.load(root / "claude_print.toml"),

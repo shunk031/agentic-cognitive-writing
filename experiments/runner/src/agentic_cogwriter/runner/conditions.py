@@ -51,7 +51,7 @@ class ConditionSpec:
 def default_registry_path() -> Path:
     """Return the registry path relative to this source file."""
 
-    return Path(__file__).resolve().parents[3] / "conditions" / "conditions.json"
+    return Path(__file__).resolve().parents[4] / "conditions" / "conditions.json"
 
 
 def _load_toml(path: Path) -> dict[str, Any]:

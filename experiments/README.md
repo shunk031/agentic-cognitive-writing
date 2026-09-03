@@ -24,7 +24,7 @@ The repository uses uv for the Python environment. From the repository root, run
 ```bash
 uv sync
 uv run pytest
-uv run --package experiment-runner pytest experiments/runner/tests
+uv run --package agentic-cogwriter-runner pytest experiments/runner/tests
 ```
 
 The test suite checks prompt and manifest hashing, runtime placeholder gating, shared output-budget accounting, wrapper metadata, one-session execution, retrieval rejection, and plugin trace collection. The experimenter must resolve any test failure before starting a scored run.
@@ -42,7 +42,7 @@ The A1 to A3 wrappers name skills from the sibling `cognitive-writing-baselines`
 The experimenter chooses the platform and condition. Codex uses `codex exec` and Claude Code uses `claude --print`. Each wrapper supplies its package skill invocation, and the runner sends the assignment and supplied context through one top-level session. Retries reuse the same command policy and do not add content or budget.
 
 ```bash
-uv run --package experiment-runner experiment-runner \
+uv run --package agentic-cogwriter-runner agentic-cogwriter-runner \
   --manifest experiments/prompts/manifests/writingbench.jsonl \
   --prompt-id writingbench-0001 \
   --condition A1 \
