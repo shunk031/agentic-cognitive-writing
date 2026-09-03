@@ -8,7 +8,7 @@ The experiment runner starts one headless top-level skill session for each condi
 | --- | --- |
 | [`config/`](config/) | Runtime gate and model, judge, decoding, seed, and analysis settings |
 | [`prompts/`](prompts/) | One immutable manifest per benchmark |
-| [`conditions/`](conditions/) | A1 to A8 wrapper configs, frozen A1 to A3 prompt files, and platform adapters |
+| [`conditions/`](conditions/) | A1 to A6 and B1 to B2 wrapper configs, frozen A1 to A3 prompt files, and platform adapters |
 | [`runner/`](runner/) | Python package for execution, manifests, budgets, and trace collection |
 | [`judge/`](judge/) | Reserved for judge prompts and runners |
 | [`human/`](human/) | Reserved for human validation |
@@ -34,7 +34,7 @@ The experimenter first materializes `writingbench.json`, `hellobench.json`, and 
 
 The experimenter then creates a complete runtime configuration outside the tracked placeholder file. The configuration must replace every `REQUIRED_AT_RUNTIME` value in [`config/runtime.json`](config/runtime.json), including model and judge assignments, decoding, output budget, timeout, retry policy, seeds, CLI versions, plugin commits, and analysis gates. The runner refuses to start a scored run while one value remains open or a required field is missing.
 
-The A1 to A3 wrappers name skills from the sibling `cognitive-writing-baselines` package. This deliverable references that package and does not include its implementation. A4 uses the `agentic-cognitive-writing` package. A5 and A6 use the `cognitive-writing-experiments` package together with the main package. A7 and A8 use the baseline package and are reported as exploratory conditions.
+The A1 to A3 wrappers name skills from the sibling `cognitive-writing-baselines` package. This deliverable references that package and does not include its implementation. A4 uses the `agentic-cognitive-writing` package. A5 and A6 use the `cognitive-writing-experiments` package together with the main package. B1 and B2 use the baseline package and are reported as exploratory conditions.
 
 ## Run one condition and prompt
 
@@ -56,4 +56,4 @@ The default tracked configuration stops in preflight. A1 to A3 require the sibli
 
 Each successful run contains `run-manifest.json`, `output.raw`, `output.normalized.txt`, the plugin-owned `.writing/trace/process.jsonl`, and `checksums.json`. Plugin state files such as `.writing/goals.md` and `.writing/draft.md` are copied when present. The runner preserves raw output bytes and does not rewrite claims or paragraph boundaries during normalization.
 
-The runner fails closed when a headless event reports web search, browser use, retrieval, an MCP tool call, or a network command. The runner gives every condition the same timeout, retry count, supplied-context policy, and output budget. A3 does not generate citations. Its retrieval, evidence, and citation trace policy is `N/A` by design. A7 and A8 remain outside the confirmatory family.
+The runner fails closed when a headless event reports web search, browser use, retrieval, an MCP tool call, or a network command. The runner gives every condition the same timeout, retry count, supplied-context policy, and output budget. A3 does not generate citations. Its retrieval, evidence, and citation trace policy is `N/A` by design. B1 and B2 remain outside the confirmatory family.

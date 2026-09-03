@@ -4,6 +4,6 @@ The condition registry binds each condition to one package skill, one platform a
 
 The A1 to A3 files under `prompts/` remain frozen prompt specifications with content hashes. The corresponding wrapper files invoke `writing-single-shot`, `writing-linear`, and `writing-storm-style` from the sibling `cognitive-writing-baselines` package. The package implementation is outside this pull request.
 
-A4 invokes `agentic-cog-writer` from `agentic-cognitive-writing`. A5 and A6 invoke `cognitive-writing-no-goal-network` and `cognitive-writing-fixed-order` from `cognitive-writing-experiments`. A7 and A8 invoke `writing-cogwriter-style` and `writing-writehere-style` from the baseline package. The registry marks A7 and A8 as exploratory.
+A4 invokes `agentic-cog-writer` from `agentic-cognitive-writing`. A5 and A6 invoke `cognitive-writing-no-goal-network` and `cognitive-writing-fixed-order` from `cognitive-writing-experiments`. B1 and B2 invoke `writing-cogwriter-style` and `writing-writehere-style` from the baseline package. The registry marks B1 and B2 as exploratory.
 
 Every condition uses `.writing/trace/process.jsonl` written by its selected skill. A3 omits citation generation and marks retrieval, evidence, and citation traces as `N/A` in its wrapper policy.

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from .conditions import CONDITION_IDS
 from .config import RuntimeConfig
 from .manifest import load_prompt_manifest
 from .runner import ExperimentRunner
@@ -18,7 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--prompt-id", required=True)
     parser.add_argument(
         "--condition",
-        choices=tuple(f"A{index}" for index in range(1, 9)),
+        choices=CONDITION_IDS,
         required=True,
     )
     parser.add_argument("--platform", choices=("codex-primary", "claude-code-replication"), required=True)

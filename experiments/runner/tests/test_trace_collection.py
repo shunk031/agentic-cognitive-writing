@@ -80,10 +80,12 @@ def _config():
 def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions():
     registry = load_condition_registry()
 
-    assert set(registry) == {f"A{index}" for index in range(1, 9)}
+    assert set(registry) == {*(f"A{index}" for index in range(1, 7)), "B1", "B2"}
     assert all(condition.kind == "plugin" for condition in registry.values())
     assert all(condition.trace_mode == "plugin_recorded" for condition in registry.values())
-    assert [registry[f"A{index}"].skill_name for index in range(1, 9)] == [
+    assert [registry[condition].skill_name for condition in (
+        "A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2"
+    )] == [
         "writing-single-shot",
         "writing-linear",
         "writing-storm-style",
@@ -94,7 +96,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "writing-writehere-style",
     ]
     assert all(registry[f"A{index}"].analysis_family == "confirmatory" for index in range(1, 7))
-    assert all(registry[f"A{index}"].analysis_family == "exploratory" for index in (7, 8))
+    assert all(registry[condition].analysis_family == "exploratory" for condition in ("B1", "B2"))
 
 
 def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):

@@ -91,18 +91,18 @@
       "wrapper_config": "a6_plugin.toml",
       "stages": [{"id": "plugin_session"}]
     },
-    "A7": {
+    "B1": {
       "kind": "plugin",
       "analysis_family": "exploratory",
       "trace_mode": "plugin_recorded",
-      "wrapper_config": "a7_exploratory.toml",
+      "wrapper_config": "b1_exploratory.toml",
       "stages": [{"id": "plugin_session"}]
     },
-    "A8": {
+    "B2": {
       "kind": "plugin",
       "analysis_family": "exploratory",
       "trace_mode": "plugin_recorded",
-      "wrapper_config": "a8_exploratory.toml",
+      "wrapper_config": "b2_exploratory.toml",
       "stages": [{"id": "plugin_session"}]
     }
   }

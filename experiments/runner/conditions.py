@@ -11,8 +11,9 @@ from typing import Any, Mapping
 from .errors import ConfigurationError
 from .hashing import sha256_bytes
 
-CONDITION_IDS = tuple(f"A{index}" for index in range(1, 9))
+CONDITION_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2")
 BASELINE_IDS = ("A1", "A2", "A3")
+EXPLORATORY_IDS = ("B1", "B2")
 PLATFORMS = ("codex-primary", "claude-code-replication")
 
 
@@ -186,7 +187,7 @@ def load_condition_registry(path: Path | None = None) -> dict[str, ConditionSpec
         raise ConfigurationError(f"Cannot read condition registry {registry_path}: {exc}") from exc
     entries = document.get("conditions") if isinstance(document, dict) else None
     if not isinstance(entries, dict) or set(entries) != set(CONDITION_IDS):
-        raise ConfigurationError("Condition registry must define exactly A1 through A8")
+        raise ConfigurationError("Condition registry must define exactly A1 through A6, B1, and B2")
 
     result: dict[str, ConditionSpec] = {}
     for condition_id in CONDITION_IDS:
