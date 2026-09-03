@@ -27,7 +27,9 @@ class ExecutionResult:
 class SubprocessExecutor:
     """Run argv directly with one common timeout."""
 
-    def run(self, command: list[str], *, cwd: Path, timeout_seconds: float) -> ExecutionResult:
+    def run(
+        self, command: list[str], *, cwd: Path, timeout_seconds: float
+    ) -> ExecutionResult:
         """Execute one command without shell expansion."""
 
         started = time.monotonic()
@@ -40,8 +42,12 @@ class SubprocessExecutor:
                 timeout=timeout_seconds,
             )
         except subprocess.TimeoutExpired as exc:
-            stdout = exc.stdout if isinstance(exc.stdout, bytes) else (exc.stdout or b"")
-            stderr = exc.stderr if isinstance(exc.stderr, bytes) else (exc.stderr or b"")
+            stdout = (
+                exc.stdout if isinstance(exc.stdout, bytes) else (exc.stdout or b"")
+            )
+            stderr = (
+                exc.stderr if isinstance(exc.stderr, bytes) else (exc.stderr or b"")
+            )
             return ExecutionResult(
                 returncode=-1,
                 stdout=stdout,
@@ -112,11 +118,13 @@ def extract_output(data: bytes) -> str:
     candidates: list[str] = []
     for value in _json_objects(data):
         item = value.get("item")
-        if isinstance(item, dict):
-            if item.get("type") in {"agent_message", "assistant_message"}:
-                text = item.get("text")
-                if isinstance(text, str):
-                    candidates.append(text)
+        if isinstance(item, dict) and item.get("type") in {
+            "agent_message",
+            "assistant_message",
+        }:
+            text = item.get("text")
+            if isinstance(text, str):
+                candidates.append(text)
         for key in ("result", "text"):
             if isinstance(value.get(key), str):
                 candidates.append(value[key])
@@ -137,9 +145,11 @@ def _retrieval_marker(value: Any) -> str | None:
     }
     if isinstance(value, dict):
         for key, item in value.items():
-            if key in {"type", "tool", "tool_name", "event_type", "method"}:
-                if isinstance(item, str) and any(marker in item.lower() for marker in markers):
-                    return item
+            if key in {"type", "tool", "tool_name", "event_type", "method"} and (
+                isinstance(item, str)
+                and any(marker in item.lower() for marker in markers)
+            ):
+                return item
             if key == "command" and isinstance(item, str):
                 command = item.lower()
                 if any(token in command.split() for token in {"curl", "wget"}):
@@ -162,4 +172,6 @@ def reject_retrieval(stdout: bytes, stderr: bytes) -> None:
         for value in _json_objects(payload):
             marker = _retrieval_marker(value)
             if marker:
-                raise RetrievalViolation(f"Unpermitted retrieval event observed: {marker}")
+                raise RetrievalViolation(
+                    f"Unpermitted retrieval event observed: {marker}"
+                )

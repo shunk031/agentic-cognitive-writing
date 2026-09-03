@@ -23,14 +23,22 @@ class PlatformAdapter:
     prompt_mode: str
 
     @classmethod
-    def load(cls, path: Path) -> "PlatformAdapter":
+    def load(cls, path: Path) -> PlatformAdapter:
         """Load one frozen adapter definition from TOML."""
 
         try:
             data = tomllib.loads(path.read_text(encoding="utf-8"))
         except (OSError, tomllib.TOMLDecodeError) as exc:
-            raise ConfigurationError(f"Cannot read platform adapter {path}: {exc}") from exc
-        required = ("platform", "executable", "first_args", "continuation_args", "version_args")
+            raise ConfigurationError(
+                f"Cannot read platform adapter {path}: {exc}"
+            ) from exc
+        required = (
+            "platform",
+            "executable",
+            "first_args",
+            "continuation_args",
+            "version_args",
+        )
         missing = [field for field in required if field not in data]
         if missing:
             raise ConfigurationError(f"Adapter {path} is missing: {', '.join(missing)}")
@@ -56,12 +64,16 @@ class PlatformAdapter:
             if "workspace-write" not in self.first_args:
                 raise ConfigurationError("Codex adapter must allow plugin trace writes")
             if self.continuation_args[:2] != ("exec", "resume"):
-                raise ConfigurationError("Codex continuation must use codex exec resume")
+                raise ConfigurationError(
+                    "Codex continuation must use codex exec resume"
+                )
         elif self.platform == "claude-code-replication":
             if "--print" not in self.first_args:
                 raise ConfigurationError("Claude adapter must use claude --print")
             if "Read,Write,Edit" not in self.first_args:
-                raise ConfigurationError("Claude adapter must allow plugin trace writes")
+                raise ConfigurationError(
+                    "Claude adapter must allow plugin trace writes"
+                )
             if "--resume" not in self.continuation_args:
                 raise ConfigurationError("Claude continuation must use --resume")
         else:
@@ -101,7 +113,8 @@ class PlatformAdapter:
             )
         except (OSError, subprocess.SubprocessError) as exc:
             raise ConfigurationError(
-                f"Cannot validate installed {self.platform} CLI {self.executable}: {exc}"
+                f"Cannot validate installed {self.platform} CLI "
+                f"{self.executable}: {exc}"
             ) from exc
         version = (result.stdout or result.stderr).strip()
         if not version:

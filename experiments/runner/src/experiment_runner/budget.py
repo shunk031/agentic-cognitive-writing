@@ -32,14 +32,15 @@ class OutputBudget:
             raise ValueError("Output consumption cannot be negative")
         if amount > self.remaining:
             raise BudgetExceeded(
-                f"Stage {stage} needs {amount} output units but only {self.remaining} remain"
+                f"Stage {stage} needs {amount} output units but only "
+                f"{self.remaining} remain"
             )
         self.used += amount
         self.stages.append((stage, amount))
 
 
 def estimate_output_tokens(text: str) -> int:
-    """Use a deterministic conservative fallback when a pinned tokenizer is unavailable."""
+    """Use a deterministic fallback when a pinned tokenizer is unavailable."""
 
     if not text.strip():
         return 0

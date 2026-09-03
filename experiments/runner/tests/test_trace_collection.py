@@ -1,13 +1,12 @@
 import json
 
 import pytest
-
-from experiments.runner.conditions import load_condition_registry
-from experiments.runner.config import RuntimeConfig
-from experiments.runner.errors import BudgetExceeded, RetrievalViolation
-from experiments.runner.execution import ExecutionResult
-from experiments.runner.manifest import PromptRecord
-from experiments.runner.runner import ExperimentRunner
+from experiment_runner.conditions import load_condition_registry
+from experiment_runner.config import RuntimeConfig
+from experiment_runner.errors import BudgetExceeded, RetrievalViolation
+from experiment_runner.execution import ExecutionResult
+from experiment_runner.manifest import PromptRecord
+from experiment_runner.runner import ExperimentRunner
 
 
 class FakeExecutor:
@@ -82,10 +81,13 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
 
     assert set(registry) == {*(f"A{index}" for index in range(1, 7)), "B1", "B2"}
     assert all(condition.kind == "plugin" for condition in registry.values())
-    assert all(condition.trace_mode == "plugin_recorded" for condition in registry.values())
-    assert [registry[condition].skill_name for condition in (
-        "A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2"
-    )] == [
+    assert all(
+        condition.trace_mode == "plugin_recorded" for condition in registry.values()
+    )
+    assert [
+        registry[condition].skill_name
+        for condition in ("A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2")
+    ] == [
         "writing-single-shot",
         "writing-linear",
         "writing-storm-style",
@@ -95,8 +97,13 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "writing-cogwriter-style",
         "writing-writehere-style",
     ]
-    assert all(registry[f"A{index}"].analysis_family == "confirmatory" for index in range(1, 7))
-    assert all(registry[condition].analysis_family == "exploratory" for condition in ("B1", "B2"))
+    assert all(
+        registry[f"A{index}"].analysis_family == "confirmatory" for index in range(1, 7)
+    )
+    assert all(
+        registry[condition].analysis_family == "exploratory"
+        for condition in ("B1", "B2")
+    )
 
 
 def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
@@ -119,7 +126,10 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
     assert len(executor.calls) == 1
     assert "resume" not in executor.calls[0][0]
     assert any("$writing-linear" in argument for argument in executor.calls[0][0])
-    assert result.trace_path.relative_to(result.run_dir).as_posix() == ".writing/trace/process.jsonl"
+    assert (
+        result.trace_path.relative_to(result.run_dir).as_posix()
+        == ".writing/trace/process.jsonl"
+    )
     checksums = json.loads(result.checksums_path.read_text())
     assert checksums[".writing/trace/process.jsonl"].startswith("sha256:")
 
@@ -161,7 +171,9 @@ def test_runner_rejects_output_over_shared_budget(tmp_path):
     values = dict(config.values)
     values["maximum_output_tokens"] = 1
     runner = ExperimentRunner(
-        RuntimeConfig.from_dict(values), output_root=tmp_path, executor=FakeExecutor(output="two words")
+        RuntimeConfig.from_dict(values),
+        output_root=tmp_path,
+        executor=FakeExecutor(output="two words"),
     )
 
     with pytest.raises(BudgetExceeded):

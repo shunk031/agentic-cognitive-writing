@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import tomllib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .errors import ConfigurationError
 from .hashing import sha256_bytes
@@ -50,14 +51,16 @@ class ConditionSpec:
 def default_registry_path() -> Path:
     """Return the registry path relative to this source file."""
 
-    return Path(__file__).resolve().parents[1] / "conditions" / "conditions.json"
+    return Path(__file__).resolve().parents[3] / "conditions" / "conditions.json"
 
 
 def _load_toml(path: Path) -> dict[str, Any]:
     try:
         value = tomllib.loads(path.read_text(encoding="utf-8"))
     except (OSError, tomllib.TOMLDecodeError) as exc:
-        raise ConfigurationError(f"Cannot read condition wrapper {path}: {exc}") from exc
+        raise ConfigurationError(
+            f"Cannot read condition wrapper {path}: {exc}"
+        ) from exc
     if not isinstance(value, dict):
         raise ConfigurationError(f"Condition wrapper {path} must be a TOML object")
     return value
@@ -70,25 +73,35 @@ def _required_string(mapping: Mapping[str, Any], key: str, *, label: str) -> str
     return value
 
 
-def _load_stages(entry: Mapping[str, Any], registry_path: Path, condition_id: str) -> tuple[StageSpec, ...]:
+def _load_stages(
+    entry: Mapping[str, Any], registry_path: Path, condition_id: str
+) -> tuple[StageSpec, ...]:
     stage_entries = entry.get("stages")
     if not isinstance(stage_entries, list) or not stage_entries:
         raise ConfigurationError(f"Condition {condition_id} must define ordered stages")
     stages: list[StageSpec] = []
     for stage_entry in stage_entries:
-        if not isinstance(stage_entry, Mapping) or not isinstance(stage_entry.get("id"), str):
+        if not isinstance(stage_entry, Mapping) or not isinstance(
+            stage_entry.get("id"), str
+        ):
             raise ConfigurationError(f"Condition {condition_id} has an invalid stage")
         relative = stage_entry.get("path")
-        stage_path = registry_path.parent / relative if isinstance(relative, str) else None
+        stage_path = (
+            registry_path.parent / relative if isinstance(relative, str) else None
+        )
         expected = stage_entry.get("sha256")
         if stage_path is not None:
             if not stage_path.is_file():
                 raise ConfigurationError(f"Missing frozen prompt file: {stage_path}")
-            if not isinstance(expected, str) or sha256_bytes(stage_path.read_bytes()) != expected:
+            if (
+                not isinstance(expected, str)
+                or sha256_bytes(stage_path.read_bytes()) != expected
+            ):
                 raise ConfigurationError(f"Frozen prompt hash mismatch: {stage_path}")
         elif expected is not None:
             raise ConfigurationError(
-                f"Condition {condition_id} stage {stage_entry['id']} has a hash without a path"
+                f"Condition {condition_id} stage {stage_entry['id']} has a hash "
+                "without a path"
             )
         stages.append(
             StageSpec(
@@ -111,7 +124,9 @@ def _load_wrapper(
         raise ConfigurationError(f"Wrapper {wrapper_path} has the wrong condition_id")
     wrapper_family = wrapper.get("analysis_family")
     if wrapper_family != analysis_family:
-        raise ConfigurationError(f"Wrapper {wrapper_path} has the wrong analysis_family")
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} has the wrong analysis_family"
+        )
 
     skill_name = _required_string(wrapper, "skill", label=str(wrapper_path))
     package = wrapper.get("package")
@@ -130,7 +145,9 @@ def _load_wrapper(
 
     invocation = wrapper.get("invocation")
     if not isinstance(invocation, Mapping):
-        raise ConfigurationError(f"Wrapper {wrapper_path} must define an invocation table")
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} must define an invocation table"
+        )
     for platform in PLATFORMS:
         invocation_value = _required_string(
             invocation,
@@ -151,12 +168,18 @@ def _load_wrapper(
             raise ConfigurationError(
                 f"Wrapper {wrapper_path} must define install commands for {platform}"
             )
-        if not all(isinstance(command, str) and command.strip() for command in commands):
-            raise ConfigurationError(f"Wrapper {wrapper_path} install commands must be strings")
+        if not all(
+            isinstance(command, str) and command.strip() for command in commands
+        ):
+            raise ConfigurationError(
+                f"Wrapper {wrapper_path} install commands must be strings"
+            )
 
     adapters = wrapper.get("adapters")
     if not isinstance(adapters, Mapping):
-        raise ConfigurationError(f"Wrapper {wrapper_path} must define an adapters table")
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} must define an adapters table"
+        )
     expected_adapters = {
         "codex_primary": "codex_exec",
         "claude_code_replication": "claude_print",
@@ -184,29 +207,42 @@ def load_condition_registry(path: Path | None = None) -> dict[str, ConditionSpec
     try:
         document = json.loads(registry_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise ConfigurationError(f"Cannot read condition registry {registry_path}: {exc}") from exc
+        raise ConfigurationError(
+            f"Cannot read condition registry {registry_path}: {exc}"
+        ) from exc
     entries = document.get("conditions") if isinstance(document, dict) else None
     if not isinstance(entries, dict) or set(entries) != set(CONDITION_IDS):
-        raise ConfigurationError("Condition registry must define exactly A1 through A6, B1, and B2")
+        raise ConfigurationError(
+            "Condition registry must define exactly A1 through A6, B1, and B2"
+        )
 
     result: dict[str, ConditionSpec] = {}
     for condition_id in CONDITION_IDS:
         entry = entries[condition_id]
         if not isinstance(entry, Mapping):
             raise ConfigurationError(f"Condition {condition_id} must be an object")
-        if entry.get("kind") != "plugin" or entry.get("trace_mode") != "plugin_recorded":
+        if (
+            entry.get("kind") != "plugin"
+            or entry.get("trace_mode") != "plugin_recorded"
+        ):
             raise ConfigurationError(
                 f"Condition {condition_id} must use a plugin_recorded wrapper"
             )
         analysis_family = entry.get("analysis_family")
         if analysis_family not in {"confirmatory", "exploratory"}:
-            raise ConfigurationError(f"Condition {condition_id} has an invalid analysis_family")
+            raise ConfigurationError(
+                f"Condition {condition_id} has an invalid analysis_family"
+            )
         wrapper_relative = entry.get("wrapper_config")
         if not isinstance(wrapper_relative, str):
-            raise ConfigurationError(f"Condition {condition_id} must define wrapper_config")
+            raise ConfigurationError(
+                f"Condition {condition_id} must define wrapper_config"
+            )
         wrapper_path = registry_path.parent / wrapper_relative
         if not wrapper_path.is_file():
-            raise ConfigurationError(f"Missing condition wrapper config: {wrapper_path}")
+            raise ConfigurationError(
+                f"Missing condition wrapper config: {wrapper_path}"
+            )
         skill_name, package_name, trace_policy = _load_wrapper(
             wrapper_path,
             condition_id=condition_id,
@@ -245,12 +281,15 @@ def render_stage_prompt(
             ensure_ascii=False,
             sort_keys=True,
         ),
-        "{{previous_stage_output}}": previous_stage_output or "(No previous stage output.)",
+        "{{previous_stage_output}}": previous_stage_output
+        or "(No previous stage output.)",
         "{{stage_id}}": stage_id,
     }
     rendered = template
     for marker, value in replacements.items():
         rendered = rendered.replace(marker, value)
     if "{{" in rendered or "}}" in rendered:
-        raise ConfigurationError(f"Unresolved placeholder in frozen prompt stage {stage_id}")
+        raise ConfigurationError(
+            f"Unresolved placeholder in frozen prompt stage {stage_id}"
+        )
     return rendered

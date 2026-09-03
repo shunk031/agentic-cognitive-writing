@@ -238,6 +238,21 @@ wheels = [
 ]
 
 [[package]]
+name = "experiment-runner"
+version = "0.1.0"
+source = { editable = "experiments/runner" }
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.3,<9" }]
+
+[[package]]
 name = "filelock"
 version = "3.32.4"
 source = { registry = "https://pypi.org/simple" }

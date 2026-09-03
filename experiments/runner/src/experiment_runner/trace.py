@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +14,7 @@ from .hashing import sha256_file
 def timestamp() -> str:
     """Return a timezone-aware ISO 8601 timestamp."""
 
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 class TraceWriter:
@@ -37,7 +37,9 @@ class TraceWriter:
 def validate_jsonl(path: Path) -> None:
     """Ensure every non-empty trace line is standalone JSON."""
 
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
         try:
             json.loads(line)
         except json.JSONDecodeError as exc:

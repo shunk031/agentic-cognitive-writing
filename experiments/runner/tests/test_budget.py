@@ -1,7 +1,6 @@
 import pytest
-
-from experiments.runner.budget import OutputBudget
-from experiments.runner.errors import BudgetExceeded
+from experiment_runner.budget import OutputBudget
+from experiment_runner.errors import BudgetExceeded
 
 
 def test_output_budget_tracks_total_across_sequential_stages():

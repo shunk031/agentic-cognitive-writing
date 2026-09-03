@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import copy
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .errors import ConfigurationError
 
 PLACEHOLDER = "REQUIRED_AT_RUNTIME"
 
-# These names mirror the protocol's runtime table and pre-scoring gates.
+# Agentic CogWriter settings mirror the protocol's runtime table and pre-scoring gates.
 REQUIRED_RUNTIME_FIELDS = (
     "codex_generator_model",
     "claude_code_generator_model",
@@ -65,19 +66,23 @@ class RuntimeConfig:
     path: Path | None = None
 
     @classmethod
-    def load(cls, path: Path) -> "RuntimeConfig":
+    def load(cls, path: Path) -> RuntimeConfig:
         """Load a JSON runtime configuration and keep its source path."""
 
         try:
             values = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
-            raise ConfigurationError(f"Cannot read runtime config {path}: {exc}") from exc
+            raise ConfigurationError(
+                f"Cannot read runtime config {path}: {exc}"
+            ) from exc
         if not isinstance(values, dict):
             raise ConfigurationError("Runtime config must be a JSON object")
         return cls(copy.deepcopy(values), strict=True, path=path)
 
     @classmethod
-    def from_dict(cls, values: Mapping[str, Any], *, strict: bool = True) -> "RuntimeConfig":
+    def from_dict(
+        cls, values: Mapping[str, Any], *, strict: bool = True
+    ) -> RuntimeConfig:
         """Build settings directly, useful for isolated tests and callers."""
 
         return cls(copy.deepcopy(dict(values)), strict=strict)
@@ -116,7 +121,9 @@ class RuntimeConfig:
         try:
             budget = int(value)
         except (TypeError, ValueError) as exc:
-            raise ConfigurationError("maximum_output_tokens must be an integer") from exc
+            raise ConfigurationError(
+                "maximum_output_tokens must be an integer"
+            ) from exc
         if budget <= 0:
             raise ConfigurationError("maximum_output_tokens must be positive")
         return budget
@@ -139,14 +146,13 @@ class RuntimeConfig:
         """Return the fixed retry count without allowing per-condition changes."""
 
         policy = self.values.get("retry_policy")
-        if isinstance(policy, Mapping):
-            value = policy.get("max_retries", 0)
-        else:
-            value = policy
+        value = policy.get("max_retries", 0) if isinstance(policy, Mapping) else policy
         try:
             retries = int(value)
         except (TypeError, ValueError) as exc:
-            raise ConfigurationError("retry_policy must contain an integer retry count") from exc
+            raise ConfigurationError(
+                "retry_policy must contain an integer retry count"
+            ) from exc
         if retries < 0:
             raise ConfigurationError("retry_policy retry count cannot be negative")
         return retries

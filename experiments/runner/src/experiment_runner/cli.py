@@ -22,7 +22,11 @@ def build_parser() -> argparse.ArgumentParser:
         choices=CONDITION_IDS,
         required=True,
     )
-    parser.add_argument("--platform", choices=("codex-primary", "claude-code-replication"), required=True)
+    parser.add_argument(
+        "--platform",
+        choices=("codex-primary", "claude-code-replication"),
+        required=True,
+    )
     parser.add_argument("--config", type=Path, default=None)
     parser.add_argument("--output-root", type=Path, default=Path("runs"))
     return parser
@@ -32,7 +36,9 @@ def main(argv: list[str] | None = None) -> int:
     """Run one prompt and return a process status."""
 
     args = build_parser().parse_args(argv)
-    config_path = args.config or Path(__file__).resolve().parents[1] / "config" / "runtime.json"
+    config_path = (
+        args.config or Path(__file__).resolve().parents[3] / "config" / "runtime.json"
+    )
     manifest = load_prompt_manifest(args.manifest)
     runner = ExperimentRunner(
         RuntimeConfig.load(config_path),

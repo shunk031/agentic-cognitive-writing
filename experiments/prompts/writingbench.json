@@ -1,8 +1,0 @@
-{
-  "schema_version": 1,
-  "benchmark_name": "WritingBench",
-  "source_version": "pending-materialization",
-  "materialization_status": "not_materialized",
-  "prompts": [],
-  "manifest_hash": "dce4bde813913e1eb43ee5a4b68e85afd1aa449d3cbbb4b81e526c7af5b04790"
-}
