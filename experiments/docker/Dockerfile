@@ -14,6 +14,7 @@ ARG CODEX_VERSION=0.146.0
 ARG CODEX_ARM64_SHA256=975bac91562abeedeb8f79636d51a86649b31f34a9de6a3bcb059565b6cf1f87
 ARG CODEX_AMD64_SHA256=5ba3b9405543953081f661d0854d266f76e2abbe51d41349355a36de7673776a
 ARG GIT_VERSION=1:2.39.5-0+deb12u3
+ARG BWRAP_VERSION=0.8.0-2+deb12u1
 ARG CLAUDE_CODE_VERSION=2.1.236
 ARG UV_VERSION=0.11.32
 
@@ -31,6 +32,7 @@ RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
         ca-certificates \
         curl \
+        bubblewrap="${BWRAP_VERSION}" \
         git="${GIT_VERSION}" \
     && rm -rf /var/lib/apt/lists/*
 
@@ -72,6 +74,7 @@ RUN set -eux; \
     printf '%s  %s\n' "${codex_sha256}" /tmp/codex.tar.gz | sha256sum --check --status; \
     tar --extract --gzip --file /tmp/codex.tar.gz --directory /tmp; \
     install --mode 0755 "/tmp/${codex_binary}" /usr/local/bin/codex; \
+    ln --symbolic /usr/local/bin/codex /usr/local/bin/codex-linux-sandbox; \
     rm -f /tmp/codex.tar.gz "/tmp/${codex_binary}"; \
     codex --version | grep --fixed-strings "${CODEX_VERSION}"; \
     uv --version | grep --fixed-strings "uv ${UV_VERSION}"; \

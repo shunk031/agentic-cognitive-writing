@@ -14,6 +14,7 @@ Run the runner with the same mounts as the wrapper. The image includes both pinn
 
 ```bash
 docker run --rm --init \
+  --security-opt seccomp=unconfined \
   --user "$(id -u):$(id -g)" \
   --workdir /workspace \
   --mount "type=bind,src=$PWD,dst=/workspace" \

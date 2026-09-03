@@ -1,6 +1,6 @@
 # Docker experiment environment
 
-The Docker environment runs the experiment runner in a disposable container while keeping the repository as the working tree on the host. The image contains Python 3.12.11, Node.js 24.7.0, uv 0.11.32, git 2.39.5, Codex CLI 0.146.0, and Claude Code CLI 2.1.236.
+The Docker environment runs the experiment runner in a disposable container while keeping the repository as the working tree on the host. The image contains Python 3.12.11, Node.js 24.7.0, uv 0.11.32, git 2.39.5, bubblewrap 0.8.0, Codex CLI 0.146.0, and Claude Code CLI 2.1.236.
 
 ## Main path
 
@@ -23,6 +23,8 @@ Use `codex-primary` for the Codex platform or `claude-code-replication` for the 
 If your provider config resolves credentials through an auth helper command, pass its name and the credential variable with `--auth-command NAME --auth-env VAR` alongside `--env-file`. The wrapper generates a temporary three-line helper, mounts it read-only at the requested command path, and removes it when the container exits. Use `--dry-run` to inspect the Docker arguments without starting the container.
 
 The wrapper builds the image on first use. The repository is mounted read-write at `/workspace`, and the host `~/.codex/config.toml` is mounted read-only at `/home/codex/.codex/config.toml`. The wrapper passes common proxy variables from the calling shell only if your network requires proxy forwarding.
+
+Codex command sandboxing inside the container requires `--security-opt seccomp=unconfined`; the wrapper adds this option automatically. The `SYS_ADMIN` capability is not required.
 
 Pass `--ca-file /path/to/ca-bundle.pem` only if your network requires an additional proxy CA. The entrypoint appends the mounted certificate to the image trust bundle for the runner process.
 

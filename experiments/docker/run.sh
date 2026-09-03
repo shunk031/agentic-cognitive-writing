@@ -169,6 +169,7 @@ docker_args=(
     run
     --rm
     --init
+    --security-opt seccomp=unconfined
     --user "$(id -u):$(id -g)"
     --workdir /workspace
     --mount "type=bind,src=${repo_root},dst=/workspace"
