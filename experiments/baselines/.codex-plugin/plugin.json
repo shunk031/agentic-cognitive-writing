@@ -1,0 +1,9 @@
+{
+  "name": "cognitive-writing-baselines",
+  "version": "0.1.0",
+  "description": "Baseline and comparison-system skills for controlled writing-process experiments.",
+  "author": {
+    "name": "shunk031"
+  },
+  "skills": "./skills/"
+}

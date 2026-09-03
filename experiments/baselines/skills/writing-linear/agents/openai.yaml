@@ -1,0 +1,7 @@
+interface:
+  display_name: "Linear writing"
+  short_description: "Run fixed Pre-Write, Write, and Re-Write passes"
+  default_prompt: "Run condition A2 with one pass per fixed stage."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Adaptive Task Planning"
+  short_description: "Run confirmatory A3 with adaptive recursive task planning"
+  default_prompt: "Run confirmatory condition A3 Adaptive Task Planning with a persisted reasoning/composition task graph."
+
+policy:
+  allow_implicit_invocation: false

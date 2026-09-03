@@ -1,0 +1,16 @@
+{
+  "skill_name": "writing-adaptive-task-planning",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run confirmatory condition A3 Adaptive Task Planning for the supplied writing assignment.",
+      "expected_output": "The run persists a typed reasoning/composition task graph, recursively alternates decomposition and execution, and leaves retrieval handling not applicable.",
+      "files": [],
+      "expectations": [
+        "Persists graph state after mutations.",
+        "Keeps adaptation on task structure rather than writing-process selection.",
+        "Uses native subagents without retrieval or nested codex exec calls."
+      ]
+    }
+  ]
+}

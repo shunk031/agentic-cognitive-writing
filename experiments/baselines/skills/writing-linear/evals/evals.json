@@ -1,0 +1,16 @@
+{
+  "skill_name": "writing-linear",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run condition A2 for the supplied writing assignment.",
+      "expected_output": "The run executes exactly one Pre-Write, one Write, and one Re-Write pass and hands each stage output to the next.",
+      "files": [],
+      "expectations": [
+        "Preserves the fixed stage order.",
+        "Uses a total output budget equal to the single-shot condition.",
+        "Appends exactly three schema-valid stage-transition events."
+      ]
+    }
+  ]
+}
