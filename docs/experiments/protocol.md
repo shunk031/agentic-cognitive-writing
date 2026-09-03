@@ -45,7 +45,7 @@ The pointwise two-judge composite is the sole CONFIRMATORY estimand. The composi
 
 The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. The pairwise average estimates the relative ability of the conditions from pairwise choices. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
 
-The protocol also defines process and replication estimands. The primary process estimands are goal events, adaptive process switches, interruptions, and pop-back events. Report rates and distributions for each. The replication estimand is the direction and size of the A4 treatment effect under the secondary platform. Report it separately from the primary platform.
+The protocol also defines process and replication estimands. The primary process estimands are goal events, adaptive process switches, within-process operation counts, and pop-back events. Report rates and distributions for each. The replication estimand is the direction and size of the A4 treatment effect under the secondary platform. Report it separately from the primary platform.
 
 ## Six core conditions and two exploratory conditions
 
@@ -70,7 +70,7 @@ All enabled conditions share the same skill-and-subagent framework and the plugi
 
 **No-goal-network condition A5.** Condition A5 invokes `cognitive-writing-no-goal-network` from the `cognitive-writing-experiments` plugin. The variant uses the assignment as one implicit objective. The `Monitor` chooses `Planning`, `Translating`, or `Reviewing` without a hierarchical goal network. The runner leaves any existing `.writing/goals.md` untouched, records process switches under the shared trace contract, and records no goal events or goal fields.
 
-**Fixed-order condition A6.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin and retains Agentic CogWriter's full state: current text, goal network, and process history. The process implementations remain unchanged. A6 replaces only the `Monitor`'s selection function with the fixed cyclic order `Planning -> Translating -> Reviewing` and differs from A4 only in that selection rule. No interrupt-and-return rule remains. The runner keeps the ordinary goal network and records process switches, goal events, and process-history updates under the shared trace contract.
+**Fixed-order condition A6.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin and retains Agentic CogWriter's full state: current text, goal network, and process history. The process implementations remain unchanged. A6 replaces only the `Monitor`'s selection function with the fixed cycle `Planning -> Translating -> Reviewing` and differs from A4 only in that selection rule. The runner keeps the ordinary goal network and records process switches, goal events, and process-history updates under the shared trace contract.
 
 **CogWriter-style exploratory condition B1.** Condition B1 invokes `writing-cogwriter-style` as an adaptation of CogWriter [^18], not as a reproduction of that system. The skill uses a structured plan and plan revision, parallel segment generation, length review, a fixed top-level order, and no goal network. The skill writes its observable actions to the shared trace path.
 
@@ -395,7 +395,7 @@ Report transition counts and rates per run.
 
 **Process-order entropy.** Compute Shannon entropy [^12] over normalized process sequences and over transition distributions. Report raw entropy, the number of observed states, and the normalization rule.
 
-**Within-process operations.** Count Generate operations within `Planning` and Evaluate operations within `Reviewing`. Neither operation is a process switch, and the analysis must not treat either operation as an interruption.
+**Within-process operations.** Count Generate operations within `Planning` and Evaluate operations within `Reviewing`. Report both as within-process operation counts.
 
 **Pop-back events.** Count returns to an immediate parent goal after a child goal resolves. Use the child and parent IDs, status or history, and the next process event. Report unresolved parent links as trace-quality failures.
 
