@@ -43,7 +43,7 @@ flowchart TB
     memory <--> processes
 ```
 
-In the original figure from ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1], the arrows indicate information flow between processes, not a fixed left-to-right sequence.
+Footnote 11 of ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] explains that the original figure's arrows indicate information flow between processes, not a fixed left-to-right sequence.
 
 The table maps each model element to the plugin artifact that carries out the corresponding work. The rhetorical problem means the topic, audience, and reason for writing; exigency is the situation that makes writing necessary.
 

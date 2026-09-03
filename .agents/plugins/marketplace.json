@@ -27,18 +27,6 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Productivity"
-    },
-    {
-      "name": "cognitive-writing-baselines",
-      "source": {
-        "source": "local",
-        "path": "./experiments/baselines"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
     }
   ]
 }
