@@ -35,6 +35,7 @@ from agentic_cogwriter.prompts.materialize import (
     dolomites_archive_counts,
     hash_manifest_row,
     materialize,
+    pretty_json,
     provenance,
     sha256_file,
     validate_manifest_row,
@@ -111,6 +112,19 @@ def test_hash_is_canonical_and_excludes_hash_field() -> None:
     assert canonical_json(left) == canonical_json(right)
     assert hash_manifest_row(left) == hash_manifest_row(right)
     assert hash_manifest_row({**left, "hash": "ignored"}) == hash_manifest_row(left)
+
+
+def test_plain_json_is_pretty_sorted_and_byte_deterministic(tmp_path: Path) -> None:
+    value = {"nested": {"b": 2, "a": 1}, "key": "value"}
+    target = tmp_path / "provenance.json"
+    expected = '{\n  "key": "value",\n  "nested": {\n    "a": 1,\n    "b": 2\n  }\n}\n'
+
+    materialize_module._write_json(target, value)
+    assert target.read_text() == expected
+    assert target.read_text() == pretty_json(value) + "\n"
+
+    materialize_module._write_json(target, value)
+    assert target.read_text() == expected
 
 
 def test_validate_manifest_row_rejects_invalid_contract_fields() -> None:
@@ -472,9 +486,13 @@ def test_recompute_split_cli_writes_observed_counts(
 
     assert split_module.main(["--archive", str(archive), "--output", str(output)]) == 0
     result = json.loads(output.read_text())
+    assert output.read_text() == pretty_json(result) + "\n"
     assert result["observed_counts"] == {"dev": 1, "test": 1}
     assert result["manifest_subset"] == "dev"
     assert json.loads(capsys.readouterr().out)["archive_sha256"] == archive_hash
+
+    assert split_module.main(["--archive", str(archive), "--output", str(output)]) == 0
+    assert output.read_text() == pretty_json(result) + "\n"
 
 
 def test_recompute_split_cli_rejects_an_unpinned_archive(

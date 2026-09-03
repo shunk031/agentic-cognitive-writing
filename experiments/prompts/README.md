@@ -44,11 +44,11 @@ regeneration succeeds only when the bytes are identical.
 
 ## Pinned sources and counts
 
-| Benchmark | Pinned source | Source content | Manifest | License |
-| --- | --- | ---: | ---: | --- |
-| WritingBench | [`X-PLUG/WritingBench@9c24bb67`](https://github.com/X-PLUG/WritingBench/tree/9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad) | `benchmark_query/benchmark_all.jsonl`, SHA-256 `026e3f9482ff3474c802cd43f5cae9fd584e10d0848d3e0a152695434becbc98` | 1,000 | Apache-2.0 |
-| HelloBench | [`Quehry/HelloBench@92c7d469`](https://github.com/Quehry/HelloBench/tree/92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57) | Five `data/main_data/*.jsonl` files, hashes recorded in [`provenance.json`](provenance.json) | 647 | MIT |
-| DoLoMiTes | [`google-deepmind/dolomites@8331dd99`](https://github.com/google-deepmind/dolomites/tree/8331dd998bf510cacc58d10ad613c9e685787747) plus the released [`dolomites_examples.zip`](https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip) | Archive SHA-256 `62ee47b4cdf67d1efd7a21029384a929e3d66cab49989aab85ea3534b8b86c32` | 820 dev rows | CC BY 4.0 |
+| Benchmark | Pinned source | Source content | Manifest |
+| --- | --- | ---: | ---: |
+| WritingBench | [`X-PLUG/WritingBench@9c24bb67`](https://github.com/X-PLUG/WritingBench/tree/9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad) | `benchmark_query/benchmark_all.jsonl`, SHA-256 `026e3f9482ff3474c802cd43f5cae9fd584e10d0848d3e0a152695434becbc98` | 1,000 |
+| HelloBench | [`Quehry/HelloBench@92c7d469`](https://github.com/Quehry/HelloBench/tree/92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57) | Five `data/main_data/*.jsonl` files, hashes recorded in [`provenance.json`](provenance.json) | 647 |
+| DoLoMiTes | [`google-deepmind/dolomites@8331dd99`](https://github.com/google-deepmind/dolomites/tree/8331dd998bf510cacc58d10ad613c9e685787747) plus the released [`dolomites_examples.zip`](https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip) | Archive SHA-256 `62ee47b4cdf67d1efd7a21029384a929e3d66cab49989aab85ea3534b8b86c32` | 820 dev rows |
 
 WritingBench uses the query text from its curated 1,000-query file. HelloBench
 uses the `instruction` and separate `requirements` fields from its five main
@@ -67,24 +67,9 @@ analysis.
 
 ## License and attribution
 
-The manifests redistribute prompt material under the upstream licenses;
-unneeded raw source files remain acquisition-only. WritingBench is Apache-2.0
-and HelloBench is MIT. DoLoMiTes materials are CC BY 4.0, so this repository
-attributes DeepMind Technologies Limited and links the [CC BY 4.0 legal
-code](https://creativecommons.org/licenses/by/4.0/legalcode). The DoLoMiTes
-transformation is: development examples became prompt rows, and reference
-outputs were omitted. Full machine-readable decisions and hashes are in
+WritingBench prompt material is Apache-2.0. HelloBench prompt material is MIT.
+DoLoMiTes materials are CC BY 4.0. Redistributing DoLoMiTes-derived material
+requires attribution to DeepMind Technologies Limited and this change note:
+development examples became prompt rows, and reference outputs were omitted.
+The machine-readable license and provenance record is in
 [`provenance.json`](provenance.json).
-
-The source repositories' relevant implementation/data references are:
-
-- [`WritingBench` benchmark file](https://github.com/X-PLUG/WritingBench/blob/9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad/benchmark_query/benchmark_all.jsonl)
-- [`HelloBench` runner](https://github.com/Quehry/HelloBench/blob/92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57/run.py)
-- [`DoLoMiTes` release README](https://github.com/google-deepmind/dolomites/blob/8331dd998bf510cacc58d10ad613c9e685787747/README.md)
-
-The downloader uses Python's standard [`urllib.request`](https://docs.python.org/3/library/urllib.request.html)
-interface. License decisions were checked against:
-
-- [Apache Software Foundation guidance](https://www.apache.org/legal/apply-license)
-- [OSI MIT text](https://opensource.org/license/mit)
-- [Creative Commons Attribution 4.0 deed](https://creativecommons.org/licenses/by/4.0/)

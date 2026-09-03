@@ -11,8 +11,8 @@ from agentic_cogwriter.prompts.materialize import (
     DOLOMITES_ARCHIVE,
     DOLOMITES_COMMIT,
     acquire,
-    canonical_json,
     dolomites_archive_counts,
+    pretty_json,
     sha256_file,
     write_immutable,
 )
@@ -50,8 +50,8 @@ def main(argv: list[str] | None = None) -> int:
         "authoritative_split": "archive-derived",
         "manifest_subset": "dev",
     }
-    write_immutable(args.output, (canonical_json(result) + "\n").encode("utf-8"))
-    print(canonical_json(result))
+    write_immutable(args.output, (pretty_json(result) + "\n").encode("utf-8"))
+    print(pretty_json(result))
     return 0
 
 

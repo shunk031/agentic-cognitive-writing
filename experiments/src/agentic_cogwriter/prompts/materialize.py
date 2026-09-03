@@ -115,6 +115,12 @@ def canonical_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
+def pretty_json(value: Any) -> str:
+    """Serialize a plain JSON document in the checked-in data-file format."""
+
+    return json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True)
+
+
 def hash_manifest_row(row: dict[str, Any]) -> str:
     """Hash all manifest fields except the self-referential ``hash`` field."""
 
@@ -443,7 +449,7 @@ def provenance(observed_dolomites_counts: dict[str, int]) -> dict[str, Any]:
 
 
 def _write_json(path: Path, value: Any) -> None:
-    write_immutable(path, (canonical_json(value) + "\n").encode("utf-8"))
+    write_immutable(path, (pretty_json(value) + "\n").encode("utf-8"))
 
 
 def materialize(
