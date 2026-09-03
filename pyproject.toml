@@ -1,9 +1,5 @@
-[project]
-name = "agentic-cognitive-writing"
-version = "0.1.0"
-description = "Reproducible experiments for agentic cognitive writing"
-requires-python = ">=3.11"
-dependencies = []
+[tool.uv.workspace]
+members = ["experiments/prompts", "experiments/runner"]
 
 [dependency-groups]
 dev = [
@@ -18,5 +14,16 @@ dev = [
 
 [tool.pytest.ini_options]
 testpaths = ["experiments/prompts/tests"]
-pythonpath = ["."]
+pythonpath = ["experiments/prompts/src"]
 addopts = "-q"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+src = ["experiments/prompts/src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"

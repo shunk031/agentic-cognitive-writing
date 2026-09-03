@@ -13,7 +13,7 @@ repos:
     rev: v2.16
     hooks:
       - id: vulture
-        args: [experiments]
+        args: [experiments/prompts/src, experiments/prompts/tests]
 
   - repo: local
     hooks:
@@ -29,6 +29,6 @@ repos:
         types_or: [python, pyi]
       - id: pytest
         name: pytest (uv)
-        entry: uv run pytest -vsx --cov=experiments/prompts
+        entry: uv run pytest -vsx --cov=benchmark_prompts
         language: system
         pass_filenames: false

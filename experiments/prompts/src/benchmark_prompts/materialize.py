@@ -13,9 +13,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "manifests"
-DEFAULT_CACHE_DIR = PROJECT_ROOT / ".cache" / "benchmarks"
+PROMPTS_ROOT = Path(__file__).resolve().parents[2]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
+DEFAULT_OUTPUT_DIR = PROMPTS_ROOT / "manifests"
+DEFAULT_CACHE_DIR = REPOSITORY_ROOT / ".cache" / "benchmarks"
 
 WRITINGBENCH_COMMIT = "9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad"
 HELLOBENCH_COMMIT = "92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57"
@@ -190,7 +191,8 @@ def acquire(source: RemoteFile, cache_dir: Path) -> Path:
     observed = _sha256_bytes(content)
     if observed != source.sha256:
         raise ValueError(
-            f"downloaded source hash mismatch for {source.url}: expected {source.sha256}, "
+            f"downloaded source hash mismatch for {source.url}: expected "
+            f"{source.sha256}, "
             f"observed {observed}"
         )
     target.write_bytes(content)
@@ -270,7 +272,8 @@ def build_writingbench(source_path: Path) -> list[dict[str, Any]]:
                 source_version=f"X-PLUG/WritingBench@{WRITINGBENCH_COMMIT}",
                 prompt_text=source_row["query"],
                 requested_output_constraints=[
-                    "Follow all task, language, audience, format, style, length, and content constraints embedded in prompt_text."
+                    "Follow all task, language, audience, format, style, length, and "
+                    "content constraints embedded in prompt_text."
                 ],
             )
         )
@@ -356,7 +359,8 @@ def build_dolomites(archive_path: Path) -> tuple[list[dict[str, Any]], dict[str,
             if isinstance(value, str) and value
         ]
         constraints.append(
-            "Use only the supplied task context and input; do not retrieve or rely on outside sources."
+            "Use only the supplied task context and input; do not retrieve or rely "
+            "on outside sources."
         )
         rows.append(
             _manifest_row(
@@ -383,7 +387,9 @@ def provenance(observed_dolomites_counts: dict[str, int]) -> dict[str, Any]:
                 "source_url": WRITINGBENCH_URL,
                 "source_sha256": WRITINGBENCH_FILE.sha256,
                 "license": "Apache-2.0",
-                "redistribution": "Prompt manifest only; source file is acquired by the script.",
+                "redistribution": (
+                    "Prompt manifest only; source file is acquired by the script."
+                ),
                 "manifest": "manifests/writingbench.jsonl",
                 "item_count": EXPECTED_COUNTS["writingbench"],
             },
@@ -400,7 +406,9 @@ def provenance(observed_dolomites_counts: dict[str, int]) -> dict[str, Any]:
                     for source in HELLOBENCH_FILES
                 ],
                 "license": "MIT",
-                "redistribution": "Prompt manifest only; source files are acquired by the script.",
+                "redistribution": (
+                    "Prompt manifest only; source files are acquired by the script."
+                ),
                 "manifest": "manifests/hellobench.jsonl",
                 "item_count": EXPECTED_COUNTS["hellobench"],
             },
@@ -412,11 +420,14 @@ def provenance(observed_dolomites_counts: dict[str, int]) -> dict[str, Any]:
                 "archive_sha256": DOLOMITES_ARCHIVE_SHA256,
                 "license": "CC-BY-4.0",
                 "attribution": (
-                    "DeepMind Technologies Limited, DoLoMiTes: Domain-Specific Long-Form "
-                    "Methodical Tasks; CC BY 4.0. Changes: transformed the development "
+                    "DeepMind Technologies Limited, DoLoMiTes: Domain-Specific "
+                    "Long-Form Methodical Tasks; CC BY 4.0. Changes: transformed the "
+                    "development "
                     "examples into prompt rows and omitted reference outputs."
                 ),
-                "redistribution": "Development prompt manifest only, with attribution above.",
+                "redistribution": (
+                    "Development prompt manifest only, with attribution above."
+                ),
                 "manifest": "manifests/dolomites.jsonl",
                 "item_count": EXPECTED_COUNTS["dolomites"],
                 "split": {
