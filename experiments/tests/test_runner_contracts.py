@@ -154,6 +154,7 @@ def test_codex_adapter_argv_passes_installed_cli_parser() -> None:
             },
         )
         assert "--ask-for-approval" not in command
+        assert "--skip-git-repo-check" in command
         if session_id is None:
             assert "--sandbox" in command
         else:
