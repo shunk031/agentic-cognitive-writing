@@ -135,7 +135,15 @@ def _retrieval_marker(value: Any) -> str | None:
         for key, item in value.items():
             if isinstance(item, str) and (
                 key.lower()
-                in {"type", "tool", "tool_name", "event_type", "method", "name"}
+                in {
+                    "type",
+                    "tool",
+                    "tool_name",
+                    "event",
+                    "event_type",
+                    "method",
+                    "name",
+                }
                 and any(marker in item.lower() for marker in markers)
             ):
                 return item
@@ -166,7 +174,9 @@ def reject_retrieval(stdout: bytes, stderr: bytes) -> None:
     for payload in (stdout, stderr):
         decoded = payload.decode("utf-8", errors="replace")
         if re.search(
-            r"(?i)https?://|www\.|\b(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)\b|"
+            r"(?i)https?://|www\.|\b(?:web[_-]?search|websearch|browser|"
+            r"mcp[_-]?tool[_-]?call|network[_-]?request)\b|"
+            r"\b(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)\b|"
             r"\b(?:git\s+clone|python\s+-m\s+http\.client|urllib|requests\.get|"
             r"socket\.create_connection)\b",
             decoded,

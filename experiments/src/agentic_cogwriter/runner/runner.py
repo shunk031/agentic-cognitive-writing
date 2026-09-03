@@ -188,6 +188,7 @@ class ExperimentRunner:
                 draft_path = workspace / ".writing" / "draft.md"
                 if draft_path.is_file():
                     output = draft_path.read_text(encoding="utf-8")
+            reject_retrieval(output.encode("utf-8"), b"")
             budget.consume(
                 self.runtime_config.count_output_units(output), stage="final_output"
             )

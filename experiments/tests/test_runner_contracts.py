@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -8,7 +10,11 @@ import pytest
 from agentic_cogwriter.runner.adapters import PlatformAdapter
 from agentic_cogwriter.runner.config import RuntimeConfig
 from agentic_cogwriter.runner.errors import ExecutionError, RetrievalViolation
-from agentic_cogwriter.runner.execution import ExecutionResult, reject_retrieval
+from agentic_cogwriter.runner.execution import (
+    ExecutionResult,
+    _retrieval_marker,
+    reject_retrieval,
+)
 from agentic_cogwriter.runner.manifest import PromptRecord
 from agentic_cogwriter.runner.runner import ExperimentRunner
 from agentic_cogwriter.runner.trace import TraceValidationError, validate_trace
@@ -125,15 +131,64 @@ def test_adapter_commands_expand_runtime_controls_and_deny_network() -> None:
     assert claude.control_status_dict["maximum_output_tokens"] == "enforced"
 
 
+def test_codex_adapter_argv_passes_installed_cli_parser() -> None:
+    adapter = PlatformAdapter.load(
+        Path("experiments/conditions/adapters/codex_exec.toml")
+    )
+    executable = shutil.which(adapter.executable)
+    if executable is None:
+        pytest.skip("codex CLI is not installed")
+
+    for session_id in (None, "session-1"):
+        command = adapter.build_command(
+            model_id="model-test",
+            prompt="prompt",
+            session_id=session_id,
+            plugin_dirs=("/tmp/plugin",),
+            runtime_values={
+                "maximum_output_tokens": 17,
+                "temperature": 0,
+                "top_p_or_equivalent": 1,
+                "generation_seed": 23,
+                "stop_rules": [],
+            },
+        )
+        assert "--ask-for-approval" not in command
+        if session_id is None:
+            assert "--sandbox" in command
+        else:
+            assert "--sandbox" not in command
+        assert "--plugin-dir" not in command
+        assert 'approval_policy="never"' in command
+        parser_probe = subprocess.run(
+            [executable, *command[1:-1], "--help"],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        assert parser_probe.returncode == 0, parser_probe.stderr
+
+
 @pytest.mark.parametrize(
     "payload",
-    [b"https://example.test/source", b"curl https://example.test", b"wget file"],
+    [
+        b"https://example.test/source",
+        b"curl https://example.test",
+        b"wget file",
+        b"web_search",
+    ],
 )
 def test_raw_retrieval_tripwire_rejects_urls_and_network_commands(
     payload: bytes,
 ) -> None:
     with pytest.raises(RetrievalViolation, match="retrieval marker"):
         reject_retrieval(payload, b"")
+
+
+def test_retrieval_tripwire_recognizes_generic_event_key() -> None:
+    assert _retrieval_marker({"event": "web_search"}) == "web_search"
+    with pytest.raises(RetrievalViolation, match="retrieval marker"):
+        reject_retrieval(b'{"event":"web_search"}', b"")
 
 
 def test_trace_validation_requires_contract_fields(tmp_path: Path) -> None:
@@ -220,10 +275,12 @@ class _RetryExecutor:
         return self.results.pop(0)
 
 
-def _result(*, returncode: int = 0, timed_out: bool = False) -> ExecutionResult:
+def _result(
+    *, output: str = "final", returncode: int = 0, timed_out: bool = False
+) -> ExecutionResult:
     payload = {
         "type": "item.completed",
-        "item": {"type": "agent_message", "text": "final"},
+        "item": {"type": "agent_message", "text": output},
         "thread_id": "session-1",
     }
     return ExecutionResult(
@@ -279,6 +336,24 @@ def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
 
     with pytest.raises(ExecutionError, match="goals.md"):
         runner.run_prompt(_prompt(), condition_id="A5", platform="codex-primary")
+
+
+def test_runner_rejects_retrieval_in_draft_fallback(tmp_path: Path) -> None:
+    class DraftRetrievalExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds):
+            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+            draft = cwd / ".writing" / "draft.md"
+            draft.write_text("Evidence gathered with curl https://example.test/source")
+            return result
+
+    runner = ExperimentRunner(
+        _config(),
+        output_root=tmp_path,
+        executor=DraftRetrievalExecutor([_result(output="")]),
+    )
+
+    with pytest.raises(RetrievalViolation, match="retrieval marker"):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
 
 
 def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> None:

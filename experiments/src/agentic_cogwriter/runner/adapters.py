@@ -81,8 +81,10 @@ class PlatformAdapter:
         if self.platform == "codex-primary":
             if self.first_args[:1] != ("exec",) or "--json" not in self.first_args:
                 raise ConfigurationError("Codex adapter must use codex exec --json")
-            if "never" not in self.first_args:
-                raise ConfigurationError("Codex adapter must disable approval prompts")
+            if 'approval_policy="never"' not in self.runtime_args:
+                raise ConfigurationError(
+                    'Codex adapter must set approval_policy="never" via --config'
+                )
             if "workspace-write" not in self.first_args:
                 raise ConfigurationError("Codex adapter must allow plugin trace writes")
             if self.continuation_args[:2] != ("exec", "resume"):
@@ -157,8 +159,9 @@ class PlatformAdapter:
             values.update(decoding)
         args = [_render(item, values) for item in templates]
         args.extend(_render(item, values) for item in self.runtime_args)
-        for plugin_dir in plugin_dirs:
-            args.extend(("--plugin-dir", plugin_dir))
+        if self.platform == "claude-code-replication":
+            for plugin_dir in plugin_dirs:
+                args.extend(("--plugin-dir", plugin_dir))
         if self.prompt_mode == "argument":
             args.append(prompt)
         return [self.executable, *args]
