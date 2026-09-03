@@ -2,7 +2,7 @@
 
 ## Summary
 
-This survey chooses the benchmark set and judge setup for this repository's six-condition experiment on LLM long-form writing. The experiment compares single-shot generation, linear pipelines, the main cognitive-writing plugin, and two comparison variants in the experiments package. See [`docs/experiments/protocol.md`](../experiments/protocol.md) for the full condition definitions.
+This survey chooses the benchmark set and judge setup for this repository's six-condition experiment on LLM long-form writing. The experiment compares single-shot generation, linear pipelines, the main `agentic-cog-writer` skill, and two comparison variants in the experiments package. See [`docs/experiments/protocol.md`](../experiments/protocol.md) for the full condition definitions.
 
 Use exactly three primary benchmarks because they cover general-purpose writing, long text generation, and structured expert writing without mixing in unresolved license risk.
 
@@ -19,11 +19,11 @@ The planned comparison has 6 conditions, and [`docs/experiments/protocol.md`](..
 - A1: single-shot generation
 - A2: linear Pre-Write/Write/Re-Write
 - A3: Synthesis of Topic Outlines through Retrieval and Multi-perspective Question Asking (STORM) [^2]-style linear pipeline without retrieval
-- A4: `cognitive-writing`, the main plugin skill where the Monitor coordinates Planner, Translator, and Reviewer role skills
+- A4: `agentic-cog-writer`, the main plugin skill where the Monitor coordinates Planner, Translator, and Reviewer role skills
 - A5: `cognitive-writing-no-goal-network`, the experiments package skill that removes the explicit goal network
 - A6: `cognitive-writing-fixed-order`, the experiments package skill that keeps the goal network and prescribes process order
 
-The repository ships two plugin packages for the main skill and comparison variants. The main plugin lives under [`plugin/`](../../plugin/) with `cognitive-writing`, `planning`, `translating`, and `reviewing`. The comparison package lives under [`experiments/plugin/`](../../experiments/plugin/) and requires the main plugin. The manifests and README record that split:
+The repository ships two plugin packages for the main skill and comparison variants. The main plugin lives under [`plugin/`](../../plugin/) with `agentic-cog-writer`, `planning`, `translating`, and `reviewing`. The comparison package lives under [`experiments/plugin/`](../../experiments/plugin/) and requires the main plugin. The manifests and README record that split:
 
 - [`plugin/.codex-plugin/plugin.json`](../../plugin/.codex-plugin/plugin.json)
 - [`experiments/plugin/.codex-plugin/plugin.json`](../../experiments/plugin/.codex-plugin/plugin.json)
