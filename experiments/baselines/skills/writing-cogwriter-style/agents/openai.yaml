@@ -1,7 +1,7 @@
 interface:
   display_name: "CogWriter-style adaptation"
   short_description: "Run the exploratory plan, parallel generation, and length review"
-  default_prompt: "Run the X-style CogWriter adaptation with a revised structured plan and parallel segment subagents."
+  default_prompt: "Run the CogWriter-style adaptation with a revised structured plan and parallel segment subagents."
 
 policy:
   allow_implicit_invocation: false

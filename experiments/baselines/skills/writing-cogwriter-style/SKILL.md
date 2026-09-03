@@ -1,11 +1,11 @@
 ---
 name: writing-cogwriter-style
-description: "Exploratory X-style adaptation of CogWriter. Produce and immediately revise a structured plan, generate document segments in parallel with native subagents, and run a bounded length-review loop without a goal network."
+description: "Exploratory CogWriter-style adaptation. Produce and immediately revise a structured plan, generate document segments in parallel with native subagents, and run a bounded length-review loop without a goal network."
 ---
 
 # CogWriter[^1]-style writing
 
-Run an X-style adaptation of CogWriter[^1], not a reproduction. The fixed top-level order is:
+Run a CogWriter[^1]-style adaptation, not a reproduction. The fixed top-level order is:
 
 `initial planning -> immediate plan revision -> parallel segment generation -> length review`
 
