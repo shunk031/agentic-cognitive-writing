@@ -189,11 +189,17 @@ class ExperimentRunner:
                 plugin_dirs=self._plugin_dirs(condition),
             )
             output = extract_output(result.stdout)
+            used_draft_fallback = False
             if not output.strip():
                 draft_path = workspace / ".writing" / "draft.md"
                 if draft_path.is_file():
                     output = draft_path.read_text(encoding="utf-8")
-            reject_retrieval(output.encode("utf-8"), b"")
+                    used_draft_fallback = True
+            reject_retrieval(
+                output.encode("utf-8"),
+                b"",
+                scan_artifact_text=used_draft_fallback,
+            )
             budget.consume(
                 self.runtime_config.count_output_units(output), stage="final_output"
             )

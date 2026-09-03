@@ -178,18 +178,48 @@ def test_codex_adapter_argv_passes_installed_cli_parser() -> None:
         b"curl https://example.test",
         b"wget file",
         b"web_search",
+        b'codex --config web_search="disabled"',
+        b'{"type":"config","value":"web_search=\\"disabled\\""}',
+        b'{"type":"error","message":"request failed: https://api.openai.com/v1/responses"}',
+        b'{"type":"error","event":"web_search","message":"disabled"}',
+        b'{"type":"item.completed","item":{"type":"agent_message",'
+        b'"text":"try web_search at https://example.test"}}',
     ],
 )
-def test_raw_retrieval_tripwire_rejects_urls_and_network_commands(
-    payload: bytes,
-) -> None:
-    with pytest.raises(RetrievalViolation, match="retrieval marker"):
+def test_tripwire_ignores_non_invocation_text(payload: bytes) -> None:
+    reject_retrieval(payload, b"")
+
+
+def test_genuine_web_search_tool_invocation_is_rejected() -> None:
+    payload = (
+        b'{"type":"item.completed","item":{"type":"web_search_call",'
+        b'"status":"completed"}}\n'
+    )
+    with pytest.raises(RetrievalViolation, match="retrieval event"):
         reject_retrieval(payload, b"")
+
+
+def test_network_command_in_executed_command_event_is_rejected() -> None:
+    payload = (
+        b'{"type":"item.started","item":{"type":"command_execution",'
+        b'"command":"curl https://example.test"}}\n'
+    )
+    with pytest.raises(RetrievalViolation, match="retrieval event"):
+        reject_retrieval(payload, b"")
+
+
+def test_fallback_artifact_still_rejects_explicit_network_commands() -> None:
+    with pytest.raises(RetrievalViolation, match="retrieval marker"):
+        reject_retrieval(
+            b"Evidence gathered with curl https://example.test/source",
+            b"",
+            scan_artifact_text=True,
+        )
 
 
 def test_retrieval_tripwire_recognizes_generic_event_key() -> None:
     assert _retrieval_marker({"event": "web_search"}) == "web_search"
-    with pytest.raises(RetrievalViolation, match="retrieval marker"):
+    with pytest.raises(RetrievalViolation, match="retrieval event"):
         reject_retrieval(b'{"event":"web_search"}', b"")
 
 

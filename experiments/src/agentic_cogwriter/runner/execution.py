@@ -11,14 +11,52 @@ from typing import Any
 
 from .errors import ExecutionError, RetrievalViolation
 
-RAW_RETRIEVAL_PATTERN = (
-    r"(?i)https?://|www\.|\b(?:web[_-]?search|websearch|browser|"
-    r"mcp[_-]?tool[_-]?call|network[_-]?request)\b|"
-    r"\b(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)\b|"
-    r"\b(?:git\s+clone|python\s+-m\s+http\.client|urllib|requests\.get|"
-    r"socket\.create_connection)\b"
+RETRIEVAL_EVENT_TYPES = frozenset(
+    {
+        "web_search",
+        "websearch",
+        "web_search_call",
+        "web_search_preview",
+        "web_fetch",
+        "browser",
+        "browser_call",
+        "browser_search",
+        "browser_fetch",
+        "mcp_tool_call",
+        "network_request",
+        "retrieval",
+        "fetch",
+        "wget",
+        "curl",
+        "httpie",
+        "nc",
+        "netcat",
+        "socat",
+        "ssh",
+        "file_search",
+        "file_search_call",
+    }
 )
-_RAW_RETRIEVAL_RE = re.compile(RAW_RETRIEVAL_PATTERN)
+COMMAND_EVENT_TYPES = frozenset(
+    {
+        "command_execution",
+        "command_execution_started",
+        "command_execution_completed",
+        "command_execution_failed",
+    }
+)
+GENERIC_TOOL_EVENT_TYPES = frozenset(
+    {"tool_call", "function_call", "custom_tool_call", "tool_search_call"}
+)
+ERROR_EVENT_TYPES = frozenset(
+    {"error", "error_event", "response_error", "response_failed", "turn_failed"}
+)
+NETWORK_COMMAND_PATTERN = (
+    r"(?i)\b(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)\b|"
+    r"\b(?:git\s+clone|python\s+-m\s+http\.client)\b|"
+    r"\b(?:urllib|requests\.get|socket\.create_connection)\b"
+)
+_NETWORK_COMMAND_RE = re.compile(NETWORK_COMMAND_PATTERN)
 
 
 @dataclass(frozen=True)
@@ -128,71 +166,102 @@ def extract_session_id(data: bytes) -> str | None:
     return None
 
 
+def _event_name(value: str) -> str:
+    """Normalize an event or tool name without matching substrings."""
+
+    return re.sub(r"[^a-z0-9]+", "_", value.casefold()).strip("_")
+
+
+def _is_error_event(value: dict[str, Any]) -> bool:
+    """Return whether an event is a generic error envelope."""
+
+    return any(
+        isinstance(item, str) and _event_name(item) in ERROR_EVENT_TYPES
+        for key, item in value.items()
+        if key.casefold() in {"type", "event", "event_type"}
+    )
+
+
+def _command_marker(value: dict[str, Any]) -> str | None:
+    """Find a network command in a typed command-execution item."""
+
+    for key in ("command", "cmd", "shell_command"):
+        command = value.get(key)
+        if isinstance(command, str):
+            match = _NETWORK_COMMAND_RE.search(command)
+            if match:
+                return match.group(0)
+    return None
+
+
 def _retrieval_marker(value: Any) -> str | None:
-    markers = {
-        "web_search",
-        "websearch",
-        "browser",
-        "mcp_tool_call",
-        "retrieval",
-        "network_request",
-        "fetch",
-        "wget",
-        "curl",
-    }
-    if isinstance(value, dict):
-        for key, item in value.items():
-            if isinstance(item, str) and (
-                key.lower()
-                in {
-                    "type",
-                    "tool",
-                    "tool_name",
-                    "event",
-                    "event_type",
-                    "method",
-                    "name",
-                }
-                and any(marker in item.lower() for marker in markers)
-            ):
-                return item
-            if key.lower() in {"command", "cmd", "shell_command"} and isinstance(
-                item, str
-            ):
-                command = item.lower()
-                if re.search(
-                    r"\b(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)\b|"
-                    r"\b(?:git\s+clone|python\s+-m\s+http\.client)\b",
-                    command,
-                ):
-                    return item
+    """Find a genuine retrieval event in a parsed CLI event object.
+
+    The function follows only event containers and typed tool items. It does
+    not inspect arbitrary strings, assistant text, configuration echoes, or
+    generic error payloads.
+    """
+
+    if isinstance(value, list):
+        for item in value:
             found = _retrieval_marker(item)
             if found:
                 return found
-    elif isinstance(value, list):
-        for item in value:
-            found = _retrieval_marker(item)
+        return None
+    if not isinstance(value, dict) or _is_error_event(value):
+        return None
+
+    event_type = value.get("type")
+    event = value.get("event")
+    event_type_name = value.get("event_type")
+    for item in (event_type, event, event_type_name):
+        if isinstance(item, str) and _event_name(item) in RETRIEVAL_EVENT_TYPES:
+            return item
+
+    if isinstance(event_type, str) and _event_name(event_type) in COMMAND_EVENT_TYPES:
+        return _command_marker(value)
+
+    if (
+        isinstance(event_type, str)
+        and _event_name(event_type) in GENERIC_TOOL_EVENT_TYPES
+    ):
+        for key in ("tool", "tool_name", "name", "method"):
+            item = value.get(key)
+            if isinstance(item, str) and _event_name(item) in RETRIEVAL_EVENT_TYPES:
+                return item
+
+    for key in ("item", "data", "payload"):
+        nested = value.get(key)
+        if isinstance(nested, (dict, list)):
+            found = _retrieval_marker(nested)
             if found:
                 return found
     return None
 
 
-def reject_retrieval(stdout: bytes, stderr: bytes) -> None:
-    """Fail closed on raw URL/network markers and structured retrieval events."""
+def reject_retrieval(
+    stdout: bytes, stderr: bytes, *, scan_artifact_text: bool = False
+) -> None:
+    """Reject parsed retrieval events and explicit commands in fallback text.
+
+    Generator transport streams are inspected as JSONL event streams. A
+    fallback artifact is plain text, so callers may opt into the narrower
+    explicit-network-command scan for that artifact only.
+    """
 
     for stream, payload in (("stdout", stdout), ("stderr", stderr)):
         decoded = payload.decode("utf-8", errors="replace")
         for line in decoded.splitlines():
-            match = _RAW_RETRIEVAL_RE.search(line)
-            if match:
-                raise RetrievalViolation(
-                    "Unpermitted retrieval marker observed in raw output",
-                    matched_pattern=match.group(0),
-                    matching_line=line,
-                    stream=stream,
-                    payload=payload,
-                )
-        for line in decoded.splitlines():
+            if scan_artifact_text:
+                match = _NETWORK_COMMAND_RE.search(line)
+                if match:
+                    raise RetrievalViolation(
+                        "Unpermitted retrieval marker observed in artifact text",
+                        matched_pattern=match.group(0),
+                        matching_line=line,
+                        stream=stream,
+                        payload=payload,
+                    )
             try:
                 value = json.loads(line)
             except json.JSONDecodeError:
