@@ -1,6 +1,6 @@
 # Cognitive writing baselines
 
-This package gives experimenters five baseline and exploratory conditions with the same assignment, supplied context, model settings, output budget, and no-retrieval policy. The `agentic-cognitive-writing` package supplies Agentic CogWriter for the main condition; this package supplies the comparison conditions.
+This package gives experimenters five comparison conditions with the same assignment, supplied context, model settings, output budget, and no-retrieval policy. The `agentic-cognitive-writing` package supplies Agentic CogWriter for the main condition; this package supplies the comparison conditions.
 
 ## Install and invoke
 
@@ -14,17 +14,17 @@ The package layout uses [`.claude-plugin/plugin.json`](.claude-plugin/plugin.jso
 | --- | --- | --- | --- |
 | A1 | `writing-single-shot` | One complete generation pass | One generation event |
 | A2 | `writing-linear` | One `Pre-Write`, `Write`, and `Re-Write` pass | Three stage-transition events |
-| A3 | `writing-storm-style` | Perspective discovery, simulated question answering, outline, per-section draft, and polish | Five stage events; retrieval, evidence, and citation are `N/A` |
+| STORM-style baseline | `writing-storm-style` | Perspective discovery, simulated question answering, outline, per-section draft, and polish | Five stage events; retrieval, evidence, and citation are `N/A` |
 | CogWriter-style adaptation | `writing-cogwriter-style` | Initial plan, immediate plan revision, parallel segment generation, and length review | Top-level stage transitions and observable fallback evidence |
-| WriteHERE-style adaptation | `writing-writehere-style` | Persisted typed task graph with recursive decomposition and execution | Graph actions; retrieval is `N/A` |
+| A3: Adaptive Task Planning | `writing-adaptive-task-planning` | Persisted typed task graph with recursive decomposition, execution, and text-conditioned graph revision | Graph actions and revisions; retrieval is `N/A` |
 
 ## Shared run policy
 
-Every condition reads `.writing/assignment.md` and the supplied context under the same tool, model, budget, and no-retrieval policy. The runner writes observable events to `.writing/trace/process.jsonl`; the final document normally lives at `.writing/draft.md`. Retrieval, evidence gathering, and citation traces are `N/A` for A3 and the WriteHERE-style adaptation because the shared policy disables those operations.
+Every condition reads `.writing/assignment.md` and the supplied context under the same tool, model, budget, and no-retrieval policy. The runner writes observable events to `.writing/trace/process.jsonl`; the final document normally lives at `.writing/draft.md`. Retrieval, evidence gathering, and citation traces are `N/A` for the STORM-style baseline and A3 because the shared policy disables those operations.
 
 ## Adaptation caveats
 
-`writing-storm-style` is a no-retrieval STORM[^1] adaptation. Its stage mapping follows the [pinned STORM engine](https://github.com/stanford-oval/storm/blob/e80d9bbea7362141a479940dabb751c1f244e4b6/knowledge_storm/storm_wiki/engine.py) and [pinned outline module](https://github.com/stanford-oval/storm/blob/e80d9bbea7362141a479940dabb751c1f244e4b6/knowledge_storm/storm_wiki/modules/outline_generation.py). `writing-cogwriter-style` and `writing-writehere-style` are exploratory adaptations of CogWriter[^2] and WriteHERE[^3], not reproductions. The CogWriter adaptation follows the [pinned planning implementation](https://github.com/KaiyangWan/CogWriter/blob/dc3bf084e8733c951172cddd89fa4d7337121fdd/CogWriter_model/Agents/PlanningAgent.py) and [pinned generation implementation](https://github.com/KaiyangWan/CogWriter/blob/dc3bf084e8733c951172cddd89fa4d7337121fdd/CogWriter_model/Agents/GenerationAgent.py) for plan revision, parallel segment generation, and length review. The WriteHERE adaptation follows the [pinned graph implementation](https://github.com/principia-ai/WriteHERE/blob/0b78fcb9ff47305cb098dcb1eec4982024bb34ab/recursive/graph.py) and [pinned execution engine](https://github.com/principia-ai/WriteHERE/blob/0b78fcb9ff47305cb098dcb1eec4982024bb34ab/recursive/engine.py) for task decomposition and execution. The shared policy keeps inputs and budgets equal and disables retrieval and citation generation; each skill documents its operational stages and trace rules.
+`writing-storm-style` is a no-retrieval STORM[^1] adaptation. Its stage mapping follows the [pinned STORM engine](https://github.com/stanford-oval/storm/blob/e80d9bbea7362141a479940dabb751c1f244e4b6/knowledge_storm/storm_wiki/engine.py) and [pinned outline module](https://github.com/stanford-oval/storm/blob/e80d9bbea7362141a479940dabb751c1f244e4b6/knowledge_storm/storm_wiki/modules/outline_generation.py). `writing-cogwriter-style` remains an exploratory adaptation of CogWriter[^2]. Its behavior follows the [pinned planning implementation](https://github.com/KaiyangWan/CogWriter/blob/dc3bf084e8733c951172cddd89fa4d7337121fdd/CogWriter_model/Agents/PlanningAgent.py) and [pinned generation implementation](https://github.com/KaiyangWan/CogWriter/blob/dc3bf084e8733c951172cddd89fa4d7337121fdd/CogWriter_model/Agents/GenerationAgent.py) for plan revision, parallel segment generation, and length review. `writing-adaptive-task-planning` is confirmatory A3 Adaptive Task Planning, an adaptation of WriteHERE[^3], not a reproduction. Its task-graph behavior follows the [pinned graph implementation](https://github.com/principia-ai/WriteHERE/blob/0b78fcb9ff47305cb098dcb1eec4982024bb34ab/recursive/graph.py) and [pinned execution engine](https://github.com/principia-ai/WriteHERE/blob/0b78fcb9ff47305cb098dcb1eec4982024bb34ab/recursive/engine.py). The shared policy keeps inputs and budgets equal and disables retrieval and citation generation; each skill documents its operational stages and trace rules.
 
 ## Validation
 

@@ -3,7 +3,7 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Run condition A3 for the supplied writing assignment.",
+      "prompt": "Run the STORM-style baseline for the supplied writing assignment.",
       "expected_output": "The run follows five fixed stages, uses supplied context only, and records retrieval, evidence, and citation handling as not applicable.",
       "files": [],
       "expectations": [

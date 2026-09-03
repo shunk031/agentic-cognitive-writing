@@ -1,11 +1,11 @@
 ---
 name: writing-storm-style
-description: "Experiment condition A3. Use a fixed STORM-style perspective, simulated question-answering, outline, per-section draft, and polish sequence without retrieval or citation generation."
+description: "Baseline STORM-style writing. Use a fixed perspective, simulated question-answering, outline, per-section draft, and polish sequence without retrieval or citation generation."
 ---
 
 # STORM[^1]-style writing
 
-Run condition A3 in the fixed five-stage order:
+Run the STORM-style baseline in the fixed five-stage order:
 
 `perspective discovery -> simulated question answering -> outline -> per-section draft -> polish`
 

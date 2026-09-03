@@ -1,9 +1,9 @@
 {
-  "skill_name": "writing-writehere-style",
+  "skill_name": "writing-adaptive-task-planning",
   "evals": [
     {
       "id": 1,
-      "prompt": "Run the exploratory WriteHERE-style adaptation for the supplied writing assignment.",
+      "prompt": "Run confirmatory condition A3 Adaptive Task Planning for the supplied writing assignment.",
       "expected_output": "The run persists a typed reasoning/composition task graph, recursively alternates decomposition and execution, and leaves retrieval handling not applicable.",
       "files": [],
       "expectations": [
