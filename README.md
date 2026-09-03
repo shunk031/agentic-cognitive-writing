@@ -2,79 +2,11 @@
 
 Agentic CogWriter is a writing assistant that plans, drafts, and revises long-form text the way human writers do. The assistant keeps its goals, drafts, notes, and decision log as files in the directory where you write. Instead of generating text in one pass, the assistant revisits and rewrites its own plans and goals as the draft develops.
 
-Agentic CogWriter realizes the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981) as an agent system. The theory's Monitor runs as the orchestrating agent and decides what to work on next. The Monitor delegates Planning, Translating, and Reviewing as roles backed by skills and subagents. The writing project's task environment and long-term memory live in files. The writing project's goal network evolves as composition proceeds. The three roles work as follows:
+Agentic CogWriter realizes the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981) as an agent system. The theory's Monitor runs as the orchestrating agent and decides what to work on next. The Monitor delegates Planning, Translating, and Reviewing as roles backed by skills and subagents. The task environment and long-term memory live as files in the writing project, and the goal network evolves as composition proceeds. The three roles work as follows:
 
 - Planning generates and organizes ideas and sets goals.
 - Translating turns selected meanings into words.
 - Reviewing evaluates and revises the text.
-
-## How the writing model maps to the plugin
-
-The architecture turns the writing model into a main skill, shared role skills, and file-backed project state.
-
-The plugin ships a Claude Code adapter through [`plugin/.claude-plugin/plugin.json`](plugin/.claude-plugin/plugin.json) and [`plugin/agents/`](plugin/agents/), and a Codex adapter through [`plugin/.codex-plugin/plugin.json`](plugin/.codex-plugin/plugin.json) and [`plugin/skills/`](plugin/skills/).
-
-The diagram below reproduces Figure 1, "Structure of the writing model," from the paper:
-
-```mermaid
-flowchart TB
-    subgraph task["TASK ENVIRONMENT"]
-        problem["THE RHETORICAL PROBLEM<br/>Topic<br/>Audience<br/>Exigency"]
-        text["TEXT PRODUCED SO FAR"]
-    end
-
-    subgraph memory["THE WRITER'S LONG-TERM MEMORY"]
-        knowledge["Knowledge of topic, audience,<br/>and writing plans"]
-    end
-
-    subgraph processes["WRITING PROCESSES"]
-        direction TB
-        planning["PLANNING"]
-        generating["Generating"]
-        organizing["Organizing"]
-        goalsetting["Goal-setting"]
-        translating["TRANSLATING"]
-        reviewing["REVIEWING"]
-        evaluating["Evaluating"]
-        revising["Revising"]
-        monitor["MONITOR"]
-
-        planning --> generating
-        planning --> organizing
-        planning --> goalsetting
-        reviewing --> evaluating
-        reviewing --> revising
-        monitor <--> planning
-        monitor <--> translating
-        monitor <--> reviewing
-    end
-
-    task <--> processes
-    memory <--> processes
-```
-
-In the original figure, the arrows indicate information flow between processes, not a fixed left-to-right sequence[^1].
-
-The table maps each model element to the plugin artifact that carries out the corresponding work. The rhetorical problem means the topic, audience, and reason for writing; exigency is the situation that makes writing necessary.
-
-| Category | Figure 1 model element | Plugin artifact |
-| --- | --- | --- |
-| Task environment | Rhetorical problem and produced text | User project `.writing/assignment.md` and `.writing/draft.md` |
-|  | Rhetorical problem: topic, audience, exigency | Sections in `.writing/assignment.md` |
-|  | Produced text | User project `.writing/draft.md` |
-| Writer's long-term memory | Topic and audience knowledge | User project `.writing/memory/` |
-|  | Writing plans | Notes and plans in `.writing/memory/` plus `.writing/goals.md` |
-| Planning | Process and embedded sub-processes | Shared [planning skill](plugin/skills/planning/SKILL.md) plus [Claude planner adapter](plugin/agents/planner.md) |
-|  | Generating ideas | Planning skill's embedded Generate sub-process |
-|  | Organizing ideas and presentation | Planning skill's embedded Organize sub-process |
-|  | Goal-setting | Planning skill's embedded Goal-setting sub-process and `.writing/goals.md` |
-| Translating | Process | Shared [translating skill](plugin/skills/translating/SKILL.md) plus [Claude translator adapter](plugin/agents/translator.md) |
-| Reviewing | Process and embedded sub-processes | Shared [reviewing skill](plugin/skills/reviewing/SKILL.md) plus [Claude reviewer adapter](plugin/agents/reviewer.md) |
-|  | Evaluating | Reviewing skill's embedded Evaluate sub-process |
-|  | Revising | Reviewing skill's embedded Revise sub-process |
-| Monitor | Orchestration role | [`plugin/skills/agentic-cog-writer/SKILL.md`](plugin/skills/agentic-cog-writer/SKILL.md), executed by the main agent |
-
-Agentic CogWriter follows the recursive writing process described in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1]. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
 
 ## Install from GitHub
 
@@ -124,14 +56,9 @@ Agentic CogWriter turns your task into a file-backed writing session that you ca
 
 The monitor reads this state before each operation. You can inspect or edit it between turns.
 
-## Compare the separate experiment variants
+## How it works
 
-The [`cognitive-writing-experiments`](experiments/plugin/README.md) plugin packages two skills for controlled comparisons. Install the main `agentic-cognitive-writing` plugin first because both variants delegate to its shared role skills on both platforms.
-
-- [`cognitive-writing-fixed-order`](experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md) runs Planning, then Translating, then Reviewing on each pass. Generate and Evaluate can interrupt, but the Monitor logs the interruption and returns to the prescribed order.
-- [`cognitive-writing-no-goal-network`](experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md) treats the assignment as one implicit objective, leaves `.writing/goals.md` untouched, and continues to trace process switches.
-
-The variants' seed prompts live beside the skills in [`experiments/plugin/skills/`](experiments/plugin/skills/).
+Read [How the theory maps to Agentic CogWriter](docs/theory-mapping.md) for the Figure 1 diagram, artifact mapping, and adapter details. Researchers can compare controlled variants in the [experiment package README](experiments/plugin/README.md).
 
 ## Find code, research, and experiment material
 
