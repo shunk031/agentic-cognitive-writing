@@ -45,29 +45,38 @@ The pointwise two-judge composite is the sole CONFIRMATORY estimand. The composi
 
 The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. The pairwise average estimates the relative ability of the conditions from pairwise choices. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
 
-The protocol also defines process and replication estimands. The primary process estimands are goal events, adaptive process switches, interruptions, and pop-back events. Report rates and distributions for each. The replication estimand is the direction and size of the A4 treatment effect under the secondary platform. Report it separately from the primary platform.
+The protocol also defines process and replication estimands. The primary process estimands are goal events, adaptive process switches, within-process operation counts, and pop-back events. Report rates and distributions for each. The replication estimand is the direction and size of the A4 treatment effect under the secondary platform. Report it separately from the primary platform.
 
 ## Six core conditions and two exploratory conditions
 
 All enabled conditions share the same skill-and-subagent framework and the plugin-written `.writing/trace/process.jsonl` path. The runner invokes exactly one skill for each condition, including the two exploratory conditions when they are enabled. The equal-information policy gives every condition identical input context. The runner must expose the same local tools, context window policy, timeout, output budget, and number of allowed attempts to every condition. No condition may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
 
+| Condition | Control State | Control Unit | Decision | Evolving Structure |
+| --- | --- | --- | --- | --- |
+| A1 Single-pass | assignment + context | whole document | single generation | none |
+| A2 Staged Writing | assignment + preceding stage outputs | fixed stage | static Pre-Write -> Write -> Re-Write | stage artifacts / text |
+| A3 Adaptive Task Planning | D_t, T_t, task results | task node v_t | dependency/BFS scheduling + decompose-or-execute + graph revision | D_t, T_t |
+| A4 Agentic CogWriter | D_t, G_t, H_t | writing process a_t | a_t = pi_Monitor(D_t, G_t, H_t) | D_t, G_t, H_t |
+| A5 w/o Goal Network | D_t, H_t | writing process a_t | a_t = pi_Monitor(D_t, H_t) | D_t, H_t |
+| A6 Fixed Process Order | D_t, G_t, H_t | writing process a_t | fixed cyclic P -> T -> R | D_t, G_t, H_t |
+
 **Single-shot condition A1.** Condition A1 invokes `writing-single-shot` from the planned `experiments/baselines/` package. The skill makes one generation pass from the assignment and supplied context. The condition has no explicit planning or review stage. The skill writes the externally visible generation event to the shared trace path and does not infer hidden goals or stages.
 
-**Linear-stages condition A2.** Condition A2 invokes `writing-linear` from the planned `experiments/baselines/` package. The skill makes one pass through Pre-Write, Write, and Re-Write. The order is fixed, and each stage hands its output to the next. The skill writes the three stage transitions and their outputs to the shared trace path. The skill records no unobserved reasoning.
+**Linear-stages condition A2.** Condition A2 invokes `writing-linear` from the planned `experiments/baselines/` package. A2 is an ordinary pipeline. Each stage passes its output to the next, with no persistent goal network or process history. The order is fixed, and the skill writes the three stage transitions and their outputs to the shared trace path. The skill records no unobserved reasoning.
 
-**STORM-style condition A3 without retrieval.** Condition A3 invokes `writing-storm-style` from the planned `experiments/baselines/` package. The skill uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish, following [STORM](https://github.com/stanford-oval/storm)[^2]. Citation generation is omitted under the equal-information policy. The skill separates planning from writing and omits retrieval and source gathering while writing its observable stage events to the shared trace path.
+**Adaptive Task Planning condition A3.** Condition A3 invokes the confirmatory skill `writing-adaptive-task-planning` from the planned `experiments/baselines/` package. A3 promotes the current exploratory WriteHERE-style adaptation[^19] into this confirmatory condition. The coordinator recursively decomposes the writing objective into typed executable task nodes, whose types are exactly `reasoning` and `composition`. A persisted dependency DAG stores task nodes, dependencies, and task states. The scheduler interleaves decompose-or-execute decisions by selecting dependency-ready tasks in breadth-first order. After each composition task completes, the coordinator re-reads the current aggregated text and may revise pending task goals, add tasks, retire pending tasks, or adjust dependencies. The control unit is the task node, never a named writing process. A3 has no writer-goal network and leaves `.writing/goals.md` untouched. The skill writes its task-graph actions to the shared trace path.
 
-**A3 trace and evidence handling.** The skill writes the five stage events to the shared trace path. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The no-retrieval adaptation follows the benchmark evidence in [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) and the platform evidence in [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md).
-
-**Proposed-plugin condition A4.** Condition A4 invokes Agentic CogWriter through the documented `agentic-cog-writer` skill from the `agentic-cognitive-writing` plugin. The `Monitor` selects among the `Planning`, `Translating`, and `Reviewing` processes. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. The runner uses the plugin's append-only `.writing/trace/process.jsonl` and goal-network files and records the normal loop under the shared trace contract.
+**Proposed-plugin condition A4.** Condition A4 invokes Agentic CogWriter through the documented `agentic-cog-writer` skill from the `agentic-cognitive-writing` plugin. The `Monitor`'s decision is solely its selection among the `Planning`, `Translating`, and `Reviewing` processes. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. The runner uses the plugin's append-only `.writing/trace/process.jsonl` and goal-network files and records the normal loop under the shared trace contract.
 
 **No-goal-network condition A5.** Condition A5 invokes `cognitive-writing-no-goal-network` from the `cognitive-writing-experiments` plugin. The variant uses the assignment as one implicit objective. The `Monitor` chooses `Planning`, `Translating`, or `Reviewing` without a hierarchical goal network. The runner leaves any existing `.writing/goals.md` untouched, records process switches under the shared trace contract, and records no goal events or goal fields.
 
-**Fixed-order condition A6.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin. The variant runs `Planning`, `Translating`, then `Reviewing` in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, the `Monitor` returns to the prescribed order. The runner keeps the ordinary goal network, records process switches and goal events under the shared trace contract, and adds no variant-specific fields.
+**Fixed-order condition A6.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin and retains Agentic CogWriter's full state: current text, goal network, and process history. The process implementations remain unchanged. A6 replaces only the `Monitor`'s selection function with the fixed cycle `Planning -> Translating -> Reviewing` and differs from A4 only in that selection rule. The runner keeps the ordinary goal network and records process switches, goal events, and process-history updates under the shared trace contract.
 
 **CogWriter-style exploratory condition B1.** Condition B1 invokes `writing-cogwriter-style` as an adaptation of CogWriter [^18], not as a reproduction of that system. The skill uses a structured plan and plan revision, parallel segment generation, length review, a fixed top-level order, and no goal network. The skill writes its observable actions to the shared trace path.
 
-**WriteHERE-style exploratory condition B2.** Condition B2 invokes `writing-writehere-style` as an adaptation of WriteHERE [^19], not as a reproduction of that system. The skill uses a dynamic typed task graph, recursive decomposition interleaved with execution, and no retrieval task under the equal-information policy. The skill writes its observable actions to the shared trace path.
+**STORM-style exploratory condition B2 without retrieval.** Condition B2 invokes `writing-storm-style` from the planned `experiments/baselines/` package. The skill uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish, following [STORM](https://github.com/stanford-oval/storm)[^2]. Citation generation is omitted under the equal-information policy. The skill separates planning from writing and omits retrieval and source gathering while writing its observable stage events to the shared trace path.
+
+**B2 trace and evidence handling.** The skill writes the five stage events to the shared trace path. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The no-retrieval adaptation follows the benchmark evidence in [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) and the platform evidence in [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md).
 
 B1 and B2 are EXPLORATORY. Each platform's assigned judges score both conditions pointwise. The runner compares each exploratory condition with A4 in pairwise judgments, runs both presentation orders, and reports intervals without Holm-adjusted claims. The 15-pair confirmatory tournament remains the tournament among A1-A6, and the confirmatory family remains exactly the 15 Holm-corrected A4-versus-A1, A2, A3, A5, and A6 contrasts on the primary pointwise composite.
 
@@ -136,7 +145,7 @@ The plugin ships its adapters through these repository files:
 
 ### Platform assignments
 
-The primary platform is OpenAI Codex headless, invoked with `codex exec`, with the six core conditions and any enabled exploratory conditions invoking one skill per condition over one pinned generator model from the Generative Pre-trained Transformer (GPT) family. Conditions A1-A3 invoke `writing-single-shot`, `writing-linear`, and `writing-storm-style` from the planned `experiments/baselines/` package. Condition A4 invokes `agentic-cog-writer`, and conditions A5 and A6 invoke their named skills from the `cognitive-writing-experiments` plugin. The [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) describes the primary platform's skill and adapter design.
+The primary platform is OpenAI Codex headless, invoked with `codex exec`, with the six core conditions and any enabled exploratory conditions invoking one skill per condition over one pinned generator model from the Generative Pre-trained Transformer (GPT) family. Conditions A1-A3 invoke `writing-single-shot`, `writing-linear`, and `writing-adaptive-task-planning` from the planned `experiments/baselines/` package. Condition A4 invokes `agentic-cog-writer`, and conditions A5 and A6 invoke their named skills from the `cognitive-writing-experiments` plugin. The [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) describes the primary platform's skill and adapter design.
 
 The secondary replication runs the same condition specifications under Claude Code headless with one pinned Claude-family generator model. Conditions A1-A3 invoke the corresponding baseline skills, condition A4 invokes `agentic-cog-writer`, and conditions A5 and A6 invoke the corresponding skills from the `cognitive-writing-experiments` plugin. The runner applies the same skill invocation to B1 and B2 when exploratory runs are enabled.
 
@@ -222,7 +231,7 @@ The pointwise JSON object follows this contract:
 {
   "prompt_id": "<prompt ID>",
   "condition_id": "<blind condition ID>",
-  "platform": "<codex-primary|claude-code-replication>",
+  "platform": "<codex|claude-code>",
   "judge_id": "<judge ID>",
   "judge_family": "<claude_frontier|gpt_frontier|open_evaluator>",
   "scores": {
@@ -264,7 +273,7 @@ The pairwise JSON object follows this contract, and every record must include th
 ```json
 {
   "prompt_id": "<prompt ID>",
-  "platform": "<codex-primary|claude-code-replication>",
+  "platform": "<codex|claude-code>",
   "judge_id": "<judge ID>",
   "judge_family": "<claude_frontier|gpt_frontier|open_evaluator>",
   "pair_id": "<unordered pair ID>",
@@ -343,9 +352,11 @@ The trace analysis measures observable process behavior and relates it to produc
 
 Each trace line is one JSON object. The documented event types are `process_switch`, `goal_created`, `goal_developed`, and `goal_regenerated`. Process-switch events include `from_process` and `to_process`. Goal events include `goal_id` and `parent_goal_id`. The plugin records responsible actor, decision, evidence, and uncertainty.
 
-For A1, A2, and A3, the baseline skills write only externally observed generation or stage events in the same per-run trace location. An adapter must not invent goals, hidden decisions, or internal reasoning. Plugin-specific fields that cannot be observed are `N/A` in the derived analysis. The baseline stage traces support structural comparisons.
+A3's trace events use the shared schema's `process` field with values `task-decomposition`, `task-execution`, and `task-revision`. These values identify task-graph actions, and the analysis must not count them as writing-process switches.
 
-The goal-network estimands apply to A4 and A6. The recursive-monitor estimands apply to A4 to A6, with no goal events or goal fields for A5.
+For A1 and A2, the baseline skills write only externally observed generation or stage events in the same per-run trace location. A3 writes the task-graph events described above. An adapter must not invent goals, hidden decisions, or internal reasoning. Plugin-specific fields that cannot be observed are `N/A` in the derived analysis. The baseline traces support structural comparisons.
+
+The goal-network estimands apply to A4 and A6. A6's process history still updates even though its selection is fixed. The recursive-monitor estimands apply to A4 to A6, with no goal events or goal fields for A5.
 
 The trace is an operational analogue of a thinking-aloud protocol, not a direct transcript of an agent's private state. The analysis therefore distinguishes logged actions from claims about cognition. An event that lacks enough evidence for a code is marked ambiguous and remains in the denominator for trace completeness.
 
@@ -374,10 +385,8 @@ The specificity analysis reports the coding rubric and double-codes a reliabilit
 
 **Goal regeneration.** Count `goal_regenerated` events. Verify that the old goal remains in history and that the replacement has a new ID when its meaning materially changes. Record the evidence and stated rationale.
 
-**Process-switch transitions.** Count transitions among the named processes. Include these event types when the trace records them:
+**Process-switch transitions.** Count transitions among the named writing processes. Generate is an operation within `Planning`, and Evaluate is an operation within `Reviewing`; neither counts as a process switch. Include these process-level event types when the trace records them:
 
-- Embedded Generate
-- Evaluate
 - Organize
 - Goal-setting
 - Revise
@@ -386,7 +395,7 @@ Report transition counts and rates per run.
 
 **Process-order entropy.** Compute Shannon entropy [^12] over normalized process sequences and over transition distributions. Report raw entropy, the number of observed states, and the normalization rule.
 
-**Generate and Evaluate interruptions.** Count process switches into Generate or Evaluate while another process is active, using the process fields and explicit decision or evidence markers. Do not infer an interruption from text alone when the event is ambiguous.
+**Within-process operations.** Count Generate operations within `Planning` and Evaluate operations within `Reviewing`. Report both as within-process operation counts.
 
 **Pop-back events.** Count returns to an immediate parent goal after a child goal resolves. Use the child and parent IDs, status or history, and the next process event. Report unresolved parent links as trace-quality failures.
 
@@ -400,13 +409,7 @@ Report transition counts and rates per run.
 
 Record the edit operation and the evidence in the trace or draft diff. The [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) identifies IteraTeR as the process-level revision precedent.
 
-**A3 outline and QA structure.** Count these structures:
-
-- Discovered perspectives
-- Simulated questions and answers
-- Outline nodes
-- Section handoffs
-- Polish passes
+**A3 task-graph structure.** Count the `reasoning` and `composition` task nodes, persisted dependency edges, task states, decompose-or-execute decisions, and graph revisions. Report dependency-ready breadth-first scheduling and, after each composition task, revisions to pending task goals, added tasks, retired pending tasks, and adjusted dependencies.
 
 Retrieval and citation metrics are `N/A` under the common policy.
 
@@ -503,7 +506,7 @@ The protocol limits claims with checks for construct, comparison, judge, length,
 
 **Construct validity.** A logged agent trace records actions selected by the plugin and runner. The trace does not prove that an agent has human-like thoughts. The RQ3 analysis uses the thinking-aloud analogy only to define observable process measures.
 
-**Comparison validity.** The equal-tool and no-retrieval policy makes the A3 condition a STORM [^2] style pipeline, not the full retrieval-based system. The policy limits claims about source-grounded research performance. The policy also prevents retrieval from becoming an unbalanced advantage for one condition.
+**Comparison validity.** The equal-tool and no-retrieval policy makes exploratory B2 a STORM [^2] style pipeline, not the full retrieval-based system. The policy limits claims about source-grounded research performance. The no-retrieval policy also prevents retrieval from becoming an unbalanced advantage for A3 or B2.
 
 **Judge validity.** Pointwise and pairwise judges can show position, verbosity, self-preference, and model-family bias.
 
