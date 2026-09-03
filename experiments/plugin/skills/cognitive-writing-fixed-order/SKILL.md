@@ -80,6 +80,8 @@ At each pass, the `Monitor` must:
 
    Ask for a decision when the next move depends on user intent or factual authority.
 
+Before sending the final response, write the complete current document to `.writing/draft.md`. The run is `INVALID` unless `.writing/draft.md` exists before the final response and the final response contains the complete final text. The final response cannot substitute for the required draft.
+
 ## Interruptions
 
 Generate and Evaluate may interrupt any process when new information or a conflict in the growing text demands it. Log each interruption as a `process_switch`, perform the interrupt through the relevant shared role, return to the interrupted process, and then continue with the next process in the prescribed order.

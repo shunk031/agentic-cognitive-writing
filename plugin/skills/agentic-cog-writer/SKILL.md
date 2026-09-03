@@ -87,6 +87,8 @@ At each turn, the `Monitor` should:
 
    Ask for a decision when the next move depends on the user's intent or factual authority.
 
+Before sending the final response, write the complete current document to `.writing/draft.md`. The run is `INVALID` unless `.writing/draft.md` exists before the final response and the final response contains the complete final text. The final response cannot substitute for the required draft.
+
 ## Non-linear control rules
 
 The writing processes form a recursive loop, not a pipeline. A process may call another process to solve a local problem, and that process may call the whole loop again.

@@ -25,6 +25,8 @@ The user owns rhetorical intent, factual authority, final wording, and publicati
 6. Run one `Re-Write` pass using the assignment, supplied context, and complete Write output. Store the final document at `.writing/draft.md`.
 7. Append the third event for `write -> re-write`, citing the Write output and final draft.
 
+Before sending the final response, write the final document to `.writing/draft.md`. The run is `INVALID` unless `.writing/draft.md` exists before the final response and the final response contains the complete final text. The final response cannot substitute for the required draft.
+
 The trace contract is fixed at exactly three `process_switch` events. Every event's `process` must be one of `pre-write`, `write`, or `re-write`, in this exact order. The transitions are `null -> pre-write`, `pre-write -> write`, and `write -> re-write`. Append every event to `.writing/trace/process.jsonl`. Each event is a `process_switch` object with `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`, plus `artifacts` for stage files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts` is an array of project-relative path strings. Use `responsible_agent: "runner"`, preserve the exact stage names in `process`, `from_process`, and `to_process`, and add stage artifacts to `artifacts`. Do not append goal, retrieval, evidence, citation, or hidden-reasoning events. For example:
 
 ```json
