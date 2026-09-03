@@ -326,16 +326,22 @@ class ExperimentRunner:
             if result.timed_out:
                 if local_attempts < max_attempts:
                     if session_id is None:
+                        detail = result.stderr.decode("utf-8", errors="replace").strip()
+                        suffix = f": {detail}" if detail else ""
                         raise ExecutionError(
                             "Cannot retry a timed-out turn without its session_id"
+                            + suffix
                         )
                     continue
                 raise ExecutionError("Headless turn timed out")
             if result.returncode != 0:
                 if local_attempts < max_attempts:
                     if session_id is None:
+                        detail = result.stderr.decode("utf-8", errors="replace").strip()
+                        suffix = f": {detail}" if detail else ""
                         raise ExecutionError(
                             "Cannot retry a failed turn without its session_id"
+                            f" (return code {result.returncode})" + suffix
                         )
                     continue
                 message = result.stderr.decode("utf-8", errors="replace").strip()

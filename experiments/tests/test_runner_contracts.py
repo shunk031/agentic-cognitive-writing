@@ -322,6 +322,28 @@ def test_retry_exhaustion_fails_after_fixed_attempt_count(tmp_path: Path) -> Non
     assert len(executor.calls) == 2
 
 
+def test_failed_turn_without_session_preserves_cli_stderr(tmp_path: Path) -> None:
+    executor = _RetryExecutor(
+        [
+            ExecutionResult(
+                returncode=1,
+                stdout=b"",
+                stderr=b"workspace is not trusted",
+                session_id=None,
+            )
+        ]
+    )
+    runner = ExperimentRunner(
+        _config(retry_policy=1), output_root=tmp_path, executor=executor
+    )
+
+    with pytest.raises(
+        ExecutionError,
+        match=r"return code 1\): workspace is not trusted",
+    ):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+
+
 def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
     class GoalWritingExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds):
