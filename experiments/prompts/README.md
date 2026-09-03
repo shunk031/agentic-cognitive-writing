@@ -58,7 +58,7 @@ become constraints. Reference outputs are intentionally omitted.
 
 ### DoLoMiTes split gate
 
-`recompute_dolomites_split.py` counts JSONL records in the two named archive
+[`recompute_dolomites_split.py`](../src/agentic_cogwriter/prompts/recompute_dolomites_split.py) counts JSONL records in the two named archive
 members and writes [`dolomites_split.json`](dolomites_split.json). The observed
 archive split is **820 dev / 1,037 test**. This is the authoritative result;
 the upstream README's 830-dev statement is not used. Only the 820-row dev
@@ -76,12 +76,15 @@ transformation is: development examples became prompt rows, and reference
 outputs were omitted. Full machine-readable decisions and hashes are in
 [`provenance.json`](provenance.json).
 
-The source repositories' relevant implementation/data references are
-[`WritingBench's benchmark file`](https://github.com/X-PLUG/WritingBench/blob/9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad/benchmark_query/benchmark_all.jsonl),
-[HelloBench's runner](https://github.com/Quehry/HelloBench/blob/92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57/run.py),
-and the [DoLoMiTes release README](https://github.com/google-deepmind/dolomites/blob/8331dd998bf510cacc58d10ad613c9e685787747/README.md).
+The source repositories' relevant implementation/data references are:
+
+- [`WritingBench` benchmark file](https://github.com/X-PLUG/WritingBench/blob/9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad/benchmark_query/benchmark_all.jsonl)
+- [`HelloBench` runner](https://github.com/Quehry/HelloBench/blob/92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57/run.py)
+- [`DoLoMiTes` release README](https://github.com/google-deepmind/dolomites/blob/8331dd998bf510cacc58d10ad613c9e685787747/README.md)
+
 The downloader uses Python's standard [`urllib.request`](https://docs.python.org/3/library/urllib.request.html)
-interface. License decisions were checked against the [Apache Software
-Foundation guidance](https://www.apache.org/legal/apply-license), the [OSI
-MIT text](https://opensource.org/license/mit), and the [Creative Commons
-Attribution 4.0 deed](https://creativecommons.org/licenses/by/4.0/).
+interface. License decisions were checked against:
+
+- [Apache Software Foundation guidance](https://www.apache.org/legal/apply-license)
+- [OSI MIT text](https://opensource.org/license/mit)
+- [Creative Commons Attribution 4.0 deed](https://creativecommons.org/licenses/by/4.0/)
