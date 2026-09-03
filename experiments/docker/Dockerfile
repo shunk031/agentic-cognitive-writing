@@ -19,7 +19,7 @@ ARG CLAUDE_CODE_VERSION=2.1.236
 ARG UV_VERSION=0.11.32
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    HOME=/home/codex \
+    HOME=/home/cog-writer-agent \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -81,10 +81,10 @@ RUN set -eux; \
     python --version | grep --fixed-strings 'Python 3.12.11'; \
     git --version | grep --fixed-strings '2.39.5'
 
-RUN groupadd --gid 1000 codex \
-    && useradd --uid 1000 --gid 1000 --create-home --shell /bin/sh codex \
-    && mkdir --parents /home/codex/.codex /workspace \
-    && chown --recursive codex:codex /home/codex /workspace
+RUN groupadd --gid 1000 cog-writer-agent \
+    && useradd --uid 1000 --gid 1000 --create-home --shell /bin/sh cog-writer-agent \
+    && mkdir --parents /home/cog-writer-agent/.codex /workspace \
+    && chown --recursive cog-writer-agent:cog-writer-agent /home/cog-writer-agent /workspace
 
 COPY experiments/docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY experiments/docker/runner-shim.sh /tmp/runner-shim.sh
@@ -93,7 +93,7 @@ RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh \
     && install --mode 0755 /tmp/runner-shim.sh \
         "${UV_PROJECT_ENVIRONMENT}/bin/agentic-cogwriter-runner"
 
-USER codex
+USER cog-writer-agent
 WORKDIR /workspace
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["uv", "run", "--package", "agentic-cogwriter", "agentic-cogwriter-runner", "--help"]

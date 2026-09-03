@@ -173,8 +173,8 @@ docker_args=(
     --user "$(id -u):$(id -g)"
     --workdir /workspace
     --mount "type=bind,src=${repo_root},dst=/workspace"
-    --mount "type=bind,src=${host_codex_config},dst=/home/codex/.codex/config.toml,readonly"
-    --env HOME=/home/codex
+    --mount "type=bind,src=${host_codex_config},dst=/home/cog-writer-agent/.codex/config.toml,readonly"
+    --env HOME=/home/cog-writer-agent
 )
 
 if [[ -n "${env_file}" ]]; then
