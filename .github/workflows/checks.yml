@@ -20,18 +20,15 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Detect documentation checker and plugin roots
+      - name: Detect documentation checker
         id: doc_inputs
         shell: bash
         run: |
           if [[ ! -f tools/check-doc-consistency.sh ]]; then
             echo "::notice::tools/check-doc-consistency.sh is absent; skipping documentation consistency checks."
             echo "available=false" >> "$GITHUB_OUTPUT"
-          elif [[ -d plugin || -d experiments/plugin ]]; then
-            echo "available=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::notice::No plugin root (plugin/ or experiments/plugin/) exists; skipping documentation consistency checks."
-            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "available=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run documentation consistency checker
@@ -103,10 +100,12 @@ jobs:
         id: workspace
         shell: bash
         run: |
-          if [[ -f uv.lock ]]; then
+          if [[ -f pyproject.toml ]] && grep -Eq '^[[:space:]]*\[tool\.uv\.workspace\]([[:space:]]*#.*)?$' pyproject.toml; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          elif [[ -f experiments/pyproject.toml ]]; then
             echo "available=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::notice::No root uv.lock found; skipping Python workspace tests."
+            echo "::notice::No root uv workspace inputs found; skipping Python workspace tests. Expected [tool.uv.workspace] in pyproject.toml or experiments/pyproject.toml."
             echo "available=false" >> "$GITHUB_OUTPUT"
           fi
 
@@ -116,4 +115,6 @@ jobs:
 
       - name: Run Python tests
         if: ${{ steps.workspace.outputs.available == 'true' }}
+        env:
+          UV_LOCKED: "1"
         run: uv run pytest
