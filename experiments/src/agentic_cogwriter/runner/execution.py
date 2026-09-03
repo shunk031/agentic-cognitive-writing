@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import subprocess
-import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -21,7 +20,6 @@ class ExecutionResult:
     stderr: bytes
     session_id: str | None = None
     timed_out: bool = False
-    duration_seconds: float = 0.0
 
 
 class SubprocessExecutor:
@@ -32,7 +30,6 @@ class SubprocessExecutor:
     ) -> ExecutionResult:
         """Execute one command without shell expansion."""
 
-        started = time.monotonic()
         try:
             completed = subprocess.run(
                 command,
@@ -53,7 +50,6 @@ class SubprocessExecutor:
                 stdout=stdout,
                 stderr=stderr,
                 timed_out=True,
-                duration_seconds=time.monotonic() - started,
             )
         except OSError as exc:
             raise ExecutionError(f"Cannot execute {command[0]}: {exc}") from exc
@@ -61,7 +57,6 @@ class SubprocessExecutor:
             returncode=completed.returncode,
             stdout=completed.stdout,
             stderr=completed.stderr,
-            duration_seconds=time.monotonic() - started,
         )
 
 
@@ -75,32 +70,6 @@ def _json_objects(data: bytes) -> list[dict[str, Any]]:
         if isinstance(value, dict):
             objects.append(value)
     return objects
-
-
-def _find_string(value: Any, names: set[str]) -> str | None:
-    if isinstance(value, dict):
-        for key, item in value.items():
-            if key in names and isinstance(item, str) and item:
-                return item
-            found = _find_string(item, names)
-            if found:
-                return found
-    elif isinstance(value, list):
-        for item in value:
-            found = _find_string(item, names)
-            if found:
-                return found
-    return None
-
-
-def extract_session_id(data: bytes) -> str | None:
-    """Read Codex thread IDs or Claude session IDs from machine output."""
-
-    for value in _json_objects(data):
-        found = _find_string(value, {"session_id", "thread_id"})
-        if found:
-            return found
-    return None
 
 
 def extract_output(data: bytes) -> str:

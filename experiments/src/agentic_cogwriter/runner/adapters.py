@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shlex
 import subprocess
 import tomllib
 from dataclasses import dataclass
@@ -120,9 +119,3 @@ class PlatformAdapter:
         if not version:
             raise ConfigurationError(f"{self.executable} returned an empty version")
         return version
-
-
-def parse_install_command(command: str) -> list[str]:
-    """Parse a wrapper install command for an explicit, shell-free executor."""
-
-    return shlex.split(command)

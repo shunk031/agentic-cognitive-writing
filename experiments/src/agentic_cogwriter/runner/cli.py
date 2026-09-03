@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from ..paths import EXPERIMENTS_ROOT
 from .conditions import CONDITION_IDS
 from .config import RuntimeConfig
 from .manifest import load_prompt_manifest
@@ -36,9 +37,7 @@ def main(argv: list[str] | None = None) -> int:
     """Run one prompt and return a process status."""
 
     args = build_parser().parse_args(argv)
-    config_path = (
-        args.config or Path(__file__).resolve().parents[3] / "config" / "runtime.json"
-    )
+    config_path = args.config or EXPERIMENTS_ROOT / "config" / "runtime.json"
     manifest = load_prompt_manifest(args.manifest)
     runner = ExperimentRunner(
         RuntimeConfig.load(config_path),

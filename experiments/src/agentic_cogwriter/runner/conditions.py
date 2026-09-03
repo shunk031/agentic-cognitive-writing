@@ -9,12 +9,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from ..paths import EXPERIMENTS_ROOT
 from .errors import ConfigurationError
 from .hashing import sha256_bytes
 
 CONDITION_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2")
-BASELINE_IDS = ("A1", "A2", "A3")
-EXPLORATORY_IDS = ("B1", "B2")
 PLATFORMS = ("codex-primary", "claude-code-replication")
 
 
@@ -51,7 +50,7 @@ class ConditionSpec:
 def default_registry_path() -> Path:
     """Return the registry path relative to this source file."""
 
-    return Path(__file__).resolve().parents[4] / "conditions" / "conditions.json"
+    return EXPERIMENTS_ROOT / "conditions" / "conditions.json"
 
 
 def _load_toml(path: Path) -> dict[str, Any]:
@@ -260,36 +259,3 @@ def load_condition_registry(path: Path | None = None) -> dict[str, ConditionSpec
             trace_policy=trace_policy,
         )
     return result
-
-
-def render_stage_prompt(
-    template: str,
-    *,
-    prompt_text: str,
-    supplied_context: str,
-    output_constraints: Any,
-    previous_stage_output: str,
-    stage_id: str,
-) -> str:
-    """Render a frozen prompt for inspection without executing stage turns."""
-
-    replacements = {
-        "{{assignment}}": prompt_text,
-        "{{supplied_context}}": supplied_context or "(No additional supplied context.)",
-        "{{output_constraints}}": json.dumps(
-            output_constraints,
-            ensure_ascii=False,
-            sort_keys=True,
-        ),
-        "{{previous_stage_output}}": previous_stage_output
-        or "(No previous stage output.)",
-        "{{stage_id}}": stage_id,
-    }
-    rendered = template
-    for marker, value in replacements.items():
-        rendered = rendered.replace(marker, value)
-    if "{{" in rendered or "}}" in rendered:
-        raise ConfigurationError(
-            f"Unresolved placeholder in frozen prompt stage {stage_id}"
-        )
-    return rendered

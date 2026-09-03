@@ -6,7 +6,6 @@ import json
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 from .hashing import sha256_file
 
@@ -15,23 +14,6 @@ def timestamp() -> str:
     """Return a timezone-aware ISO 8601 timestamp."""
 
     return datetime.now(UTC).isoformat()
-
-
-class TraceWriter:
-    """Append standalone JSON events to one trace file."""
-
-    def __init__(self, path: Path):
-        self.path = path
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.touch(exist_ok=True)
-
-    def append(self, event: dict[str, Any]) -> None:
-        """Validate JSON serializability and append exactly one JSON line."""
-
-        encoded = json.dumps(event, ensure_ascii=False, sort_keys=True)
-        json.loads(encoded)
-        with self.path.open("a", encoding="utf-8") as handle:
-            handle.write(encoded + "\n")
 
 
 def validate_jsonl(path: Path) -> None:

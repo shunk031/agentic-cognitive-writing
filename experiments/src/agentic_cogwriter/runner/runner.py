@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
+from ..paths import EXPERIMENTS_ROOT, REPOSITORY_ROOT
 from .adapters import PlatformAdapter
 from .budget import OutputBudget, estimate_output_tokens
 from .conditions import ConditionSpec, load_condition_registry
@@ -71,7 +72,7 @@ class ExperimentRunner:
         self.adapters = adapters or self._load_adapters()
 
     def _load_adapters(self) -> dict[str, PlatformAdapter]:
-        root = Path(__file__).resolve().parents[4] / "conditions" / "adapters"
+        root = EXPERIMENTS_ROOT / "conditions" / "adapters"
         return {
             "codex-primary": PlatformAdapter.load(root / "codex_exec.toml"),
             "claude-code-replication": PlatformAdapter.load(root / "claude_print.toml"),
@@ -336,9 +337,8 @@ class ExperimentRunner:
             raise ManifestError(
                 "Plugin wrapper plugins.paths must be a list of strings"
             )
-        repository_root = condition.plugin_config.resolve().parents[2]
         return tuple(
-            str((repository_root / path).resolve())
+            str((REPOSITORY_ROOT / path).resolve())
             if not Path(path).is_absolute()
             else str(Path(path).resolve())
             for path in paths
@@ -379,6 +379,9 @@ class ExperimentRunner:
                 "selected_variant": condition.condition_id,
                 "selected_skill": condition.skill_name,
                 "wrapper_config_hash": wrapper_hash,
+                "stage_prompt_hashes": {
+                    stage.stage_id: stage.sha256 for stage in condition.stages
+                },
                 "trace_policy": condition.trace_policy_dict,
             },
             "models_and_execution": {

@@ -23,7 +23,3 @@ class RetrievalViolation(RunnerError):
 
 class ExecutionError(RunnerError):
     """A headless command failed, timed out, or returned unusable output."""
-
-
-class SessionError(RunnerError):
-    """A top-level session could not satisfy the runner's session policy."""
