@@ -35,7 +35,7 @@ dry_run=false
 command_args=()
 auth_stub_dir=''
 
-# @description Remove the generated runtime auth helper after the wrapper exits.
+# @description Remove the generated runtime auth helper after run.sh exits.
 function cleanup() {
     if [[ -n "${auth_stub_dir}" ]]; then
         rm -rf -- "${auth_stub_dir}"
@@ -44,7 +44,7 @@ function cleanup() {
 
 trap cleanup EXIT
 
-# @description Print the command-line options accepted by this wrapper.
+# @description Print the command-line options accepted by run.sh.
 function usage() {
     printf '%s\n' \
         'Usage: experiments/docker/run.sh [options] [-- runner-args...]' \
@@ -60,7 +60,7 @@ function usage() {
         '  -h, --help       Print this usage text.'
 }
 
-# @description Print an error and stop the wrapper.
+# @description Print an error and stop run.sh.
 # @arg $1 message Error text for the caller.
 function die() {
     printf 'error: %s\n' "$1" >&2

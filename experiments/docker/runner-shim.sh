@@ -5,7 +5,7 @@
 # @description
 #   The Docker image pre-creates the uv project environment because the
 #   runner has no runtime dependencies. The source tree is mounted at
-#   /workspace when the wrapper starts the container.
+#   /workspace when experiments/docker/run.sh starts the container.
 
 set -eu
 

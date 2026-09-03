@@ -1,10 +1,10 @@
 # Manual container options
 
-The wrapper in [`README.md`](./README.md) is the normal entry point for both `codex-primary` and `claude-code-replication`. Follow the [prerequisites](./README.md#prerequisites), [wrapper command](./README.md#run-one-experiment-wrapper), and [success criteria](./README.md#what-success-looks-like) there. Use a direct Docker command only when another tool needs to own the container lifecycle.
+The [`run.sh`](./run.sh) script in this directory (usage documented in [README.md](./README.md)) is the normal entry point for both `codex` and `claude-code`. Follow the [run.sh command](./README.md#run-one-experiment-runsh), [prerequisites](./README.md#prerequisites), and [success criteria](./README.md#what-success-looks-like) there. Use a direct Docker command only when another tool needs to own the container lifecycle.
 
 The direct command below assumes that the README prerequisites are complete, the repository root is the current directory, the plugin is available at the documented host path, and the gitignored provider env file exists.
 
-Build or reuse the local image:
+Build or reuse the image built from [`Dockerfile`](./Dockerfile):
 
 ```bash
 docker build \
@@ -12,7 +12,7 @@ docker build \
   --file experiments/docker/Dockerfile .
 ```
 
-Run the runner with the same mounts as the wrapper. The image includes both pinned CLIs, and the runner selects the platform from the experiment arguments:
+Run `uv run --package agentic-cogwriter agentic-cogwriter-runner` with the same mounts as `run.sh`. The image includes both pinned CLIs, and the runner selects the platform from the experiment arguments:
 
 ```bash
 docker run --rm --init \
