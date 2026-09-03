@@ -404,7 +404,7 @@ The survey findings translate into the shipped architecture and the remaining ex
    - Avoid final-output-only grading; it cannot show that cognitive-process support changed behavior.
 
 4. **Evaluation harness as a considered skill**
-   - A `writing-eval-harness` skill remains a considered option. The considered skill can use the Anthropic skill-creator pattern of with-skill vs baseline runs, assertions, a grader, benchmark aggregation, and human review viewer concepts.
+   - A dedicated evaluation-harness skill remains a considered option. It can use the Anthropic skill-creator pattern of with-skill versus baseline runs, assertions, a grader, benchmark aggregation, and human review viewer concepts.
    - Reuse Anthropic `evals/evals.json`, `grading.json`, benchmark schema, and first-look qualitative review pattern.
    - Avoid exact-prose assertions. Grade claim grounding, audience-fit, structure, revision quality, and trace evidence.
 
