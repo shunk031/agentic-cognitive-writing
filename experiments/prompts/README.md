@@ -34,6 +34,17 @@ experiments/
     └── dolomites_split.json     # archive-derived split evidence
 ```
 
+## Manifest schema
+
+Each manifest row contains:
+
+`prompt_id`, `benchmark_name`, `source_version`, `prompt_text`,
+`requested_output_constraints`, and `hash`.
+
+`hash` is SHA-256 over the canonical UTF-8 JSON object containing every field
+except `hash` itself. Canonical JSON uses sorted keys, no insignificant
+whitespace, and `ensure_ascii=false`.
+
 ## Pinned sources and counts
 
 | Benchmark | Pinned source | Source content | Manifest |
