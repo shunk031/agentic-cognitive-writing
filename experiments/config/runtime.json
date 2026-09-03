@@ -1,0 +1,40 @@
+{
+  "codex_generator_model": "REQUIRED_AT_RUNTIME",
+  "claude_code_generator_model": "REQUIRED_AT_RUNTIME",
+  "codex_frontier_judge": "REQUIRED_AT_RUNTIME",
+  "claude_code_frontier_judge": "REQUIRED_AT_RUNTIME",
+  "shared_open_evaluator": "REQUIRED_AT_RUNTIME",
+  "generator_system_and_condition_prompts": "REQUIRED_AT_RUNTIME",
+  "judge_prompts_and_json_schemas": "REQUIRED_AT_RUNTIME",
+  "temperature": "REQUIRED_AT_RUNTIME",
+  "top_p_or_equivalent": "REQUIRED_AT_RUNTIME",
+  "maximum_output_tokens": "REQUIRED_AT_RUNTIME",
+  "stop_rules": "REQUIRED_AT_RUNTIME",
+  "timeout": "REQUIRED_AT_RUNTIME",
+  "generation_seed": "REQUIRED_AT_RUNTIME",
+  "judge_seed": "REQUIRED_AT_RUNTIME",
+  "sampling_seed": "REQUIRED_AT_RUNTIME",
+  "presentation_seed": "REQUIRED_AT_RUNTIME",
+  "codex_version": "REQUIRED_AT_RUNTIME",
+  "claude_code_version": "REQUIRED_AT_RUNTIME",
+  "main_plugin_commit": "REQUIRED_AT_RUNTIME",
+  "experiments_plugin_commit": "REQUIRED_AT_RUNTIME",
+  "runner_commit": "REQUIRED_AT_RUNTIME",
+  "generator_and_judge_family_audit": "REQUIRED_AT_RUNTIME",
+  "retry_policy": "REQUIRED_AT_RUNTIME",
+  "length_strata": "REQUIRED_AT_RUNTIME",
+  "minimum_cell_size": "REQUIRED_AT_RUNTIME",
+  "covariate_model": "REQUIRED_AT_RUNTIME",
+  "length_unit": "REQUIRED_AT_RUNTIME",
+  "zero_variance_rule": "REQUIRED_AT_RUNTIME",
+  "statistical_lock": "REQUIRED_AT_RUNTIME",
+  "output_counting": {
+    "unit": "REQUIRED_AT_RUNTIME",
+    "tokenizer": "REQUIRED_AT_RUNTIME",
+    "word_rule": "REQUIRED_AT_RUNTIME"
+  },
+  "tool_policy": {
+    "network": "denied",
+    "context": "supplied assignment and context only"
+  }
+}

@@ -1,0 +1,31 @@
+condition_id = "A4"
+skill = "agentic-cog-writer"
+analysis_family = "confirmatory"
+product_requires_draft = true
+
+[package]
+name = "agentic-cognitive-writing"
+
+[plugins]
+paths = ["plugin"]
+
+[adapters]
+codex = "codex_exec"
+claude_code = "claude_print"
+
+[invocation]
+codex = "Read the skill file at {codex_plugin_root}/skills/agentic-cog-writer/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact."
+claude_code = "/agentic-cognitive-writing:agentic-cog-writer"
+
+[install]
+claude_code = ["/plugin marketplace add .", "/plugin install agentic-cognitive-writing@agentic-cognitive-writing-process"]
+
+[trace]
+retrieval = "not_applicable"
+evidence = "plugin_recorded"
+citation = "plugin_recorded"
+goal_events = "allowed"
+event_types = ["process_switch", "goal_created", "goal_developed", "goal_regenerated"]
+min_events = 1
+require_goal_events = true
+processes = ["planning", "generate", "organize", "goal-setting", "translating", "reviewing", "evaluate", "revise"]

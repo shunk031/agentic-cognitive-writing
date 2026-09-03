@@ -72,7 +72,7 @@ analysis.
 
 WritingBench prompt material is Apache-2.0. HelloBench prompt material is MIT.
 DoLoMiTes materials are CC BY 4.0. Redistributing DoLoMiTes-derived material
-requires attribution to DeepMind Technologies Limited and this change note:
+requires attribution to DeepMind Technologies Limited and the following note:
 development examples became prompt rows, and reference outputs were omitted.
 The machine-readable license and provenance record is in
 [`provenance.json`](provenance.json).
