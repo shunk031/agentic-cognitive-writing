@@ -44,29 +44,13 @@
       "wrapper_config": "a3_baseline.toml",
       "stages": [
         {
-          "id": "perspective_discovery",
-          "path": "prompts/a3_perspective_discovery.md",
-          "sha256": "f2ff40dc0695fc09a0435159c24a1a31ed760c2f3fef04c2b9416934d5734f40"
+          "id": "task-decomposition"
         },
         {
-          "id": "simulated_qa",
-          "path": "prompts/a3_simulated_qa.md",
-          "sha256": "a28b7d21ab22131d6c3d63f7c253eeecd0c0b534fac87b20c57d8fb191502c43"
+          "id": "task-execution"
         },
         {
-          "id": "outline",
-          "path": "prompts/a3_outline.md",
-          "sha256": "69311cca1d9c26502fef4c2a645c6692d9fc9a6d223500b8096ea7163bcaea65"
-        },
-        {
-          "id": "draft",
-          "path": "prompts/a3_draft.md",
-          "sha256": "8058a1cc372d7c8f7d1e5da84d4a80efa7cc37a5f8280b959167ecbef5272d3a"
-        },
-        {
-          "id": "polish",
-          "path": "prompts/a3_polish.md",
-          "sha256": "93cd131e3fa4ba56ae4e89929ba476be8d2cb5efac3d4845b2521c7156df8983"
+          "id": "task-revision"
         }
       ]
     },
@@ -103,7 +87,33 @@
       "analysis_family": "exploratory",
       "trace_mode": "plugin_recorded",
       "wrapper_config": "b2_exploratory.toml",
-      "stages": [{"id": "plugin_session"}]
+      "stages": [
+        {
+          "id": "perspective_discovery",
+          "path": "prompts/a3_perspective_discovery.md",
+          "sha256": "f2ff40dc0695fc09a0435159c24a1a31ed760c2f3fef04c2b9416934d5734f40"
+        },
+        {
+          "id": "simulated_qa",
+          "path": "prompts/a3_simulated_qa.md",
+          "sha256": "a28b7d21ab22131d6c3d63f7c253eeecd0c0b534fac87b20c57d8fb191502c43"
+        },
+        {
+          "id": "outline",
+          "path": "prompts/a3_outline.md",
+          "sha256": "69311cca1d9c26502fef4c2a645c6692d9fc9a6d223500b8096ea7163bcaea65"
+        },
+        {
+          "id": "draft",
+          "path": "prompts/a3_draft.md",
+          "sha256": "8058a1cc372d7c8f7d1e5da84d4a80efa7cc37a5f8280b959167ecbef5272d3a"
+        },
+        {
+          "id": "polish",
+          "path": "prompts/a3_polish.md",
+          "sha256": "93cd131e3fa4ba56ae4e89929ba476be8d2cb5efac3d4845b2521c7156df8983"
+        }
+      ]
     }
   }
 }

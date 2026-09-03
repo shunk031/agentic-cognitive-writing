@@ -8,7 +8,7 @@ Agentic CogWriter is the writing system evaluated by this runner. To prepare a s
 | --- | --- |
 | [`config/`](config/) | Runtime gate and model, judge, decoding, seed, and analysis settings |
 | [`prompts/`](prompts/) | One immutable manifest per benchmark |
-| [`conditions/`](conditions/) | A1 to A6 and B1 to B2 wrapper configs, frozen A1 to A3 prompt files, and platform adapters |
+| [`conditions/`](conditions/) | A1 to A6 and B1 to B2 wrapper configs, frozen baseline prompt files, and platform adapters |
 | [`src/agentic_cogwriter/runner/`](src/agentic_cogwriter/runner/) | Python subpackage for execution, manifests, budgets, and trace collection |
 | [`judge/`](judge/) | Reserved for judge prompts and runners |
 | [`human/`](human/) | Reserved for human validation |

@@ -91,7 +91,7 @@ def _plugin_source(tmp_path: Path) -> Path:
         "cognitive-writing-no-goal-network",
         "cognitive-writing-fixed-order",
         "writing-cogwriter-style",
-        "writing-writehere-style",
+        "writing-adaptive-task-planning",
         "planning",
         "translating",
         "reviewing",

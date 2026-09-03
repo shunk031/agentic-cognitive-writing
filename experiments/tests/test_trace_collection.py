@@ -1,5 +1,6 @@
 import hashlib
 import json
+import tomllib
 
 import pytest
 
@@ -25,7 +26,7 @@ def _plugin_source(tmp_path):
         "cognitive-writing-no-goal-network",
         "cognitive-writing-fixed-order",
         "writing-cogwriter-style",
-        "writing-writehere-style",
+        "writing-adaptive-task-planning",
         "planning",
         "translating",
         "reviewing",
@@ -64,6 +65,7 @@ class FakeExecutor:
                     for skill_name in (
                         "writing-single-shot",
                         "writing-linear",
+                        "writing-adaptive-task-planning",
                         "writing-storm-style",
                     )
                     if any(
@@ -76,6 +78,11 @@ class FakeExecutor:
             stages = {
                 "writing-single-shot": ("single_shot",),
                 "writing-linear": ("pre_write", "write", "re_write"),
+                "writing-adaptive-task-planning": (
+                    "task-decomposition",
+                    "task-execution",
+                    "task-revision",
+                ),
                 "writing-storm-style": (
                     "perspective_discovery",
                     "simulated_qa",
@@ -173,13 +180,37 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     ] == [
         "writing-single-shot",
         "writing-linear",
-        "writing-storm-style",
+        "writing-adaptive-task-planning",
         "agentic-cog-writer",
         "cognitive-writing-no-goal-network",
         "cognitive-writing-fixed-order",
         "writing-cogwriter-style",
-        "writing-writehere-style",
+        "writing-storm-style",
     ]
+    a3_wrapper = tomllib.loads(registry["A3"].plugin_config.read_text(encoding="utf-8"))
+    assert a3_wrapper["title"] == "Adaptive Task Planning"
+    assert a3_wrapper["trace"]["processes"] == [
+        "task-decomposition",
+        "task-execution",
+        "task-revision",
+    ]
+    assert tuple(stage.stage_id for stage in registry["A3"].stages) == (
+        "task-decomposition",
+        "task-execution",
+        "task-revision",
+    )
+    assert tuple(stage.stage_id for stage in registry["B2"].stages) == (
+        "perspective_discovery",
+        "simulated_qa",
+        "outline",
+        "draft",
+        "polish",
+    )
+    assert registry["B2"].trace_policy_dict == {
+        "citation": "N/A",
+        "evidence": "N/A",
+        "retrieval": "N/A",
+    }
     assert all(
         registry[f"A{index}"].analysis_family == "confirmatory" for index in range(1, 7)
     )
@@ -236,11 +267,9 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
 
     events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
     assert [event["stage_id"] for event in events] == [
-        "perspective_discovery",
-        "simulated_qa",
-        "outline",
-        "draft",
-        "polish",
+        "task-decomposition",
+        "task-execution",
+        "task-revision",
     ]
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["inputs"]["trace_policy"] == {
