@@ -80,6 +80,37 @@ def _prompt() -> PromptRecord:
     )
 
 
+def _plugin_source(tmp_path: Path) -> Path:
+    root = tmp_path / "plugin-source"
+    skills = (
+        "writing-single-shot",
+        "writing-linear",
+        "writing-storm-style",
+        "agentic-cog-writer",
+        "cognitive-writing-no-goal-network",
+        "cognitive-writing-fixed-order",
+        "writing-cogwriter-style",
+        "writing-writehere-style",
+        "planning",
+        "translating",
+        "reviewing",
+    )
+    for skill in skills:
+        path = root / "skills" / skill / "SKILL.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(skill)
+    return root
+
+
+def _runner(tmp_path: Path, config: RuntimeConfig | None = None, **kwargs):
+    return ExperimentRunner(
+        config or _config(),
+        output_root=tmp_path,
+        codex_plugin_root=_plugin_source(tmp_path),
+        **kwargs,
+    )
+
+
 def _event(
     event_type: str = "process_switch", *, stage_id: str | None = None
 ) -> dict[str, object]:
@@ -173,7 +204,7 @@ def test_codex_adapter_argv_passes_installed_cli_parser() -> None:
         assert parser_probe.returncode == 0, parser_probe.stderr
 
 
-def test_codex_prompt_references_configured_skill_file_without_plugin_install(
+def test_codex_prompt_references_workspace_skill_file_without_plugin_install(
     tmp_path: Path,
 ) -> None:
     runner = ExperimentRunner(
@@ -184,7 +215,7 @@ def test_codex_prompt_references_configured_skill_file_without_plugin_install(
         load_condition_registry()["A4"], _prompt(), "codex-primary"
     )
 
-    assert "Read the skill file at /plugin/skills/agentic-cog-writer/SKILL.md" in prompt
+    assert "Read the skill file at plugin/skills/agentic-cog-writer/SKILL.md" in prompt
     assert "follow it" in prompt
     assert "$agentic-cog-writer" not in prompt
     assert "codex plugin add" not in prompt
@@ -200,7 +231,74 @@ def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> No
         assert "SKILL.md" in invocation
         assert wrapper["install"]["codex_primary"] == []
         prompt = runner._plugin_prompt(condition, _prompt(), "codex-primary")
-        assert f"/skills/{condition.skill_name}/SKILL.md" in prompt
+        assert f"plugin/skills/{condition.skill_name}/SKILL.md" in prompt
+
+
+def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
+    source_root = tmp_path / "plugin-source"
+    files = {
+        "skills/agentic-cog-writer/SKILL.md": "main skill\n",
+        "skills/agentic-cog-writer/references/trace.md": "trace reference\n",
+        "skills/planning/SKILL.md": "planning role\n",
+        "skills/translating/SKILL.md": "translating role\n",
+        "skills/reviewing/SKILL.md": "reviewing role\n",
+    }
+    for relative, content in files.items():
+        path = source_root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+
+    class StageExecutor:
+        def run(self, command, *, cwd, timeout_seconds):
+            trace_path = cwd / ".writing" / "trace" / "process.jsonl"
+            trace_path.parent.mkdir(parents=True, exist_ok=True)
+            trace_path.write_text(
+                json.dumps(_event("process_switch"))
+                + "\n"
+                + json.dumps(_event("goal_created"))
+                + "\n"
+            )
+            return _result()
+
+    runner = ExperimentRunner(
+        _config(),
+        output_root=tmp_path / "runs",
+        executor=StageExecutor(),
+        codex_plugin_root=source_root,
+    )
+
+    result = runner.run_prompt(
+        _prompt(), condition_id="A4", platform="codex-primary", run_id="staged"
+    )
+
+    manifest = json.loads(result.manifest_path.read_text())
+    staged_files = manifest["staged_files"]
+    assert set(staged_files) == {
+        "plugin/skills/agentic-cog-writer/SKILL.md",
+        "plugin/skills/agentic-cog-writer/references/trace.md",
+        "plugin/skills/planning/SKILL.md",
+        "plugin/skills/translating/SKILL.md",
+        "plugin/skills/reviewing/SKILL.md",
+    }
+    for relative, content in files.items():
+        staged = result.run_dir / "workspace" / "plugin" / relative
+        assert staged.read_text() == content
+        assert staged_files[f"plugin/{relative}"] == (
+            "sha256:" + hashlib.sha256(content.encode()).hexdigest()
+        )
+
+    prompt_text = (result.run_dir / "prompt.txt").read_text()
+    assert (
+        "Read the skill file at plugin/skills/agentic-cog-writer/SKILL.md"
+        in prompt_text
+    )
+    assert str(source_root) not in prompt_text
+    assert manifest["execution_paths"]["cwd"] == str(
+        (result.run_dir / "workspace").resolve()
+    )
+    assert manifest["execution_paths"]["trace_path"] == str(
+        (result.run_dir / ".writing" / "trace" / "process.jsonl").resolve()
+    )
 
 
 @pytest.mark.parametrize(
@@ -265,9 +363,7 @@ def test_runner_preserves_retrieval_evidence_in_artifact_and_manifest(
         stderr=b"",
         session_id="session-1",
     )
-    runner = ExperimentRunner(
-        _config(), output_root=tmp_path, executor=_RetryExecutor([result])
-    )
+    runner = _runner(tmp_path, executor=_RetryExecutor([result]))
 
     with pytest.raises(RetrievalViolation) as captured:
         runner.run_prompt(
@@ -352,9 +448,7 @@ def test_run_fails_on_schema_invalid_plugin_trace(tmp_path: Path) -> None:
             trace_path.write_text(json.dumps(event) + "\n")
             return result
 
-    runner = ExperimentRunner(
-        _config(), output_root=tmp_path, executor=InvalidTraceExecutor([_result()])
-    )
+    runner = _runner(tmp_path, executor=InvalidTraceExecutor([_result()]))
 
     with pytest.raises(TraceValidationError, match="evidence"):
         runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
@@ -400,9 +494,7 @@ def test_retry_reuses_the_returned_session_id(
     tmp_path: Path, first: ExecutionResult
 ) -> None:
     executor = _RetryExecutor([first, _result()])
-    runner = ExperimentRunner(
-        _config(retry_policy=1), output_root=tmp_path, executor=executor
-    )
+    runner = _runner(tmp_path, _config(retry_policy=1), executor=executor)
 
     runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
 
@@ -413,9 +505,7 @@ def test_retry_reuses_the_returned_session_id(
 
 def test_retry_exhaustion_fails_after_fixed_attempt_count(tmp_path: Path) -> None:
     executor = _RetryExecutor([_result(returncode=1), _result(returncode=1)])
-    runner = ExperimentRunner(
-        _config(retry_policy=1), output_root=tmp_path, executor=executor
-    )
+    runner = _runner(tmp_path, _config(retry_policy=1), executor=executor)
 
     with pytest.raises(ExecutionError, match="status 1"):
         runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
@@ -433,9 +523,7 @@ def test_failed_turn_without_session_preserves_cli_stderr(tmp_path: Path) -> Non
             )
         ]
     )
-    runner = ExperimentRunner(
-        _config(retry_policy=1), output_root=tmp_path, executor=executor
-    )
+    runner = _runner(tmp_path, _config(retry_policy=1), executor=executor)
 
     with pytest.raises(
         ExecutionError,
@@ -452,9 +540,7 @@ def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
             goals.write_text("should not exist")
             return result
 
-    runner = ExperimentRunner(
-        _config(), output_root=tmp_path, executor=GoalWritingExecutor([_result()])
-    )
+    runner = _runner(tmp_path, executor=GoalWritingExecutor([_result()]))
 
     with pytest.raises(ExecutionError, match="goals.md"):
         runner.run_prompt(_prompt(), condition_id="A5", platform="codex-primary")
@@ -468,11 +554,7 @@ def test_runner_rejects_retrieval_in_draft_fallback(tmp_path: Path) -> None:
             draft.write_text("Evidence gathered with curl https://example.test/source")
             return result
 
-    runner = ExperimentRunner(
-        _config(),
-        output_root=tmp_path,
-        executor=DraftRetrievalExecutor([_result(output="")]),
-    )
+    runner = _runner(tmp_path, executor=DraftRetrievalExecutor([_result(output="")]))
 
     with pytest.raises(RetrievalViolation, match="retrieval marker"):
         runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
@@ -480,7 +562,7 @@ def test_runner_rejects_retrieval_in_draft_fallback(tmp_path: Path) -> None:
 
 def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> None:
     executor = _RetryExecutor([_result()])
-    runner = ExperimentRunner(_config(), output_root=tmp_path, executor=executor)
+    runner = _runner(tmp_path, executor=executor)
 
     result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
 

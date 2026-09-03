@@ -15,6 +15,37 @@ from agentic_cogwriter.runner.manifest import PromptRecord
 from agentic_cogwriter.runner.runner import ExperimentRunner
 
 
+def _plugin_source(tmp_path):
+    root = tmp_path / "plugin-source"
+    skills = (
+        "writing-single-shot",
+        "writing-linear",
+        "writing-storm-style",
+        "agentic-cog-writer",
+        "cognitive-writing-no-goal-network",
+        "cognitive-writing-fixed-order",
+        "writing-cogwriter-style",
+        "writing-writehere-style",
+        "planning",
+        "translating",
+        "reviewing",
+    )
+    for skill in skills:
+        path = root / "skills" / skill / "SKILL.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(skill)
+    return root
+
+
+def _runner(tmp_path, *, config=None, **kwargs):
+    return ExperimentRunner(
+        config or _config(),
+        output_root=tmp_path,
+        codex_plugin_root=_plugin_source(tmp_path),
+        **kwargs,
+    )
+
+
 class FakeExecutor:
     def __init__(self, *, output="final output", retrieval=False, write_trace=True):
         self.calls = []
@@ -36,7 +67,7 @@ class FakeExecutor:
                         "writing-storm-style",
                     )
                     if any(
-                        f"/skills/{skill_name}/SKILL.md" in argument
+                        f"skills/{skill_name}/SKILL.md" in argument
                         for argument in command
                     )
                 ),
@@ -169,7 +200,7 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
         row_hash="row-hash",
     )
     executor = FakeExecutor()
-    runner = ExperimentRunner(_config(), output_root=tmp_path, executor=executor)
+    runner = _runner(tmp_path, executor=executor)
 
     result = runner.run_prompt(prompt, condition_id="A2", platform="codex-primary")
 
@@ -199,7 +230,7 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
         requested_output_constraints={},
         row_hash="row-hash",
     )
-    runner = ExperimentRunner(_config(), output_root=tmp_path, executor=FakeExecutor())
+    runner = _runner(tmp_path, executor=FakeExecutor())
 
     result = runner.run_prompt(prompt, condition_id="A3", platform="codex-primary")
 
@@ -231,9 +262,9 @@ def test_runner_rejects_output_over_shared_budget(tmp_path):
     config = _config()
     values = dict(config.values)
     values["maximum_output_tokens"] = 1
-    runner = ExperimentRunner(
-        RuntimeConfig.from_dict(values),
-        output_root=tmp_path,
+    runner = _runner(
+        tmp_path,
+        config=RuntimeConfig.from_dict(values),
         executor=FakeExecutor(output="two words"),
     )
 
@@ -252,9 +283,7 @@ def test_runner_fails_closed_on_retrieval_event(tmp_path):
         requested_output_constraints={},
         row_hash="row-hash",
     )
-    runner = ExperimentRunner(
-        _config(), output_root=tmp_path, executor=FakeExecutor(retrieval=True)
-    )
+    runner = _runner(tmp_path, executor=FakeExecutor(retrieval=True))
 
     with pytest.raises(RetrievalViolation):
         runner.run_prompt(prompt, condition_id="A1", platform="codex-primary")
@@ -269,9 +298,7 @@ def test_runner_rejects_missing_plugin_trace(tmp_path):
         requested_output_constraints={},
         row_hash="row-hash",
     )
-    runner = ExperimentRunner(
-        _config(), output_root=tmp_path, executor=FakeExecutor(write_trace=False)
-    )
+    runner = _runner(tmp_path, executor=FakeExecutor(write_trace=False))
 
     with pytest.raises(RuntimeError, match="no plugin trace"):
         runner.run_prompt(prompt, condition_id="A1", platform="codex-primary")
@@ -286,9 +313,7 @@ def test_missing_trace_preserves_transport_evidence_and_absolute_paths(tmp_path)
         requested_output_constraints={},
         row_hash="row-hash",
     )
-    runner = ExperimentRunner(
-        _config(), output_root=tmp_path, executor=FakeExecutor(write_trace=False)
-    )
+    runner = _runner(tmp_path, executor=FakeExecutor(write_trace=False))
 
     with pytest.raises(RuntimeError, match="no plugin trace"):
         runner.run_prompt(
@@ -333,9 +358,7 @@ def test_executor_start_failure_preserves_empty_transport_evidence(tmp_path):
         def run(self, command, *, cwd, timeout_seconds):
             raise ExecutionError("process could not start")
 
-    runner = ExperimentRunner(
-        _config(), output_root=tmp_path, executor=FailingExecutor()
-    )
+    runner = _runner(tmp_path, executor=FailingExecutor())
 
     prompt = PromptRecord(
         prompt_id="p-1",
@@ -396,9 +419,9 @@ def test_retry_failure_preserves_each_attempt_transport_evidence(tmp_path):
         row_hash="row-hash",
     )
     executor = RetryFailureExecutor()
-    runner = ExperimentRunner(
-        RuntimeConfig.from_dict({**_config().values, "retry_policy": 1}),
-        output_root=tmp_path,
+    runner = _runner(
+        tmp_path,
+        config=RuntimeConfig.from_dict({**_config().values, "retry_policy": 1}),
         executor=executor,
     )
 
@@ -468,9 +491,7 @@ def test_final_execution_errors_preserve_transport_evidence(tmp_path, result, me
         requested_output_constraints={},
         row_hash="row-hash",
     )
-    runner = ExperimentRunner(
-        _config(), output_root=tmp_path, executor=FinalFailureExecutor()
-    )
+    runner = _runner(tmp_path, executor=FinalFailureExecutor())
 
     with pytest.raises(ExecutionError, match=message):
         runner.run_prompt(

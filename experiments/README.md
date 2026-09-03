@@ -38,7 +38,7 @@ The A1 to A3 wrappers invoke skills from the `cognitive-writing-baselines` packa
 
 ## Run one condition and prompt
 
-The experimenter chooses the platform and condition. Codex uses `codex exec` and Claude Code uses `claude --print`. Codex wrappers tell the session to read `skills/<skill>/SKILL.md` from the configured plugin root, while Claude Code wrappers use the platform's plugin invocation. The runner sends the assignment and supplied context through one top-level session. Retries reuse the same command policy and do not add content or budget.
+The experimenter chooses the platform and condition. Codex uses `codex exec` and Claude Code uses `claude --print`. Before a Codex session starts, the runner stages the selected skill, its references, and any delegated role skills inside the run workspace; the prompt then tells Codex to read `plugin/skills/<skill>/SKILL.md`. Claude Code wrappers use the platform's plugin invocation. The runner sends the assignment and supplied context through one top-level session. Retries reuse the same command policy and do not add content or budget.
 
 ```bash
 uv run --package agentic-cogwriter agentic-cogwriter-runner \
@@ -51,19 +51,21 @@ uv run --package agentic-cogwriter agentic-cogwriter-runner \
   --output-root runs
 ```
 
-The default tracked configuration stops in preflight. For Codex, set `--codex-plugin-root` to a directory containing `skills/<skill>/SKILL.md`. A container run that mounts the plugin at `/plugin` must pass `--codex-plugin-root /plugin`. Codex reads the referenced file during the session and does not install a plugin into `CODEX_HOME`. When the option is omitted, the runner selects a matching skill file from the wrapper's configured plugin paths. Claude Code uses the plugin directories listed by its selected wrapper.
+The default tracked configuration stops in preflight. For Codex, set `--codex-plugin-root` to a directory containing `skills/<skill>/SKILL.md`; the runner copies the required files into the run workspace before invoking Codex. A container run that mounts the plugin at `/plugin` must pass `--codex-plugin-root /plugin`. Codex reads `plugin/skills/<skill>/SKILL.md` from the workspace and does not install a plugin into `CODEX_HOME`. When the option is omitted, the runner selects matching skill files from the wrapper's configured plugin paths. Claude Code uses the plugin directories listed by its selected wrapper.
 
 ## Inspect artifacts
 
 Each successful run contains the following files:
 
 - `run-manifest.json` records the prompt, condition, platform, versions, policy status, and run outcome.
+- `prompt.txt` preserves the exact composed prompt sent to the top-level session.
 - `output.raw` preserves the final output bytes extracted from the headless response.
 - `output.normalized.txt` contains the same final output as text for downstream tools.
 - `.writing/trace/process.jsonl` contains the selected skill's trace events.
-- `checksums.json` contains SHA-256 hashes for the output and trace artifacts.
+- `checksums.json` contains SHA-256 hashes for the run artifacts when the run reaches artifact finalization.
+- `attempt-NNN.events.jsonl`, `attempt-NNN.stdout.raw`, and `attempt-NNN.stderr.raw` preserve each transport stream; failed runs retain them for diagnosis.
 
-The runner also copies `.writing/goals.md` and `.writing/draft.md` when the selected skill creates them. It does not rewrite claims or paragraph boundaries during normalization.
+The run manifest records absolute execution paths and SHA-256 hashes for the staged skill files. The runner also copies `.writing/goals.md` and `.writing/draft.md` when the selected skill creates them. It does not rewrite claims or paragraph boundaries during normalization.
 
 ## Policy enforcement
 

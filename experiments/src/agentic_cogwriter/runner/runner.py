@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import tomllib
 import uuid
 from collections.abc import Callable, Mapping
@@ -138,6 +139,7 @@ class ExperimentRunner:
         budget = OutputBudget(self.runtime_config.output_budget_tokens)
         attempts = 0
         evidence_hashes: dict[str, str] = {}
+        staged_files: dict[str, str] = {}
         cli_version = "not_probed"
         stage_prompt_hashes = self._stage_prompt_hashes(condition)
         benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
@@ -163,6 +165,7 @@ class ExperimentRunner:
                 benchmark_provenance=benchmark_provenance,
                 execution_paths=execution_paths,
                 evidence_hashes=evidence_hashes,
+                staged_files=staged_files,
             ),
         )
 
@@ -174,6 +177,8 @@ class ExperimentRunner:
                     f"Installed {platform} CLI version {cli_version!r} does not match "
                     f"pinned version {expected_version!r}"
                 )
+            if platform == "codex-primary":
+                staged_files = self._stage_codex_plugin(condition, workspace)
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -190,9 +195,15 @@ class ExperimentRunner:
                     benchmark_provenance=benchmark_provenance,
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
+                    staged_files=staged_files,
                 ),
             )
-            command_prompt = self._plugin_prompt(condition, prompt, platform)
+            command_prompt = self._plugin_prompt(
+                condition,
+                prompt,
+                platform,
+                codex_prompt_root=Path("plugin"),
+            )
 
             prompt_path.write_text(command_prompt, encoding="utf-8")
             evidence_hashes["prompt.txt"] = f"sha256:{sha256_file(prompt_path)}"
@@ -212,6 +223,7 @@ class ExperimentRunner:
                     benchmark_provenance=benchmark_provenance,
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
+                    staged_files=staged_files,
                 ),
             )
 
@@ -298,6 +310,7 @@ class ExperimentRunner:
                     benchmark_provenance=benchmark_provenance,
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
+                    staged_files=staged_files,
                 ),
             )
             return RunResult(
@@ -350,6 +363,7 @@ class ExperimentRunner:
                     benchmark_provenance=benchmark_provenance,
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
+                    staged_files=staged_files,
                     failure=failure,
                 ),
             )
@@ -452,7 +466,12 @@ class ExperimentRunner:
         raise ExecutionError("Headless turn exhausted retry policy")
 
     def _plugin_prompt(
-        self, condition: ConditionSpec, prompt: PromptRecord, platform: str
+        self,
+        condition: ConditionSpec,
+        prompt: PromptRecord,
+        platform: str,
+        *,
+        codex_prompt_root: str | Path | None = None,
     ) -> str:
         wrapper = self._wrapper(condition)
         key = platform.replace("-", "_")
@@ -462,8 +481,13 @@ class ExperimentRunner:
                 f"Plugin wrapper {condition.plugin_config} has no {key} invocation"
             )
         if platform == "codex-primary":
+            prompt_root = Path(codex_prompt_root or "plugin")
+            if prompt_root.is_absolute():
+                raise ManifestError(
+                    "Codex skill prompt path must be workspace-relative"
+                )
             invocation = invocation.replace(
-                "{codex_plugin_root}", str(self._codex_plugin_root(condition))
+                "{codex_plugin_root}", prompt_root.as_posix()
             )
             if "{codex_plugin_root}" in invocation:
                 raise ManifestError(
@@ -551,12 +575,17 @@ class ExperimentRunner:
 
         return tuple(str(path) for path in self._configured_plugin_paths(condition))
 
+    def _codex_source_roots(self, condition: ConditionSpec) -> tuple[Path, ...]:
+        """Return configured roots from which Codex skill files can be staged."""
+
+        if self.codex_plugin_root is not None:
+            return (self.codex_plugin_root.resolve(),)
+        return self._configured_plugin_paths(condition)
+
     def _codex_plugin_root(self, condition: ConditionSpec) -> Path:
         """Select the root containing the skill file referenced by Codex."""
 
-        if self.codex_plugin_root is not None:
-            return self.codex_plugin_root.resolve()
-        paths = self._configured_plugin_paths(condition)
+        paths = self._codex_source_roots(condition)
         skill_relative = Path("skills") / condition.skill_name / "SKILL.md"
         for path in paths:
             if (path / skill_relative).is_file():
@@ -566,6 +595,55 @@ class ExperimentRunner:
         raise ManifestError(
             f"Plugin wrapper {condition.plugin_config} has no configured plugin path"
         )
+
+    def _stage_codex_plugin(
+        self, condition: ConditionSpec, workspace: Path
+    ) -> dict[str, str]:
+        """Stage the invoked skill and delegated role skills inside the workspace."""
+
+        selected_root = self._codex_plugin_root(condition)
+        source_roots = (
+            selected_root,
+            *tuple(
+                root
+                for root in self._codex_source_roots(condition)
+                if root != selected_root
+            ),
+        )
+        required_directories = [Path("skills") / condition.skill_name]
+        if condition.skill_name == "agentic-cog-writer":
+            required_directories.extend(
+                Path("skills") / role
+                for role in ("planning", "translating", "reviewing")
+            )
+        sources: dict[Path, Path] = {}
+        for relative in required_directories:
+            source = next(
+                (
+                    root / relative
+                    for root in source_roots
+                    if (root / relative).is_dir()
+                ),
+                None,
+            )
+            if source is None:
+                raise ManifestError(
+                    f"Cannot stage required Codex skill directory: {relative}"
+                )
+            sources[relative] = source
+
+        staged_root = workspace / "plugin"
+        for relative, source in sources.items():
+            shutil.copytree(
+                source,
+                staged_root / relative,
+                dirs_exist_ok=True,
+            )
+        return {
+            path.relative_to(workspace).as_posix(): f"sha256:{sha256_file(path)}"
+            for path in sorted(staged_root.rglob("*"))
+            if path.is_file()
+        }
 
     def _manifest(
         self,
@@ -587,6 +665,7 @@ class ExperimentRunner:
         failure: Mapping[str, Any] | None = None,
         execution_paths: Mapping[str, str] | None = None,
         evidence_hashes: Mapping[str, str] | None = None,
+        staged_files: Mapping[str, str] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         manifest: dict[str, Any] = {
@@ -702,6 +781,7 @@ class ExperimentRunner:
             "budget_used_tokens": budget.used if budget else 0,
             "execution_paths": dict(execution_paths or {}),
             "evidence_hashes": dict(evidence_hashes or {}),
+            "staged_files": dict(staged_files or {}),
         }
         if output_hash is not None:
             manifest["output_hash"] = output_hash
