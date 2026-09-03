@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -49,6 +50,7 @@ class SubprocessExecutor:
                 returncode=-1,
                 stdout=stdout,
                 stderr=stderr,
+                session_id=extract_session_id(stdout + stderr),
                 timed_out=True,
             )
         except OSError as exc:
@@ -57,6 +59,7 @@ class SubprocessExecutor:
             returncode=completed.returncode,
             stdout=completed.stdout,
             stderr=completed.stderr,
+            session_id=extract_session_id(completed.stdout + completed.stderr),
         )
 
 
@@ -100,6 +103,22 @@ def extract_output(data: bytes) -> str:
     return candidates[-1] if candidates else decoded
 
 
+def extract_session_id(data: bytes) -> str | None:
+    """Extract a resumable top-level session identifier from CLI JSONL."""
+
+    for value in _json_objects(data):
+        for key in ("session_id", "thread_id"):
+            session_id = value.get(key)
+            if isinstance(session_id, str) and session_id.strip():
+                return session_id
+        nested = value.get("thread")
+        if isinstance(nested, dict):
+            session_id = nested.get("id")
+            if isinstance(session_id, str) and session_id.strip():
+                return session_id
+    return None
+
+
 def _retrieval_marker(value: Any) -> str | None:
     markers = {
         "web_search",
@@ -114,14 +133,21 @@ def _retrieval_marker(value: Any) -> str | None:
     }
     if isinstance(value, dict):
         for key, item in value.items():
-            if key in {"type", "tool", "tool_name", "event_type", "method"} and (
-                isinstance(item, str)
+            if isinstance(item, str) and (
+                key.lower()
+                in {"type", "tool", "tool_name", "event_type", "method", "name"}
                 and any(marker in item.lower() for marker in markers)
             ):
                 return item
-            if key == "command" and isinstance(item, str):
+            if key.lower() in {"command", "cmd", "shell_command"} and isinstance(
+                item, str
+            ):
                 command = item.lower()
-                if any(token in command.split() for token in {"curl", "wget"}):
+                if re.search(
+                    r"\b(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)\b|"
+                    r"\b(?:git\s+clone|python\s+-m\s+http\.client)\b",
+                    command,
+                ):
                     return item
             found = _retrieval_marker(item)
             if found:
@@ -135,9 +161,19 @@ def _retrieval_marker(value: Any) -> str | None:
 
 
 def reject_retrieval(stdout: bytes, stderr: bytes) -> None:
-    """Fail closed when structured headless output reports retrieval."""
+    """Fail closed on raw URL/network markers and structured retrieval events."""
 
     for payload in (stdout, stderr):
+        decoded = payload.decode("utf-8", errors="replace")
+        if re.search(
+            r"(?i)https?://|www\.|\b(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)\b|"
+            r"\b(?:git\s+clone|python\s+-m\s+http\.client|urllib|requests\.get|"
+            r"socket\.create_connection)\b",
+            decoded,
+        ):
+            raise RetrievalViolation(
+                "Unpermitted retrieval marker observed in raw output"
+            )
         for value in _json_objects(payload):
             marker = _retrieval_marker(value)
             if marker:

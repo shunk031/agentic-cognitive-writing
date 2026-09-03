@@ -6,8 +6,30 @@ import json
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
+from .errors import TraceValidationError
 from .hashing import sha256_file
+
+TRACE_EVENT_TYPES = frozenset(
+    {
+        "process_switch",
+        "goal_created",
+        "goal_developed",
+        "goal_regenerated",
+        "stage_event",
+        "generation",
+    }
+)
+GOAL_EVENT_TYPES = frozenset({"goal_created", "goal_developed", "goal_regenerated"})
+BASE_TRACE_FIELDS = (
+    "timestamp",
+    "responsible_agent",
+    "process",
+    "decision",
+    "evidence",
+    "open_uncertainty",
+)
 
 
 def timestamp() -> str:
@@ -16,16 +38,155 @@ def timestamp() -> str:
     return datetime.now(UTC).isoformat()
 
 
-def validate_jsonl(path: Path) -> None:
-    """Ensure every non-empty trace line is standalone JSON."""
+def _read_trace_events(path: Path) -> list[dict[str, Any]]:
+    """Read trace lines as objects and retain line numbers for diagnostics."""
 
-    for line_number, line in enumerate(
-        path.read_text(encoding="utf-8").splitlines(), start=1
-    ):
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeError) as exc:
+        raise TraceValidationError(f"Cannot read trace {path}: {exc}") from exc
+    if not lines:
+        raise TraceValidationError(f"Trace {path} is empty")
+    events: list[dict[str, Any]] = []
+    for line_number, line in enumerate(lines, start=1):
+        if not line.strip():
+            raise TraceValidationError(f"Trace {path}:{line_number} is blank")
         try:
-            json.loads(line)
+            value = json.loads(line)
         except json.JSONDecodeError as exc:
-            raise ValueError(f"Invalid JSONL at {path}:{line_number}: {exc}") from exc
+            raise TraceValidationError(
+                f"Trace {path}:{line_number} is not standalone JSON: {exc}"
+            ) from exc
+        if not isinstance(value, dict):
+            raise TraceValidationError(
+                f"Trace {path}:{line_number} must contain an object"
+            )
+        events.append(value)
+    return events
+
+
+def validate_trace(
+    path: Path,
+    *,
+    condition_id: str,
+    expected_stage_ids: tuple[str, ...] = (),
+) -> list[dict[str, Any]]:
+    """Validate event fields and the condition-specific trace contract."""
+
+    events = _read_trace_events(path)
+    goal_event_count = 0
+    observed_stages: list[str] = []
+    goal_fields_required = condition_id in {"A4", "A6"}
+    for line_number, event in enumerate(events, start=1):
+        event_type = event.get("event_type")
+        if not isinstance(event_type, str) or event_type not in TRACE_EVENT_TYPES:
+            raise TraceValidationError(
+                f"Trace {path}:{line_number} has unknown event_type {event_type!r}"
+            )
+        missing = [field for field in BASE_TRACE_FIELDS if field not in event]
+        if missing:
+            raise TraceValidationError(
+                f"Trace {path}:{line_number} is missing {', '.join(missing)}"
+            )
+        for field in ("timestamp", "responsible_agent", "process", "decision"):
+            if not isinstance(event[field], str) or not event[field].strip():
+                raise TraceValidationError(
+                    f"Trace {path}:{line_number} field {field} must be a string"
+                )
+        for field in ("evidence", "open_uncertainty"):
+            if not isinstance(event[field], list):
+                raise TraceValidationError(
+                    f"Trace {path}:{line_number} field {field} must be an array"
+                )
+        if goal_fields_required:
+            _validate_goal_fields(event, path=path, line_number=line_number)
+        if "artifacts" in event and not isinstance(event["artifacts"], list):
+            raise TraceValidationError(
+                f"Trace {path}:{line_number} field artifacts must be an array"
+            )
+
+        if event_type == "process_switch":
+            for field in ("from_process", "to_process"):
+                if field not in event:
+                    raise TraceValidationError(
+                        f"Trace {path}:{line_number} process_switch needs {field}"
+                    )
+                if event[field] is not None and not isinstance(event[field], str):
+                    raise TraceValidationError(
+                        f"Trace {path}:{line_number} process_switch needs {field}"
+                    )
+                if isinstance(event.get(field), str) and not event[field].strip():
+                    raise TraceValidationError(
+                        f"Trace {path}:{line_number} process_switch needs {field}"
+                    )
+        if event_type in GOAL_EVENT_TYPES:
+            goal_event_count += 1
+            _validate_goal_fields(event, path=path, line_number=line_number)
+        if event_type in {"stage_event", "generation"}:
+            stage_id = event.get("stage_id", event.get("stage"))
+            if not isinstance(stage_id, str) or not stage_id.strip():
+                raise TraceValidationError(
+                    f"Trace {path}:{line_number} stage event needs stage_id"
+                )
+            observed_stages.append(stage_id)
+
+    if condition_id in {"A1", "A2", "A3"}:
+        if len(events) != len(expected_stage_ids):
+            raise TraceValidationError(
+                f"{condition_id} requires {len(expected_stage_ids)} stage events, "
+                f"observed {len(events)}"
+            )
+        if observed_stages != list(expected_stage_ids):
+            raise TraceValidationError(
+                f"{condition_id} stage order mismatch: expected {expected_stage_ids}, "
+                f"observed {tuple(observed_stages)}"
+            )
+        if goal_event_count:
+            raise TraceValidationError(f"{condition_id} must not contain goal events")
+    elif condition_id in {"A4", "A6"} and goal_event_count == 0:
+        raise TraceValidationError(
+            f"{condition_id} requires goal fields in goal events"
+        )
+    elif condition_id in {"A5", "B1", "B2"}:
+        if goal_event_count:
+            raise TraceValidationError(f"{condition_id} must not contain goal events")
+        if any(
+            field in event
+            for event in events
+            for field in ("goal_id", "parent_goal_id")
+        ):
+            raise TraceValidationError(f"{condition_id} must not contain goal fields")
+    return events
+
+
+def _validate_goal_fields(
+    event: dict[str, Any], *, path: Path, line_number: int
+) -> None:
+    """Validate conditional goal identifiers for goal-aware conditions."""
+
+    for field in ("goal_id", "parent_goal_id"):
+        if field not in event:
+            raise TraceValidationError(
+                f"Trace {path}:{line_number} goal-aware event needs {field}"
+            )
+    if not isinstance(event["goal_id"], str) or not event["goal_id"].strip():
+        raise TraceValidationError(
+            f"Trace {path}:{line_number} goal_id must be a string"
+        )
+    if event["parent_goal_id"] is not None and not isinstance(
+        event["parent_goal_id"], str
+    ):
+        raise TraceValidationError(
+            f"Trace {path}:{line_number} parent_goal_id must be a string or null"
+        )
+
+
+def assert_untouched(path: Path, before: bytes | None) -> None:
+    """Reject a file created or changed by a condition that must leave it alone."""
+
+    after = path.read_bytes() if path.is_file() else None
+    if after != before:
+        raise TraceValidationError(f"Condition changed protected file {path.name}")
 
 
 def collect_plugin_trace(source_root: Path, run_root: Path) -> list[str]:

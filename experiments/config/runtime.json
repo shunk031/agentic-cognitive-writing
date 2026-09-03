@@ -28,6 +28,11 @@
   "length_unit": "REQUIRED_AT_RUNTIME",
   "zero_variance_rule": "REQUIRED_AT_RUNTIME",
   "statistical_lock": "REQUIRED_AT_RUNTIME",
+  "output_counting": {
+    "unit": "REQUIRED_AT_RUNTIME",
+    "tokenizer": "REQUIRED_AT_RUNTIME",
+    "word_rule": "REQUIRED_AT_RUNTIME"
+  },
   "tool_policy": {
     "network": "denied",
     "context": "supplied assignment and context only"

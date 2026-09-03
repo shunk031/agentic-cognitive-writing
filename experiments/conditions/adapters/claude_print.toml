@@ -4,3 +4,12 @@ version_args = ["--version"]
 prompt_mode = "argument"
 first_args = ["--print", "--output-format", "json", "--permission-mode", "dontAsk", "--allowedTools", "Read,Write,Edit", "--model", "{model_id}"]
 continuation_args = ["--print", "--resume", "{session_id}", "--output-format", "json", "--permission-mode", "dontAsk", "--allowedTools", "Read,Write,Edit", "--model", "{model_id}"]
+runtime_args = ["--settings", "{\"env\":{\"CLAUDE_CODE_MAX_OUTPUT_TOKENS\":\"{maximum_output_tokens}\"},\"sandbox\":{\"enabled\":true,\"failIfUnavailable\":true,\"allowUnsandboxedCommands\":false,\"network\":{\"allowedDomains\":[],\"deniedDomains\":[\"*\"],\"strictAllowlist\":true}},\"permissions\":{\"deny\":[\"WebFetch\",\"WebSearch\",\"Bash(curl *)\",\"Bash(wget *)\",\"Bash(fetch *)\",\"Bash(nc *)\",\"Bash(netcat *)\",\"Bash(socat *)\",\"Bash(ssh *)\",\"mcp__*\"]}}"]
+network_enforcement = "enforced"
+
+[control_status]
+maximum_output_tokens = "enforced"
+temperature = "monitored-only"
+top_p_or_equivalent = "monitored-only"
+generation_seed = "monitored-only"
+stop_rules = "monitored-only"

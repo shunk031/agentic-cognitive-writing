@@ -5,13 +5,14 @@ from __future__ import annotations
 import json
 import tomllib
 import uuid
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
 from ..paths import EXPERIMENTS_ROOT, REPOSITORY_ROOT
 from .adapters import PlatformAdapter
-from .budget import OutputBudget, estimate_output_tokens
+from .budget import OutputBudget
 from .conditions import ConditionSpec, load_condition_registry
 from .config import RuntimeConfig
 from .errors import ConfigurationError, ExecutionError, ManifestError
@@ -21,9 +22,15 @@ from .execution import (
     extract_output,
     reject_retrieval,
 )
-from .hashing import sha256_file
-from .manifest import PromptRecord
-from .trace import checksums_for_files, collect_plugin_trace, timestamp, validate_jsonl
+from .hashing import sha256_bytes, sha256_file
+from .manifest import PromptRecord, load_benchmark_provenance
+from .trace import (
+    assert_untouched,
+    checksums_for_files,
+    collect_plugin_trace,
+    timestamp,
+    validate_trace,
+)
 
 
 class Executor(Protocol):
@@ -118,6 +125,12 @@ class ExperimentRunner:
         budget = OutputBudget(self.runtime_config.output_budget_tokens)
         attempts = 0
         cli_version = "not_probed"
+        stage_prompt_hashes = self._stage_prompt_hashes(condition)
+        benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
+        protected_goals = workspace / ".writing" / "goals.md"
+        goals_before = (
+            protected_goals.read_bytes() if protected_goals.is_file() else None
+        )
 
         # The started manifest exists before CLI probing or model process creation.
         self._write_json(
@@ -132,6 +145,8 @@ class ExperimentRunner:
                 started_at=started_at,
                 cli_version=cli_version,
                 budget=budget,
+                stage_prompt_hashes=stage_prompt_hashes,
+                benchmark_provenance=benchmark_provenance,
             ),
         )
 
@@ -155,6 +170,8 @@ class ExperimentRunner:
                     started_at=started_at,
                     cli_version=cli_version,
                     budget=budget,
+                    stage_prompt_hashes=stage_prompt_hashes,
+                    benchmark_provenance=benchmark_provenance,
                 ),
             )
             command_prompt = self._plugin_prompt(condition, prompt, platform)
@@ -171,8 +188,12 @@ class ExperimentRunner:
                 draft_path = workspace / ".writing" / "draft.md"
                 if draft_path.is_file():
                     output = draft_path.read_text(encoding="utf-8")
-            budget.consume(estimate_output_tokens(output), stage="final_output")
+            budget.consume(
+                self.runtime_config.count_output_units(output), stage="final_output"
+            )
 
+            if condition.condition_id == "A5":
+                assert_untouched(protected_goals, goals_before)
             trace_files = collect_plugin_trace(workspace, run_dir)
             required_trace = ".writing/trace/process.jsonl"
             if required_trace not in trace_files:
@@ -182,7 +203,11 @@ class ExperimentRunner:
                 )
             copied_trace = run_dir / required_trace
             reject_retrieval(copied_trace.read_bytes(), b"")
-            validate_jsonl(copied_trace)
+            validate_trace(
+                copied_trace,
+                condition_id=condition.condition_id,
+                expected_stage_ids=tuple(stage.stage_id for stage in condition.stages),
+            )
 
             output_path.write_bytes(output.encode("utf-8"))
             normalized_path.write_text(output, encoding="utf-8")
@@ -209,6 +234,8 @@ class ExperimentRunner:
                     budget=budget,
                     output_hash=checksums.get("output.raw"),
                     trace_hash=checksums.get(required_trace),
+                    stage_prompt_hashes=stage_prompt_hashes,
+                    benchmark_provenance=benchmark_provenance,
                 ),
             )
             return RunResult(
@@ -228,6 +255,8 @@ class ExperimentRunner:
                     cli_version=cli_version,
                     attempts=attempts,
                     budget=budget,
+                    stage_prompt_hashes=stage_prompt_hashes,
+                    benchmark_provenance=benchmark_provenance,
                     failure={"type": type(exc).__name__, "message": str(exc)},
                 ),
             )
@@ -266,13 +295,24 @@ class ExperimentRunner:
 
         max_attempts = self.runtime_config.retry_count + 1
         local_attempts = 0
+        session_id: str | None = None
         while local_attempts < max_attempts:
             local_attempts += 1
             attempts += 1
             command = adapter.build_command(
                 model_id=model_id,
                 prompt=prompt,
+                session_id=session_id,
                 plugin_dirs=plugin_dirs,
+                output_budget_tokens=self.runtime_config.output_budget_tokens,
+                decoding={
+                    "temperature": self.runtime_config.get("temperature"),
+                    "top_p_or_equivalent": self.runtime_config.get(
+                        "top_p_or_equivalent"
+                    ),
+                    "generation_seed": self.runtime_config.get("generation_seed"),
+                    "stop_rules": self.runtime_config.get("stop_rules"),
+                },
             )
             result = self.executor.run(
                 command,
@@ -280,12 +320,22 @@ class ExperimentRunner:
                 timeout_seconds=self.runtime_config.timeout_seconds,
             )
             reject_retrieval(result.stdout, result.stderr)
+            if result.session_id:
+                session_id = result.session_id
             if result.timed_out:
                 if local_attempts < max_attempts:
+                    if session_id is None:
+                        raise ExecutionError(
+                            "Cannot retry a timed-out turn without its session_id"
+                        )
                     continue
                 raise ExecutionError("Headless turn timed out")
             if result.returncode != 0:
                 if local_attempts < max_attempts:
+                    if session_id is None:
+                        raise ExecutionError(
+                            "Cannot retry a failed turn without its session_id"
+                        )
                     continue
                 message = result.stderr.decode("utf-8", errors="replace").strip()
                 raise ExecutionError(
@@ -314,7 +364,41 @@ class ExperimentRunner:
             f"Supplied context:\n{prompt.supplied_context or '(none)'}\n\n"
             "Requested output constraints:\n"
             f"{constraints}"
+            f"{self._stage_prompt_text(condition)}"
         )
+
+    def _stage_prompt_hashes(self, condition: ConditionSpec) -> dict[str, str | None]:
+        """Re-read frozen stage files and verify the bytes used for the prompt."""
+
+        hashes: dict[str, str | None] = {}
+        for stage in condition.stages:
+            if stage.path is None:
+                hashes[stage.stage_id] = None
+                continue
+            raw = stage.path.read_bytes()
+            observed = sha256_bytes(raw)
+            if stage.sha256 != observed:
+                raise ManifestError(f"Frozen prompt hash mismatch: {stage.path}")
+            hashes[stage.stage_id] = observed
+        return hashes
+
+    def _stage_prompt_text(self, condition: ConditionSpec) -> str:
+        """Include committed A1-A3 stage instructions in the scored prompt."""
+
+        chunks: list[str] = []
+        for stage in condition.stages:
+            if stage.path is None:
+                continue
+            try:
+                content = stage.path.read_text(encoding="utf-8")
+            except (OSError, UnicodeError) as exc:
+                raise ManifestError(
+                    f"Cannot read frozen prompt file {stage.path}: {exc}"
+                ) from exc
+            if sha256_bytes(content.encode("utf-8")) != stage.sha256:
+                raise ManifestError(f"Frozen prompt hash mismatch: {stage.path}")
+            chunks.append(f"\n\nFrozen stage {stage.stage_id}:\n{content}")
+        return "".join(chunks)
 
     def _wrapper(self, condition: ConditionSpec) -> dict[str, Any]:
         try:
@@ -357,6 +441,8 @@ class ExperimentRunner:
         cli_version: str,
         attempts: int = 0,
         budget: OutputBudget | None = None,
+        stage_prompt_hashes: Mapping[str, str | None] | None = None,
+        benchmark_provenance: Mapping[str, Any] | None = None,
         output_hash: str | None = None,
         trace_hash: str | None = None,
         failure: dict[str, str] | None = None,
@@ -380,9 +466,11 @@ class ExperimentRunner:
                 "selected_skill": condition.skill_name,
                 "wrapper_config_hash": wrapper_hash,
                 "stage_prompt_hashes": {
-                    stage.stage_id: stage.sha256 for stage in condition.stages
+                    stage.stage_id: (stage_prompt_hashes or {}).get(stage.stage_id)
+                    for stage in condition.stages
                 },
                 "trace_policy": condition.trace_policy_dict,
+                "benchmark_provenance": dict(benchmark_provenance or {}),
             },
             "models_and_execution": {
                 "cli": adapter.executable,
@@ -429,11 +517,30 @@ class ExperimentRunner:
                     "stop_rules": self.runtime_config.get("stop_rules"),
                 },
                 "output_budget_tokens": self.runtime_config.output_budget_tokens,
-                "tool_policy": "local supplied context only",
-                "no_retrieval_check": "fail closed",
+                "output_budget_unit": self.runtime_config.output_unit,
+                "tool_policy": {
+                    "context": "local supplied context only",
+                    "network": adapter.network_enforcement,
+                },
+                "no_retrieval": {
+                    "generator": adapter.network_enforcement,
+                    "secondary_tripwire": "raw URL and network-command scan",
+                    "judge_side": "out-of-scope pending judge module",
+                },
+                "judge_verification": {
+                    "judge_families": "declared-unverified pending judge module",
+                    "family_overlap_audit": (
+                        "declared-unverified pending judge module"
+                    ),
+                    "declared_audit": self.runtime_config.get(
+                        "generator_and_judge_family_audit"
+                    ),
+                },
+                "generation_control_status": adapter.control_status_dict,
                 "command_flags": {
                     "first_args": list(adapter.first_args),
                     "continuation_args": list(adapter.continuation_args),
+                    "runtime_args": list(adapter.runtime_args),
                 },
             },
             "reproducibility_and_environment": {

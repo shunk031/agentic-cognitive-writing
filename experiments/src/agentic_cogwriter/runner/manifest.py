@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from ..paths import PROVENANCE_PATH
 from .errors import ManifestError
 from .hashing import sha256_bytes, sha256_json
 
@@ -114,7 +115,7 @@ class PromptManifest:
 
 
 def _validate_prompt_rows(
-    rows: list[Mapping[str, Any]],
+    rows: Sequence[Mapping[str, Any]],
     *,
     benchmark_name: str,
     source_version: str,
@@ -249,3 +250,30 @@ def load_prompt_manifest(path: Path) -> PromptManifest:
         manifest_hash=sha256_bytes(raw),
         path=path,
     )
+
+
+def load_benchmark_provenance(
+    benchmark_name: str, *, path: Path = PROVENANCE_PATH
+) -> dict[str, Any]:
+    """Return the checked-in provenance record for a benchmark without rewriting it."""
+
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ManifestError(f"Cannot read benchmark provenance {path}: {exc}") from exc
+    benchmarks = document.get("benchmarks") if isinstance(document, dict) else None
+    if not isinstance(benchmarks, Mapping):
+        raise ManifestError(f"Benchmark provenance {path} has no benchmarks object")
+    key = benchmark_name.casefold()
+    value = benchmarks.get(key)
+    if not isinstance(value, dict):
+        for candidate in benchmarks.values():
+            if (
+                isinstance(candidate, dict)
+                and candidate.get("name", "").casefold() == key
+            ):
+                value = candidate
+                break
+    if not isinstance(value, dict):
+        raise ManifestError(f"Benchmark {benchmark_name!r} has no record in {path}")
+    return json.loads(json.dumps(value, ensure_ascii=False))

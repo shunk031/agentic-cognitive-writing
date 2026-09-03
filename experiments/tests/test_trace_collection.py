@@ -1,6 +1,7 @@
 import json
 
 import pytest
+
 from agentic_cogwriter.runner.conditions import load_condition_registry
 from agentic_cogwriter.runner.config import RuntimeConfig
 from agentic_cogwriter.runner.errors import BudgetExceeded, RetrievalViolation
@@ -21,8 +22,46 @@ class FakeExecutor:
         if self.write_trace:
             trace_path = cwd / ".writing" / "trace" / "process.jsonl"
             trace_path.parent.mkdir(parents=True, exist_ok=True)
+            skill = next(
+                (
+                    skill_name
+                    for skill_name in (
+                        "$writing-single-shot",
+                        "$writing-linear",
+                        "$writing-storm-style",
+                    )
+                    if any(skill_name in argument for argument in command)
+                ),
+                "",
+            )
+            stages = {
+                "$writing-single-shot": ("single_shot",),
+                "$writing-linear": ("pre_write", "write", "re_write"),
+                "$writing-storm-style": (
+                    "perspective_discovery",
+                    "simulated_qa",
+                    "outline",
+                    "draft",
+                    "polish",
+                ),
+            }.get(skill, ("single_shot",))
             trace_path.write_text(
-                json.dumps({"event_type": "process_switch", "source": "plugin"}) + "\n"
+                "".join(
+                    json.dumps(
+                        {
+                            "event_type": "stage_event",
+                            "stage_id": stage,
+                            "timestamp": "2026-01-01T00:00:00+00:00",
+                            "responsible_agent": "writer",
+                            "process": "writing",
+                            "decision": "continue",
+                            "evidence": ["supplied context"],
+                            "open_uncertainty": [],
+                        }
+                    )
+                    + "\n"
+                    for stage in stages
+                )
             )
         session_id = "session-1"
         payload = {
@@ -72,6 +111,11 @@ def _config():
             "length_unit": "words",
             "zero_variance_rule": "test",
             "statistical_lock": "test",
+            "output_counting": {
+                "unit": "words",
+                "tokenizer": None,
+                "word_rule": "unicode-whitespace",
+            },
         }
     )
 
@@ -122,7 +166,7 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
     result = runner.run_prompt(prompt, condition_id="A2", platform="codex-primary")
 
     events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
-    assert events == [{"event_type": "process_switch", "source": "plugin"}]
+    assert [event["stage_id"] for event in events] == ["pre_write", "write", "re_write"]
     assert len(executor.calls) == 1
     assert "resume" not in executor.calls[0][0]
     assert any("$writing-linear" in argument for argument in executor.calls[0][0])
@@ -149,7 +193,13 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
     result = runner.run_prompt(prompt, condition_id="A3", platform="codex-primary")
 
     events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
-    assert events == [{"event_type": "process_switch", "source": "plugin"}]
+    assert [event["stage_id"] for event in events] == [
+        "perspective_discovery",
+        "simulated_qa",
+        "outline",
+        "draft",
+        "polish",
+    ]
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["inputs"]["trace_policy"] == {
         "citation": "N/A",

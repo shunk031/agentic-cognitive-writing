@@ -8,9 +8,10 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 import agentic_cogwriter.prompts.materialize as materialize_module
 import agentic_cogwriter.prompts.recompute_dolomites_split as split_module
-import pytest
 from agentic_cogwriter.paths import (
     BENCHMARK_CACHE_DIR,
     DOLOMITES_SPLIT_PATH,

@@ -23,3 +23,7 @@ class RetrievalViolation(RunnerError):
 
 class ExecutionError(RunnerError):
     """A headless command failed, timed out, or returned unusable output."""
+
+
+class TraceValidationError(ExecutionError):
+    """A plugin trace is not valid for the selected condition."""
