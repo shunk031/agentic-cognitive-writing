@@ -11,7 +11,7 @@ Run a comparison that uses the assignment as one implicit objective while preser
 
 Use this skill only when the user explicitly requests a controlled no-goal-network comparison. Do not use it as the default writing workflow.
 
-## Monitor responsibilities
+## `Monitor` responsibilities
 
 - Keep rhetorical intent, factual authority, final wording, and publication decisions under the user's control.
 - Coordinate process switches and record the evidence for each switch.
@@ -56,26 +56,26 @@ Do not silently invent a rhetorical problem.
 
 Read the trace field contract below before writing the first entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
 
-## Monitor loop
+## `Monitor` loop
 
-At each turn, the Monitor must:
+At each turn, the `Monitor` must:
 
-1. Compare the assignment's implicit objective with the current project state and open uncertainty. Choose Planning, Translating, or Reviewing from that comparison. Do not consult or construct a hierarchical goal network.
+1. Compare the assignment's implicit objective with the current project state and open uncertainty. Choose `Planning`, `Translating`, or `Reviewing` from that comparison. Do not consult or construct a hierarchical goal network.
 2. Before every process switch, append a `process_switch` event naming the responsible process or agent, its decision, its evidence, and open uncertainty. The no-goal-network variant records no goal-created, goal-developed, or goal-regenerated events.
 3. Delegate the selected role using the Delegation section.
-4. For a Planning delegation, request problem representation, Generate, and Organize. Do not request Goal-setting or ask the agent to write `goals.md`. If the agent proposes a hierarchical goal, report it as an observation without changing the file.
+4. For a `Planning` delegation, request problem representation, Generate, and Organize. Do not request Goal-setting or ask the agent to write `goals.md`. If the agent proposes a hierarchical goal, report it as an observation without changing the file.
 5. Re-read changed state and reconcile the role's work with the assignment. Update `draft.md` or `memory/` as appropriate. Keep user-authored text and uncertain claims visible.
 6. Tell the user:
    - what changed
    - that the assignment remains the implicit objective
    - what remains uncertain
-   - which process the Monitor recommends next
+   - which process the `Monitor` recommends next
 
    Ask for a decision when the next move depends on user intent or factual authority.
 
 ## Interruptions
 
-Generate and Evaluate may interrupt any process when new information or a claim conflict in the growing text demands it. Log each interruption as a `process_switch`, perform the interrupt through the relevant shared role, return to the process that initiated it, and then continue the Monitor's process choice.
+Generate and Evaluate may interrupt any process when new information or a claim conflict in the growing text demands it. Log each interruption as a `process_switch`, perform the interrupt through the relevant shared role, return to the process that initiated it, and then continue the `Monitor`'s process choice.
 
 Do not create a goal to track the interrupt. When an interrupt resolves, return to the process that initiated it rather than silently changing the assignment.
 
@@ -93,7 +93,7 @@ Ask the delegated agent to cite the files or draft passages that support its dec
 - Claude Code: delegate to the planner, translator, or reviewer agent shipped in the `agentic-cognitive-writing` plugin. That agent preloads the matching role skill.
 - Codex: spawn a native Codex subagent and instruct it to use `$planning`, `$translating`, or `$reviewing`.
 
-Do not write a script that spawns `codex exec` children. If native delegation is unavailable, perform the role as Monitor and record that fallback in the trace.
+Do not write a script that spawns `codex exec` children. If native delegation is unavailable, perform the role as the `Monitor` and record that fallback in the trace.
 
 ## Trace contract
 
