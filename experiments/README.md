@@ -1,6 +1,6 @@
 # Agentic CogWriter experiment runner
 
-Agentic CogWriter is the writing system evaluated by this runner. The runner starts one headless top-level skill session for each condition and prompt. The experimenter supplies an immutable benchmark prompt manifest and a complete runtime configuration before a scored run. The runner writes the run manifest, invokes the selected package skill, applies the shared no-retrieval and output-budget policy, and hashes the resulting artifacts. It records whether each policy is enforced by the platform or monitored by the runner.
+Agentic CogWriter is the writing system evaluated by this runner. To prepare a scored run, the experimenter uses the committed prompt manifests, supplies a complete runtime configuration, selects a condition and platform, runs the CLI, and inspects the artifacts. The runner starts one headless session per condition and prompt, applies the shared information, timeout, retry, no-retrieval, and output-budget rules, writes the run manifest, and hashes the outputs and traces.
 
 ## Layout
 
@@ -15,7 +15,7 @@ Agentic CogWriter is the writing system evaluated by this runner. The runner sta
 | [`analysis/`](analysis/) | Reserved for scoring and statistics |
 | [`manifests/`](manifests/) | Run-artifact documentation and generated output |
 
-The judge, human, and analysis directories are stubs in this change. They do not score or inspect experiment outputs.
+The judge, human, and analysis directories are reserved and empty. They do not score or inspect experiment outputs.
 
 ## Install and test
 
@@ -30,11 +30,11 @@ The test suite checks prompt and manifest hashing, runtime placeholder gating, s
 
 ## Prepare a scored run
 
-The experimenter first materializes `writingbench.jsonl`, `hellobench.jsonl`, and `dolomites.jsonl` under [`prompts/manifests/`](prompts/manifests/) using a permitted benchmark source and a pinned source version. Each row needs `prompt_id`, `benchmark_name`, `source_version`, `prompt_text` or `source_reference`, `requested_output_constraints`, and `hash`. The runner accepts a source reference for provenance but does not fetch it at run time. A scored run therefore needs materialized prompt text.
+Use the committed manifests under [`prompts/manifests/`](prompts/manifests/). To regenerate or verify them, follow [`prompts/README.md`](prompts/README.md) and use the `agentic-cogwriter-materialize` entry point. That document defines the manifest schema and the permitted source and hash checks.
 
 The experimenter then creates a complete runtime configuration outside the tracked placeholder file. The configuration must replace every `REQUIRED_AT_RUNTIME` value in [`config/runtime.json`](config/runtime.json), including model and judge assignments, decoding, output budget, timeout, retry policy, seeds, CLI versions, plugin commits, and analysis gates. The runner refuses to start a scored run while one value remains open or a required field is missing.
 
-The A1 to A3 wrappers name skills from the sibling `cognitive-writing-baselines` package. This deliverable references that package and does not include its implementation. The A4 Agentic CogWriter condition uses the `agentic-cognitive-writing` package. A5 and A6 use the `cognitive-writing-experiments` package together with the main package. B1 and B2 use the baseline package and are reported as exploratory conditions.
+The A1 to A3 wrappers invoke skills from the `cognitive-writing-baselines` package. The A4 Agentic CogWriter condition uses the `agentic-cognitive-writing` package. A5 and A6 use the `cognitive-writing-experiments` package together with the main package. B1 and B2 use the baseline package and are reported as exploratory conditions.
 
 ## Run one condition and prompt
 
@@ -50,16 +50,28 @@ uv run --package agentic-cogwriter agentic-cogwriter-runner \
   --output-root runs
 ```
 
-The default tracked configuration stops in preflight. A1 to A3 require the sibling baseline package, and A4 to A6 require the branch-relative plugin directories named in their wrapper files. The wrapper metadata names installation commands and skill invocations; Agentic CogWriter and the baseline behavior stay in the referenced packages.
+The default tracked configuration stops in preflight. Before a run, make the package and plugin directories listed by the selected wrapper available. The wrapper metadata names installation commands and skill invocations for each condition.
 
 ## Inspect artifacts
 
-Each successful run contains `run-manifest.json`, `output.raw`, `output.normalized.txt`, the plugin-owned `.writing/trace/process.jsonl`, and `checksums.json`. Plugin state files such as `.writing/goals.md` and `.writing/draft.md` are copied when present. The runner preserves raw output bytes and does not rewrite claims or paragraph boundaries during normalization.
+Each successful run contains the following files:
 
-The runner fails closed when a headless event reports web search, browser use, retrieval, an MCP tool call, a URL, or a network command. Codex runs set `sandbox_workspace_write.network_access=false`, disable Codex web search, and use the non-interactive `codex exec --json` adapter. Claude Code runs enable its sandbox, fail if the sandbox is unavailable, prevent unsandboxed retries, use an empty strict network allowlist, and deny retrieval tools. These platform settings are the primary no-retrieval mechanism; raw-output marker scanning is only a secondary tripwire. The manifest records the platform status. A platform that cannot guarantee denial must be recorded as `monitored-only` and cannot be represented as enforced.
+- `run-manifest.json` records the prompt, condition, platform, versions, policy status, and run outcome.
+- `output.raw` preserves the final output bytes extracted from the headless response.
+- `output.normalized.txt` contains the same final output as text for downstream tools.
+- `.writing/trace/process.jsonl` contains the selected skill's trace events.
+- `checksums.json` contains SHA-256 hashes for the output and trace artifacts.
 
-The adapter passes Claude Code's documented `CLAUDE_CODE_MAX_OUTPUT_TOKENS` setting into each invocation. The current Codex CLI has no supported generation-token, temperature, top-p, seed, or stop-rule control in `codex exec`, so those Codex controls are explicitly `monitored-only`; the runner still applies the same post-hoc output-budget check and fails the run on excess. Claude Code's temperature, top-p, seed, and stop-rule controls are likewise `monitored-only` because `claude --print` does not document corresponding options. When `output_counting` selects a pinned tokenizer, the runner counts its tokens; otherwise it uses the frozen word rule recorded in the runtime configuration. This fallback is a measurement unit, not a claim that the CLI enforced a word cap.
+The runner also copies `.writing/goals.md` and `.writing/draft.md` when the selected skill creates them. It does not rewrite claims or paragraph boundaries during normalization.
 
-The judge-side no-retrieval gate is out of scope for this pull request. The run manifest records that boundary as `judge_side: out-of-scope pending judge module`; the future judge module must enforce and audit it before scoring. A3 does not generate citations. Its retrieval, evidence, and citation trace policy is `N/A` by design. B1 and B2 remain outside the confirmatory family.
+## Policy enforcement
 
-The adapter behavior was checked against the [Codex non-interactive mode guide](https://developers.openai.com/codex/non-interactive-mode), the [Codex execution adapter](https://github.com/openai/codex/blob/main/sdk/typescript/src/exec.ts), the [Claude Code CLI reference](https://code.claude.com/docs/en/cli-usage), the [Claude Code environment-variable reference](https://code.claude.com/docs/en/env-vars), and the [Claude Code sandbox guide](https://code.claude.com/docs/en/sandboxing). The pinned CLI versions are supplied by `config/runtime.json`; the experimenter must verify them before a scored run.
+The runner gives every condition the same assignment, supplied context, timeout, retry count, and output budget. It rejects a run when a headless event or accepted output contains web search, browser use, retrieval, an MCP tool call, a URL, a network command, or a bare retrieval token.
+
+Codex first turns use `sandbox_workspace_write.network_access=false`, disable Codex web search, and use the non-interactive `codex exec --json` adapter. Claude Code enables its sandbox, fails if the sandbox is unavailable, prevents unsandboxed commands, uses an empty strict network allowlist, and denies retrieval tools. These platform settings are the primary no-retrieval mechanism; raw-output marker scanning is a secondary tripwire. The manifest records the platform status. A platform that cannot guarantee denial is recorded as `monitored-only` and cannot be represented as enforced.
+
+The adapter passes Claude Code's documented `CLAUDE_CODE_MAX_OUTPUT_TOKENS` setting into each invocation. Codex `exec` has no supported generation-token, temperature, top-p, seed, or stop-rule control, so those Codex controls are `monitored-only`. The runner still applies a post-hoc output-budget check and fails a run that exceeds the configured limit. Claude Code's temperature, top-p, seed, and stop-rule controls are also `monitored-only` because `claude --print` does not document corresponding options. When `output_counting` selects a pinned tokenizer, the runner counts its tokens; otherwise it uses the frozen word rule in the runtime configuration. This is a measurement unit, not a claim that the CLI enforced a word cap.
+
+The judge-side no-retrieval gate belongs to the judge module and is not enforced by this runner. The run manifest records `judge_side: out-of-scope pending judge module`; the judge module must enforce and audit that gate before scoring. A3 does not generate citations. Its retrieval, evidence, and citation trace policy is `N/A` by design. B1 and B2 are outside the confirmatory family.
+
+The adapter behavior was checked against the [Codex non-interactive mode guide](https://developers.openai.com/codex/non-interactive-mode), the [Codex execution adapter](https://github.com/openai/codex/blob/main/sdk/typescript/src/exec.ts), the [Claude Code CLI reference](https://code.claude.com/docs/en/cli-usage), the [Claude Code environment-variable reference](https://code.claude.com/docs/en/env-vars), and the [Claude Code sandbox guide](https://code.claude.com/docs/en/sandboxing). The pinned CLI versions are supplied by `config/runtime.json`; verify them before a scored run.
