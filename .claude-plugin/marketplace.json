@@ -1,0 +1,17 @@
+{
+  "name": "agentic-cognitive-writing-process",
+  "description": "Agentic CogWriter plugins for writing projects and controlled comparisons.",
+  "owner": {
+    "name": "shunk031"
+  },
+  "plugins": [
+    {
+      "name": "agentic-cognitive-writing",
+      "source": "./plugin"
+    },
+    {
+      "name": "cognitive-writing-experiments",
+      "source": "./experiments/plugin"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+interface:
+  display_name: "`Reviewing` role"
+  short_description: "Internal `Monitor` `Reviewing` role instructions"
+
+policy:
+  allow_implicit_invocation: false

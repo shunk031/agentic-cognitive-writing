@@ -1,0 +1,27 @@
+{
+  "skill_name": "agentic-cog-writer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need to write a 900-word memo for new engineering managers explaining why we are changing our on-call handoff. The audience is busy and skeptical, the exigency is a rise in missed handoffs, and my goal is to get them to adopt a short checklist. Help me plan and draft it in a project that currently has no .writing files.",
+      "expected_output": "The project contains an assignment, a hierarchical goal network, a growing draft, and an auditable trace. The response explains the active goal and why the Monitor chose planning or drafting next, while keeping unsupported operational facts visible.",
+      "files": [],
+      "expectations": [
+        "Creates or describes the required .writing state without overwriting existing content.",
+        "Represents the audience, exigency, and writer's goals before drafting.",
+        "Uses a parent-child goal relationship and records process or goal decisions with evidence and uncertainty."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Here is a rough two-paragraph grant introduction in .writing/draft.md. Review it for a public-health funder, revise the weakest paragraph, and tell me whether the revision changes the central goal. If the draft reveals a better framing than my original assignment, show how you would regenerate the goal instead of hiding the change.",
+      "expected_output": "The reviewer evaluates the draft against the funder's audience and the assignment, makes a scoped revision, and records any goal regeneration with the old and new rationale in goals.md and the trace.",
+      "files": [],
+      "expectations": [
+        "Separates evaluation from revision and ties findings to the rhetorical problem.",
+        "Preserves the user's claims and marks missing evidence rather than inventing it.",
+        "Records a goal regeneration only when the draft provides evidence for a changed framing."
+      ]
+    }
+  ]
+}

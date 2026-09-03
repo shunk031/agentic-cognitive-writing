@@ -1,0 +1,10 @@
+{
+  "name": "cognitive-writing-experiments",
+  "version": "0.1.0",
+  "description": "Controlled-comparison variants of the agentic-cog-writer skill.",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "shunk031"
+  },
+  "skills": "./skills/"
+}
