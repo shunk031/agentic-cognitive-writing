@@ -169,24 +169,16 @@ def _load_wrapper(
     install = wrapper.get("install")
     if not isinstance(install, Mapping):
         raise ConfigurationError(f"Wrapper {wrapper_path} must define an install table")
-    for platform in PLATFORMS:
-        commands = install.get(platform.replace("-", "_"))
-        if not isinstance(commands, list) or (
-            platform != "codex-primary" and not commands
-        ):
-            raise ConfigurationError(
-                f"Wrapper {wrapper_path} must define install metadata for {platform}"
-            )
-        if platform == "codex-primary" and commands:
-            raise ConfigurationError(
-                f"Wrapper {wrapper_path} must not install Codex plugins"
-            )
-        if not all(
-            isinstance(command, str) and command.strip() for command in commands
-        ):
-            raise ConfigurationError(
-                f"Wrapper {wrapper_path} install commands must be strings"
-            )
+    commands = install.get("claude_code_replication")
+    if not isinstance(commands, list) or not commands:
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} must define install metadata for "
+            "claude-code-replication"
+        )
+    if not all(isinstance(command, str) and command.strip() for command in commands):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} install commands must be strings"
+        )
 
     adapters = wrapper.get("adapters")
     if not isinstance(adapters, Mapping):

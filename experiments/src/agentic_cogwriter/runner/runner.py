@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import tomllib
 import uuid
@@ -25,6 +26,7 @@ from .errors import (
 from .execution import (
     ExecutionResult,
     SubprocessExecutor,
+    _subagent_spawn_ids,
     extract_output,
     extract_token_usage,
     reject_retrieval,
@@ -104,6 +106,7 @@ class ExperimentRunner:
         condition_registry: dict[str, ConditionSpec] | None = None,
         adapters: dict[str, PlatformAdapter] | None = None,
         codex_plugin_root: Path | None = None,
+        codex_home: Path | None = None,
     ):
         self.runtime_config = runtime_config
         self.output_root = output_root.resolve()
@@ -111,6 +114,12 @@ class ExperimentRunner:
         self.conditions = condition_registry or load_condition_registry()
         self.adapters = adapters or self._load_adapters()
         self.codex_plugin_root = codex_plugin_root
+        configured_codex_home = (
+            codex_home
+            if codex_home is not None
+            else Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
+        )
+        self.codex_home = configured_codex_home.expanduser().resolve()
 
     def _load_adapters(self) -> dict[str, PlatformAdapter]:
         root = EXPERIMENTS_ROOT / "conditions" / "adapters"
@@ -167,6 +176,7 @@ class ExperimentRunner:
         evidence_hashes: dict[str, str] = {}
         staged_files: dict[str, str] = {}
         token_usage: dict[str, int] | None = None
+        subagent_spawn_ids: set[str] = set()
         cli_version = "not_probed"
         stage_prompt_hashes = self._stage_prompt_hashes(condition)
         benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
@@ -194,6 +204,7 @@ class ExperimentRunner:
                 evidence_hashes=evidence_hashes,
                 staged_files=staged_files,
                 token_usage=token_usage,
+                subagent_spawn_count=len(subagent_spawn_ids),
             ),
         )
 
@@ -225,6 +236,7 @@ class ExperimentRunner:
                     evidence_hashes=evidence_hashes,
                     staged_files=staged_files,
                     token_usage=token_usage,
+                    subagent_spawn_count=len(subagent_spawn_ids),
                 ),
             )
             command_prompt = self._plugin_prompt(
@@ -258,12 +270,26 @@ class ExperimentRunner:
             )
 
             def record_attempt(
-                attempt_number: int, result: ExecutionResult | None
+                attempt_number: int,
+                result: ExecutionResult | None,
+                session_before: Mapping[Path, str] | None,
             ) -> None:
                 nonlocal attempts, token_usage
                 attempts = max(attempts, attempt_number)
                 evidence_hashes.update(
                     self._persist_attempt_evidence(run_dir, attempt_number, result)
+                )
+                if platform == "codex-primary":
+                    evidence_hashes.update(
+                        self._collect_codex_sessions(
+                            run_dir, attempt_number, session_before or {}
+                        )
+                    )
+                attempt_events_path = (
+                    run_dir / f"attempt-{attempt_number:03d}.events.jsonl"
+                )
+                subagent_spawn_ids.update(
+                    _subagent_spawn_ids(attempt_events_path.read_bytes())
                 )
                 if result is not None:
                     observed_usage = extract_token_usage(result.stdout)
@@ -276,6 +302,32 @@ class ExperimentRunner:
                             }
                         for key, value in observed_usage.items():
                             token_usage[key] += value
+                self._write_json(
+                    checksums_path,
+                    checksums_for_files(run_dir, ["prompt.txt", *evidence_hashes]),
+                )
+                self._write_json(
+                    manifest_path,
+                    self._manifest(
+                        prompt=prompt,
+                        condition=condition,
+                        platform=platform,
+                        adapter=adapter,
+                        run_id=run_id,
+                        status="started",
+                        started_at=started_at,
+                        cli_version=cli_version,
+                        attempts=attempts,
+                        budget=budget,
+                        stage_prompt_hashes=stage_prompt_hashes,
+                        benchmark_provenance=benchmark_provenance,
+                        execution_paths=execution_paths,
+                        evidence_hashes=evidence_hashes,
+                        staged_files=staged_files,
+                        token_usage=token_usage,
+                        subagent_spawn_count=len(subagent_spawn_ids),
+                    ),
+                )
 
             result, attempts = self._run_turn_with_retry(
                 adapter,
@@ -287,6 +339,11 @@ class ExperimentRunner:
                     self._plugin_dirs(condition) if platform != "codex-primary" else ()
                 ),
                 record_attempt=record_attempt,
+                snapshot_sessions=(
+                    self._snapshot_codex_sessions
+                    if platform == "codex-primary"
+                    else None
+                ),
             )
             output = extract_output(result.stdout)
             draft_path = workspace / ".writing" / "draft.md"
@@ -359,6 +416,7 @@ class ExperimentRunner:
                     evidence_hashes=evidence_hashes,
                     staged_files=staged_files,
                     token_usage=token_usage,
+                    subagent_spawn_count=len(subagent_spawn_ids),
                 ),
             )
             return RunResult(
@@ -418,6 +476,7 @@ class ExperimentRunner:
                     evidence_hashes=evidence_hashes,
                     staged_files=staged_files,
                     token_usage=token_usage,
+                    subagent_spawn_count=len(subagent_spawn_ids),
                     failure=failure,
                 ),
             )
@@ -452,6 +511,7 @@ class ExperimentRunner:
         attempts: int,
         plugin_dirs: tuple[str, ...] = (),
         record_attempt: Callable[[int, ExecutionResult | None], None] | None = None,
+        snapshot_sessions: Callable[[], dict[Path, str]] | None = None,
     ) -> tuple[ExecutionResult, int]:
         """Run one skill turn, retrying only with the identical command policy."""
 
@@ -476,6 +536,9 @@ class ExperimentRunner:
                     "stop_rules": self.runtime_config.get("stop_rules"),
                 },
             )
+            session_before = (
+                snapshot_sessions() if snapshot_sessions is not None else None
+            )
             try:
                 result = self.executor.run(
                     command,
@@ -484,10 +547,10 @@ class ExperimentRunner:
                 )
             except Exception:
                 if record_attempt is not None:
-                    record_attempt(attempts, None)
+                    record_attempt(attempts, None, session_before)
                 raise
             if record_attempt is not None:
-                record_attempt(attempts, result)
+                record_attempt(attempts, result, session_before)
             reject_retrieval(result.stdout, result.stderr)
             if result.session_id:
                 session_id = result.session_id
@@ -721,6 +784,7 @@ class ExperimentRunner:
         evidence_hashes: Mapping[str, str] | None = None,
         staged_files: Mapping[str, str] | None = None,
         token_usage: Mapping[str, int] | None = None,
+        subagent_spawn_count: int = 0,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         manifest: dict[str, Any] = {
@@ -837,6 +901,7 @@ class ExperimentRunner:
                 token_usage.get("total_tokens") if token_usage is not None else None
             ),
             "output_units_used": budget.used if budget else 0,
+            "subagent_spawn_count": subagent_spawn_count,
             "token_accounting": {
                 "status": "observed" if token_usage is not None else "monitored-only",
                 "source": "Codex turn.completed usage",
@@ -891,4 +956,54 @@ class ExperimentRunner:
         for name, payload in payloads.items():
             (run_dir / name).write_bytes(payload)
             hashes[name] = f"sha256:{sha256_bytes(payload)}"
+        return hashes
+
+    def _snapshot_codex_sessions(self) -> dict[Path, str]:
+        """Hash regular files currently under CODEX_HOME/sessions."""
+
+        sessions_root = self.codex_home / "sessions"
+        if not sessions_root.is_dir():
+            return {}
+        snapshot: dict[Path, str] = {}
+        for path in sessions_root.rglob("*"):
+            if not path.is_file() or path.is_symlink():
+                continue
+            try:
+                snapshot[path.resolve()] = sha256_file(path)
+            except OSError:
+                continue
+        return snapshot
+
+    def _collect_codex_sessions(
+        self,
+        run_dir: Path,
+        attempt_number: int,
+        before: Mapping[Path, str],
+    ) -> dict[str, str]:
+        """Copy only new or changed Codex rollout files into this run."""
+
+        sessions_root = (self.codex_home / "sessions").resolve()
+        after = self._snapshot_codex_sessions()
+        run_root = run_dir.resolve()
+        hashes: dict[str, str] = {}
+        for source, digest in sorted(after.items(), key=lambda item: str(item[0])):
+            if before.get(source) == digest:
+                continue
+            try:
+                relative = source.relative_to(sessions_root)
+            except ValueError:
+                continue
+            relative_destination = (
+                Path("sessions") / f"attempt-{attempt_number:03d}" / relative
+            )
+            destination = (run_dir / relative_destination).resolve()
+            if run_root not in destination.parents:
+                raise ExecutionError(
+                    f"Refusing to collect a Codex session outside run directory: "
+                    f"{source}"
+                )
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, destination)
+            key = relative_destination.as_posix()
+            hashes[key] = f"sha256:{sha256_file(destination)}"
         return hashes

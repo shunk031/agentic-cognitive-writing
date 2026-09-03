@@ -205,6 +205,36 @@ def _event_name(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.casefold()).strip("_")
 
 
+def _subagent_spawn_ids(data: bytes) -> set[str]:
+    """Return unique Codex collaboration spawn item IDs from JSONL events."""
+
+    spawn_ids: set[str] = set()
+    for value in _json_objects(data):
+        if value.get("type") not in {
+            "item.started",
+            "item.updated",
+            "item.completed",
+        }:
+            continue
+        item = value.get("item")
+        if not isinstance(item, dict):
+            continue
+        if _event_name(str(item.get("type", ""))) != "collab_tool_call":
+            continue
+        if _event_name(str(item.get("tool", ""))) != "spawn_agent":
+            continue
+        item_id = item.get("id")
+        if isinstance(item_id, str) and item_id.strip():
+            spawn_ids.add(item_id)
+    return spawn_ids
+
+
+def extract_subagent_spawn_count(data: bytes) -> int:
+    """Count unique ``spawn_agent`` collaboration items in Codex JSONL."""
+
+    return len(_subagent_spawn_ids(data))
+
+
 def _is_error_event(value: dict[str, Any]) -> bool:
     """Return whether an event is a generic error envelope."""
 

@@ -39,6 +39,7 @@ def _plugin_source(tmp_path):
 
 
 def _runner(tmp_path, *, config=None, **kwargs):
+    kwargs.setdefault("codex_home", tmp_path / "codex-home")
     return ExperimentRunner(
         config or _config(),
         output_root=tmp_path,

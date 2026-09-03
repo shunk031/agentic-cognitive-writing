@@ -17,7 +17,6 @@ codex_primary = "Read the skill file at {codex_plugin_root}/skills/cognitive-wri
 claude_code_replication = "/cognitive-writing-experiments:cognitive-writing-fixed-order"
 
 [install]
-codex_primary = []
 claude_code_replication = ["/plugin marketplace add .", "/plugin install agentic-cognitive-writing@agentic-cognitive-writing-process", "/plugin install cognitive-writing-experiments@agentic-cognitive-writing-process"]
 
 [trace]

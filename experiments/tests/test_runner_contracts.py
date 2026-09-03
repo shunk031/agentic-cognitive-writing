@@ -16,6 +16,7 @@ from agentic_cogwriter.runner.errors import ExecutionError, RetrievalViolation
 from agentic_cogwriter.runner.execution import (
     ExecutionResult,
     _retrieval_marker,
+    extract_subagent_spawn_count,
     extract_token_usage,
     reject_retrieval,
 )
@@ -104,6 +105,7 @@ def _plugin_source(tmp_path: Path) -> Path:
 
 
 def _runner(tmp_path: Path, config: RuntimeConfig | None = None, **kwargs):
+    kwargs.setdefault("codex_home", tmp_path / "codex-home")
     return ExperimentRunner(
         config or _config(),
         output_root=tmp_path,
@@ -231,7 +233,7 @@ def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> No
 
         assert "{codex_plugin_root}" in invocation
         assert "SKILL.md" in invocation
-        assert wrapper["install"]["codex_primary"] == []
+        assert "codex_primary" not in wrapper["install"]
         assert "complete final text itself" in invocation
         prompt = runner._plugin_prompt(condition, _prompt(), "codex-primary")
         assert f"plugin/skills/{condition.skill_name}/SKILL.md" in prompt
@@ -269,6 +271,7 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         output_root=tmp_path / "runs",
         executor=StageExecutor(),
         codex_plugin_root=source_root,
+        codex_home=tmp_path / "codex-home",
     )
 
     result = runner.run_prompt(
@@ -304,6 +307,79 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         (
             result.run_dir / "workspace" / ".writing" / "trace" / "process.jsonl"
         ).resolve()
+    )
+
+
+def test_run_records_unique_codex_subagent_spawns(tmp_path: Path) -> None:
+    executor = _RetryExecutor([_result(subagent_spawns=2)])
+    runner = _runner(tmp_path, executor=executor)
+
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["subagent_spawn_count"] == 2
+
+
+def test_extract_subagent_spawn_count_deduplicates_started_and_completed_events() -> (
+    None
+):
+    stream = (
+        b'{"type":"item.started","item":{"id":"collab-1",'
+        b'"type":"collab_tool_call","tool":"spawn_agent"}}\n'
+        b'{"type":"item.completed","item":{"id":"collab-1",'
+        b'"type":"collab_tool_call","tool":"spawn_agent"}}\n'
+        b'{"type":"item.completed","item":{"id":"collab-2",'
+        b'"type":"collab_tool_call","tool":"spawn_agent"}}\n'
+    )
+
+    assert extract_subagent_spawn_count(stream) == 2
+    assert extract_subagent_spawn_count(b'{"type":"item.completed"}\n') == 0
+
+
+def test_collects_only_new_or_changed_codex_rollouts_under_run_dir(
+    tmp_path: Path,
+) -> None:
+    codex_home = tmp_path / "codex-home"
+    sessions = codex_home / "sessions"
+    unchanged = sessions / "old.jsonl"
+    changed = sessions / "changed.jsonl"
+    unchanged.parent.mkdir(parents=True)
+    unchanged.write_text("pre-existing")
+    changed.write_text("before")
+    created = sessions / "2026" / "new.jsonl"
+
+    class RolloutExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds):
+            changed.write_text("after")
+            created.parent.mkdir(parents=True)
+            created.write_text("created during attempt")
+            return super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+
+    runner = _runner(
+        tmp_path / "runs",
+        executor=RolloutExecutor([_result()]),
+        codex_home=codex_home,
+    )
+
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+
+    collected_root = result.run_dir / "sessions" / "attempt-001"
+    assert (collected_root / "changed.jsonl").read_text() == "after"
+    assert (collected_root / "2026" / "new.jsonl").read_text() == (
+        "created during attempt"
+    )
+    assert not (collected_root / "old.jsonl").exists()
+    collected_files = [path for path in collected_root.rglob("*") if path.is_file()]
+    assert collected_files
+    assert all(
+        result.run_dir.resolve() in path.resolve().parents for path in collected_files
+    )
+    checksums = json.loads(result.checksums_path.read_text())
+    assert checksums["sessions/attempt-001/changed.jsonl"] == (
+        "sha256:" + hashlib.sha256(b"after").hexdigest()
+    )
+    assert checksums["sessions/attempt-001/2026/new.jsonl"] == (
+        "sha256:" + hashlib.sha256(b"created during attempt").hexdigest()
     )
 
 
@@ -481,6 +557,7 @@ def _result(
     returncode: int = 0,
     timed_out: bool = False,
     usage: dict[str, int] | None = None,
+    subagent_spawns: int = 0,
 ) -> ExecutionResult:
     payload = {
         "type": "item.completed",
@@ -488,6 +565,18 @@ def _result(
         "thread_id": "session-1",
     }
     stream = [payload]
+    for index in range(subagent_spawns):
+        item = {
+            "id": f"collab-{index}",
+            "type": "collab_tool_call",
+            "tool": "spawn_agent",
+        }
+        stream.extend(
+            [
+                {"type": "item.started", "item": item},
+                {"type": "item.completed", "item": item},
+            ]
+        )
     if usage is not None:
         stream.append({"type": "turn.completed", "usage": usage})
     return ExecutionResult(
@@ -706,6 +795,7 @@ def test_runner_accounts_for_codex_event_usage_and_marks_missing_usage(
     )
     no_usage_manifest = json.loads(no_usage_result.manifest_path.read_text())
     assert no_usage_manifest["budget_used_tokens"] is None
+    assert no_usage_manifest["subagent_spawn_count"] == 0
     assert no_usage_manifest["token_accounting"] == {
         "status": "monitored-only",
         "source": "Codex turn.completed usage",
