@@ -1,10 +1,15 @@
+import hashlib
 import json
 
 import pytest
 
 from agentic_cogwriter.runner.conditions import load_condition_registry
 from agentic_cogwriter.runner.config import RuntimeConfig
-from agentic_cogwriter.runner.errors import BudgetExceeded, RetrievalViolation
+from agentic_cogwriter.runner.errors import (
+    BudgetExceeded,
+    ExecutionError,
+    RetrievalViolation,
+)
 from agentic_cogwriter.runner.execution import ExecutionResult
 from agentic_cogwriter.runner.manifest import PromptRecord
 from agentic_cogwriter.runner.runner import ExperimentRunner
@@ -270,3 +275,220 @@ def test_runner_rejects_missing_plugin_trace(tmp_path):
 
     with pytest.raises(RuntimeError, match="no plugin trace"):
         runner.run_prompt(prompt, condition_id="A1", platform="codex-primary")
+
+
+def test_missing_trace_preserves_transport_evidence_and_absolute_paths(tmp_path):
+    prompt = PromptRecord(
+        prompt_id="p-1",
+        benchmark_name="WritingBench",
+        source_version="test",
+        prompt_text="Write a memo.",
+        requested_output_constraints={},
+        row_hash="row-hash",
+    )
+    runner = ExperimentRunner(
+        _config(), output_root=tmp_path, executor=FakeExecutor(write_trace=False)
+    )
+
+    with pytest.raises(RuntimeError, match="no plugin trace"):
+        runner.run_prompt(
+            prompt,
+            condition_id="A1",
+            platform="codex-primary",
+            run_id="missing-trace",
+        )
+
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "missing-trace"
+    stream = (run_dir / "attempt-001.events.jsonl").read_bytes()
+    assert stream
+    assert (run_dir / "attempt-001.stdout.raw").read_bytes() == stream
+    assert (run_dir / "attempt-001.stderr.raw").read_bytes() == b""
+    assert (
+        (run_dir / "prompt.txt")
+        .read_text(encoding="utf-8")
+        .startswith("Read the skill file at")
+    )
+
+    manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    assert manifest["execution_paths"] == {
+        "cwd": str((run_dir / "workspace").resolve()),
+        "prompt": str((run_dir / "prompt.txt").resolve()),
+        "trace_path": str((run_dir / ".writing" / "trace" / "process.jsonl").resolve()),
+    }
+    evidence_hashes = manifest["evidence_hashes"]
+    assert evidence_hashes["attempt-001.events.jsonl"] == (
+        "sha256:" + hashlib.sha256(stream).hexdigest()
+    )
+    assert (
+        evidence_hashes["attempt-001.stdout.raw"]
+        == evidence_hashes["attempt-001.events.jsonl"]
+    )
+    assert evidence_hashes["attempt-001.stderr.raw"] == (
+        "sha256:" + hashlib.sha256(b"").hexdigest()
+    )
+
+
+def test_executor_start_failure_preserves_empty_transport_evidence(tmp_path):
+    class FailingExecutor:
+        def run(self, command, *, cwd, timeout_seconds):
+            raise ExecutionError("process could not start")
+
+    runner = ExperimentRunner(
+        _config(), output_root=tmp_path, executor=FailingExecutor()
+    )
+
+    prompt = PromptRecord(
+        prompt_id="p-1",
+        benchmark_name="WritingBench",
+        source_version="test",
+        prompt_text="Write a memo.",
+        requested_output_constraints={},
+        row_hash="row-hash",
+    )
+
+    with pytest.raises(ExecutionError, match="process could not start"):
+        runner.run_prompt(
+            prompt,
+            condition_id="A1",
+            platform="codex-primary",
+            run_id="executor-failure",
+        )
+
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "executor-failure"
+    for suffix in ("events.jsonl", "stdout.raw", "stderr.raw"):
+        assert (run_dir / f"attempt-001.{suffix}").read_bytes() == b""
+    manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    assert manifest["evidence_hashes"]["attempt-001.events.jsonl"].startswith("sha256:")
+
+
+def test_retry_failure_preserves_each_attempt_transport_evidence(tmp_path):
+    first_stdout = b'{"thread_id":"session-1","type":"error"}\n'
+    second_stdout = b'{"thread_id":"session-1","type":"turn.failed"}\n'
+
+    class RetryFailureExecutor:
+        def __init__(self):
+            self.calls = []
+            self.results = [
+                ExecutionResult(
+                    returncode=1,
+                    stdout=first_stdout,
+                    stderr=b"first failure",
+                    session_id="session-1",
+                ),
+                ExecutionResult(
+                    returncode=1,
+                    stdout=second_stdout,
+                    stderr=b"second failure",
+                    session_id="session-1",
+                ),
+            ]
+
+        def run(self, command, *, cwd, timeout_seconds):
+            self.calls.append(command)
+            return self.results.pop(0)
+
+    prompt = PromptRecord(
+        prompt_id="p-1",
+        benchmark_name="WritingBench",
+        source_version="test",
+        prompt_text="Write a memo.",
+        requested_output_constraints={},
+        row_hash="row-hash",
+    )
+    executor = RetryFailureExecutor()
+    runner = ExperimentRunner(
+        RuntimeConfig.from_dict({**_config().values, "retry_policy": 1}),
+        output_root=tmp_path,
+        executor=executor,
+    )
+
+    with pytest.raises(ExecutionError, match="status 1"):
+        runner.run_prompt(
+            prompt,
+            condition_id="A1",
+            platform="codex-primary",
+            run_id="retry-failure",
+        )
+
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "retry-failure"
+    assert len(executor.calls) == 2
+    assert (run_dir / "attempt-001.events.jsonl").read_bytes() == first_stdout
+    assert (run_dir / "attempt-002.events.jsonl").read_bytes() == second_stdout
+    assert (run_dir / "attempt-001.stdout.raw").read_bytes() == first_stdout
+    assert (run_dir / "attempt-002.stdout.raw").read_bytes() == second_stdout
+    assert (run_dir / "attempt-001.stderr.raw").read_bytes() == b"first failure"
+    assert (run_dir / "attempt-002.stderr.raw").read_bytes() == b"second failure"
+    manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    assert manifest["attempts"] == 2
+    assert set(manifest["evidence_hashes"]) == {
+        "prompt.txt",
+        "attempt-001.events.jsonl",
+        "attempt-001.stdout.raw",
+        "attempt-001.stderr.raw",
+        "attempt-002.events.jsonl",
+        "attempt-002.stdout.raw",
+        "attempt-002.stderr.raw",
+    }
+
+
+@pytest.mark.parametrize(
+    ("result", "message"),
+    [
+        (
+            ExecutionResult(
+                returncode=1,
+                stdout=b'{"type":"error"}\n',
+                stderr=b"nonzero",
+                session_id=None,
+            ),
+            "status 1",
+        ),
+        (
+            ExecutionResult(
+                returncode=-1,
+                stdout=b'{"type":"turn.failed"}\n',
+                stderr=b"timed out",
+                session_id=None,
+                timed_out=True,
+            ),
+            "timed out",
+        ),
+    ],
+)
+def test_final_execution_errors_preserve_transport_evidence(tmp_path, result, message):
+    class FinalFailureExecutor:
+        def run(self, command, *, cwd, timeout_seconds):
+            return result
+
+    prompt = PromptRecord(
+        prompt_id="p-1",
+        benchmark_name="WritingBench",
+        source_version="test",
+        prompt_text="Write a memo.",
+        requested_output_constraints={},
+        row_hash="row-hash",
+    )
+    runner = ExperimentRunner(
+        _config(), output_root=tmp_path, executor=FinalFailureExecutor()
+    )
+
+    with pytest.raises(ExecutionError, match=message):
+        runner.run_prompt(
+            prompt,
+            condition_id="A1",
+            platform="codex-primary",
+            run_id="final-failure",
+        )
+
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "final-failure"
+    assert (run_dir / "attempt-001.events.jsonl").read_bytes() == result.stdout
+    assert (run_dir / "attempt-001.stdout.raw").read_bytes() == result.stdout
+    assert (run_dir / "attempt-001.stderr.raw").read_bytes() == result.stderr
+    manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    assert manifest["attempts"] == 1
+    assert set(manifest["evidence_hashes"]) == {
+        "prompt.txt",
+        "attempt-001.events.jsonl",
+        "attempt-001.stdout.raw",
+        "attempt-001.stderr.raw",
+    }

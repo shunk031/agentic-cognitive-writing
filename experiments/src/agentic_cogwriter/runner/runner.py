@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import tomllib
 import uuid
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -79,7 +79,7 @@ class ExperimentRunner:
         codex_plugin_root: Path | None = None,
     ):
         self.runtime_config = runtime_config
-        self.output_root = output_root
+        self.output_root = output_root.resolve()
         self.executor = executor or SubprocessExecutor()
         self.conditions = condition_registry or load_condition_registry()
         self.adapters = adapters or self._load_adapters()
@@ -128,9 +128,16 @@ class ExperimentRunner:
         normalized_path = run_dir / "output.normalized.txt"
         trace_path = run_dir / ".writing" / "trace" / "process.jsonl"
         checksums_path = run_dir / "checksums.json"
+        prompt_path = run_dir / "prompt.txt"
+        execution_paths = {
+            "cwd": str(workspace.resolve()),
+            "prompt": str(prompt_path.resolve()),
+            "trace_path": str(trace_path.resolve()),
+        }
         started_at = timestamp()
         budget = OutputBudget(self.runtime_config.output_budget_tokens)
         attempts = 0
+        evidence_hashes: dict[str, str] = {}
         cli_version = "not_probed"
         stage_prompt_hashes = self._stage_prompt_hashes(condition)
         benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
@@ -154,6 +161,8 @@ class ExperimentRunner:
                 budget=budget,
                 stage_prompt_hashes=stage_prompt_hashes,
                 benchmark_provenance=benchmark_provenance,
+                execution_paths=execution_paths,
+                evidence_hashes=evidence_hashes,
             ),
         )
 
@@ -179,9 +188,42 @@ class ExperimentRunner:
                     budget=budget,
                     stage_prompt_hashes=stage_prompt_hashes,
                     benchmark_provenance=benchmark_provenance,
+                    execution_paths=execution_paths,
+                    evidence_hashes=evidence_hashes,
                 ),
             )
             command_prompt = self._plugin_prompt(condition, prompt, platform)
+
+            prompt_path.write_text(command_prompt, encoding="utf-8")
+            evidence_hashes["prompt.txt"] = f"sha256:{sha256_file(prompt_path)}"
+            self._write_json(
+                manifest_path,
+                self._manifest(
+                    prompt=prompt,
+                    condition=condition,
+                    platform=platform,
+                    adapter=adapter,
+                    run_id=run_id,
+                    status="started",
+                    started_at=started_at,
+                    cli_version=cli_version,
+                    budget=budget,
+                    stage_prompt_hashes=stage_prompt_hashes,
+                    benchmark_provenance=benchmark_provenance,
+                    execution_paths=execution_paths,
+                    evidence_hashes=evidence_hashes,
+                ),
+            )
+
+            def record_attempt(
+                attempt_number: int, result: ExecutionResult | None
+            ) -> None:
+                nonlocal attempts
+                attempts = max(attempts, attempt_number)
+                evidence_hashes.update(
+                    self._persist_attempt_evidence(run_dir, attempt_number, result)
+                )
+
             result, attempts = self._run_turn_with_retry(
                 adapter,
                 model_id=self.runtime_config.model_for(platform),
@@ -191,6 +233,7 @@ class ExperimentRunner:
                 plugin_dirs=(
                     self._plugin_dirs(condition) if platform != "codex-primary" else ()
                 ),
+                record_attempt=record_attempt,
             )
             output = extract_output(result.stdout)
             used_draft_fallback = False
@@ -232,6 +275,7 @@ class ExperimentRunner:
                 "output.normalized.txt",
                 required_trace,
                 *trace_files,
+                *evidence_hashes,
             ]
             checksums = checksums_for_files(run_dir, artifact_paths)
             self._write_json(checksums_path, checksums)
@@ -252,12 +296,19 @@ class ExperimentRunner:
                     trace_hash=checksums.get(required_trace),
                     stage_prompt_hashes=stage_prompt_hashes,
                     benchmark_provenance=benchmark_provenance,
+                    execution_paths=execution_paths,
+                    evidence_hashes=evidence_hashes,
                 ),
             )
             return RunResult(
                 run_dir, manifest_path, output_path, trace_path, checksums_path, run_id
             )
         except Exception as exc:
+            if isinstance(exc, ExecutionError) and attempts == 0:
+                attempts = 1
+                evidence_hashes.update(
+                    self._persist_attempt_evidence(run_dir, attempts, None)
+                )
             failure: dict[str, Any] = {
                 "type": type(exc).__name__,
                 "message": str(exc),
@@ -274,6 +325,14 @@ class ExperimentRunner:
                     "sha256": f"sha256:{sha256_bytes(exc.payload)}",
                     "stream": stream,
                 }
+            failure_artifacts = ["prompt.txt", *evidence_hashes]
+            if isinstance(exc, RetrievalViolation):
+                failure_artifacts.append(f"rejected-output.{exc.stream or 'stdout'}")
+            failure_checksums = checksums_for_files(
+                run_dir, list(dict.fromkeys(failure_artifacts))
+            )
+            if failure_checksums:
+                self._write_json(checksums_path, failure_checksums)
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -289,6 +348,8 @@ class ExperimentRunner:
                     budget=budget,
                     stage_prompt_hashes=stage_prompt_hashes,
                     benchmark_provenance=benchmark_provenance,
+                    execution_paths=execution_paths,
+                    evidence_hashes=evidence_hashes,
                     failure=failure,
                 ),
             )
@@ -322,6 +383,7 @@ class ExperimentRunner:
         cwd: Path,
         attempts: int,
         plugin_dirs: tuple[str, ...] = (),
+        record_attempt: Callable[[int, ExecutionResult | None], None] | None = None,
     ) -> tuple[ExecutionResult, int]:
         """Run one skill turn, retrying only with the identical command policy."""
 
@@ -346,11 +408,18 @@ class ExperimentRunner:
                     "stop_rules": self.runtime_config.get("stop_rules"),
                 },
             )
-            result = self.executor.run(
-                command,
-                cwd=cwd,
-                timeout_seconds=self.runtime_config.timeout_seconds,
-            )
+            try:
+                result = self.executor.run(
+                    command,
+                    cwd=cwd,
+                    timeout_seconds=self.runtime_config.timeout_seconds,
+                )
+            except Exception:
+                if record_attempt is not None:
+                    record_attempt(attempts, None)
+                raise
+            if record_attempt is not None:
+                record_attempt(attempts, result)
             reject_retrieval(result.stdout, result.stderr)
             if result.session_id:
                 session_id = result.session_id
@@ -516,6 +585,8 @@ class ExperimentRunner:
         output_hash: str | None = None,
         trace_hash: str | None = None,
         failure: Mapping[str, Any] | None = None,
+        execution_paths: Mapping[str, str] | None = None,
+        evidence_hashes: Mapping[str, str] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         manifest: dict[str, Any] = {
@@ -629,6 +700,8 @@ class ExperimentRunner:
             },
             "attempts": attempts,
             "budget_used_tokens": budget.used if budget else 0,
+            "execution_paths": dict(execution_paths or {}),
+            "evidence_hashes": dict(evidence_hashes or {}),
         }
         if output_hash is not None:
             manifest["output_hash"] = output_hash
@@ -644,3 +717,23 @@ class ExperimentRunner:
             json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+
+    @staticmethod
+    def _persist_attempt_evidence(
+        run_dir: Path, attempt_number: int, result: ExecutionResult | None
+    ) -> dict[str, str]:
+        """Persist the complete transport streams for one executor attempt."""
+
+        stdout = result.stdout if result is not None else b""
+        stderr = result.stderr if result is not None else b""
+        prefix = f"attempt-{attempt_number:03d}"
+        payloads = {
+            f"{prefix}.events.jsonl": stdout,
+            f"{prefix}.stdout.raw": stdout,
+            f"{prefix}.stderr.raw": stderr,
+        }
+        hashes: dict[str, str] = {}
+        for name, payload in payloads.items():
+            (run_dir / name).write_bytes(payload)
+            hashes[name] = f"sha256:{sha256_bytes(payload)}"
+        return hashes
