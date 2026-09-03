@@ -1,8 +1,8 @@
-# Agentic cognitive writing
+# Agentic CogWriter
 
-This project gives you a writing assistant that plans, drafts, and revises long-form text the way human writers do. The assistant keeps its goals, drafts, notes, and decision log as files in the directory where you write. Instead of generating text in one pass, the assistant revisits and rewrites its own plans and goals as the draft develops.
+Agentic CogWriter is a writing assistant that plans, drafts, and revises long-form text the way human writers do. The assistant keeps its goals, drafts, notes, and decision log as files in the directory where you write. Instead of generating text in one pass, the assistant revisits and rewrites its own plans and goals as the draft develops.
 
-The plugin implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor decides what to work on next. The monitor coordinates three writing processes as the writer works:
+Agentic CogWriter implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor decides what to work on next. The monitor coordinates three writing processes as the writer works:
 
 - Planning generates and organizes ideas and sets goals.
 - Translating turns selected meanings into words.
@@ -74,7 +74,7 @@ The table maps each model element to the plugin artifact that carries out the co
 |  | Revising | Reviewing skill's embedded Revise sub-process |
 | Monitor | Orchestration role | [`plugin/skills/agentic-cog-writer/SKILL.md`](plugin/skills/agentic-cog-writer/SKILL.md), executed by the main agent |
 
-The main skill follows the recursive writing process described in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1]. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
+Agentic CogWriter follows the recursive writing process described in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1]. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
 
 ## Install from GitHub
 
@@ -110,7 +110,7 @@ Use the GitHub marketplace for the main install path. If the repository is priva
 
 ## Try it in a writing project
 
-The main skill turns your task into a file-backed writing session that you can inspect between turns.
+Agentic CogWriter turns your task into a file-backed writing session that you can inspect between turns.
 
 1. Start in the project where the writing should live.
 2. Invoke `/agentic-cognitive-writing:agentic-cog-writer` in Claude Code or `$agentic-cog-writer` in Codex. Describe the topic, audience, reason for writing, and desired result. The main skill asks for the rhetorical problem when needed, then coordinates the writing work through the project files.

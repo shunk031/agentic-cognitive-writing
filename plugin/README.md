@@ -1,6 +1,6 @@
-# Agentic cognitive writing
+# Agentic CogWriter
 
-The installed `agentic-cognitive-writing` package lets you invoke the `agentic-cog-writer` skill in a writing project. The skill plans, drafts, and revises a document while it updates goals and other process state in the project's `.writing/` directory.
+The installed `agentic-cognitive-writing` package lets you invoke Agentic CogWriter in a writing project. Agentic CogWriter plans, drafts, and revises a document while it updates goals and other process state in the project's `.writing/` directory.
 
 The package ships a Claude Code adapter in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and [`agents/`](agents/), plus a Codex adapter in [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) and per-skill metadata under [`skills/`](skills/).
 
@@ -40,13 +40,13 @@ Use the GitHub marketplace for the main install path. If the repository is priva
 
 ## Start a writing task
 
-Invoke `/agentic-cognitive-writing:agentic-cog-writer` in Claude Code or `$agentic-cog-writer` in Codex. The main skill can also start when your request clearly asks for writing help, without the explicit command.
+Invoke `/agentic-cognitive-writing:agentic-cog-writer` in Claude Code or `$agentic-cog-writer` in Codex. Agentic CogWriter can also start when your request clearly asks for writing help, without the explicit command.
 
 To bind a delegated role to a custom Codex agent, use the [Codex custom-agent examples](examples/codex-agents/README.md).
 
 ## Skills you can use
 
-Use `agentic-cog-writer` for normal writing tasks. The list below separates that entry from the internal role skills.
+Use Agentic CogWriter for normal writing tasks. The list below separates the main skill entry from the internal role skills.
 
 ### The skill you use
 
@@ -64,7 +64,7 @@ The separate [`cognitive-writing-experiments` package](https://github.com/shunk0
 
 ## Files maintained in your writing project
 
-The plugin creates or maintains this layout in the project where it is used:
+Agentic CogWriter creates or maintains this layout in the project where it is used:
 
 ```text
 .writing/
