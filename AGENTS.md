@@ -33,6 +33,8 @@ Published works use complete footnotes, while resource pointers use descriptive 
 
 Writers format content for reader use: facts go in tables, reasoning in prose, and actions in bullets; headings, first sentences, and tables expose the main answer and top caveats in a 30-second skim.
 
+- Format `Monitor`, `Planning`, `Translating`, and `Reviewing` as code when prose names them as system processes or roles. Leave identifiers, ordinary-English uses, and direct quotations unchanged.
+
 ### Lists and prose
 
 - Use bullets for separate decisions, claims, steps, or multi-word structure.
