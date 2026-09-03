@@ -1,1 +1,1 @@
-"""Reserved for pointwise and pairwise judge runners in a later change."""
+"""The judge implementation lives in ``src/agentic_cogwriter/judges``."""

@@ -169,7 +169,12 @@ def _config():
             "main_plugin_commit": "test",
             "experiments_plugin_commit": "test",
             "runner_commit": "test",
-            "generator_and_judge_family_audit": "test",
+            "generator_and_judge_family_audit": {
+                "generator_families": {
+                    "codex": "gpt",
+                    "claude-code": "claude",
+                }
+            },
             "retry_policy": 0,
             "length_strata": "test",
             "minimum_cell_size": 1,

@@ -64,7 +64,12 @@ def _runtime_values() -> dict[str, object]:
         "main_plugin_commit": "test",
         "experiments_plugin_commit": "test",
         "runner_commit": "test",
-        "generator_and_judge_family_audit": "test",
+        "generator_and_judge_family_audit": {
+            "generator_families": {
+                "codex": "gpt",
+                "claude-code": "claude",
+            }
+        },
         "retry_policy": 0,
         "length_strata": "test",
         "minimum_cell_size": 1,
@@ -1052,10 +1057,16 @@ def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> No
         "99964b369a76d8cb88ec375cda4e553a5b993483ca05b14e46c3c3fb3d3014cf"
     )
     assert manifest["models_and_execution"]["judge_verification"] == {
-        "declared_audit": "test",
-        "family_overlap_audit": "declared-unverified pending judge module",
-        "judge_families": "declared-unverified pending judge module",
+        "declared_audit": {
+            "generator_families": {
+                "codex": "gpt",
+                "claude-code": "claude",
+            }
+        },
+        "family_overlap_audit": "runtime-verified in the score manifest",
+        "judge_families": "runtime-verified in the score manifest",
     }
+    assert manifest["models_and_execution"]["generator_model_family"] == "gpt"
 
 
 def test_runner_accounts_for_codex_event_usage_and_marks_missing_usage(
