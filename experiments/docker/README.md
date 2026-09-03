@@ -20,8 +20,10 @@ Create `experiments/docker/provider.env` in the repository and provide provider 
 
 Use `codex-primary` for the Codex platform or `claude-code-replication` for the Claude Code platform. Both variants use the same container and receive provider credentials only from the runtime env file.
 
-The wrapper builds the image on first use. The repository is mounted read-write at `/workspace`, and the host `~/.codex/config.toml` is mounted read-only at `/home/codex/.codex/config.toml`. The wrapper passes common proxy variables from the calling shell when they are set.
+If your provider config resolves credentials through an auth helper command, pass its name and the credential variable with `--auth-command NAME --auth-env VAR` alongside `--env-file`. The wrapper generates a temporary three-line helper, mounts it read-only at the requested command path, and removes it when the container exits. Use `--dry-run` to inspect the Docker arguments without starting the container.
 
-Pass `--ca-file /path/to/ca-bundle.pem` only when the container needs an additional proxy CA. The entrypoint appends the mounted certificate to the image trust bundle for the runner process.
+The wrapper builds the image on first use. The repository is mounted read-write at `/workspace`, and the host `~/.codex/config.toml` is mounted read-only at `/home/codex/.codex/config.toml`. The wrapper passes common proxy variables from the calling shell only if your network requires proxy forwarding.
+
+Pass `--ca-file /path/to/ca-bundle.pem` only if your network requires an additional proxy CA. The entrypoint appends the mounted certificate to the image trust bundle for the runner process.
 
 The runner's manifests, runtime configuration, condition definitions, and artifact contract are documented in the [experiment protocol](../../docs/experiments/protocol.md). For manual `docker run` usage and image options, read [manual container options](./manual.md).

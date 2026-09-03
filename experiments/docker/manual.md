@@ -1,6 +1,6 @@
 # Manual container options
 
-The wrapper in [`README.md`](./README.md) is the normal entry point for both `codex-primary` and `claude-code-replication`. Use a direct Docker command only when another tool needs to own the container lifecycle.
+The wrapper in [`README.md`](./README.md) is the normal entry point for both `codex-primary` and `claude-code-replication`. If your provider config resolves credentials through an auth helper command, pass its name and the credential variable to the wrapper with `--auth-command NAME --auth-env VAR`. The wrapper generates the temporary helper and mounts it read-only. Use a direct Docker command only when another tool needs to own the container lifecycle.
 
 Build or reuse the local image:
 
@@ -23,4 +23,4 @@ docker run --rm --init \
   uv run --package agentic-cogwriter agentic-cogwriter-runner --help
 ```
 
-Add `--mount "type=bind,src=/path/to/ca-bundle.pem,dst=/run/user-ca.pem,readonly"` when an additional proxy CA is required. Pass standard proxy variables with Docker's `--env NAME` form when the calling shell provides them. Provide provider credentials via the gitignored env file and pass them only at run time.
+Add `--mount "type=bind,src=/path/to/ca-bundle.pem,dst=/run/user-ca.pem,readonly"` only if your network requires an additional proxy CA. Pass standard proxy variables with Docker's `--env NAME` form only if your network requires proxy forwarding. Provide provider credentials via the gitignored env file and pass them only at run time.
