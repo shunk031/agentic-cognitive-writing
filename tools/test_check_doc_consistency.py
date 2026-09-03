@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Run with: python3 -m pytest tools/test_check_doc_consistency.py -q"""
 
 from __future__ import annotations
@@ -10,7 +9,6 @@ import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
 from tempfile import TemporaryDirectory
-
 
 CHECKER = Path(__file__).resolve().with_name("check-doc-consistency.sh")
 REPOSITORY_SLUG = "shunk031/agentic-cognitive-writing"

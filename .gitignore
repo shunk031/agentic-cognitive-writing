@@ -1,0 +1,5 @@
+# Local Docker experiment environment values.
+experiments/docker/*.env
+experiments/docker/*.pem
+experiments/docker/*.crt
+experiments/docker/*.cer
