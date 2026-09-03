@@ -231,7 +231,7 @@ The pointwise JSON object follows this contract:
 {
   "prompt_id": "<prompt ID>",
   "condition_id": "<blind condition ID>",
-  "platform": "<codex-primary|claude-code-replication>",
+  "platform": "<codex|claude-code>",
   "judge_id": "<judge ID>",
   "judge_family": "<claude_frontier|gpt_frontier|open_evaluator>",
   "scores": {
@@ -273,7 +273,7 @@ The pairwise JSON object follows this contract, and every record must include th
 ```json
 {
   "prompt_id": "<prompt ID>",
-  "platform": "<codex-primary|claude-code-replication>",
+  "platform": "<codex|claude-code>",
   "judge_id": "<judge ID>",
   "judge_family": "<claude_frontier|gpt_frontier|open_evaluator>",
   "pair_id": "<unordered pair ID>",
