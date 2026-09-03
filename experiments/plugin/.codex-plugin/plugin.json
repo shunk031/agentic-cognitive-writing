@@ -1,7 +1,7 @@
 {
   "name": "cognitive-writing-experiments",
   "version": "0.1.0",
-  "description": "Controlled-comparison variants of the cognitive-writing skill.",
+  "description": "Controlled-comparison variants of the agentic-cog-writer skill.",
   "author": {
     "name": "shunk031"
   },

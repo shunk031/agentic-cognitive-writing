@@ -1,11 +1,11 @@
 ---
 name: cognitive-writing-fixed-order
-description: "Experiment-comparison variant of the cognitive-writing skill for testing a fixed Planning, Translating, then Reviewing order. For internal comparison use only, not the recommended default. Use when a controlled fixed-order comparison is explicitly requested."
+description: "Experiment-comparison variant of the agentic-cog-writer skill for testing a fixed Planning, Translating, then Reviewing order. For internal comparison use only, not the recommended default. Use when a controlled fixed-order comparison is explicitly requested."
 ---
 
 # Fixed-order cognitive writing
 
-Run a comparison with a fixed Planning, Translating, then Reviewing order while preserving the cognitive-writing skill's project state, goal network, delegation, and trace contracts.
+Run a comparison with a fixed Planning, Translating, then Reviewing order while preserving the agentic-cog-writer skill's project state, goal network, delegation, and trace contracts.
 
 ## When this skill runs
 

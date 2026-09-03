@@ -1,6 +1,6 @@
 # Agentic cognitive writing
 
-The installed `agentic-cognitive-writing` package lets you invoke the `cognitive-writing` skill in a writing project. The skill plans, drafts, and revises a document while it updates goals and other process state in the project's `.writing/` directory.
+The installed `agentic-cognitive-writing` package lets you invoke the `agentic-cog-writer` skill in a writing project. The skill plans, drafts, and revises a document while it updates goals and other process state in the project's `.writing/` directory.
 
 The package ships a Claude Code adapter in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and [`agents/`](agents/), plus a Codex adapter in [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) and per-skill metadata under [`skills/`](skills/).
 
@@ -40,17 +40,17 @@ Use the GitHub marketplace for the main install path. If the repository is priva
 
 ## Start a writing task
 
-Invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognitive-writing` in Codex. The main skill can also start when your request clearly asks for writing help, without the explicit command.
+Invoke `/agentic-cognitive-writing:agentic-cog-writer` in Claude Code or `$agentic-cog-writer` in Codex. The main skill can also start when your request clearly asks for writing help, without the explicit command.
 
 To bind a delegated role to a custom Codex agent, use the [Codex custom-agent examples](examples/codex-agents/README.md).
 
 ## Skills you can use
 
-Use `cognitive-writing` for normal writing tasks. The list below separates that entry from the internal role skills.
+Use `agentic-cog-writer` for normal writing tasks. The list below separates that entry from the internal role skills.
 
 ### The skill you use
 
-- `cognitive-writing` coordinates planning, drafting, and revision for the current writing project.
+- `agentic-cog-writer` coordinates planning, drafting, and revision for the current writing project.
 
 ### Internal role skills
 
@@ -79,9 +79,9 @@ The plugin creates or maintains this layout in the project where it is used:
     └── process.jsonl   # append-only process log
 ```
 
-The Monitor appends every process switch and goal change as one JSON line to `.writing/trace/process.jsonl`. Read the [field-by-field trace schema](skills/cognitive-writing/references/trace-jsonl-schema.md) before inspecting or extending the log.
+The Monitor appends every process switch and goal change as one JSON line to `.writing/trace/process.jsonl`. Read the [field-by-field trace schema](skills/agentic-cog-writer/references/trace-jsonl-schema.md) before inspecting or extending the log.
 
-The main skill also uses [`goals-format.md`](skills/cognitive-writing/references/goals-format.md) for the hierarchical notation in `goals.md`.
+The main skill also uses [`goals-format.md`](skills/agentic-cog-writer/references/goals-format.md) for the hierarchical notation in `goals.md`.
 
 The shipped package contains the manifests, skills, and agents it reads at runtime; no other file in this repository is required.
 

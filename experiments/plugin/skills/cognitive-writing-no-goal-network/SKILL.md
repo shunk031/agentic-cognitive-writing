@@ -1,11 +1,11 @@
 ---
 name: cognitive-writing-no-goal-network
-description: "Experiment-comparison variant of the cognitive-writing skill for testing writing without a hierarchical goal network. For internal comparison use only, not the recommended default. Use when a controlled no-goal-network comparison is explicitly requested."
+description: "Experiment-comparison variant of the agentic-cog-writer skill for testing writing without a hierarchical goal network. For internal comparison use only, not the recommended default. Use when a controlled no-goal-network comparison is explicitly requested."
 ---
 
 # Cognitive writing without a goal network
 
-Run a comparison that uses the assignment as one implicit objective while preserving the cognitive-writing skill's project state, delegation, and trace contracts.
+Run a comparison that uses the assignment as one implicit objective while preserving the agentic-cog-writer skill's project state, delegation, and trace contracts.
 
 ## When this skill runs
 

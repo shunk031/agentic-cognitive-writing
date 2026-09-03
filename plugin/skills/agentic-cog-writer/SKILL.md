@@ -1,9 +1,9 @@
 ---
-name: cognitive-writing
+name: agentic-cog-writer
 description: Use this skill whenever a user needs help with writing. It runs a Monitor loop over the user's rhetorical problem and project state, coordinates the writing processes, and preserves an observable process trace.
 ---
 
-# Cognitive writing
+# Agentic cog writer
 
 Use this skill in the user's writing project. The project root is the current working directory unless the user names another project.
 

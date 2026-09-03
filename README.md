@@ -72,7 +72,7 @@ The table maps each model element to the plugin artifact that carries out the co
 | Reviewing | Process and embedded sub-processes | Shared [reviewing skill](plugin/skills/reviewing/SKILL.md) plus [Claude reviewer adapter](plugin/agents/reviewer.md) |
 |  | Evaluating | Reviewing skill's embedded Evaluate sub-process |
 |  | Revising | Reviewing skill's embedded Revise sub-process |
-| Monitor | Orchestration role | [`plugin/skills/cognitive-writing/SKILL.md`](plugin/skills/cognitive-writing/SKILL.md), executed by the main agent |
+| Monitor | Orchestration role | [`plugin/skills/agentic-cog-writer/SKILL.md`](plugin/skills/agentic-cog-writer/SKILL.md), executed by the main agent |
 
 The main skill follows the recursive writing process described in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1]. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
 
@@ -113,14 +113,14 @@ Use the GitHub marketplace for the main install path. If the repository is priva
 The main skill turns your task into a file-backed writing session that you can inspect between turns.
 
 1. Start in the project where the writing should live.
-2. Invoke `/agentic-cognitive-writing:cognitive-writing` in Claude Code or `$cognitive-writing` in Codex. Describe the topic, audience, reason for writing, and desired result. The main skill asks for the rhetorical problem when needed, then coordinates the writing work through the project files.
+2. Invoke `/agentic-cognitive-writing:agentic-cog-writer` in Claude Code or `$agentic-cog-writer` in Codex. Describe the topic, audience, reason for writing, and desired result. The main skill asks for the rhetorical problem when needed, then coordinates the writing work through the project files.
 3. Review the files the skill creates or updates:
 
    - `.writing/assignment.md` records the rhetorical problem and constraints.
    - `.writing/goals.md` records the hierarchical goal network and its history.
    - `.writing/draft.md` holds the growing text.
    - `.writing/memory/` holds topic knowledge, audience knowledge, and writing plans.
-   - `.writing/trace/process.jsonl` records every process switch and goal change as one JSON line. See the [trace schema](plugin/skills/cognitive-writing/references/trace-jsonl-schema.md).
+   - `.writing/trace/process.jsonl` records every process switch and goal change as one JSON line. See the [trace schema](plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md).
 
 The monitor reads this state before each operation. You can inspect or edit it between turns.
 
@@ -143,7 +143,7 @@ The repository keeps the main plugin, experiment package, research, and protocol
 - The [`docs/research/skill-subagent-survey.md`](./docs/research/skill-subagent-survey.md) documents the research basis.
 - The [`docs/experiments/protocol.md`](./docs/experiments/protocol.md) defines the comparison procedure.
 - [`tools/validate-skills.sh`](tools/validate-skills.sh) runs the reproducible skill validators.
-- [`plugin/skills/cognitive-writing/evals/evals.json`](plugin/skills/cognitive-writing/evals/evals.json) and the experiment skill eval files under [`experiments/plugin/skills/`](experiments/plugin/skills/) seed skill evaluations.
+- [`plugin/skills/agentic-cog-writer/evals/evals.json`](plugin/skills/agentic-cog-writer/evals/evals.json) and the experiment skill eval files under [`experiments/plugin/skills/`](experiments/plugin/skills/) seed skill evaluations.
 
 For offline use after installation, read [`plugin/README.md`](plugin/README.md); for research and experiment context, browse the linked documents above.
 
