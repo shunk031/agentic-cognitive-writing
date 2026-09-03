@@ -1,0 +1,16 @@
+{
+  "skill_name": "writing-storm-style",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run condition A3 for the supplied writing assignment.",
+      "expected_output": "The run follows five fixed stages, uses supplied context only, and records retrieval, evidence, and citation handling as not applicable.",
+      "files": [],
+      "expectations": [
+        "Uses the question-asker and expert roles without external retrieval.",
+        "Drafts from an outline and then polishes the assembled sections.",
+        "Appends exactly five schema-valid stage events."
+      ]
+    }
+  ]
+}

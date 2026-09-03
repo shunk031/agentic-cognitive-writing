@@ -1,0 +1,7 @@
+interface:
+  display_name: "WriteHERE-style adaptation"
+  short_description: "Run typed recursive task planning without retrieval"
+  default_prompt: "Run the exploratory WriteHERE-style adaptation with a persisted reasoning/composition task graph."
+
+policy:
+  allow_implicit_invocation: false

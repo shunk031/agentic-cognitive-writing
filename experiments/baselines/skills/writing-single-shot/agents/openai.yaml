@@ -1,0 +1,7 @@
+interface:
+  display_name: "Single-shot writing"
+  short_description: "Generate a document in one pass for condition A1"
+  default_prompt: "Run condition A1 from the assignment and supplied context."
+
+policy:
+  allow_implicit_invocation: false

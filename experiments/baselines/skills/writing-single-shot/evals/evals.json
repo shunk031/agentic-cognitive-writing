@@ -1,0 +1,16 @@
+{
+  "skill_name": "writing-single-shot",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run condition A1 for the supplied writing assignment.",
+      "expected_output": "The complete document is generated in one pass and the shared trace contains exactly one generation event.",
+      "files": [],
+      "expectations": [
+        "Does not create planning or review scaffolding.",
+        "Uses only the assignment and supplied context.",
+        "Appends one schema-valid process_switch event and no goal event."
+      ]
+    }
+  ]
+}

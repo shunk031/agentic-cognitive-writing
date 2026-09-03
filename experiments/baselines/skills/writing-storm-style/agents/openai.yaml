@@ -1,0 +1,7 @@
+interface:
+  display_name: "STORM-style writing"
+  short_description: "Run the five-stage no-retrieval STORM comparison"
+  default_prompt: "Run condition A3 with perspective discovery, simulated question answering, outline, section drafting, and polish."
+
+policy:
+  allow_implicit_invocation: false

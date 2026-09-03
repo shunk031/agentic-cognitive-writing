@@ -1,0 +1,16 @@
+{
+  "skill_name": "writing-writehere-style",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run the exploratory WriteHERE-style adaptation for the supplied writing assignment.",
+      "expected_output": "The run persists a typed reasoning/composition task graph, recursively alternates decomposition and execution, and leaves retrieval handling not applicable.",
+      "files": [],
+      "expectations": [
+        "Persists graph state after mutations.",
+        "Keeps adaptation on task structure rather than writing-process selection.",
+        "Uses native subagents without retrieval or nested codex exec calls."
+      ]
+    }
+  ]
+}

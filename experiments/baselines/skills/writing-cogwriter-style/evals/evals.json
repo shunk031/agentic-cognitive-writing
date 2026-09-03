@@ -1,0 +1,16 @@
+{
+  "skill_name": "writing-cogwriter-style",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run the exploratory CogWriter-style adaptation for the supplied writing assignment.",
+      "expected_output": "The run creates and revises a structured plan once, generates segments in parallel from the whole plan, length-reviews them, and leaves goals.md untouched.",
+      "files": [],
+      "expectations": [
+        "Labels the condition as an adaptation rather than a reproduction.",
+        "Uses native subagents without nested codex exec calls.",
+        "Keeps the top-level order fixed and records it in the shared trace."
+      ]
+    }
+  ]
+}
