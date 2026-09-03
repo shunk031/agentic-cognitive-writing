@@ -2,7 +2,7 @@
 
 Agentic CogWriter is a writing assistant that plans, drafts, and revises long-form text the way human writers do. The assistant keeps its goals, drafts, notes, and decision log as files in the directory where you write. Instead of generating text in one pass, the assistant revisits and rewrites its own plans and goals as the draft develops.
 
-Agentic CogWriter implements the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981). In that model, a monitor decides what to work on next. The monitor coordinates three writing processes as the writer works:
+Agentic CogWriter realizes the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1] by Linda Flower and John R. Hayes (1981) as an agent system. The theory's Monitor runs as the orchestrating agent and decides what to work on next. The Monitor delegates Planning, Translating, and Reviewing as roles backed by skills and subagents. The writing project's task environment and long-term memory live in files. The writing project's goal network evolves as composition proceeds. The three roles work as follows:
 
 - Planning generates and organizes ideas and sets goals.
 - Translating turns selected meanings into words.
