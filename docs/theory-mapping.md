@@ -2,8 +2,6 @@
 
 Agentic CogWriter maps the writing model to a main skill, shared role skills, and file-backed project state.
 
-The plugin ships a Claude Code adapter through [`plugin/.claude-plugin/plugin.json`](../plugin/.claude-plugin/plugin.json) and [`plugin/agents/`](../plugin/agents/), and a Codex adapter through [`plugin/.codex-plugin/plugin.json`](../plugin/.codex-plugin/plugin.json) and [`plugin/skills/`](../plugin/skills/).
-
 The diagram below reproduces Figure 1, "Structure of the writing model," from ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1]:
 
 ```mermaid
