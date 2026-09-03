@@ -12,6 +12,10 @@
     {
       "name": "cognitive-writing-experiments",
       "source": "./experiments/plugin"
+    },
+    {
+      "name": "cognitive-writing-baselines",
+      "source": "./experiments/baselines"
     }
   ]
 }
