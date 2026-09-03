@@ -1,6 +1,6 @@
 # Cognitive writing baselines
 
-This package gives experimenters five writing conditions that share one assignment, supplied context, model configuration, output budget, and no-retrieval policy. The package is experimental infrastructure. It does not replace the main `agentic-cognitive-writing` package or its `agentic-cog-writer` skill.
+This package gives experimenters five writing conditions that share one assignment, supplied context, model configuration, output budget, and no-retrieval policy. The package is experimental infrastructure. It does not replace Agentic CogWriter, whose package identifier is `agentic-cognitive-writing` and whose skill identifier is `agentic-cog-writer`.
 
 ## Conditions
 
