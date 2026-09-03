@@ -25,7 +25,6 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_CACHE_DIR=/tmp/uv-cache \
-    UV_NO_SYNC=1 \
     UV_PROJECT_ENVIRONMENT=/tmp/uv-project-env
 
 RUN apt-get update \
@@ -87,11 +86,7 @@ RUN groupadd --gid 1000 cog-writer-agent \
     && chown --recursive cog-writer-agent:cog-writer-agent /home/cog-writer-agent /workspace
 
 COPY experiments/docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY experiments/docker/runner-shim.sh /tmp/runner-shim.sh
-RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh \
-    && python -m venv "${UV_PROJECT_ENVIRONMENT}" \
-    && install --mode 0755 /tmp/runner-shim.sh \
-        "${UV_PROJECT_ENVIRONMENT}/bin/agentic-cogwriter-runner"
+RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh
 
 USER cog-writer-agent
 WORKDIR /workspace

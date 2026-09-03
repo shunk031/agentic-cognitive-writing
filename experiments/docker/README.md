@@ -1,6 +1,6 @@
 # Docker experiment environment
 
-The Docker environment runs the `agentic-cogwriter-runner` command in a disposable container while keeping the repository as the working tree on the host. The image built from [`Dockerfile`](./Dockerfile) contains Python 3.12.11, Node.js 24.7.0, codex CLI 0.146.0, Claude Code 2.1.236, uv 0.11.32, bubblewrap 0.8.0, git 2.39.5.
+The Docker environment runs the `agentic-cogwriter-runner` command in a disposable container while keeping the repository as the working tree on the host. The image built from [`Dockerfile`](./Dockerfile) contains `Python 3.12.11`, `Node.js 24.7.0`, `codex CLI 0.146.0`, `Claude Code 2.1.236`, `uv 0.11.32`, `bubblewrap 0.8.0`, `git 2.39.5`.
 
 ## Prerequisites
 
