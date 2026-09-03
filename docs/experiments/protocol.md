@@ -4,6 +4,8 @@ This protocol defines the paper experiment and future runner. It fixes compariso
 
 The runner must fill every `REQUIRED_AT_RUNTIME` value before a run. An open value is a pre-run stop condition.
 
+Run the experiment runner in the disposable [Docker experiment environment](../../experiments/docker/README.md) when the host should not execute experiment processes directly.
+
 **Repository sources.** The protocol uses benchmark, evaluation, platform, and plugin evidence from these repository files. The runner records each source commit in the run manifest when it starts a run.
 
 The repository includes these survey files:
