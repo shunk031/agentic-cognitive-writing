@@ -13,7 +13,7 @@ The two-package design keeps shared skills separate from host-specific adapters 
 
 The main plugin exposes Flower & Hayes' Cognitive Process Theory of Writing [^1] as four roles. The main plugin provides four skills that map the role names to package artifacts:
 
-- `cognitive-writing`: monitor role, executed by the main agent
+- `agentic-cog-writer`: monitor role, executed by the main agent
 - `planning`: planner role
 - `translating`: translator role
 - `reviewing`: reviewer role
@@ -131,7 +131,7 @@ Claude Code subagents are Markdown files with YAML frontmatter, and plugins ship
 - Background subagents retain a filtered built-in tool set spanning file, search, shell, notebook, web, task, skill, worktree, monitor, messaging, and artifact operations. Source: [Claude Code subagents docs](https://code.claude.com/docs/en/sub-agents.md).
 - `feature-dev/commands/feature-dev.md` uses a command skill to launch `code-explorer`, `code-architect`, and `code-reviewer` across discovery, design, and quality review phases. Source: [feature-dev command](https://github.com/anthropics/claude-plugins-official/blob/main/plugins/feature-dev/commands/feature-dev.md).
 - The shipped plugin represents Flower & Hayes' model [^1] as one monitor skill plus three Claude Code plugin agents:
-  - `cognitive-writing`: monitor role, executed by the main agent
+  - `agentic-cog-writer`: monitor role, executed by the main agent
   - `planner`: Claude-native agent adapter
   - `translator`: Claude-native agent adapter
   - `reviewer`: Claude-native agent adapter
@@ -268,7 +268,7 @@ agentic-cognitive-writing-process/
 |   |-- .codex-plugin/
 |   |-- agents/
 |   |-- skills/
-|   |   |-- cognitive-writing/
+|   |   |-- agentic-cog-writer/
 |   |   |-- planning/
 |   |   |-- translating/
 |   |   `-- reviewing/
@@ -368,7 +368,7 @@ The survey findings translate into the shipped architecture and the remaining ex
 
 1. **Theory-first role decomposition**
    - The shipped plugin uses four writing-process roles:
-     - `monitor`: main `cognitive-writing` skill, executed by the main agent
+     - `monitor`: main `agentic-cog-writer` skill, executed by the main agent
      - `planner`: Claude-native agent adapter
      - `translator`: Claude-native agent adapter
      - `reviewer`: Claude-native agent adapter
@@ -379,7 +379,7 @@ The survey findings translate into the shipped architecture and the remaining ex
 
 2. **Shared skills, platform-specific wrappers**
    - The main plugin puts canonical instructions in four skills:
-     - [`plugin/skills/cognitive-writing/SKILL.md`](../../plugin/skills/cognitive-writing/SKILL.md): main monitor skill
+     - [`plugin/skills/agentic-cog-writer/SKILL.md`](../../plugin/skills/agentic-cog-writer/SKILL.md): main monitor skill
      - [`plugin/skills/planning/SKILL.md`](../../plugin/skills/planning/SKILL.md): internal role skill
      - [`plugin/skills/translating/SKILL.md`](../../plugin/skills/translating/SKILL.md): internal role skill
      - [`plugin/skills/reviewing/SKILL.md`](../../plugin/skills/reviewing/SKILL.md): internal role skill
@@ -398,7 +398,7 @@ The survey findings translate into the shipped architecture and the remaining ex
    - Avoid the Anthropic-only `compatibility` field in shared `SKILL.md`, because OpenAI validator does not allow it.
 
 3. **Stateful process trace**
-   - The shipped monitor appends JSON Lines entries to `.writing/trace/process.jsonl` in the user's writing project. The schema lives at [`plugin/skills/cognitive-writing/references/trace-jsonl-schema.md`](../../plugin/skills/cognitive-writing/references/trace-jsonl-schema.md).
+   - The shipped monitor appends JSON Lines entries to `.writing/trace/process.jsonl` in the user's writing project. The schema lives at [`plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md`](../../plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md).
    - The trace records rhetorical problem, audience, goals, content plan, source commitments, drafts, revisions, and monitor decisions.
    - Reuse STORM [^3] as a pipeline reference for research, outline, draft, and polish. Add Flower & Hayes' model [^1] monitor decisions as first-class data.
    - Avoid final-output-only grading; it cannot show that cognitive-process support changed behavior.
