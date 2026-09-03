@@ -1,6 +1,6 @@
 # Manual container options
 
-The wrapper in [`README.md`](./README.md) is the normal entry point. Use a direct Docker command only when another tool needs to own the container lifecycle.
+The wrapper in [`README.md`](./README.md) is the normal entry point for both `codex-primary` and `claude-code-replication`. Use a direct Docker command only when another tool needs to own the container lifecycle.
 
 Build or reuse the local image:
 
@@ -10,7 +10,7 @@ docker build \
   --file experiments/docker/Dockerfile .
 ```
 
-Run the runner with the same mounts as the wrapper:
+Run the runner with the same mounts as the wrapper. The image includes both pinned CLIs, and the runner selects the platform from the experiment arguments:
 
 ```bash
 docker run --rm --init \
@@ -23,4 +23,4 @@ docker run --rm --init \
   uv run --package agentic-cogwriter agentic-cogwriter-runner --help
 ```
 
-Add `--mount "type=bind,src=/path/to/ca-bundle.pem,dst=/run/user-ca.pem,readonly"` when an additional proxy CA is required. Pass standard proxy variables with Docker's `--env NAME` form when the calling shell provides them. Keep provider values in the ignored env file and pass them only at run time.
+Add `--mount "type=bind,src=/path/to/ca-bundle.pem,dst=/run/user-ca.pem,readonly"` when an additional proxy CA is required. Pass standard proxy variables with Docker's `--env NAME` form when the calling shell provides them. Provide provider credentials via the gitignored env file and pass them only at run time.

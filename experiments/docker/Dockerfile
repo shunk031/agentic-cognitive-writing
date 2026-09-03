@@ -1,8 +1,11 @@
 # syntax=docker/dockerfile:1
 
 ARG UV_VERSION=0.11.32
+ARG NODE_VERSION=24.7.0
 
 FROM ghcr.io/astral-sh/uv:${UV_VERSION}@sha256:df4cae8f3a96d175e2e5f992e597550000edbe78fdc2594d5cd8de1a217f504c AS uv
+
+FROM node:${NODE_VERSION}-bookworm-slim@sha256:0104d9447ea3ddf7373643be7f9915fc7b7c896e41d0d33229338e457217cd78 AS node
 
 FROM python:3.12.11-slim-bookworm@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7
 
@@ -11,6 +14,7 @@ ARG CODEX_VERSION=0.146.0
 ARG CODEX_ARM64_SHA256=975bac91562abeedeb8f79636d51a86649b31f34a9de6a3bcb059565b6cf1f87
 ARG CODEX_AMD64_SHA256=5ba3b9405543953081f661d0854d266f76e2abbe51d41349355a36de7673776a
 ARG GIT_VERSION=1:2.39.5-0+deb12u3
+ARG CLAUDE_CODE_VERSION=2.1.236
 ARG UV_VERSION=0.11.32
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -31,6 +35,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=uv /uv /uvx /usr/local/bin/
+COPY --from=node /usr/local/ /usr/local/
+
+RUN npm install --global --no-fund --no-update-notifier "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" \
+    && npm cache clean --force \
+    && claude --version | grep --fixed-strings "${CLAUDE_CODE_VERSION}"
 
 RUN set -eux; \
     target_arch="${TARGETARCH:-}"; \

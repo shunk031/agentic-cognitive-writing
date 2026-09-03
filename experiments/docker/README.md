@@ -1,10 +1,10 @@
 # Docker experiment environment
 
-The Docker environment runs the experiment runner in a disposable container while keeping the repository as the working tree on the host. The image contains Python 3.12.11, uv 0.11.32, git 2.39.5, and Codex CLI 0.146.0.
+The Docker environment runs the experiment runner in a disposable container while keeping the repository as the working tree on the host. The image contains Python 3.12.11, Node.js 24.7.0, uv 0.11.32, git 2.39.5, Codex CLI 0.146.0, and Claude Code CLI 2.1.236.
 
 ## Main path
 
-Create `experiments/docker/provider.env` in the repository and provide your provider credentials there. The file is ignored by Git. From the repository root, run one experiment through the wrapper:
+Create `experiments/docker/provider.env` in the repository and provide provider credentials via the gitignored env file. From the repository root, run one experiment through the wrapper:
 
 ```bash
 ./experiments/docker/run.sh \
@@ -17,6 +17,8 @@ Create `experiments/docker/provider.env` in the repository and provide your prov
   --config experiments/config/runtime.json \
   --output-root runs
 ```
+
+Use `codex-primary` for the Codex platform or `claude-code-replication` for the Claude Code platform. Both variants use the same container and receive provider credentials only from the runtime env file.
 
 The wrapper builds the image on first use. The repository is mounted read-write at `/workspace`, and the host `~/.codex/config.toml` is mounted read-only at `/home/codex/.codex/config.toml`. The wrapper passes common proxy variables from the calling shell when they are set.
 
