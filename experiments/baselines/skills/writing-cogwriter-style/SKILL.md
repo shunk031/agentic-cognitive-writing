@@ -3,9 +3,9 @@ name: writing-cogwriter-style
 description: "Exploratory X-style adaptation of CogWriter. Produce and immediately revise a structured plan, generate document segments in parallel with native subagents, and run a bounded length-review loop without a goal network."
 ---
 
-# CogWriter-style writing
+# CogWriter[^1]-style writing
 
-Run an X-style adaptation of CogWriter, not a reproduction. The fixed top-level order is:
+Run an X-style adaptation of CogWriter[^1], not a reproduction. The fixed top-level order is:
 
 `initial planning -> immediate plan revision -> parallel segment generation -> length review`
 
@@ -34,4 +34,6 @@ The user owns rhetorical intent, factual authority, final wording, and publicati
 
 Each event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Use `responsible_agent: "runner"`, cite the stage inputs, and list the relevant plan, segment, or draft files in `artifacts`. Do not append goal events, retrieval events, or private reasoning. If a subagent fallback is needed because native delegation is unavailable, the runner records that observable fallback in the event evidence while keeping the top-level order fixed.
 
-The adaptation does not claim the original models, prompts, dataset, token limits, monitoring implementation, or reported results. The adaptation preserves the published control-flow ideas needed for this comparison and makes the platform, input, budget, and no-retrieval differences explicit.
+The adaptation does not claim to reproduce CogWriter[^1]'s original models, prompts, dataset, token limits, monitoring implementation, or reported results. The adaptation preserves the published control-flow ideas needed for this comparison and makes the platform, input, budget, and no-retrieval differences explicit.
+
+[^1]: Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen, "A Cognitive Writing Perspective for Constrained Long-Form Text Generation," *Findings of the Association for Computational Linguistics: ACL 2025* (Findings of ACL 2025), 2025, https://doi.org/10.18653/v1/2025.findings-acl.511.

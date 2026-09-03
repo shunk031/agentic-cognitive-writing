@@ -3,13 +3,13 @@ name: writing-storm-style
 description: "Experiment condition A3. Use a fixed STORM-style perspective, simulated question-answering, outline, per-section draft, and polish sequence without retrieval or citation generation."
 ---
 
-# STORM-style writing
+# STORM[^1]-style writing
 
 Run condition A3 in the fixed five-stage order:
 
 `perspective discovery -> simulated question answering -> outline -> per-section draft -> polish`
 
-The sequence adapts the released STORM pre-writing semantics to the experiment's equal-information policy. The perspective step identifies useful angles from the assignment and supplied context. The simulated question-answering step has a question-asker and an expert, but both roles can use only the supplied context. The outline step organizes those exchanges. The per-section draft expands the outline section by section. The polish step produces the final document.
+The sequence adapts the released STORM[^1] pre-writing semantics to the experiment's equal-information policy. The perspective step identifies useful angles from the assignment and supplied context. The simulated question-answering step has a question-asker and an expert, but both roles can use only the supplied context. The outline step organizes those exchanges. The per-section draft expands the outline section by section. The polish step produces the final document.
 
 ## Equal-information and no-retrieval policy
 
@@ -31,4 +31,6 @@ The user owns rhetorical intent, factual authority, final wording, and publicati
 
 Append every event to `.writing/trace/process.jsonl`. Each event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Use `responsible_agent: "runner"`, cite the preceding inputs and current stage artifact in `evidence`, preserve unknowns in `open_uncertainty`, and list project-relative files in `artifacts`. The trace must contain exactly five stage events for a successful run. Do not append retrieval, evidence, citation, goal, or hidden-reasoning events.
 
-The five-stage mapping follows STORM's separation of perspective-guided questioning, simulated conversation, outline creation, section-oriented writing, and polishing. The adaptation omits the released system's Internet research and citation behavior because those operations would violate the shared policy.
+The five-stage mapping follows STORM[^1]'s separation of perspective-guided questioning, simulated conversation, outline creation, section-oriented writing, and polishing. The adaptation omits the released system's Internet research and citation behavior because those operations would violate the shared policy.
+
+[^1]: Yijia Shao, Yucheng Jiang, Theodore Kanell, Peter Xu, Omar Khattab, and Monica Lam, "Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models," *Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies* (NAACL 2024), 2024, https://doi.org/10.18653/v1/2024.naacl-long.347.

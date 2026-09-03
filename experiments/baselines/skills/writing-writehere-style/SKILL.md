@@ -3,9 +3,9 @@ name: writing-writehere-style
 description: "Exploratory WriteHERE-style adaptation. Build and persist a typed reasoning/composition task graph, recursively decompose and execute tasks with subagents, and keep adaptation on task structure rather than writing-process selection."
 ---
 
-# WriteHERE-style writing
+# WriteHERE[^1]-style writing
 
-Run an exploratory adaptation of WriteHERE's heterogeneous recursive planning. The coordinator dynamically builds a directed acyclic task graph in project files and interleaves recursive decomposition with execution. The root task is a composition task for the complete document. Child tasks may be reasoning tasks for requirements, structure, consistency, or argument development and composition tasks for section or document writing. The coordinator schedules ready tasks by graph state and dependency order, then persists the graph after every change.
+Run an exploratory adaptation of WriteHERE[^1]'s heterogeneous recursive planning. The coordinator dynamically builds a directed acyclic task graph in project files and interleaves recursive decomposition with execution. The root task is a composition task for the complete document. Child tasks may be reasoning tasks for requirements, structure, consistency, or argument development and composition tasks for section or document writing. The coordinator schedules ready tasks by graph state and dependency order, then persists the graph after every change.
 
 The adaptation changes task structure only. The coordinator must not adapt by selecting among named writing processes, replacing a task graph with a fixed process pipeline, or using a meta-process chooser. The distinction is the experimental point: WriteHERE-style adaptation concerns what tasks exist and how they depend on one another, not which writing workflow is selected.
 
@@ -43,4 +43,6 @@ Store task results under `.writing/baselines/writehere/results/` when they are t
 
 Every trace event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Use `responsible_agent: "runner"`, add the graph and relevant result files to `artifacts`, and preserve unresolved dependencies or claims in `open_uncertainty`. Retrieval, evidence, and citation fields are `N/A` by design in the runner's derived accounting, not fabricated trace events. Do not append goal events or hidden reasoning.
 
-The adaptation follows the released system's typed task graph, dependency-aware states, recursive decomposition, and interleaved execution semantics. It does not reproduce the original retrieval agent, prompts, models, frontend, benchmark, or graph implementation. The experiment compares task-structure adaptation under a common no-retrieval information policy.
+The adaptation follows WriteHERE[^1]'s released typed task graph, dependency-aware states, recursive decomposition, and interleaved execution semantics. It does not reproduce the original retrieval agent, prompts, models, frontend, benchmark, or graph implementation. The experiment compares task-structure adaptation under a common no-retrieval information policy.
+
+[^1]: Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmidhuber, "Beyond Outlining: Heterogeneous Recursive Planning for Adaptive Long-form Writing with Language Models," *Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing* (EMNLP 2025), 2025, https://aclanthology.org/2025.emnlp-main.1254/.
