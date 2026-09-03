@@ -6,6 +6,8 @@ This package gives experimenters five baseline and exploratory conditions with t
 
 Install `cognitive-writing-baselines` from the repository marketplace. Invoke a selected condition with `/cognitive-writing-baselines:<skill-name>` in Claude Code or `$<skill-name>` in Codex. For example, use `/cognitive-writing-baselines:writing-linear` or `$writing-linear` for A2.
 
+The package layout uses [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) for Claude Code and [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) for Codex.
+
 ## Conditions
 
 | Condition | Skill | Fixed behavior | Trace expectation |
@@ -22,7 +24,7 @@ Every condition reads `.writing/assignment.md` and the supplied context under th
 
 ## Adaptation caveats
 
-`writing-storm-style` is a no-retrieval STORM[^1] adaptation. `writing-cogwriter-style` and `writing-writehere-style` are exploratory adaptations of CogWriter[^2] and WriteHERE[^3], not reproductions. The shared policy keeps inputs and budgets equal and disables retrieval and citation generation; each skill documents its operational stages and trace rules.
+`writing-storm-style` is a no-retrieval STORM[^1] adaptation. Its stage mapping follows the [pinned STORM engine](https://github.com/stanford-oval/storm/blob/e80d9bbea7362141a479940dabb751c1f244e4b6/knowledge_storm/storm_wiki/engine.py) and [pinned outline module](https://github.com/stanford-oval/storm/blob/e80d9bbea7362141a479940dabb751c1f244e4b6/knowledge_storm/storm_wiki/modules/outline_generation.py). `writing-cogwriter-style` and `writing-writehere-style` are exploratory adaptations of CogWriter[^2] and WriteHERE[^3], not reproductions. The CogWriter adaptation follows the [pinned planning implementation](https://github.com/KaiyangWan/CogWriter/blob/dc3bf084e8733c951172cddd89fa4d7337121fdd/CogWriter_model/Agents/PlanningAgent.py) and [pinned generation implementation](https://github.com/KaiyangWan/CogWriter/blob/dc3bf084e8733c951172cddd89fa4d7337121fdd/CogWriter_model/Agents/GenerationAgent.py) for plan revision, parallel segment generation, and length review. The WriteHERE adaptation follows the [pinned graph implementation](https://github.com/principia-ai/WriteHERE/blob/0b78fcb9ff47305cb098dcb1eec4982024bb34ab/recursive/graph.py) and [pinned execution engine](https://github.com/principia-ai/WriteHERE/blob/0b78fcb9ff47305cb098dcb1eec4982024bb34ab/recursive/engine.py) for task decomposition and execution. The shared policy keeps inputs and budgets equal and disables retrieval and citation generation; each skill documents its operational stages and trace rules.
 
 ## Validation
 
