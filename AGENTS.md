@@ -2,13 +2,13 @@
 
 ## Repository scope
 
-The repository contains a cross-platform writing plugin, research surveys, and an experiment protocol.
+The repository contains a cross-platform writing plugin, baseline skill packages, research surveys, experiment protocols and code, and paper manuscripts.
 
 The writing contract covers those artifacts and every prose deliverable, including documents, READMEs, and pull request bodies.
 
 ### Paper manuscripts
 
-Paper manuscripts use venue-register prose. Scholarly citations use only the footnote apparatus, without bibliography-duplicating inline links; repository links appear only in an artifact-availability paragraph. Each product or platform name appears once as an artifact-anchored fact.
+Paper manuscripts use venue-register prose. Scholarly citations use only the footnote apparatus, without bibliography-duplicating inline links; repository links appear only in an artifact-availability paragraph. This system's product and host-platform names appear once as artifact-anchored facts; cited external systems are unaffected.
 
 ## Citations and links
 
@@ -33,13 +33,12 @@ Published works use complete footnotes, while resource pointers use descriptive 
 
 Writers format content for reader use: facts go in tables, reasoning in prose, and actions in bullets; headings, first sentences, and tables expose the main answer and top caveats in a 30-second skim.
 
-- Format `Monitor`, `Planning`, `Translating`, and `Reviewing` as code when prose names them as system processes or roles. Leave identifiers, ordinary-English uses, and direct quotations unchanged.
-
 ### Lists and prose
 
 - Use bullets for separate decisions, claims, steps, or multi-word structure.
 - Match the format to the content rather than forcing every point into a list.
-- Present sibling entities within one section in parallel forms. When primary entries use labeled bold-lead-in bullets, give secondary entries the same form at their weight; never collapse them into a single fact-only paragraph.
+- Format `Monitor`, `Planning`, `Translating`, and `Reviewing` as code when prose names them as system processes or roles. Leave identifiers, ordinary-English uses, and direct quotations unchanged.
+- Present sibling entities within one section in parallel forms. When primary entries use labeled bold-lead-in bullets, give secondary entries the same form scaled to their weight; never collapse them into a single fact-only paragraph.
 - Keep short atomic-token reference lists inline regardless of count. When an exact enumeration is not load-bearing, summarize it with a source link, but never summarize away content that is the claim, such as exact schema keys. Summarize third-party procedures in prose with a descriptive source link; use step lists only for procedures the reader executes. Keep two-item enumerations in prose when a list adds no value.
 - Within a scope, omit an established name from children under a lead-in, cells after a row header, and sentences inside an entity's own section. Labels carry only the differentiating part.
 - Open each paragraph with a topic sentence stating its one point. Keep following sentences on that point, start a new paragraph for a new point, and make the first sentences alone carry the full argument. A definition or gloss belongs in the sentence that uses the term or in its own explicitly declared paragraph, never as a trailing sentence in a paragraph about another point. Merge runs of single-sentence paragraphs created by list-to-prose conversion, and use blank lines only for genuine topic shifts.
@@ -49,7 +48,7 @@ Writers format content for reader use: facts go in tables, reasoning in prose, a
 ### Tables
 
 - Use tables for atomic, comparable values. When a table cell must hold several entries, separate them with `<br>` because bullet lists do not render inside cells. When a cell needs sentences or more than about two `<br>`-separated lines, move the content to per-item subsections or prose and keep at most a compact table of atomic-value summaries. Right-align only purely numeric columns and left-align text columns.
-- In comparison tables, keep each entity's brief resource links in a `Resources` column as slash-separated links so each row holds the entity's facts and links together. Keep detail sections to links tied to a specific claim.
+- In comparison tables, keep each entity's brief resource links in a `Resources` column as slash-separated links so each row holds the entity's facts and links together; the two-to-four limit does not apply inside `Resources` cells, but labels remain brief. Keep detail sections to links tied to a specific claim.
 
 ### Headings and sections
 
@@ -58,11 +57,11 @@ Writers format content for reader use: facts go in tables, reasoning in prose, a
 
 ### README files
 
-README files present only the mainstream installation or usage path inline; a dedicated document holds links to alternatives. Each fact and procedure appears once at its best location.
+README files present only the mainstream installation or usage path inline and link a dedicated document that holds the alternatives. Each fact and procedure appears once at its best location.
 
 ## Language and claim strength
 
-Writers produce all prose deliverables in English and apply the `unslop` skill to each one.
+Writers produce all prose deliverables in English and remove AI-pattern phrasing, puffery, and filler from each deliverable; apply the `unslop` skill where available.
 
 - Introduce an abbreviation only when the document uses it again; otherwise keep the full form without a parenthetical. Expand a reused abbreviation at first use. Leave universally understood tokens such as URL, JSON, HTTP, PDF, API, CLI, README, and DOI, as well as proper names and brands such as JSTOR, arXiv, and GitHub, unexpanded.
 - Avoid pronoun subjects such as "It", "This", and "They" unless the referent is the immediately preceding subject and unambiguous. Name the actor instead, as in "The survey derives ..." or "The monitor appends ...".
