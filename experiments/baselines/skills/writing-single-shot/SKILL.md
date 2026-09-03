@@ -17,15 +17,15 @@ The user owns rhetorical intent, factual authority, final wording, and publicati
 
 1. Read `.writing/assignment.md` and the supplied context. Do not create or modify `.writing/goals.md`, planning notes, review notes, or memory files for this condition.
 2. Generate the complete final document in one pass. Keep the requested audience, genre, structure, length, and other constraints visible in the prompt.
-3. Write the final document to the runner-designated output, normally `.writing/draft.md`. Do not replace unrelated user files.
+3. Return the complete final document in the final response. Do not write `.writing/draft.md` or another draft file.
 4. Append exactly one event to `.writing/trace/process.jsonl`. The schema has no separate generation event type, so represent the generation as one `process_switch` object with `process: "generate"`, `from_process: null`, and `to_process: "generate"`.
 
-The runner appends the event when the single pass starts or completes. The line must contain `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Use `responsible_agent: "runner"`, describe the assignment and supplied context in `evidence`, and list unresolved claims in `open_uncertainty`. Add `.writing/draft.md` to `artifacts` when that is the output path. Do not append goal events or invent internal reasoning.
+The trace contract is fixed at exactly one `process_switch` event. Its only allowed `process` value is `generate`. The runner appends the event when the single pass starts or completes. The line must contain `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Use `responsible_agent: "runner"`, describe the assignment and supplied context in `evidence`, and list unresolved claims in `open_uncertainty`. Do not append goal events or invent internal reasoning.
 
 Example shape:
 
 ```json
-{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"runner","process":"generate","from_process":null,"to_process":"generate","decision":"Generate the complete document in one pass from the assignment and supplied context.","evidence":[".writing/assignment.md","supplied context"],"open_uncertainty":[],"artifacts":[".writing/draft.md"]}
+{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"runner","process":"generate","from_process":null,"to_process":"generate","decision":"Generate the complete document in one pass from the assignment and supplied context.","evidence":[".writing/assignment.md","supplied context"],"open_uncertainty":[],"artifacts":[]}
 ```
 
 Do not add another trace line for a retry, formatting step, or hidden decision. A failed run is accounted for by the runner; the skill must not turn failure handling into an unplanned stage.
