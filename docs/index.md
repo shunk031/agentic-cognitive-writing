@@ -35,7 +35,9 @@ Agentic CogWriter is a writing assistant that **plans, drafts, reviews, and adap
 
 </div>
 
-<div class="acw-architecture" markdown>
+<div class="acw-architecture">
+
+<div class="acw-architecture-copy" markdown>
 
 <span class="acw-eyebrow">COGNITIVE PROCESS ARCHITECTURE</span>
 
@@ -45,7 +47,9 @@ Agentic CogWriter operationalizes the writing model proposed by Flower and Hayes
 
 Each process updates a shared writing state containing the draft, goals, memory, and process history. That evolving state then informs the next decision by the `Monitor`.
 
-<div class="acw-process-map" markdown="0">
+</div>
+
+<div class="acw-process-map">
   <div class="acw-map-monitor">
     <span class="acw-map-kicker">CONTROL</span>
     <strong>Monitor</strong>
