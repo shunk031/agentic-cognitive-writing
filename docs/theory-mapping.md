@@ -54,15 +54,15 @@ The table maps each model element to the plugin artifact that carries out the co
 |  | Produced text | User project `.writing/draft.md` |
 | Writer's long-term memory | Topic and audience knowledge | User project `.writing/memory/` |
 |  | Writing plans | Notes and plans in `.writing/memory/` plus `.writing/goals.md` |
-| Planning | Process and embedded sub-processes | Shared [planning skill](../plugin/skills/planning/SKILL.md) plus [Claude planner adapter](../plugin/agents/planner.md) |
-|  | Generating ideas | Planning skill's embedded Generate sub-process |
-|  | Organizing ideas and presentation | Planning skill's embedded Organize sub-process |
-|  | Goal-setting | Planning skill's embedded Goal-setting sub-process and `.writing/goals.md` |
-| Translating | Process | Shared [translating skill](../plugin/skills/translating/SKILL.md) plus [Claude translator adapter](../plugin/agents/translator.md) |
-| Reviewing | Process and embedded sub-processes | Shared [reviewing skill](../plugin/skills/reviewing/SKILL.md) plus [Claude reviewer adapter](../plugin/agents/reviewer.md) |
-|  | Evaluating | Reviewing skill's embedded Evaluate sub-process |
-|  | Revising | Reviewing skill's embedded Revise sub-process |
-| Monitor | Orchestration role | [`plugin/skills/agentic-cog-writer/SKILL.md`](../plugin/skills/agentic-cog-writer/SKILL.md), executed by the main agent |
+| `Planning` | Process and embedded sub-processes | Shared [planning skill](../plugin/skills/planning/SKILL.md) plus [Claude planner adapter](../plugin/agents/planner.md) |
+|  | Generating ideas | `Planning` skill's embedded Generate sub-process |
+|  | Organizing ideas and presentation | `Planning` skill's embedded Organize sub-process |
+|  | Goal-setting | `Planning` skill's embedded Goal-setting sub-process and `.writing/goals.md` |
+| `Translating` | Process | Shared [translating skill](../plugin/skills/translating/SKILL.md) plus [Claude translator adapter](../plugin/agents/translator.md) |
+| `Reviewing` | Process and embedded sub-processes | Shared [reviewing skill](../plugin/skills/reviewing/SKILL.md) plus [Claude reviewer adapter](../plugin/agents/reviewer.md) |
+|  | Evaluating | `Reviewing` skill's embedded Evaluate sub-process |
+|  | Revising | `Reviewing` skill's embedded Revise sub-process |
+| `Monitor` | Orchestration role | [`plugin/skills/agentic-cog-writer/SKILL.md`](../plugin/skills/agentic-cog-writer/SKILL.md), executed by the main agent |
 
 Agentic CogWriter follows the recursive writing process described in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600)[^1]. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
 

@@ -1,15 +1,15 @@
 ---
 name: agentic-cog-writer
-description: Use this skill whenever a user needs help with writing. It runs a Monitor loop over the user's rhetorical problem and project state, coordinates the writing processes, and preserves an observable process trace.
+description: Use this skill whenever a user needs help with writing. It runs a `Monitor` loop over the user's rhetorical problem and project state, coordinates the writing processes, and preserves an observable process trace.
 ---
 
 # Agentic cog writer
 
 Use this skill in the user's writing project. The project root is the current working directory unless the user names another project.
 
-The Monitor is the main agent running this skill. The Monitor chooses the next writing process from the project state and open uncertainty. The Monitor does not impose a fixed stage sequence.
+The `Monitor` is the main agent running this skill. The `Monitor` chooses the next writing process from the project state and open uncertainty. The `Monitor` does not impose a fixed stage sequence.
 
-## Monitor responsibilities
+## `Monitor` responsibilities
 
 - Keep these under the user's control:
   - rhetorical intent
@@ -52,9 +52,9 @@ The Monitor is the main agent running this skill. The Monitor chooses the next w
 3. Keep `goals.md` in the notation described in [`references/goals-format.md`](references/goals-format.md). Update it whenever a goal is created, developed, or regenerated. Preserve the history instead of replacing an earlier goal without recording what changed.
 4. Read [`references/trace-jsonl-schema.md`](references/trace-jsonl-schema.md) before writing the first trace entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
 
-## Monitor loop
+## `Monitor` loop
 
-At each turn, the Monitor should:
+At each turn, the `Monitor` should:
 
 1. Identify the active goal and its parent. If a sub-goal resolves, pop back to the parent goal before choosing the next operation.
 2. Compare the active goal with:
@@ -63,12 +63,12 @@ At each turn, the Monitor should:
    - retrieved memory
    - open uncertainty
 
-   Use that comparison to select planning, translating, or reviewing. Planning may mean:
+   Use that comparison to select `Planning`, `Translating`, or `Reviewing`. `Planning` may mean:
    - exploring
    - organizing
    - setting a goal
 
-   Reviewing may mean:
+   `Reviewing` may mean:
    - evaluating
    - revising
 3. Before every process switch, append a `process_switch` event naming the responsible process or agent and recording the decision, evidence, and open uncertainty. Record a separate goal event whenever a goal is created, developed, or regenerated. Use the exact fields in the trace reference.
@@ -83,7 +83,7 @@ At each turn, the Monitor should:
    - what changed
    - which goal is active
    - what remains uncertain
-   - which process the Monitor recommends next
+   - which process the `Monitor` recommends next
 
    Ask for a decision when the next move depends on the user's intent or factual authority.
 
@@ -114,7 +114,7 @@ Use the platform path that matches the host:
 
 Do not write a script that spawns `codex exec` children.
 
-If native delegation is unavailable, perform the role as Monitor and record that fallback in the trace.
+If native delegation is unavailable, perform the role as the `Monitor` and record that fallback in the trace.
 
 ## References
 

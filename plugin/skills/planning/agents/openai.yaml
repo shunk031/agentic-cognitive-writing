@@ -1,6 +1,6 @@
 interface:
-  display_name: "Planning role"
-  short_description: "Internal Monitor planning role instructions"
+  display_name: "`Planning` role"
+  short_description: "Internal `Monitor` `Planning` role instructions"
 
 policy:
   allow_implicit_invocation: false

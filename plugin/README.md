@@ -1,12 +1,12 @@
 # Agentic CogWriter
 
-The installed `agentic-cognitive-writing` package lets you invoke Agentic CogWriter in a writing project. Agentic CogWriter realizes the writing model as an agent system. Its Monitor chooses the next process. Delegated Planning, Translating, and Reviewing roles update the project's goals, drafts, notes, decision log, and other process state under `.writing/`.
+The installed `agentic-cognitive-writing` package lets you invoke Agentic CogWriter in a writing project. Agentic CogWriter realizes the writing model as an agent system. Its `Monitor` chooses the next process. Delegated `Planning`, `Translating`, and `Reviewing` roles update the project's goals, drafts, notes, decision log, and other process state under `.writing/`.
 
 The package ships a Claude Code adapter in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and [`agents/`](agents/), plus a Codex adapter in [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) and per-skill metadata under [`skills/`](skills/).
 
 For the theory and architecture behind this plugin, see the [project README](https://github.com/shunk031/agentic-cognitive-writing#readme).
 
-## Install from GitHub
+## Installation
 
 Use the GitHub marketplace for the main install path. If the repository is private, GitHub installs require access to it. For development checkouts and personal Codex installs, read the `docs/installation.md` guide in the [project repository](https://github.com/shunk031/agentic-cognitive-writing).
 
@@ -54,7 +54,7 @@ Use Agentic CogWriter for normal writing tasks. The list below separates the mai
 
 ### Internal role skills
 
-The Monitor is the part of the skill that decides what to work on next and invokes these roles during delegated work. Do not invoke them directly.
+The `Monitor` is the part of the skill that decides what to work on next and invokes these roles during delegated work. Do not invoke them directly.
 
 - `planning` handles delegated idea generation and goal setting.
 - `translating` handles delegated drafting.
@@ -79,7 +79,7 @@ Agentic CogWriter creates or maintains this layout in the project where it is us
     └── process.jsonl   # append-only process log
 ```
 
-The Monitor appends every process switch and goal change as one JSON line to `.writing/trace/process.jsonl`. Read the [field-by-field trace schema](skills/agentic-cog-writer/references/trace-jsonl-schema.md) before inspecting or extending the log.
+The `Monitor` appends every process switch and goal change as one JSON line to `.writing/trace/process.jsonl`. Read the [field-by-field trace schema](skills/agentic-cog-writer/references/trace-jsonl-schema.md) before inspecting or extending the log.
 
 The main skill also uses [`goals-format.md`](skills/agentic-cog-writer/references/goals-format.md) for the hierarchical notation in `goals.md`.
 

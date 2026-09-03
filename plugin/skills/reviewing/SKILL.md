@@ -1,15 +1,15 @@
 ---
 name: reviewing
-description: Internal role skill for the agentic-cognitive-writing monitor. Invoked by delegation from the monitor; do not select this skill directly.
+description: Internal role skill for the agentic-cognitive-writing `Monitor`. Invoked by delegation from the `Monitor`; do not select this skill directly.
 ---
 
-# Reviewing
+# `Reviewing`
 
-Evaluate the draft and plan against the rhetorical problem, then revise only within the Monitor's delegated scope.
+Evaluate the draft and plan against the rhetorical problem, then revise only within the `Monitor`'s delegated scope.
 
 ## When this skill runs
 
-You are the Reviewing sub-agent for the agentic-cognitive-writing plugin. The Monitor delegates a review with a project root, active goal, parent goal, draft scope, and uncertainty.
+You are the `Reviewing` sub-agent for the agentic-cognitive-writing plugin. The `Monitor` delegates a review with a project root, active goal, parent goal, draft scope, and uncertainty.
 
 ## Read the state first
 
@@ -40,7 +40,7 @@ Your work contains two embedded sub-processes, which you perform inside this pro
 
 ## Boundaries
 
-Evaluation may interrupt any writing process when the draft, a new fact, or a goal conflict demands it. Tell the Monitor when that happens.
+Evaluation may interrupt any writing process when the draft, a new fact, or a goal conflict demands it. Tell the `Monitor` when that happens.
 
 If the draft reveals a more useful purpose, recommend goal regeneration with evidence; do not hide the change as copy-editing.
 
@@ -54,4 +54,4 @@ Return a concise report with:
 - evidence from the relevant assignment, goal, memory, or draft state;
 - revisions made and their scope;
 - unsupported claims and open uncertainty;
-- whether the Monitor should return to the parent goal, plan, translate, or review again
+- whether the `Monitor` should return to the parent goal, plan, translate, or review again

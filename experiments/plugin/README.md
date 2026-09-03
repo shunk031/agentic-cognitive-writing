@@ -56,7 +56,7 @@ Use these skills only for controlled comparisons. They are not recommended defau
 
 The variants' seed prompts live beside the skills in [`skills/`](skills/).
 
-- `cognitive-writing-fixed-order` runs Planning, Translating, and Reviewing in a fixed order on each pass. Generate and Evaluate may interrupt the order, after which the Monitor returns to the prescribed sequence.
+- `cognitive-writing-fixed-order` runs `Planning`, `Translating`, and `Reviewing` in a fixed order on each pass. Generate and Evaluate may interrupt the order, after which the `Monitor` returns to the prescribed sequence.
 - `cognitive-writing-no-goal-network` treats the assignment as one implicit objective, leaves `.writing/goals.md` untouched, and traces process switches.
 
 ## Invoke a variant
