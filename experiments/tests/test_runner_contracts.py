@@ -160,16 +160,26 @@ def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -
 
     a4_path = tmp_path / "a4.jsonl"
     a4_path.write_text(json.dumps(_event("process_switch")) + "\n")
-    with pytest.raises(TraceValidationError, match="goal-aware event needs goal_id"):
+    with pytest.raises(TraceValidationError, match="A4 requires goal fields"):
         validate_trace(a4_path, condition_id="A4")
 
     valid_a4_events = _event("process_switch")
-    valid_a4_events.update({"goal_id": "g1", "parent_goal_id": None})
     valid_a4_path = tmp_path / "a4-valid.jsonl"
     valid_a4_path.write_text(
         json.dumps(valid_a4_events) + "\n" + json.dumps(_event("goal_created")) + "\n"
     )
     validate_trace(valid_a4_path, condition_id="A4")
+
+    invalid_goal_path = tmp_path / "a4-invalid-goal.jsonl"
+    invalid_goal = _event("goal_created")
+    invalid_goal.pop("parent_goal_id")
+    invalid_goal_path.write_text(
+        json.dumps(_event("process_switch")) + "\n" + json.dumps(invalid_goal) + "\n"
+    )
+    with pytest.raises(
+        TraceValidationError, match="goal-aware event needs parent_goal_id"
+    ):
+        validate_trace(invalid_goal_path, condition_id="A4")
 
     a5_path = tmp_path / "a5.jsonl"
     a5_path.write_text(json.dumps(_event("goal_created")) + "\n")

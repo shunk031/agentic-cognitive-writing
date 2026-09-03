@@ -76,7 +76,6 @@ def validate_trace(
     events = _read_trace_events(path)
     goal_event_count = 0
     observed_stages: list[str] = []
-    goal_fields_required = condition_id in {"A4", "A6"}
     for line_number, event in enumerate(events, start=1):
         event_type = event.get("event_type")
         if not isinstance(event_type, str) or event_type not in TRACE_EVENT_TYPES:
@@ -98,8 +97,6 @@ def validate_trace(
                 raise TraceValidationError(
                     f"Trace {path}:{line_number} field {field} must be an array"
                 )
-        if goal_fields_required:
-            _validate_goal_fields(event, path=path, line_number=line_number)
         if "artifacts" in event and not isinstance(event["artifacts"], list):
             raise TraceValidationError(
                 f"Trace {path}:{line_number} field artifacts must be an array"
