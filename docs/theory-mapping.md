@@ -1,6 +1,6 @@
-# How the theory maps to `Agentic CogWriter`
+# How the theory maps to Agentic CogWriter
 
-Agentic CogWriter maps the writing model to a main skill, shared role skills, and file-backed project state.
+`Agentic CogWriter` maps the writing model to a main skill, shared role skills, and file-backed project state.
 
 ```mermaid
 flowchart TB

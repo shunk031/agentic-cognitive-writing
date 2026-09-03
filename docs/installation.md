@@ -1,6 +1,6 @@
-# Install `Agentic CogWriter` for development or personal use
+# Install Agentic CogWriter for development or personal use
 
-Use this guide to install Agentic CogWriter from a development checkout or as a personal Codex install. Use the GitHub marketplace steps in [`README.md`](../README.md) for the main install path.
+Use this guide to install `Agentic CogWriter` from a development checkout or as a personal Codex install. Use the GitHub marketplace steps in [`README.md`](../README.md) for the main install path.
 
 ## Marketplace and manifest layout
 

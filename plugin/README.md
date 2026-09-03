@@ -1,6 +1,6 @@
-# `Agentic CogWriter`
+# Agentic CogWriter
 
-The installed `agentic-cognitive-writing` package lets you invoke Agentic CogWriter in a writing project. Agentic CogWriter realizes the writing model as an agent system. Its `Monitor` chooses the next process. Delegated `Planning`, `Translating`, and `Reviewing` roles update the project's goals, drafts, notes, decision log, and other process state under `.writing/`.
+The installed `agentic-cognitive-writing` package lets you invoke `Agentic CogWriter` in a writing project. Agentic CogWriter realizes the writing model as an agent system. Its `Monitor` chooses the next process. Delegated `Planning`, `Translating`, and `Reviewing` roles update the project's goals, drafts, notes, decision log, and other process state under `.writing/`.
 
 The package ships adapters for both Claude Code and Codex.
 
