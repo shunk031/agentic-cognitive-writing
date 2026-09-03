@@ -3,20 +3,17 @@
 
 from __future__ import annotations
 
-import io
+import json
 import runpy
 import subprocess
 import sys
-import tarfile
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 
 CHECKER = Path(__file__).resolve().with_name("check-doc-consistency.sh")
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_SLUG = "shunk031/agentic-cognitive-writing"
-ACTUAL_PLUGIN_COMMIT = "d0d6da7d0607f9d54b35973c2cf4e10d779a15dd"
 MAIN_SKILL = "agentic-cog-writer"
 
 
@@ -34,6 +31,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         *,
         skills: tuple[str, ...] = (),
         agents: tuple[str, ...] = (),
+        package_name: str | None = None,
     ) -> None:
         plugin_root = self.root / relative_root
         skills_root = plugin_root / "skills"
@@ -44,6 +42,12 @@ class CheckDocConsistencyTests(unittest.TestCase):
             (skills_root / skill).mkdir()
         for agent in agents:
             (agents_root / f"{agent}.md").write_text("agent\n", encoding="utf-8")
+        if package_name is not None:
+            manifest = plugin_root / ".claude-plugin" / "plugin.json"
+            manifest.parent.mkdir()
+            manifest.write_text(
+                json.dumps({"name": package_name}) + "\n", encoding="utf-8"
+            )
 
     def _write_readme(self, text: str) -> None:
         (self.root / "README.md").write_text(text, encoding="utf-8")
@@ -134,61 +138,6 @@ class CheckDocConsistencyTests(unittest.TestCase):
             text=True,
         )
 
-    def _materialize_actual_plugin_tree(self) -> None:
-        ref = f"{ACTUAL_PLUGIN_COMMIT}^{{commit}}"
-        object_check = subprocess.run(
-            ["git", "-C", str(REPOSITORY_ROOT), "cat-file", "-e", ref],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        if object_check.returncode != 0:
-            fetch = subprocess.run(
-                [
-                    "git",
-                    "-C",
-                    str(REPOSITORY_ROOT),
-                    "fetch",
-                    "origin",
-                    "feat/cognitive-writing-plugin",
-                ],
-                check=False,
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(
-                fetch.returncode,
-                0,
-                fetch.stdout + fetch.stderr,
-            )
-
-        archive = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(REPOSITORY_ROOT),
-                "archive",
-                "--format=tar",
-                ACTUAL_PLUGIN_COMMIT,
-                "README.md",
-                "plugin",
-                "experiments/plugin",
-            ],
-            check=False,
-            capture_output=True,
-        )
-        self.assertEqual(archive.returncode, 0, archive.stderr.decode())
-        with tarfile.open(fileobj=io.BytesIO(archive.stdout), mode="r:") as archive_file:
-            for member in archive_file.getmembers():
-                target = self.root / Path(member.name)
-                if member.isdir():
-                    target.mkdir(parents=True, exist_ok=True)
-                elif member.isfile():
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    source = archive_file.extractfile(member)
-                    self.assertIsNotNone(source)
-                    target.write_bytes(source.read())
-
     def test_both_plugin_roots_union_skills_agents_and_trace_doc_token(self) -> None:
         self._create_plugin(
             Path("plugin"), skills=(MAIN_SKILL,), agents=("planner",)
@@ -219,8 +168,23 @@ class CheckDocConsistencyTests(unittest.TestCase):
             ground_truth["trace_doc_tokens"], {".writing/trace/process.jsonl"}
         )
 
-    def test_actual_plugin_tree_at_d0d6da7_is_clean(self) -> None:
-        self._materialize_actual_plugin_tree()
+    def test_known_plugin_tree_is_clean(self) -> None:
+        self._create_plugin(
+            Path("plugin"),
+            skills=(MAIN_SKILL, "planning", "reviewing", "translating"),
+            agents=("planner", "reviewer", "translator"),
+            package_name="agentic-cognitive-writing",
+        )
+        self._create_plugin(
+            Path("experiments/plugin"),
+            skills=("cognitive-writing-fixed-order", "cognitive-writing-no-goal-network"),
+            package_name="cognitive-writing-experiments",
+        )
+        self._write_readme(
+            f"{MAIN_SKILL}\n"
+            "cognitive-writing-fixed-order\n"
+            "cognitive-writing-no-goal-network\n"
+        )
 
         result = self._run_checker()
 
@@ -363,7 +327,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self._add_origin_remote()
         self._write_readme(
             f"Unknown snapshot: https://github.com/{REPOSITORY_SLUG}/blob/"
-            "d0d6da7/README.md\n"
+            "a1b2c3d/README.md\n"
         )
 
         result = self._run_checker()
@@ -408,13 +372,13 @@ class CheckDocConsistencyTests(unittest.TestCase):
 
     def test_standalone_prose_sha_is_flagged(self) -> None:
         self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
-        self._write_readme("The snapshot at d0d6da7 uses the shipped plugin.\n")
+        self._write_readme("The snapshot at a1b2c3d uses the shipped plugin.\n")
 
         result = self._run_checker()
 
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn(
-            "README.md:1: commit SHA 'd0d6da7' appears in prose",
+            "README.md:1: commit SHA 'a1b2c3d' appears in prose",
             result.stdout,
         )
 
@@ -456,14 +420,14 @@ class CheckDocConsistencyTests(unittest.TestCase):
     def test_hyphenated_doi_like_suffix_is_flagged(self) -> None:
         self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme(
-            "The snapshot at 10.1234/d0d6da7-not-a-doi is documented.\n"
+            "The snapshot at 10.1234/a1b2c3d-not-a-doi is documented.\n"
         )
 
         result = self._run_checker()
 
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn(
-            "README.md:1: commit SHA 'd0d6da7' appears in prose",
+            "README.md:1: commit SHA 'a1b2c3d' appears in prose",
             result.stdout,
         )
 
@@ -471,7 +435,7 @@ class CheckDocConsistencyTests(unittest.TestCase):
         self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme(
             "Pinned [snapshot](https://github.com/example/project/blob/"
-            "d0d6da7/README.md) is documented.\n"
+            "a1b2c3d/README.md) is documented.\n"
         )
 
         result = self._run_checker()
@@ -482,9 +446,9 @@ class CheckDocConsistencyTests(unittest.TestCase):
     def test_code_spans_and_fenced_code_are_clean(self) -> None:
         self._create_plugin(Path("plugin"), skills=(MAIN_SKILL,))
         self._write_readme(
-            "Use `deadbeef` and `d0d6da7` as fixture values.\n"
+            "Use `deadbeef` and `a1b2c3d` as fixture values.\n"
             "```text\n"
-            "The fenced example uses d0d6da7.\n"
+            "The fenced example uses a1b2c3d.\n"
             "```\n"
         )
 
