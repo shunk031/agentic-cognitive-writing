@@ -14,8 +14,8 @@ The repository includes these survey files:
 The repository includes these main-plugin files:
 
 - [`plugin/README.md`](../../plugin/README.md)
-- [`plugin/skills/cognitive-writing/SKILL.md`](../../plugin/skills/cognitive-writing/SKILL.md)
-- [`plugin/skills/cognitive-writing/references/trace-jsonl-schema.md`](../../plugin/skills/cognitive-writing/references/trace-jsonl-schema.md)
+- [`plugin/skills/agentic-cog-writer/SKILL.md`](../../plugin/skills/agentic-cog-writer/SKILL.md)
+- [`plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md`](../../plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md)
 
 The repository includes these experiments-plugin files:
 
@@ -26,11 +26,11 @@ The repository includes these experiments-plugin files:
 
 This protocol tests whether the theory-based recursive process improves writing and whether its traces show the predicted goal dynamics.
 
-Flower and Hayes' *A Cognitive Process Theory of Writing* [^1] describes writing as a set of thinking processes that a writer coordinates during composing. The processes are hierarchical and can be embedded in one another. Writing is goal-directed, and writers can create, develop, and regenerate goals as they learn from the act of writing. The Monitor coordinates Planning, Translating, and Reviewing.
+Flower and Hayes' *A Cognitive Process Theory of Writing*[^1] describes writing as a set of thinking processes that a writer coordinates during composing. The processes are hierarchical and can be embedded in one another. Writing is goal-directed, and writers can create, develop, and regenerate goals as they learn from the act of writing. The Monitor coordinates Planning, Translating, and Reviewing.
 
 The protocol tests that account as an agent process rather than treating the account as a claim about human inner experience.
 
-The experiment has six experimental conditions, identified as A1 through A6. The experiment holds the assignment, supplied context, tool budget, output budget, and no-retrieval rule constant across those conditions. Only the process instructions and the resulting observable process differ. The benchmark and judge choices follow [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
+The core experiment has six conditions, identified as A1 through A6, and the protocol adds B1 and B2 as exploratory conditions. The experiment holds the assignment, supplied context, tool budget, output budget, and no-retrieval rule constant across all enabled conditions. Only the process instructions and the resulting observable process differ. The benchmark and judge choices follow [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
 
 The research questions (RQ) are:
 
@@ -47,34 +47,37 @@ The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-
 
 The protocol also defines process and replication estimands. The primary process estimands are goal events, adaptive process switches, interruptions, and pop-back events. Report rates and distributions for each. The replication estimand is the direction and size of the A4 treatment effect under the secondary platform. Report it separately from the primary platform.
 
-## Six conditions under equal information
+## Six core conditions and two exploratory conditions
 
-The equal-information policy gives all six conditions identical input context. The runner must expose the same local tools, context window policy, timeout, output budget, and number of allowed attempts to every condition. No condition may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
+All enabled conditions share the same skill-and-subagent framework and the plugin-written `.writing/trace/process.jsonl` path. The runner invokes exactly one skill for each condition, including the two exploratory conditions when they are enabled. The equal-information policy gives every condition identical input context. The runner must expose the same local tools, context window policy, timeout, output budget, and number of allowed attempts to every condition. No condition may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
 
-**Single-shot condition A1.** Condition A1 makes one generation pass from the assignment and supplied context. The condition has no explicit planning or review stage. The runner records the externally visible generation event and does not infer hidden goals or stages.
+**Single-shot condition A1.** Condition A1 invokes `writing-single-shot` from the planned `experiments/baselines/` package. The skill makes one generation pass from the assignment and supplied context. The condition has no explicit planning or review stage. The skill writes the externally visible generation event to the shared trace path and does not infer hidden goals or stages.
 
-**Linear-stages condition A2.** Condition A2 makes one pass through Pre-Write, Write, and Re-Write. The order is fixed, and each stage hands its output to the next. The runner records the three stage transitions and their outputs. The runner records no unobserved reasoning.
+**Linear-stages condition A2.** Condition A2 invokes `writing-linear` from the planned `experiments/baselines/` package. The skill makes one pass through Pre-Write, Write, and Re-Write. The order is fixed, and each stage hands its output to the next. The skill writes the three stage transitions and their outputs to the shared trace path. The skill records no unobserved reasoning.
 
-**STORM-style condition A3 without retrieval.** Condition A3 uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish, following [STORM](https://github.com/stanford-oval/storm)[^2]. Citation generation is omitted under the equal-information policy. The pipeline separates planning from writing and omits retrieval and source gathering.
+**STORM-style condition A3 without retrieval.** Condition A3 invokes `writing-storm-style` from the planned `experiments/baselines/` package. The skill uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish, following [STORM](https://github.com/stanford-oval/storm)[^2]. Citation generation is omitted under the equal-information policy. The skill separates planning from writing and omits retrieval and source gathering while writing its observable stage events to the shared trace path.
 
-**A3 trace and evidence handling.** The runner records the five stages. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The no-retrieval adaptation follows these repository sources:
+**A3 trace and evidence handling.** The skill writes the five stage events to the shared trace path. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The no-retrieval adaptation follows the benchmark evidence in [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) and the platform evidence in [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md).
 
-- [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) for evaluation evidence
-- [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) for platform evidence
-
-**Proposed-plugin condition A4.** Condition A4 uses the documented cognitive-writing plugin. The Monitor selects among the Planning, Translating, and Reviewing processes. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. The runner uses the plugin's append-only `.writing/trace/process.jsonl` and goal-network files and records the normal loop under the shared trace contract.
+**Proposed-plugin condition A4.** Condition A4 invokes the documented `agentic-cog-writer` skill from the `agentic-cognitive-writing` plugin. The Monitor selects among the Planning, Translating, and Reviewing processes. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. The runner uses the plugin's append-only `.writing/trace/process.jsonl` and goal-network files and records the normal loop under the shared trace contract.
 
 **No-goal-network condition A5.** Condition A5 invokes `cognitive-writing-no-goal-network` from the `cognitive-writing-experiments` plugin. The variant uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. The runner leaves any existing `.writing/goals.md` untouched, records process switches under the shared trace contract, and records no goal events or goal fields.
 
 **Fixed-order condition A6.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin. The variant runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, the Monitor returns to the prescribed order. The runner keeps the ordinary goal network, records process switches and goal events under the shared trace contract, and adds no variant-specific fields.
 
-All six conditions use the same assignment, starting draft, model settings, and user decisions.
+**CogWriter-style exploratory condition B1.** Condition B1 invokes `writing-cogwriter-style` as an adaptation of CogWriter [^18], not as a reproduction of that system. The skill uses a structured plan and plan revision, parallel segment generation, length review, a fixed top-level order, and no goal network. The skill writes its observable actions to the shared trace path.
 
-The plugin mapping implements the theory in *A Cognitive Process Theory of Writing* [^1], but that 1981 paper does not specify these files.
+**WriteHERE-style exploratory condition B2.** Condition B2 invokes `writing-writehere-style` as an adaptation of WriteHERE [^19], not as a reproduction of that system. The skill uses a dynamic typed task graph, recursive decomposition interleaved with execution, and no retrieval task under the equal-information policy. The skill writes its observable actions to the shared trace path.
+
+B1 and B2 are EXPLORATORY. Each platform's assigned judges score both conditions pointwise. The runner compares each exploratory condition with A4 in pairwise judgments, runs both presentation orders, and reports intervals without Holm-adjusted claims. The 15-pair confirmatory tournament remains the tournament among A1-A6, and the confirmatory family remains exactly the 15 Holm-corrected A4-versus-A1, A2, A3, A5, and A6 contrasts on the primary pointwise composite.
+
+All six core conditions use the same assignment, starting draft, model settings, and user decisions. B1 and B2 use the same settings when the exploratory runs are enabled.
+
+The plugin mapping implements the theory in *A Cognitive Process Theory of Writing*[^1], but that 1981 paper does not specify these files.
 
 The user owns rhetorical intent, factual authority, final wording, and publication.
 
-The Monitor owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/cognitive-writing/SKILL.md`](../../plugin/skills/cognitive-writing/SKILL.md).
+The Monitor owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/agentic-cog-writer/SKILL.md`](../../plugin/skills/agentic-cog-writer/SKILL.md).
 
 ## Primary benchmarks and data gates
 
@@ -133,9 +136,9 @@ The plugin ships its adapters through these repository files:
 
 ### Platform assignments
 
-The primary platform is OpenAI Codex headless, invoked with `codex exec`, with all six conditions running as skill or prompt variants over one pinned generator model from the Generative Pre-trained Transformer (GPT) family. The [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) describes the primary platform's skill and adapter design.
+The primary platform is OpenAI Codex headless, invoked with `codex exec`, with the six core conditions and any enabled exploratory conditions invoking one skill per condition over one pinned generator model from the Generative Pre-trained Transformer (GPT) family. Conditions A1-A3 invoke `writing-single-shot`, `writing-linear`, and `writing-storm-style` from the planned `experiments/baselines/` package. Condition A4 invokes `agentic-cog-writer`, and conditions A5 and A6 invoke their named skills from the `cognitive-writing-experiments` plugin. The [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) describes the primary platform's skill and adapter design.
 
-The secondary replication runs the same six condition specifications under Claude Code headless with one pinned Claude-family generator model. A4 to A6 use the plugin, while A1 to A3 use the corresponding prompt variants.
+The secondary replication runs the same condition specifications under Claude Code headless with one pinned Claude-family generator model. Conditions A1-A3 invoke the corresponding baseline skills, condition A4 invokes `agentic-cog-writer`, and conditions A5 and A6 invoke the corresponding skills from the `cognitive-writing-experiments` plugin. The runner applies the same skill invocation to B1 and B2 when exploratory runs are enabled.
 
 The runner must record the installed Codex and Claude Code CLI versions and validate each exact headless invocation before a run. The [Codex non-interactive mode guide](https://developers.openai.com/codex/non-interactive-mode) and [Claude Code headless mode guide](https://docs.anthropic.com/en/docs/claude-code/headless) provide invocation references.
 
@@ -146,7 +149,7 @@ The runner uses these conceptual interfaces:
 
 The runner will version the command flags in experiments/conditions/ when the runner lands and record them in every run manifest. The run must not silently fall back to an interactive mode.
 
-Before running A4, A5, or A6, the runner installs the main `agentic-cognitive-writing` plugin. Before running A5 or A6, the runner also installs the `cognitive-writing-experiments` plugin. The main plugin provides the role skills and agents that the experiment plugin uses. The runner records both plugin commits in the run manifest.
+Before running A1, A2, or A3, the runner loads the corresponding skill from the planned `experiments/baselines/` package. Before running A4, A5, or A6, the runner installs the main `agentic-cognitive-writing` plugin. Before running A5 or A6, the runner also installs the `cognitive-writing-experiments` plugin. The main plugin provides the role skills and agents that the experiment plugin uses. The runner records both plugin commits in the run manifest.
 
 The runner starts one top-level session per condition and prompt. In Codex A4 to A6 runs, the plugin may request native Codex subagents as documented. The plugin must not spawn nested `codex exec` children. If native delegation is unavailable and the Monitor performs a delegated role itself, the trace must record that fallback.
 
@@ -248,7 +251,7 @@ The runner retries an invalid judge response only under the fixed retry count in
 
 ### Balanced pairwise tournament
 
-The six conditions produce 15 unordered condition pairs. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. The two presentations produce 30 judgments per prompt per judge. Apply these controls:
+The six core conditions A1-A6 produce 15 unordered condition pairs. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. The two presentations produce 30 judgments per prompt per judge. Apply these controls:
 
 - Blind the condition labels.
 - Randomize output order with a recorded seed.
@@ -336,11 +339,11 @@ The trace analysis measures observable process behavior and relates it to produc
 
 ### Trace sources and interpretation
 
-**Trace sources.** For A4, A5, and A6, the runner uses the plugin's append-only `.writing/trace/process.jsonl` and [`plugin/skills/cognitive-writing/references/trace-jsonl-schema.md`](../../plugin/skills/cognitive-writing/references/trace-jsonl-schema.md). The runner uses `.writing/goals.md` for A4 and A6 and the final draft for all three conditions. A5 leaves any existing `goals.md` untouched, so the analysis does not use that file for A5 goal measures.
+**Trace sources.** Every invoked skill writes observable events to the plugin's append-only `.writing/trace/process.jsonl` path. For A4, A5, and A6, the runner validates those events against [`plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md`](../../plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md). The runner uses `.writing/goals.md` for A4 and A6 and the final draft for all three core plugin conditions. A5 leaves any existing `goals.md` untouched, so the analysis does not use that file for A5 goal measures. The runner applies the same trace contract to A1-A3 and to B1-B2 when exploratory runs are enabled.
 
 Each trace line is one JSON object. The documented event types are `process_switch`, `goal_created`, `goal_developed`, and `goal_regenerated`. Process-switch events include `from_process` and `to_process`. Goal events include `goal_id` and `parent_goal_id`. The plugin records responsible actor, decision, evidence, and uncertainty.
 
-For A1, A2, and A3, the runner records only externally observed generation or stage events in the same per-run trace location. An adapter must not invent goals, hidden decisions, or internal reasoning. Plugin-specific fields that cannot be observed are `N/A` in the derived analysis. The baseline stage traces support structural comparisons.
+For A1, A2, and A3, the baseline skills write only externally observed generation or stage events in the same per-run trace location. An adapter must not invent goals, hidden decisions, or internal reasoning. Plugin-specific fields that cannot be observed are `N/A` in the derived analysis. The baseline stage traces support structural comparisons.
 
 The goal-network estimands apply to A4 and A6. The recursive-monitor estimands apply to A4 to A6, with no goal events or goal fields for A5.
 
@@ -461,7 +464,8 @@ The runner will script all runs under the planned experiments/ layout. The plann
 experiments/
 ├── config/       # frozen run, model, judge, and seed configurations
 ├── prompts/      # materialized prompt manifests and source hashes
-├── conditions/   # A1-A6 wrappers and platform-specific adapters
+├── baselines/    # planned A1-A3 baseline skills
+├── conditions/   # condition registry and platform-specific adapters
 ├── runner/       # execution, timeout, retry, and trace collection code
 ├── judge/        # pointwise and pairwise prompts, schemas, and runners
 ├── human/        # sampling manifest, annotation form, and agreement code
@@ -471,7 +475,7 @@ experiments/
 
 The runner writes a manifest before each run. The manifest records these fields:
 
-- **Inputs.** Benchmark release and hash / prompt manifest hash / condition ID / platform / selected skill or prompt variant
+- **Inputs.** Benchmark release and hash / prompt manifest hash / condition ID / platform / selected skill
 - **Models and execution.** CLI versions / main plugin commit / experiments plugin commit / generator and judge model IDs / system / condition / judge prompt hashes / decoding parameters / output budget / tool policy / no-retrieval check
 - **Reproducibility and environment.** Random seeds / retry policy / start time / software environment identifiers that are safe to publish
 
@@ -640,3 +644,5 @@ If a new source check contradicts a settled design item or the plugin's document
 [^15]: Sture Holm, "A Simple Sequentially Rejective Multiple Test Procedure," *Scandinavian Journal of Statistics* 6, no. 2 (1979): 65-70. [JSTOR](https://www.jstor.org/stable/4615733).
 [^16]: Frank Wilcoxon, "Individual Comparisons by Ranking Methods," *Biometrics Bulletin* 1, no. 6 (1945): 80-83. [JSTOR](https://www.jstor.org/stable/3001968).
 [^17]: Shuangshuang Ying, Yunwen Li, Xingwei Qu, Xin Li, Sheng Jin, Minghao Liu, Zhoufutu Wen, Xeron Du, Tianyu Zheng, Yichi Zhang, Letian Ni, Yuyang Cheng, Zhenzhu Yang, Qiguang Chen, Jingzhe Ding, Shengda Long, Wangchunshu Zhou, Jiazhan Feng, Wanjun Zhong, Libo Qin, Ge Zhang, Wenhao Huang, Wanxiang Che, and Chenghua Lin, "Beyond Correctness: Evaluating Subjective Writing Preferences Across Cultures," arXiv preprint arXiv:2510.14616 (2025). [arXiv](https://arxiv.org/abs/2510.14616).
+[^18]: Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen, "A Cognitive Writing Perspective for Constrained Long-Form Text Generation," *Findings of the Association for Computational Linguistics: ACL 2025* (2025). DOI: [10.18653/v1/2025.findings-acl.511](https://doi.org/10.18653/v1/2025.findings-acl.511). [ACL Anthology](https://aclanthology.org/2025.findings-acl.511/).
+[^19]: Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmidhuber, "Beyond Outlining: Heterogeneous Recursive Planning for Adaptive Long-form Writing with Language Models," *Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing* (2025): 24678-24714. DOI: [10.18653/v1/2025.emnlp-main.1254](https://doi.org/10.18653/v1/2025.emnlp-main.1254). [ACL Anthology](https://aclanthology.org/2025.emnlp-main.1254/).
