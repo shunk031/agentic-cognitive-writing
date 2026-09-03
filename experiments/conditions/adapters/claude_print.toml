@@ -1,0 +1,6 @@
+platform = "claude-code-replication"
+executable = "claude"
+version_args = ["--version"]
+prompt_mode = "argument"
+first_args = ["--print", "--output-format", "json", "--permission-mode", "dontAsk", "--allowedTools", "Read,Write,Edit", "--model", "{model_id}"]
+continuation_args = ["--print", "--resume", "{session_id}", "--output-format", "json", "--permission-mode", "dontAsk", "--allowedTools", "Read,Write,Edit", "--model", "{model_id}"]

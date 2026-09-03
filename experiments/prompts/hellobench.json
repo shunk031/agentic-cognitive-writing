@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "benchmark_name": "HelloBench",
+  "source_version": "pending-materialization",
+  "materialization_status": "not_materialized",
+  "prompts": [],
+  "manifest_hash": "6b0b0685dde647e1bd7c5d2bc55ac7a5cb893bbdadf4a578c32a498b9b2aa7c3"
+}

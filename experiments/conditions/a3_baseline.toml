@@ -1,0 +1,26 @@
+condition_id = "A3"
+skill = "writing-storm-style"
+analysis_family = "confirmatory"
+
+[package]
+name = "cognitive-writing-baselines"
+
+[plugins]
+paths = ["experiments/baselines"]
+
+[adapters]
+codex_primary = "codex_exec"
+claude_code_replication = "claude_print"
+
+[invocation]
+codex_primary = "$writing-storm-style"
+claude_code_replication = "/cognitive-writing-baselines:writing-storm-style"
+
+[install]
+codex_primary = ["codex plugin marketplace add .", "codex plugin add cognitive-writing-baselines@agentic-cognitive-writing-process"]
+claude_code_replication = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
+
+[trace]
+retrieval = "N/A"
+evidence = "N/A"
+citation = "N/A"

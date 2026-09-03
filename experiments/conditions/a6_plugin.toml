@@ -1,0 +1,26 @@
+condition_id = "A6"
+skill = "cognitive-writing-fixed-order"
+analysis_family = "confirmatory"
+
+[package]
+name = "cognitive-writing-experiments"
+
+[plugins]
+paths = ["plugin", "experiments/plugin"]
+
+[adapters]
+codex_primary = "codex_exec"
+claude_code_replication = "claude_print"
+
+[invocation]
+codex_primary = "$cognitive-writing-fixed-order"
+claude_code_replication = "/cognitive-writing-experiments:cognitive-writing-fixed-order"
+
+[install]
+codex_primary = ["codex plugin marketplace add .", "codex plugin add agentic-cognitive-writing@agentic-cognitive-writing-process", "codex plugin add cognitive-writing-experiments@agentic-cognitive-writing-process"]
+claude_code_replication = ["/plugin marketplace add .", "/plugin install agentic-cognitive-writing@agentic-cognitive-writing-process", "/plugin install cognitive-writing-experiments@agentic-cognitive-writing-process"]
+
+[trace]
+retrieval = "not_applicable"
+evidence = "plugin_recorded"
+citation = "plugin_recorded"

@@ -1,0 +1,26 @@
+condition_id = "A7"
+skill = "writing-cogwriter-style"
+analysis_family = "exploratory"
+
+[package]
+name = "cognitive-writing-baselines"
+
+[plugins]
+paths = ["experiments/baselines"]
+
+[adapters]
+codex_primary = "codex_exec"
+claude_code_replication = "claude_print"
+
+[invocation]
+codex_primary = "$writing-cogwriter-style"
+claude_code_replication = "/cognitive-writing-baselines:writing-cogwriter-style"
+
+[install]
+codex_primary = ["codex plugin marketplace add .", "codex plugin add cognitive-writing-baselines@agentic-cognitive-writing-process"]
+claude_code_replication = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
+
+[trace]
+retrieval = "not_applicable"
+evidence = "plugin_recorded"
+citation = "plugin_recorded"

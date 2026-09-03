@@ -1,0 +1,6 @@
+platform = "codex-primary"
+executable = "codex"
+version_args = ["--version"]
+prompt_mode = "argument"
+first_args = ["exec", "--json", "--ask-for-approval", "never", "--sandbox", "workspace-write", "--model", "{model_id}"]
+continuation_args = ["exec", "resume", "{session_id}", "--json", "--ask-for-approval", "never", "--sandbox", "workspace-write", "--model", "{model_id}"]

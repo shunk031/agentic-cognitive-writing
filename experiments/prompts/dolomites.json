@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "benchmark_name": "DoLoMiTes",
+  "source_version": "pending-materialization",
+  "materialization_status": "not_materialized",
+  "prompts": [],
+  "manifest_hash": "d561a4e3f196b4b8b0cdae3cd4973691c249b7beecf751bc8f668dde3f3a5e7f"
+}
