@@ -13,9 +13,9 @@ cd agentic-cognitive-writing
 
 Before running an experiment, confirm these prerequisites:
 
-- A Docker engine is running.
-- The host has `~/.codex/config.toml` with a working provider configuration. The wrapper mounts the file read-only and does not copy or modify it.
-- A plugin checkout exists before the run. The plugin directory ships in this repository at `plugin/` after the plugin change merges; until then, use a checkout of the plugin branch at the host path passed to `--codex-plugin-root`. Keep that host path under this repository so the wrapper mounts it into the container. The example passes the host-relative path `plugin`, which the wrapper exposes as `/workspace/plugin`.
+- A Docker engine is running (user-supplied: install and start Docker Desktop or an equivalent engine).
+- The host has `~/.codex/config.toml` with a working provider configuration (user-supplied: created by your normal Codex setup or login for your provider). The wrapper mounts the file read-only and does not copy or modify it.
+- A plugin checkout exists before the run. A fresh clone contains the plugin directory at the host path `plugin/`; pass that host path to `--codex-plugin-root`. The wrapper mounts the repository at `/workspace`, so `plugin/` is available inside the container as `/workspace/plugin`. The example passes the host-relative path `plugin`.
 - Codex command sandboxing requires `--security-opt seccomp=unconfined`. The wrapper adds this option automatically, so keep the default security setting for Codex runs.
 
 Create the gitignored env file from the repository root. The value below is a fake placeholder; replace it locally with the provider credential before running an experiment:
