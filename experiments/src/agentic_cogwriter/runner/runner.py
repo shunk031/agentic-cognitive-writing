@@ -230,8 +230,8 @@ class ExperimentRunner:
     def _load_adapters(self) -> dict[str, PlatformAdapter]:
         root = EXPERIMENTS_ROOT / "conditions" / "adapters"
         return {
-            "codex-primary": PlatformAdapter.load(root / "codex_exec.toml"),
-            "claude-code-replication": PlatformAdapter.load(root / "claude_print.toml"),
+            "codex": PlatformAdapter.load(root / "codex_exec.toml"),
+            "claude-code": PlatformAdapter.load(root / "claude_print.toml"),
         }
 
     def run_prompt(
@@ -338,7 +338,7 @@ class ExperimentRunner:
                     f"Installed {platform} CLI version {cli_version!r} does not match "
                     f"pinned version {expected_version!r}"
                 )
-            if platform == "codex-primary":
+            if platform == "codex":
                 staged_files = self._stage_codex_plugin(condition, workspace)
             self._write_json(
                 manifest_path,
@@ -411,7 +411,7 @@ class ExperimentRunner:
                 evidence_hashes.update(
                     self._persist_attempt_evidence(run_dir, attempt_number, result)
                 )
-                if platform == "codex-primary":
+                if platform == "codex":
                     collection = self._collect_codex_sessions(
                         run_dir,
                         attempt_number,
@@ -468,7 +468,7 @@ class ExperimentRunner:
                         "reason": None,
                         "source": "Codex JSONL event stream",
                     }
-                if result is not None and platform == "codex-primary":
+                if result is not None and platform == "codex":
                     try:
                         observed_usage = extract_token_usage(result.stdout)
                     except ExecutionError as exc:
@@ -538,13 +538,11 @@ class ExperimentRunner:
                 cwd=workspace,
                 attempts=attempts,
                 plugin_dirs=(
-                    self._plugin_dirs(condition) if platform != "codex-primary" else ()
+                    self._plugin_dirs(condition) if platform != "codex" else ()
                 ),
                 record_attempt=record_attempt,
                 snapshot_sessions=(
-                    self._snapshot_codex_sessions
-                    if platform == "codex-primary"
-                    else None
+                    self._snapshot_codex_sessions if platform == "codex" else None
                 ),
             )
             output = extract_output(result.stdout)
@@ -732,15 +730,11 @@ class ExperimentRunner:
             return adapter.probe_version(
                 timeout_seconds=self.runtime_config.timeout_seconds
             )
-        key = (
-            "codex_version"
-            if adapter.platform == "codex-primary"
-            else "claude_code_version"
-        )
+        key = "codex_version" if adapter.platform == "codex" else "claude_code_version"
         return str(self.runtime_config.get(key))
 
     def _expected_cli_version(self, platform: str) -> str:
-        key = "codex_version" if platform == "codex-primary" else "claude_code_version"
+        key = "codex_version" if platform == "codex" else "claude_code_version"
         value = self.runtime_config.get(key)
         if not isinstance(value, str) or not value.strip():
             raise ConfigurationError(f"{key} must be a pinned version string")
@@ -845,7 +839,7 @@ class ExperimentRunner:
             raise ManifestError(
                 f"Plugin wrapper {condition.plugin_config} has no {key} invocation"
             )
-        if platform == "codex-primary":
+        if platform == "codex":
             prompt_root = Path(codex_prompt_root or "plugin")
             if prompt_root.is_absolute():
                 raise ManifestError(
@@ -1039,7 +1033,7 @@ class ExperimentRunner:
         spawn_extraction: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
-        if platform == "codex-primary":
+        if platform == "codex":
             if token_accounting_error is not None:
                 token_accounting_status = "unscored"
             elif token_usage is not None:
@@ -1091,7 +1085,7 @@ class ExperimentRunner:
                 "generator_model_id": self.runtime_config.model_for(platform),
                 "frontier_judge_model_id": self.runtime_config.get(
                     "codex_frontier_judge"
-                    if platform == "codex-primary"
+                    if platform == "codex"
                     else "claude_code_frontier_judge"
                 ),
                 "judge_model_ids": {

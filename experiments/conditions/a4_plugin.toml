@@ -10,15 +10,15 @@ name = "agentic-cognitive-writing"
 paths = ["plugin"]
 
 [adapters]
-codex_primary = "codex_exec"
-claude_code_replication = "claude_print"
+codex = "codex_exec"
+claude_code = "claude_print"
 
 [invocation]
-codex_primary = "Read the skill file at {codex_plugin_root}/skills/agentic-cog-writer/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact."
-claude_code_replication = "/agentic-cognitive-writing:agentic-cog-writer"
+codex = "Read the skill file at {codex_plugin_root}/skills/agentic-cog-writer/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact."
+claude_code = "/agentic-cognitive-writing:agentic-cog-writer"
 
 [install]
-claude_code_replication = ["/plugin marketplace add .", "/plugin install agentic-cognitive-writing@agentic-cognitive-writing-process"]
+claude_code = ["/plugin marketplace add .", "/plugin install agentic-cognitive-writing@agentic-cognitive-writing-process"]
 
 [trace]
 retrieval = "not_applicable"

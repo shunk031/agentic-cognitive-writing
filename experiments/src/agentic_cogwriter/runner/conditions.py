@@ -14,7 +14,7 @@ from .errors import ConfigurationError
 from .hashing import sha256_bytes
 
 CONDITION_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2")
-PLATFORMS = ("codex-primary", "claude-code-replication")
+PLATFORMS = ("codex", "claude-code")
 KNOWN_TRACE_EVENT_TYPES = frozenset(
     {
         "process_switch",
@@ -191,7 +191,7 @@ def _load_wrapper(
             raise ConfigurationError(
                 f"Wrapper {wrapper_path} invocation must name skill {skill_name}"
             )
-        if platform == "codex-primary" and (
+        if platform == "codex" and (
             "{codex_plugin_root}" not in invocation_value
             or "SKILL.md" not in invocation_value
         ):
@@ -203,11 +203,10 @@ def _load_wrapper(
     install = wrapper.get("install")
     if not isinstance(install, Mapping):
         raise ConfigurationError(f"Wrapper {wrapper_path} must define an install table")
-    commands = install.get("claude_code_replication")
+    commands = install.get("claude_code")
     if not isinstance(commands, list) or not commands:
         raise ConfigurationError(
-            f"Wrapper {wrapper_path} must define install metadata for "
-            "claude-code-replication"
+            f"Wrapper {wrapper_path} must define install metadata for claude-code"
         )
     if not all(isinstance(command, str) and command.strip() for command in commands):
         raise ConfigurationError(
@@ -220,8 +219,8 @@ def _load_wrapper(
             f"Wrapper {wrapper_path} must define an adapters table"
         )
     expected_adapters = {
-        "codex_primary": "codex_exec",
-        "claude_code_replication": "claude_print",
+        "codex": "codex_exec",
+        "claude_code": "claude_print",
     }
     for key, expected in expected_adapters.items():
         if adapters.get(key) != expected:

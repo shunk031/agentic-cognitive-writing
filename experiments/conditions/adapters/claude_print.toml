@@ -1,4 +1,4 @@
-platform = "claude-code-replication"
+platform = "claude-code"
 executable = "claude"
 version_args = ["--version"]
 prompt_mode = "argument"

@@ -6,7 +6,7 @@ import argparse
 from pathlib import Path
 
 from ..paths import EXPERIMENTS_ROOT
-from .conditions import CONDITION_IDS
+from .conditions import CONDITION_IDS, PLATFORMS
 from .config import RuntimeConfig
 from .manifest import load_prompt_manifest
 from .runner import ExperimentRunner
@@ -25,7 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--platform",
-        choices=("codex-primary", "claude-code-replication"),
+        choices=PLATFORMS,
         required=True,
     )
     parser.add_argument("--config", type=Path, default=None)

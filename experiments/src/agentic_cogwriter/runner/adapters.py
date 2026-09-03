@@ -78,7 +78,7 @@ class PlatformAdapter:
     def validate_templates(self) -> None:
         """Reject adapters that could silently invoke an interactive CLI."""
 
-        if self.platform == "codex-primary":
+        if self.platform == "codex":
             if self.first_args[:1] != ("exec",) or "--json" not in self.first_args:
                 raise ConfigurationError("Codex adapter must use codex exec --json")
             if 'approval_policy="never"' not in self.runtime_args:
@@ -91,7 +91,7 @@ class PlatformAdapter:
                 raise ConfigurationError(
                     "Codex continuation must use codex exec resume"
                 )
-        elif self.platform == "claude-code-replication":
+        elif self.platform == "claude-code":
             if "--print" not in self.first_args:
                 raise ConfigurationError("Claude adapter must use claude --print")
             if "Read,Write,Edit" not in self.first_args:
@@ -159,7 +159,7 @@ class PlatformAdapter:
             values.update(decoding)
         args = [_render(item, values) for item in templates]
         args.extend(_render(item, values) for item in self.runtime_args)
-        if self.platform == "claude-code-replication":
+        if self.platform == "claude-code":
             for plugin_dir in plugin_dirs:
                 args.extend(("--plugin-dir", plugin_dir))
         if self.prompt_mode == "argument":

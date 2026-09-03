@@ -40,12 +40,14 @@ The A1 to A3 wrappers invoke skills from the `cognitive-writing-baselines` packa
 
 The experimenter chooses the platform and condition. Codex uses `codex exec` and Claude Code uses `claude --print`. Before a Codex session starts, the runner stages the selected skill, its references, and any delegated role skills inside the run workspace; the prompt then tells Codex to read `plugin/skills/<skill>/SKILL.md`. Claude Code wrappers use the platform's plugin invocation. The runner sends the assignment and supplied context through one top-level session. Retries reuse the same command policy and do not add content or budget.
 
+The `--platform` values accepted by `experiments/src/agentic_cogwriter/runner/cli.py` are `codex` for Codex runs and `claude-code` for Claude Code runs. Use the platform value that matches the headless command you intend to execute.
+
 ```bash
 uv run --package agentic-cogwriter agentic-cogwriter-runner \
   --manifest experiments/prompts/manifests/writingbench.jsonl \
   --prompt-id writingbench-0001 \
   --condition A1 \
-  --platform codex-primary \
+  --platform codex \
   --codex-plugin-root /path/to/plugin \
   --config /path/to/runtime.json \
   --output-root runs

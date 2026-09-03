@@ -296,7 +296,7 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
     executor = FakeExecutor()
     runner = _runner(tmp_path, executor=executor)
 
-    result = runner.run_prompt(prompt, condition_id="A2", platform="codex-primary")
+    result = runner.run_prompt(prompt, condition_id="A2", platform="codex")
 
     events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
     assert [event["process"] for event in events] == [
@@ -330,7 +330,7 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
     )
     runner = _runner(tmp_path, executor=FakeExecutor())
 
-    result = runner.run_prompt(prompt, condition_id="A3", platform="codex-primary")
+    result = runner.run_prompt(prompt, condition_id="A3", platform="codex")
 
     events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
     assert [event["process"] for event in events] == [
@@ -378,7 +378,7 @@ def test_runner_rejects_output_over_shared_budget(tmp_path):
     )
 
     with pytest.raises(BudgetExceeded):
-        runner.run_prompt(prompt, condition_id="A1", platform="codex-primary")
+        runner.run_prompt(prompt, condition_id="A1", platform="codex")
 
     assert len(runner.executor.calls) == 1
 
@@ -395,7 +395,7 @@ def test_runner_fails_closed_on_retrieval_event(tmp_path):
     runner = _runner(tmp_path, executor=FakeExecutor(retrieval=True))
 
     with pytest.raises(RetrievalViolation):
-        runner.run_prompt(prompt, condition_id="A1", platform="codex-primary")
+        runner.run_prompt(prompt, condition_id="A1", platform="codex")
 
 
 def test_runner_rejects_missing_plugin_trace(tmp_path):
@@ -410,7 +410,7 @@ def test_runner_rejects_missing_plugin_trace(tmp_path):
     runner = _runner(tmp_path, executor=FakeExecutor(write_trace=False))
 
     with pytest.raises(RuntimeError, match="no plugin trace"):
-        runner.run_prompt(prompt, condition_id="A1", platform="codex-primary")
+        runner.run_prompt(prompt, condition_id="A1", platform="codex")
 
 
 def test_missing_trace_preserves_transport_evidence_and_absolute_paths(tmp_path):
@@ -428,11 +428,11 @@ def test_missing_trace_preserves_transport_evidence_and_absolute_paths(tmp_path)
         runner.run_prompt(
             prompt,
             condition_id="A1",
-            platform="codex-primary",
+            platform="codex",
             run_id="missing-trace",
         )
 
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "missing-trace"
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex" / "missing-trace"
     stream = (run_dir / "attempt-001.events.jsonl").read_bytes()
     assert stream
     assert (run_dir / "attempt-001.stdout.raw").read_bytes() == stream
@@ -479,7 +479,7 @@ def test_trace_path_is_derived_from_codex_cwd(tmp_path):
     result = runner.run_prompt(
         prompt,
         condition_id="A1",
-        platform="codex-primary",
+        platform="codex",
         run_id="trace-cwd",
     )
 
@@ -512,11 +512,11 @@ def test_executor_start_failure_preserves_empty_transport_evidence(tmp_path):
         runner.run_prompt(
             prompt,
             condition_id="A1",
-            platform="codex-primary",
+            platform="codex",
             run_id="executor-failure",
         )
 
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "executor-failure"
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex" / "executor-failure"
     for suffix in ("events.jsonl", "stdout.raw", "stderr.raw"):
         assert (run_dir / f"attempt-001.{suffix}").read_bytes() == b""
     manifest = json.loads((run_dir / "run-manifest.json").read_text())
@@ -568,11 +568,11 @@ def test_retry_failure_preserves_each_attempt_transport_evidence(tmp_path):
         runner.run_prompt(
             prompt,
             condition_id="A1",
-            platform="codex-primary",
+            platform="codex",
             run_id="retry-failure",
         )
 
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "retry-failure"
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex" / "retry-failure"
     assert len(executor.calls) == 2
     assert (run_dir / "attempt-001.events.jsonl").read_bytes() == first_stdout
     assert (run_dir / "attempt-002.events.jsonl").read_bytes() == second_stdout
@@ -636,11 +636,11 @@ def test_final_execution_errors_preserve_transport_evidence(tmp_path, result, me
         runner.run_prompt(
             prompt,
             condition_id="A1",
-            platform="codex-primary",
+            platform="codex",
             run_id="final-failure",
         )
 
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "final-failure"
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex" / "final-failure"
     assert (run_dir / "attempt-001.events.jsonl").read_bytes() == result.stdout
     assert (run_dir / "attempt-001.stdout.raw").read_bytes() == result.stdout
     assert (run_dir / "attempt-001.stderr.raw").read_bytes() == result.stderr

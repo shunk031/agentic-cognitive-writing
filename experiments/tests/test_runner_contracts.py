@@ -10,7 +10,8 @@ from pathlib import Path
 import pytest
 
 from agentic_cogwriter.runner.adapters import PlatformAdapter
-from agentic_cogwriter.runner.conditions import load_condition_registry
+from agentic_cogwriter.runner.cli import build_parser
+from agentic_cogwriter.runner.conditions import PLATFORMS, load_condition_registry
 from agentic_cogwriter.runner.config import RuntimeConfig
 from agentic_cogwriter.runner.errors import (
     BudgetExceeded,
@@ -119,6 +120,28 @@ def _plugin_source(tmp_path: Path) -> Path:
     return root
 
 
+def test_platform_identifiers_use_public_codex_and_claude_code_values() -> None:
+    assert PLATFORMS == ("codex", "claude-code")
+    parser = build_parser()
+    common = (
+        "--manifest",
+        "manifest.jsonl",
+        "--prompt-id",
+        "writingbench-0001",
+        "--condition",
+        "A1",
+    )
+    assert parser.parse_args((*common, "--platform", "codex")).platform == "codex"
+    assert (
+        parser.parse_args((*common, "--platform", "claude-code")).platform
+        == "claude-code"
+    )
+    with pytest.raises(SystemExit):
+        parser.parse_args((*common, "--platform", "unsupported-codex"))
+    with pytest.raises(SystemExit):
+        parser.parse_args((*common, "--platform", "unsupported-claude"))
+
+
 def _runner(tmp_path: Path, config: RuntimeConfig | None = None, **kwargs):
     kwargs.setdefault("codex_home", tmp_path / "codex-home")
     return ExperimentRunner(
@@ -172,6 +195,7 @@ def test_adapter_commands_expand_runtime_controls_and_deny_network() -> None:
     }
 
     codex = PlatformAdapter.load(adapter_root / "codex_exec.toml")
+    assert codex.platform == "codex"
     codex_command = codex.build_command(
         model_id="model-test", prompt="prompt", runtime_values=values
     )
@@ -181,6 +205,7 @@ def test_adapter_commands_expand_runtime_controls_and_deny_network() -> None:
     assert codex.control_status_dict["maximum_output_tokens"] == "monitored-only"
 
     claude = PlatformAdapter.load(adapter_root / "claude_print.toml")
+    assert claude.platform == "claude-code"
     claude_command = claude.build_command(
         model_id="model-test", prompt="prompt", runtime_values=values
     )
@@ -239,9 +264,7 @@ def test_codex_prompt_references_workspace_skill_file_without_plugin_install(
         _config(), output_root=tmp_path, codex_plugin_root=Path("/plugin")
     )
 
-    prompt = runner._plugin_prompt(
-        load_condition_registry()["A4"], _prompt(), "codex-primary"
-    )
+    prompt = runner._plugin_prompt(load_condition_registry()["A4"], _prompt(), "codex")
 
     assert "Read the skill file at plugin/skills/agentic-cog-writer/SKILL.md" in prompt
     assert "follow it" in prompt
@@ -254,13 +277,13 @@ def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> No
     runner = ExperimentRunner(_config(), output_root=Path("runs"))
     for condition in load_condition_registry().values():
         wrapper = tomllib.loads(condition.plugin_config.read_text(encoding="utf-8"))
-        invocation = wrapper["invocation"]["codex_primary"]
+        invocation = wrapper["invocation"]["codex"]
 
         assert "{codex_plugin_root}" in invocation
         assert "SKILL.md" in invocation
-        assert "codex_primary" not in wrapper["install"]
+        assert "codex" not in wrapper["install"]
         assert "complete final text itself" in invocation
-        prompt = runner._plugin_prompt(condition, _prompt(), "codex-primary")
+        prompt = runner._plugin_prompt(condition, _prompt(), "codex")
         assert f"plugin/skills/{condition.skill_name}/SKILL.md" in prompt
         assert "complete final text itself" in prompt
 
@@ -301,7 +324,7 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
     )
 
     result = runner.run_prompt(
-        _prompt(), condition_id="A4", platform="codex-primary", run_id="staged"
+        _prompt(), condition_id="A4", platform="codex", run_id="staged"
     )
 
     manifest = json.loads(result.manifest_path.read_text())
@@ -348,7 +371,7 @@ def test_run_records_unique_codex_subagent_spawns(tmp_path: Path) -> None:
     executor = SpawnRolloutExecutor([_result(subagent_spawns=2)])
     runner = _runner(tmp_path, executor=executor)
 
-    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["subagent_spawn_count"] == 2
@@ -395,7 +418,7 @@ def test_collects_only_new_or_changed_codex_rollouts_under_run_dir(
         codex_home=codex_home,
     )
 
-    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
     collected_root = result.run_dir / "sessions" / "attempt-001"
     assert (collected_root / "changed.jsonl").read_text() == "after"
@@ -438,7 +461,7 @@ def test_rollout_status_remains_complete_across_retry_without_new_files(
         codex_home=codex_home,
     )
 
-    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["rollout_collection"]["status"] == "complete"
@@ -511,14 +534,14 @@ def test_runner_preserves_retrieval_evidence_in_artifact_and_manifest(
 
     with pytest.raises(RetrievalViolation) as captured:
         runner.run_prompt(
-            _prompt(), condition_id="A1", platform="codex-primary", run_id="evidence"
+            _prompt(), condition_id="A1", platform="codex", run_id="evidence"
         )
 
     violation = captured.value
     assert violation.matched_pattern == "web_search"
     assert violation.matching_line == rejected.decode().rstrip("\n")
     assert "matched_pattern='web_search'" in str(violation)
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "evidence"
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex" / "evidence"
     artifact = run_dir / "rejected-output.stdout"
     assert artifact.read_bytes() == rejected
     manifest = json.loads((run_dir / "run-manifest.json").read_text())
@@ -773,7 +796,7 @@ def test_run_fails_on_schema_invalid_plugin_trace(tmp_path: Path) -> None:
     runner = _runner(tmp_path, executor=InvalidTraceExecutor([_result()]))
 
     with pytest.raises(TraceValidationError, match="evidence"):
-        runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
 
 class _RetryExecutor:
@@ -840,7 +863,7 @@ def test_retry_reuses_the_returned_session_id(
     executor = _RetryExecutor([first, _result()])
     runner = _runner(tmp_path, _config(retry_policy=1), executor=executor)
 
-    runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+    runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
     assert len(executor.calls) == 2
     assert executor.calls[1][0:3] == ["codex", "exec", "resume"]
@@ -852,7 +875,7 @@ def test_retry_exhaustion_fails_after_fixed_attempt_count(tmp_path: Path) -> Non
     runner = _runner(tmp_path, _config(retry_policy=1), executor=executor)
 
     with pytest.raises(ExecutionError, match="status 1"):
-        runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
     assert len(executor.calls) == 2
 
 
@@ -873,7 +896,7 @@ def test_failed_turn_without_session_preserves_cli_stderr(tmp_path: Path) -> Non
         ExecutionError,
         match=r"return code 1\): workspace is not trusted",
     ):
-        runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
 
 def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
@@ -888,7 +911,7 @@ def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
     runner = _runner(tmp_path, executor=GoalWritingExecutor([_result()]))
 
     with pytest.raises(ExecutionError, match="goals.md"):
-        runner.run_prompt(_prompt(), condition_id="A5", platform="codex-primary")
+        runner.run_prompt(_prompt(), condition_id="A5", platform="codex")
 
 
 def test_runner_rejects_retrieval_in_draft_fallback(tmp_path: Path) -> None:
@@ -902,9 +925,9 @@ def test_runner_rejects_retrieval_in_draft_fallback(tmp_path: Path) -> None:
     runner = _runner(tmp_path, executor=DraftRetrievalExecutor([_result(output="")]))
 
     with pytest.raises(RetrievalViolation, match="retrieval marker"):
-        runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary"
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex"
     manifest = json.loads(
         next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
     )
@@ -932,11 +955,11 @@ def test_runner_rejects_a_summary_when_workspace_draft_is_the_product(
         runner.run_prompt(
             _prompt(),
             condition_id="A3",
-            platform="codex-primary",
+            platform="codex",
             run_id="summary-output",
         )
 
-    run_dir = tmp_path / "WritingBench" / "A3" / "codex-primary" / "summary-output"
+    run_dir = tmp_path / "WritingBench" / "A3" / "codex" / "summary-output"
     assert not (run_dir / "output.raw").exists()
     assert (
         (run_dir / "workspace" / ".writing" / "draft.md")
@@ -981,7 +1004,7 @@ def test_a2_rejects_short_response_against_its_draft(tmp_path: Path) -> None:
     )
 
     with pytest.raises(ExecutionError, match="less than 50% of draft.md"):
-        runner.run_prompt(_prompt(), condition_id="A2", platform="codex-primary")
+        runner.run_prompt(_prompt(), condition_id="A2", platform="codex")
 
 
 def test_runner_does_not_substitute_draft_for_empty_final_response(
@@ -1004,11 +1027,11 @@ def test_runner_does_not_substitute_draft_for_empty_final_response(
         runner.run_prompt(
             _prompt(),
             condition_id="A1",
-            platform="codex-primary",
+            platform="codex",
             run_id="empty-output",
         )
 
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "empty-output"
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex" / "empty-output"
     assert not (run_dir / "output.raw").exists()
 
 
@@ -1016,7 +1039,7 @@ def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> No
     executor = _RetryExecutor([_result()])
     runner = _runner(tmp_path, executor=executor)
 
-    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
     command_prompt = executor.calls[0][-1]
     assert "Use only the assignment and supplied context" in command_prompt
@@ -1050,7 +1073,7 @@ def test_runner_accounts_for_codex_event_usage_and_marks_missing_usage(
     )
     runner = _runner(tmp_path, executor=executor)
 
-    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["budget_used_tokens"] == 15
@@ -1079,20 +1102,18 @@ def test_runner_accounts_for_codex_event_usage_and_marks_missing_usage(
         executor=_RetryExecutor([_result(include_usage=False)]),
     )
     with pytest.raises(ExecutionError, match="token usage"):
-        no_usage_runner.run_prompt(
-            _prompt(), condition_id="A1", platform="codex-primary"
-        )
+        no_usage_runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
     no_usage_manifest = json.loads(
         (
             tmp_path
             / "no-usage"
             / "WritingBench"
             / "A1"
-            / "codex-primary"
+            / "codex"
             / next(
                 path.name
                 for path in (
-                    tmp_path / "no-usage" / "WritingBench" / "A1" / "codex-primary"
+                    tmp_path / "no-usage" / "WritingBench" / "A1" / "codex"
                 ).iterdir()
                 if path.is_dir()
             )
@@ -1131,7 +1152,7 @@ def test_runner_fails_on_over_budget_turn_usage(tmp_path: Path) -> None:
     )
 
     with pytest.raises(BudgetExceeded, match="budget"):
-        runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
 
 def test_non_draft_condition_has_a_nontrivial_product_floor(tmp_path: Path) -> None:
@@ -1151,9 +1172,9 @@ def test_non_draft_condition_has_a_nontrivial_product_floor(tmp_path: Path) -> N
     )
 
     with pytest.raises(ExecutionError, match="completeness floor"):
-        runner.run_prompt(prompt, condition_id="A1", platform="codex-primary")
+        runner.run_prompt(prompt, condition_id="A1", platform="codex")
 
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary"
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex"
     manifest = json.loads(
         next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
     )
@@ -1194,7 +1215,7 @@ def test_a3_production_shaped_trace_and_draft_gate(tmp_path: Path) -> None:
         tmp_path,
         executor=A3Executor([_result(output=output, usage={"output_tokens": 60})]),
     )
-    result = runner.run_prompt(_prompt(), condition_id="A3", platform="codex-primary")
+    result = runner.run_prompt(_prompt(), condition_id="A3", platform="codex")
     events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
     assert [event["process"] for event in events] == [
         "task-decomposition",
@@ -1243,7 +1264,7 @@ def test_a3_rejects_created_goals_file(tmp_path: Path) -> None:
     runner = _runner(tmp_path, executor=A3GoalsExecutor([_result()]))
 
     with pytest.raises(TraceValidationError, match="protected file goals.md"):
-        runner.run_prompt(_prompt(), condition_id="A3", platform="codex-primary")
+        runner.run_prompt(_prompt(), condition_id="A3", platform="codex")
 
 
 def test_spawn_count_without_rollout_is_unscored(tmp_path: Path) -> None:
@@ -1255,9 +1276,9 @@ def test_spawn_count_without_rollout_is_unscored(tmp_path: Path) -> None:
     )
 
     with pytest.raises(ExecutionError, match="rollout"):
-        runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary"
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex"
     manifest = json.loads(
         next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
     )
@@ -1291,7 +1312,7 @@ def test_unreadable_rollout_file_marks_run_unscored(
         runner.run_prompt(
             _prompt(),
             condition_id="A1",
-            platform="codex-primary",
+            platform="codex",
             run_id="unreadable-rollout",
         )
 
@@ -1300,7 +1321,7 @@ def test_unreadable_rollout_file_marks_run_unscored(
             tmp_path
             / "WritingBench"
             / "A1"
-            / "codex-primary"
+            / "codex"
             / "unreadable-rollout"
             / "run-manifest.json"
         ).read_text()

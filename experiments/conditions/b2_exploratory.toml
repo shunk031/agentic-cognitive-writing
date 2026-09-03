@@ -10,15 +10,15 @@ name = "cognitive-writing-baselines"
 paths = ["experiments/baselines"]
 
 [adapters]
-codex_primary = "codex_exec"
-claude_code_replication = "claude_print"
+codex = "codex_exec"
+claude_code = "claude_print"
 
 [invocation]
-codex_primary = "Read the skill file at {codex_plugin_root}/skills/writing-storm-style/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact."
-claude_code_replication = "/cognitive-writing-baselines:writing-storm-style"
+codex = "Read the skill file at {codex_plugin_root}/skills/writing-storm-style/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact."
+claude_code = "/cognitive-writing-baselines:writing-storm-style"
 
 [install]
-claude_code_replication = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
+claude_code = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
 
 [trace]
 retrieval = "N/A"

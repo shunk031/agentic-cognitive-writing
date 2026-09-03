@@ -1,4 +1,4 @@
-platform = "codex-primary"
+platform = "codex"
 executable = "codex"
 version_args = ["--version"]
 prompt_mode = "argument"

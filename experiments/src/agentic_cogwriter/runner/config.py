@@ -224,8 +224,8 @@ class RuntimeConfig:
     def model_for(self, platform: str) -> str:
         """Return the generator model assigned to a platform."""
 
-        if platform == "codex-primary":
+        if platform == "codex":
             return str(self.values["codex_generator_model"])
-        if platform == "claude-code-replication":
+        if platform == "claude-code":
             return str(self.values["claude_code_generator_model"])
         raise ConfigurationError(f"Unknown platform: {platform}")
