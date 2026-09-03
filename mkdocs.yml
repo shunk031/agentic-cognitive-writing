@@ -10,7 +10,7 @@ edit_uri: edit/main/docs/
 
 copyright: Copyright © 2026 Shunsuke Kitada
 
-docs_dir: .docs-site
+docs_dir: .cache/docs-site
 site_dir: site
 
 theme:
