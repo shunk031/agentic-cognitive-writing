@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import hashlib
+import importlib
 import json
 import zipfile
 from pathlib import Path
 from typing import Any
 
+import agentic_cogwriter.prompts.materialize as materialize_module
+import agentic_cogwriter.prompts.recompute_dolomites_split as split_module
 import pytest
-
-import benchmark_prompts.materialize as materialize_module
-import benchmark_prompts.recompute_dolomites_split as split_module
-from benchmark_prompts.materialize import (
+from agentic_cogwriter.prompts.materialize import (
     BENCHMARKS,
     DOLOMITES_DEV_MEMBER,
     DOLOMITES_TEST_MEMBER,
@@ -31,7 +31,7 @@ from benchmark_prompts.materialize import (
     write_immutable,
 )
 
-PROMPTS_ROOT = Path(__file__).resolve().parents[1]
+PROMPTS_ROOT = Path(__file__).resolve().parents[1] / "prompts"
 MANIFEST_DIR = PROMPTS_ROOT / "manifests"
 
 
@@ -66,8 +66,19 @@ def _write_split_archive(
 def test_materializer_uses_the_src_package_layout() -> None:
     package_path = Path(materialize_module.__file__).resolve()
 
-    assert package_path.parent.name == "benchmark_prompts"
-    assert package_path.parent.parent.name == "src"
+    assert package_path.parent.name == "prompts"
+    assert package_path.parent.parent.name == "agentic_cogwriter"
+    assert package_path.parent.parent.parent.name == "src"
+
+
+def test_agentic_cogwriter_is_a_regular_package() -> None:
+    namespace = importlib.import_module("agentic_cogwriter")
+    namespace_path = Path(materialize_module.__file__).resolve().parent.parent
+
+    assert namespace.__file__ is not None
+    assert namespace.__spec__ is not None
+    assert namespace.__spec__.origin == namespace.__file__
+    assert (namespace_path / "__init__.py").exists()
 
 
 def test_hash_is_canonical_and_excludes_hash_field() -> None:

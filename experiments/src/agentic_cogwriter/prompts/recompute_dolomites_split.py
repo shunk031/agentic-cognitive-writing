@@ -6,7 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from benchmark_prompts.materialize import (
+from agentic_cogwriter.prompts.materialize import (
     DEFAULT_CACHE_DIR,
     DOLOMITES_ARCHIVE,
     DOLOMITES_COMMIT,
@@ -18,7 +18,7 @@ from benchmark_prompts.materialize import (
 )
 
 SCRIPT_VERSION = "1.0.0"
-PROMPTS_ROOT = Path(__file__).resolve().parents[2]
+PROMPTS_ROOT = Path(__file__).resolve().parents[3] / "prompts"
 DEFAULT_OUTPUT = PROMPTS_ROOT / "dolomites_split.json"
 
 

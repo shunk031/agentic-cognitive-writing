@@ -13,7 +13,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-PROMPTS_ROOT = Path(__file__).resolve().parents[2]
+EXPERIMENTS_ROOT = Path(__file__).resolve().parents[3]
+PROMPTS_ROOT = EXPERIMENTS_ROOT / "prompts"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_OUTPUT_DIR = PROMPTS_ROOT / "manifests"
 DEFAULT_CACHE_DIR = REPOSITORY_ROOT / ".cache" / "benchmarks"

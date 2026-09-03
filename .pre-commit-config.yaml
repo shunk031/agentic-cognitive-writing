@@ -13,22 +13,22 @@ repos:
     rev: v2.16
     hooks:
       - id: vulture
-        args: [experiments/prompts/src, experiments/prompts/tests]
+        args: [experiments/src, experiments/tests]
 
   - repo: local
     hooks:
       - id: ruff
         name: ruff (uv)
-        entry: uv run ruff check --fix --exit-non-zero-on-fix
+        entry: uv run ruff check --config experiments/pyproject.toml --fix --exit-non-zero-on-fix
         language: system
         types_or: [python, pyi]
       - id: ruff-format
         name: ruff format (uv)
-        entry: uv run ruff format
+        entry: uv run ruff format --config experiments/pyproject.toml
         language: system
         types_or: [python, pyi]
       - id: pytest
         name: pytest (uv)
-        entry: uv run pytest -vsx --cov=benchmark_prompts
+        entry: uv run pytest -vsx --cov=agentic_cogwriter
         language: system
         pass_filenames: false
