@@ -2,9 +2,9 @@
 
 [![Checks](https://github.com/shunk031/agentic-cognitive-writing/actions/workflows/checks.yml/badge.svg)](https://github.com/shunk031/agentic-cognitive-writing/actions/workflows/checks.yml)
 
-`Agentic CogWriter` is a writing assistant that plans, drafts, and revises long-form text the way human writers do. The assistant keeps its goals, drafts, notes, and decision log as files in the directory where you write. Instead of generating text in one pass, the assistant revisits and rewrites its own plans and goals as the draft develops.
+Agentic CogWriter is a writing assistant that plans, drafts, and revises long-form text the way human writers do. The assistant keeps its goals, drafts, notes, and decision log as files in the directory where you write. Instead of generating text in one pass, the assistant revisits and rewrites its own plans and goals as the draft develops.
 
-`Agentic CogWriter` realizes the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600) (1981)[^1] as an agent system. The theory's `Monitor` runs as the orchestrating agent and decides what to work on next. The `Monitor` delegates `Planning`, `Translating`, and `Reviewing` as roles backed by skills and subagents. The task environment and long-term memory live as files in the writing project, and the goal network evolves as composition proceeds. The three roles work as follows:
+Agentic CogWriter realizes the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600) (1981)[^1] as an agent system. The theory's `Monitor` runs as the orchestrating agent and decides what to work on next. The `Monitor` delegates `Planning`, `Translating`, and `Reviewing` as roles backed by skills and subagents. The task environment and long-term memory live as files in the writing project, and the goal network evolves as composition proceeds. The three roles work as follows:
 
 - `Planning` generates and organizes ideas and sets goals.
 - `Translating` turns selected meanings into words.
@@ -14,7 +14,7 @@
 
 Use the GitHub marketplace for the main install path. If the repository is private, GitHub installs require access to it. For development checkouts and personal Codex installs, read [`docs/installation.md`](./docs/installation.md).
 
-### GitHub install for Claude Code
+### Claude Code
 
 1. Add the repository marketplace:
 
@@ -28,7 +28,7 @@ Use the GitHub marketplace for the main install path. If the repository is priva
    /plugin install agentic-cognitive-writing@agentic-cognitive-writing-process
    ```
 
-### GitHub install for Codex
+### Codex
 
 1. From the writing project, add the repository marketplace:
 
@@ -44,7 +44,7 @@ Use the GitHub marketplace for the main install path. If the repository is priva
 
 ## Try it in a writing project
 
-`Agentic CogWriter` turns your task into a file-backed writing session that you can inspect between turns.
+Agentic CogWriter turns your task into a file-backed writing session that you can inspect between turns.
 
 1. Start in the project where the writing should live.
 2. Invoke `/agentic-cognitive-writing:agentic-cog-writer` in Claude Code or `$agentic-cog-writer` in Codex. Describe the topic, audience, reason for writing, and desired result. The main skill asks for the rhetorical problem when needed, then coordinates the writing work through the project files.
@@ -62,7 +62,7 @@ For offline package details, read [`plugin/README.md`](plugin/README.md).
 
 ## How it works
 
-Read [How the theory maps to `Agentic CogWriter`](docs/theory-mapping.md) for the Figure 1 diagram and artifact mapping.
+Read [How the theory maps to Agentic CogWriter](docs/theory-mapping.md) for the Figure 1 diagram and artifact mapping.
 
 ## Research and experiment context
 

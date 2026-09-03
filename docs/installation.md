@@ -1,6 +1,17 @@
 # Install `Agentic CogWriter` for development or personal use
 
-Use this guide to install `Agentic CogWriter` from a development checkout or as a personal Codex install. Use the GitHub marketplace steps in [`README.md`](../README.md) for the main install path.
+Use this guide to install Agentic CogWriter from a development checkout or as a personal Codex install. Use the GitHub marketplace steps in [`README.md`](../README.md) for the main install path.
+
+## Marketplace and manifest layout
+
+Both clients read the same repository marketplace file, and each client loads its own plugin manifest.
+
+| Platform | Marketplace | Plugin manifest |
+| --- | --- | --- |
+| Claude Code | [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json) | [`plugin/.claude-plugin/plugin.json`](../plugin/.claude-plugin/plugin.json) |
+| OpenAI Codex | [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json) | [`plugin/.codex-plugin/plugin.json`](../plugin/.codex-plugin/plugin.json) |
+
+The tested Codex CLI registered and installed the plugin from this shared marketplace file but rejected a root `.codex-plugin/marketplace.json` file.
 
 ## Claude Code development install
 
@@ -25,7 +36,7 @@ Use this guide to install `Agentic CogWriter` from a development checkout or as 
 
 ## Codex development install
 
-1. Change to the repository root. The repository includes [`.agents/plugins/marketplace.json`](../.agents/plugins/marketplace.json) with a local source entry for the [`plugin/`](../plugin/) directory.
+1. Change to the repository root.
 2. Add the local marketplace:
 
    ```bash
