@@ -171,8 +171,8 @@ def _config():
             "runner_commit": "test",
             "generator_and_judge_family_audit": {
                 "generator_families": {
-                    "codex-primary": "gpt",
-                    "claude-code-replication": "claude",
+                    "codex": "gpt",
+                    "claude-code": "claude",
                 }
             },
             "retry_policy": 0,

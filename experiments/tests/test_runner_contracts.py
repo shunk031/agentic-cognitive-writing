@@ -66,8 +66,8 @@ def _runtime_values() -> dict[str, object]:
         "runner_commit": "test",
         "generator_and_judge_family_audit": {
             "generator_families": {
-                "codex-primary": "gpt",
-                "claude-code-replication": "claude",
+                "codex": "gpt",
+                "claude-code": "claude",
             }
         },
         "retry_policy": 0,
@@ -1059,8 +1059,8 @@ def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> No
     assert manifest["models_and_execution"]["judge_verification"] == {
         "declared_audit": {
             "generator_families": {
-                "codex-primary": "gpt",
-                "claude-code-replication": "claude",
+                "codex": "gpt",
+                "claude-code": "claude",
             }
         },
         "family_overlap_audit": "runtime-verified in the score manifest",

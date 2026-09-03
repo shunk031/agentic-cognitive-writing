@@ -22,8 +22,8 @@
   "runner_commit": "REQUIRED_AT_RUNTIME",
   "generator_and_judge_family_audit": {
     "generator_families": {
-      "codex-primary": "REQUIRED_AT_RUNTIME",
-      "claude-code-replication": "REQUIRED_AT_RUNTIME"
+      "codex": "REQUIRED_AT_RUNTIME",
+      "claude-code": "REQUIRED_AT_RUNTIME"
     }
   },
   "retry_policy": "REQUIRED_AT_RUNTIME",
