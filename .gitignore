@@ -3,3 +3,10 @@ experiments/docker/*.env
 experiments/docker/*.pem
 experiments/docker/*.crt
 experiments/docker/*.cer
+
+# Python environment and generated files.
+.cache/
+.pytest_cache/
+.venv/
+__pycache__/
+*.py[cod]

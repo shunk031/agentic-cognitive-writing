@@ -1,0 +1,22 @@
+[project]
+name = "agentic-cognitive-writing"
+version = "0.1.0"
+description = "Reproducible experiments for agentic cognitive writing"
+requires-python = ">=3.11"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "mypy>=2.3.1",
+  "pre-commit>=4.6.2",
+  "pytest>=8.3,<9",
+  "pytest-cov>=7.1.0",
+  "ruff>=0.16.4",
+  "ty>=0.0.75",
+  "vulture>=2.16",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["experiments/prompts/tests"]
+pythonpath = ["."]
+addopts = "-q"
