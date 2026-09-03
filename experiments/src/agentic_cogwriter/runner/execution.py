@@ -122,6 +122,39 @@ def _json_objects(data: bytes) -> list[dict[str, Any]]:
     return objects
 
 
+def extract_token_usage(data: bytes) -> dict[str, int] | None:
+    """Sum generated-token usage reported by Codex turn-completion events."""
+
+    totals = {
+        "output_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 0,
+    }
+    observed = False
+    for value in _json_objects(data):
+        if value.get("type") != "turn.completed":
+            continue
+        usage = value.get("usage")
+        if not isinstance(usage, dict):
+            continue
+        output_tokens = usage.get("output_tokens")
+        reasoning_tokens = usage.get("reasoning_output_tokens", 0)
+        if (
+            isinstance(output_tokens, bool)
+            or not isinstance(output_tokens, int)
+            or output_tokens < 0
+            or isinstance(reasoning_tokens, bool)
+            or not isinstance(reasoning_tokens, int)
+            or reasoning_tokens < 0
+        ):
+            continue
+        totals["output_tokens"] += output_tokens
+        totals["reasoning_output_tokens"] += reasoning_tokens
+        totals["total_tokens"] += output_tokens + reasoning_tokens
+        observed = True
+    return totals if observed else None
+
+
 def extract_output(data: bytes) -> str:
     """Extract the model's final text while leaving transport bytes untouched."""
 

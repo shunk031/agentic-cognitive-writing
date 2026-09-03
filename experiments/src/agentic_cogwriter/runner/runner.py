@@ -26,6 +26,7 @@ from .execution import (
     ExecutionResult,
     SubprocessExecutor,
     extract_output,
+    extract_token_usage,
     reject_retrieval,
 )
 from .hashing import sha256_bytes, sha256_file
@@ -60,10 +61,35 @@ class RunResult:
     run_id: str
 
 
+FINAL_OUTPUT_DRAFT_RATIO = 0.5
+
+
 def _safe_component(value: str) -> str:
     return "".join(
         char if char.isalnum() or char in {"-", "_", "."} else "_" for char in value
     )
+
+
+def _validate_final_product(
+    output: str, draft: str | None, *, condition_id: str
+) -> None:
+    """Require the response channel to carry the complete product text."""
+
+    final_chars = len(output.strip())
+    if not final_chars:
+        raise ExecutionError(
+            f"Condition {condition_id} produced no final response; "
+            "draft.md is not accepted as a substitute"
+        )
+    if draft is None:
+        return
+    draft_chars = len(draft.strip())
+    if final_chars < draft_chars * FINAL_OUTPUT_DRAFT_RATIO:
+        raise ExecutionError(
+            f"Condition {condition_id} final response is less than "
+            f"{FINAL_OUTPUT_DRAFT_RATIO:.0%} of draft.md; "
+            f"final_chars={final_chars}, draft_chars={draft_chars}"
+        )
 
 
 class ExperimentRunner:
@@ -140,6 +166,7 @@ class ExperimentRunner:
         attempts = 0
         evidence_hashes: dict[str, str] = {}
         staged_files: dict[str, str] = {}
+        token_usage: dict[str, int] | None = None
         cli_version = "not_probed"
         stage_prompt_hashes = self._stage_prompt_hashes(condition)
         benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
@@ -166,6 +193,7 @@ class ExperimentRunner:
                 execution_paths=execution_paths,
                 evidence_hashes=evidence_hashes,
                 staged_files=staged_files,
+                token_usage=token_usage,
             ),
         )
 
@@ -196,6 +224,7 @@ class ExperimentRunner:
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
                     staged_files=staged_files,
+                    token_usage=token_usage,
                 ),
             )
             command_prompt = self._plugin_prompt(
@@ -224,17 +253,29 @@ class ExperimentRunner:
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
                     staged_files=staged_files,
+                    token_usage=token_usage,
                 ),
             )
 
             def record_attempt(
                 attempt_number: int, result: ExecutionResult | None
             ) -> None:
-                nonlocal attempts
+                nonlocal attempts, token_usage
                 attempts = max(attempts, attempt_number)
                 evidence_hashes.update(
                     self._persist_attempt_evidence(run_dir, attempt_number, result)
                 )
+                if result is not None:
+                    observed_usage = extract_token_usage(result.stdout)
+                    if observed_usage is not None:
+                        if token_usage is None:
+                            token_usage = {
+                                "output_tokens": 0,
+                                "reasoning_output_tokens": 0,
+                                "total_tokens": 0,
+                            }
+                        for key, value in observed_usage.items():
+                            token_usage[key] += value
 
             result, attempts = self._run_turn_with_retry(
                 adapter,
@@ -248,17 +289,18 @@ class ExperimentRunner:
                 record_attempt=record_attempt,
             )
             output = extract_output(result.stdout)
-            used_draft_fallback = False
-            if not output.strip():
-                draft_path = workspace / ".writing" / "draft.md"
-                if draft_path.is_file():
-                    output = draft_path.read_text(encoding="utf-8")
-                    used_draft_fallback = True
-            reject_retrieval(
-                output.encode("utf-8"),
-                b"",
-                scan_artifact_text=used_draft_fallback,
-            )
+            draft_path = workspace / ".writing" / "draft.md"
+            draft = None
+            if draft_path.is_file():
+                try:
+                    draft = draft_path.read_text(encoding="utf-8")
+                except (OSError, UnicodeError) as exc:
+                    raise ExecutionError(
+                        f"Cannot read workspace draft {draft_path}: {exc}"
+                    ) from exc
+                reject_retrieval(draft.encode("utf-8"), b"", scan_artifact_text=True)
+            reject_retrieval(output.encode("utf-8"), b"")
+            _validate_final_product(output, draft, condition_id=condition.condition_id)
             budget.consume(
                 self.runtime_config.count_output_units(output), stage="final_output"
             )
@@ -316,6 +358,7 @@ class ExperimentRunner:
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
                     staged_files=staged_files,
+                    token_usage=token_usage,
                 ),
             )
             return RunResult(
@@ -374,6 +417,7 @@ class ExperimentRunner:
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
                     staged_files=staged_files,
+                    token_usage=token_usage,
                     failure=failure,
                 ),
             )
@@ -676,6 +720,7 @@ class ExperimentRunner:
         execution_paths: Mapping[str, str] | None = None,
         evidence_hashes: Mapping[str, str] | None = None,
         staged_files: Mapping[str, str] | None = None,
+        token_usage: Mapping[str, int] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         manifest: dict[str, Any] = {
@@ -788,7 +833,27 @@ class ExperimentRunner:
                 ),
             },
             "attempts": attempts,
-            "budget_used_tokens": budget.used if budget else 0,
+            "budget_used_tokens": (
+                token_usage.get("total_tokens") if token_usage is not None else None
+            ),
+            "output_units_used": budget.used if budget else 0,
+            "token_accounting": {
+                "status": "observed" if token_usage is not None else "monitored-only",
+                "source": "Codex turn.completed usage",
+                "output_tokens": (
+                    token_usage.get("output_tokens")
+                    if token_usage is not None
+                    else None
+                ),
+                "reasoning_output_tokens": (
+                    token_usage.get("reasoning_output_tokens")
+                    if token_usage is not None
+                    else None
+                ),
+                "total_tokens": (
+                    token_usage.get("total_tokens") if token_usage is not None else None
+                ),
+            },
             "execution_paths": dict(execution_paths or {}),
             "evidence_hashes": dict(evidence_hashes or {}),
             "staged_files": dict(staged_files or {}),

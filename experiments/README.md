@@ -64,8 +64,11 @@ Each successful run contains the following files:
 - `.writing/trace/process.jsonl` contains the selected skill's trace events.
 - `checksums.json` contains SHA-256 hashes for the run artifacts when the run reaches artifact finalization.
 - `attempt-NNN.events.jsonl`, `attempt-NNN.stdout.raw`, and `attempt-NNN.stderr.raw` preserve each transport stream; failed runs retain them for diagnosis.
+- `run-manifest.json` reports `budget_used_tokens` from Codex `turn.completed` usage when available; otherwise the field is `null` and `token_accounting.status` is `monitored-only`. `output_units_used` records the configured post-hoc output-budget measurement.
 
 The run manifest records absolute execution paths and SHA-256 hashes for the staged skill files. The runner also copies `.writing/goals.md` and `.writing/draft.md` when the selected skill creates them. It does not rewrite claims or paragraph boundaries during normalization.
+
+The final response must contain the complete product text. The runner does not substitute `.writing/draft.md`; a response shorter than half of an existing draft fails the run for inspection.
 
 ## Policy enforcement
 

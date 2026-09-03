@@ -16,6 +16,7 @@ from agentic_cogwriter.runner.errors import ExecutionError, RetrievalViolation
 from agentic_cogwriter.runner.execution import (
     ExecutionResult,
     _retrieval_marker,
+    extract_token_usage,
     reject_retrieval,
 )
 from agentic_cogwriter.runner.manifest import PromptRecord
@@ -219,6 +220,7 @@ def test_codex_prompt_references_workspace_skill_file_without_plugin_install(
     assert "follow it" in prompt
     assert "$agentic-cog-writer" not in prompt
     assert "codex plugin add" not in prompt
+    assert "complete final text itself" in prompt
 
 
 def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> None:
@@ -230,8 +232,10 @@ def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> No
         assert "{codex_plugin_root}" in invocation
         assert "SKILL.md" in invocation
         assert wrapper["install"]["codex_primary"] == []
+        assert "complete final text itself" in invocation
         prompt = runner._plugin_prompt(condition, _prompt(), "codex-primary")
         assert f"plugin/skills/{condition.skill_name}/SKILL.md" in prompt
+        assert "complete final text itself" in prompt
 
 
 def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
@@ -472,16 +476,23 @@ class _RetryExecutor:
 
 
 def _result(
-    *, output: str = "final", returncode: int = 0, timed_out: bool = False
+    *,
+    output: str = "final",
+    returncode: int = 0,
+    timed_out: bool = False,
+    usage: dict[str, int] | None = None,
 ) -> ExecutionResult:
     payload = {
         "type": "item.completed",
         "item": {"type": "agent_message", "text": output},
         "thread_id": "session-1",
     }
+    stream = [payload]
+    if usage is not None:
+        stream.append({"type": "turn.completed", "usage": usage})
     return ExecutionResult(
         returncode=returncode,
-        stdout=(json.dumps(payload) + "\n").encode(),
+        stdout=("\n".join(json.dumps(event) for event in stream) + "\n").encode(),
         stderr=b"failed" if returncode else b"",
         session_id="session-1",
         timed_out=timed_out,
@@ -562,6 +573,69 @@ def test_runner_rejects_retrieval_in_draft_fallback(tmp_path: Path) -> None:
         runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
 
 
+def test_runner_rejects_a_summary_when_workspace_draft_is_the_product(
+    tmp_path: Path,
+) -> None:
+    class SummaryExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds):
+            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+            draft = cwd / ".writing" / "draft.md"
+            draft.write_text("draft " * 100)
+            return result
+
+    runner = _runner(
+        tmp_path,
+        executor=SummaryExecutor([_result(output="short summary")]),
+    )
+
+    with pytest.raises(ExecutionError, match="less than 50% of draft.md"):
+        runner.run_prompt(
+            _prompt(),
+            condition_id="A1",
+            platform="codex-primary",
+            run_id="summary-output",
+        )
+
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "summary-output"
+    assert not (run_dir / "output.raw").exists()
+    assert (
+        (run_dir / "workspace" / ".writing" / "draft.md")
+        .read_text()
+        .startswith("draft")
+    )
+    manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    assert manifest["failure"]["type"] == "ExecutionError"
+    assert manifest["failure"]["message"].endswith("final_chars=13, draft_chars=599")
+
+
+def test_runner_does_not_substitute_draft_for_empty_final_response(
+    tmp_path: Path,
+) -> None:
+    class EmptyResponseExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds):
+            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+            (cwd / ".writing" / "draft.md").write_text("complete draft")
+            return result
+
+    runner = _runner(
+        tmp_path,
+        executor=EmptyResponseExecutor([_result(output="")]),
+    )
+
+    with pytest.raises(
+        ExecutionError, match="draft.md is not accepted as a substitute"
+    ):
+        runner.run_prompt(
+            _prompt(),
+            condition_id="A1",
+            platform="codex-primary",
+            run_id="empty-output",
+        )
+
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex-primary" / "empty-output"
+    assert not (run_dir / "output.raw").exists()
+
+
 def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> None:
     executor = _RetryExecutor([_result()])
     runner = _runner(tmp_path, executor=executor)
@@ -582,6 +656,62 @@ def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> No
         "declared_audit": "test",
         "family_overlap_audit": "declared-unverified pending judge module",
         "judge_families": "declared-unverified pending judge module",
+    }
+
+
+def test_runner_accounts_for_codex_event_usage_and_marks_missing_usage(
+    tmp_path: Path,
+) -> None:
+    executor = _RetryExecutor(
+        [
+            _result(
+                usage={
+                    "output_tokens": 11,
+                    "reasoning_output_tokens": 4,
+                }
+            )
+        ]
+    )
+    runner = _runner(tmp_path, executor=executor)
+
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex-primary")
+
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["budget_used_tokens"] == 15
+    assert manifest["token_accounting"] == {
+        "status": "observed",
+        "source": "Codex turn.completed usage",
+        "output_tokens": 11,
+        "reasoning_output_tokens": 4,
+        "total_tokens": 15,
+    }
+    usage_stream = (
+        b'{"type":"turn.completed","usage":{"output_tokens":2}}\n'
+        b'{"type":"turn.completed","usage":{"output_tokens":3,'
+        b'"reasoning_output_tokens":1}}\n'
+    )
+    assert extract_token_usage(usage_stream) == {
+        "output_tokens": 5,
+        "reasoning_output_tokens": 1,
+        "total_tokens": 6,
+    }
+    assert extract_token_usage(b'{"type":"item.completed"}\n') is None
+
+    no_usage_runner = _runner(
+        tmp_path / "no-usage",
+        executor=_RetryExecutor([_result()]),
+    )
+    no_usage_result = no_usage_runner.run_prompt(
+        _prompt(), condition_id="A1", platform="codex-primary"
+    )
+    no_usage_manifest = json.loads(no_usage_result.manifest_path.read_text())
+    assert no_usage_manifest["budget_used_tokens"] is None
+    assert no_usage_manifest["token_accounting"] == {
+        "status": "monitored-only",
+        "source": "Codex turn.completed usage",
+        "output_tokens": None,
+        "reasoning_output_tokens": None,
+        "total_tokens": None,
     }
 
 

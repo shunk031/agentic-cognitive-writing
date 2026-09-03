@@ -13,7 +13,7 @@ codex_primary = "codex_exec"
 claude_code_replication = "claude_print"
 
 [invocation]
-codex_primary = "Read the skill file at {codex_plugin_root}/skills/writing-writehere-style/SKILL.md and follow it."
+codex_primary = "Read the skill file at {codex_plugin_root}/skills/writing-writehere-style/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact."
 claude_code_replication = "/cognitive-writing-baselines:writing-writehere-style"
 
 [install]
