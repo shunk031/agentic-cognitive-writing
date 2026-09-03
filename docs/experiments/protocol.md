@@ -26,7 +26,7 @@ The repository includes these experiments-plugin files:
 
 This protocol tests whether the theory-based recursive process improves writing and whether its traces show the predicted goal dynamics.
 
-Flower and Hayes' *A Cognitive Process Theory of Writing*[^1] describes writing as a set of thinking processes that a writer coordinates during composing. The processes are hierarchical and can be embedded in one another. Writing is goal-directed, and writers can create, develop, and regenerate goals as they learn from the act of writing. The Monitor coordinates Planning, Translating, and Reviewing.
+Flower and Hayes' *A Cognitive Process Theory of Writing*[^1] describes writing as a set of thinking processes that a writer coordinates during composing. The processes are hierarchical and can be embedded in one another. Writing is goal-directed, and writers can create, develop, and regenerate goals as they learn from the act of writing. The `Monitor` coordinates `Planning`, `Translating`, and `Reviewing`.
 
 The protocol tests that account as an agent process rather than treating the account as a claim about human inner experience.
 
@@ -34,7 +34,7 @@ The core experiment has six conditions, identified as A1 through A6, and the pro
 
 The research questions (RQ) are:
 
-1. **RQ1.** Does the theory-based recursive Monitor and goal-network architecture, a hierarchy of writing goals that the Monitor coordinates during drafting, produce better writing than a single-shot system and linear-stage pipelines?
+1. **RQ1.** Does the theory-based recursive `Monitor` and goal-network architecture, a hierarchy of writing goals that the `Monitor` coordinates during drafting, produce better writing than a single-shot system and linear-stage pipelines?
 2. **RQ2.** Which components matter? We compare the full plugin with ablation conditions A5 and A6, each of which removes or constrains one component of the full design.
 3. **RQ3.** Do agent traces, treated as operational analogues of thinking-aloud protocols rather than direct transcripts of private state, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? The RQ3 analysis includes Flower and Hayes' prediction that the quantity and quality of middle-range goals, which connect broad rhetorical aims to local writing actions, relate to writing quality.
 4. **RQ4.** Does the mapping replicate across platforms?
@@ -59,11 +59,11 @@ All enabled conditions share the same skill-and-subagent framework and the plugi
 
 **A3 trace and evidence handling.** The skill writes the five stage events to the shared trace path. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The no-retrieval adaptation follows the benchmark evidence in [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) and the platform evidence in [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md).
 
-**Proposed-plugin condition A4.** Condition A4 invokes Agentic CogWriter through the documented `agentic-cog-writer` skill from the `agentic-cognitive-writing` plugin. The Monitor selects among the Planning, Translating, and Reviewing processes. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. The runner uses the plugin's append-only `.writing/trace/process.jsonl` and goal-network files and records the normal loop under the shared trace contract.
+**Proposed-plugin condition A4.** Condition A4 invokes Agentic CogWriter through the documented `agentic-cog-writer` skill from the `agentic-cognitive-writing` plugin. The `Monitor` selects among the `Planning`, `Translating`, and `Reviewing` processes. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. Generate and Evaluate may interrupt another process. The runner uses the plugin's append-only `.writing/trace/process.jsonl` and goal-network files and records the normal loop under the shared trace contract.
 
-**No-goal-network condition A5.** Condition A5 invokes `cognitive-writing-no-goal-network` from the `cognitive-writing-experiments` plugin. The variant uses the assignment as one implicit objective. The Monitor chooses Planning, Translating, or Reviewing without a hierarchical goal network. The runner leaves any existing `.writing/goals.md` untouched, records process switches under the shared trace contract, and records no goal events or goal fields.
+**No-goal-network condition A5.** Condition A5 invokes `cognitive-writing-no-goal-network` from the `cognitive-writing-experiments` plugin. The variant uses the assignment as one implicit objective. The `Monitor` chooses `Planning`, `Translating`, or `Reviewing` without a hierarchical goal network. The runner leaves any existing `.writing/goals.md` untouched, records process switches under the shared trace contract, and records no goal events or goal fields.
 
-**Fixed-order condition A6.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin. The variant runs Planning, Translating, then Reviewing in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, the Monitor returns to the prescribed order. The runner keeps the ordinary goal network, records process switches and goal events under the shared trace contract, and adds no variant-specific fields.
+**Fixed-order condition A6.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin. The variant runs `Planning`, `Translating`, then `Reviewing` in each pass. Generate and Evaluate may still interrupt when new information or a conflict requires it. After an interruption, the `Monitor` returns to the prescribed order. The runner keeps the ordinary goal network, records process switches and goal events under the shared trace contract, and adds no variant-specific fields.
 
 **CogWriter-style exploratory condition B1.** Condition B1 invokes `writing-cogwriter-style` as an adaptation of CogWriter [^18], not as a reproduction of that system. The skill uses a structured plan and plan revision, parallel segment generation, length review, a fixed top-level order, and no goal network. The skill writes its observable actions to the shared trace path.
 
@@ -77,7 +77,7 @@ The plugin mapping implements the theory in *A Cognitive Process Theory of Writi
 
 The user owns rhetorical intent, factual authority, final wording, and publication.
 
-The Monitor owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/agentic-cog-writer/SKILL.md`](../../plugin/skills/agentic-cog-writer/SKILL.md).
+The `Monitor` owns process coordination. The Planner, Translator, and Reviewer act within their documented delegated roles. See [`plugin/skills/agentic-cog-writer/SKILL.md`](../../plugin/skills/agentic-cog-writer/SKILL.md).
 
 ## Primary benchmarks and data gates
 
@@ -151,7 +151,7 @@ The runner will version the command flags in experiments/conditions/ when the ru
 
 Before running A1, A2, or A3, the runner loads the corresponding skill from the planned `experiments/baselines/` package. Before running A4, A5, or A6, the runner installs the main `agentic-cognitive-writing` plugin. Before running A5 or A6, the runner also installs the `cognitive-writing-experiments` plugin. The main plugin provides the role skills and agents that the experiment plugin uses. The runner records both plugin commits in the run manifest.
 
-The runner starts one top-level session per condition and prompt. In Codex A4 to A6 runs, the plugin may request native Codex subagents as documented. The plugin must not spawn nested `codex exec` children. If native delegation is unavailable and the Monitor performs a delegated role itself, the trace must record that fallback.
+The runner starts one top-level session per condition and prompt. In Codex A4 to A6 runs, the plugin may request native Codex subagents as documented. The plugin must not spawn nested `codex exec` children. If native delegation is unavailable and the `Monitor` performs a delegated role itself, the trace must record that fallback.
 
 ### Generator and judge separation
 
