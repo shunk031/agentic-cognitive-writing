@@ -13,11 +13,11 @@ codex_primary = "codex_exec"
 claude_code_replication = "claude_print"
 
 [invocation]
-codex_primary = "$cognitive-writing-no-goal-network"
+codex_primary = "Read the skill file at {codex_plugin_root}/skills/cognitive-writing-no-goal-network/SKILL.md and follow it."
 claude_code_replication = "/cognitive-writing-experiments:cognitive-writing-no-goal-network"
 
 [install]
-codex_primary = ["codex plugin marketplace add .", "codex plugin add agentic-cognitive-writing@agentic-cognitive-writing-process", "codex plugin add cognitive-writing-experiments@agentic-cognitive-writing-process"]
+codex_primary = []
 claude_code_replication = ["/plugin marketplace add .", "/plugin install agentic-cognitive-writing@agentic-cognitive-writing-process", "/plugin install cognitive-writing-experiments@agentic-cognitive-writing-process"]
 
 [trace]

@@ -157,15 +157,29 @@ def _load_wrapper(
             raise ConfigurationError(
                 f"Wrapper {wrapper_path} invocation must name skill {skill_name}"
             )
+        if platform == "codex-primary" and (
+            "{codex_plugin_root}" not in invocation_value
+            or "SKILL.md" not in invocation_value
+        ):
+            raise ConfigurationError(
+                f"Wrapper {wrapper_path} Codex invocation must reference "
+                "{codex_plugin_root}/skills/<skill>/SKILL.md"
+            )
 
     install = wrapper.get("install")
     if not isinstance(install, Mapping):
         raise ConfigurationError(f"Wrapper {wrapper_path} must define an install table")
     for platform in PLATFORMS:
         commands = install.get(platform.replace("-", "_"))
-        if not isinstance(commands, list) or not commands:
+        if not isinstance(commands, list) or (
+            platform != "codex-primary" and not commands
+        ):
             raise ConfigurationError(
-                f"Wrapper {wrapper_path} must define install commands for {platform}"
+                f"Wrapper {wrapper_path} must define install metadata for {platform}"
+            )
+        if platform == "codex-primary" and commands:
+            raise ConfigurationError(
+                f"Wrapper {wrapper_path} must not install Codex plugins"
             )
         if not all(
             isinstance(command, str) and command.strip() for command in commands

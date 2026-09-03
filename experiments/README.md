@@ -38,7 +38,7 @@ The A1 to A3 wrappers invoke skills from the `cognitive-writing-baselines` packa
 
 ## Run one condition and prompt
 
-The experimenter chooses the platform and condition. Codex uses `codex exec` and Claude Code uses `claude --print`. Each wrapper supplies its package skill invocation, and the runner sends the assignment and supplied context through one top-level session. Retries reuse the same command policy and do not add content or budget.
+The experimenter chooses the platform and condition. Codex uses `codex exec` and Claude Code uses `claude --print`. Codex wrappers tell the session to read `skills/<skill>/SKILL.md` from the configured plugin root, while Claude Code wrappers use the platform's plugin invocation. The runner sends the assignment and supplied context through one top-level session. Retries reuse the same command policy and do not add content or budget.
 
 ```bash
 uv run --package agentic-cogwriter agentic-cogwriter-runner \
@@ -46,11 +46,12 @@ uv run --package agentic-cogwriter agentic-cogwriter-runner \
   --prompt-id writingbench-0001 \
   --condition A1 \
   --platform codex-primary \
+  --codex-plugin-root /path/to/plugin \
   --config /path/to/runtime.json \
   --output-root runs
 ```
 
-The default tracked configuration stops in preflight. Before a run, make the package and plugin directories listed by the selected wrapper available. The wrapper metadata names installation commands and skill invocations for each condition.
+The default tracked configuration stops in preflight. For Codex, set `--codex-plugin-root` to a directory containing `skills/<skill>/SKILL.md`. A container run that mounts the plugin at `/plugin` must pass `--codex-plugin-root /plugin`. Codex reads the referenced file during the session and does not install a plugin into `CODEX_HOME`. When the option is omitted, the runner selects a matching skill file from the wrapper's configured plugin paths. Claude Code uses the plugin directories listed by its selected wrapper.
 
 ## Inspect artifacts
 

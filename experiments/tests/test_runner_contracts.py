@@ -4,11 +4,13 @@ import hashlib
 import json
 import shutil
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
 
 from agentic_cogwriter.runner.adapters import PlatformAdapter
+from agentic_cogwriter.runner.conditions import load_condition_registry
 from agentic_cogwriter.runner.config import RuntimeConfig
 from agentic_cogwriter.runner.errors import ExecutionError, RetrievalViolation
 from agentic_cogwriter.runner.execution import (
@@ -169,6 +171,36 @@ def test_codex_adapter_argv_passes_installed_cli_parser() -> None:
             text=True,
         )
         assert parser_probe.returncode == 0, parser_probe.stderr
+
+
+def test_codex_prompt_references_configured_skill_file_without_plugin_install(
+    tmp_path: Path,
+) -> None:
+    runner = ExperimentRunner(
+        _config(), output_root=tmp_path, codex_plugin_root=Path("/plugin")
+    )
+
+    prompt = runner._plugin_prompt(
+        load_condition_registry()["A4"], _prompt(), "codex-primary"
+    )
+
+    assert "Read the skill file at /plugin/skills/agentic-cog-writer/SKILL.md" in prompt
+    assert "follow it" in prompt
+    assert "$agentic-cog-writer" not in prompt
+    assert "codex plugin add" not in prompt
+
+
+def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> None:
+    runner = ExperimentRunner(_config(), output_root=Path("runs"))
+    for condition in load_condition_registry().values():
+        wrapper = tomllib.loads(condition.plugin_config.read_text(encoding="utf-8"))
+        invocation = wrapper["invocation"]["codex_primary"]
+
+        assert "{codex_plugin_root}" in invocation
+        assert "SKILL.md" in invocation
+        assert wrapper["install"]["codex_primary"] == []
+        prompt = runner._plugin_prompt(condition, _prompt(), "codex-primary")
+        assert f"/skills/{condition.skill_name}/SKILL.md" in prompt
 
 
 @pytest.mark.parametrize(

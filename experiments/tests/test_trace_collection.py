@@ -26,18 +26,21 @@ class FakeExecutor:
                 (
                     skill_name
                     for skill_name in (
-                        "$writing-single-shot",
-                        "$writing-linear",
-                        "$writing-storm-style",
+                        "writing-single-shot",
+                        "writing-linear",
+                        "writing-storm-style",
                     )
-                    if any(skill_name in argument for argument in command)
+                    if any(
+                        f"/skills/{skill_name}/SKILL.md" in argument
+                        for argument in command
+                    )
                 ),
                 "",
             )
             stages = {
-                "$writing-single-shot": ("single_shot",),
-                "$writing-linear": ("pre_write", "write", "re_write"),
-                "$writing-storm-style": (
+                "writing-single-shot": ("single_shot",),
+                "writing-linear": ("pre_write", "write", "re_write"),
+                "writing-storm-style": (
                     "perspective_discovery",
                     "simulated_qa",
                     "outline",
@@ -169,7 +172,10 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
     assert [event["stage_id"] for event in events] == ["pre_write", "write", "re_write"]
     assert len(executor.calls) == 1
     assert "resume" not in executor.calls[0][0]
-    assert any("$writing-linear" in argument for argument in executor.calls[0][0])
+    assert any(
+        "/skills/writing-linear/SKILL.md" in argument
+        for argument in executor.calls[0][0]
+    )
     assert (
         result.trace_path.relative_to(result.run_dir).as_posix()
         == ".writing/trace/process.jsonl"

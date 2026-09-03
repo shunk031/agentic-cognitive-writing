@@ -30,6 +30,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--config", type=Path, default=None)
     parser.add_argument("--output-root", type=Path, default=Path("runs"))
+    parser.add_argument(
+        "--codex-plugin-root",
+        type=Path,
+        default=None,
+        help=(
+            "Filesystem root containing skills/<skill>/SKILL.md for Codex; "
+            "defaults to the selected wrapper's configured plugin paths"
+        ),
+    )
     return parser
 
 
@@ -42,6 +51,7 @@ def main(argv: list[str] | None = None) -> int:
     runner = ExperimentRunner(
         RuntimeConfig.load(config_path),
         output_root=args.output_root,
+        codex_plugin_root=args.codex_plugin_root,
     )
     result = runner.run_prompt(
         manifest.get(args.prompt_id),

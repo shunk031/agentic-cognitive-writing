@@ -13,11 +13,11 @@ codex_primary = "codex_exec"
 claude_code_replication = "claude_print"
 
 [invocation]
-codex_primary = "$writing-single-shot"
+codex_primary = "Read the skill file at {codex_plugin_root}/skills/writing-single-shot/SKILL.md and follow it."
 claude_code_replication = "/cognitive-writing-baselines:writing-single-shot"
 
 [install]
-codex_primary = ["codex plugin marketplace add .", "codex plugin add cognitive-writing-baselines@agentic-cognitive-writing-process"]
+codex_primary = []
 claude_code_replication = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
 
 [trace]

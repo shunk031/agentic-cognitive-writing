@@ -76,12 +76,14 @@ class ExperimentRunner:
         executor: Executor | None = None,
         condition_registry: dict[str, ConditionSpec] | None = None,
         adapters: dict[str, PlatformAdapter] | None = None,
+        codex_plugin_root: Path | None = None,
     ):
         self.runtime_config = runtime_config
         self.output_root = output_root
         self.executor = executor or SubprocessExecutor()
         self.conditions = condition_registry or load_condition_registry()
         self.adapters = adapters or self._load_adapters()
+        self.codex_plugin_root = codex_plugin_root
 
     def _load_adapters(self) -> dict[str, PlatformAdapter]:
         root = EXPERIMENTS_ROOT / "conditions" / "adapters"
@@ -186,7 +188,9 @@ class ExperimentRunner:
                 prompt=command_prompt,
                 cwd=workspace,
                 attempts=attempts,
-                plugin_dirs=self._plugin_dirs(condition),
+                plugin_dirs=(
+                    self._plugin_dirs(condition) if platform != "codex-primary" else ()
+                ),
             )
             output = extract_output(result.stdout)
             used_draft_fallback = False
@@ -388,6 +392,15 @@ class ExperimentRunner:
             raise ManifestError(
                 f"Plugin wrapper {condition.plugin_config} has no {key} invocation"
             )
+        if platform == "codex-primary":
+            invocation = invocation.replace(
+                "{codex_plugin_root}", str(self._codex_plugin_root(condition))
+            )
+            if "{codex_plugin_root}" in invocation:
+                raise ManifestError(
+                    f"Plugin wrapper {condition.plugin_config} has an unresolved "
+                    "Codex plugin root"
+                )
         constraints = json.dumps(
             prompt.requested_output_constraints,
             ensure_ascii=False,
@@ -447,19 +460,42 @@ class ExperimentRunner:
             )
         return wrapper
 
-    def _plugin_dirs(self, condition: ConditionSpec) -> tuple[str, ...]:
-        paths = self._wrapper(condition).get("plugins", {}).get("paths", [])
+    def _configured_plugin_paths(self, condition: ConditionSpec) -> tuple[Path, ...]:
+        wrapper = self._wrapper(condition)
+        plugins = wrapper.get("plugins")
+        paths = plugins.get("paths") if isinstance(plugins, Mapping) else None
         if not isinstance(paths, list) or not all(
-            isinstance(path, str) for path in paths
+            isinstance(path, str) and path.strip() for path in paths
         ):
             raise ManifestError(
                 "Plugin wrapper plugins.paths must be a list of strings"
             )
         return tuple(
-            str((REPOSITORY_ROOT / path).resolve())
+            (REPOSITORY_ROOT / path).resolve()
             if not Path(path).is_absolute()
-            else str(Path(path).resolve())
+            else Path(path).resolve()
             for path in paths
+        )
+
+    def _plugin_dirs(self, condition: ConditionSpec) -> tuple[str, ...]:
+        """Return configured plugin directories for Claude's plugin loader."""
+
+        return tuple(str(path) for path in self._configured_plugin_paths(condition))
+
+    def _codex_plugin_root(self, condition: ConditionSpec) -> Path:
+        """Select the root containing the skill file referenced by Codex."""
+
+        if self.codex_plugin_root is not None:
+            return self.codex_plugin_root.resolve()
+        paths = self._configured_plugin_paths(condition)
+        skill_relative = Path("skills") / condition.skill_name / "SKILL.md"
+        for path in paths:
+            if (path / skill_relative).is_file():
+                return path
+        if paths:
+            return paths[0]
+        raise ManifestError(
+            f"Plugin wrapper {condition.plugin_config} has no configured plugin path"
         )
 
     def _manifest(
