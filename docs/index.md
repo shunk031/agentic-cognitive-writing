@@ -26,9 +26,9 @@ Agentic CogWriter is a writing assistant that **plans, drafts, reviews, and adap
 
 <div class="acw-process-strip">
   <span><strong>Planning</strong></span>
-  <span class="acw-process-arrow">↔</span>
+  <span class="acw-process-separator">·</span>
   <span><strong>Translating</strong></span>
-  <span class="acw-process-arrow">↔</span>
+  <span class="acw-process-separator">·</span>
   <span><strong>Reviewing</strong></span>
   <span class="acw-process-note">coordinated by the <strong>Monitor</strong></span>
 </div>
@@ -45,19 +45,49 @@ Agentic CogWriter operationalizes the writing model proposed by Flower and Hayes
 
 Each process updates a shared writing state containing the draft, goals, memory, and process history. That evolving state then informs the next decision by the `Monitor`.
 
-```mermaid
-flowchart LR
-    monitor["Monitor"]
-    planning["Planning"]
-    translating["Translating"]
-    reviewing["Reviewing"]
-    state["Writing state<br/>draft · goals · memory · history"]
+<div class="acw-process-map">
+  <div class="acw-map-monitor">
+    <span class="acw-map-kicker">CONTROL</span>
+    <strong>Monitor</strong>
+    <span>selects the next writing process</span>
+  </div>
 
-    monitor --> planning --> state
-    monitor --> translating --> state
-    monitor --> reviewing --> state
-    state --> monitor
-```
+  <div class="acw-map-flow">
+    <span class="acw-map-arrow">↓</span>
+    <span>delegates</span>
+  </div>
+
+  <div class="acw-map-processes">
+    <div class="acw-map-process">
+      <strong>Planning</strong>
+      <span>generate and organize goals</span>
+    </div>
+    <div class="acw-map-process">
+      <strong>Translating</strong>
+      <span>turn meanings and goals into text</span>
+    </div>
+    <div class="acw-map-process">
+      <strong>Reviewing</strong>
+      <span>evaluate and revise the document</span>
+    </div>
+  </div>
+
+  <div class="acw-map-flow">
+    <span class="acw-map-arrow">↓</span>
+    <span>updates</span>
+  </div>
+
+  <div class="acw-map-state">
+    <span class="acw-map-kicker">EVOLVING STATE</span>
+    <strong>Writing state</strong>
+    <span>draft · goals · memory · process history</span>
+  </div>
+
+  <div class="acw-map-feedback">
+    <span class="acw-map-feedback-arrow">↺</span>
+    <span>state informs the next <strong>Monitor</strong> decision</span>
+  </div>
+</div>
 
 <div class="acw-architecture-link" markdown>
 
