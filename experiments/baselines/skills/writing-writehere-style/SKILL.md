@@ -7,7 +7,7 @@ description: "Exploratory WriteHERE-style adaptation. Build and persist a typed 
 
 Run an exploratory adaptation of WriteHERE[^1]'s heterogeneous recursive planning. The coordinator dynamically builds a directed acyclic task graph in project files and interleaves recursive decomposition with execution. The root task is a composition task for the complete document. Child tasks may be reasoning tasks for requirements, structure, consistency, or argument development and composition tasks for section or document writing. The coordinator schedules ready tasks by graph state and dependency order, then persists the graph after every change.
 
-The adaptation changes task structure only. The coordinator must not adapt by selecting among named writing processes, replacing a task graph with a fixed process pipeline, or using a meta-process chooser. The distinction is the experimental point: WriteHERE-style adaptation concerns what tasks exist and how they depend on one another, not which writing workflow is selected.
+The adaptation changes task structure only. The coordinator must not adapt by selecting among named writing processes, replacing a task graph with a fixed process pipeline, or using a meta-process chooser. The distinction is the experimental point: WriteHERE[^1]-style adaptation concerns what tasks exist and how they depend on one another, not which writing workflow is selected.
 
 ## Equal-information and no-retrieval policy
 
