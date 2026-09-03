@@ -2,51 +2,74 @@
 title: Overview
 description: A cognitive-process architecture for agentic long-form writing.
 icon: lucide/pen-line
+hide:
+  - toc
 ---
+
+<div class="acw-hero" markdown>
+
+<span class="acw-eyebrow">AGENTIC COGNITIVE WRITING</span>
 
 # Agentic CogWriter
 
-**Agentic CogWriter** is a writing assistant that plans, drafts, and revises long-form text through an explicit cognitive-process architecture.
+<div class="acw-tagline">Long-form writing as an adaptive cognitive process.</div>
 
-Instead of producing a document in a single pass, Agentic CogWriter maintains the evolving state of the writing process—including the rhetorical problem, current draft, writing goals, memory, and process history—and repeatedly decides what kind of writing operation should happen next.
+Agentic CogWriter is a writing assistant that **plans, drafts, reviews, and adapts** while maintaining the evolving state of a long-form writing project. Instead of committing to a fixed generation pipeline, it repeatedly decides what writing operation should happen next.
+
+<div class="acw-hero-actions" markdown>
 
 [Get started](installation.md){ .md-button .md-button--primary }
+[How it works](theory-mapping.md){ .md-button }
 [View on GitHub](https://github.com/shunk031/agentic-cognitive-writing){ .md-button }
 
-## Cognitive writing as an agent process
+</div>
 
-Agentic CogWriter operationalizes the writing model proposed by Flower and Hayes in *A Cognitive Process Theory of Writing*.
+<div class="acw-process-strip">
+  <span><strong>Planning</strong></span>
+  <span class="acw-process-arrow">↔</span>
+  <span><strong>Translating</strong></span>
+  <span class="acw-process-arrow">↔</span>
+  <span><strong>Reviewing</strong></span>
+  <span class="acw-process-note">coordinated by the <strong>Monitor</strong></span>
+</div>
 
-A `Monitor` coordinates three writing processes:
+</div>
 
-- **Planning** generates and organizes ideas and develops writing goals.
-- **Translating** turns selected meanings and goals into text.
-- **Reviewing** evaluates the evolving document and revises it.
+<div class="acw-architecture" markdown>
 
-The processes are not executed as a fixed pipeline. The `Monitor` can move between them as composition develops, while the system maintains an evolving hierarchical goal network.
+<span class="acw-eyebrow">COGNITIVE PROCESS ARCHITECTURE</span>
+
+## The Monitor decides what happens next
+
+Agentic CogWriter operationalizes the writing model proposed by Flower and Hayes in *A Cognitive Process Theory of Writing*. A `Monitor` coordinates `Planning`, `Translating`, and `Reviewing` rather than executing them as a fixed sequence.
+
+Each process updates a shared writing state containing the draft, goals, memory, and process history. That evolving state then informs the next decision by the `Monitor`.
 
 ```mermaid
 flowchart LR
-    state["Writing state<br/>draft · goals · memory · history"]
     monitor["Monitor"]
     planning["Planning"]
     translating["Translating"]
     reviewing["Reviewing"]
+    state["Writing state<br/>draft · goals · memory · history"]
 
-    state <--> monitor
-    monitor <--> planning
-    monitor <--> translating
-    monitor <--> reviewing
-    planning --> state
-    translating --> state
-    reviewing --> state
+    monitor --> planning --> state
+    monitor --> translating --> state
+    monitor --> reviewing --> state
+    state --> monitor
 ```
 
-[Read how the cognitive model maps to the system →](theory-mapping.md)
+<div class="acw-architecture-link" markdown>
+
+[Read the cognitive-process mapping →](theory-mapping.md)
+
+</div>
+
+</div>
 
 ## Explore the project
 
-<div class="grid cards" markdown>
+<div class="grid cards acw-project-grid" markdown>
 
 -   :material-rocket-launch: **Get started**
 
