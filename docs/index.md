@@ -36,68 +36,59 @@ Agentic CogWriter is a writing assistant that **plans, drafts, reviews, and adap
 </div>
 
 <div class="acw-architecture">
+  <span class="acw-eyebrow">COGNITIVE PROCESS ARCHITECTURE</span>
+  <h2>The Monitor decides what happens next</h2>
+  <p>Agentic CogWriter operationalizes the writing model proposed by Flower and Hayes in <em>A Cognitive Process Theory of Writing</em>. A <code>Monitor</code> coordinates <code>Planning</code>, <code>Translating</code>, and <code>Reviewing</code> rather than executing them as a fixed sequence.</p>
+  <p>Each process updates a shared writing state containing the draft, goals, memory, and process history. That evolving state then informs the next decision by the <code>Monitor</code>.</p>
 
-<div class="acw-architecture-copy" markdown>
-
-<span class="acw-eyebrow">COGNITIVE PROCESS ARCHITECTURE</span>
-
-## The Monitor decides what happens next
-
-Agentic CogWriter operationalizes the writing model proposed by Flower and Hayes in *A Cognitive Process Theory of Writing*. A `Monitor` coordinates `Planning`, `Translating`, and `Reviewing` rather than executing them as a fixed sequence.
-
-Each process updates a shared writing state containing the draft, goals, memory, and process history. That evolving state then informs the next decision by the `Monitor`.
-
-</div>
-
-<div class="acw-process-map">
-  <div class="acw-map-monitor">
-    <span class="acw-map-kicker">CONTROL</span>
-    <strong>Monitor</strong>
-    <span>selects the next writing process</span>
-  </div>
-
-  <div class="acw-map-flow">
-    <span class="acw-map-arrow">↓</span>
-    <span>delegates</span>
-  </div>
-
-  <div class="acw-map-processes">
-    <div class="acw-map-process">
-      <strong>Planning</strong>
-      <span>generate and organize goals</span>
+  <div class="acw-process-map">
+    <div class="acw-map-monitor">
+      <span class="acw-map-kicker">CONTROL</span>
+      <strong>Monitor</strong>
+      <span>selects the next writing process</span>
     </div>
-    <div class="acw-map-process">
-      <strong>Translating</strong>
-      <span>turn meanings and goals into text</span>
+
+    <div class="acw-map-flow">
+      <span class="acw-map-arrow">↓</span>
+      <span>delegates</span>
     </div>
-    <div class="acw-map-process">
-      <strong>Reviewing</strong>
-      <span>evaluate and revise the document</span>
+
+    <div class="acw-map-processes">
+      <div class="acw-map-process">
+        <strong>Planning</strong>
+        <span>generate and organize goals</span>
+      </div>
+      <div class="acw-map-process">
+        <strong>Translating</strong>
+        <span>turn meanings and goals into text</span>
+      </div>
+      <div class="acw-map-process">
+        <strong>Reviewing</strong>
+        <span>evaluate and revise the document</span>
+      </div>
     </div>
-  </div>
 
-  <div class="acw-map-flow">
-    <span class="acw-map-arrow">↓</span>
-    <span>updates</span>
-  </div>
+    <div class="acw-map-flow">
+      <span class="acw-map-arrow">↓</span>
+      <span>updates</span>
+    </div>
 
-  <div class="acw-map-state">
-    <span class="acw-map-kicker">EVOLVING STATE</span>
-    <strong>Writing state</strong>
-    <span>draft · goals · memory · process history</span>
-  </div>
+    <div class="acw-map-state">
+      <span class="acw-map-kicker">EVOLVING STATE</span>
+      <strong>Writing state</strong>
+      <span>draft · goals · memory · process history</span>
+    </div>
 
-  <div class="acw-map-feedback">
-    <span class="acw-map-feedback-arrow">↺</span>
-    <span>state informs the next <strong>Monitor</strong> decision</span>
+    <div class="acw-map-feedback">
+      <span class="acw-map-feedback-arrow">↺</span>
+      <span>state informs the next <strong>Monitor</strong> decision</span>
+    </div>
   </div>
 </div>
 
 <div class="acw-architecture-link" markdown>
 
 [Read the cognitive-process mapping →](theory-mapping.md)
-
-</div>
 
 </div>
 
