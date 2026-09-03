@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import io
+import os
 import runpy
 import subprocess
 import sys
@@ -18,6 +19,31 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_SLUG = "shunk031/agentic-cognitive-writing"
 ACTUAL_PLUGIN_COMMIT = "d0d6da7d0607f9d54b35973c2cf4e10d779a15dd"
 MAIN_SKILL = "agentic-cog-writer"
+
+
+def _clean_git_environment() -> dict[str, str]:
+    return {
+        name: value
+        for name, value in os.environ.items()
+        if not name.startswith("GIT_")
+    }
+
+
+def _run_git(
+    *arguments: str,
+    cwd: Path,
+    check: bool,
+    capture_output: bool = False,
+    text: bool = False,
+) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", *arguments],
+        check=check,
+        cwd=cwd,
+        env=_clean_git_environment(),
+        capture_output=capture_output,
+        text=text,
+    )
 
 
 class CheckDocConsistencyTests(unittest.TestCase):
@@ -49,109 +75,79 @@ class CheckDocConsistencyTests(unittest.TestCase):
         (self.root / "README.md").write_text(text, encoding="utf-8")
 
     def _add_origin_remote(self) -> None:
-        subprocess.run(
-            ["git", "init", "--quiet", str(self.root)],
-            check=True,
-        )
-        subprocess.run(
-            [
-                "git",
-                "-C",
-                str(self.root),
-                "config",
-                "remote.origin.url",
-                f"https://github.com/{REPOSITORY_SLUG}.git",
-            ],
+        _run_git("init", "--quiet", cwd=self.root, check=True)
+        _run_git(
+            "config",
+            "remote.origin.url",
+            f"https://github.com/{REPOSITORY_SLUG}.git",
+            cwd=self.root,
             check=True,
         )
 
     def _initialize_committed_git_fixture(self) -> None:
-        subprocess.run(
-            ["git", "init", "--quiet", str(self.root)],
+        _run_git("init", "--quiet", cwd=self.root, check=True)
+        _run_git("symbolic-ref", "HEAD", "refs/heads/main", cwd=self.root, check=True)
+        _run_git(
+            "config",
+            "remote.origin.url",
+            f"https://github.com/{REPOSITORY_SLUG}.git",
+            cwd=self.root,
             check=True,
         )
-        subprocess.run(
-            ["git", "-C", str(self.root), "symbolic-ref", "HEAD", "refs/heads/main"],
-            check=True,
-        )
-        subprocess.run(
-            [
-                "git",
-                "-C",
-                str(self.root),
-                "config",
-                "remote.origin.url",
-                f"https://github.com/{REPOSITORY_SLUG}.git",
-            ],
-            check=True,
-        )
-        subprocess.run(
-            ["git", "-C", str(self.root), "config", "user.name", "Checker Test"],
-            check=True,
-        )
-        subprocess.run(
-            [
-                "git",
-                "-C",
-                str(self.root),
-                "config",
-                "user.email",
-                "checker-test@example.invalid",
-            ],
+        _run_git("config", "user.name", "Checker Test", cwd=self.root, check=True)
+        _run_git(
+            "config",
+            "user.email",
+            "checker-test@example.invalid",
+            cwd=self.root,
             check=True,
         )
 
     def _commit_fixture(self, message: str) -> str:
-        subprocess.run(["git", "-C", str(self.root), "add", "."], check=True)
-        subprocess.run(
-            ["git", "-C", str(self.root), "commit", "--quiet", "-m", message],
-            check=True,
-        )
-        return subprocess.run(
-            ["git", "-C", str(self.root), "rev-parse", "HEAD"],
+        _run_git("add", ".", cwd=self.root, check=True)
+        _run_git("commit", "--quiet", "-m", message, cwd=self.root, check=True)
+        return _run_git(
+            "rev-parse",
+            "HEAD",
+            cwd=self.root,
             check=True,
             capture_output=True,
             text=True,
         ).stdout.strip()
 
     def _checkout_new_branch(self, branch: str) -> None:
-        subprocess.run(
-            ["git", "-C", str(self.root), "checkout", "--quiet", "-b", branch],
-            check=True,
-        )
+        _run_git("checkout", "--quiet", "-b", branch, cwd=self.root, check=True)
 
     def _update_ref(self, ref: str, revision: str) -> None:
-        subprocess.run(
-            ["git", "-C", str(self.root), "update-ref", ref, revision],
-            check=True,
-        )
+        _run_git("update-ref", ref, revision, cwd=self.root, check=True)
 
     def _run_checker(self) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [sys.executable, str(CHECKER), "--repo-root", str(self.root)],
             check=False,
+            cwd=self.root,
+            env=_clean_git_environment(),
             capture_output=True,
             text=True,
         )
 
     def _materialize_actual_plugin_tree(self) -> None:
         ref = f"{ACTUAL_PLUGIN_COMMIT}^{{commit}}"
-        object_check = subprocess.run(
-            ["git", "-C", str(REPOSITORY_ROOT), "cat-file", "-e", ref],
+        object_check = _run_git(
+            "cat-file",
+            "-e",
+            ref,
+            cwd=REPOSITORY_ROOT,
             check=False,
             capture_output=True,
             text=True,
         )
         if object_check.returncode != 0:
-            fetch = subprocess.run(
-                [
-                    "git",
-                    "-C",
-                    str(REPOSITORY_ROOT),
-                    "fetch",
-                    "origin",
-                    "feat/cognitive-writing-plugin",
-                ],
+            fetch = _run_git(
+                "fetch",
+                "origin",
+                "feat/cognitive-writing-plugin",
+                cwd=REPOSITORY_ROOT,
                 check=False,
                 capture_output=True,
                 text=True,
@@ -162,18 +158,14 @@ class CheckDocConsistencyTests(unittest.TestCase):
                 fetch.stdout + fetch.stderr,
             )
 
-        archive = subprocess.run(
-            [
-                "git",
-                "-C",
-                str(REPOSITORY_ROOT),
-                "archive",
-                "--format=tar",
-                ACTUAL_PLUGIN_COMMIT,
-                "README.md",
-                "plugin",
-                "experiments/plugin",
-            ],
+        archive = _run_git(
+            "archive",
+            "--format=tar",
+            ACTUAL_PLUGIN_COMMIT,
+            "README.md",
+            "plugin",
+            "experiments/plugin",
+            cwd=REPOSITORY_ROOT,
             check=False,
             capture_output=True,
         )
