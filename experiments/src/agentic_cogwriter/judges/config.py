@@ -10,7 +10,7 @@ from typing import Any, Literal, cast
 
 from .errors import JudgeConfigurationError
 
-JudgeTask = Literal["pointwise", "pairwise"]
+JudgeTask = Literal["pointwise", "pairwise", "native-pointwise"]
 JudgeFamily = Literal["claude_frontier", "gpt_frontier", "open_evaluator"]
 JudgeRole = Literal["frontier", "open_evaluator"]
 
@@ -151,7 +151,7 @@ def _base_family(value: str) -> str:
 
 @dataclass(frozen=True)
 class JudgeConfig:
-    """Immutable settings for one pointwise or pairwise judge."""
+    """Immutable settings for one generic or benchmark-native judge."""
 
     task: JudgeTask
     model: str
@@ -191,8 +191,10 @@ class JudgeConfig:
         """Validate a mapping whose decoding fields mirror runtime configuration."""
 
         task_value = values.get("task", "pointwise")
-        if task_value not in {"pointwise", "pairwise"}:
-            raise JudgeConfigurationError("task must be 'pointwise' or 'pairwise'")
+        if task_value not in {"pointwise", "pairwise", "native-pointwise"}:
+            raise JudgeConfigurationError(
+                "task must be 'pointwise', 'pairwise', or 'native-pointwise'"
+            )
         task: JudgeTask = task_value
 
         model = _required_string(values, "model")

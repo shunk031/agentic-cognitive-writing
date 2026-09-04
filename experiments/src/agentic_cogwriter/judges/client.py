@@ -26,9 +26,13 @@ from pydantic_ai.providers.openai import OpenAIProvider
 
 from .config import JudgeConfig
 from .errors import JudgeConfigurationError, JudgeTransportError, JudgeValidationError
-from .validation import PairwiseJudgeRecord, PointwiseJudgeRecord
+from .validation import (
+    NativePointwiseJudgeRecord,
+    PairwiseJudgeRecord,
+    PointwiseJudgeRecord,
+)
 
-JudgeOutput = PointwiseJudgeRecord | PairwiseJudgeRecord
+JudgeOutput = PointwiseJudgeRecord | PairwiseJudgeRecord | NativePointwiseJudgeRecord
 
 
 @dataclass(frozen=True)
@@ -133,6 +137,7 @@ class OpenAICompatibleClient:
         output_type: type[JudgeOutput],
         output_validator: Callable[[JudgeOutput], None] | None = None,
         prompt_cache_key: str = "judge-default",
+        system_prompt: str | None = None,
     ) -> JudgeResponse:
         """Run one pydantic-ai request with bounded structured-output retries."""
 
@@ -163,7 +168,8 @@ class OpenAICompatibleClient:
             # Templates carry the JSON contract; parse their text without
             # output tools.
             output_type=PromptedOutput(output_type, template=False),
-            system_prompt="Return only the JSON object requested by the user.",
+            system_prompt=system_prompt
+            or "Return only the JSON object requested by the user.",
             model_settings=settings,
             retries=self.config.max_retries,
         )
@@ -179,27 +185,44 @@ class OpenAICompatibleClient:
 
         # Reassemble at the existing transport seam so judged text stays in the
         # cached block while rubric and format text follows it.
-        format_marker = "\nReturn this JSON shape"
+        native_format_marker = "\n** Output format **"
+        native_criteria_marker = "\n** Criteria **"
         prompt_content: str | list[UserContent] = prompt
         if (
             self.config.model.casefold().startswith("gpt-5.6")
-            and format_marker in prompt
+            and native_criteria_marker in prompt
         ):
-            prefix, format_suffix = prompt.rsplit(format_marker, 1)
-            rubric_marker = (
-                "\nUse the five dimensions below."
-                if "\nUse the five dimensions below." in prefix
-                else "\nReturn exactly one valid JSON object."
-            )
-            data_marker = "\n[Prompt ID]"
-            if rubric_marker in prefix and data_marker in prefix:
-                static_prefix, rubric_and_data = prefix.split(rubric_marker, 1)
-                rubric, judged_data = rubric_and_data.split(data_marker, 1)
-                prefix = static_prefix + data_marker + judged_data
-                suffix = rubric_marker + rubric + format_marker + format_suffix
-            else:
-                suffix = format_marker + format_suffix
-            prompt_content = [prefix, CachePoint(), suffix]
+            # The native template already puts the shared query and response
+            # before the criterion, so the existing cache seam only moves the
+            # criterion and output instructions into the second content block.
+            shared, criterion_suffix = prompt.split(native_criteria_marker, 1)
+            if native_format_marker in criterion_suffix:
+                prompt_content = [
+                    shared,
+                    CachePoint(),
+                    native_criteria_marker + criterion_suffix,
+                ]
+        else:
+            format_marker = "\nReturn this JSON shape"
+            if (
+                self.config.model.casefold().startswith("gpt-5.6")
+                and format_marker in prompt
+            ):
+                prefix, format_suffix = prompt.rsplit(format_marker, 1)
+                rubric_marker = (
+                    "\nUse the five dimensions below."
+                    if "\nUse the five dimensions below." in prefix
+                    else "\nReturn exactly one valid JSON object."
+                )
+                data_marker = "\n[Prompt ID]"
+                if rubric_marker in prefix and data_marker in prefix:
+                    static_prefix, rubric_and_data = prefix.split(rubric_marker, 1)
+                    rubric, judged_data = rubric_and_data.split(data_marker, 1)
+                    prefix = static_prefix + data_marker + judged_data
+                    suffix = rubric_marker + rubric + format_marker + format_suffix
+                else:
+                    suffix = format_marker + format_suffix
+                prompt_content = [prefix, CachePoint(), suffix]
         result = agent.run_sync(prompt_content)
 
         reported_model_id = result.response.model_name
@@ -208,7 +231,10 @@ class OpenAICompatibleClient:
         content = _response_content(result.response)
         usage = _usage(result.usage)
         output = result.output
-        if not isinstance(output, (PointwiseJudgeRecord, PairwiseJudgeRecord)):
+        if not isinstance(
+            output,
+            (PointwiseJudgeRecord, PairwiseJudgeRecord, NativePointwiseJudgeRecord),
+        ):
             raise JudgeTransportError("Judge response has an unexpected output type")
         return JudgeResponse(
             content=content,

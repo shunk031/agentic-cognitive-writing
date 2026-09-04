@@ -19,7 +19,7 @@ def _without(mapping: Mapping[str, Any], key: str) -> dict[str, Any]:
 
 @dataclass(frozen=True)
 class PromptRecord:
-    """One immutable benchmark prompt and its requested output constraints."""
+    """One immutable benchmark prompt and its optional native judge payload."""
 
     prompt_id: str
     benchmark_name: str
@@ -30,6 +30,7 @@ class PromptRecord:
     supplied_context: str = ""
     source_reference: str | None = None
     manifest_hash: str | None = None
+    native_payload: Any | None = None
 
     @classmethod
     def from_mapping(
@@ -81,6 +82,8 @@ class PromptRecord:
             requested_output_constraints=row["requested_output_constraints"],
             row_hash=row["hash"],
             manifest_hash=manifest_hash,
+            # Preserve benchmark-native criteria through the existing prompt row.
+            native_payload=row.get("native_payload"),
         )
 
     @property

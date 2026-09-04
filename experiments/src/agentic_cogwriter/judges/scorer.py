@@ -12,7 +12,12 @@ from pydantic_ai.models import Model
 
 from ..runner.hashing import sha256_bytes, sha256_file, sha256_json
 from .config import JudgeConfig
-from .engine import JudgeResult, judge_pairwise, judge_pointwise
+from .engine import (
+    JudgeResult,
+    judge_native_pointwise,
+    judge_pairwise,
+    judge_pointwise,
+)
 from .errors import RunArtifactError
 
 
@@ -31,6 +36,7 @@ class RunArtifacts:
     blind_condition_id: str
     generator_model_id: str
     generator_family: str
+    native_payload: Any | None
 
 
 @dataclass(frozen=True)
@@ -72,6 +78,39 @@ def _generator_evidence(manifest: Mapping[str, Any]) -> tuple[str, str]:
         models.get("generator_model_family"), "generator_model_family"
     )
     return model_id, family
+
+
+def _native_criteria(run: RunArtifacts) -> tuple[dict[str, str], ...]:
+    """Validate the WritingBench checklist before making any native calls."""
+
+    inputs = run.manifest.get("inputs")
+    benchmark_name = (
+        inputs.get("benchmark_name") if isinstance(inputs, Mapping) else None
+    )
+    if benchmark_name != "WritingBench":
+        raise RunArtifactError("native-pointwise scoring requires a WritingBench run")
+    payload = run.native_payload
+    required = {
+        "name",
+        "criteria_description",
+        "1-2",
+        "3-4",
+        "5-6",
+        "7-8",
+        "9-10",
+    }
+    if not isinstance(payload, list) or not payload:
+        raise RunArtifactError("WritingBench run manifest needs a native checklist")
+    criteria: list[dict[str, str]] = []
+    for criterion in payload:
+        if not isinstance(criterion, Mapping) or set(criterion) != required:
+            raise RunArtifactError("WritingBench native checklist has invalid fields")
+        if not all(
+            isinstance(value, str) and value.strip() for value in criterion.values()
+        ):
+            raise RunArtifactError("WritingBench native checklist has invalid values")
+        criteria.append({key: criterion[key] for key in required})
+    return tuple(criteria)
 
 
 def _prompt_parts(path: Path) -> tuple[str, str]:
@@ -150,6 +189,7 @@ def load_run_artifacts(run_dir: Path) -> RunArtifacts:
         blind_condition_id=blind_condition_id(condition_id),
         generator_model_id=generator_model_id,
         generator_family=generator_family,
+        native_payload=inputs.get("native_payload"),
     )
 
 
@@ -340,6 +380,43 @@ def score_run(
             (first,),
             (result,),
             _family_audit(config, result, first),
+        )
+
+    if config.task == "native-pointwise":
+        if compare_run_dir is not None:
+            raise RunArtifactError(
+                "native-pointwise scoring does not accept a comparison run"
+            )
+        # Keep one criterion per request and defer aggregation to the analysis
+        # stage, matching the native benchmark's checklist-wise contract.
+        results = tuple(
+            judge_native_pointwise(
+                config,
+                assignment=first.assignment,
+                output=first.output,
+                criterion=criterion,
+                prompt_id=first.prompt_id,
+                blind_condition_id=first.blind_condition_id,
+                platform=first.platform,
+                model=model,
+                prompt_cache_key=prompt_cache_key,
+            )
+            for criterion in _native_criteria(first)
+        )
+        family_audit = _family_audit(config, results[0], first)
+        for result in results[1:]:
+            if result.judge_identity != results[0].judge_identity:
+                raise RunArtifactError(
+                    "native-pointwise criteria reported different judge model "
+                    "identities"
+                )
+            _family_audit(config, result, first)
+        return _write_score_artifacts(
+            (output_path or first.run_dir / "scores.jsonl").resolve(),
+            config,
+            (first,),
+            results,
+            family_audit,
         )
 
     if compare_run_dir is None:

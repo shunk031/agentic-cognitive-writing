@@ -237,15 +237,35 @@ def test_acquire_rejects_cached_and_downloaded_hash_mismatches(
 
 def test_build_writingbench_maps_index_and_query(tmp_path: Path) -> None:
     source = tmp_path / "writingbench.jsonl"
-    source.write_text('{"index": 7, "query": "Write a memo."}\n')
+    source.write_text(
+        json.dumps(
+            {
+                "index": 7,
+                "query": "Write a memo.",
+                "checklist": [
+                    {
+                        "name": "Structure",
+                        "criteria_description": "Use a clear structure.",
+                        "1-2": "Missing.",
+                        "3-4": "Weak.",
+                        "5-6": "Adequate.",
+                        "7-8": "Strong.",
+                        "9-10": "Excellent.",
+                    }
+                ],
+            }
+        )
+        + "\n"
+    )
 
     rows = build_writingbench(source)
 
     assert len(rows) == 1
     assert rows[0]["prompt_id"] == "writingbench-0007"
+    assert rows[0]["native_payload"][0]["name"] == "Structure"
     validate_manifest_row(rows[0])
 
-    source.write_text('{"index": "seven", "query": "Write."}\n')
+    source.write_text('{"index": "seven", "query": "Write.", "checklist": []}\n')
     with pytest.raises(TypeError, match="index must be an integer"):
         build_writingbench(source)
 
@@ -355,7 +375,12 @@ def test_checked_in_manifests_have_schema_hashes_and_expected_counts() -> None:
         assert len(rows) == expected_count
         assert len({row["prompt_id"] for row in rows}) == expected_count
         for row in rows:
-            assert set(row) == set(MANIFEST_FIELDS)
+            expected_fields = (
+                set(MANIFEST_FIELDS) | {"native_payload"}
+                if benchmark_name == "writingbench"
+                else set(MANIFEST_FIELDS)
+            )
+            assert set(row) == expected_fields
             validate_manifest_row(row)
             assert row["hash"] == hash_manifest_row(row)
 
@@ -372,8 +397,10 @@ def test_checked_in_provenance_records_pins_license_and_split() -> None:
     provenance = json.loads((PROMPTS_ROOT / "provenance.json").read_text())
 
     assert set(provenance["benchmarks"]) == set(BENCHMARKS)
-    assert provenance["benchmarks"]["writingbench"]["source_version"].endswith(
-        "@9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad"
+    writingbench = provenance["benchmarks"]["writingbench"]
+    assert "@9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad" in writingbench["source_version"]
+    assert writingbench["source_blob_sha1"] == (
+        "e6cd82aabed6fa845f0a28cd2114daad59c012b9"
     )
     assert provenance["benchmarks"]["hellobench"]["source_version"].endswith(
         "@92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57"
