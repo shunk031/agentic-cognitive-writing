@@ -12,13 +12,17 @@ from .errors import JudgeConfigurationError
 
 
 def _prompt_body(text: str) -> str:
-    """Remove only leading comment header lines from a prompt file."""
+    """Remove only the leading HTML comment header block from a prompt file."""
 
     lines = text.splitlines()
     index = 0
-    while index < len(lines) and (
-        not lines[index].strip() or lines[index].startswith("#")
-    ):
+    if lines and lines[0].strip() == "<!--":
+        while index < len(lines) and lines[index].strip() != "-->":
+            index += 1
+        if index == len(lines):
+            raise JudgeConfigurationError(
+                "Judge prompt template header comment is unterminated"
+            )
         index += 1
     body = "\n".join(lines[index:])
     if text.endswith("\n"):

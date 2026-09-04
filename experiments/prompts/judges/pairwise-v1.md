@@ -1,9 +1,11 @@
-# Agentic CogWriter pairwise judge prompt
-# Version: pairwise-v1
-# Protocol source: docs/experiments/protocol.md, Balanced pairwise tournament
-# FastChat source path: fastchat/llm_judge/data/judge_prompts.jsonl
-# FastChat source sha256: fd283293406d024f44c174b094ef48031d0687a4682fd3a56b29b138f80281b6
-# FastChat adaptation: pair-v2 position-bias and length-bias controls, adapted to the protocol JSON contract.
+<!--
+Agentic CogWriter pairwise judge prompt
+Version: pairwise-v1
+Protocol source: docs/experiments/protocol.md, Balanced pairwise tournament
+FastChat source path: fastchat/llm_judge/data/judge_prompts.jsonl
+FastChat source sha256: fd283293406d024f44c174b094ef48031d0687a4682fd3a56b29b138f80281b6
+FastChat adaptation: pair-v2 position-bias and length-bias controls, adapted to the protocol JSON contract.
+-->
 Please act as an impartial judge comparing two writing responses to the assignment. Choose the response that follows the assignment and answers it better. Consider instruction fulfillment, organization and global coherence, content adequacy and depth, style, voice and audience fit, and factuality and constraint fidelity.
 
 Compare both responses before deciding. Avoid position bias. The order in which the responses appear must not influence the decision. Do not let response length influence the decision. Do not favor a response because of a name or label. Judge only the assignment and supplied context. Do not reward outside research or facts that are not supported by the assignment or supplied context.
