@@ -1,0 +1,76 @@
+site_name: Agentic CogWriter
+site_description: >-
+  A cognitive-process architecture for agentic long-form writing,
+  with explicit planning, translating, reviewing, and evolving goals.
+site_url: https://shunk031.me/agentic-cognitive-writing/
+
+repo_url: https://github.com/shunk031/agentic-cognitive-writing
+repo_name: shunk031/agentic-cognitive-writing
+edit_uri: edit/main/docs/
+
+copyright: Copyright © 2026 Shunsuke Kitada
+
+docs_dir: build/docs-site
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - content.action.edit
+    - content.action.view
+    - content.code.copy
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+
+nav:
+  - Overview: index.md
+  - Get Started:
+      - Installation: installation.md
+  - How It Works:
+      - Cognitive Process Architecture: theory-mapping.md
+  - Research:
+      - Overview: research/index.md
+      - Agent Skills & Subagents: research/skill-subagent-survey.md
+      - Writing Evaluation & Datasets: research/writing-eval-datasets.md
+  - Experiments:
+      - Overview: experiments/index.md
+      - Full Protocol: experiments/protocol.md
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - toc:
+      permalink: true
