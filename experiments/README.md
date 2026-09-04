@@ -32,7 +32,7 @@ The test suite checks prompt and manifest hashing, runtime placeholder gating, s
 
 Use the committed manifests under [`prompts/manifests/`](prompts/manifests/). To regenerate or verify them, follow [`prompts/README.md`](prompts/README.md) and use the `agentic-cogwriter-materialize` entry point. That document defines the manifest schema and the permitted source and hash checks.
 
-The experimenter then creates a complete runtime configuration outside the tracked placeholder file. The configuration must replace every `REQUIRED_AT_RUNTIME` value in [`config/runtime.json`](config/runtime.json), including model and judge assignments, decoding, output budget, timeout, retry policy, seeds, CLI versions, plugin commits, and analysis gates. The `generator_and_judge_family_audit.generator_families` object must name the generator family for `codex` and `claude-code`; the runner records the selected value in `run-manifest.json`. The runner refuses to start a scored run while one value remains open or a required field is missing.
+The experimenter then creates a complete runtime configuration outside the tracked placeholder file. The configuration must replace every `REQUIRED_AT_RUNTIME` value in [`config/runtime.json`](config/runtime.json), including model and judge assignments, decoding, output budget, timeout, retry policy, seeds, CLI versions, plugin commits, and analysis gates. The `generator_and_judge_family_audit.generator_model_family_map` object must map each exact configured generator model ID to its family; the runner records the selected family in `run-manifest.json` and refuses to start a scored run when the ID is unmappable. The runner refuses to start a scored run while one value remains open or a required field is missing.
 
 The A1 to A3 wrappers invoke skills from the `cognitive-writing-baselines` package. The A4 Agentic CogWriter condition uses the `agentic-cognitive-writing` package. A5 and A6 use the `cognitive-writing-experiments` package together with the main package. B1 and B2 use the baseline package and are reported as exploratory conditions.
 
@@ -94,7 +94,7 @@ The private judge configuration supplies the requested model, judge identifier, 
   "template_path": "/path/to/repository/experiments/prompts/judges/pointwise-v1.txt",
   "seed": 12345,
   "presentation_seed": 67890,
-  "temperature": 0,
+  "temperature": null,
   "top_p_or_equivalent": 1,
   "maximum_output_tokens": 512,
   "stop_rules": [],
@@ -104,6 +104,8 @@ The private judge configuration supplies the requested model, judge identifier, 
 ```
 
 The base URL and credential environment variables named in the private configuration must be set before the command runs. The scorer resolves both values at call time and never copies either value into a score artifact. The endpoint response must report a model identifier present in `model_family_map`; the scorer derives the judge family from that mapping instead of trusting a configured family label. The judge engine in [`src/agentic_cogwriter/judges/engine.py`](src/agentic_cogwriter/judges/engine.py) replaces the prompt's `runtime-verified` marker with that runtime-derived protocol value before the score record is written. The completed run's `run-manifest.json` must contain `models_and_execution.generator_model_id` and `models_and_execution.generator_model_family`. The scorer rejects any judge whose base family overlaps the generator family.
+
+gpt-5-family judges cannot pin `temperature`; determinism relies on the recorded seed, and the judge manifest records the effective decoding settings as `provider-default` when a setting is omitted.
 
 Run one pointwise judgment with the `agentic-cogwriter-score` entry point:
 

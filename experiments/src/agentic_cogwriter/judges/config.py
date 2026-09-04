@@ -161,7 +161,7 @@ class JudgeConfig:
     credential_env: str
     template_path: Path
     seed: int
-    temperature: float
+    temperature: float | None
     top_p: float | None
     max_output_tokens: int | None
     stop_rules: tuple[str, ...]
@@ -219,19 +219,23 @@ class JudgeConfig:
             raise JudgeConfigurationError("decoding must be an object")
 
         temperature_value = _decoding_value(values, decoding_value, "temperature")
-        if temperature_value is None:
-            raise JudgeConfigurationError("temperature is required")
-        temperature = _number(temperature_value, "temperature")
-        if temperature != 0:
+        temperature = (
+            None
+            if temperature_value is None
+            else _number(temperature_value, "temperature")
+        )
+        if temperature is not None and temperature != 0:
             raise JudgeConfigurationError("temperature must be exactly 0")
 
         top_p_value = _decoding_value(
             values, decoding_value, "top_p_or_equivalent", "top_p"
         )
-        if top_p_value is None:
-            raise JudgeConfigurationError("top_p_or_equivalent is required")
-        top_p = _number(top_p_value, "top_p_or_equivalent", minimum=0)
-        if top_p > 1:
+        top_p = (
+            None
+            if top_p_value is None
+            else _number(top_p_value, "top_p_or_equivalent", minimum=0)
+        )
+        if top_p is not None and top_p > 1:
             raise JudgeConfigurationError("top_p_or_equivalent cannot exceed 1")
 
         max_tokens_value = _decoding_value(

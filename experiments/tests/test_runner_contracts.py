@@ -15,6 +15,7 @@ from agentic_cogwriter.runner.conditions import PLATFORMS, load_condition_regist
 from agentic_cogwriter.runner.config import RuntimeConfig
 from agentic_cogwriter.runner.errors import (
     BudgetExceeded,
+    ConfigurationError,
     ExecutionError,
     RetrievalViolation,
 )
@@ -65,9 +66,9 @@ def _runtime_values() -> dict[str, object]:
         "experiments_plugin_commit": "test",
         "runner_commit": "test",
         "generator_and_judge_family_audit": {
-            "generator_families": {
-                "codex": "gpt",
-                "claude-code": "claude",
+            "generator_model_family_map": {
+                "gpt-test": "gpt",
+                "claude-test": "claude",
             }
         },
         "retry_policy": 0,
@@ -1055,6 +1056,7 @@ def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> No
     command_prompt = executor.calls[0][-1]
     assert "Use only the assignment and supplied context" in command_prompt
     manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["inputs"]["platform"] == "codex"
     benchmark = manifest["inputs"]["benchmark_provenance"]
     assert benchmark["source_sha256"] == (
         "026e3f9482ff3474c802cd43f5cae9fd584e10d0848d3e0a152695434becbc98"
@@ -1064,15 +1066,34 @@ def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> No
     )
     assert manifest["models_and_execution"]["judge_verification"] == {
         "declared_audit": {
-            "generator_families": {
-                "codex": "gpt",
-                "claude-code": "claude",
+            "generator_model_family_map": {
+                "gpt-test": "gpt",
+                "claude-test": "claude",
             }
         },
         "family_overlap_audit": "runtime-verified in the score manifest",
         "judge_families": "runtime-verified in the score manifest",
     }
     assert manifest["models_and_execution"]["generator_model_family"] == "gpt"
+
+
+def test_runner_rejects_unmapped_generator_model_before_starting_run(
+    tmp_path: Path,
+) -> None:
+    runner = _runner(
+        tmp_path,
+        config=_config(codex_generator_model="unmapped-generator"),
+        executor=_RetryExecutor([_result()]),
+    )
+
+    with pytest.raises(
+        ConfigurationError,
+        match="generator model ID 'unmapped-generator' is not present in "
+        "generator_model_family_map",
+    ):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    assert not (tmp_path / "WritingBench").exists()
 
 
 def test_runner_accounts_for_codex_event_usage_and_marks_missing_usage(

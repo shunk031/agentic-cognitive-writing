@@ -50,7 +50,19 @@ Store task results under `.writing/baselines/adaptive-task-planning/results/` wh
 6. Continue the recursive decompose-or-execute loop until the root composition task is silent. Aggregate composition results in dependency and child order and write the final document to `.writing/draft.md`.
 7. Append one schema-valid `process_switch` event to `.writing/trace/process.jsonl` for each observable graph action that enters a top-level task state. The trace contract has a variable event count with a minimum of one event for a successful run. Every event's `process` value must be exactly one of `task-decomposition`, `task-execution`, or `task-revision`; no other process value is allowed. Explain the task ID, type, dependency evidence, and state change in `decision` and `evidence`. The trace must never claim that a writing-process choice occurred when only the task graph changed.
 
-Every trace event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Use `responsible_agent: "runner"`, add the graph and relevant result files to `artifacts`, and preserve unresolved dependencies or claims in `open_uncertainty`. Retrieval, evidence, and citation fields are `N/A` by design in the runner's derived accounting, not fabricated trace events. Do not append goal events or hidden reasoning.
+Before sending the final response, complete this non-skippable checklist:
+
+1. The root task is `silent`.
+2. The aggregated document is written to `.writing/draft.md`.
+3. The final response contains the complete final text.
+
+The run is `INVALID` unless all three checks pass. Returning the complete text without writing `.writing/draft.md` does not satisfy the contract.
+
+Every trace event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Use `responsible_agent: "runner"`, add the graph and relevant result files to `artifacts`, and preserve unresolved dependencies or claims in `open_uncertainty`. Retrieval, evidence, and citation fields are `N/A` by design in the runner's derived accounting, not fabricated trace events. Do not append goal events or hidden reasoning. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts` is an array of project-relative path strings. For example:
+
+```json
+{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"runner","process":"task-decomposition","decision":"Decompose the root composition task into typed child tasks.","evidence":[".writing/baselines/adaptive-task-planning/task-graph.json"],"open_uncertainty":[],"from_process":null,"to_process":"task-decomposition","artifacts":[".writing/baselines/adaptive-task-planning/task-graph.json"]}
+```
 
 The adaptation follows WriteHERE[^1]'s released typed task graph, dependency-aware states, recursive decomposition, and interleaved execution semantics. It does not reproduce the original retrieval agent, prompts, models, frontend, benchmark, or graph implementation. The experiment compares task-structure adaptation under a common no-retrieval information policy.
 
