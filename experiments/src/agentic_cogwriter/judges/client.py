@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from typing import Any, cast
 
 from pydantic_ai import (
@@ -97,12 +98,12 @@ def _response_content(response: ModelResponse) -> str:
     raise JudgeTransportError("Judge response has no structured output")
 
 
+@dataclass
 class OpenAICompatibleClient:
     """Run one structured judge request through pydantic-ai."""
 
-    def __init__(self, config: JudgeConfig, *, model: Model | None = None) -> None:
-        self.config = config
-        self.model = model
+    config: JudgeConfig
+    model: Model | None = dataclass_field(default=None, kw_only=True)
 
     def _configured_model(self) -> Model:
         base_url = os.environ.get(self.config.base_url_env)
