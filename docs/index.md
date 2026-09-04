@@ -27,19 +27,19 @@ The processes are not executed as a fixed pipeline. The `Monitor` can move betwe
 
 ```mermaid
 flowchart TB
-    monitor["Monitor"]
-    planning["Planning"]
-    translating["Translating"]
-    reviewing["Reviewing"]
-    state["Writing state<br/>draft · goals · memory · history"]
+    monitor["Main agent<br/>Monitor"]
+    planner["Planner<br/>(Planning)"]
+    translator["Translator<br/>(Translating)"]
+    reviewer["Reviewer<br/>(Reviewing)"]
+    state["File-backed writing state<br/>draft · goals · memory · history"]
 
-    monitor --> planning
-    monitor --> translating
-    monitor --> reviewing
+    monitor --> planner
+    monitor --> translator
+    monitor --> reviewer
 
-    planning --> state
-    translating --> state
-    reviewing --> state
+    planner --> state
+    translator --> state
+    reviewer --> state
 
     state -.-> monitor
 ```
