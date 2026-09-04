@@ -34,6 +34,7 @@ from agentic_cogwriter.judges.scorer import (
 from agentic_cogwriter.judges.templates import JudgeTemplate
 from agentic_cogwriter.judges.validation import (
     POINTWISE_DIMENSIONS,
+    NativePointwiseJudgeRecord,
     PairwiseJudgeRecord,
     PointwiseJudgeRecord,
     validate_pairwise,
@@ -147,6 +148,12 @@ def _pointwise_record(judge_family: str = "open_evaluator") -> dict[str, object]
     }
 
 
+def _native_record(
+    score: int, reason: str = "The response meets the criterion."
+) -> dict[str, object]:
+    return {"score": score, "reason": reason}
+
+
 def _pairwise_record() -> dict[str, object]:
     return {
         "prompt_id": "p-1",
@@ -191,6 +198,7 @@ def test_pydantic_records_mirror_the_frozen_json_contracts() -> None:
         "evidence_quotes",
         "reason",
     }
+    assert set(NativePointwiseJudgeRecord.model_fields) == {"score", "reason"}
 
 
 def test_pointwise_validation_rejects_unknown_or_out_of_range_scores() -> None:
@@ -393,6 +401,26 @@ def test_committed_judge_templates_render_without_unresolved_fields() -> None:
     )
 
 
+def test_writingbench_native_template_keeps_query_and_response_before_criteria() -> (
+    None
+):
+    template = JudgeTemplate.load(
+        Path(__file__).parents[1] / "prompts/judges/writingbench-native-v1.txt"
+    )
+
+    rendered = template.render(
+        {
+            "query": "Write a memo.",
+            "response": "A response.",
+            "criteria": '{"name": "Structure"}',
+        }
+    )
+
+    assert rendered.index("** Query **") < rendered.index("** Response **")
+    assert rendered.index("** Response **") < rendered.index("** Criteria **")
+    assert "You are an expert evaluator" in template.raw.decode("utf-8")
+
+
 def test_fake_transport_receives_deterministic_zero_temperature_payload(
     tmp_path: Path,
 ) -> None:
@@ -522,6 +550,98 @@ def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
         "total_tokens": 12,
         "cached_tokens": 8,
     }
+
+
+def test_gpt56_native_template_splits_shared_text_before_criterion(
+    tmp_path: Path,
+) -> None:
+    template = Path(__file__).parents[1] / "prompts/judges/writingbench-native-v1.txt"
+    config = _config(tmp_path, template, task="native-pointwise", model="gpt-5.6-terra")
+    captured: list[dict[str, Any]] = []
+
+    import httpx2 as httpx
+
+    async def respond(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        captured.append(payload)
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-native-test",
+                "object": "chat.completion",
+                "created": 1,
+                "model": payload["model"],
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": json.dumps(_native_record(8)),
+                        },
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 10,
+                    "completion_tokens": 2,
+                    "total_tokens": 12,
+                },
+            },
+        )
+
+    async_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(respond),
+        base_url="https://gateway.test/v1",
+    )
+    model = OpenAIChatModel(
+        "gpt-5.6-terra",
+        provider=OpenAIProvider(
+            base_url="https://gateway.test/v1",
+            api_key="test-key",
+            http_client=async_client,
+        ),
+        profile=OpenAIModelProfile(
+            openai_supports_reasoning=False,
+            openai_reasoning_enabled_by_default=False,
+            openai_chat_supports_max_completion_tokens=True,
+            openai_supports_prompt_cache_breakpoints=True,
+        ),
+    )
+    try:
+        client = OpenAICompatibleClient(config, model=model)
+        response = client.complete(
+            JudgeTemplate.load(template).render(
+                {
+                    "query": "Write a memo.",
+                    "response": "A response.",
+                    "criteria": '{"name": "Structure"}',
+                }
+            ),
+            output_type=NativePointwiseJudgeRecord,
+            system_prompt=(
+                "You are an expert evaluator with extensive experience in "
+                "evaluating response of given query."
+            ),
+        )
+    finally:
+        asyncio.run(async_client.aclose())
+
+    payload = captured[0]
+    assert payload["messages"][0]["content"] == (
+        "You are an expert evaluator with extensive experience in evaluating "
+        "response of given query."
+    )
+    content = payload["messages"][1]["content"]
+    assert isinstance(content, list)
+    assert len(content) == 2
+    assert "** Query **" in content[0]["text"]
+    assert "** Response **" in content[0]["text"]
+    assert "** Criteria **" not in content[0]["text"]
+    assert "** Criteria **" in content[1]["text"]
+    assert content[0]["prompt_cache_breakpoint"] == {"mode": "explicit"}
+    assert payload["prompt_cache_key"] == "judge-default"
+    assert payload["prompt_cache_options"] == {"mode": "explicit", "ttl": "30m"}
+    assert response.output.score == 8
 
 
 def test_pairwise_template_forbids_assignment_evidence_quotes() -> None:
@@ -742,12 +862,21 @@ def test_pairwise_score_run_writes_no_output_until_both_presentations_validate(
     assert not output_path.with_name("pairwise-manifest.json").exists()
 
 
-def _run_dir(tmp_path: Path, condition_id: str, output: str) -> Path:
+def _run_dir(
+    tmp_path: Path,
+    condition_id: str,
+    output: str,
+    *,
+    prompt_id: str = "p-1",
+    assignment: str = "Write a memo.",
+    benchmark_name: str | None = None,
+    native_payload: object | None = None,
+) -> Path:
     run_dir = tmp_path / condition_id
     run_dir.mkdir()
     (run_dir / "output.normalized.txt").write_text(output, encoding="utf-8")
     (run_dir / "prompt.txt").write_text(
-        "Assignment:\nWrite a memo.\n\n"
+        f"Assignment:\n{assignment}\n\n"
         "Supplied context:\nProvided fact.\n\n"
         "Requested output constraints:\n{}\n",
         encoding="utf-8",
@@ -759,9 +888,19 @@ def _run_dir(tmp_path: Path, condition_id: str, output: str) -> Path:
                 "status": "completed",
                 "run_id": condition_id,
                 "inputs": {
-                    "prompt_id": "p-1",
+                    "prompt_id": prompt_id,
                     "condition_id": condition_id,
                     "platform": "codex",
+                    **(
+                        {"benchmark_name": benchmark_name}
+                        if benchmark_name is not None
+                        else {}
+                    ),
+                    **(
+                        {"native_payload": native_payload}
+                        if native_payload is not None
+                        else {}
+                    ),
                 },
                 "models_and_execution": _generator_family_audit(),
                 "scoring": {"status": "eligible"},
@@ -770,6 +909,46 @@ def _run_dir(tmp_path: Path, condition_id: str, output: str) -> Path:
         encoding="utf-8",
     )
     return run_dir
+
+
+def test_native_pointwise_reproduces_pilot_a4_writingbench_shape(
+    tmp_path: Path,
+) -> None:
+    row = json.loads(
+        (Path(__file__).parents[1] / "prompts/manifests/writingbench.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()[0]
+    )
+    run_dir = _run_dir(
+        tmp_path,
+        "A4",
+        "A4 fixture response.",
+        prompt_id=row["prompt_id"],
+        assignment=row["prompt_text"],
+        benchmark_name="WritingBench",
+        native_payload=row["native_payload"],
+    )
+    template = Path(__file__).parents[1] / "prompts/judges/writingbench-native-v1.txt"
+    config = _config(tmp_path, template, task="native-pointwise")
+    transport = FakeTransport(
+        [{"content": json.dumps(_native_record(score))} for score in (8, 7, 7, 9, 9)]
+    )
+
+    result = score_run(run_dir, config, model=transport.model)
+
+    records = [
+        json.loads(line)
+        for line in result.scores_path.read_text(encoding="utf-8").splitlines()
+    ]
+    assert [record["score"] for record in records] == [8, 7, 7, 9, 9]
+    assert [record["criterion"] for record in records] == [
+        criterion["name"] for criterion in row["native_payload"]
+    ]
+    assert all("avg" not in record for record in records)
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["task"] == "native-pointwise"
+    assert len(manifest["records"]) == 5
+    assert len(transport.requests) == 5
 
 
 def test_load_run_artifacts_accepts_real_shaped_manifest(tmp_path: Path) -> None:

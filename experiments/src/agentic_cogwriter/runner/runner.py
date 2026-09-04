@@ -1204,6 +1204,10 @@ class ExperimentRunner:
             "evidence_hashes": dict(evidence_hashes or {}),
             "staged_files": dict(staged_files or {}),
         }
+        # Carry native criteria in the existing run-manifest input so the judge
+        # can score the immutable row without reopening or refetching its source.
+        if prompt.native_payload is not None:
+            manifest["inputs"]["native_payload"] = prompt.native_payload
         if output_hash is not None:
             manifest["output_hash"] = output_hash
         if trace_hash is not None:

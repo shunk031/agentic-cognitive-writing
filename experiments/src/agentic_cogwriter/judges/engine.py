@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping, Sequence
+import json
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -14,8 +15,10 @@ from .config import JudgeConfig, JudgeIdentity
 from .errors import JudgeValidationError
 from .templates import JudgeTemplate
 from .validation import (
+    NativePointwiseJudgeRecord,
     PairwiseJudgeRecord,
     PointwiseJudgeRecord,
+    validate_native_pointwise,
     validate_pairwise,
     validate_pointwise,
 )
@@ -37,61 +40,31 @@ def _run(
     config: JudgeConfig,
     *,
     values: dict[str, Any],
-    expected: Mapping[str, str],
-    validator: Any,
-    searchable_texts: Sequence[str] | None = None,
-    pairwise_texts: tuple[str, str, str] | None = None,
+    output_type: type[JudgeOutput],
+    validator: Callable[[Any], dict[str, Any]],
     model: Model | None = None,
     prompt_cache_key: str = "judge-default",
+    system_prompt: str | None = None,
 ) -> JudgeResult:
     template = JudgeTemplate.load(config.template_path)
     prompt = template.render(values)
     client = OpenAICompatibleClient(config, model=model)
-    response_expected = {
-        field: value for field, value in expected.items() if field != "judge_family"
-    }
 
+    # Keep retries and final record normalization in one callback seam so the
+    # native score/reason response needs no parallel judge engine.
     def validate_output(output: JudgeOutput) -> None:
-        payload = output.model_dump()
-        if pairwise_texts is None:
-            validator(
-                payload,
-                expected=response_expected,
-                searchable_texts=searchable_texts or (),
-            )
-        else:
-            validator(
-                payload,
-                expected=response_expected,
-                output_a=pairwise_texts[0],
-                output_b=pairwise_texts[1],
-                context=pairwise_texts[2],
-            )
+        validator(output.model_dump())
 
     response = client.complete(
         prompt,
-        output_type=(
-            PointwiseJudgeRecord if pairwise_texts is None else PairwiseJudgeRecord
-        ),
+        output_type=output_type,
         output_validator=validate_output,
+        system_prompt=system_prompt,
         # Reuse the caller's run-scoped cache namespace at the transport seam.
         prompt_cache_key=prompt_cache_key,
     )
     identity = config.resolve_model_identity(response.reported_model_id)
-    if pairwise_texts is None:
-        record = validator(
-            response.output.model_dump(),
-            expected=response_expected,
-            searchable_texts=searchable_texts or (),
-        )
-    else:
-        record = validator(
-            response.output.model_dump(),
-            expected=response_expected,
-            output_a=pairwise_texts[0],
-            output_b=pairwise_texts[1],
-            context=pairwise_texts[2],
-        )
+    record = validator(response.output.model_dump())
     record["judge_family"] = identity.judge_family
     return JudgeResult(
         record=record,
@@ -135,12 +108,22 @@ def judge_pointwise(
         "context": context or "(none)",
         "output": output,
     }
+    response_expected = {
+        field: value for field, value in expected.items() if field != "judge_family"
+    }
+
+    def validator(value: Any) -> dict[str, Any]:
+        return validate_pointwise(
+            value,
+            expected=response_expected,
+            searchable_texts=(output, context),
+        )
+
     return _run(
         config,
         values=values,
-        expected=expected,
-        validator=validate_pointwise,
-        searchable_texts=(output, context),
+        output_type=PointwiseJudgeRecord,
+        validator=validator,
         model=model,
         # Keep pointwise calls on the same run-scoped cache namespace.
         prompt_cache_key=prompt_cache_key,
@@ -186,13 +169,81 @@ def judge_pairwise(
         "answer_a": output_a,
         "answer_b": output_b,
     }
+    response_expected = {
+        field: value for field, value in expected.items() if field != "judge_family"
+    }
+
+    def validator(value: Any) -> dict[str, Any]:
+        return validate_pairwise(
+            value,
+            expected=response_expected,
+            output_a=output_a,
+            output_b=output_b,
+            context=context,
+        )
+
     return _run(
         config,
         values=values,
-        expected=expected,
-        validator=validate_pairwise,
-        pairwise_texts=(output_a, output_b, context),
+        output_type=PairwiseJudgeRecord,
+        validator=validator,
         model=model,
         # Keep both pairwise presentations on the same run-scoped cache namespace.
+        prompt_cache_key=prompt_cache_key,
+    )
+
+
+def judge_native_pointwise(
+    config: JudgeConfig,
+    *,
+    assignment: str,
+    output: str,
+    criterion: Mapping[str, str],
+    prompt_id: str,
+    blind_condition_id: str,
+    platform: str,
+    model: Model | None = None,
+    prompt_cache_key: str = "judge-default",
+) -> JudgeResult:
+    """Score one WritingBench checklist criterion with the upstream JSON shape."""
+
+    if config.task != "native-pointwise":
+        raise JudgeValidationError("Judge configuration task is not native-pointwise")
+    criterion_name = criterion.get("name", "")
+    if not criterion_name.strip():
+        raise JudgeValidationError("WritingBench criterion name must be non-empty")
+    expected = {
+        "prompt_id": prompt_id,
+        "condition_id": blind_condition_id,
+        "platform": platform,
+        "judge_id": config.judge_id,
+    }
+    response_expected = {
+        field: value for field, value in expected.items() if field != "judge_family"
+    }
+    values = {
+        "query": assignment,
+        "response": output,
+        "criteria": json.dumps(criterion, ensure_ascii=False, indent=2),
+    }
+
+    def validator(value: Any) -> dict[str, Any]:
+        return validate_native_pointwise(
+            value,
+            expected=response_expected,
+            criterion_name=criterion_name,
+        )
+
+    return _run(
+        config,
+        values=values,
+        output_type=NativePointwiseJudgeRecord,
+        validator=validator,
+        model=model,
+        system_prompt=(
+            "You are an expert evaluator with extensive experience in evaluating "
+            "response of given query."
+        ),
+        # Reuse the caller's run-scoped cache namespace across checklist criteria.
         prompt_cache_key=prompt_cache_key,
     )

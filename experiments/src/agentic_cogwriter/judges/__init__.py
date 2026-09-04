@@ -1,7 +1,7 @@
-"""Pointwise and pairwise API judges for completed experiment runs."""
+"""Generic and WritingBench-native API judges for completed experiment runs."""
 
 from .config import JudgeConfig, JudgeIdentity, ModelFamilyMapping
-from .engine import JudgeResult, judge_pairwise, judge_pointwise
+from .engine import JudgeResult, judge_native_pointwise, judge_pairwise, judge_pointwise
 from .errors import (
     JudgeConfigurationError,
     JudgeError,
@@ -24,5 +24,6 @@ __all__ = [
     "ScoreRunResult",
     "judge_pairwise",
     "judge_pointwise",
+    "judge_native_pointwise",
     "score_run",
 ]

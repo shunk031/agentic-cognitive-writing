@@ -1,4 +1,4 @@
-"""Fail-closed validation for the frozen pointwise and pairwise contracts."""
+"""Fail-closed validation for the generic and WritingBench-native contracts."""
 
 from __future__ import annotations
 
@@ -40,6 +40,7 @@ _PAIRWISE_KEYS = {
     "evidence_quotes",
     "reason",
 }
+_NATIVE_POINTWISE_KEYS = {"score", "reason"}
 
 
 class _StrictRecord(BaseModel):
@@ -82,6 +83,20 @@ class PointwiseJudgeRecord(_StrictRecord):
     evidence_quotes: list[EvidenceQuote]  # noqa: V107
     judge_level_composite: float = Field(allow_inf_nan=False)  # noqa: V107
     uncertainties: list[str]
+
+
+class NativePointwiseJudgeRecord(_StrictRecord):
+    """The upstream WritingBench response object for one checklist criterion."""
+
+    score: int = Field(ge=1, le=10)  # noqa: V107
+    reason: str
+
+    @field_validator("reason")  # noqa: V105
+    @classmethod
+    def _non_empty_reason(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("reason must be a non-empty string")
+        return value
 
 
 class PairwiseEvidence(_StrictRecord):
@@ -233,6 +248,30 @@ def validate_pointwise(
         "evidence_quotes": raw_quotes,
         "judge_level_composite": float(composite),
         "uncertainties": list(uncertainties),
+    }
+
+
+def validate_native_pointwise(
+    value: Any,
+    *,
+    expected: Mapping[str, str],
+    criterion_name: str,
+) -> dict[str, Any]:
+    """Validate one WritingBench score and attach existing judge metadata."""
+
+    value = _validated_mapping(
+        value, NativePointwiseJudgeRecord, "WritingBench native response"
+    )
+    if not isinstance(value, Mapping):
+        raise JudgeValidationError("WritingBench native response must be a JSON object")
+    _exact_keys(value, _NATIVE_POINTWISE_KEYS, "WritingBench native response")
+    if not criterion_name.strip():
+        raise JudgeValidationError("WritingBench criterion name must be non-empty")
+    return {
+        **expected,
+        "criterion": criterion_name,
+        "score": value["score"],
+        "reason": value["reason"],
     }
 
 

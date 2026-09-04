@@ -17,7 +17,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument("--task", choices=("pointwise", "pairwise"), default=None)
+    parser.add_argument(
+        "--task", choices=("pointwise", "pairwise", "native-pointwise"), default=None
+    )
     parser.add_argument("--compare-run-dir", type=Path, default=None)
     parser.add_argument("--output", type=Path, default=None)
     return parser

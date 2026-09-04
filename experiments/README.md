@@ -77,7 +77,7 @@ The wrapper TOMLs are the source of truth for trace contracts. Each declares the
 
 The scorer in [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) reads a completed run's `run-manifest.json`, `prompt.txt`, and `output.normalized.txt`, then writes `scores.jsonl` and `scores-manifest.json` beside the run artifacts. The manifest records the versioned template hash, source-run hashes, API usage counters, response hash, attempt count, score-record hash, and the runtime judge-family evidence chain. A successful command prints the `scores.jsonl` path. Pairwise scoring writes both presentation records only after both judgments pass validation.
 
-The private judge configuration supplies the requested model, judge identifier, names of the endpoint and credential environment variables, the template path, the API seed, the pairwise presentation seed, decoding settings, timeout, retry count, and an explicit model-family mapping table. Use a configuration outside the repository. Replace every angle-bracket value in the following example with a value you supply at runtime; the template path must point to [`pointwise-v1.txt`](prompts/judges/pointwise-v1.txt) or [`pairwise-v1.txt`](prompts/judges/pairwise-v1.txt).
+The private judge configuration supplies the requested model, judge identifier, names of the endpoint and credential environment variables, the template path, the API seed, the pairwise presentation seed, decoding settings, timeout, retry count, and an explicit model-family mapping table. Use a configuration outside the repository. Replace every angle-bracket value in the following example with a value you supply at runtime; the template path must point to [`pointwise-v1.txt`](prompts/judges/pointwise-v1.txt), [`pairwise-v1.txt`](prompts/judges/pairwise-v1.txt), or [`writingbench-native-v1.txt`](prompts/judges/writingbench-native-v1.txt).
 
 ```json
 {
@@ -117,7 +117,7 @@ uv run --project experiments agentic-cogwriter-score \
   --config /path/to/private-judge-config.json
 ```
 
-The pointwise record follows the five-dimension contract in [`protocol.md`](../docs/experiments/protocol.md). Invalid JSON, missing dimensions, scores outside 1 to 5, and evidence quotes absent from the output or supplied context are rejected. The configured retry count bounds every additional API call, and every attempt keeps the same prompt and decoding payload.
+The pointwise record follows the five-dimension contract in [`protocol.md`](../docs/experiments/protocol.md). Native WritingBench scoring uses one criterion-level record per checklist item and accepts only integer scores from 1 to 10; aggregation computes averages later. Invalid JSON, missing dimensions, scores outside the task's range, and evidence quotes absent from the output or supplied context are rejected. The configured retry count bounds every additional API call, and every attempt keeps the same prompt and decoding payload.
 
 The pairwise command runs both presentations for one unordered pair. The scorer derives the invocation order from `presentation_seed`, records that seed and the derived order mapping in `scores-manifest.json`, and writes two JSON Lines records only after both presentations validate:
 
@@ -128,7 +128,7 @@ uv run --project experiments agentic-cogwriter-score \
   --config /path/to/private-pairwise-config.json
 ```
 
-The pairwise records follow the balanced tournament contract in [`protocol.md`](../docs/experiments/protocol.md), including both `A|B` and `B|A` presentations, a winner of `A`, `B`, or `tie`, and verbatim evidence for both outputs. If either presentation fails after the configured retries, the scorer writes no aggregate score artifact. WritingBench criteria and HelloBench checklists are outside this judge stage; a benchmark-native judge can be added as a follow-up after the generic contracts are validated.
+The pairwise records follow the balanced tournament contract in [`protocol.md`](../docs/experiments/protocol.md), including both `A|B` and `B|A` presentations, a winner of `A`, `B`, or `tie`, and verbatim evidence for both outputs. If either presentation fails after the configured retries, the scorer writes no aggregate score artifact. Native WritingBench scoring consumes the checklist carried by the run manifest and writes no run-level average.
 
 ## Policy enforcement
 

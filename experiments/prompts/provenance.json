@@ -69,9 +69,10 @@
       "redistribution": "Prompt manifest only; source file is acquired by the script.",
       "repository": "https://github.com/X-PLUG/WritingBench",
       "source_file": "benchmark_query/benchmark_all.jsonl",
+      "source_blob_sha1": "e6cd82aabed6fa845f0a28cd2114daad59c012b9",
       "source_sha256": "026e3f9482ff3474c802cd43f5cae9fd584e10d0848d3e0a152695434becbc98",
       "source_url": "https://raw.githubusercontent.com/X-PLUG/WritingBench/9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad/benchmark_query/benchmark_all.jsonl",
-      "source_version": "X-PLUG/WritingBench@9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad"
+      "source_version": "X-PLUG/WritingBench@9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad; benchmark_query/benchmark_all.jsonl blob:e6cd82aabed6fa845f0a28cd2114daad59c012b9"
     }
   },
   "manifest_hash": "sha256(canonical JSON row without hash)",

@@ -24,6 +24,7 @@ DEFAULT_OUTPUT_DIR = MANIFESTS_DIR
 DEFAULT_CACHE_DIR = BENCHMARK_CACHE_DIR
 
 WRITINGBENCH_COMMIT = "9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad"
+WRITINGBENCH_BLOB_SHA1 = "e6cd82aabed6fa845f0a28cd2114daad59c012b9"
 HELLOBENCH_COMMIT = "92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57"
 DOLOMITES_COMMIT = "8331dd998bf510cacc58d10ad613c9e685787747"
 DOLOMITES_ARCHIVE_SHA256 = (
@@ -46,6 +47,9 @@ MANIFEST_FIELDS = (
     "requested_output_constraints",
     "hash",
 )
+# WritingBench is the only checked-in manifest whose native evaluator payload is
+# materialized; keeping the base tuple unchanged preserves the other manifests.
+WRITINGBENCH_MANIFEST_FIELDS = (*MANIFEST_FIELDS[:-1], "native_payload", "hash")
 
 EXPECTED_COUNTS = {
     "writingbench": 1000,
@@ -130,10 +134,11 @@ def hash_manifest_row(row: dict[str, Any]) -> str:
 def validate_manifest_row(row: dict[str, Any]) -> None:
     """Validate one row against the experiment prompt-manifest contract."""
 
-    if set(row) != set(MANIFEST_FIELDS):
-        raise ValueError(
-            f"manifest fields must be {MANIFEST_FIELDS!r}, got {sorted(row)!r}"
-        )
+    if set(row) not in (
+        set(MANIFEST_FIELDS),
+        set(WRITINGBENCH_MANIFEST_FIELDS),
+    ):
+        raise ValueError(f"manifest fields are invalid, got {sorted(row)!r}")
     for field in ("prompt_id", "benchmark_name", "source_version", "prompt_text"):
         if not isinstance(row[field], str) or not row[field]:
             raise ValueError(f"{field} must be a non-empty string")
@@ -144,6 +149,37 @@ def validate_manifest_row(row: dict[str, Any]) -> None:
         raise ValueError(
             "requested_output_constraints must be a list of non-empty strings"
         )
+    if row["benchmark_name"] == "WritingBench":
+        if set(row) != set(WRITINGBENCH_MANIFEST_FIELDS):
+            raise ValueError(
+                "WritingBench rows must include the native_payload checklist"
+            )
+        native_payload = row["native_payload"]
+        required_checklist_fields = {
+            "name",
+            "criteria_description",
+            "1-2",
+            "3-4",
+            "5-6",
+            "7-8",
+            "9-10",
+        }
+        if not isinstance(native_payload, list) or not native_payload:
+            raise ValueError("WritingBench native_payload must be a non-empty list")
+        for criterion in native_payload:
+            if (
+                not isinstance(criterion, dict)
+                or set(criterion) != required_checklist_fields
+            ):
+                raise ValueError("WritingBench checklist criterion fields are invalid")
+            if not all(
+                isinstance(value, str) and value.strip() for value in criterion.values()
+            ):
+                raise ValueError(
+                    "WritingBench checklist values must be non-empty strings"
+                )
+    elif "native_payload" in row:
+        raise ValueError("native_payload is only supported for WritingBench rows")
     if not isinstance(row["hash"], str) or len(row["hash"]) != 64:
         raise ValueError("hash must be a 64-character SHA-256 hex digest")
     if row["hash"] != hash_manifest_row(row):
@@ -217,14 +253,17 @@ def _manifest_row(
     source_version: str,
     prompt_text: str,
     requested_output_constraints: list[str],
+    native_payload: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    row = {
+    row: dict[str, Any] = {
         "prompt_id": prompt_id,
         "benchmark_name": benchmark_name,
         "source_version": source_version,
         "prompt_text": prompt_text,
         "requested_output_constraints": requested_output_constraints,
     }
+    if native_payload is not None:
+        row["native_payload"] = native_payload
     row["hash"] = hash_manifest_row(row)
     validate_manifest_row(row)
     return row
@@ -262,12 +301,16 @@ def build_writingbench(source_path: Path) -> list[dict[str, Any]]:
             _manifest_row(
                 prompt_id=f"writingbench-{index:04d}",
                 benchmark_name="WritingBench",
-                source_version=f"X-PLUG/WritingBench@{WRITINGBENCH_COMMIT}",
+                source_version=(
+                    f"X-PLUG/WritingBench@{WRITINGBENCH_COMMIT}; "
+                    f"benchmark_query/benchmark_all.jsonl blob:{WRITINGBENCH_BLOB_SHA1}"
+                ),
                 prompt_text=source_row["query"],
                 requested_output_constraints=[
                     "Follow all task, language, audience, format, style, length, and "
                     "content constraints embedded in prompt_text."
                 ],
+                native_payload=source_row["checklist"],
             )
         )
     return rows
@@ -375,10 +418,14 @@ def provenance(observed_dolomites_counts: dict[str, int]) -> dict[str, Any]:
             "writingbench": {
                 "name": "WritingBench",
                 "repository": "https://github.com/X-PLUG/WritingBench",
-                "source_version": f"X-PLUG/WritingBench@{WRITINGBENCH_COMMIT}",
+                "source_version": (
+                    f"X-PLUG/WritingBench@{WRITINGBENCH_COMMIT}; "
+                    f"benchmark_query/benchmark_all.jsonl blob:{WRITINGBENCH_BLOB_SHA1}"
+                ),
                 "source_file": "benchmark_query/benchmark_all.jsonl",
                 "source_url": WRITINGBENCH_URL,
                 "source_sha256": WRITINGBENCH_FILE.sha256,
+                "source_blob_sha1": WRITINGBENCH_BLOB_SHA1,
                 "license": "Apache-2.0",
                 "redistribution": (
                     "Prompt manifest only; source file is acquired by the script."
