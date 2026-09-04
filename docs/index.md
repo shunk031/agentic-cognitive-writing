@@ -6,7 +6,7 @@ icon: lucide/pen-line
 
 # Agentic CogWriter
 
-**Agentic CogWriter** is a writing assistant that plans, drafts, and revises long-form text through an explicit cognitive-process architecture.
+**Agentic CogWriter** is a harness that turns a coding agent into a cognitive writing system: skills and subagents run long-form writing as an explicit cognitive-process architecture.
 
 Instead of producing a document in a single pass, Agentic CogWriter maintains the evolving state of the writing process—including the rhetorical problem, current draft, writing goals, memory, and process history—and repeatedly decides what kind of writing operation should happen next.
 

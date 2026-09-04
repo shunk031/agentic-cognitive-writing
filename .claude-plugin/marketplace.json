@@ -7,14 +7,17 @@
   "plugins": [
     {
       "name": "agentic-cognitive-writing",
+      "description": "Agentic CogWriter is a harness that turns a coding agent into a cognitive writing system by installing skills and subagents that run long-form writing as an explicit cognitive process and keep goals, drafts, notes, and the decision log as files.",
       "source": "./plugin"
     },
     {
       "name": "cognitive-writing-experiments",
+      "description": "Controlled process variants for comparing writing-process choices, including fixed process order and removal of the hierarchical goal network.",
       "source": "./experiments/plugin"
     },
     {
       "name": "cognitive-writing-baselines",
+      "description": "Baseline writing conditions for controlled comparisons using the same assignment, context, model settings, output budget, and no-retrieval policy.",
       "source": "./experiments/baselines"
     }
   ]
