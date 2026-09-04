@@ -31,9 +31,9 @@ flowchart TB
 
     subgraph agents["Writing-process agents"]
         direction LR
-        planner["Planner<br/>(Planning)"]
-        translator["Translator<br/>(Translating)"]
-        reviewer["Reviewer<br/>(Reviewing)"]
+        planner["Planner<br/>Planning"]
+        translator["Translator<br/>Translating"]
+        reviewer["Reviewer<br/>Reviewing"]
     end
 
     state["File-backed writing state<br/>draft · goals · memory · history"]
