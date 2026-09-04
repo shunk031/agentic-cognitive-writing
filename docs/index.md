@@ -28,9 +28,14 @@ The processes are not executed as a fixed pipeline. The `Monitor` can move betwe
 ```mermaid
 flowchart TB
     monitor["Main agent<br/>Monitor"]
-    planner["Planner<br/>(Planning)"]
-    translator["Translator<br/>(Translating)"]
-    reviewer["Reviewer<br/>(Reviewing)"]
+
+    subgraph agents["Writing-process agents"]
+        direction LR
+        planner["Planner<br/>(Planning)"]
+        translator["Translator<br/>(Translating)"]
+        reviewer["Reviewer<br/>(Reviewing)"]
+    end
+
     state["File-backed writing state<br/>draft · goals · memory · history"]
 
     monitor --> planner
