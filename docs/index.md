@@ -27,19 +27,29 @@ The processes are not executed as a fixed pipeline. The `Monitor` can move betwe
 
 ```mermaid
 flowchart LR
-    state["Writing state<br/>draft · goals · memory · history"]
-    monitor["Monitor"]
-    planning["Planning"]
-    translating["Translating"]
-    reviewing["Reviewing"]
 
-    state <--> monitor
-    monitor <--> planning
-    monitor <--> translating
-    monitor <--> reviewing
-    planning --> state
-    translating --> state
-    reviewing --> state
+    subgraph state["Writing State ✍️"]
+        direction LR
+        db[("📝 Draft<br>🎯 Goals<br>🧠 Memory<br>⌛ History")]
+    end
+
+    subgraph agentic_cogwriter["Agentic CogWriter 🔄"]
+        direction LR
+        subgraph main_agent["Main Agent"]
+            monitor["🤖 Monitor"]
+        end
+        subgraph sub_agents["SubAgents"]
+            planner["🤖 Planner"]
+            translator["🤖 Translator"]
+            reviewer["🤖 Reviewer"]
+        end
+    end
+
+    state <--> main_agent
+
+    monitor <--> planner
+    monitor <--> translator
+    monitor <--> reviewer
 ```
 
 [Read how the cognitive model maps to the system →](theory-mapping.md)
