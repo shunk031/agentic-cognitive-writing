@@ -8,8 +8,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from pydantic_ai.models import Model
+
 from ..runner.hashing import sha256_bytes, sha256_file, sha256_json
-from .client import ChatTransport
 from .config import JudgeConfig
 from .engine import JudgeResult, judge_pairwise, judge_pointwise
 from .errors import RunArtifactError
@@ -195,7 +196,7 @@ def _score_pairwise_presentation(
     *,
     pair_id: str,
     presentation: str,
-    transport: ChatTransport | None,
+    model: Model | None,
 ) -> JudgeResult:
     output_a, output_b = _pair_presentation(first, second, presentation)
     return judge_pairwise(
@@ -208,7 +209,7 @@ def _score_pairwise_presentation(
         pair_id=pair_id,
         presentation=presentation,
         platform=first.platform,
-        transport=transport,
+        model=model,
     )
 
 
@@ -302,7 +303,7 @@ def score_run(
     *,
     compare_run_dir: Path | None = None,
     output_path: Path | None = None,
-    transport: ChatTransport | None = None,
+    model: Model | None = None,
 ) -> ScoreRunResult:
     """Score one run or a complete pairwise tournament and write its manifest."""
 
@@ -318,7 +319,7 @@ def score_run(
             prompt_id=first.prompt_id,
             blind_condition_id=first.blind_condition_id,
             platform=first.platform,
-            transport=transport,
+            model=model,
         )
         return _write_score_artifacts(
             (output_path or first.run_dir / "scores.jsonl").resolve(),
@@ -354,7 +355,7 @@ def score_run(
             config,
             pair_id=pair_id,
             presentation=order,
-            transport=transport,
+            model=model,
         )
         for order in orders
     )
