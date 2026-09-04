@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 from pydantic_ai import ModelResponse, RequestUsage
 from pydantic_ai.exceptions import ModelHTTPError, UnexpectedModelBehavior
-from pydantic_ai.messages import ModelRequest, ToolCallPart
+from pydantic_ai.messages import ModelRequest, TextPart
 from pydantic_ai.messages import ModelResponse as MessageResponse
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.models.openai import OpenAIChatModel, OpenAIModelProfile
@@ -70,12 +70,7 @@ class FakeTransport:
         self.requests.append(payload)
         response = self.responses.pop(0)
         return ModelResponse(
-            parts=[
-                ToolCallPart(
-                    tool_name=info.output_tools[0].name,
-                    args=str(response["content"]),
-                )
-            ],
+            parts=[TextPart(content=str(response["content"]))],
             usage=RequestUsage(input_tokens=11, output_tokens=7),
         )
 
@@ -442,7 +437,6 @@ def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
     async def respond(request: httpx.Request) -> httpx.Response:
         payload = json.loads(request.content)
         captured.append(payload)
-        tool_name = payload["tools"][0]["function"]["name"]
         return httpx.Response(
             200,
             json={
@@ -455,20 +449,11 @@ def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
                         "index": 0,
                         "message": {
                             "role": "assistant",
-                            "tool_calls": [
-                                {
-                                    "id": "call_1",
-                                    "type": "function",
-                                    "function": {
-                                        "name": tool_name,
-                                        "arguments": json.dumps(
-                                            _pointwise_record(), ensure_ascii=False
-                                        ),
-                                    },
-                                }
-                            ],
+                            "content": json.dumps(
+                                _pointwise_record(), ensure_ascii=False
+                            ),
                         },
-                        "finish_reason": "tool_calls",
+                        "finish_reason": "stop",
                     }
                 ],
                 "usage": {
@@ -518,6 +503,8 @@ def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
         asyncio.run(async_client.aclose())
 
     payload = captured[0]
+    assert "tools" not in payload
+    assert payload["response_format"] == {"type": "json_object"}
     assert payload["messages"][1]["role"] == "user"
     content = payload["messages"][1]["content"]
     assert isinstance(content, list)

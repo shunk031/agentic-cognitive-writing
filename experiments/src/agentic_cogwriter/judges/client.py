@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -14,6 +13,7 @@ from pydantic_ai import (
     ModelResponse,
     ModelRetry,
     ModelSettings,
+    PromptedOutput,
     RunUsage,
     UserContent,
 )
@@ -85,15 +85,8 @@ def _usage(run_usage: RunUsage) -> dict[str, int]:
 
 
 def _response_content(response: ModelResponse) -> str:
-    """Return the raw structured arguments used for response hashing."""
+    """Return the raw JSON text used for response hashing."""
 
-    tool_calls = response.tool_calls
-    if tool_calls:
-        arguments = tool_calls[-1].args
-        if isinstance(arguments, str):
-            return arguments
-        if isinstance(arguments, Mapping):
-            return json.dumps(arguments, ensure_ascii=False, sort_keys=True)
     text = response.text
     if isinstance(text, str) and text:
         return text
@@ -167,7 +160,9 @@ class OpenAICompatibleClient:
         model = self.model or self._configured_model()
         agent: Agent[object, JudgeOutput] = Agent(
             model,
-            output_type=output_type,
+            # Templates carry the JSON contract; parse their text without
+            # output tools.
+            output_type=PromptedOutput(output_type, template=False),
             system_prompt="Return only the JSON object requested by the user.",
             model_settings=settings,
             retries=self.config.max_retries,
