@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
-import json
 import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
-from pydantic_ai import Agent, ModelResponse, ModelRetry, ModelSettings, RunUsage
+from pydantic_ai import (
+    Agent,
+    CachePoint,
+    ModelResponse,
+    ModelRetry,
+    ModelSettings,
+    PromptedOutput,
+    RunUsage,
+    UserContent,
+)
 from pydantic_ai.models import Model
 from pydantic_ai.models.openai import (
     OpenAIChatModel,
@@ -77,15 +85,8 @@ def _usage(run_usage: RunUsage) -> dict[str, int]:
 
 
 def _response_content(response: ModelResponse) -> str:
-    """Return the raw structured arguments used for response hashing."""
+    """Return the raw JSON text used for response hashing."""
 
-    tool_calls = response.tool_calls
-    if tool_calls:
-        arguments = tool_calls[-1].args
-        if isinstance(arguments, str):
-            return arguments
-        if isinstance(arguments, Mapping):
-            return json.dumps(arguments, ensure_ascii=False, sort_keys=True)
     text = response.text
     if isinstance(text, str) and text:
         return text
@@ -117,6 +118,11 @@ class OpenAICompatibleClient:
                 openai_supports_reasoning=False,
                 openai_reasoning_enabled_by_default=False,
                 openai_chat_supports_max_completion_tokens=True,
+                # The configured judge gateway uses GPT-5.6's explicit cache
+                # breakpoint contract.
+                openai_supports_prompt_cache_breakpoints=self.config.model.casefold().startswith(
+                    "gpt-5.6"
+                ),
             ),
         )
 
@@ -126,6 +132,7 @@ class OpenAICompatibleClient:
         *,
         output_type: type[JudgeOutput],
         output_validator: Callable[[JudgeOutput], None] | None = None,
+        prompt_cache_key: str = "judge-default",
     ) -> JudgeResponse:
         """Run one pydantic-ai request with bounded structured-output retries."""
 
@@ -141,11 +148,21 @@ class OpenAICompatibleClient:
             settings["top_p"] = self.config.top_p
         if self.config.max_output_tokens is not None:
             settings["max_tokens"] = self.config.max_output_tokens
+        if self.config.model.casefold().startswith("gpt-5.6"):
+            # Keep the run-directory key and explicit 30-minute policy on every retry.
+            typed_settings = cast(dict[str, Any], settings)
+            typed_settings["openai_prompt_cache_key"] = prompt_cache_key
+            typed_settings["openai_prompt_cache_options"] = {
+                "mode": "explicit",
+                "ttl": "30m",
+            }
 
         model = self.model or self._configured_model()
         agent: Agent[object, JudgeOutput] = Agent(
             model,
-            output_type=output_type,
+            # Templates carry the JSON contract; parse their text without
+            # output tools.
+            output_type=PromptedOutput(output_type, template=False),
             system_prompt="Return only the JSON object requested by the user.",
             model_settings=settings,
             retries=self.config.max_retries,
@@ -160,7 +177,30 @@ class OpenAICompatibleClient:
                     raise ModelRetry(str(error)) from error
                 return output
 
-        result = agent.run_sync(prompt)
+        # Reassemble at the existing transport seam so judged text stays in the
+        # cached block while rubric and format text follows it.
+        format_marker = "\nReturn this JSON shape"
+        prompt_content: str | list[UserContent] = prompt
+        if (
+            self.config.model.casefold().startswith("gpt-5.6")
+            and format_marker in prompt
+        ):
+            prefix, format_suffix = prompt.rsplit(format_marker, 1)
+            rubric_marker = (
+                "\nUse the five dimensions below."
+                if "\nUse the five dimensions below." in prefix
+                else "\nReturn exactly one valid JSON object."
+            )
+            data_marker = "\n[Prompt ID]"
+            if rubric_marker in prefix and data_marker in prefix:
+                static_prefix, rubric_and_data = prefix.split(rubric_marker, 1)
+                rubric, judged_data = rubric_and_data.split(data_marker, 1)
+                prefix = static_prefix + data_marker + judged_data
+                suffix = rubric_marker + rubric + format_marker + format_suffix
+            else:
+                suffix = format_marker + format_suffix
+            prompt_content = [prefix, CachePoint(), suffix]
+        result = agent.run_sync(prompt_content)
 
         reported_model_id = result.response.model_name
         if not isinstance(reported_model_id, str) or not reported_model_id.strip():

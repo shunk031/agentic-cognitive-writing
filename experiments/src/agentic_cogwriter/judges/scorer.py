@@ -197,6 +197,7 @@ def _score_pairwise_presentation(
     pair_id: str,
     presentation: str,
     model: Model | None,
+    prompt_cache_key: str,
 ) -> JudgeResult:
     output_a, output_b = _pair_presentation(first, second, presentation)
     return judge_pairwise(
@@ -210,6 +211,8 @@ def _score_pairwise_presentation(
         presentation=presentation,
         platform=first.platform,
         model=model,
+        # Share one cache namespace across A|B and B|A for this run pair.
+        prompt_cache_key=prompt_cache_key,
     )
 
 
@@ -308,6 +311,14 @@ def score_run(
     """Score one run or a complete pairwise tournament and write its manifest."""
 
     first = load_run_artifacts(run_dir)
+    # Hash the run identity so both pairwise presentations share one stable
+    # gateway cache key.
+    prompt_cache_key = (
+        "judge-"
+        + sha256_bytes(
+            f"{config.task}:{config.template_path}:{first.run_dir}".encode()
+        )[:32]
+    )
     if config.task == "pointwise":
         if compare_run_dir is not None:
             raise RunArtifactError("pointwise scoring does not accept a comparison run")
@@ -320,6 +331,8 @@ def score_run(
             blind_condition_id=first.blind_condition_id,
             platform=first.platform,
             model=model,
+            # Scope the pointwise request cache to this run directory.
+            prompt_cache_key=prompt_cache_key,
         )
         return _write_score_artifacts(
             (output_path or first.run_dir / "scores.jsonl").resolve(),
@@ -356,6 +369,8 @@ def score_run(
             pair_id=pair_id,
             presentation=order,
             model=model,
+            # Reuse the run-directory namespace for both tournament presentations.
+            prompt_cache_key=prompt_cache_key,
         )
         for order in orders
     )
