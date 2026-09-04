@@ -37,3 +37,6 @@ min_events = 4
 max_events = 4
 process_order = ["initial-planning", "immediate-plan-revision", "parallel-segment-generation", "length-review"]
 processes = ["initial-planning", "immediate-plan-revision", "parallel-segment-generation", "length-review"]
+
+[[stages]]
+id = "plugin_session"

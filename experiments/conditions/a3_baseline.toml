@@ -36,3 +36,12 @@ goal_events = "forbidden"
 event_types = ["process_switch"]
 min_events = 1
 processes = ["task-decomposition", "task-execution", "task-revision"]
+
+[[stages]]
+id = "task-decomposition"
+
+[[stages]]
+id = "task-execution"
+
+[[stages]]
+id = "task-revision"
