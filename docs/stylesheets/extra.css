@@ -62,7 +62,7 @@
   color: var(--md-default-fg-color);
 }
 
-.acw-process-separator {
+.acw-process-arrow {
   color: var(--md-default-fg-color--lighter);
 }
 
@@ -83,92 +83,16 @@
   letter-spacing: -0.02em;
 }
 
-.acw-process-map {
-  max-width: 48rem;
-  margin: 1.8rem auto 1.4rem;
-}
-
-.acw-map-monitor,
-.acw-map-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0.65rem;
-  background: var(--md-code-bg-color);
-  text-align: center;
-}
-
-.acw-map-monitor strong,
-.acw-map-state strong {
-  font-size: 1.05rem;
-}
-
-.acw-map-monitor > span:last-child,
-.acw-map-state > span:last-child,
-.acw-map-process span,
-.acw-map-flow,
-.acw-map-feedback {
-  color: var(--md-default-fg-color--light);
-  font-size: 0.74rem;
-}
-
-.acw-map-kicker {
-  color: var(--md-primary-fg-color) !important;
-  font-size: 0.6rem !important;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
-.acw-map-flow {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.05rem;
-  padding: 0.35rem 0;
-  line-height: 1.1;
-}
-
-.acw-map-arrow {
-  color: var(--md-default-fg-color);
-  font-size: 1.15rem;
-}
-
-.acw-map-processes {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.65rem;
-}
-
-.acw-map-process {
-  display: flex;
-  min-height: 5.1rem;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.25rem;
-  padding: 0.9rem;
-  border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0.6rem;
-  text-align: center;
-}
-
-.acw-map-process strong {
-  font-size: 0.88rem;
-}
-
-.acw-map-feedback {
+.acw-architecture .mermaid {
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 0.4rem;
-  padding-top: 0.55rem;
+  margin: 1.6rem 0 1.3rem;
 }
 
-.acw-map-feedback-arrow {
-  color: var(--md-primary-fg-color);
-  font-size: 1.1rem;
+.acw-architecture .mermaid svg {
+  width: min(100%, 58rem) !important;
+  max-width: 100% !important;
+  height: auto !important;
 }
 
 .acw-architecture-link {
@@ -197,13 +121,5 @@
 
   .acw-architecture {
     padding: 1.2rem;
-  }
-
-  .acw-map-processes {
-    grid-template-columns: 1fr;
-  }
-
-  .acw-map-process {
-    min-height: auto;
   }
 }
