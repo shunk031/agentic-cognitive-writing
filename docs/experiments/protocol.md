@@ -41,11 +41,13 @@ The research questions (RQ) are:
 3. **RQ3.** Do agent traces, treated as operational analogues of thinking-aloud protocols rather than direct transcripts of private state, show the goal creation and regeneration dynamics described by Flower and Hayes [^1]? The RQ3 analysis includes Flower and Hayes' prediction that the quantity and quality of middle-range goals, which connect broad rhetorical aims to local writing actions, relate to writing quality.
 4. **RQ4.** Does the mapping replicate across platforms?
 
-The protocol defines the analysis terms used below. An estimand is the quantity that the analysis plans to estimate. Pointwise scoring gives each output an independent rubric score. A Bradley-Terry model [^11] estimates relative condition abilities from pairwise choices. Holm correction [^15] controls the family-wise error rate.
+The protocol defines the analysis terms used below. An estimand is the quantity that the analysis plans to estimate. Pointwise scoring gives each output an independent rubric score. Benchmark-native pointwise scoring judges an output against the criteria that the benchmark ships for its own prompts instead of a shared generic rubric. A Bradley-Terry model [^11] estimates relative condition abilities from pairwise choices. Holm correction [^15] controls the family-wise error rate.
 
-The pointwise two-judge composite is the sole CONFIRMATORY estimand. The composite is the prespecified quantity used for confirmatory tests. Use one correction family per benchmark on the primary Codex pointwise composite. Each family contains the five comparisons of the theory-based condition A4 with the five other core conditions A1, A2, A3, A5, and A6, for 15 confirmatory tests total.
+The pairwise Bradley-Terry [^11] two-judge average is the sole CONFIRMATORY estimand. The average is the prespecified quantity used for confirmatory tests. Use one correction family per benchmark on the primary Codex pairwise average. Each family contains the five comparisons of the theory-based condition A4 with the five other core conditions A1, A2, A3, A5, and A6, for 15 confirmatory tests total.
 
-The pairwise Bradley-Terry [^11] average is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. The pairwise average estimates the relative ability of the conditions from pairwise choices. Report it with intervals and attach no Holm-adjusted claims. All other contrasts remain exploratory.
+The benchmark-native pointwise two-judge composite is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. Report the native composite with intervals and attach no Holm-adjusted claims. The generic five-dimension pointwise composite is a sensitivity and judge-diagnostic estimand. All other contrasts remain exploratory.
+
+This estimand assignment revises the original protocol, which made the generic pointwise composite the sole confirmatory estimand. The revision precedes the statistical lock and every confirmatory scoring run. A ten-prompt WritingBench pilot, recorded in the [session handoff](https://github.com/shunk031/agentic-cognitive-writing/issues/32), showed that the generic five-dimension scale saturates while benchmark-native criteria and pairwise comparisons discriminate among conditions. Pilot outputs and pilot scores enter no confirmatory analysis; confirmatory runs regenerate outputs from the frozen prompt manifests.
 
 The protocol also defines process and replication estimands. The primary process estimands are goal events, adaptive process switches, within-process operation counts, and pop-back events. Report rates and distributions for each. The replication estimand is the direction and size of the A4 treatment effect under the secondary platform. Report it separately from the primary platform.
 
@@ -80,7 +82,7 @@ All enabled conditions share the same skill-and-subagent framework and the plugi
 
 **B2 trace and evidence handling.** The skill writes the five stage events to the shared trace path. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The no-retrieval adaptation follows the benchmark evidence in [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) and the platform evidence in [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md).
 
-B1 and B2 are EXPLORATORY. Each platform's assigned judges score both conditions pointwise. The runner compares each exploratory condition with A4 in pairwise judgments, runs both presentation orders, and reports intervals without Holm-adjusted claims. The 15-pair confirmatory tournament remains the tournament among A1-A6, and the confirmatory family remains exactly the 15 Holm-corrected A4-versus-A1, A2, A3, A5, and A6 contrasts on the primary pointwise composite.
+B1 and B2 are EXPLORATORY. Each platform's assigned judges score both conditions pointwise. The runner compares each exploratory condition with A4 in pairwise judgments, runs both presentation orders, and reports intervals without Holm-adjusted claims. The 15-pair confirmatory tournament remains the tournament among A1-A6, and the confirmatory family remains exactly the 15 Holm-corrected A4-versus-A1, A2, A3, A5, and A6 contrasts on the primary pairwise Bradley-Terry [^11] two-judge average.
 
 All six core conditions use the same assignment, starting draft, model settings, and user decisions. B1 and B2 use the same settings when the exploratory runs are enabled.
 
@@ -207,15 +209,15 @@ The runner measures output quality and length as separate outcomes. The product 
 
 The runner preserves the raw output byte-for-byte and also stores the normalized text used for token and word counts. Normalization may remove only transport wrappers defined in the runner specification. Normalization must not rewrite content, repair claims, or change paragraph boundaries.
 
-### Pointwise quality from two judges
+### Generic pointwise quality from two judges
 
-Each assigned judge scores every output independently on five dimensions. Each raw score is an integer from 1 to 5. The judge returns a short evidence quote for each dimension.
+The generic pointwise scale supplies the sensitivity and judge-diagnostic estimand and stays comparable across benchmarks. Each assigned judge scores every output independently on five dimensions. Each raw score is an integer from 1 to 5. The judge returns a short evidence quote for each dimension.
 
 For each platform, the runner z-scores each dimension within each benchmark and judge. The runner then averages the five z-scores into that judge's level composite. For platform `p`, judge `j`, benchmark `b`, dimension `d`, and output `i`, the value is `z(i,p,j,b,d) = (raw(i,p,j,b,d) - mean(p,j,b,d)) / sd(p,j,b,d)`. A zero standard deviation uses the frozen zero-variance rule in the runtime gate. Length compliance never enters a quality score.
 
-On the primary Codex platform, every output receives both the Claude-family frontier judge and the open evaluator. The primary pointwise product-quality estimand is the equal-weight mean of the two judge-level composites, `Q_primary(i) = 0.5 * C_Claude(i) + 0.5 * C_open(i)`. Report per-judge raw scores and per-judge composites as sensitivity analyses.
+On the primary Codex platform, every output receives both the Claude-family frontier judge and the open evaluator. The generic pointwise composite is the equal-weight mean of the two judge-level composites, `Q_primary(i) = 0.5 * C_Claude(i) + 0.5 * C_open(i)`. Report per-judge raw scores and per-judge composites as additional sensitivity analyses.
 
-On the Claude Code replication, every output receives the GPT-family frontier judge and the same open evaluator. The replication estimand uses the same equal-weight construction, `Q_replication(i) = 0.5 * C_GPT(i) + 0.5 * C_open(i)`. Keep replication inference separate from primary inference. Do not pool platforms. Report cross-platform agreement descriptively for RQ4.
+On the Claude Code replication, every output receives the GPT-family frontier judge and the same open evaluator. The replication composite uses the same equal-weight construction, `Q_replication(i) = 0.5 * C_GPT(i) + 0.5 * C_open(i)`. Keep replication inference separate from primary inference. Do not pool platforms. Report cross-platform agreement descriptively for RQ4.
 
 | Dimension | Score 1 | Score 3 | Score 5 |
 | --- | --- | --- | --- |
@@ -260,9 +262,15 @@ The runner rejects a response when it has any of these problems:
 
 The runner retries an invalid judge response only under the fixed retry count in the run manifest. The runner never gives a failed condition extra content or attempts.
 
+### Benchmark-native pointwise quality
+
+The benchmark-native composite is the primary reported pointwise estimand and is defined for each benchmark whose pinned prompt manifest carries per-prompt native criteria. The WritingBench manifest carries each query's five native criteria. The judge scores one criterion per request as an integer from 1 to 10 under the frozen versioned native template, following the pinned upstream evaluator. The analysis stage aggregates the criterion scores: the per-output native score is the unweighted mean over that prompt's criteria on the raw native scale without z-scoring, and the native composite averages the two assigned judges with equal weight, mirroring the generic two-judge construction. The runner applies the same JSON validation and retry rules as the generic pointwise stage.
+
+The HelloBench manifest adds its per-prompt checklist criteria when HelloBench generation runs begin, and the same construction applies to those criteria. For a benchmark whose manifest carries no per-prompt native criteria, the generic composite remains the reported pointwise scale and the native composite is `N/A`.
+
 ### Balanced pairwise tournament
 
-The six core conditions A1-A6 produce 15 unordered condition pairs. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. The two presentations produce 30 judgments per prompt per judge. Apply these controls:
+The balanced tournament supplies the confirmatory estimand. The six core conditions A1-A6 produce 15 unordered condition pairs. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. The two presentations produce 30 judgments per prompt per judge. Apply these controls:
 
 - Blind the condition labels.
 - Randomize output order with a recorded seed.
@@ -289,9 +297,9 @@ The pairwise JSON object follows this contract, and every record must include th
 }
 ```
 
-Group pairwise records on `(platform, judge_id)` before fitting each judge-specific Bradley-Terry [^11] model. Use `judge_family` to verify each group against the runtime judge manifest. Compute the equal-weight average from those per-judge fits within each platform. Do not combine records from different platforms or judges before fitting.
+Group pairwise records on `(platform, judge_id, benchmark)` before fitting each judge-specific Bradley-Terry [^11] model, because each confirmatory family covers one benchmark. Use `judge_family` to verify each group against the runtime judge manifest. Compute the equal-weight average from those per-judge fits within each platform and benchmark. Do not combine records from different platforms, judges, or benchmarks before fitting.
 
-Fit each Bradley-Terry [^11] model with a predeclared tie treatment. For condition `a`, let `theta_Codex(a, Claude)` and `theta_Codex(a, open)` be the judge-specific ability estimates under the same reference-condition constraint. The Codex pairwise average is `theta_primary(a) = 0.5 * theta_Codex(a, Claude) + 0.5 * theta_Codex(a, open)`. For the replication, use `theta_replication(a) = 0.5 * theta_ClaudeCode(a, GPT) + 0.5 * theta_ClaudeCode(a, open)`.
+Fit each Bradley-Terry [^11] model with a predeclared tie treatment. For condition `a` within one benchmark, let `theta_Codex(a, Claude)` and `theta_Codex(a, open)` be the judge-specific ability estimates under the same reference-condition constraint. The Codex pairwise average is `theta_primary(a) = 0.5 * theta_Codex(a, Claude) + 0.5 * theta_Codex(a, open)`. For the replication, use `theta_replication(a) = 0.5 * theta_ClaudeCode(a, GPT) + 0.5 * theta_ClaudeCode(a, open)`.
 
 Fit and report the two platform models separately. Report these pairwise outputs:
 
@@ -317,7 +325,7 @@ Length compliance is a standalone outcome for prompts with an explicit requested
 
 For `x > 0` and `y > 0`, use the LongWriter [^8] style formula from the [reference length evaluator](https://github.com/THUDM/LongWriter/blob/main/evaluation/eval_length.py). When `y > x`, compute `S = 100 * max(0, 1 - (y / x - 1) / 3)`. When `y <= x`, compute `S = 100 * max(0, 1 - (x / y - 1) / 2)`. If `y = 0`, set `S = 0` and `D = 1`. If a prompt has no explicit length request, report these outcomes as `N/A`. Freeze the length unit, formula, zero-output rule, and `tau` value in the runtime gate.
 
-Length compliance and the length score never enter either quality estimand.
+Length compliance and the length score never enter any quality estimand.
 
 The runner performs a judge and generator family overlap audit. If any judge also generated an output, it runs the self-preference test on a blinded subset with the same A/B and B/A controls. The test estimates whether that judge family changes its choices for its own outputs. If the planned non-overlap assignment holds, the manifest records that the test was not triggered by direct overlap and reports swapped-judge rank agreement as the corresponding sensitivity check. The [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) recommends this diagnostic when overlap cannot be avoided.
 
@@ -419,29 +427,29 @@ The analysis correlates process measures with per-prompt product quality. It rep
 
 ## Confirmatory and exploratory analysis
 
-The analysis keeps primary and replication inference separate and reserves confirmatory claims for the primary pointwise two-judge composite.
+The analysis keeps primary and replication inference separate and reserves confirmatory claims for the primary pairwise Bradley-Terry [^11] two-judge average.
 
 The prompt is the paired unit. Each condition receives the same prompt, and platform replications use the same prompt manifest. Invalid or missing outputs remain in the run accounting. The report gives the failure count and reason by condition and benchmark. The report does not silently drop a condition that fails more often.
 
-For pointwise quality, compute the primary equal-weight judge composite for each prompt and condition on each platform. The confirmatory contrasts compare condition A4 with the five other core conditions A1, A2, A3, A5, and A6. Use paired bootstrap intervals or a paired Wilcoxon signed-rank test [^16] across prompts. Report these results:
+For pointwise quality, compute the benchmark-native composite where the pinned manifest defines native criteria and the generic composite for every output, for each prompt and condition on each platform. Report the A4-versus-A1, A2, A3, A5, and A6 contrasts on both composites, using paired bootstrap intervals or a paired Wilcoxon signed-rank test [^16] across prompts, with no Holm-adjusted claims. Report these results:
 
 - Mean and median paired differences
 - Confidence intervals
-- Test statistic and p-value
+- Test statistic and unadjusted p-value
 - Effect size
 
-Report raw 1 to 5 means, judge-level composites, and per-judge contrasts as sensitivity analyses. Run the same analysis by benchmark. Keep Codex and Claude Code inference separate.
+Report raw native criterion means, raw 1 to 5 generic means, judge-level composites, and per-judge contrasts as sensitivity analyses. Run the same analysis by benchmark. Keep Codex and Claude Code inference separate.
 
-For pairwise quality, report these results on each platform:
+For pairwise quality, the confirmatory contrasts compare condition A4 with the five other core conditions A1, A2, A3, A5, and A6 on the equal-weight pairwise average within each primary benchmark. Use prompt-level paired resampling for uncertainty and for the confirmatory p-values. Report these results on each platform:
 
 - Raw wins, losses, and ties
 - Per-judge tie-aware win rates
 - Per-judge Bradley-Terry [^11] ability estimates
 - Equal-weight judge average
 
-Use prompt-level paired resampling for uncertainty. Report the effect size on the selected Bradley-Terry [^11] scale or the paired difference in tie-aware win rate. Keep Codex and Claude Code inference separate.
+Report the effect size on the selected Bradley-Terry [^11] scale or the paired difference in tie-aware win rate. Keep Codex and Claude Code inference separate.
 
-For RQ1 and RQ2, run the 15 confirmatory contrasts on the primary Codex pointwise composite. Compare condition A4 with the five other core conditions A1, A2, A3, A5, and A6 within each primary benchmark. Report the same five contrasts on the Claude Code replication separately, without pooled or confirmatory inference.
+For RQ1 and RQ2, run the 15 confirmatory contrasts on the primary Codex pairwise average. Compare condition A4 with the five other core conditions A1, A2, A3, A5, and A6 within each primary benchmark. Report the same five contrasts on the Claude Code replication separately, without pooled or confirmatory inference.
 
 For RQ4, compare platforms descriptively by the following measures and do not pool platforms:
 
@@ -449,7 +457,7 @@ For RQ4, compare platforms descriptively by the following measures and do not po
 - Rank agreement
 - Standardized effect size
 
-Apply Holm correction [^15] within each primary-benchmark family of five confirmatory contrasts on the primary Codex pointwise composite. Do not apply the correction to the pairwise average or to any other contrast. Report the pairwise average with uncertainty intervals and no Holm-adjusted claims. Freeze these settings before outcome inspection:
+Apply Holm correction [^15] within each primary-benchmark family of five confirmatory contrasts on the primary Codex pairwise average. Do not apply the correction to the native or generic pointwise composite or to any other contrast. Report both pointwise composites with uncertainty intervals and no Holm-adjusted claims. Freeze these settings before outcome inspection:
 
 - Alternative hypotheses
 - Missing-value rules

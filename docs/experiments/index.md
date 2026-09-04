@@ -40,7 +40,7 @@ The experiment asks whether:
 
 The protocol combines output-quality evaluation with analysis of the writing process itself.
 
-The primary benchmark set covers broad writing tasks, long-text generation, and structured expert writing. Output evaluation uses prespecified pointwise judging as the confirmatory estimand, with pairwise comparison reported as a complementary analysis.
+The primary benchmark set covers broad writing tasks, long-text generation, and structured expert writing. Output evaluation uses a prespecified balanced pairwise tournament as the confirmatory estimand, with benchmark-native and generic pointwise scores reported as complementary analyses.
 
 Process evaluation operates on the externally recorded writing trace rather than treating hidden model reasoning as data.
 
