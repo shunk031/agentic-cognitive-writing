@@ -244,7 +244,7 @@ def test_family_audit_rejects_frontier_generator_overlap(
     assert not (run_dir / "scores.jsonl").exists()
 
 
-def test_family_audit_rejects_open_evaluator_not_in_third_family(
+def test_family_audit_allows_incomplete_non_overlapping_map(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     template = tmp_path / "judge.txt"
@@ -253,9 +253,7 @@ def test_family_audit_rejects_open_evaluator_not_in_third_family(
         tmp_path,
         template,
         model_family_map={
-            "claude-frontier": {"family": "claude", "role": "frontier"},
-            "gpt-frontier": {"family": "gpt", "role": "frontier"},
-            "open-model": {"family": "gpt", "role": "open_evaluator"},
+            "open-model": {"family": "prometheus", "role": "open_evaluator"},
         },
     )
     run_dir = _run_dir(tmp_path, "A1", "evidence")
@@ -268,14 +266,15 @@ def test_family_audit_rejects_open_evaluator_not_in_third_family(
         for dimension in POINTWISE_DIMENSIONS
     ]
 
-    with pytest.raises(JudgeConfigurationError, match="third family"):
-        score_run(
-            run_dir,
-            config,
-            transport=FakeTransport(
-                [{"content": json.dumps(response), "model": "open-model"}]
-            ),
-        )
+    result = score_run(
+        run_dir,
+        config,
+        transport=FakeTransport(
+            [{"content": json.dumps(response), "model": "open-model"}]
+        ),
+    )
+
+    assert result.scores_path.is_file()
 
 
 def test_family_audit_rejects_unmappable_reported_model(

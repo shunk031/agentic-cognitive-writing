@@ -204,6 +204,8 @@ def test_adapter_commands_expand_runtime_controls_and_deny_network() -> None:
     codex_command = codex.build_command(
         model_id="model-test", prompt="prompt", runtime_values=values
     )
+    assert not hasattr(codex, "prompt_mode")
+    assert codex_command[-1] == "prompt"
     assert "sandbox_workspace_write.network_access=false" in codex_command
     assert 'web_search="disabled"' in codex_command
     assert all("{" not in part and "}" not in part for part in codex_command)
@@ -214,6 +216,8 @@ def test_adapter_commands_expand_runtime_controls_and_deny_network() -> None:
     claude_command = claude.build_command(
         model_id="model-test", prompt="prompt", runtime_values=values
     )
+    assert not hasattr(claude, "prompt_mode")
+    assert claude_command[-1] == "prompt"
     settings = json.loads(claude_command[claude_command.index("--settings") + 1])
     assert settings["env"]["CLAUDE_CODE_MAX_OUTPUT_TOKENS"] == "17"
     assert settings["sandbox"]["network"]["allowedDomains"] == []
@@ -436,13 +440,15 @@ def test_collects_only_new_or_changed_codex_rollouts_under_run_dir(
     assert all(
         result.run_dir.resolve() in path.resolve().parents for path in collected_files
     )
-    checksums = json.loads(result.checksums_path.read_text())
-    assert checksums["sessions/attempt-001/changed.jsonl"] == (
+    manifest = json.loads(result.manifest_path.read_text())
+    evidence_hashes = manifest["evidence_hashes"]
+    assert evidence_hashes["sessions/attempt-001/changed.jsonl"] == (
         "sha256:" + hashlib.sha256(b"after").hexdigest()
     )
-    assert checksums["sessions/attempt-001/2026/new.jsonl"] == (
+    assert evidence_hashes["sessions/attempt-001/2026/new.jsonl"] == (
         "sha256:" + hashlib.sha256(b"created during attempt").hexdigest()
     )
+    assert not (result.run_dir / "checksums.json").exists()
 
 
 def test_rollout_status_remains_complete_across_retry_without_new_files(

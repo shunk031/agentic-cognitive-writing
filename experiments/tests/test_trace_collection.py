@@ -319,8 +319,12 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
         result.trace_path.relative_to(result.run_dir).as_posix()
         == ".writing/trace/process.jsonl"
     )
-    checksums = json.loads(result.checksums_path.read_text())
-    assert checksums[".writing/trace/process.jsonl"].startswith("sha256:")
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["output_hash"].startswith("sha256:")
+    assert manifest["trace_hash"] == (
+        "sha256:" + hashlib.sha256(result.trace_path.read_bytes()).hexdigest()
+    )
+    assert not (result.run_dir / "checksums.json").exists()
 
 
 def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):

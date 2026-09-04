@@ -329,35 +329,12 @@ class JudgeConfig:
     def validate_family_audit(
         self, identity: JudgeIdentity, generator_family: str
     ) -> None:
-        """Reject family overlap and incomplete third-family mappings."""
+        """Reject empty generator families and family overlap."""
 
         generator_base = _base_family(generator_family)
         if not generator_base:
             raise JudgeConfigurationError(
                 "run manifest needs a non-empty generator model family"
-            )
-        mappings = tuple(self.model_family_map)
-        frontier_families = {
-            _base_family(mapping.family)
-            for _, mapping in mappings
-            if mapping.role == "frontier"
-        }
-        if not {"claude", "gpt"}.issubset(frontier_families):
-            raise JudgeConfigurationError(
-                "model_family_map must include both frontier families"
-            )
-        open_families = {
-            _base_family(mapping.family)
-            for _, mapping in mappings
-            if mapping.role == "open_evaluator"
-        }
-        if not open_families:
-            raise JudgeConfigurationError(
-                "model_family_map must include an open evaluator family"
-            )
-        if any(family in frontier_families for family in open_families):
-            raise JudgeConfigurationError(
-                "open evaluator family must be a third family"
             )
         if identity.mapped_family == generator_base:
             raise JudgeConfigurationError("judge and generator model families overlap")

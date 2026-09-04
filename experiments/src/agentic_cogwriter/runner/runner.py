@@ -39,7 +39,6 @@ from .hashing import sha256_bytes, sha256_file
 from .manifest import PromptRecord, load_benchmark_provenance
 from .trace import (
     assert_untouched,
-    checksums_for_files,
     collect_plugin_trace,
     timestamp,
     validate_trace,
@@ -63,7 +62,6 @@ class RunResult:
     manifest_path: Path
     output_path: Path
     trace_path: Path
-    checksums_path: Path
     run_id: str
 
 
@@ -284,7 +282,6 @@ class ExperimentRunner:
         output_path = run_dir / "output.raw"
         normalized_path = run_dir / "output.normalized.txt"
         trace_path = workspace / ".writing" / "trace" / "process.jsonl"
-        checksums_path = run_dir / "checksums.json"
         prompt_path = run_dir / "prompt.txt"
         execution_paths = {
             "cwd": str(workspace.resolve()),
@@ -516,10 +513,6 @@ class ExperimentRunner:
                         "Codex rollout collection is available"
                     )
                 self._write_json(
-                    checksums_path,
-                    checksums_for_files(run_dir, ["prompt.txt", *evidence_hashes]),
-                )
-                self._write_json(
                     manifest_path,
                     self._manifest(
                         prompt=prompt,
@@ -618,15 +611,6 @@ class ExperimentRunner:
 
             output_path.write_bytes(output.encode("utf-8"))
             normalized_path.write_text(output, encoding="utf-8")
-            artifact_paths = [
-                "output.raw",
-                "output.normalized.txt",
-                required_trace,
-                *trace_files,
-                *evidence_hashes,
-            ]
-            checksums = checksums_for_files(run_dir, artifact_paths)
-            self._write_json(checksums_path, checksums)
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -640,8 +624,8 @@ class ExperimentRunner:
                     cli_version=cli_version,
                     attempts=attempts,
                     budget=budget,
-                    output_hash=checksums.get("output.raw"),
-                    trace_hash=checksums.get(required_trace),
+                    output_hash=f"sha256:{sha256_file(output_path)}",
+                    trace_hash=f"sha256:{sha256_file(copied_trace)}",
                     stage_prompt_hashes=stage_prompt_hashes,
                     benchmark_provenance=benchmark_provenance,
                     execution_paths=execution_paths,
@@ -660,7 +644,6 @@ class ExperimentRunner:
                 manifest_path,
                 output_path,
                 copied_trace,
-                checksums_path,
                 run_id,
             )
         except Exception as exc:
@@ -691,19 +674,6 @@ class ExperimentRunner:
                     "stream": stream,
                     "artifact_source": exc.artifact_source,
                 }
-            failure_artifacts = ["prompt.txt", *evidence_hashes]
-            if isinstance(exc, RetrievalViolation):
-                artifact_suffix = (
-                    exc.artifact_source
-                    if exc.artifact_source != "transport"
-                    else (exc.stream or "stdout")
-                )
-                failure_artifacts.append(f"rejected-output.{artifact_suffix}")
-            failure_checksums = checksums_for_files(
-                run_dir, list(dict.fromkeys(failure_artifacts))
-            )
-            if failure_checksums:
-                self._write_json(checksums_path, failure_checksums)
             self._write_json(
                 manifest_path,
                 self._manifest(

@@ -173,46 +173,6 @@ def _parse_jsonl(text: str, path: Path) -> list[Mapping[str, Any]]:
     return rows
 
 
-def _load_document_manifest(
-    document: Mapping[str, Any], *, path: Path
-) -> PromptManifest:
-    """Load an object-form manifest used by isolated runner fixtures."""
-
-    required = (
-        "schema_version",
-        "benchmark_name",
-        "source_version",
-        "prompts",
-        "manifest_hash",
-    )
-    missing = [field for field in required if field not in document]
-    if missing:
-        raise ManifestError(f"Prompt manifest is missing fields: {', '.join(missing)}")
-    if document["schema_version"] != 1:
-        raise ManifestError("Unsupported prompt manifest schema_version")
-    if not isinstance(document["prompts"], list):
-        raise ManifestError("Prompt manifest prompts must be a list")
-    expected_hash = sha256_json(_without(document, "manifest_hash"))
-    if document["manifest_hash"] != expected_hash:
-        raise ManifestError("Prompt manifest has an invalid manifest_hash")
-    if not isinstance(document["benchmark_name"], str) or not isinstance(
-        document["source_version"], str
-    ):
-        raise ManifestError(
-            "Prompt manifest benchmark and source versions must be strings"
-        )
-    rows = [row for row in document["prompts"] if isinstance(row, dict)]
-    if len(rows) != len(document["prompts"]):
-        raise ManifestError("Prompt manifest rows must be objects")
-    return _validate_prompt_rows(
-        rows,
-        benchmark_name=document["benchmark_name"],
-        source_version=document["source_version"],
-        manifest_hash=document["manifest_hash"],
-        path=path,
-    )
-
-
 def load_prompt_manifest(path: Path) -> PromptManifest:
     """Load JSONL prompt rows and validate hashes without network access."""
 
@@ -221,19 +181,6 @@ def load_prompt_manifest(path: Path) -> PromptManifest:
         text = raw.decode("utf-8")
     except (OSError, UnicodeError) as exc:
         raise ManifestError(f"Cannot read prompt manifest {path}: {exc}") from exc
-
-    try:
-        document = json.loads(text)
-    except json.JSONDecodeError:
-        document = None
-    if isinstance(document, dict) and {
-        "schema_version",
-        "benchmark_name",
-        "source_version",
-        "prompts",
-        "manifest_hash",
-    }.issubset(document):
-        return _load_document_manifest(document, path=path)
 
     rows = _parse_jsonl(text, path)
     first = rows[0]

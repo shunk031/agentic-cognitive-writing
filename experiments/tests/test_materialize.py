@@ -360,6 +360,14 @@ def test_checked_in_manifests_have_schema_hashes_and_expected_counts() -> None:
             assert row["hash"] == hash_manifest_row(row)
 
 
+def test_checked_in_manifests_are_byte_deterministic() -> None:
+    for benchmark_name in BENCHMARKS:
+        path = MANIFEST_DIR / f"{benchmark_name}.jsonl"
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+
+        assert materialize_module._manifest_bytes(rows) == path.read_bytes()
+
+
 def test_checked_in_provenance_records_pins_license_and_split() -> None:
     provenance = json.loads((PROMPTS_ROOT / "provenance.json").read_text())
 

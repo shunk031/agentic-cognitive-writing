@@ -155,8 +155,8 @@ The runner must record the installed Codex and Claude Code CLI versions and vali
 
 The runner uses these conceptual interfaces:
 
-- `PRIMARY_GENERATOR`: `codex exec <REQUIRED_AT_RUNTIME flags> <prompt or stdin>`
-- `SECONDARY_GENERATOR`: `claude --print <REQUIRED_AT_RUNTIME flags> <prompt or stdin>`
+- `PRIMARY_GENERATOR`: `codex exec <REQUIRED_AT_RUNTIME flags> <prompt argument>`
+- `SECONDARY_GENERATOR`: `claude --print <REQUIRED_AT_RUNTIME flags> <prompt argument>`
 
 The runner will version the command flags in experiments/conditions/ when the runner lands and record them in every run manifest. The run must not silently fall back to an interactive mode.
 
@@ -168,7 +168,7 @@ The runner starts one top-level session per condition and prompt. In Codex A4 to
 
 The protocol assigns judges by platform. The Codex run with GPT-family generators uses a Claude-family frontier judge and the shared third-family Prometheus 2 [^9] style open evaluator. The Claude Code run with Claude-family generators uses a GPT-family frontier judge and the same open evaluator.
 
-The open evaluator must belong to a third model family, and the assignment is symmetric across the two platform runs.
+The open evaluator must belong to a third model family, and the assignment is symmetric across the two platform runs. The runtime family audit enforces judge/generator family non-overlap per scoring run; it does not require declaring the full family set for a single-judge run.
 
 The runner must pin each value below. A placeholder blocks the run:
 
@@ -195,9 +195,9 @@ The runner must pin each value below. A placeholder blocks the run:
 | Main plugin commit | `REQUIRED_AT_RUNTIME`: main plugin commit |
 | Experiments plugin commit | `REQUIRED_AT_RUNTIME`: experiments plugin commit |
 | Runner commit | `REQUIRED_AT_RUNTIME`: runner commit |
-| Generator and judge family audit | `REQUIRED_AT_RUNTIME`: recorded base-model families and runtime verification that each frontier judge differs from the generator family and the open evaluator belongs to a third family |
+| Generator and judge family audit | `REQUIRED_AT_RUNTIME`: recorded base-model families and runtime verification that each selected judge differs from the generator family |
 
-The runner records each judge's base-model family and the generator family for every scored output. It fails the run if a frontier judge shares the generator family or if the open evaluator does not belong to a third family. The audit verifies the family labels at runtime rather than trusting configuration names.
+The runner records each judge's base-model family and the generator family for every scored output. The runner fails the run when a selected judge shares the generator family. The audit verifies the family labels at runtime rather than trusting configuration names.
 
 The no-retrieval rule applies to generators and judges. Judges receive only the assignment, the permitted supplied context, and the blinded output or output pair. Judges do not receive agent traces, internal role names, or condition labels.
 
@@ -475,7 +475,7 @@ experiments/
 ├── judge/        # pointwise and pairwise prompts, schemas, and runners
 ├── human/        # sampling manifest, annotation form, and agreement code
 ├── analysis/     # scoring, statistics, plots, and report tables
-└── manifests/    # run manifests, checksums, and validation reports
+└── manifests/    # run manifests and validation reports
 ```
 
 The runner writes a manifest before each run. The manifest records these fields:
@@ -583,8 +583,7 @@ The owner must close every gate below before the first scored run. The runner re
    - Exact GPT-family frontier judge for Claude Code outputs
    - The same open evaluator for both platforms
    - Each judge's base-model family
-   - Runtime verification that each frontier judge differs from the generator family
-   - Runtime verification that the open evaluator belongs to a third family, such as a Mistral-family evaluator
+   - Runtime verification that each selected judge differs from the generator family
    - Frozen judge prompts, schemas, decoding parameters, and seeds
    - Frozen Bradley-Terry [^11] tie treatment
    - Frozen common ability-scale convention
