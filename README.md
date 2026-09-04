@@ -1,6 +1,6 @@
 # Agentic CogWriter
 
-[![Checks](https://github.com/shunk031/agentic-cognitive-writing/actions/workflows/checks.yml/badge.svg)](https://github.com/shunk031/agentic-cognitive-writing/actions/workflows/checks.yml)
+[![Checks](https://github.com/shunk031/agentic-cognitive-writing/actions/workflows/checks.yml/badge.svg)](https://github.com/shunk031/agentic-cognitive-writing/actions/workflows/checks.yml) [![Docs](https://github.com/shunk031/agentic-cognitive-writing/actions/workflows/docs.yml/badge.svg)](https://github.com/shunk031/agentic-cognitive-writing/actions/workflows/docs.yml) [![Documentation](https://img.shields.io/badge/docs-online-blue)](https://shunk031.me/agentic-cognitive-writing/)
 
 `Agentic CogWriter` is a harness that turns a coding agent into a cognitive writing system. The harness installs as skills and subagents, runs long-form writing as an explicit cognitive process, and keeps goals, drafts, notes, and the decision log as files in the directory where you write. Instead of generating text in one pass, the harness revisits and rewrites its own plans and goals as the draft develops.
 
