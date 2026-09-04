@@ -26,20 +26,22 @@ A `Monitor` coordinates three writing processes:
 The processes are not executed as a fixed pipeline. The `Monitor` can move between them as composition develops, while the system maintains an evolving hierarchical goal network.
 
 ```mermaid
-flowchart LR
-    state["Writing state<br/>draft · goals · memory · history"]
+flowchart TB
     monitor["Monitor"]
     planning["Planning"]
     translating["Translating"]
     reviewing["Reviewing"]
+    state["Writing state<br/>draft · goals · memory · history"]
 
-    state <--> monitor
-    monitor <--> planning
-    monitor <--> translating
-    monitor <--> reviewing
+    monitor --> planning
+    monitor --> translating
+    monitor --> reviewing
+
     planning --> state
     translating --> state
     reviewing --> state
+
+    state -.-> monitor
 ```
 
 [Read how the cognitive model maps to the system →](theory-mapping.md)
