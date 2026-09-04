@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic_ai import ModelResponse, RequestUsage
@@ -10,6 +12,8 @@ from pydantic_ai.exceptions import ModelHTTPError, UnexpectedModelBehavior
 from pydantic_ai.messages import ModelRequest, ToolCallPart
 from pydantic_ai.messages import ModelResponse as MessageResponse
 from pydantic_ai.models.function import AgentInfo, FunctionModel
+from pydantic_ai.models.openai import OpenAIChatModel, OpenAIModelProfile
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from agentic_cogwriter.judges.client import (
     OpenAICompatibleClient,
@@ -422,6 +426,177 @@ def test_fake_transport_receives_deterministic_zero_temperature_payload(
     assert payload["seed"] == 19
     assert payload["top_p"] == 1
     assert payload["max_completion_tokens"] == 120
+
+
+def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
+    tmp_path: Path,
+) -> None:
+    template = Path(__file__).parents[1] / "prompts/judges/pointwise-v1.txt"
+    config = _config(tmp_path, template, model="gpt-5.6-terra")
+    captured: list[dict[str, Any]] = []
+
+    # Exercise the pinned OpenAI request mapper so the regression checks the
+    # wire shape, not only model settings.
+    import httpx2 as httpx
+
+    async def respond(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        captured.append(payload)
+        tool_name = payload["tools"][0]["function"]["name"]
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-test",
+                "object": "chat.completion",
+                "created": 1,
+                "model": payload["model"],
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "tool_calls": [
+                                {
+                                    "id": "call_1",
+                                    "type": "function",
+                                    "function": {
+                                        "name": tool_name,
+                                        "arguments": json.dumps(
+                                            _pointwise_record(), ensure_ascii=False
+                                        ),
+                                    },
+                                }
+                            ],
+                        },
+                        "finish_reason": "tool_calls",
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 10,
+                    "completion_tokens": 2,
+                    "total_tokens": 12,
+                    "prompt_tokens_details": {"cached_tokens": 8},
+                },
+            },
+        )
+
+    async_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(respond),
+        base_url="https://gateway.test/v1",
+    )
+    model = OpenAIChatModel(
+        "gpt-5.6-terra",
+        provider=OpenAIProvider(
+            base_url="https://gateway.test/v1",
+            api_key="test-key",
+            http_client=async_client,
+        ),
+        profile=OpenAIModelProfile(
+            openai_supports_reasoning=False,
+            openai_reasoning_enabled_by_default=False,
+            openai_chat_supports_max_completion_tokens=True,
+            openai_supports_prompt_cache_breakpoints=True,
+        ),
+    )
+    try:
+        response = OpenAICompatibleClient(config, model=model).complete(
+            JudgeTemplate.load(template).render(
+                {
+                    "prompt_id": "p-1",
+                    "condition_id": "blind-condition",
+                    "platform": "codex",
+                    "judge_id": "judge-1",
+                    "judge_family": "open_evaluator",
+                    "assignment": "Write a memo.",
+                    "context": "Provided fact.",
+                    "output": "Provided response.",
+                }
+            ),
+            output_type=PointwiseJudgeRecord,
+        )
+    finally:
+        asyncio.run(async_client.aclose())
+
+    payload = captured[0]
+    assert payload["messages"][1]["role"] == "user"
+    content = payload["messages"][1]["content"]
+    assert isinstance(content, list)
+    assert len(content) == 2
+    assert content[0]["prompt_cache_breakpoint"] == {"mode": "explicit"}
+    assert content[1]["text"]
+    assert payload["prompt_cache_key"] == "judge-default"
+    assert payload["prompt_cache_options"] == {
+        "mode": "explicit",
+        "ttl": "30m",
+    }
+    assert response.usage == {
+        "prompt_tokens": 10,
+        "completion_tokens": 2,
+        "total_tokens": 12,
+        "cached_tokens": 8,
+    }
+
+
+def test_pairwise_template_forbids_assignment_evidence_quotes() -> None:
+    pairwise = JudgeTemplate.load(
+        Path(__file__).parents[1] / "prompts/judges/pairwise-v1.txt"
+    )
+
+    rendered = pairwise.render(
+        {
+            "prompt_id": "writingbench-0001",
+            "pair_id": "pair-real-a4-a1",
+            "presentation": "A|B",
+            "platform": "codex",
+            "judge_id": "judge-1",
+            "judge_family": "open_evaluator",
+            "assignment": "我想撰写一篇机器学习在智能制造质量控制中的应用研究论文",
+            "context": "(none)",
+            "answer_a": (
+                "## 0 引言\n\n"
+                "说明智能制造场景下高节拍、多品种和复杂工况带来的质量控制挑战。"
+            ),
+            "answer_b": (
+                "提出本文研究目标与创新点：\n1. "
+                "构建融合图像、传感器、工艺及检测结果的多源质量数据模型；"
+            ),
+        }
+    )
+
+    assert "Do not quote the assignment or any other prompt text" in rendered
+
+
+def test_pairwise_validation_accepts_verbatim_quotes_from_real_a4_a1_outputs() -> None:
+    # These excerpts are copied from /tmp/cogwriter-out/judge-batch/A4 and A1 outputs.
+    output_a = (
+        "## 0 引言\n\n说明智能制造场景下高节拍、多品种和复杂工况带来的质量控制挑战。"
+    )
+    output_b = (
+        "提出本文研究目标与创新点：\n1. "
+        "构建融合图像、传感器、工艺及检测结果的多源质量数据模型；"
+    )
+    record = _pairwise_record()
+    record["evidence_quotes"] = {
+        "A": ["高节拍、多品种和复杂工况"],
+        "B": ["多源质量数据模型"],
+    }
+
+    validated = validate_pairwise(
+        record,
+        expected={
+            "prompt_id": "p-1",
+            "platform": "codex",
+            "judge_id": "judge-1",
+            "judge_family": "open_evaluator",
+            "pair_id": "pair-1",
+            "presentation": "A|B",
+        },
+        output_a=output_a,
+        output_b=output_b,
+        context="",
+    )
+
+    assert validated["evidence_quotes"] == record["evidence_quotes"]
 
 
 def test_provider_default_decoding_fields_are_omitted_from_payload(

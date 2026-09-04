@@ -42,6 +42,7 @@ def _run(
     searchable_texts: Sequence[str] | None = None,
     pairwise_texts: tuple[str, str, str] | None = None,
     model: Model | None = None,
+    prompt_cache_key: str = "judge-default",
 ) -> JudgeResult:
     template = JudgeTemplate.load(config.template_path)
     prompt = template.render(values)
@@ -73,6 +74,8 @@ def _run(
             PointwiseJudgeRecord if pairwise_texts is None else PairwiseJudgeRecord
         ),
         output_validator=validate_output,
+        # Reuse the caller's run-scoped cache namespace at the transport seam.
+        prompt_cache_key=prompt_cache_key,
     )
     identity = config.resolve_model_identity(response.reported_model_id)
     if pairwise_texts is None:
@@ -110,6 +113,7 @@ def judge_pointwise(
     blind_condition_id: str,
     platform: str,
     model: Model | None = None,
+    prompt_cache_key: str = "judge-default",
 ) -> JudgeResult:
     """Score one output against the five protocol dimensions."""
 
@@ -138,6 +142,8 @@ def judge_pointwise(
         validator=validate_pointwise,
         searchable_texts=(output, context),
         model=model,
+        # Keep pointwise calls on the same run-scoped cache namespace.
+        prompt_cache_key=prompt_cache_key,
     )
 
 
@@ -153,6 +159,7 @@ def judge_pairwise(
     presentation: str,
     platform: str,
     model: Model | None = None,
+    prompt_cache_key: str = "judge-default",
 ) -> JudgeResult:
     """Compare two blinded outputs in the supplied presentation order."""
 
@@ -186,4 +193,6 @@ def judge_pairwise(
         validator=validate_pairwise,
         pairwise_texts=(output_a, output_b, context),
         model=model,
+        # Keep both pairwise presentations on the same run-scoped cache namespace.
+        prompt_cache_key=prompt_cache_key,
     )
