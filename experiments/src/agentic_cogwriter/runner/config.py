@@ -229,3 +229,25 @@ class RuntimeConfig:
         if platform == "claude-code":
             return str(self.values["claude_code_generator_model"])
         raise ConfigurationError(f"Unknown platform: {platform}")
+
+    def generator_model_family_for(self, platform: str) -> str:
+        """Return the family mapped to the selected generator model ID."""
+
+        model_id = self.model_for(platform)
+        audit = self.values.get("generator_and_judge_family_audit")
+        family_map = (
+            audit.get("generator_model_family_map")
+            if isinstance(audit, Mapping)
+            else None
+        )
+        if not isinstance(family_map, Mapping):
+            raise ConfigurationError(
+                "generator_model_family_map must map generator model IDs to families"
+            )
+        family = family_map.get(model_id)
+        if not isinstance(family, str) or not family.strip():
+            raise ConfigurationError(
+                f"generator model ID {model_id!r} is not present in "
+                "generator_model_family_map"
+            )
+        return family.strip()

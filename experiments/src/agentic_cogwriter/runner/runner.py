@@ -69,19 +69,10 @@ FINAL_OUTPUT_DRAFT_RATIO = 0.5
 DEFAULT_PRODUCT_FLOOR = 10
 
 
-def _generator_model_family(runtime_config: RuntimeConfig, platform: str) -> str | None:
-    """Read the generator family from the runtime family-audit settings."""
+def _generator_model_family(runtime_config: RuntimeConfig, platform: str) -> str:
+    """Resolve the selected generator model ID through the frozen family map."""
 
-    audit = runtime_config.get("generator_and_judge_family_audit")
-    if not isinstance(audit, Mapping):
-        return None
-    families = audit.get("generator_families")
-    if not isinstance(families, Mapping):
-        return None
-    value = families.get(platform)
-    if isinstance(value, str) and value.strip():
-        return value.strip()
-    return None
+    return runtime_config.generator_model_family_for(platform)
 
 
 def _safe_component(value: str) -> str:
@@ -266,6 +257,7 @@ class ExperimentRunner:
             raise ManifestError(f"Unknown platform: {platform}")
         if adapter.platform != platform:
             raise ManifestError(f"Adapter platform mismatch for {platform}")
+        _generator_model_family(self.runtime_config, platform)
 
         run_id = run_id or uuid.uuid4().hex
         run_dir = (
@@ -1037,6 +1029,7 @@ class ExperimentRunner:
                 "benchmark_name": prompt.benchmark_name,
                 "source_version": prompt.source_version,
                 "prompt_id": prompt.prompt_id,
+                "platform": platform,
                 "prompt_hash": prompt.row_hash,
                 "prompt_manifest_hash": prompt.manifest_hash,
                 "condition_id": condition.condition_id,

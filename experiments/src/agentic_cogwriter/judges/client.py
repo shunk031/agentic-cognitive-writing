@@ -108,6 +108,18 @@ def _reported_model(response: Mapping[str, Any]) -> str:
     return model.strip()
 
 
+def _http_error_body(error: urllib.error.HTTPError) -> str | None:
+    try:
+        raw = error.read(JudgeTransportError.MAX_RESPONSE_BODY_LENGTH)
+    except (OSError, ValueError):
+        return None
+    if not raw:
+        return None
+    if isinstance(raw, bytes):
+        return raw.decode("utf-8", errors="replace")
+    return str(raw)
+
+
 class UrllibChatTransport:
     """Send JSON over the OpenAI-compatible ``/chat/completions`` endpoint."""
 
@@ -134,7 +146,8 @@ class UrllibChatTransport:
                 raw = response.read()
         except urllib.error.HTTPError as exc:
             raise JudgeTransportError(
-                f"Judge endpoint returned HTTP status {exc.code}"
+                f"Judge endpoint returned HTTP status {exc.code}",
+                response_body=_http_error_body(exc),
             ) from exc
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             raise JudgeTransportError("Judge endpoint request failed") from exc
@@ -183,14 +196,15 @@ class OpenAICompatibleClient:
                 },
                 {"role": "user", "content": prompt},
             ],
-            "temperature": self.config.temperature,
             "seed": self.config.seed,
             "response_format": {"type": "json_object"},
         }
+        if self.config.temperature is not None:
+            payload["temperature"] = self.config.temperature
         if self.config.top_p is not None:
             payload["top_p"] = self.config.top_p
         if self.config.max_output_tokens is not None:
-            payload["max_tokens"] = self.config.max_output_tokens
+            payload["max_completion_tokens"] = self.config.max_output_tokens
         if self.config.stop_rules:
             payload["stop"] = list(self.config.stop_rules)
         response = self.transport.complete(

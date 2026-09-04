@@ -54,23 +54,12 @@ def _required_text(value: Any, field: str) -> str:
     return value
 
 
-def _platform(manifest: Mapping[str, Any], run_dir: Path) -> str:
+def _platform(manifest: Mapping[str, Any]) -> str:
     inputs = manifest.get("inputs")
     value = inputs.get("platform") if isinstance(inputs, Mapping) else None
-    if value is None and run_dir.parent.name in {
-        "codex-primary",
-        "claude-code-replication",
-    }:
-        value = run_dir.parent.name
-    mapping = {
-        "codex-primary": "codex",
-        "claude-code-replication": "claude-code",
-        "codex": "codex",
-        "claude-code": "claude-code",
-    }
-    if value not in mapping:
+    if value not in {"codex", "claude-code"}:
         raise RunArtifactError("run manifest does not identify a supported platform")
-    return mapping[value]
+    return value
 
 
 def _generator_evidence(manifest: Mapping[str, Any]) -> tuple[str, str]:
@@ -78,10 +67,9 @@ def _generator_evidence(manifest: Mapping[str, Any]) -> tuple[str, str]:
     if not isinstance(models, Mapping):
         raise RunArtifactError("run manifest needs models_and_execution evidence")
     model_id = _required_text(models.get("generator_model_id"), "generator_model_id")
-    family_value = models.get("generator_model_family")
-    if family_value is None:
-        family_value = models.get("generator_family")
-    family = _required_text(family_value, "generator_model_family")
+    family = _required_text(
+        models.get("generator_model_family"), "generator_model_family"
+    )
     return model_id, family
 
 
@@ -153,7 +141,7 @@ def load_run_artifacts(run_dir: Path) -> RunArtifacts:
         run_dir=run_dir,
         prompt_id=prompt_id,
         condition_id=condition_id,
-        platform=_platform(manifest, run_dir),
+        platform=_platform(manifest),
         assignment=assignment,
         context=context,
         output=output,
@@ -259,8 +247,12 @@ def _write_score_artifacts(
             "judge_family": first_result.judge_identity.judge_family,
             "reported_model_id": first_result.judge_identity.reported_model_id,
             "seed": config.seed,
-            "temperature": config.temperature,
-            "top_p": config.top_p,
+            "temperature": (
+                config.temperature
+                if config.temperature is not None
+                else "provider-default"
+            ),
+            "top_p": config.top_p if config.top_p is not None else "provider-default",
             "max_output_tokens": config.max_output_tokens,
             "stop_rules": list(config.stop_rules),
             "max_retries": config.max_retries,

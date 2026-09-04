@@ -1,19 +1,32 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import pytest
 
-from agentic_cogwriter.judges.client import ChatResponse, normalize_usage
+from agentic_cogwriter.judges.client import (
+    ChatResponse,
+    OpenAICompatibleClient,
+    UrllibChatTransport,
+    normalize_usage,
+)
 from agentic_cogwriter.judges.config import JudgeConfig
 from agentic_cogwriter.judges.errors import (
     JudgeConfigurationError,
     JudgeTransportError,
     JudgeValidationError,
+    RunArtifactError,
 )
-from agentic_cogwriter.judges.scorer import blind_condition_id, score_run
+from agentic_cogwriter.judges.scorer import (
+    blind_condition_id,
+    load_run_artifacts,
+    score_run,
+)
 from agentic_cogwriter.judges.templates import JudgeTemplate
 from agentic_cogwriter.judges.validation import (
     POINTWISE_DIMENSIONS,
@@ -74,6 +87,8 @@ def _config(
     *,
     model: str = "open-model",
     model_family_map: dict[str, object] | None = None,
+    temperature: object = 0,
+    top_p: object = 1,
 ) -> JudgeConfig:
     values: dict[str, object] = {
         "task": task,
@@ -90,8 +105,8 @@ def _config(
         "template_path": str(template),
         "seed": 19,
         "presentation_seed": 23,
-        "temperature": 0,
-        "top_p_or_equivalent": 1,
+        "temperature": temperature,
+        "top_p_or_equivalent": top_p,
         "maximum_output_tokens": 120,
         "stop_rules": [],
         "timeout": 10,
@@ -214,6 +229,16 @@ def test_judge_config_rejects_nonzero_temperature(tmp_path: Path) -> None:
                 "temperature": 0.1,
             }
         )
+
+
+def test_judge_config_accepts_provider_default_decoding(tmp_path: Path) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+
+    config = _config(tmp_path, template, temperature=None, top_p=None)
+
+    assert config.temperature is None
+    assert config.top_p is None
 
 
 def test_family_audit_rejects_frontier_generator_overlap(
@@ -372,8 +397,62 @@ def test_fake_transport_receives_deterministic_zero_temperature_payload(
     assert payload["temperature"] == 0
     assert payload["seed"] == 19
     assert payload["top_p"] == 1
-    assert payload["max_tokens"] == 120
+    assert payload["max_completion_tokens"] == 120
     assert payload["response_format"] == {"type": "json_object"}
+
+
+def test_provider_default_decoding_fields_are_omitted_from_payload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+    config = _config(tmp_path, template, temperature=None, top_p=None)
+    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
+    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
+    transport = FakeTransport([{"content": json.dumps(_pointwise_record())}])
+
+    client = OpenAICompatibleClient(config, transport=transport)
+    response = client.complete("prompt")
+
+    assert response.content
+    payload = transport.requests[0]
+    assert "temperature" not in payload
+    assert "top_p" not in payload
+    assert payload["max_completion_tokens"] == 120
+
+
+def test_http_error_preserves_a_bounded_response_body(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    body = (
+        b'{"error":{"type":"unsupported_parameter",'
+        b'"message":"Use max_completion_tokens"}}' + b"x" * 5000
+    )
+
+    def raise_http_error(*args: object, **kwargs: object) -> None:
+        raise urllib.error.HTTPError(
+            "https://judge.invalid/v1/chat/completions",
+            400,
+            "Bad Request",
+            {},
+            io.BytesIO(body),
+        )
+
+    monkeypatch.setattr(urllib.request, "urlopen", raise_http_error)
+
+    with pytest.raises(JudgeTransportError, match="unsupported_parameter") as captured:
+        UrllibChatTransport().complete(
+            base_url="https://judge.invalid/v1",
+            api_key="placeholder-only",
+            payload={"model": "judge-model"},
+            timeout_seconds=10,
+        )
+
+    assert captured.value.response_body is not None
+    assert captured.value.response_body.startswith(
+        '{"error":{"type":"unsupported_parameter"'
+    )
+    assert len(captured.value.response_body) == 4096
 
 
 def test_invalid_json_retries_with_identical_request(
@@ -519,7 +598,7 @@ def _run_dir(tmp_path: Path, condition_id: str, output: str) -> Path:
                 "inputs": {
                     "prompt_id": "p-1",
                     "condition_id": condition_id,
-                    "platform": "codex-primary",
+                    "platform": "codex",
                 },
                 "models_and_execution": _generator_family_audit(),
                 "scoring": {"status": "eligible"},
@@ -528,6 +607,44 @@ def _run_dir(tmp_path: Path, condition_id: str, output: str) -> Path:
         encoding="utf-8",
     )
     return run_dir
+
+
+def test_load_run_artifacts_accepts_real_shaped_manifest(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path, "A1", "Provided fact.")
+
+    artifacts = load_run_artifacts(run_dir)
+
+    assert artifacts.platform == "codex"
+    assert artifacts.generator_model_id == "generator-model"
+    assert artifacts.generator_family == "gpt"
+
+
+@pytest.mark.parametrize(
+    ("section", "field", "message"),
+    [
+        (
+            "inputs",
+            "platform",
+            "run manifest does not identify a supported platform",
+        ),
+        (
+            "models_and_execution",
+            "generator_model_family",
+            "run manifest needs a non-empty generator_model_family",
+        ),
+    ],
+)
+def test_load_run_artifacts_requires_manifest_interface_fields(
+    tmp_path: Path, section: str, field: str, message: str
+) -> None:
+    run_dir = _run_dir(tmp_path, "A1", "Provided fact.")
+    manifest_path = run_dir / "run-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    del manifest[section][field]
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(RunArtifactError, match=message):
+        load_run_artifacts(run_dir)
 
 
 def test_score_run_writes_protocol_jsonl_and_hashed_manifest(
@@ -584,3 +701,30 @@ def test_score_run_writes_protocol_jsonl_and_hashed_manifest(
         "generator_model_id": "generator-model",
         "generator_family": "gpt",
     }
+
+
+def test_score_manifest_records_provider_default_decoding(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+    config = _config(tmp_path, template, temperature=None, top_p=None)
+    run_dir = _run_dir(tmp_path, "A1", "Provided fact.")
+    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
+    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
+    response = _pointwise_record()
+    response["condition_id"] = blind_condition_id("A1")
+    response["evidence_quotes"] = [
+        {"dimension": dimension, "quote": "Provided fact."}
+        for dimension in POINTWISE_DIMENSIONS
+    ]
+
+    result = score_run(
+        run_dir,
+        config,
+        transport=FakeTransport([{"content": json.dumps(response)}]),
+    )
+
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["judge"]["temperature"] == "provider-default"
+    assert manifest["judge"]["top_p"] == "provider-default"

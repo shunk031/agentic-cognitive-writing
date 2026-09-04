@@ -197,7 +197,7 @@ The runner must pin each value below. A placeholder blocks the run:
 | Runner commit | `REQUIRED_AT_RUNTIME`: runner commit |
 | Generator and judge family audit | `REQUIRED_AT_RUNTIME`: recorded base-model families and runtime verification that each selected judge differs from the generator family |
 
-The runner records each judge's base-model family and the generator family for every scored output. The runner fails the run when a selected judge shares the generator family. The audit verifies the family labels at runtime rather than trusting configuration names.
+The runner records each judge's base-model family and the generator family for every scored output. The runner fails the run when a selected judge shares the generator family. The audit verifies the family labels at runtime rather than trusting configuration names. The run manifest records `inputs.platform` and `models_and_execution.generator_model_family` for each run.
 
 The no-retrieval rule applies to generators and judges. Judges receive only the assignment, the permitted supplied context, and the blinded output or output pair. Judges do not receive agent traces, internal role names, or condition labels.
 
