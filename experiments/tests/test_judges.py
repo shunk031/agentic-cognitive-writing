@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 from pydantic_ai import ModelResponse, RequestUsage
-from pydantic_ai.exceptions import ModelHTTPError
+from pydantic_ai.exceptions import ModelHTTPError, UnexpectedModelBehavior
 from pydantic_ai.messages import ModelRequest, ToolCallPart
 from pydantic_ai.messages import ModelResponse as MessageResponse
 from pydantic_ai.models.function import AgentInfo, FunctionModel
@@ -442,7 +442,7 @@ def test_provider_default_decoding_fields_are_omitted_from_payload(
     assert payload["max_completion_tokens"] == 120
 
 
-def test_http_error_preserves_a_bounded_response_body(tmp_path: Path) -> None:
+def test_http_error_preserves_the_native_response_body(tmp_path: Path) -> None:
     body = (
         b'{"error":{"type":"unsupported_parameter",'
         b'"message":"Use max_completion_tokens"}}' + b"x" * 5000
@@ -454,17 +454,16 @@ def test_http_error_preserves_a_bounded_response_body(tmp_path: Path) -> None:
         del messages, info
         raise ModelHTTPError(400, "judge-model", body=body.decode("utf-8"))
 
-    with pytest.raises(JudgeTransportError, match="unsupported_parameter") as captured:
+    with pytest.raises(ModelHTTPError, match="unsupported_parameter") as captured:
         OpenAICompatibleClient(
             _config(tmp_path, _template(tmp_path / "judge.txt", "pointwise")),
             model=FunctionModel(raise_http_error, model_name="open-model"),
         ).complete("prompt", output_type=PointwiseJudgeRecord)
 
-    assert captured.value.response_body is not None
-    assert captured.value.response_body.startswith(
-        '{"error":{"type":"unsupported_parameter"'
-    )
-    assert len(captured.value.response_body) == 4096
+    assert captured.value.status_code == 400
+    assert captured.value.body == body.decode("utf-8")
+    assert isinstance(captured.value.body, str)
+    assert len(captured.value.body) == len(body)
 
 
 def test_invalid_json_retries_with_identical_request(tmp_path: Path) -> None:
@@ -562,7 +561,7 @@ def test_pairwise_score_run_writes_no_output_until_both_presentations_validate(
     response["evidence_quotes"] = {"A": ["alpha"], "B": ["beta"]}
     output_path = tmp_path / "pairwise.jsonl"
 
-    with pytest.raises(JudgeValidationError, match="not valid JSON"):
+    with pytest.raises(UnexpectedModelBehavior):
         score_run(
             run_a,
             config,

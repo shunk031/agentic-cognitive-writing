@@ -9,7 +9,7 @@ from typing import Any
 
 from pydantic_ai.models import Model
 
-from .client import JudgeOutput, JudgeResponse, OpenAICompatibleClient
+from .client import JudgeOutput, OpenAICompatibleClient
 from .config import JudgeConfig, JudgeIdentity
 from .errors import JudgeValidationError
 from .templates import JudgeTemplate
@@ -31,10 +31,6 @@ class JudgeResult:
     response_sha256: str
     template_sha256: str
     judge_identity: JudgeIdentity
-
-
-def _response_sha256(response: JudgeResponse) -> str:
-    return hashlib.sha256(response.content.encode("utf-8")).hexdigest()
 
 
 def _run(
@@ -98,7 +94,7 @@ def _run(
         record=record,
         usage=dict(response.usage),
         attempts=response.attempts,
-        response_sha256=_response_sha256(response),
+        response_sha256=hashlib.sha256(response.content.encode("utf-8")).hexdigest(),
         template_sha256=template.sha256,
         judge_identity=identity,
     )

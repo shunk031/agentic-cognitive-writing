@@ -6,16 +6,9 @@ import json
 import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, NoReturn
+from typing import Any
 
-from pydantic import ValidationError
 from pydantic_ai import Agent, ModelResponse, ModelRetry, ModelSettings, RunUsage
-from pydantic_ai.exceptions import (
-    ModelAPIError,
-    ModelHTTPError,
-    UnexpectedModelBehavior,
-    UserError,
-)
 from pydantic_ai.models import Model
 from pydantic_ai.models.openai import (
     OpenAIChatModel,
@@ -99,48 +92,6 @@ def _response_content(response: ModelResponse) -> str:
     raise JudgeTransportError("Judge response has no structured output")
 
 
-def _error_body(value: object) -> str | None:
-    if value is None:
-        return None
-    if isinstance(value, str):
-        return value
-    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
-
-
-def _validation_detail(error: UnexpectedModelBehavior) -> str:
-    cause = error.__cause__
-    if isinstance(cause, ValidationError) and any(
-        item.get("type") == "json_invalid" for item in cause.errors()
-    ):
-        return "Judge response is not valid JSON"
-    return "Judge response failed structured-output validation"
-
-
-def _raise_library_error(error: Exception) -> NoReturn:
-    """Map every pydantic-ai failure to a judge-stage error type."""
-
-    if isinstance(error, ModelHTTPError):
-        raise JudgeTransportError(
-            f"Judge endpoint returned HTTP status {error.status_code}",
-            response_body=_error_body(error.body),
-        ) from error
-    if isinstance(error, UnexpectedModelBehavior):
-        if "maximum output retries" in str(error):
-            raise JudgeValidationError(_validation_detail(error)) from error
-        raise JudgeTransportError(
-            "Judge model returned unusable output",
-            response_body=_error_body(error.body) or str(error),
-        ) from error
-    if isinstance(error, (ModelAPIError, UserError)):
-        raise JudgeTransportError(
-            "Judge model request failed",
-            response_body=_error_body(getattr(error, "body", None)) or str(error),
-        ) from error
-    raise JudgeTransportError(
-        "Judge model request failed", response_body=str(error)
-    ) from error
-
-
 class OpenAICompatibleClient:
     """Run one structured judge request through pydantic-ai."""
 
@@ -192,22 +143,13 @@ class OpenAICompatibleClient:
             settings["max_tokens"] = self.config.max_output_tokens
 
         model = self.model or self._configured_model()
-        if output_type is PointwiseJudgeRecord:
-            agent: Any = Agent(
-                model,
-                output_type=PointwiseJudgeRecord,
-                system_prompt="Return only the JSON object requested by the user.",
-                model_settings=settings,
-                retries=self.config.max_retries,
-            )
-        else:
-            agent = Agent(
-                model,
-                output_type=PairwiseJudgeRecord,
-                system_prompt="Return only the JSON object requested by the user.",
-                model_settings=settings,
-                retries=self.config.max_retries,
-            )
+        agent: Agent[object, JudgeOutput] = Agent(
+            model,
+            output_type=output_type,
+            system_prompt="Return only the JSON object requested by the user.",
+            model_settings=settings,
+            retries=self.config.max_retries,
+        )
         if output_validator is not None:
 
             @agent.output_validator  # noqa: V103
@@ -218,12 +160,7 @@ class OpenAICompatibleClient:
                     raise ModelRetry(str(error)) from error
                 return output
 
-        try:
-            result = agent.run_sync(prompt)
-        except (JudgeConfigurationError, JudgeTransportError, JudgeValidationError):
-            raise
-        except Exception as error:
-            _raise_library_error(error)
+        result = agent.run_sync(prompt)
 
         reported_model_id = result.response.model_name
         if not isinstance(reported_model_id, str) or not reported_model_id.strip():
