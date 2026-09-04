@@ -104,10 +104,7 @@ def _error_body(value: object) -> str | None:
         return None
     if isinstance(value, str):
         return value
-    try:
-        return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
-    except (TypeError, ValueError):
-        return str(value)
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
 
 
 def _validation_detail(error: UnexpectedModelBehavior) -> str:
@@ -162,18 +159,15 @@ class OpenAICompatibleClient:
             raise JudgeConfigurationError(
                 "Configured judge credential environment variable is unset"
             )
-        try:
-            return OpenAIChatModel(
-                self.config.model,
-                provider=OpenAIProvider(base_url=base_url, api_key=credential),
-                profile=OpenAIModelProfile(
-                    openai_supports_reasoning=False,
-                    openai_reasoning_enabled_by_default=False,
-                    openai_chat_supports_max_completion_tokens=True,
-                ),
-            )
-        except Exception as error:
-            _raise_library_error(error)
+        return OpenAIChatModel(
+            self.config.model,
+            provider=OpenAIProvider(base_url=base_url, api_key=credential),
+            profile=OpenAIModelProfile(
+                openai_supports_reasoning=False,
+                openai_reasoning_enabled_by_default=False,
+                openai_chat_supports_max_completion_tokens=True,
+            ),
+        )
 
     def complete(
         self,
@@ -198,33 +192,33 @@ class OpenAICompatibleClient:
             settings["max_tokens"] = self.config.max_output_tokens
 
         model = self.model or self._configured_model()
+        if output_type is PointwiseJudgeRecord:
+            agent: Any = Agent(
+                model,
+                output_type=PointwiseJudgeRecord,
+                system_prompt="Return only the JSON object requested by the user.",
+                model_settings=settings,
+                retries=self.config.max_retries,
+            )
+        else:
+            agent = Agent(
+                model,
+                output_type=PairwiseJudgeRecord,
+                system_prompt="Return only the JSON object requested by the user.",
+                model_settings=settings,
+                retries=self.config.max_retries,
+            )
+        if output_validator is not None:
+
+            @agent.output_validator  # noqa: V103
+            def _validate_output(output: JudgeOutput) -> JudgeOutput:
+                try:
+                    output_validator(output)
+                except JudgeValidationError as error:
+                    raise ModelRetry(str(error)) from error
+                return output
+
         try:
-            if output_type is PointwiseJudgeRecord:
-                agent: Any = Agent(
-                    model,
-                    output_type=PointwiseJudgeRecord,
-                    system_prompt="Return only the JSON object requested by the user.",
-                    model_settings=settings,
-                    retries=self.config.max_retries,
-                )
-            else:
-                agent = Agent(
-                    model,
-                    output_type=PairwiseJudgeRecord,
-                    system_prompt="Return only the JSON object requested by the user.",
-                    model_settings=settings,
-                    retries=self.config.max_retries,
-                )
-            if output_validator is not None:
-
-                @agent.output_validator  # noqa: V103
-                def _validate_output(output: JudgeOutput) -> JudgeOutput:
-                    try:
-                        output_validator(output)
-                    except JudgeValidationError as error:
-                        raise ModelRetry(str(error)) from error
-                    return output
-
             result = agent.run_sync(prompt)
         except (JudgeConfigurationError, JudgeTransportError, JudgeValidationError):
             raise
@@ -234,13 +228,8 @@ class OpenAICompatibleClient:
         reported_model_id = result.response.model_name
         if not isinstance(reported_model_id, str) or not reported_model_id.strip():
             raise JudgeTransportError("Judge response has no reported model identifier")
-        try:
-            content = _response_content(result.response)
-            usage = _usage(result.usage)
-        except (JudgeTransportError, JudgeValidationError):
-            raise
-        except Exception as error:
-            _raise_library_error(error)
+        content = _response_content(result.response)
+        usage = _usage(result.usage)
         output = result.output
         if not isinstance(output, (PointwiseJudgeRecord, PairwiseJudgeRecord)):
             raise JudgeTransportError("Judge response has an unexpected output type")
