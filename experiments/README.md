@@ -77,7 +77,7 @@ The wrapper TOMLs are the source of truth for trace contracts. Each declares the
 
 The scorer in [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) reads a completed run's `run-manifest.json`, `prompt.txt`, and `output.normalized.txt`, then writes `scores.jsonl` and `scores-manifest.json` beside the run artifacts. The manifest records the versioned template hash, source-run hashes, API usage counters, response hash, attempt count, score-record hash, and the runtime judge-family evidence chain. A successful command prints the `scores.jsonl` path. Pairwise scoring writes both presentation records only after both judgments pass validation.
 
-The private judge configuration supplies the requested model, judge identifier, names of the endpoint and credential environment variables, the template path, the API seed, the pairwise presentation seed, decoding settings, timeout, retry count, and an explicit model-family mapping table. Use a configuration outside the repository. Replace every angle-bracket value in the following example with a value you supply at runtime; the template path must point to [`pointwise-v1.txt`](prompts/judges/pointwise-v1.txt), [`pairwise-v1.txt`](prompts/judges/pairwise-v1.txt), or [`writingbench-native-v1.txt`](prompts/judges/writingbench-native-v1.txt).
+The private judge configuration supplies the requested model, judge identifier, names of the endpoint and credential environment variables, the template path, the API seed, the pairwise presentation seed, decoding settings, timeout, retry count, and an explicit model-family mapping table. Use a configuration outside the repository. Replace every angle-bracket value in the following example with a value you supply at runtime; the template path must point to [`pointwise-v1.md`](prompts/judges/pointwise-v1.md), [`pairwise-v1.md`](prompts/judges/pairwise-v1.md), or [`writingbench-native-v1.md`](prompts/judges/writingbench-native-v1.md).
 
 ```json
 {
@@ -91,7 +91,7 @@ The private judge configuration supplies the requested model, judge identifier, 
   },
   "base_url_env": "<base-url-environment-variable>",
   "credential_env": "<credential-environment-variable>",
-  "template_path": "/path/to/repository/experiments/prompts/judges/pointwise-v1.txt",
+  "template_path": "/path/to/repository/experiments/prompts/judges/pointwise-v1.md",
   "seed": 12345,
   "presentation_seed": 67890,
   "temperature": null,
