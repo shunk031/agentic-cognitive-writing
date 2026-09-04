@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import hashlib
-import io
 import json
-import urllib.error
-import urllib.request
 from pathlib import Path
 
 import pytest
+from pydantic_ai import ModelResponse, RequestUsage
+from pydantic_ai.exceptions import ModelHTTPError
+from pydantic_ai.messages import ModelRequest, ToolCallPart
+from pydantic_ai.messages import ModelResponse as MessageResponse
+from pydantic_ai.models.function import AgentInfo, FunctionModel
 
 from agentic_cogwriter.judges.client import (
-    ChatResponse,
     OpenAICompatibleClient,
-    UrllibChatTransport,
     normalize_usage,
 )
 from agentic_cogwriter.judges.config import JudgeConfig
@@ -30,6 +30,8 @@ from agentic_cogwriter.judges.scorer import (
 from agentic_cogwriter.judges.templates import JudgeTemplate
 from agentic_cogwriter.judges.validation import (
     POINTWISE_DIMENSIONS,
+    PairwiseJudgeRecord,
+    PointwiseJudgeRecord,
     validate_pairwise,
     validate_pointwise,
 )
@@ -39,32 +41,42 @@ class FakeTransport:
     def __init__(self, responses: list[dict[str, object]]) -> None:
         self.responses = responses
         self.requests: list[dict[str, object]] = []
+        model_name = str(responses[0].get("model", "open-model"))
+        self.model = FunctionModel(self.complete, model_name=model_name)
 
     def complete(
         self,
-        *,
-        base_url: str,
-        api_key: str,
-        payload: dict[str, object],
-        timeout_seconds: float,
-    ) -> ChatResponse:
-        assert base_url == "https://judge.invalid/v1"
-        assert api_key
-        assert timeout_seconds == 10.0
+        messages: list[ModelRequest | MessageResponse],
+        info: AgentInfo,
+    ) -> ModelResponse:
+        del messages
+        settings = dict(getattr(info, "model_settings", None) or {})
+        payload: dict[str, object] = {
+            "model": self.model.model_name,
+            "seed": settings["seed"],
+        }
+        if "stop_sequences" in settings:
+            payload["stop"] = settings["stop_sequences"]
+        if "temperature" in settings:
+            payload["temperature"] = settings["temperature"]
+        if "top_p" in settings:
+            payload["top_p"] = settings["top_p"]
+        if "max_tokens" in settings:
+            payload["max_completion_tokens"] = settings["max_tokens"]
         self.requests.append(payload)
         response = self.responses.pop(0)
-        return ChatResponse(
-            content=str(response["content"]),
-            usage={
-                "prompt_tokens": 11,
-                "completion_tokens": 7,
-                "total_tokens": 18,
-            },
-            raw={**response, "model": response.get("model", "open-model")},
+        return ModelResponse(
+            parts=[
+                ToolCallPart(
+                    tool_name=info.output_tools[0].name,
+                    args=str(response["content"]),
+                )
+            ],
+            usage=RequestUsage(input_tokens=11, output_tokens=7),
         )
 
 
-def _template(path: Path, task: str) -> None:
+def _template(path: Path, task: str) -> Path:
     if task == "pointwise":
         path.write_text(
             "Judge {prompt_id} {condition_id} {platform} {judge_id} "
@@ -78,6 +90,7 @@ def _template(path: Path, task: str) -> None:
             "{context}\nA={answer_a}\nB={answer_b}\n",
             encoding="utf-8",
         )
+    return path
 
 
 def _config(
@@ -100,8 +113,8 @@ def _config(
             "gpt-frontier": {"family": "gpt", "role": "frontier"},
             "open-model": {"family": "prometheus", "role": "open_evaluator"},
         },
-        "base_url_env": "FAKE_JUDGE_URL",
-        "credential_env": "FAKE_JUDGE_TOKEN",
+        "base_url_env": "TEST_JUDGE_BASE_URL",
+        "credential_env": "TEST_JUDGE_CREDENTIAL",
         "template_path": str(template),
         "seed": 19,
         "presentation_seed": 23,
@@ -153,6 +166,31 @@ def _generator_family_audit() -> dict[str, object]:
     return {
         "generator_model_id": "generator-model",
         "generator_model_family": "gpt",
+    }
+
+
+def test_pydantic_records_mirror_the_frozen_json_contracts() -> None:
+    assert set(PointwiseJudgeRecord.model_fields) == {
+        "prompt_id",
+        "condition_id",
+        "platform",
+        "judge_id",
+        "judge_family",
+        "scores",
+        "evidence_quotes",
+        "judge_level_composite",
+        "uncertainties",
+    }
+    assert set(PairwiseJudgeRecord.model_fields) == {
+        "prompt_id",
+        "platform",
+        "judge_id",
+        "judge_family",
+        "pair_id",
+        "presentation",
+        "winner",
+        "evidence_quotes",
+        "reason",
     }
 
 
@@ -222,8 +260,8 @@ def test_judge_config_rejects_nonzero_temperature(tmp_path: Path) -> None:
                         "role": "open_evaluator",
                     }
                 },
-                "base_url_env": "FAKE_JUDGE_URL",
-                "credential_env": "FAKE_JUDGE_TOKEN",
+                "base_url_env": "TEST_JUDGE_BASE_URL",
+                "credential_env": "TEST_JUDGE_CREDENTIAL",
                 "template_path": str(template),
                 "seed": 19,
                 "temperature": 0.1,
@@ -241,15 +279,11 @@ def test_judge_config_accepts_provider_default_decoding(tmp_path: Path) -> None:
     assert config.top_p is None
 
 
-def test_family_audit_rejects_frontier_generator_overlap(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_family_audit_rejects_frontier_generator_overlap(tmp_path: Path) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
     config = _config(tmp_path, template, model="gpt-frontier")
     run_dir = _run_dir(tmp_path, "A1", "evidence")
-    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
-    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
     response = _pointwise_record("gpt_frontier")
     response["condition_id"] = blind_condition_id("A1")
     response["evidence_quotes"] = [
@@ -261,17 +295,15 @@ def test_family_audit_rejects_frontier_generator_overlap(
         score_run(
             run_dir,
             config,
-            transport=FakeTransport(
+            model=FakeTransport(
                 [{"content": json.dumps(response), "model": "gpt-frontier"}]
-            ),
+            ).model,
         )
 
     assert not (run_dir / "scores.jsonl").exists()
 
 
-def test_family_audit_allows_incomplete_non_overlapping_map(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_family_audit_allows_incomplete_non_overlapping_map(tmp_path: Path) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
     config = _config(
@@ -282,8 +314,6 @@ def test_family_audit_allows_incomplete_non_overlapping_map(
         },
     )
     run_dir = _run_dir(tmp_path, "A1", "evidence")
-    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
-    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
     response = _pointwise_record()
     response["condition_id"] = blind_condition_id("A1")
     response["evidence_quotes"] = [
@@ -294,23 +324,19 @@ def test_family_audit_allows_incomplete_non_overlapping_map(
     result = score_run(
         run_dir,
         config,
-        transport=FakeTransport(
+        model=FakeTransport(
             [{"content": json.dumps(response), "model": "open-model"}]
-        ),
+        ).model,
     )
 
     assert result.scores_path.is_file()
 
 
-def test_family_audit_rejects_unmappable_reported_model(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_family_audit_rejects_unmappable_reported_model(tmp_path: Path) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
     config = _config(tmp_path, template)
     run_dir = _run_dir(tmp_path, "A1", "evidence")
-    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
-    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
     response = _pointwise_record()
     response["condition_id"] = blind_condition_id("A1")
     response["evidence_quotes"] = [
@@ -322,9 +348,9 @@ def test_family_audit_rejects_unmappable_reported_model(
         score_run(
             run_dir,
             config,
-            transport=FakeTransport(
+            model=FakeTransport(
                 [{"content": json.dumps(response), "model": "unknown-model"}]
-            ),
+            ).model,
         )
 
 
@@ -369,13 +395,11 @@ def test_committed_judge_templates_render_without_unresolved_fields() -> None:
 
 
 def test_fake_transport_receives_deterministic_zero_temperature_payload(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
     config = _config(tmp_path, template)
-    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
-    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
     transport = FakeTransport([{"content": json.dumps(_pointwise_record())}])
 
     from agentic_cogwriter.judges.engine import judge_pointwise
@@ -388,7 +412,7 @@ def test_fake_transport_receives_deterministic_zero_temperature_payload(
         prompt_id="p-1",
         blind_condition_id="blind-condition",
         platform="codex",
-        transport=transport,
+        model=transport.model,
     )
 
     assert result.record["prompt_id"] == "p-1"
@@ -398,21 +422,18 @@ def test_fake_transport_receives_deterministic_zero_temperature_payload(
     assert payload["seed"] == 19
     assert payload["top_p"] == 1
     assert payload["max_completion_tokens"] == 120
-    assert payload["response_format"] == {"type": "json_object"}
 
 
 def test_provider_default_decoding_fields_are_omitted_from_payload(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
     config = _config(tmp_path, template, temperature=None, top_p=None)
-    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
-    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
     transport = FakeTransport([{"content": json.dumps(_pointwise_record())}])
 
-    client = OpenAICompatibleClient(config, transport=transport)
-    response = client.complete("prompt")
+    client = OpenAICompatibleClient(config, model=transport.model)
+    response = client.complete("prompt", output_type=PointwiseJudgeRecord)
 
     assert response.content
     payload = transport.requests[0]
@@ -421,32 +442,23 @@ def test_provider_default_decoding_fields_are_omitted_from_payload(
     assert payload["max_completion_tokens"] == 120
 
 
-def test_http_error_preserves_a_bounded_response_body(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_http_error_preserves_a_bounded_response_body(tmp_path: Path) -> None:
     body = (
         b'{"error":{"type":"unsupported_parameter",'
         b'"message":"Use max_completion_tokens"}}' + b"x" * 5000
     )
 
-    def raise_http_error(*args: object, **kwargs: object) -> None:
-        raise urllib.error.HTTPError(
-            "https://judge.invalid/v1/chat/completions",
-            400,
-            "Bad Request",
-            {},
-            io.BytesIO(body),
-        )
-
-    monkeypatch.setattr(urllib.request, "urlopen", raise_http_error)
+    def raise_http_error(
+        messages: list[ModelRequest | MessageResponse], info: AgentInfo
+    ) -> ModelResponse:
+        del messages, info
+        raise ModelHTTPError(400, "judge-model", body=body.decode("utf-8"))
 
     with pytest.raises(JudgeTransportError, match="unsupported_parameter") as captured:
-        UrllibChatTransport().complete(
-            base_url="https://judge.invalid/v1",
-            api_key="placeholder-only",
-            payload={"model": "judge-model"},
-            timeout_seconds=10,
-        )
+        OpenAICompatibleClient(
+            _config(tmp_path, _template(tmp_path / "judge.txt", "pointwise")),
+            model=FunctionModel(raise_http_error, model_name="open-model"),
+        ).complete("prompt", output_type=PointwiseJudgeRecord)
 
     assert captured.value.response_body is not None
     assert captured.value.response_body.startswith(
@@ -455,14 +467,10 @@ def test_http_error_preserves_a_bounded_response_body(
     assert len(captured.value.response_body) == 4096
 
 
-def test_invalid_json_retries_with_identical_request(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_invalid_json_retries_with_identical_request(tmp_path: Path) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
     config = _config(tmp_path, template)
-    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
-    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
     transport = FakeTransport(
         [
             {"content": "not json"},
@@ -480,7 +488,7 @@ def test_invalid_json_retries_with_identical_request(
         prompt_id="p-1",
         blind_condition_id="blind-condition",
         platform="codex",
-        transport=transport,
+        model=transport.model,
     )
 
     assert result.attempts == 2
@@ -488,16 +496,12 @@ def test_invalid_json_retries_with_identical_request(
     assert transport.requests[0] == transport.requests[1]
 
 
-def test_pairwise_score_run_uses_the_caller_selected_order(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_pairwise_score_run_uses_the_caller_selected_order(tmp_path: Path) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pairwise")
     config = _config(tmp_path, template, task="pairwise")
     run_a = _run_dir(tmp_path, "A1", "alpha")
     run_b = _run_dir(tmp_path, "A2", "beta")
-    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
-    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
     labels = sorted((blind_condition_id("A1"), blind_condition_id("A2")))
     pair_id = "pair-" + hashlib.sha256("|".join(labels).encode()).hexdigest()[:16]
     response_a = _pairwise_record()
@@ -518,7 +522,7 @@ def test_pairwise_score_run_uses_the_caller_selected_order(
         config,
         compare_run_dir=run_b,
         output_path=tmp_path / "pairwise.jsonl",
-        transport=transport,
+        model=transport.model,
     )
 
     assert len(transport.requests) == 2
@@ -544,15 +548,13 @@ def test_pairwise_score_run_uses_the_caller_selected_order(
 
 
 def test_pairwise_score_run_writes_no_output_until_both_presentations_validate(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pairwise")
     config = _config(tmp_path, template, task="pairwise")
     run_a = _run_dir(tmp_path, "A1", "alpha")
     run_b = _run_dir(tmp_path, "A2", "beta")
-    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
-    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
     labels = sorted((blind_condition_id("A1"), blind_condition_id("A2")))
     pair_id = "pair-" + hashlib.sha256("|".join(labels).encode()).hexdigest()[:16]
     response = _pairwise_record()
@@ -566,13 +568,13 @@ def test_pairwise_score_run_writes_no_output_until_both_presentations_validate(
             config,
             compare_run_dir=run_b,
             output_path=output_path,
-            transport=FakeTransport(
+            model=FakeTransport(
                 [
                     {"content": json.dumps(response)},
                     {"content": "not json"},
                     {"content": "not json"},
                 ]
-            ),
+            ).model,
         )
 
     assert not output_path.exists()
@@ -647,15 +649,11 @@ def test_load_run_artifacts_requires_manifest_interface_fields(
         load_run_artifacts(run_dir)
 
 
-def test_score_run_writes_protocol_jsonl_and_hashed_manifest(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_score_run_writes_protocol_jsonl_and_hashed_manifest(tmp_path: Path) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
     config = _config(tmp_path, template)
     run_dir = _run_dir(tmp_path, "A1", "Provided fact.")
-    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
-    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
     transport = FakeTransport(
         [
             {
@@ -675,7 +673,7 @@ def test_score_run_writes_protocol_jsonl_and_hashed_manifest(
         ]
     )
 
-    result = score_run(run_dir, config, transport=transport)
+    result = score_run(run_dir, config, model=transport.model)
 
     assert result.scores_path == run_dir / "scores.jsonl"
     record = json.loads(result.scores_path.read_text(encoding="utf-8"))
@@ -691,6 +689,39 @@ def test_score_run_writes_protocol_jsonl_and_hashed_manifest(
         "uncertainties",
     }
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert set(manifest) == {
+        "schema_version",
+        "task",
+        "scores_sha256",
+        "template_sha256",
+        "judge",
+        "family_audit",
+        "source_runs",
+        "records",
+    }
+    assert set(manifest["judge"]) == {
+        "model",
+        "judge_id",
+        "judge_family",
+        "reported_model_id",
+        "seed",
+        "temperature",
+        "top_p",
+        "max_output_tokens",
+        "stop_rules",
+        "max_retries",
+    }
+    assert set(manifest["source_runs"][0]) == {
+        "run_manifest_sha256",
+        "output_sha256",
+    }
+    assert set(manifest["records"][0]) == {
+        "line",
+        "record_sha256",
+        "response_sha256",
+        "attempts",
+        "usage",
+    }
     assert record["judge_family"] == "open_evaluator"
     assert manifest["records"][0]["record_sha256"].startswith("sha256:")
     assert manifest["records"][0]["usage"]["total_tokens"] == 18
@@ -704,14 +735,12 @@ def test_score_run_writes_protocol_jsonl_and_hashed_manifest(
 
 
 def test_score_manifest_records_provider_default_decoding(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
     config = _config(tmp_path, template, temperature=None, top_p=None)
     run_dir = _run_dir(tmp_path, "A1", "Provided fact.")
-    monkeypatch.setenv("FAKE_JUDGE_URL", "https://judge.invalid/v1")
-    monkeypatch.setenv("FAKE_JUDGE_TOKEN", "placeholder-only")
     response = _pointwise_record()
     response["condition_id"] = blind_condition_id("A1")
     response["evidence_quotes"] = [
@@ -722,7 +751,7 @@ def test_score_manifest_records_provider_default_decoding(
     result = score_run(
         run_dir,
         config,
-        transport=FakeTransport([{"content": json.dumps(response)}]),
+        model=FakeTransport([{"content": json.dumps(response)}]).model,
     )
 
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))

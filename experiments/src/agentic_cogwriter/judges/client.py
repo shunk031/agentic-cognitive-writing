@@ -1,41 +1,44 @@
-"""OpenAI-compatible chat-completions transport used by the judge stage."""
+"""Pydantic AI client used by the OpenAI-compatible judge stage."""
 
 from __future__ import annotations
 
 import json
 import os
-import urllib.error
-import urllib.request
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, NoReturn
+
+from pydantic import ValidationError
+from pydantic_ai import Agent, ModelResponse, ModelRetry, ModelSettings, RunUsage
+from pydantic_ai.exceptions import (
+    ModelAPIError,
+    ModelHTTPError,
+    UnexpectedModelBehavior,
+    UserError,
+)
+from pydantic_ai.models import Model
+from pydantic_ai.models.openai import (
+    OpenAIChatModel,
+    OpenAIModelProfile,
+)
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from .config import JudgeConfig
-from .errors import JudgeConfigurationError, JudgeTransportError
+from .errors import JudgeConfigurationError, JudgeTransportError, JudgeValidationError
+from .validation import PairwiseJudgeRecord, PointwiseJudgeRecord
+
+JudgeOutput = PointwiseJudgeRecord | PairwiseJudgeRecord
 
 
 @dataclass(frozen=True)
-class ChatResponse:
-    """The response text, usage counters, and raw API response."""
+class JudgeResponse:
+    """A validated structured output and pydantic-ai accounting."""
 
     content: str
+    output: JudgeOutput
     usage: Mapping[str, int]
-    raw: Mapping[str, Any]
-    reported_model_id: str | None = None
-
-
-class ChatTransport(Protocol):
-    """Transport boundary that tests can replace without network access."""
-
-    def complete(
-        self,
-        *,
-        base_url: str,
-        api_key: str,
-        payload: dict[str, object],
-        timeout_seconds: float,
-    ) -> ChatResponse:
-        """Send one OpenAI-compatible chat-completions request."""
+    reported_model_id: str
+    attempts: int
 
 
 def normalize_usage(value: Mapping[str, Any]) -> dict[str, int]:
@@ -63,120 +66,92 @@ def normalize_usage(value: Mapping[str, Any]) -> dict[str, int]:
     return result
 
 
-def _usage(response: Mapping[str, Any]) -> dict[str, int]:
-    value = response.get("usage")
-    if not isinstance(value, Mapping):
-        raise JudgeTransportError("Judge response has no usage object")
-    return normalize_usage(value)
+def _usage(run_usage: RunUsage) -> dict[str, int]:
+    """Map pydantic-ai usage names to the frozen score-manifest names."""
+
+    values: dict[str, Any] = {
+        "prompt_tokens": run_usage.input_tokens,
+        "completion_tokens": run_usage.output_tokens,
+        "total_tokens": run_usage.total_tokens,
+    }
+    reasoning_tokens = run_usage.details.get("reasoning_tokens")
+    if "reasoning_tokens" in run_usage.details:
+        values["reasoning_tokens"] = reasoning_tokens
+    cached_tokens = run_usage.cache_read_tokens
+    if cached_tokens:
+        values["cached_tokens"] = cached_tokens
+    return normalize_usage(values)
 
 
-def _content(response: Mapping[str, Any]) -> str:
-    output_text = response.get("output_text")
-    if isinstance(output_text, str):
-        return output_text
-    choices = response.get("choices")
-    if isinstance(choices, list) and choices and isinstance(choices[0], Mapping):
-        message = choices[0].get("message")
-        if isinstance(message, Mapping):
-            content = message.get("content")
-            if isinstance(content, str):
-                return content
-        text = choices[0].get("text")
-        if isinstance(text, str):
-            return text
-    output = response.get("output")
-    if isinstance(output, list):
-        chunks: list[str] = []
-        for item in output:
-            if not isinstance(item, Mapping):
-                continue
-            content = item.get("content")
-            if not isinstance(content, list):
-                continue
-            for part in content:
-                if isinstance(part, Mapping) and isinstance(part.get("text"), str):
-                    chunks.append(part["text"])
-        if chunks:
-            return "".join(chunks)
-    raise JudgeTransportError("Judge response has no text content")
+def _response_content(response: ModelResponse) -> str:
+    """Return the raw structured arguments used for response hashing."""
+
+    tool_calls = response.tool_calls
+    if tool_calls:
+        arguments = tool_calls[-1].args
+        if isinstance(arguments, str):
+            return arguments
+        if isinstance(arguments, Mapping):
+            return json.dumps(arguments, ensure_ascii=False, sort_keys=True)
+    text = response.text
+    if isinstance(text, str) and text:
+        return text
+    raise JudgeTransportError("Judge response has no structured output")
 
 
-def _reported_model(response: Mapping[str, Any]) -> str:
-    model = response.get("model")
-    if not isinstance(model, str) or not model.strip():
-        raise JudgeTransportError("Judge response has no reported model identifier")
-    return model.strip()
-
-
-def _http_error_body(error: urllib.error.HTTPError) -> str | None:
+def _error_body(value: object) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
     try:
-        raw = error.read(JudgeTransportError.MAX_RESPONSE_BODY_LENGTH)
-    except (OSError, ValueError):
-        return None
-    if not raw:
-        return None
-    if isinstance(raw, bytes):
-        return raw.decode("utf-8", errors="replace")
-    return str(raw)
+        return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    except (TypeError, ValueError):
+        return str(value)
 
 
-class UrllibChatTransport:
-    """Send JSON over the OpenAI-compatible ``/chat/completions`` endpoint."""
+def _validation_detail(error: UnexpectedModelBehavior) -> str:
+    cause = error.__cause__
+    if isinstance(cause, ValidationError) and any(
+        item.get("type") == "json_invalid" for item in cause.errors()
+    ):
+        return "Judge response is not valid JSON"
+    return "Judge response failed structured-output validation"
 
-    def complete(
-        self,
-        *,
-        base_url: str,
-        api_key: str,
-        payload: dict[str, object],
-        timeout_seconds: float,
-    ) -> ChatResponse:
-        url = base_url.rstrip("/") + "/chat/completions"
-        request = urllib.request.Request(
-            url,
-            data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
-        try:
-            with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
-                raw = response.read()
-        except urllib.error.HTTPError as exc:
-            raise JudgeTransportError(
-                f"Judge endpoint returned HTTP status {exc.code}",
-                response_body=_http_error_body(exc),
-            ) from exc
-        except (urllib.error.URLError, TimeoutError, OSError) as exc:
-            raise JudgeTransportError("Judge endpoint request failed") from exc
-        try:
-            decoded = json.loads(raw.decode("utf-8"))
-        except (UnicodeError, json.JSONDecodeError) as exc:
-            raise JudgeTransportError("Judge endpoint returned invalid JSON") from exc
-        if not isinstance(decoded, Mapping):
-            raise JudgeTransportError("Judge endpoint returned a non-object response")
-        return ChatResponse(
-            content=_content(decoded),
-            usage=_usage(decoded),
-            raw=decoded,
-            reported_model_id=_reported_model(decoded),
-        )
+
+def _raise_library_error(error: Exception) -> NoReturn:
+    """Map every pydantic-ai failure to a judge-stage error type."""
+
+    if isinstance(error, ModelHTTPError):
+        raise JudgeTransportError(
+            f"Judge endpoint returned HTTP status {error.status_code}",
+            response_body=_error_body(error.body),
+        ) from error
+    if isinstance(error, UnexpectedModelBehavior):
+        if "maximum output retries" in str(error):
+            raise JudgeValidationError(_validation_detail(error)) from error
+        raise JudgeTransportError(
+            "Judge model returned unusable output",
+            response_body=_error_body(error.body) or str(error),
+        ) from error
+    if isinstance(error, (ModelAPIError, UserError)):
+        raise JudgeTransportError(
+            "Judge model request failed",
+            response_body=_error_body(getattr(error, "body", None)) or str(error),
+        ) from error
+    raise JudgeTransportError(
+        "Judge model request failed", response_body=str(error)
+    ) from error
 
 
 class OpenAICompatibleClient:
-    """Build one deterministic API request from a validated judge config."""
+    """Run one structured judge request through pydantic-ai."""
 
-    def __init__(
-        self, config: JudgeConfig, *, transport: ChatTransport | None = None
-    ) -> None:
+    def __init__(self, config: JudgeConfig, *, model: Model | None = None) -> None:
         self.config = config
-        self.transport = transport or UrllibChatTransport()
+        self.model = model
 
-    def complete(self, prompt: str) -> ChatResponse:
-        """Send one request while resolving endpoint credentials at call time."""
-
+    def _configured_model(self) -> Model:
         base_url = os.environ.get(self.config.base_url_env)
         credential = os.environ.get(self.config.credential_env)
         if not base_url:
@@ -187,42 +162,92 @@ class OpenAICompatibleClient:
             raise JudgeConfigurationError(
                 "Configured judge credential environment variable is unset"
             )
-        payload: dict[str, object] = {
-            "model": self.config.model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": "Return only the JSON object requested by the user.",
-                },
-                {"role": "user", "content": prompt},
-            ],
-            "seed": self.config.seed,
-            "response_format": {"type": "json_object"},
-        }
-        if self.config.temperature is not None:
-            payload["temperature"] = self.config.temperature
-        if self.config.top_p is not None:
-            payload["top_p"] = self.config.top_p
-        if self.config.max_output_tokens is not None:
-            payload["max_completion_tokens"] = self.config.max_output_tokens
-        if self.config.stop_rules:
-            payload["stop"] = list(self.config.stop_rules)
-        response = self.transport.complete(
-            base_url=base_url,
-            api_key=credential,
-            payload=payload,
-            timeout_seconds=self.config.timeout_seconds,
-        )
         try:
-            usage = normalize_usage(response.usage)
-        except (AttributeError, TypeError) as exc:
-            raise JudgeTransportError("Judge response has invalid usage") from exc
-        reported_model_id = response.reported_model_id
+            return OpenAIChatModel(
+                self.config.model,
+                provider=OpenAIProvider(base_url=base_url, api_key=credential),
+                profile=OpenAIModelProfile(
+                    openai_supports_reasoning=False,
+                    openai_reasoning_enabled_by_default=False,
+                    openai_chat_supports_max_completion_tokens=True,
+                ),
+            )
+        except Exception as error:
+            _raise_library_error(error)
+
+    def complete(
+        self,
+        prompt: str,
+        *,
+        output_type: type[JudgeOutput],
+        output_validator: Callable[[JudgeOutput], None] | None = None,
+    ) -> JudgeResponse:
+        """Run one pydantic-ai request with bounded structured-output retries."""
+
+        settings: ModelSettings = {
+            "seed": self.config.seed,
+            "timeout": self.config.timeout_seconds,
+        }
+        if self.config.stop_rules:
+            settings["stop_sequences"] = list(self.config.stop_rules)
+        if self.config.temperature is not None:
+            settings["temperature"] = self.config.temperature
+        if self.config.top_p is not None:
+            settings["top_p"] = self.config.top_p
+        if self.config.max_output_tokens is not None:
+            settings["max_tokens"] = self.config.max_output_tokens
+
+        model = self.model or self._configured_model()
+        try:
+            if output_type is PointwiseJudgeRecord:
+                agent: Any = Agent(
+                    model,
+                    output_type=PointwiseJudgeRecord,
+                    system_prompt="Return only the JSON object requested by the user.",
+                    model_settings=settings,
+                    retries=self.config.max_retries,
+                )
+            else:
+                agent = Agent(
+                    model,
+                    output_type=PairwiseJudgeRecord,
+                    system_prompt="Return only the JSON object requested by the user.",
+                    model_settings=settings,
+                    retries=self.config.max_retries,
+                )
+            if output_validator is not None:
+
+                @agent.output_validator  # noqa: V103
+                def _validate_output(output: JudgeOutput) -> JudgeOutput:
+                    try:
+                        output_validator(output)
+                    except JudgeValidationError as error:
+                        raise ModelRetry(str(error)) from error
+                    return output
+
+            result = agent.run_sync(prompt)
+        except (JudgeConfigurationError, JudgeTransportError, JudgeValidationError):
+            raise
+        except Exception as error:
+            _raise_library_error(error)
+
+        reported_model_id = result.response.model_name
         if not isinstance(reported_model_id, str) or not reported_model_id.strip():
-            reported_model_id = _reported_model(response.raw)
-        return ChatResponse(
-            content=response.content,
+            raise JudgeTransportError("Judge response has no reported model identifier")
+        try:
+            content = _response_content(result.response)
+            usage = _usage(result.usage)
+        except (JudgeTransportError, JudgeValidationError):
+            raise
+        except Exception as error:
+            _raise_library_error(error)
+        output = result.output
+        if not isinstance(output, (PointwiseJudgeRecord, PairwiseJudgeRecord)):
+            raise JudgeTransportError("Judge response has an unexpected output type")
+        return JudgeResponse(
+            content=content,
+            output=output,
             usage=usage,
-            raw=response.raw,
             reported_model_id=reported_model_id.strip(),
+            attempts=result.usage.requests,
         )

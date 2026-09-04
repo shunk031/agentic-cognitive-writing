@@ -6,6 +6,8 @@ import math
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+
 from .errors import JudgeValidationError
 
 POINTWISE_DIMENSIONS = (
@@ -38,6 +40,92 @@ _PAIRWISE_KEYS = {
     "evidence_quotes",
     "reason",
 }
+
+
+class _StrictRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)  # noqa: V107
+
+
+class EvidenceQuote(_StrictRecord):
+    """One pointwise evidence quote, before text-presence validation."""
+
+    dimension: str
+    quote: str
+
+    @field_validator("quote")  # noqa: V105
+    @classmethod
+    def _valid_quote(cls, value: str) -> str:
+        if not value or value != value.strip() or len(value) > 240:
+            raise ValueError("quote must be a non-empty short string")
+        return value
+
+
+class PointwiseScores(_StrictRecord):
+    """The five integer dimensions in the pointwise contract."""
+
+    instruction_fulfillment: int = Field(ge=1, le=5)  # noqa: V107
+    organization_global_coherence: int = Field(ge=1, le=5)  # noqa: V107
+    content_adequacy_depth: int = Field(ge=1, le=5)  # noqa: V107
+    style_voice_audience_fit: int = Field(ge=1, le=5)  # noqa: V107
+    factuality_constraint_fidelity: int = Field(ge=1, le=5)  # noqa: V107
+
+
+class PointwiseJudgeRecord(_StrictRecord):
+    """Pydantic structured-output contract for one pointwise judgment."""
+
+    prompt_id: str
+    condition_id: str
+    platform: str
+    judge_id: str
+    judge_family: str
+    scores: PointwiseScores
+    evidence_quotes: list[EvidenceQuote]  # noqa: V107
+    judge_level_composite: float = Field(allow_inf_nan=False)  # noqa: V107
+    uncertainties: list[str]
+
+
+class PairwiseEvidence(_StrictRecord):
+    """The two output-specific evidence lists in the pairwise contract."""
+
+    A: list[str]  # noqa: V107
+    B: list[str]  # noqa: V107
+
+    @field_validator("A", "B")  # noqa: V105
+    @classmethod
+    def _valid_quotes(cls, value: list[str]) -> list[str]:
+        if not value or any(
+            not quote or quote != quote.strip() or len(quote) > 240 for quote in value
+        ):
+            raise ValueError("evidence quotes must contain one or more short strings")
+        return value
+
+
+class PairwiseJudgeRecord(_StrictRecord):
+    """Pydantic structured-output contract for one pairwise judgment."""
+
+    prompt_id: str
+    platform: str
+    judge_id: str
+    judge_family: str
+    pair_id: str
+    presentation: str
+    winner: str  # noqa: V107
+    evidence_quotes: PairwiseEvidence  # noqa: V107
+    reason: str
+
+
+def _validated_mapping(
+    value: Any, model: type[BaseModel], label: str
+) -> Mapping[str, Any]:
+    try:
+        parsed = model.model_validate(value, strict=True)
+    except ValidationError as exc:
+        detail = "; ".join(
+            ".".join(str(item) for item in error["loc"]) + ": " + error["msg"]
+            for error in exc.errors()
+        )
+        raise JudgeValidationError(f"{label} has invalid fields: {detail}") from exc
+    return parsed.model_dump()
 
 
 def _exact_keys(value: Mapping[str, Any], expected: set[str], label: str) -> None:
@@ -92,6 +180,7 @@ def validate_pointwise(
 ) -> dict[str, Any]:
     """Validate and return one exact protocol pointwise object."""
 
+    value = _validated_mapping(value, PointwiseJudgeRecord, "Pointwise response")
     if not isinstance(value, Mapping):
         raise JudgeValidationError("Pointwise response must be a JSON object")
     _exact_keys(value, _POINTWISE_KEYS, "Pointwise response")
@@ -170,6 +259,7 @@ def validate_pairwise(
 ) -> dict[str, Any]:
     """Validate and return one exact protocol pairwise object."""
 
+    value = _validated_mapping(value, PairwiseJudgeRecord, "Pairwise response")
     if not isinstance(value, Mapping):
         raise JudgeValidationError("Pairwise response must be a JSON object")
     _exact_keys(value, _PAIRWISE_KEYS, "Pairwise response")
