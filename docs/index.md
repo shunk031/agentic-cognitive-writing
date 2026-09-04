@@ -28,20 +28,20 @@ The processes are not executed as a fixed pipeline. The `Monitor` can move betwe
 ```mermaid
 flowchart LR
 
-    subgraph state["Writing State"]
+    subgraph state["Writing State ✍️"]
         direction LR
-        db[("Draft<br/>Goals<br>Memory<br>History")]
+        db[("📝 Draft<br>🎯 Goals<br>🧠 Memory<br>⌛ History")]
     end
 
-    subgraph agentic_cogwriter["Agentic CogWriter"]
+    subgraph agentic_cogwriter["Agentic CogWriter 🔄"]
         direction LR
         subgraph main_agent["Main Agent"]
-            monitor["Monitor"]
+            monitor["🤖 Monitor"]
         end
         subgraph sub_agents["SubAgents"]
-            planner["Planner"]
-            translator["Translator"]
-            reviewer["Reviewer"]
+            planner["🤖 Planner"]
+            translator["🤖 Translator"]
+            reviewer["🤖 Reviewer"]
         end
     end
 
