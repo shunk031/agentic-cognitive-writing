@@ -41,6 +41,17 @@ WRITING_TRACE_PROCESSES = (
     "revise",
 )
 
+SINGLE_TURN_CONTRACT = (
+    "\n\nSingle-turn contract:\n"
+    "This is a single-turn task with no interactive user; never ask clarification "
+    "questions. When the assignment underspecifies audience, purpose, or scope, "
+    "apply genre-appropriate defaults and record the assumptions. Conditions with "
+    "a `.writing/` workspace record assumptions there. Do not state assumptions "
+    "briefly at the top of the deliverable. Conditions without `.writing/` apply "
+    "assumptions without an extra preamble. Do not change the deliverable's content "
+    "contract."
+)
+
 
 def _runtime_values() -> dict[str, object]:
     return {
@@ -81,7 +92,9 @@ def _runtime_values() -> dict[str, object]:
         "output_counting": {
             "unit": "words",
             "tokenizer": None,
-            "word_rule": "unicode-whitespace",
+            "word_rule": (
+                "CJK codepoints plus Unicode-whitespace-separated non-CJK runs"
+            ),
         },
     }
 
@@ -296,6 +309,14 @@ def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> No
         prompt = runner._plugin_prompt(condition, _prompt(), "codex")
         assert f"plugin/skills/{condition.skill_name}/SKILL.md" in prompt
         assert "complete final text itself" in prompt
+
+
+def test_every_condition_prompt_has_the_uniform_single_turn_contract() -> None:
+    runner = ExperimentRunner(_config(), output_root=Path("runs"))
+    for condition in load_condition_registry().values():
+        for platform in ("codex", "claude-code"):
+            prompt = runner._plugin_prompt(condition, _prompt(), platform)
+            assert SINGLE_TURN_CONTRACT in prompt
 
 
 def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:

@@ -185,7 +185,9 @@ def _config():
             "output_counting": {
                 "unit": "words",
                 "tokenizer": None,
-                "word_rule": "unicode-whitespace",
+                "word_rule": (
+                    "CJK codepoints plus Unicode-whitespace-separated non-CJK runs"
+                ),
             },
         }
     )

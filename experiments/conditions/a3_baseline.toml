@@ -15,8 +15,15 @@ codex = "codex_exec"
 claude_code = "claude_print"
 
 [invocation]
-codex = "Read the skill file at {codex_plugin_root}/skills/writing-adaptive-task-planning/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact."
-claude_code = "/cognitive-writing-baselines:writing-adaptive-task-planning"
+codex = """Read the skill file at {codex_plugin_root}/skills/writing-adaptive-task-planning/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact.
+
+Single-turn contract:
+This is a single-turn task with no interactive user; never ask clarification questions. When the assignment underspecifies audience, purpose, or scope, apply genre-appropriate defaults and record the assumptions. Conditions with a `.writing/` workspace record assumptions there. Do not state assumptions briefly at the top of the deliverable. Conditions without `.writing/` apply assumptions without an extra preamble. Do not change the deliverable's content contract."""
+
+claude_code = """/cognitive-writing-baselines:writing-adaptive-task-planning
+
+Single-turn contract:
+This is a single-turn task with no interactive user; never ask clarification questions. When the assignment underspecifies audience, purpose, or scope, apply genre-appropriate defaults and record the assumptions. Conditions with a `.writing/` workspace record assumptions there. Do not state assumptions briefly at the top of the deliverable. Conditions without `.writing/` apply assumptions without an extra preamble. Do not change the deliverable's content contract."""
 
 [install]
 claude_code = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]

@@ -1,6 +1,6 @@
 import pytest
 
-from agentic_cogwriter.runner.budget import OutputBudget
+from agentic_cogwriter.runner.budget import OutputBudget, estimate_output_tokens
 from agentic_cogwriter.runner.errors import BudgetExceeded
 
 
@@ -23,3 +23,9 @@ def test_output_budget_rejects_overflow_without_partial_consumption():
 
     assert budget.used == 4
     assert budget.remaining == 1
+
+
+def test_estimate_output_tokens_counts_cjk_codepoints_and_preserves_english() -> None:
+    assert estimate_output_tokens("one two\nthree") == 3
+    assert estimate_output_tokens("中文 mixed-script") == 3
+    assert estimate_output_tokens("pre中post") == 3
