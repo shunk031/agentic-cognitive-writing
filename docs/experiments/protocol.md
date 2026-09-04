@@ -168,7 +168,7 @@ The runner starts one top-level session per condition and prompt. In Codex A4 to
 
 The protocol assigns judges by platform. The Codex run with GPT-family generators uses a Claude-family frontier judge and the shared third-family Prometheus 2 [^9] style open evaluator. The Claude Code run with Claude-family generators uses a GPT-family frontier judge and the same open evaluator.
 
-The runtime family audit requires each selected judge's base family to differ from the generator family. The audit does not require a complete set of frontier or open-evaluator families, and the assignment remains symmetric across the two platform runs.
+The open evaluator must belong to a third model family, and the assignment is symmetric across the two platform runs. The runtime family audit enforces judge/generator family non-overlap per scoring run; it does not require declaring the full family set for a single-judge run.
 
 The runner must pin each value below. A placeholder blocks the run:
 
