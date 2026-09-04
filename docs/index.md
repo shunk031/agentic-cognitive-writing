@@ -26,27 +26,30 @@ A `Monitor` coordinates three writing processes:
 The processes are not executed as a fixed pipeline. The `Monitor` can move between them as composition develops, while the system maintains an evolving hierarchical goal network.
 
 ```mermaid
-flowchart TB
-    monitor["Main agent<br/>Monitor"]
+flowchart LR
 
-    subgraph agents["Writing-process agents"]
+    subgraph state["Writing State"]
         direction LR
-        planner["Planner"]
-        translator["Translator"]
-        reviewer["Reviewer"]
+        db[("Draft<br/>Goals<br>Memory<br>History")]
     end
 
-    state["File-backed writing state<br/>draft · goals · memory · history"]
+    subgraph agentic_cogwriter["Agentic CogWriter"]
+        direction LR
+        subgraph main_agent["Main Agent"]
+            monitor["Monitor"]
+        end
+        subgraph sub_agents["SubAgents"]
+            planner["Planner"]
+            translator["Translator"]
+            reviewer["Reviewer"]
+        end
+    end
 
-    monitor --> planner
-    monitor --> translator
-    monitor --> reviewer
+    state <--> main_agent
 
-    planner --> state
-    translator --> state
-    reviewer --> state
-
-    state -.-> monitor
+    monitor <--> planner
+    monitor <--> translator
+    monitor <--> reviewer
 ```
 
 [Read how the cognitive model maps to the system →](theory-mapping.md)
