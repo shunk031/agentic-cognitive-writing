@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import sys
 import urllib.request
@@ -14,6 +13,12 @@ from pathlib import Path
 from typing import Any
 
 from agentic_cogwriter.paths import BENCHMARK_CACHE_DIR, MANIFESTS_DIR
+from agentic_cogwriter.runner.hashing import (
+    canonical_json,
+    sha256_bytes,
+    sha256_file,
+    sha256_json,
+)
 
 DEFAULT_OUTPUT_DIR = MANIFESTS_DIR
 DEFAULT_CACHE_DIR = BENCHMARK_CACHE_DIR
@@ -109,12 +114,6 @@ DOLOMITES_ARCHIVE = RemoteFile(
 )
 
 
-def canonical_json(value: Any) -> str:
-    """Serialize JSON in the stable form used by manifest hashes."""
-
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-
-
 def pretty_json(value: Any) -> str:
     """Serialize a plain JSON document in the checked-in data-file format."""
 
@@ -125,7 +124,7 @@ def hash_manifest_row(row: dict[str, Any]) -> str:
     """Hash all manifest fields except the self-referential ``hash`` field."""
 
     unhashed = {key: value for key, value in row.items() if key != "hash"}
-    return hashlib.sha256(canonical_json(unhashed).encode("utf-8")).hexdigest()
+    return sha256_json(unhashed)
 
 
 def validate_manifest_row(row: dict[str, Any]) -> None:
@@ -162,18 +161,6 @@ def write_immutable(path: Path, content: bytes) -> None:
     path.write_bytes(content)
 
 
-def _sha256_bytes(content: bytes) -> str:
-    return hashlib.sha256(content).hexdigest()
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as source:
-        for chunk in iter(lambda: source.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def acquire(source: RemoteFile, cache_dir: Path) -> Path:
     """Download one pinned source into a verified local cache."""
 
@@ -194,7 +181,7 @@ def acquire(source: RemoteFile, cache_dir: Path) -> Path:
     )
     with urllib.request.urlopen(request, timeout=120) as response:
         content = response.read()
-    observed = _sha256_bytes(content)
+    observed = sha256_bytes(content)
     if observed != source.sha256:
         raise ValueError(
             f"downloaded source hash mismatch for {source.url}: expected "
@@ -251,7 +238,7 @@ def _manifest_bytes(rows: Iterable[dict[str, Any]]) -> bytes:
         if row["prompt_id"] in seen_ids:
             raise ValueError(f"duplicate prompt ID: {row['prompt_id']}")
         seen_ids.add(row["prompt_id"])
-        encoded_rows.append(canonical_json(row).encode("utf-8") + b"\n")
+        encoded_rows.append(canonical_json(row) + b"\n")
     return b"".join(encoded_rows)
 
 

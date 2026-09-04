@@ -1,4 +1,4 @@
-"""Append-only trace writing, validation, and artifact hashing."""
+"""Append-only trace writing and validation."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from .errors import TraceValidationError
-from .hashing import sha256_file
 
 TRACE_EVENT_TYPES = frozenset(
     {
@@ -256,13 +255,3 @@ def collect_plugin_trace(source_root: Path, run_root: Path) -> list[str]:
             shutil.copyfile(source, destination)
             copied.append(relative.as_posix())
     return copied
-
-
-def checksums_for_files(root: Path, relative_paths: list[str]) -> dict[str, str]:
-    """Hash named run artifacts with a stable ``sha256:`` prefix."""
-
-    return {
-        relative: f"sha256:{sha256_file(root / relative)}"
-        for relative in relative_paths
-        if (root / relative).is_file()
-    }

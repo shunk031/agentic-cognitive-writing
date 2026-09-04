@@ -1,7 +1,6 @@
 platform = "codex"
 executable = "codex"
 version_args = ["--version"]
-prompt_mode = "argument"
 first_args = ["exec", "--json", "--sandbox", "workspace-write", "--skip-git-repo-check", "--model", "{model_id}"]
 continuation_args = ["exec", "resume", "{session_id}", "--json", "--skip-git-repo-check", "--model", "{model_id}"]
 runtime_args = ["--config", "sandbox_workspace_write.network_access=false", "--config", "web_search=\"disabled\"", "--config", "approval_policy=\"never\""]

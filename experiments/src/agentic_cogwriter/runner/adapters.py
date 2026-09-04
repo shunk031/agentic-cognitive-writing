@@ -23,7 +23,6 @@ class PlatformAdapter:
     first_args: tuple[str, ...]
     continuation_args: tuple[str, ...]
     version_args: tuple[str, ...]
-    prompt_mode: str
     runtime_args: tuple[str, ...]
     network_enforcement: str
     control_status: tuple[tuple[str, str], ...]
@@ -64,7 +63,6 @@ class PlatformAdapter:
             first_args=tuple(str(item) for item in data["first_args"]),
             continuation_args=tuple(str(item) for item in data["continuation_args"]),
             version_args=tuple(str(item) for item in data["version_args"]),
-            prompt_mode=str(data.get("prompt_mode", "argument")),
             runtime_args=tuple(str(item) for item in data.get("runtime_args", [])),
             network_enforcement=str(data.get("network_enforcement", "monitored-only")),
             control_status=tuple(
@@ -102,8 +100,6 @@ class PlatformAdapter:
                 raise ConfigurationError("Claude continuation must use --resume")
         else:
             raise ConfigurationError(f"Unknown adapter platform: {self.platform}")
-        if self.prompt_mode not in {"argument", "stdin"}:
-            raise ConfigurationError("Adapter prompt_mode must be argument or stdin")
         if self.network_enforcement not in {"enforced", "monitored-only"}:
             raise ConfigurationError(
                 "Adapter network_enforcement must be enforced or monitored-only"
@@ -162,8 +158,7 @@ class PlatformAdapter:
         if self.platform == "claude-code":
             for plugin_dir in plugin_dirs:
                 args.extend(("--plugin-dir", plugin_dir))
-        if self.prompt_mode == "argument":
-            args.append(prompt)
+        args.append(prompt)
         return [self.executable, *args]
 
     def probe_version(self, *, timeout_seconds: float) -> str:

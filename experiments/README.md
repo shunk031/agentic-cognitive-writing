@@ -64,11 +64,10 @@ Each successful run contains the following files:
 - `output.raw` preserves the final output bytes extracted from the headless response.
 - `output.normalized.txt` contains the same final output as text for downstream tools.
 - `.writing/trace/process.jsonl` contains the selected skill's trace events.
-- `checksums.json` contains SHA-256 hashes for the run artifacts when the run reaches artifact finalization.
 - `attempt-NNN.events.jsonl`, `attempt-NNN.stdout.raw`, and `attempt-NNN.stderr.raw` preserve each transport stream; failed runs retain them for diagnosis.
 - `run-manifest.json` reports `budget_used_tokens` as the sum of Codex `turn.completed` output and reasoning tokens across the run. A missing or malformed usage record marks the run `unscored` and excludes it from scoring. `output_units_used` records the configured post-hoc output-budget measurement.
 
-The run manifest records absolute execution paths and SHA-256 hashes for the staged skill files. The runner also copies `.writing/goals.md` and `.writing/draft.md` when the selected skill creates them. It does not rewrite claims or paragraph boundaries during normalization.
+The run manifest records absolute execution paths and the authoritative SHA-256 hashes for output, trace, transport evidence, and staged skill files. The runner also copies `.writing/goals.md` and `.writing/draft.md` when the selected skill creates them. It does not rewrite claims or paragraph boundaries during normalization.
 
 The final response must contain the complete product text. For A2 to A6, `.writing/draft.md` must exist and the final response must contain at least half of its characters. B1 and B2 use the same draft gate. A1 is the only no-draft baseline and uses a non-empty completeness floor, measured in the configured output unit, with a 10-unit minimum or half of an explicitly requested length when that length is larger. The runner never substitutes `.writing/draft.md` for the response.
 
@@ -104,7 +103,7 @@ The private judge configuration supplies the requested model, judge identifier, 
 }
 ```
 
-The base URL and credential environment variables named in the private configuration must be set before the command runs. The scorer resolves both values at call time and never copies either value into a score artifact. The endpoint response must report a model identifier present in `model_family_map`; the scorer derives the judge family from that mapping instead of trusting a configured family label. The judge engine in [`src/agentic_cogwriter/judges/engine.py`](src/agentic_cogwriter/judges/engine.py) replaces the prompt's `runtime-verified` marker with that runtime-derived protocol value before the score record is written. The completed run's `run-manifest.json` must contain `models_and_execution.generator_model_id` and `models_and_execution.generator_model_family`. The scorer rejects generator-family overlap and an open evaluator that is not distinct from both frontier families.
+The base URL and credential environment variables named in the private configuration must be set before the command runs. The scorer resolves both values at call time and never copies either value into a score artifact. The endpoint response must report a model identifier present in `model_family_map`; the scorer derives the judge family from that mapping instead of trusting a configured family label. The judge engine in [`src/agentic_cogwriter/judges/engine.py`](src/agentic_cogwriter/judges/engine.py) replaces the prompt's `runtime-verified` marker with that runtime-derived protocol value before the score record is written. The completed run's `run-manifest.json` must contain `models_and_execution.generator_model_id` and `models_and_execution.generator_model_family`. The scorer rejects any judge whose base family overlaps the generator family.
 
 Run one pointwise judgment with the `agentic-cogwriter-score` entry point:
 
