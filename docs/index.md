@@ -49,6 +49,8 @@ flowchart TB
     state -.-> monitor
 ```
 
+The `Planner`, `Translator`, and `Reviewer` implement the corresponding `Planning`, `Translating`, and `Reviewing` processes.
+
 [Read how the cognitive model maps to the system →](theory-mapping.md)
 
 ## Explore the project
