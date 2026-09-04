@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from .errors import BudgetExceeded
+
+_CJK_RE = re.compile(r"[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002FA1F]")
 
 
 @dataclass
@@ -40,8 +43,8 @@ class OutputBudget:
 
 
 def estimate_output_tokens(text: str) -> int:
-    """Use a deterministic fallback when a pinned tokenizer is unavailable."""
+    """Count CJK codepoints and whitespace-separated non-CJK runs."""
 
-    if not text.strip():
-        return 0
-    return len(text.split())
+    return len(_CJK_RE.findall(text)) + sum(
+        len(part.split()) for part in _CJK_RE.split(text)
+    )

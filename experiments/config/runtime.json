@@ -33,7 +33,7 @@
   "output_counting": {
     "unit": "REQUIRED_AT_RUNTIME",
     "tokenizer": "REQUIRED_AT_RUNTIME",
-    "word_rule": "REQUIRED_AT_RUNTIME"
+    "word_rule": "CJK codepoints plus Unicode-whitespace-separated non-CJK runs"
   },
   "tool_policy": {
     "network": "denied",

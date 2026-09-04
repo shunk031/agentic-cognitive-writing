@@ -304,7 +304,7 @@ If the selected implementation cannot fit ties, count each tie as half a win in 
 
 ### Length outcomes and judge sensitivity
 
-The runner records raw word count, model-token count when the pinned tokenizer makes it available, and output-length gap for every pair.
+The runner records output-unit count using the frozen rule: each CJK codepoint counts as one unit, and each Unicode-whitespace-separated non-CJK run counts as one unit. The runner also records model-token count when the pinned tokenizer makes it available and output-length gap for every pair.
 
 Report every quality result both raw and length-stratified. The length strata and minimum cell size are `REQUIRED_AT_RUNTIME` and must be fixed before scoring.
 
