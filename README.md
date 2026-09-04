@@ -4,7 +4,7 @@
 
 `Agentic CogWriter` is a harness that turns a coding agent into a cognitive writing system. The harness installs as skills and subagents, runs long-form writing as an explicit cognitive process, and keeps goals, drafts, notes, and the decision log as files in the directory where you write. Instead of generating text in one pass, the harness revisits and rewrites its own plans and goals as the draft develops.
 
-Agentic CogWriter realizes the writing model in ["A Cognitive Process Theory of Writing"](https://www.jstor.org/stable/356600) (1981)[^1] as an agent system. The theory's `Monitor` runs as the orchestrating agent and decides what to work on next. The `Monitor` delegates `Planning`, `Translating`, and `Reviewing` as roles backed by skills and subagents. The task environment and long-term memory live as files in the writing project, and the goal network evolves as composition proceeds. The three roles work as follows:
+Agentic CogWriter realizes the writing model in "A Cognitive Process Theory of Writing"[^1] as an agent system. The theory's `Monitor` runs as the orchestrating agent and decides what to work on next. The `Monitor` delegates `Planning`, `Translating`, and `Reviewing` as roles backed by skills and subagents. The task environment and long-term memory live as files in the writing project, and the goal network evolves as composition proceeds. The three roles work as follows:
 
 - `Planning` generates and organizes ideas and sets goals.
 - `Translating` turns selected meanings into words.
@@ -62,7 +62,7 @@ For offline package details, read [`plugin/README.md`](plugin/README.md).
 
 ## How it works
 
-Read [How the theory maps to Agentic CogWriter](docs/theory-mapping.md) for the Figure 1 diagram and artifact mapping.
+Read [How the theory maps to Agentic CogWriter](docs/theory-mapping.md) for the writing-model diagram and artifact mapping.
 
 ## Research and experiment context
 
