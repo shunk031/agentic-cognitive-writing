@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -40,9 +39,7 @@ class ConditionSpec:
     """One condition wrapper and the package skill it invokes."""
 
     condition_id: str
-    kind: str
     analysis_family: str
-    trace_mode: str
     skill_name: str
     package_name: str
     stages: tuple[StageSpec, ...]
@@ -62,12 +59,6 @@ class ConditionSpec:
         """Return trace-policy metadata as a fresh mapping."""
 
         return dict(self.trace_policy)
-
-
-def default_registry_path() -> Path:
-    """Return the registry path relative to this source file."""
-
-    return EXPERIMENTS_ROOT / "conditions" / "conditions.json"
 
 
 def _load_toml(path: Path) -> dict[str, Any]:
@@ -90,20 +81,20 @@ def _required_string(mapping: Mapping[str, Any], key: str, *, label: str) -> str
 
 
 def _load_stages(
-    entry: Mapping[str, Any], registry_path: Path, condition_id: str
+    wrapper: Mapping[str, Any], wrapper_path: Path
 ) -> tuple[StageSpec, ...]:
-    stage_entries = entry.get("stages")
+    stage_entries = wrapper.get("stages")
     if not isinstance(stage_entries, list) or not stage_entries:
-        raise ConfigurationError(f"Condition {condition_id} must define ordered stages")
+        raise ConfigurationError(f"Wrapper {wrapper_path} must define ordered stages")
     stages: list[StageSpec] = []
     for stage_entry in stage_entries:
         if not isinstance(stage_entry, Mapping) or not isinstance(
             stage_entry.get("id"), str
         ):
-            raise ConfigurationError(f"Condition {condition_id} has an invalid stage")
+            raise ConfigurationError(f"Wrapper {wrapper_path} has an invalid stage")
         relative = stage_entry.get("path")
         stage_path = (
-            registry_path.parent / relative if isinstance(relative, str) else None
+            wrapper_path.parent / relative if isinstance(relative, str) else None
         )
         expected = stage_entry.get("sha256")
         if stage_path is not None:
@@ -116,7 +107,7 @@ def _load_stages(
                 raise ConfigurationError(f"Frozen prompt hash mismatch: {stage_path}")
         elif expected is not None:
             raise ConfigurationError(
-                f"Condition {condition_id} stage {stage_entry['id']} has a hash "
+                f"Wrapper {wrapper_path} stage {stage_entry['id']} has a hash "
                 "without a path"
             )
         stages.append(
@@ -129,31 +120,14 @@ def _load_stages(
     return tuple(stages)
 
 
-def _load_wrapper(
-    wrapper_path: Path,
-    *,
-    condition_id: str,
-    analysis_family: str,
-) -> tuple[
-    str,
-    str,
-    tuple[tuple[str, str], ...],
-    tuple[str, ...],
-    str,
-    tuple[str, ...],
-    int,
-    int | None,
-    tuple[str, ...] | None,
-    bool,
-    bool,
-]:
+def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
     wrapper = _load_toml(wrapper_path)
-    if wrapper.get("condition_id") != condition_id:
-        raise ConfigurationError(f"Wrapper {wrapper_path} has the wrong condition_id")
-    wrapper_family = wrapper.get("analysis_family")
-    if wrapper_family != analysis_family:
+    condition_id = _required_string(wrapper, "condition_id", label=str(wrapper_path))
+    analysis_family = wrapper.get("analysis_family")
+    if analysis_family not in {"confirmatory", "exploratory"}:
         raise ConfigurationError(
-            f"Wrapper {wrapper_path} has the wrong analysis_family"
+            f"Wrapper {wrapper_path} analysis_family must be "
+            "confirmatory or exploratory"
         )
 
     skill_name = _required_string(wrapper, "skill", label=str(wrapper_path))
@@ -308,98 +282,41 @@ def _load_wrapper(
         raise ConfigurationError(
             f"Wrapper {wrapper_path} cannot require forbidden goal events"
         )
-    return (
-        skill_name,
-        package_name,
-        trace_policy,
-        tuple(processes),
-        goal_events,
-        tuple(event_types),
-        min_events,
-        max_events,
-        tuple(process_order) if process_order is not None else None,
-        require_goal_events,
-        product_requires_draft,
+    return ConditionSpec(
+        condition_id=condition_id,
+        analysis_family=analysis_family,
+        skill_name=skill_name,
+        package_name=package_name,
+        stages=_load_stages(wrapper, wrapper_path),
+        plugin_config=wrapper_path,
+        trace_policy=trace_policy,
+        trace_processes=tuple(processes),
+        goal_events=goal_events,
+        event_types=tuple(event_types),
+        min_events=min_events,
+        max_events=max_events,
+        process_order=tuple(process_order) if process_order is not None else None,
+        require_goal_events=require_goal_events,
+        product_requires_draft=product_requires_draft,
     )
 
 
-def load_condition_registry(path: Path | None = None) -> dict[str, ConditionSpec]:
+def load_condition_registry(
+    conditions_dir: Path | None = None,
+) -> dict[str, ConditionSpec]:
     """Load all condition wrappers and verify frozen prompt hashes."""
 
-    registry_path = path or default_registry_path()
-    try:
-        document = json.loads(registry_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+    directory = conditions_dir or EXPERIMENTS_ROOT / "conditions"
+    loaded: dict[str, ConditionSpec] = {}
+    for wrapper_path in sorted(directory.glob("*.toml")):
+        spec = _load_wrapper(wrapper_path)
+        if spec.condition_id in loaded:
+            raise ConfigurationError(
+                f"Duplicate condition_id {spec.condition_id} in {wrapper_path}"
+            )
+        loaded[spec.condition_id] = spec
+    if set(loaded) != set(CONDITION_IDS):
         raise ConfigurationError(
-            f"Cannot read condition registry {registry_path}: {exc}"
-        ) from exc
-    entries = document.get("conditions") if isinstance(document, dict) else None
-    if not isinstance(entries, dict) or set(entries) != set(CONDITION_IDS):
-        raise ConfigurationError(
-            "Condition registry must define exactly A1 through A6, B1, and B2"
+            "Condition wrappers must define exactly A1 through A6, B1, and B2"
         )
-
-    result: dict[str, ConditionSpec] = {}
-    for condition_id in CONDITION_IDS:
-        entry = entries[condition_id]
-        if not isinstance(entry, Mapping):
-            raise ConfigurationError(f"Condition {condition_id} must be an object")
-        if (
-            entry.get("kind") != "plugin"
-            or entry.get("trace_mode") != "plugin_recorded"
-        ):
-            raise ConfigurationError(
-                f"Condition {condition_id} must use a plugin_recorded wrapper"
-            )
-        analysis_family = entry.get("analysis_family")
-        if analysis_family not in {"confirmatory", "exploratory"}:
-            raise ConfigurationError(
-                f"Condition {condition_id} has an invalid analysis_family"
-            )
-        wrapper_relative = entry.get("wrapper_config")
-        if not isinstance(wrapper_relative, str):
-            raise ConfigurationError(
-                f"Condition {condition_id} must define wrapper_config"
-            )
-        wrapper_path = registry_path.parent / wrapper_relative
-        if not wrapper_path.is_file():
-            raise ConfigurationError(
-                f"Missing condition wrapper config: {wrapper_path}"
-            )
-        (
-            skill_name,
-            package_name,
-            trace_policy,
-            trace_processes,
-            goal_events,
-            event_types,
-            min_events,
-            max_events,
-            process_order,
-            require_goal_events,
-            product_requires_draft,
-        ) = _load_wrapper(
-            wrapper_path,
-            condition_id=condition_id,
-            analysis_family=analysis_family,
-        )
-        result[condition_id] = ConditionSpec(
-            condition_id=condition_id,
-            kind="plugin",
-            analysis_family=analysis_family,
-            trace_mode="plugin_recorded",
-            skill_name=skill_name,
-            package_name=package_name,
-            stages=_load_stages(entry, registry_path, condition_id),
-            plugin_config=wrapper_path,
-            trace_policy=trace_policy,
-            trace_processes=trace_processes,
-            goal_events=goal_events,
-            event_types=event_types,
-            min_events=min_events,
-            max_events=max_events,
-            process_order=process_order,
-            require_goal_events=require_goal_events,
-            product_requires_draft=product_requires_draft,
-        )
-    return result
+    return {condition_id: loaded[condition_id] for condition_id in CONDITION_IDS}

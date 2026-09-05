@@ -478,7 +478,7 @@ experiments/
 ├── config/       # frozen run, model, judge, and seed configurations
 ├── prompts/      # materialized prompt manifests and source hashes
 ├── baselines/    # planned A1-A3 baseline skills
-├── conditions/   # condition registry and platform-specific adapters
+├── conditions/   # condition wrapper configs and platform-specific adapters
 ├── runner/       # execution, timeout, retry, and trace collection code
 ├── judge/        # pointwise and pairwise prompts, schemas, and runners
 ├── human/        # sampling manifest, annotation form, and agreement code

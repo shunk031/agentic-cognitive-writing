@@ -37,3 +37,18 @@ min_events = 3
 max_events = 3
 process_order = ["pre-write", "write", "re-write"]
 processes = ["pre-write", "write", "re-write"]
+
+[[stages]]
+id = "pre_write"
+path = "prompts/a2_pre_write.md"
+sha256 = "d72bf6052a7ad3ff70bfe7b700fe48cf8715430984201956908ae9c4df59d604"
+
+[[stages]]
+id = "write"
+path = "prompts/a2_write.md"
+sha256 = "435e866a7311676ee48a7e92a7cd68527c31a3185816c2d9eb082e9671496067"
+
+[[stages]]
+id = "re_write"
+path = "prompts/a2_re_write.md"
+sha256 = "210d3888a7f64eb65b463374728dc0def87801235c9789eef06b5a29d13098fa"

@@ -36,3 +36,6 @@ event_types = ["process_switch", "goal_created", "goal_developed", "goal_regener
 min_events = 1
 require_goal_events = true
 processes = ["planning", "generate", "organize", "goal-setting", "translating", "reviewing", "evaluate", "revise"]
+
+[[stages]]
+id = "plugin_session"

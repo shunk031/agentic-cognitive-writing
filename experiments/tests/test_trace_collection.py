@@ -197,10 +197,6 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     registry = load_condition_registry()
 
     assert set(registry) == {*(f"A{index}" for index in range(1, 7)), "B1", "B2"}
-    assert all(condition.kind == "plugin" for condition in registry.values())
-    assert all(
-        condition.trace_mode == "plugin_recorded" for condition in registry.values()
-    )
     assert [
         registry[condition].skill_name
         for condition in ("A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2")

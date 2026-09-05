@@ -35,3 +35,6 @@ goal_events = "forbidden"
 event_types = ["process_switch", "goal_created", "goal_developed", "goal_regenerated"]
 min_events = 1
 processes = ["planning", "generate", "organize", "goal-setting", "translating", "reviewing", "evaluate", "revise"]
+
+[[stages]]
+id = "plugin_session"

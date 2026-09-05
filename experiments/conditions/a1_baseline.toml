@@ -36,3 +36,8 @@ event_types = ["process_switch"]
 min_events = 1
 max_events = 1
 processes = ["generate"]
+
+[[stages]]
+id = "single_shot"
+path = "prompts/a1_single_shot.md"
+sha256 = "99964b369a76d8cb88ec375cda4e553a5b993483ca05b14e46c3c3fb3d3014cf"
