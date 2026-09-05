@@ -363,8 +363,8 @@ def test_family_audit_rejects_unmappable_reported_model(tmp_path: Path) -> None:
 
 def test_committed_judge_templates_render_without_unresolved_fields() -> None:
     root = Path(__file__).parents[1]
-    pointwise = JudgeTemplate.load(root / "prompts/judges/pointwise-v1.txt")
-    pairwise = JudgeTemplate.load(root / "prompts/judges/pairwise-v1.txt")
+    pointwise = JudgeTemplate.load(root / "prompts/judges/pointwise-v1.md")
+    pairwise = JudgeTemplate.load(root / "prompts/judges/pairwise-v1.md")
 
     rendered_pointwise = pointwise.render(
         {
@@ -405,7 +405,7 @@ def test_writingbench_native_template_keeps_query_and_response_before_criteria()
     None
 ):
     template = JudgeTemplate.load(
-        Path(__file__).parents[1] / "prompts/judges/writingbench-native-v1.txt"
+        Path(__file__).parents[1] / "prompts/judges/writingbench-native-v1.md"
     )
 
     rendered = template.render(
@@ -454,7 +454,7 @@ def test_fake_transport_receives_deterministic_zero_temperature_payload(
 def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
     tmp_path: Path,
 ) -> None:
-    template = Path(__file__).parents[1] / "prompts/judges/pointwise-v1.txt"
+    template = Path(__file__).parents[1] / "prompts/judges/pointwise-v1.md"
     config = _config(tmp_path, template, model="gpt-5.6-terra")
     captured: list[dict[str, Any]] = []
 
@@ -555,7 +555,7 @@ def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
 def test_gpt56_native_template_splits_shared_text_before_criterion(
     tmp_path: Path,
 ) -> None:
-    template = Path(__file__).parents[1] / "prompts/judges/writingbench-native-v1.txt"
+    template = Path(__file__).parents[1] / "prompts/judges/writingbench-native-v1.md"
     config = _config(tmp_path, template, task="native-pointwise", model="gpt-5.6-terra")
     captured: list[dict[str, Any]] = []
 
@@ -646,7 +646,7 @@ def test_gpt56_native_template_splits_shared_text_before_criterion(
 
 def test_pairwise_template_forbids_assignment_evidence_quotes() -> None:
     pairwise = JudgeTemplate.load(
-        Path(__file__).parents[1] / "prompts/judges/pairwise-v1.txt"
+        Path(__file__).parents[1] / "prompts/judges/pairwise-v1.md"
     )
 
     rendered = pairwise.render(
@@ -928,7 +928,7 @@ def test_native_pointwise_reproduces_pilot_a4_writingbench_shape(
         benchmark_name="WritingBench",
         native_payload=row["native_payload"],
     )
-    template = Path(__file__).parents[1] / "prompts/judges/writingbench-native-v1.txt"
+    template = Path(__file__).parents[1] / "prompts/judges/writingbench-native-v1.md"
     config = _config(tmp_path, template, task="native-pointwise")
     transport = FakeTransport(
         [{"content": json.dumps(_native_record(score))} for score in (8, 7, 7, 9, 9)]

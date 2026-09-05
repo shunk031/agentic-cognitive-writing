@@ -1,9 +1,11 @@
-# Agentic CogWriter pointwise judge prompt
-# Version: pointwise-v1
-# Protocol source: docs/experiments/protocol.md, Pointwise quality from two judges
-# FastChat source path: fastchat/llm_judge/data/judge_prompts.jsonl
-# FastChat source sha256: fd283293406d024f44c174b094ef48031d0687a4682fd3a56b29b138f80281b6
-# FastChat adaptation: single-v1 neutral-judge framing only; the five-dimension rubric is protocol-defined.
+<!--
+Agentic CogWriter pointwise judge prompt
+Version: pointwise-v1
+Protocol source: docs/experiments/protocol.md, Pointwise quality from two judges
+FastChat source path: fastchat/llm_judge/data/judge_prompts.jsonl
+FastChat source sha256: fd283293406d024f44c174b094ef48031d0687a4682fd3a56b29b138f80281b6
+FastChat adaptation: single-v1 neutral-judge framing only; the five-dimension rubric is protocol-defined.
+-->
 Please act as an impartial judge of one writing response. Judge the response against the assignment and the supplied context. Do not reward outside research or facts that are not supported by the assignment or supplied context. Judge the response itself, not its condition label, length, or any hidden process.
 
 Return exactly one valid JSON object. Do not use Markdown fences or add explanation outside the JSON object.
