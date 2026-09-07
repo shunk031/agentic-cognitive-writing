@@ -270,6 +270,9 @@ class ExperimentRunner:
         run_dir.mkdir(parents=True, exist_ok=False)
         workspace = run_dir / "workspace"
         workspace.mkdir()
+        # Pre-create the trace directory so skills anchor `.writing/` writes
+        # to the workspace instead of the plugin or skill directory.
+        (workspace / ".writing" / "trace").mkdir(parents=True)
         manifest_path = run_dir / "run-manifest.json"
         output_path = run_dir / "output.raw"
         normalized_path = run_dir / "output.normalized.txt"

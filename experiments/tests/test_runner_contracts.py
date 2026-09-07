@@ -311,6 +311,27 @@ def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> No
         assert "complete final text itself" in prompt
 
 
+CLAUDE_WORKSPACE_CONTRACT = (
+    "Workspace contract:\n"
+    "Create and update every `.writing/` file under the session working "
+    "directory, never under the plugin or skill directory. The final response "
+    "must contain the complete final text itself, not a summary or a link to a "
+    "workspace artifact."
+)
+
+
+def test_every_claude_code_invocation_anchors_workspace_and_final_text() -> None:
+    runner = ExperimentRunner(_config(), output_root=Path("runs"))
+    for condition in load_condition_registry().values():
+        wrapper = tomllib.loads(condition.plugin_config.read_text(encoding="utf-8"))
+        invocation = wrapper["invocation"]["claude_code"]
+
+        assert CLAUDE_WORKSPACE_CONTRACT in invocation
+        prompt = runner._plugin_prompt(condition, _prompt(), "claude-code")
+        assert "complete final text itself" in prompt
+        assert "session working directory" in prompt
+
+
 def test_every_condition_prompt_has_the_uniform_single_turn_contract() -> None:
     runner = ExperimentRunner(_config(), output_root=Path("runs"))
     for condition in load_condition_registry().values():
