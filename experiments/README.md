@@ -50,12 +50,12 @@ uv run --package agentic-cogwriter agentic-cogwriter-runner \
   --platform codex \
   --codex-plugin-root /path/to/plugin \
   --config /path/to/runtime.json \
-  --output-root runs
+  --output-root /path/to/guidance-free-runs
 ```
 
 The default tracked configuration stops in preflight. For Codex, set `--codex-plugin-root` to a directory containing `skills/<skill>/SKILL.md`; the runner copies the required files into the run workspace before invoking Codex. A container run that mounts the plugin at `/plugin` must pass `--codex-plugin-root /plugin`. Codex reads `plugin/skills/<skill>/SKILL.md` from the workspace and does not install a plugin into `CODEX_HOME`. When the option is omitted, the runner selects matching skill files from the wrapper's configured plugin paths. Claude Code uses the plugin directories listed by its selected wrapper.
 
-The resolved workspace must not have an ancestor carrying `AGENTS.md`, `CLAUDE.md`, `.codex/`, or `.claude/`. Running from the repository root with `--output-root runs` therefore fails closed because the repository contains guidance files. Choose an output root whose ancestors are guidance-free, or use the [Docker runner](docker/README.md), which mounts the host `runs/` directory at `/run-output`.
+The resolved workspace must not have an ancestor carrying `AGENTS.md`, `CLAUDE.md`, `.codex/`, or `.claude/`. The runner refuses an output path under the repository because the repository's ancestors contain guidance files. Choose an output root whose ancestors are guidance-free, or use the [Docker runner](docker/README.md), which mounts the host `runs/` directory at `/run-output`.
 
 ## Inspect artifacts
 
@@ -138,7 +138,7 @@ The runner gives every condition the same assignment, supplied context, timeout,
 
 Codex first turns use `sandbox_workspace_write.network_access=false`, disable Codex web search, and use the non-interactive `codex exec --json` adapter. Claude Code enables its sandbox, fails if the sandbox is unavailable, prevents unsandboxed commands, uses an empty strict network allowlist, and denies retrieval tools. These platform settings are the primary no-retrieval mechanism; raw-output marker scanning is a secondary tripwire. The manifest records the platform status. A platform that cannot guarantee denial is recorded as `monitored-only` and cannot be represented as enforced.
 
-Each generator process receives a run-local `CODEX_HOME` or `CLAUDE_CONFIG_DIR` under the run directory. The runner copies only Codex `config.toml` and `auth.json` or Claude Code `.credentials.json` when those files exist in the caller's provider home. User guidance, settings, skills, plugins, and MCP configuration never enter the run-local directory. The runner records the resolved directory in `execution_paths` and rejects any workspace with a guidance-bearing ancestor before probing or starting the generator.
+Each generator process receives a run-local `CODEX_HOME` or `CLAUDE_CONFIG_DIR` in a temporary directory outside the run directory. The runner copies only Codex `config.toml` and `auth.json` or Claude Code `.credentials.json` when those files exist in the caller's provider home. User guidance, settings, skills, plugins, and MCP configuration never enter the temporary directory. The runner removes the temporary directory when the run ends, so provider files never become run artifacts. The runner records the resolved directory in `execution_paths` and rejects any workspace with a guidance-bearing ancestor before probing or starting the generator.
 
 The adapter passes Claude Code's documented `CLAUDE_CODE_MAX_OUTPUT_TOKENS` setting into each invocation. Codex `exec` has no supported generation-token, temperature, top-p, seed, or stop-rule control, so those Codex controls are `monitored-only`; its reported output and reasoning usage is still checked against the shared cap. Claude Code's temperature, top-p, seed, and stop-rule controls are also `monitored-only` because `claude --print` does not document corresponding options. When `output_counting` selects a pinned tokenizer, the runner counts its tokens; otherwise it uses the frozen word rule in the runtime configuration. The measurement unit does not claim that the CLI enforced a word cap.
 

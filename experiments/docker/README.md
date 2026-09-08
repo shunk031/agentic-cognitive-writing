@@ -58,7 +58,7 @@ The runner refuses a workspace whose resolved ancestors contain `AGENTS.md`, `CL
 
 ## What success looks like
 
-A successful run exits with status 0 and prints the runner's final completion message. With `--output-root runs`, the host receives a run directory with these files:
+A successful run exits with status 0 and prints the runner's final completion message. With `--output-root /run-output`, the host receives a run directory with these files:
 
 ```text
 runs/

@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import stat
+import tempfile
 import tomllib
 import uuid
 from collections.abc import Callable, Mapping
@@ -288,29 +289,32 @@ class ExperimentRunner:
         }
 
     def _prepare_generator_environment(
-        self, run_dir: Path, platform: str
+        self, platform: str
     ) -> tuple[Path, dict[str, str]]:
         """Build one run-local provider home and its child process environment."""
 
-        config_root = run_dir / "generator-config"
-        config_root.mkdir()
+        config_root = Path(tempfile.mkdtemp(prefix="agentic-cogwriter-generator-"))
         source_root = self.codex_home if platform == "codex" else self.claude_config_dir
-        for filename in _GENERATOR_CONFIG_ALLOWLIST[platform]:
-            source = source_root / filename
-            try:
-                present = source.is_file()
-            except OSError as exc:
-                raise ConfigurationError(
-                    f"Cannot inspect provider file {source}"
-                ) from exc
-            if not present:
-                continue
-            try:
-                shutil.copy2(source, config_root / filename)
-            except OSError as exc:
-                raise ConfigurationError(
-                    f"Cannot copy provider file {source} to {config_root}"
-                ) from exc
+        try:
+            for filename in _GENERATOR_CONFIG_ALLOWLIST[platform]:
+                source = source_root / filename
+                try:
+                    present = source.is_file()
+                except OSError as exc:
+                    raise ConfigurationError(
+                        f"Cannot inspect provider file {source}"
+                    ) from exc
+                if not present:
+                    continue
+                try:
+                    shutil.copy2(source, config_root / filename)
+                except OSError as exc:
+                    raise ConfigurationError(
+                        f"Cannot copy provider file {source} to {config_root}"
+                    ) from exc
+        except Exception:
+            shutil.rmtree(config_root, ignore_errors=True)
+            raise
 
         child_environment = dict(os.environ)
         child_environment[_GENERATOR_CONFIG_ENV[platform]] = str(config_root.resolve())
@@ -353,7 +357,7 @@ class ExperimentRunner:
         # to the workspace instead of the plugin or skill directory.
         (workspace / ".writing" / "trace").mkdir(parents=True)
         generator_config_dir, generator_environment = (
-            self._prepare_generator_environment(run_dir, platform)
+            self._prepare_generator_environment(platform)
         )
         manifest_path = run_dir / "run-manifest.json"
         output_path = run_dir / "output.raw"
@@ -393,34 +397,33 @@ class ExperimentRunner:
             protected_goals.read_bytes() if protected_goals.is_file() else None
         )
 
-        # The started manifest exists before CLI probing or model process creation.
-        self._write_json(
-            manifest_path,
-            self._manifest(
-                prompt=prompt,
-                condition=condition,
-                platform=platform,
-                adapter=adapter,
-                run_id=run_id,
-                status="started",
-                started_at=started_at,
-                cli_version=cli_version,
-                budget=budget,
-                stage_prompt_hashes=stage_prompt_hashes,
-                benchmark_provenance=benchmark_provenance,
-                execution_paths=execution_paths,
-                evidence_hashes=evidence_hashes,
-                staged_files=staged_files,
-                token_usage=token_usage,
-                subagent_spawn_count=len(subagent_spawn_ids),
-                product_gate=product_gate,
-                token_accounting_error=token_accounting_error,
-                rollout_collection=rollout_collection,
-                spawn_extraction=spawn_extraction,
-            ),
-        )
-
         try:
+            # The started manifest exists before CLI probing or model process creation.
+            self._write_json(
+                manifest_path,
+                self._manifest(
+                    prompt=prompt,
+                    condition=condition,
+                    platform=platform,
+                    adapter=adapter,
+                    run_id=run_id,
+                    status="started",
+                    started_at=started_at,
+                    cli_version=cli_version,
+                    budget=budget,
+                    stage_prompt_hashes=stage_prompt_hashes,
+                    benchmark_provenance=benchmark_provenance,
+                    execution_paths=execution_paths,
+                    evidence_hashes=evidence_hashes,
+                    staged_files=staged_files,
+                    token_usage=token_usage,
+                    subagent_spawn_count=len(subagent_spawn_ids),
+                    product_gate=product_gate,
+                    token_accounting_error=token_accounting_error,
+                    rollout_collection=rollout_collection,
+                    spawn_extraction=spawn_extraction,
+                ),
+            )
             cli_version = self._probe_cli(adapter)
             expected_version = self._expected_cli_version(platform)
             if cli_version != expected_version:
@@ -791,6 +794,8 @@ class ExperimentRunner:
                 ),
             )
             raise
+        finally:
+            shutil.rmtree(generator_config_dir, ignore_errors=True)
 
     def _probe_cli(self, adapter: PlatformAdapter) -> str:
         if isinstance(self.executor, SubprocessExecutor):

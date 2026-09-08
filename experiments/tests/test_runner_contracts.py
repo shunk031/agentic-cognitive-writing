@@ -218,7 +218,26 @@ def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
     (source_root / "plugins" / "ignored.plugin" / "manifest.json").write_text(
         "ignored", encoding="utf-8"
     )
-    executor = _RetryExecutor([_result()])
+    observed_config_dirs: list[Path] = []
+    observed_config_files: list[set[str]] = []
+
+    class InspectingExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            assert env is not None
+            config_root = Path(env[variable])
+            observed_config_dirs.append(config_root)
+            observed_config_files.append(
+                {
+                    path.relative_to(config_root).as_posix()
+                    for path in config_root.rglob("*")
+                    if path.is_file()
+                }
+            )
+            return super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+
+    executor = InspectingExecutor([_result()])
     runner_kwargs = {"executor": executor}
     if platform == "codex":
         runner_kwargs["codex_home"] = source_root
@@ -229,17 +248,85 @@ def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
     result = runner.run_prompt(_prompt(), condition_id="A1", platform=platform)
 
     manifest = json.loads(result.manifest_path.read_text())
-    config_root = result.run_dir / "generator-config"
+    config_root = observed_config_dirs[0]
     assert executor.environments[0] is not None
     assert executor.environments[0][variable] == str(config_root.resolve())
-    copied_files = {
-        path.relative_to(config_root).as_posix()
-        for path in config_root.rglob("*")
-        if path.is_file()
-    }
-    assert copied_files == set(allowlist)
+    assert observed_config_files == [set(allowlist)]
+    assert config_root not in result.run_dir.parents
+    assert result.run_dir not in config_root.parents
+    assert not config_root.exists()
     assert manifest["execution_paths"]["generator_config_dir"] == str(
         config_root.resolve()
+    )
+    assert not any(
+        path.name in {"auth.json", ".credentials.json"}
+        for path in result.run_dir.rglob("*")
+        if path.is_file()
+    )
+
+
+@pytest.mark.parametrize(
+    ("platform", "variable", "allowlist"),
+    [
+        ("codex", "CODEX_HOME", ("config.toml", "auth.json")),
+        ("claude-code", "CLAUDE_CONFIG_DIR", (".credentials.json",)),
+    ],
+)
+def test_run_removes_generator_config_after_failure(
+    tmp_path: Path,
+    platform: str,
+    variable: str,
+    allowlist: tuple[str, ...],
+) -> None:
+    source_root = tmp_path / "host-provider-config"
+    source_root.mkdir()
+    for relative in allowlist:
+        (source_root / relative).write_text(relative, encoding="utf-8")
+    observed_config_dirs: list[Path] = []
+    observed_config_files: list[set[str]] = []
+
+    class InspectingExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            assert env is not None
+            config_root = Path(env[variable])
+            observed_config_dirs.append(config_root)
+            observed_config_files.append(
+                {
+                    path.relative_to(config_root).as_posix()
+                    for path in config_root.rglob("*")
+                    if path.is_file()
+                }
+            )
+            return super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+
+    executor = InspectingExecutor([_result(returncode=1)])
+    runner_kwargs = {"executor": executor}
+    if platform == "codex":
+        runner_kwargs["codex_home"] = source_root
+    else:
+        runner_kwargs["claude_config_dir"] = source_root
+    runner = _runner(
+        tmp_path / "runs",
+        _config(retry_policy=0),
+        **runner_kwargs,
+    )
+
+    with pytest.raises(ExecutionError, match="status 1"):
+        runner.run_prompt(
+            _prompt(), condition_id="A1", platform=platform, run_id="failure"
+        )
+
+    run_dir = tmp_path / "runs" / "WritingBench" / "A1" / platform / "failure"
+    assert observed_config_files == [set(allowlist)]
+    assert run_dir not in observed_config_dirs[0].parents
+    assert observed_config_dirs[0] not in run_dir.parents
+    assert not observed_config_dirs[0].exists()
+    assert not any(
+        path.name in {"auth.json", ".credentials.json"}
+        for path in run_dir.rglob("*")
+        if path.is_file()
     )
 
 
