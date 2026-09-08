@@ -419,6 +419,11 @@ def test_runner_rejects_missing_plugin_trace(tmp_path):
     with pytest.raises(RuntimeError, match="no plugin trace"):
         runner.run_prompt(prompt, condition_id="A1", platform="codex")
 
+    workspaces = [d for d in tmp_path.rglob("workspace") if d.is_dir()]
+    assert workspaces
+    for workspace in workspaces:
+        assert (workspace / ".writing" / "trace").is_dir()
+
 
 def test_missing_trace_preserves_transport_evidence_and_absolute_paths(tmp_path):
     prompt = PromptRecord(
