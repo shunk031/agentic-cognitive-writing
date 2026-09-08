@@ -82,7 +82,7 @@ RUN set -eux; \
 
 RUN groupadd --gid 1000 cog-writer-agent \
     && useradd --uid 1000 --gid 1000 --create-home --shell /bin/sh cog-writer-agent \
-    && mkdir --parents /home/cog-writer-agent/.codex /workspace \
+    && mkdir --parents /home/cog-writer-agent/.codex /home/cog-writer-agent/.claude /workspace \
     && chown --recursive cog-writer-agent:cog-writer-agent /home/cog-writer-agent /workspace
 
 COPY experiments/docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

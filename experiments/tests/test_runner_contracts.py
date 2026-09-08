@@ -61,6 +61,18 @@ SINGLE_TURN_CONTRACT = (
 )
 
 
+pytestmark = pytest.mark.usefixtures(  # noqa: V107
+    "_keep_generator_config_out_of_system_temp"
+)
+
+
+@pytest.fixture  # noqa: V103
+def _keep_generator_config_out_of_system_temp(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
+
+
 def _runtime_values() -> dict[str, object]:
     return {
         "codex_generator_model": "gpt-test",
@@ -218,7 +230,6 @@ def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
     allowlist: tuple[str, ...],
 ) -> None:
     monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
-    monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
     source_root = tmp_path / "host-provider-config"
     source_root.mkdir()
     for relative in (*allowlist, "AGENTS.md", "CLAUDE.md", "settings.json"):
@@ -263,14 +274,7 @@ def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
     assert executor.environments[0] is not None
     assert executor.environments[0][variable] == str(config_root.resolve())
     assert observed_config_files == [set(allowlist)]
-    assert config_root == (
-        tmp_path
-        / "home"
-        / ".cache"
-        / "agentic-cogwriter"
-        / "generator-config"
-        / result.run_id
-    )
+    assert config_root == (tmp_path / "runs" / ".generator-config" / result.run_id)
     assert observed_config_modes == [0o700]
     assert config_root not in result.run_dir.parents
     assert result.run_dir not in config_root.parents
@@ -300,7 +304,6 @@ def test_run_removes_generator_config_after_failure(
     allowlist: tuple[str, ...],
 ) -> None:
     monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
-    monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
     source_root = tmp_path / "host-provider-config"
     source_root.mkdir()
     for relative in allowlist:
@@ -346,12 +349,7 @@ def test_run_removes_generator_config_after_failure(
     run_dir = tmp_path / "runs" / "WritingBench" / "A1" / platform / "failure"
     assert observed_config_files == [set(allowlist)]
     assert observed_config_dirs[0] == (
-        tmp_path
-        / "home"
-        / ".cache"
-        / "agentic-cogwriter"
-        / "generator-config"
-        / "failure"
+        tmp_path / "runs" / ".generator-config" / "failure"
     )
     assert observed_config_modes == [0o700]
     assert run_dir not in observed_config_dirs[0].parents
@@ -368,7 +366,6 @@ def test_run_removes_generator_config_when_preflight_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
-    monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
     source_root = tmp_path / "host-provider-config"
     source_root.mkdir()
     (source_root / "config.toml").write_text("model = 'test'", encoding="utf-8")
@@ -405,17 +402,9 @@ def test_run_rejects_generator_config_under_system_temp(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path))
-    monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
     executor = _RetryExecutor([_result()])
     runner = _runner(tmp_path / "runs", executor=executor)
-    expected_root = (
-        tmp_path
-        / "home"
-        / ".cache"
-        / "agentic-cogwriter"
-        / "generator-config"
-        / "guard"
-    )
+    expected_root = tmp_path / "runs" / ".generator-config" / "guard"
 
     with pytest.raises(
         ConfigurationError,
@@ -430,8 +419,9 @@ def test_run_rejects_generator_config_under_system_temp(
 
 
 def test_codex_session_snapshot_uses_the_run_generator_config_home(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
     host_codex_home = tmp_path / "host-codex"
     host_sessions = host_codex_home / "sessions"
     host_sessions.mkdir(parents=True)

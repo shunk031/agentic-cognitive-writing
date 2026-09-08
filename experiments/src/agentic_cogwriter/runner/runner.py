@@ -306,11 +306,7 @@ class ExperimentRunner:
         """Build one per-run provider home and its child process environment."""
 
         config_root = (
-            Path.home()
-            / ".cache"
-            / "agentic-cogwriter"
-            / "generator-config"
-            / _safe_component(run_id)
+            self.output_root / ".generator-config" / _safe_component(run_id)
         ).resolve()
         temporary_root = Path(tempfile.gettempdir()).resolve()
         try:

@@ -16,6 +16,17 @@ from agentic_cogwriter.runner.execution import ExecutionResult
 from agentic_cogwriter.runner.manifest import PromptRecord
 from agentic_cogwriter.runner.runner import ExperimentRunner
 
+pytestmark = pytest.mark.usefixtures(  # noqa: V107
+    "_keep_generator_config_out_of_system_temp"
+)
+
+
+@pytest.fixture  # noqa: V103
+def _keep_generator_config_out_of_system_temp(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
+
 
 def _plugin_source(tmp_path):
     root = tmp_path / "plugin-source"
