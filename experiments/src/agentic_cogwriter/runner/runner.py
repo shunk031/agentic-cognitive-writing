@@ -7,6 +7,7 @@ import math
 import os
 import re
 import shutil
+import stat
 import tomllib
 import uuid
 from collections.abc import Callable, Mapping
@@ -49,7 +50,12 @@ class Executor(Protocol):
     """Protocol implemented by real and test executors."""
 
     def run(
-        self, command: list[str], *, cwd: Path, timeout_seconds: float
+        self,
+        command: list[str],
+        *,
+        cwd: Path,
+        timeout_seconds: float,
+        env: Mapping[str, str] | None = None,
     ) -> ExecutionResult:
         """Run one non-interactive command."""
 
@@ -67,6 +73,42 @@ class RunResult:
 
 FINAL_OUTPUT_DRAFT_RATIO = 0.5
 DEFAULT_PRODUCT_FLOOR = 10
+_GENERATOR_CONFIG_ENV = {
+    "codex": "CODEX_HOME",
+    "claude-code": "CLAUDE_CONFIG_DIR",
+}
+_GENERATOR_CONFIG_ALLOWLIST = {
+    "codex": ("config.toml", "auth.json"),
+    "claude-code": (".credentials.json",),
+}
+_GUIDANCE_MARKERS = ("AGENTS.md", "CLAUDE.md", ".claude", ".codex")
+
+
+def _assert_guidance_free_workspace(workspace: Path) -> None:
+    """Refuse a workspace whose ancestors can supply user or project guidance."""
+
+    conflicts: list[Path] = []
+    for ancestor in (workspace, *workspace.parents):
+        for marker in _GUIDANCE_MARKERS:
+            candidate = ancestor / marker
+            try:
+                mode = candidate.stat().st_mode
+                present = (
+                    stat.S_ISDIR(mode) if marker.startswith(".") else stat.S_ISREG(mode)
+                )
+            except FileNotFoundError:
+                present = False
+            except OSError as exc:
+                raise ConfigurationError(
+                    f"Cannot inspect guidance marker {candidate}"
+                ) from exc
+            if present:
+                conflicts.append(candidate)
+    if conflicts:
+        markers = ", ".join(str(path) for path in conflicts)
+        raise ConfigurationError(
+            f"Refusing to start: workspace has guidance ancestors: {markers}"
+        )
 
 
 def _generator_model_family(runtime_config: RuntimeConfig, platform: str) -> str:
@@ -217,6 +259,7 @@ class ExperimentRunner:
         adapters: dict[str, PlatformAdapter] | None = None,
         codex_plugin_root: Path | None = None,
         codex_home: Path | None = None,
+        claude_config_dir: Path | None = None,
     ):
         self.runtime_config = runtime_config
         self.output_root = output_root.resolve()
@@ -230,6 +273,12 @@ class ExperimentRunner:
             else Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
         )
         self.codex_home = configured_codex_home.expanduser().resolve()
+        configured_claude_config_dir = (
+            claude_config_dir
+            if claude_config_dir is not None
+            else Path(os.environ.get("CLAUDE_CONFIG_DIR", Path.home() / ".claude"))
+        )
+        self.claude_config_dir = configured_claude_config_dir.expanduser().resolve()
 
     def _load_adapters(self) -> dict[str, PlatformAdapter]:
         root = EXPERIMENTS_ROOT / "conditions" / "adapters"
@@ -237,6 +286,35 @@ class ExperimentRunner:
             "codex": PlatformAdapter.load(root / "codex_exec.toml"),
             "claude-code": PlatformAdapter.load(root / "claude_print.toml"),
         }
+
+    def _prepare_generator_environment(
+        self, run_dir: Path, platform: str
+    ) -> tuple[Path, dict[str, str]]:
+        """Build one run-local provider home and its child process environment."""
+
+        config_root = run_dir / "generator-config"
+        config_root.mkdir()
+        source_root = self.codex_home if platform == "codex" else self.claude_config_dir
+        for filename in _GENERATOR_CONFIG_ALLOWLIST[platform]:
+            source = source_root / filename
+            try:
+                present = source.is_file()
+            except OSError as exc:
+                raise ConfigurationError(
+                    f"Cannot inspect provider file {source}"
+                ) from exc
+            if not present:
+                continue
+            try:
+                shutil.copy2(source, config_root / filename)
+            except OSError as exc:
+                raise ConfigurationError(
+                    f"Cannot copy provider file {source} to {config_root}"
+                ) from exc
+
+        child_environment = dict(os.environ)
+        child_environment[_GENERATOR_CONFIG_ENV[platform]] = str(config_root.resolve())
+        return config_root, child_environment
 
     def run_prompt(
         self,
@@ -266,13 +344,17 @@ class ExperimentRunner:
             / _safe_component(condition_id)
             / _safe_component(platform)
             / _safe_component(run_id)
-        )
-        run_dir.mkdir(parents=True, exist_ok=False)
+        ).resolve()
         workspace = run_dir / "workspace"
+        _assert_guidance_free_workspace(workspace)
+        run_dir.mkdir(parents=True, exist_ok=False)
         workspace.mkdir()
         # Pre-create the trace directory so skills anchor `.writing/` writes
         # to the workspace instead of the plugin or skill directory.
         (workspace / ".writing" / "trace").mkdir(parents=True)
+        generator_config_dir, generator_environment = (
+            self._prepare_generator_environment(run_dir, platform)
+        )
         manifest_path = run_dir / "run-manifest.json"
         output_path = run_dir / "output.raw"
         normalized_path = run_dir / "output.normalized.txt"
@@ -282,6 +364,7 @@ class ExperimentRunner:
             "cwd": str(workspace.resolve()),
             "prompt": str(prompt_path.resolve()),
             "trace_path": str(trace_path.resolve()),
+            "generator_config_dir": str(generator_config_dir.resolve()),
         }
         started_at = timestamp()
         budget = OutputBudget(self.runtime_config.output_budget_tokens)
@@ -424,6 +507,7 @@ class ExperimentRunner:
                         attempt_number,
                         session_before
                         or SessionSnapshot(files={}, present=False, error=None),
+                        generator_config_dir,
                     )
                     evidence_hashes.update(collection.hashes)
                     if collection.status == "error":
@@ -539,13 +623,16 @@ class ExperimentRunner:
                 model_id=self.runtime_config.model_for(platform),
                 prompt=command_prompt,
                 cwd=workspace,
+                env=generator_environment,
                 attempts=attempts,
                 plugin_dirs=(
                     self._plugin_dirs(condition) if platform != "codex" else ()
                 ),
                 record_attempt=record_attempt,
                 snapshot_sessions=(
-                    self._snapshot_codex_sessions if platform == "codex" else None
+                    (lambda: self._snapshot_codex_sessions(generator_config_dir))
+                    if platform == "codex"
+                    else None
                 ),
             )
             output = extract_output(result.stdout)
@@ -727,6 +814,7 @@ class ExperimentRunner:
         model_id: str,
         prompt: str,
         cwd: Path,
+        env: Mapping[str, str],
         attempts: int,
         plugin_dirs: tuple[str, ...] = (),
         record_attempt: Callable[
@@ -766,6 +854,7 @@ class ExperimentRunner:
                     command,
                     cwd=cwd,
                     timeout_seconds=self.runtime_config.timeout_seconds,
+                    env=env,
                 )
             except Exception:
                 if record_attempt is not None:
@@ -1248,10 +1337,12 @@ class ExperimentRunner:
             hashes[name] = f"sha256:{sha256_bytes(payload)}"
         return hashes
 
-    def _snapshot_codex_sessions(self) -> SessionSnapshot:
+    def _snapshot_codex_sessions(
+        self, codex_home: Path | None = None
+    ) -> SessionSnapshot:
         """Hash readable files currently under CODEX_HOME/sessions."""
 
-        sessions_root = self.codex_home / "sessions"
+        sessions_root = (codex_home or self.codex_home) / "sessions"
         try:
             present = sessions_root.is_dir()
         except OSError as exc:
@@ -1278,11 +1369,12 @@ class ExperimentRunner:
         run_dir: Path,
         attempt_number: int,
         before: SessionSnapshot,
+        codex_home: Path,
     ) -> SessionCollection:
         """Copy only new or changed Codex rollout files into this run."""
 
-        sessions_root = (self.codex_home / "sessions").resolve()
-        after = self._snapshot_codex_sessions()
+        sessions_root = (codex_home / "sessions").resolve()
+        after = self._snapshot_codex_sessions(codex_home)
         if before.error is not None or after.error is not None:
             return SessionCollection(
                 hashes={},
