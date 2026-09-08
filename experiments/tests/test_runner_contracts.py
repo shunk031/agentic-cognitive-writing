@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import tomllib
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -21,6 +22,7 @@ from agentic_cogwriter.runner.errors import (
 )
 from agentic_cogwriter.runner.execution import (
     ExecutionResult,
+    SubprocessExecutor,
     _retrieval_marker,
     extract_subagent_spawn_count,
     extract_token_usage,
@@ -161,6 +163,30 @@ def test_platform_identifiers_use_public_codex_and_claude_code_values() -> None:
         parser.parse_args((*common, "--platform", "unsupported-claude"))
 
 
+def test_subprocess_executor_forwards_the_child_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    observed: dict[str, object] = {}
+
+    def fake_run(command, **kwargs):
+        observed["command"] = command
+        observed.update(kwargs)
+        return SimpleNamespace(returncode=0, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr("agentic_cogwriter.runner.execution.subprocess.run", fake_run)
+    environment = {"CODEX_HOME": str(tmp_path / "generator-config")}
+
+    result = SubprocessExecutor().run(
+        ["codex", "exec"],
+        cwd=tmp_path,
+        timeout_seconds=5,
+        env=environment,
+    )
+
+    assert result.returncode == 0
+    assert observed["env"] == environment
+
+
 def _runner(tmp_path: Path, config: RuntimeConfig | None = None, **kwargs):
     kwargs.setdefault("codex_home", tmp_path / "codex-home")
     return ExperimentRunner(
@@ -169,6 +195,101 @@ def _runner(tmp_path: Path, config: RuntimeConfig | None = None, **kwargs):
         codex_plugin_root=_plugin_source(tmp_path),
         **kwargs,
     )
+
+
+@pytest.mark.parametrize(
+    ("platform", "variable", "allowlist"),
+    [
+        ("codex", "CODEX_HOME", ("config.toml", "auth.json")),
+        ("claude-code", "CLAUDE_CONFIG_DIR", (".credentials.json",)),
+    ],
+)
+def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
+    tmp_path: Path,
+    platform: str,
+    variable: str,
+    allowlist: tuple[str, ...],
+) -> None:
+    source_root = tmp_path / "host-provider-config"
+    source_root.mkdir()
+    for relative in (*allowlist, "AGENTS.md", "CLAUDE.md", "settings.json"):
+        (source_root / relative).write_text(relative, encoding="utf-8")
+    (source_root / "plugins" / "ignored.plugin").mkdir(parents=True)
+    (source_root / "plugins" / "ignored.plugin" / "manifest.json").write_text(
+        "ignored", encoding="utf-8"
+    )
+    executor = _RetryExecutor([_result()])
+    runner_kwargs = {"executor": executor}
+    if platform == "codex":
+        runner_kwargs["codex_home"] = source_root
+    else:
+        runner_kwargs["claude_config_dir"] = source_root
+    runner = _runner(tmp_path / "runs", **runner_kwargs)
+
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform=platform)
+
+    manifest = json.loads(result.manifest_path.read_text())
+    config_root = result.run_dir / "generator-config"
+    assert executor.environments[0] is not None
+    assert executor.environments[0][variable] == str(config_root.resolve())
+    copied_files = {
+        path.relative_to(config_root).as_posix()
+        for path in config_root.rglob("*")
+        if path.is_file()
+    }
+    assert copied_files == set(allowlist)
+    assert manifest["execution_paths"]["generator_config_dir"] == str(
+        config_root.resolve()
+    )
+
+
+def test_codex_session_snapshot_uses_the_run_generator_config_home(
+    tmp_path: Path,
+) -> None:
+    host_codex_home = tmp_path / "host-codex"
+    host_sessions = host_codex_home / "sessions"
+    host_sessions.mkdir(parents=True)
+    (host_sessions / "host-only.jsonl").write_text("host", encoding="utf-8")
+
+    class SessionExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            sessions = Path(env["CODEX_HOME"]) / "sessions"
+            sessions.mkdir()
+            (sessions / "run-only.jsonl").write_text("run", encoding="utf-8")
+            return super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+
+    executor = SessionExecutor([_result()])
+    runner = _runner(
+        tmp_path / "runs",
+        executor=executor,
+        codex_home=host_codex_home,
+    )
+
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    collected = result.run_dir / "sessions" / "attempt-001" / "run-only.jsonl"
+    assert collected.read_text() == "run"
+    assert not (
+        result.run_dir / "sessions" / "attempt-001" / "host-only.jsonl"
+    ).exists()
+
+
+def test_runner_rejects_guidance_ancestor_before_starting_a_session(
+    tmp_path: Path,
+) -> None:
+    blocked_root = tmp_path / "blocked"
+    blocked_root.mkdir()
+    (blocked_root / "CLAUDE.md").write_text("user guidance", encoding="utf-8")
+    executor = _RetryExecutor([_result()])
+    runner = _runner(blocked_root / "runs", executor=executor)
+
+    with pytest.raises(ConfigurationError, match="CLAUDE.md"):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    assert executor.calls == []
+    assert not (blocked_root / "runs" / "WritingBench").exists()
 
 
 def _event(
@@ -334,7 +455,7 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         path.write_text(content)
 
     class StageExecutor:
-        def run(self, command, *, cwd, timeout_seconds):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
             trace_path = cwd / ".writing" / "trace" / "process.jsonl"
             trace_path.parent.mkdir(parents=True, exist_ok=True)
             trace_path.write_text(
@@ -392,9 +513,11 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
 
 def test_run_records_unique_codex_subagent_spawns(tmp_path: Path) -> None:
     class SpawnRolloutExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds):
-            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
-            rollout = tmp_path / "codex-home" / "sessions" / "attempt.jsonl"
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+            rollout = Path(env["CODEX_HOME"]) / "sessions" / "attempt.jsonl"
             rollout.parent.mkdir(parents=True, exist_ok=True)
             rollout.write_bytes(result.stdout)
             return result
@@ -428,20 +551,19 @@ def test_collects_only_new_or_changed_codex_rollouts_under_run_dir(
     tmp_path: Path,
 ) -> None:
     codex_home = tmp_path / "codex-home"
-    sessions = codex_home / "sessions"
-    unchanged = sessions / "old.jsonl"
-    changed = sessions / "changed.jsonl"
-    unchanged.parent.mkdir(parents=True)
-    unchanged.write_text("pre-existing")
-    changed.write_text("before")
-    created = sessions / "2026" / "new.jsonl"
 
     class RolloutExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds):
-            changed.write_text("after")
-            created.parent.mkdir(parents=True)
-            created.write_text("created during attempt")
-            return super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            run_sessions = Path(env["CODEX_HOME"]) / "sessions"
+            run_changed = run_sessions / "changed.jsonl"
+            run_created = run_sessions / "2026" / "new.jsonl"
+            run_changed.parent.mkdir(parents=True)
+            run_changed.write_text("after")
+            run_created.parent.mkdir(parents=True)
+            run_created.write_text("created during attempt")
+            return super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
 
     runner = _runner(
         tmp_path / "runs",
@@ -479,10 +601,12 @@ def test_rollout_status_remains_complete_across_retry_without_new_files(
     codex_home = tmp_path / "codex-home"
 
     class FirstAttemptRolloutExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds):
-            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
             if len(self.calls) == 1:
-                rollout = codex_home / "sessions" / "attempt.jsonl"
+                rollout = Path(env["CODEX_HOME"]) / "sessions" / "attempt.jsonl"
                 rollout.parent.mkdir(parents=True, exist_ok=True)
                 rollout.write_bytes(result.stdout)
             return result
@@ -818,8 +942,10 @@ def test_trace_validation_rejects_undeclared_process_switch_endpoints(
 
 def test_run_fails_on_schema_invalid_plugin_trace(tmp_path: Path) -> None:
     class InvalidTraceExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds):
-            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
             trace_path = cwd / ".writing" / "trace" / "process.jsonl"
             event = json.loads(trace_path.read_text())
             del event["evidence"]
@@ -836,9 +962,11 @@ class _RetryExecutor:
     def __init__(self, results: list[ExecutionResult]) -> None:
         self.results = results
         self.calls: list[list[str]] = []
+        self.environments: list[dict[str, str] | None] = []
 
-    def run(self, command, *, cwd, timeout_seconds):
+    def run(self, command, *, cwd, timeout_seconds, env=None):
         self.calls.append(command)
+        self.environments.append(env)
         trace_path = cwd / ".writing" / "trace" / "process.jsonl"
         trace_path.parent.mkdir(parents=True, exist_ok=True)
         trace_path.write_text(
@@ -934,8 +1062,10 @@ def test_failed_turn_without_session_preserves_cli_stderr(tmp_path: Path) -> Non
 
 def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
     class GoalWritingExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds):
-            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
             goals = cwd / ".writing" / "goals.md"
             (cwd / ".writing" / "draft.md").write_text("final output " * 10)
             goals.write_text("should not exist")
@@ -949,8 +1079,10 @@ def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
 
 def test_runner_rejects_retrieval_in_draft_fallback(tmp_path: Path) -> None:
     class DraftRetrievalExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds):
-            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
             draft = cwd / ".writing" / "draft.md"
             draft.write_text("Evidence gathered with curl https://example.test/source")
             return result
@@ -973,8 +1105,10 @@ def test_runner_rejects_a_summary_when_workspace_draft_is_the_product(
     tmp_path: Path,
 ) -> None:
     class SummaryExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds):
-            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
             draft = cwd / ".writing" / "draft.md"
             draft.write_text("draft " * 100)
             return result
@@ -1006,8 +1140,10 @@ def test_runner_rejects_a_summary_when_workspace_draft_is_the_product(
 
 def test_a2_rejects_short_response_against_its_draft(tmp_path: Path) -> None:
     class A2DraftExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds):
-            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
             trace_path = cwd / ".writing" / "trace" / "process.jsonl"
             trace_path.write_text(
                 "".join(
@@ -1044,8 +1180,10 @@ def test_runner_does_not_substitute_draft_for_empty_final_response(
     tmp_path: Path,
 ) -> None:
     class EmptyResponseExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds):
-            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
             (cwd / ".writing" / "draft.md").write_text("complete draft")
             return result
 
@@ -1247,8 +1385,10 @@ def test_non_draft_condition_has_a_nontrivial_product_floor(tmp_path: Path) -> N
 
 def test_a3_production_shaped_trace_and_draft_gate(tmp_path: Path) -> None:
     class A3Executor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds):
-            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
             trace_path = cwd / ".writing" / "trace" / "process.jsonl"
             trace_path.write_text(
                 "".join(
@@ -1309,8 +1449,10 @@ def test_a3_rejects_goal_events_and_goal_fields(tmp_path: Path) -> None:
 
 def test_a3_rejects_created_goals_file(tmp_path: Path) -> None:
     class A3GoalsExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds):
-            result = super().run(command, cwd=cwd, timeout_seconds=timeout_seconds)
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
             trace_path = cwd / ".writing" / "trace" / "process.jsonl"
             trace_path.write_text(
                 json.dumps(_event("process_switch", process="task-decomposition"))
@@ -1365,7 +1507,11 @@ def test_unreadable_rollout_file_marks_run_unscored(
             SessionSnapshot(files={}, present=True, error="rollout is unreadable"),
         ]
     )
-    monkeypatch.setattr(runner, "_snapshot_codex_sessions", lambda: next(snapshots))
+    monkeypatch.setattr(
+        runner,
+        "_snapshot_codex_sessions",
+        lambda _codex_home: next(snapshots),
+    )
 
     with pytest.raises(ExecutionError, match="rollout"):
         runner.run_prompt(

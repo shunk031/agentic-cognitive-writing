@@ -57,7 +57,7 @@ class FakeExecutor:
         self.retrieval = retrieval
         self.write_trace = write_trace
 
-    def run(self, command, *, cwd, timeout_seconds):
+    def run(self, command, *, cwd, timeout_seconds, env=None):
         self.calls.append((command, cwd, timeout_seconds))
         if self.write_trace:
             trace_path = cwd / ".writing" / "trace" / "process.jsonl"
@@ -457,6 +457,7 @@ def test_missing_trace_preserves_transport_evidence_and_absolute_paths(tmp_path)
         "trace_path": str(
             (run_dir / "workspace" / ".writing" / "trace" / "process.jsonl").resolve()
         ),
+        "generator_config_dir": str((run_dir / "generator-config").resolve()),
     }
     evidence_hashes = manifest["evidence_hashes"]
     assert evidence_hashes["attempt-001.events.jsonl"] == (
@@ -501,7 +502,7 @@ def test_trace_path_is_derived_from_codex_cwd(tmp_path):
 
 def test_executor_start_failure_preserves_empty_transport_evidence(tmp_path):
     class FailingExecutor:
-        def run(self, command, *, cwd, timeout_seconds):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
             raise ExecutionError("process could not start")
 
     runner = _runner(tmp_path, executor=FailingExecutor())
@@ -552,7 +553,7 @@ def test_retry_failure_preserves_each_attempt_transport_evidence(tmp_path):
                 ),
             ]
 
-        def run(self, command, *, cwd, timeout_seconds):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
             self.calls.append(command)
             return self.results.pop(0)
 
@@ -626,7 +627,7 @@ def test_retry_failure_preserves_each_attempt_transport_evidence(tmp_path):
 )
 def test_final_execution_errors_preserve_transport_evidence(tmp_path, result, message):
     class FinalFailureExecutor:
-        def run(self, command, *, cwd, timeout_seconds):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
             return result
 
     prompt = PromptRecord(

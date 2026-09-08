@@ -14,9 +14,9 @@ cd agentic-cognitive-writing
 Before running an experiment, confirm these prerequisites:
 
 - A Docker engine is running (user-supplied: install and start Docker Desktop or an equivalent engine).
-- The host has `~/.codex/config.toml` with a working provider configuration (user-supplied: created by your normal Codex setup or login for your provider). The [`run.sh`](./run.sh) script mounts the file read-only and does not copy or modify it.
+- The host has provider credentials for the selected platform. When present, [`run.sh`](./run.sh) mounts `~/.codex` and `~/.claude` read-only so the runner can copy `config.toml` and `auth.json` for Codex or `.credentials.json` for Claude Code into the run-local configuration directory. Environment-based credentials remain available when either directory is absent.
 - A plugin checkout exists before the run. A fresh clone contains the plugin directory at the host path `plugin/`; pass that host path to `--codex-plugin-root`. `run.sh` mounts the repository at `/workspace`, so `plugin/` is available inside the container as `/workspace/plugin`. The example passes the host-relative path `plugin`.
-- Inside the container, `codex` runs require `--security-opt seccomp=unconfined` for command sandboxing, while the `claude-code` version gate succeeds without that option; `run.sh` adds the required option automatically for `codex` runs, and no `SYS_ADMIN` capability is required.
+- Inside the container, `codex` runs require `--security-opt seccomp=unconfined` for command sandboxing. The `claude-code` path does not receive that option, and no `SYS_ADMIN` capability is required.
 
 Create the gitignored env file from the repository root. The value below is a fake placeholder; replace it locally with the provider credential before running an experiment:
 
@@ -45,14 +45,16 @@ Run one Codex experiment through `run.sh`:
   --platform codex \
   --codex-plugin-root plugin \
   --config experiments/config/runtime.json \
-  --output-root runs
+  --output-root /run-output
 ```
 
 When your Codex config authenticates through a helper command, that helper does not exist inside the container, so `run.sh` generates a stand-in that returns the token from the environment variable you name. `run.sh` passes credentials only at runtime through `experiments/docker/provider.env`; the file is ignored by Git.
 
-Change only `--platform codex` to `--platform claude-code` to run the Claude Code variant. If your provider config does not use an auth helper, omit both `--auth-command` and `--auth-env`.
+Change only `--platform codex` to `--platform claude-code` to run the Claude Code variant. The read-only `~/.claude` mount supplies `.credentials.json` when present. If your provider config does not use an auth helper, omit both `--auth-command` and `--auth-env`.
 
-`run.sh` builds the image on first use. The repository is mounted read-write at `/workspace`, and the host `~/.codex/config.toml` is mounted read-only at `/home/cog-writer-agent/.codex/config.toml`. Use `--dry-run` to inspect the Docker arguments without starting the container.
+`run.sh` builds the image on first use. The repository is mounted read-write at `/workspace`, host provider configuration directories are mounted read-only when present, and the host `runs/` directory is mounted at `/run-output`. The runner uses `/run-output` by default when no `--output-root` argument is supplied. Use `--dry-run` to inspect the Docker arguments without starting the container.
+
+The runner refuses a workspace whose resolved ancestors contain `AGENTS.md`, `CLAUDE.md`, `.codex/`, or `.claude/`. The repository mount contains guidance files, so `/workspace/runs` would fail that check. The dedicated `/run-output` mount keeps generated workspaces outside those ancestors while preserving artifacts in the host `runs/` directory.
 
 ## What success looks like
 
