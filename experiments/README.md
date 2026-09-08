@@ -40,6 +40,8 @@ The A1 to A3 wrappers invoke skills from the `cognitive-writing-baselines` packa
 
 The experimenter chooses the platform and condition. Codex uses `codex exec` and Claude Code uses `claude --print`. Before a Codex session starts, the runner stages the selected skill, its references, and any delegated role skills inside the run workspace; the prompt then tells Codex to read `plugin/skills/<skill>/SKILL.md`. Claude Code wrappers use the platform's plugin invocation. The runner sends the assignment and supplied context through one top-level session. Retries reuse the same command policy and do not add content or budget.
 
+The runner composes the assignment, supplied context, and requested output constraints once. A condition with frozen stage files uses the first path-bearing stage as the shared-input carrier, removes repeated shared-input sections from later stage text in memory, and leaves the committed files and wrapper hashes unchanged. The runner replaces the stage handoff token with a plain description because generated output is unavailable while the prompt is composed. A condition whose stages have no path keeps the generic shared-input block. An unknown `{{name}}` token fails configuration before CLI probing or generator execution.
+
 The `--platform` values accepted by `experiments/src/agentic_cogwriter/runner/cli.py` are `codex` for Codex runs and `claude-code` for Claude Code runs. Use the platform value that matches the headless command you intend to execute.
 
 ```bash
@@ -50,10 +52,12 @@ uv run --package agentic-cogwriter agentic-cogwriter-runner \
   --platform codex \
   --codex-plugin-root /path/to/plugin \
   --config /path/to/runtime.json \
-  --output-root runs
+  --output-root /path/to/guidance-free-runs
 ```
 
 The default tracked configuration stops in preflight. For Codex, set `--codex-plugin-root` to a directory containing `skills/<skill>/SKILL.md`; the runner copies the required files into the run workspace before invoking Codex. A container run that mounts the plugin at `/plugin` must pass `--codex-plugin-root /plugin`. Codex reads `plugin/skills/<skill>/SKILL.md` from the workspace and does not install a plugin into `CODEX_HOME`. When the option is omitted, the runner selects matching skill files from the wrapper's configured plugin paths. Claude Code uses the plugin directories listed by its selected wrapper.
+
+The resolved workspace must not have an ancestor carrying `AGENTS.md`, `CLAUDE.md`, `.codex/`, or `.claude/`. The runner refuses an output path under the repository because the repository's ancestors contain guidance files. Choose an output root whose ancestors are guidance-free, or use the [Docker runner](docker/README.md), which mounts the host `runs/` directory at `/run-output`.
 
 ## Inspect artifacts
 
@@ -149,6 +153,8 @@ The pairwise records follow the balanced tournament contract in [`protocol.md`](
 The runner gives every condition the same assignment, supplied context, timeout, retry count, and output budget. It rejects a run when the parsed event stream records a web search, browser or retrieval tool invocation, or a network command in an executed-command event. Draft artifacts receive a separate explicit network-command scan. URLs and retrieval words in assistant text, configuration echoes, and generic error events do not trigger the transport tripwire.
 
 Codex first turns use `sandbox_workspace_write.network_access=false`, disable Codex web search, and use the non-interactive `codex exec --json` adapter. Claude Code enables its sandbox, fails if the sandbox is unavailable, prevents unsandboxed commands, uses an empty strict network allowlist, and denies retrieval tools. These platform settings are the primary no-retrieval mechanism; raw-output marker scanning is a secondary tripwire. The manifest records the platform status. A platform that cannot guarantee denial is recorded as `monitored-only` and cannot be represented as enforced.
+
+Each generator process receives a run-local `CODEX_HOME` or `CLAUDE_CONFIG_DIR` in a temporary directory outside the run directory. The runner copies only Codex `config.toml` and `auth.json` or Claude Code `.credentials.json` when those files exist in the caller's provider home. User guidance, settings, skills, plugins, and MCP configuration never enter the temporary directory. The runner removes the temporary directory when the run ends, so provider files never become run artifacts. The runner records the resolved directory in `execution_paths` and rejects any workspace with a guidance-bearing ancestor before probing or starting the generator.
 
 The adapter passes Claude Code's documented `CLAUDE_CODE_MAX_OUTPUT_TOKENS` setting into each invocation. Codex `exec` has no supported generation-token, temperature, top-p, seed, or stop-rule control, so those Codex controls are `monitored-only`; its reported output and reasoning usage is still checked against the shared cap. Claude Code's temperature, top-p, seed, and stop-rule controls are also `monitored-only` because `claude --print` does not document corresponding options. When `output_counting` selects a pinned tokenizer, the runner counts its tokens; otherwise it uses the frozen word rule in the runtime configuration. The measurement unit does not claim that the CLI enforced a word cap.
 

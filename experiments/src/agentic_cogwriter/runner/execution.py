@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -79,7 +80,12 @@ class SubprocessExecutor:
     """Run argv directly with one common timeout."""
 
     def run(
-        self, command: list[str], *, cwd: Path, timeout_seconds: float
+        self,
+        command: list[str],
+        *,
+        cwd: Path,
+        timeout_seconds: float,
+        env: Mapping[str, str] | None = None,
     ) -> ExecutionResult:
         """Execute one command without shell expansion."""
 
@@ -90,6 +96,7 @@ class SubprocessExecutor:
                 capture_output=True,
                 check=False,
                 timeout=timeout_seconds,
+                env=env,
             )
         except subprocess.TimeoutExpired as exc:
             stdout = (

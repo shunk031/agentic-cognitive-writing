@@ -1,6 +1,7 @@
 import hashlib
 import json
 import tomllib
+from pathlib import Path
 
 import pytest
 
@@ -53,12 +54,14 @@ class FakeExecutor:
         self, *, output="final output " * 10, retrieval=False, write_trace=True
     ):
         self.calls = []
+        self.environments = []
         self.output = output
         self.retrieval = retrieval
         self.write_trace = write_trace
 
-    def run(self, command, *, cwd, timeout_seconds):
+    def run(self, command, *, cwd, timeout_seconds, env=None):
         self.calls.append((command, cwd, timeout_seconds))
+        self.environments.append(env)
         if self.write_trace:
             trace_path = cwd / ".writing" / "trace" / "process.jsonl"
             trace_path.parent.mkdir(parents=True, exist_ok=True)
@@ -434,7 +437,8 @@ def test_missing_trace_preserves_transport_evidence_and_absolute_paths(tmp_path)
         requested_output_constraints={},
         row_hash="row-hash",
     )
-    runner = _runner(tmp_path, executor=FakeExecutor(write_trace=False))
+    executor = FakeExecutor(write_trace=False)
+    runner = _runner(tmp_path, executor=executor)
 
     with pytest.raises(RuntimeError, match="no plugin trace"):
         runner.run_prompt(
@@ -456,13 +460,18 @@ def test_missing_trace_preserves_transport_evidence_and_absolute_paths(tmp_path)
     )
 
     manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    config_root = Path(executor.environments[0]["CODEX_HOME"])
     assert manifest["execution_paths"] == {
         "cwd": str((run_dir / "workspace").resolve()),
         "prompt": str((run_dir / "prompt.txt").resolve()),
         "trace_path": str(
             (run_dir / "workspace" / ".writing" / "trace" / "process.jsonl").resolve()
         ),
+        "generator_config_dir": str(config_root.resolve()),
     }
+    assert run_dir not in config_root.parents
+    assert config_root not in run_dir.parents
+    assert not config_root.exists()
     evidence_hashes = manifest["evidence_hashes"]
     assert evidence_hashes["attempt-001.events.jsonl"] == (
         "sha256:" + hashlib.sha256(stream).hexdigest()
@@ -506,7 +515,7 @@ def test_trace_path_is_derived_from_codex_cwd(tmp_path):
 
 def test_executor_start_failure_preserves_empty_transport_evidence(tmp_path):
     class FailingExecutor:
-        def run(self, command, *, cwd, timeout_seconds):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
             raise ExecutionError("process could not start")
 
     runner = _runner(tmp_path, executor=FailingExecutor())
@@ -557,7 +566,7 @@ def test_retry_failure_preserves_each_attempt_transport_evidence(tmp_path):
                 ),
             ]
 
-        def run(self, command, *, cwd, timeout_seconds):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
             self.calls.append(command)
             return self.results.pop(0)
 
@@ -631,7 +640,7 @@ def test_retry_failure_preserves_each_attempt_transport_evidence(tmp_path):
 )
 def test_final_execution_errors_preserve_transport_evidence(tmp_path, result, message):
     class FinalFailureExecutor:
-        def run(self, command, *, cwd, timeout_seconds):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
             return result
 
     prompt = PromptRecord(

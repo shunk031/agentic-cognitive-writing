@@ -4,9 +4,12 @@
 # @brief Run the experiment runner inside the disposable Docker environment.
 # @description
 #   The script builds the pinned image on first use, mounts the repository
-#   read-write at /workspace, and mounts the host Codex configuration read-only
-#   at the container user's configuration path. Provider values come from an
-#   optional runtime env file; common proxy variables pass through when set.
+#   read-write at /workspace, mounts available host Codex and Claude Code
+#   configuration directories read-only at the container user's configuration
+#   paths, and mounts host runs/ at /run-output. The runner copies only its
+#   provider-file allowlist into each run-local configuration directory.
+#   Provider values come from an optional runtime env file; common proxy
+#   variables pass through when set.
 #   When both auth options are set, the script generates a temporary helper
 #   stub and mounts it read-only at the requested command path.
 # @option --env-file PATH Read provider values from a gitignored env file.
@@ -139,8 +142,9 @@ while (($# > 0)); do
 done
 
 [[ -n "${HOME:-}" ]] || die 'HOME must identify the host home directory'
-host_codex_config="${HOME}/.codex/config.toml"
-[[ -r "${host_codex_config}" ]] || die "missing readable ${host_codex_config}"
+host_codex_home="${HOME}/.codex"
+host_claude_home="${HOME}/.claude"
+host_output_root="${repo_root}/runs"
 
 if [[ -n "${env_file}" ]]; then
     [[ -r "${env_file}" ]] || die "missing readable env file ${env_file}"
@@ -169,13 +173,48 @@ docker_args=(
     run
     --rm
     --init
-    --security-opt seccomp=unconfined
     --user "$(id -u):$(id -g)"
     --workdir /workspace
     --mount "type=bind,src=${repo_root},dst=/workspace"
-    --mount "type=bind,src=${host_codex_config},dst=/home/cog-writer-agent/.codex/config.toml,readonly"
+    --mount "type=bind,src=${host_output_root},dst=/run-output"
     --env HOME=/home/cog-writer-agent
 )
+
+if [[ -d "${host_codex_home}" ]]; then
+    docker_args+=(
+        --mount
+        "type=bind,src=${host_codex_home},dst=/home/cog-writer-agent/.codex,readonly"
+    )
+fi
+
+if [[ -d "${host_claude_home}" ]]; then
+    docker_args+=(
+        --mount
+        "type=bind,src=${host_claude_home},dst=/home/cog-writer-agent/.claude,readonly"
+    )
+fi
+
+platform=''
+output_root_set=false
+for ((index = 0; index < ${#command_args[@]}; index++)); do
+    case "${command_args[index]}" in
+        --platform)
+            ((index + 1 < ${#command_args[@]})) || die '--platform requires a value'
+            platform="${command_args[index + 1]}"
+            index=$((index + 1))
+            ;;
+        --platform=*)
+            platform="${command_args[index]#--platform=}"
+            ;;
+        --output-root|--output-root=*)
+            output_root_set=true
+            ;;
+    esac
+done
+
+if [[ "${platform}" == codex ]]; then
+    docker_args+=(--security-opt seccomp=unconfined)
+fi
 
 if [[ -n "${env_file}" ]]; then
     docker_args+=(--env-file "${env_file}")
@@ -195,6 +234,14 @@ fi
 
 if ((${#command_args[@]} == 0)); then
     command_args=(--help)
+fi
+
+if [[ "${output_root_set}" == false ]]; then
+    command_args+=(--output-root /run-output)
+fi
+
+if [[ "${dry_run}" == false ]]; then
+    mkdir -p -- "${host_output_root}"
 fi
 
 docker_command=("${docker_args[@]}" "${image}" uv run --package agentic-cogwriter agentic-cogwriter-runner "${command_args[@]}")

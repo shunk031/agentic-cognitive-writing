@@ -7,6 +7,8 @@ import math
 import os
 import re
 import shutil
+import stat
+import tempfile
 import tomllib
 import uuid
 from collections.abc import Callable, Mapping
@@ -49,7 +51,12 @@ class Executor(Protocol):
     """Protocol implemented by real and test executors."""
 
     def run(
-        self, command: list[str], *, cwd: Path, timeout_seconds: float
+        self,
+        command: list[str],
+        *,
+        cwd: Path,
+        timeout_seconds: float,
+        env: Mapping[str, str] | None = None,
     ) -> ExecutionResult:
         """Run one non-interactive command."""
 
@@ -67,6 +74,54 @@ class RunResult:
 
 FINAL_OUTPUT_DRAFT_RATIO = 0.5
 DEFAULT_PRODUCT_FLOOR = 10
+_GENERATOR_CONFIG_ENV = {
+    "codex": "CODEX_HOME",
+    "claude-code": "CLAUDE_CONFIG_DIR",
+}
+_GENERATOR_CONFIG_ALLOWLIST = {
+    "codex": ("config.toml", "auth.json"),
+    "claude-code": (".credentials.json",),
+}
+_GUIDANCE_MARKERS = ("AGENTS.md", "CLAUDE.md", ".claude", ".codex")
+_STAGE_TOKEN_PATTERN = re.compile(r"\{\{([^{}]+)\}\}")
+_SHARED_STAGE_INPUT_BLOCK = re.compile(
+    r"(?ms)^\s*Assignment:\n\{\{assignment\}\}\n\n"
+    r"Supplied context:\n\{\{supplied_context\}\}\n\n"
+    r"Requested output constraints:\n\{\{output_constraints\}\}\n?"
+)
+_SHARED_STAGE_TOKENS = (
+    "assignment",
+    "supplied_context",
+    "output_constraints",
+)
+_STAGE_RENDERABLE_TOKENS = frozenset((*_SHARED_STAGE_TOKENS, "previous_stage_output"))
+
+
+def _assert_guidance_free_workspace(workspace: Path) -> None:
+    """Refuse a workspace whose ancestors can supply user or project guidance."""
+
+    conflicts: list[Path] = []
+    for ancestor in (workspace, *workspace.parents):
+        for marker in _GUIDANCE_MARKERS:
+            candidate = ancestor / marker
+            try:
+                mode = candidate.stat().st_mode
+                present = (
+                    stat.S_ISDIR(mode) if marker.startswith(".") else stat.S_ISREG(mode)
+                )
+            except FileNotFoundError:
+                present = False
+            except OSError as exc:
+                raise ConfigurationError(
+                    f"Cannot inspect guidance marker {candidate}"
+                ) from exc
+            if present:
+                conflicts.append(candidate)
+    if conflicts:
+        markers = ", ".join(str(path) for path in conflicts)
+        raise ConfigurationError(
+            f"Refusing to start: workspace has guidance ancestors: {markers}"
+        )
 
 
 def _generator_model_family(runtime_config: RuntimeConfig, platform: str) -> str:
@@ -217,6 +272,7 @@ class ExperimentRunner:
         adapters: dict[str, PlatformAdapter] | None = None,
         codex_plugin_root: Path | None = None,
         codex_home: Path | None = None,
+        claude_config_dir: Path | None = None,
     ):
         self.runtime_config = runtime_config
         self.output_root = output_root.resolve()
@@ -230,6 +286,12 @@ class ExperimentRunner:
             else Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
         )
         self.codex_home = configured_codex_home.expanduser().resolve()
+        configured_claude_config_dir = (
+            claude_config_dir
+            if claude_config_dir is not None
+            else Path(os.environ.get("CLAUDE_CONFIG_DIR", Path.home() / ".claude"))
+        )
+        self.claude_config_dir = configured_claude_config_dir.expanduser().resolve()
 
     def _load_adapters(self) -> dict[str, PlatformAdapter]:
         root = EXPERIMENTS_ROOT / "conditions" / "adapters"
@@ -237,6 +299,38 @@ class ExperimentRunner:
             "codex": PlatformAdapter.load(root / "codex_exec.toml"),
             "claude-code": PlatformAdapter.load(root / "claude_print.toml"),
         }
+
+    def _prepare_generator_environment(
+        self, platform: str
+    ) -> tuple[Path, dict[str, str]]:
+        """Build one run-local provider home and its child process environment."""
+
+        config_root = Path(tempfile.mkdtemp(prefix="agentic-cogwriter-generator-"))
+        source_root = self.codex_home if platform == "codex" else self.claude_config_dir
+        try:
+            for filename in _GENERATOR_CONFIG_ALLOWLIST[platform]:
+                source = source_root / filename
+                try:
+                    present = source.is_file()
+                except OSError as exc:
+                    raise ConfigurationError(
+                        f"Cannot inspect provider file {source}"
+                    ) from exc
+                if not present:
+                    continue
+                try:
+                    shutil.copy2(source, config_root / filename)
+                except OSError as exc:
+                    raise ConfigurationError(
+                        f"Cannot copy provider file {source} to {config_root}"
+                    ) from exc
+        except Exception:
+            shutil.rmtree(config_root, ignore_errors=True)
+            raise
+
+        child_environment = dict(os.environ)
+        child_environment[_GENERATOR_CONFIG_ENV[platform]] = str(config_root.resolve())
+        return config_root, child_environment
 
     def run_prompt(
         self,
@@ -266,78 +360,94 @@ class ExperimentRunner:
             / _safe_component(condition_id)
             / _safe_component(platform)
             / _safe_component(run_id)
-        )
-        run_dir.mkdir(parents=True, exist_ok=False)
+        ).resolve()
         workspace = run_dir / "workspace"
+        _assert_guidance_free_workspace(workspace)
+        run_dir.mkdir(parents=True, exist_ok=False)
         workspace.mkdir()
         # Pre-create the trace directory so skills anchor `.writing/` writes
         # to the workspace instead of the plugin or skill directory.
         (workspace / ".writing" / "trace").mkdir(parents=True)
-        manifest_path = run_dir / "run-manifest.json"
-        output_path = run_dir / "output.raw"
-        normalized_path = run_dir / "output.normalized.txt"
-        trace_path = workspace / ".writing" / "trace" / "process.jsonl"
-        prompt_path = run_dir / "prompt.txt"
-        execution_paths = {
-            "cwd": str(workspace.resolve()),
-            "prompt": str(prompt_path.resolve()),
-            "trace_path": str(trace_path.resolve()),
-        }
-        started_at = timestamp()
-        budget = OutputBudget(self.runtime_config.output_budget_tokens)
-        product_gate = _product_gate(prompt, condition, self.runtime_config)
-        attempts = 0
-        evidence_hashes: dict[str, str] = {}
-        staged_files: dict[str, str] = {}
-        token_usage: dict[str, int] | None = None
-        token_accounting_error: str | None = None
-        subagent_spawn_ids: set[str] = set()
-        rollout_collection: dict[str, Any] = {
-            "status": "absent",
-            "reason": "no Codex rollout files collected",
-            "source": "CODEX_HOME/sessions",
-        }
-        spawn_extraction: dict[str, Any] = {
-            "status": "absent",
-            "reason": "no attempt event stream collected",
-            "source": "Codex JSONL event stream",
-        }
-        cli_version = "not_probed"
-        stage_prompt_hashes = self._stage_prompt_hashes(condition)
-        benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
-        protected_goals = workspace / ".writing" / "goals.md"
-        goals_before = (
-            protected_goals.read_bytes() if protected_goals.is_file() else None
+        generator_config_dir, generator_environment = (
+            self._prepare_generator_environment(platform)
         )
-
-        # The started manifest exists before CLI probing or model process creation.
-        self._write_json(
-            manifest_path,
-            self._manifest(
-                prompt=prompt,
-                condition=condition,
-                platform=platform,
-                adapter=adapter,
-                run_id=run_id,
-                status="started",
-                started_at=started_at,
-                cli_version=cli_version,
-                budget=budget,
-                stage_prompt_hashes=stage_prompt_hashes,
-                benchmark_provenance=benchmark_provenance,
-                execution_paths=execution_paths,
-                evidence_hashes=evidence_hashes,
-                staged_files=staged_files,
-                token_usage=token_usage,
-                subagent_spawn_count=len(subagent_spawn_ids),
-                product_gate=product_gate,
-                token_accounting_error=token_accounting_error,
-                rollout_collection=rollout_collection,
-                spawn_extraction=spawn_extraction,
-            ),
-        )
+        preflight_ready = False
+        try:
+            manifest_path = run_dir / "run-manifest.json"
+            output_path = run_dir / "output.raw"
+            normalized_path = run_dir / "output.normalized.txt"
+            trace_path = workspace / ".writing" / "trace" / "process.jsonl"
+            prompt_path = run_dir / "prompt.txt"
+            execution_paths = {
+                "cwd": str(workspace.resolve()),
+                "prompt": str(prompt_path.resolve()),
+                "trace_path": str(trace_path.resolve()),
+                "generator_config_dir": str(generator_config_dir.resolve()),
+            }
+            started_at = timestamp()
+            budget = OutputBudget(self.runtime_config.output_budget_tokens)
+            product_gate = _product_gate(prompt, condition, self.runtime_config)
+            attempts = 0
+            evidence_hashes: dict[str, str] = {}
+            staged_files: dict[str, str] = {}
+            token_usage: dict[str, int] | None = None
+            token_accounting_error: str | None = None
+            subagent_spawn_ids: set[str] = set()
+            rollout_collection: dict[str, Any] = {
+                "status": "absent",
+                "reason": "no Codex rollout files collected",
+                "source": "CODEX_HOME/sessions",
+            }
+            spawn_extraction: dict[str, Any] = {
+                "status": "absent",
+                "reason": "no attempt event stream collected",
+                "source": "Codex JSONL event stream",
+            }
+            cli_version = "not_probed"
+            stage_prompt_hashes = self._stage_prompt_hashes(condition)
+            command_prompt = self._plugin_prompt(
+                condition,
+                prompt,
+                platform,
+                codex_prompt_root=Path("plugin"),
+            )
+            benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
+            protected_goals = workspace / ".writing" / "goals.md"
+            goals_before = (
+                protected_goals.read_bytes() if protected_goals.is_file() else None
+            )
+            preflight_ready = True
+        finally:
+            if not preflight_ready:
+                shutil.rmtree(generator_config_dir, ignore_errors=True)
 
         try:
+            # The started manifest exists before CLI probing or model process creation.
+            self._write_json(
+                manifest_path,
+                self._manifest(
+                    prompt=prompt,
+                    condition=condition,
+                    platform=platform,
+                    adapter=adapter,
+                    run_id=run_id,
+                    status="started",
+                    started_at=started_at,
+                    cli_version=cli_version,
+                    budget=budget,
+                    stage_prompt_hashes=stage_prompt_hashes,
+                    benchmark_provenance=benchmark_provenance,
+                    execution_paths=execution_paths,
+                    evidence_hashes=evidence_hashes,
+                    staged_files=staged_files,
+                    token_usage=token_usage,
+                    subagent_spawn_count=len(subagent_spawn_ids),
+                    product_gate=product_gate,
+                    token_accounting_error=token_accounting_error,
+                    rollout_collection=rollout_collection,
+                    spawn_extraction=spawn_extraction,
+                ),
+            )
             cli_version = self._probe_cli(adapter)
             expected_version = self._expected_cli_version(platform)
             if cli_version != expected_version:
@@ -372,13 +482,6 @@ class ExperimentRunner:
                     spawn_extraction=spawn_extraction,
                 ),
             )
-            command_prompt = self._plugin_prompt(
-                condition,
-                prompt,
-                platform,
-                codex_prompt_root=Path("plugin"),
-            )
-
             prompt_path.write_text(command_prompt, encoding="utf-8")
             evidence_hashes["prompt.txt"] = f"sha256:{sha256_file(prompt_path)}"
             self._write_json(
@@ -424,6 +527,7 @@ class ExperimentRunner:
                         attempt_number,
                         session_before
                         or SessionSnapshot(files={}, present=False, error=None),
+                        generator_config_dir,
                     )
                     evidence_hashes.update(collection.hashes)
                     if collection.status == "error":
@@ -539,13 +643,16 @@ class ExperimentRunner:
                 model_id=self.runtime_config.model_for(platform),
                 prompt=command_prompt,
                 cwd=workspace,
+                env=generator_environment,
                 attempts=attempts,
                 plugin_dirs=(
                     self._plugin_dirs(condition) if platform != "codex" else ()
                 ),
                 record_attempt=record_attempt,
                 snapshot_sessions=(
-                    self._snapshot_codex_sessions if platform == "codex" else None
+                    (lambda: self._snapshot_codex_sessions(generator_config_dir))
+                    if platform == "codex"
+                    else None
                 ),
             )
             output = extract_output(result.stdout)
@@ -704,6 +811,8 @@ class ExperimentRunner:
                 ),
             )
             raise
+        finally:
+            shutil.rmtree(generator_config_dir, ignore_errors=True)
 
     def _probe_cli(self, adapter: PlatformAdapter) -> str:
         if isinstance(self.executor, SubprocessExecutor):
@@ -727,6 +836,7 @@ class ExperimentRunner:
         model_id: str,
         prompt: str,
         cwd: Path,
+        env: Mapping[str, str],
         attempts: int,
         plugin_dirs: tuple[str, ...] = (),
         record_attempt: Callable[
@@ -766,6 +876,7 @@ class ExperimentRunner:
                     command,
                     cwd=cwd,
                     timeout_seconds=self.runtime_config.timeout_seconds,
+                    env=env,
                 )
             except Exception:
                 if record_attempt is not None:
@@ -838,13 +949,25 @@ class ExperimentRunner:
             ensure_ascii=False,
             sort_keys=True,
         )
-        return (
-            f"{invocation}\n\nAssignment:\n{prompt.input_text}\n\n"
-            f"Supplied context:\n{prompt.supplied_context or '(none)'}\n\n"
-            "Requested output constraints:\n"
-            f"{constraints}"
-            f"{self._stage_prompt_text(condition)}"
+        shared_values = {
+            "assignment": prompt.input_text,
+            "supplied_context": prompt.supplied_context or "(none)",
+            "output_constraints": constraints,
+        }
+        stage_text, carried_tokens = self._stage_prompt_text(condition, shared_values)
+        generic_values = [
+            f"Assignment:\n{shared_values['assignment']}",
+            f"Supplied context:\n{shared_values['supplied_context']}",
+            f"Requested output constraints:\n{shared_values['output_constraints']}",
+        ]
+        generic_block = "\n\n".join(
+            value
+            for token, value in zip(_SHARED_STAGE_TOKENS, generic_values, strict=True)
+            if token not in carried_tokens
         )
+        if generic_block:
+            generic_block = f"\n\n{generic_block}"
+        return f"{invocation}{generic_block}{stage_text}"
 
     def _stage_prompt_hashes(self, condition: ConditionSpec) -> dict[str, str | None]:
         """Re-read frozen stage files and verify the bytes used for the prompt."""
@@ -861,11 +984,14 @@ class ExperimentRunner:
             hashes[stage.stage_id] = observed
         return hashes
 
-    def _stage_prompt_text(self, condition: ConditionSpec) -> str:
-        """Include committed A1-A3 stage instructions in the scored prompt."""
+    def _stage_prompt_text(
+        self, condition: ConditionSpec, shared_values: Mapping[str, str]
+    ) -> tuple[str, set[str]]:
+        """Render committed stage instructions without changing their files."""
 
         chunks: list[str] = []
-        for stage in condition.stages:
+        carried_tokens: set[str] = set()
+        for stage_index, stage in enumerate(condition.stages):
             if stage.path is None:
                 continue
             try:
@@ -876,8 +1002,38 @@ class ExperimentRunner:
                 ) from exc
             if sha256_bytes(content.encode("utf-8")) != stage.sha256:
                 raise ManifestError(f"Frozen prompt hash mismatch: {stage.path}")
+            tokens = _STAGE_TOKEN_PATTERN.findall(content)
+            for token in tokens:
+                if token not in _STAGE_RENDERABLE_TOKENS:
+                    raise ConfigurationError(
+                        f"Cannot render token {{{{{token}}}}} in frozen prompt file "
+                        f"{stage.path}"
+                    )
+
+            stage_values = dict(shared_values)
+            stage_values["previous_stage_output"] = (
+                "(none; this is the first stage)"
+                if stage_index == 0
+                else "(the output produced by the preceding stage in this session)"
+            )
+            if carried_tokens & set(_SHARED_STAGE_TOKENS):
+                content = _SHARED_STAGE_INPUT_BLOCK.sub("", content)
+
+            def render_token(
+                match: re.Match[str],
+                *,
+                stage_values: Mapping[str, str] = stage_values,
+            ) -> str:
+                token = match.group(1)
+                if token in _SHARED_STAGE_TOKENS:
+                    if token in carried_tokens:
+                        return ""
+                    carried_tokens.add(token)
+                return stage_values[token]
+
+            content = _STAGE_TOKEN_PATTERN.sub(render_token, content)
             chunks.append(f"\n\nFrozen stage {stage.stage_id}:\n{content}")
-        return "".join(chunks)
+        return "".join(chunks), carried_tokens
 
     def _wrapper(self, condition: ConditionSpec) -> dict[str, Any]:
         try:
@@ -1248,10 +1404,12 @@ class ExperimentRunner:
             hashes[name] = f"sha256:{sha256_bytes(payload)}"
         return hashes
 
-    def _snapshot_codex_sessions(self) -> SessionSnapshot:
+    def _snapshot_codex_sessions(
+        self, codex_home: Path | None = None
+    ) -> SessionSnapshot:
         """Hash readable files currently under CODEX_HOME/sessions."""
 
-        sessions_root = self.codex_home / "sessions"
+        sessions_root = (codex_home or self.codex_home) / "sessions"
         try:
             present = sessions_root.is_dir()
         except OSError as exc:
@@ -1278,11 +1436,12 @@ class ExperimentRunner:
         run_dir: Path,
         attempt_number: int,
         before: SessionSnapshot,
+        codex_home: Path,
     ) -> SessionCollection:
         """Copy only new or changed Codex rollout files into this run."""
 
-        sessions_root = (self.codex_home / "sessions").resolve()
-        after = self._snapshot_codex_sessions()
+        sessions_root = (codex_home / "sessions").resolve()
+        after = self._snapshot_codex_sessions(codex_home)
         if before.error is not None or after.error is not None:
             return SessionCollection(
                 hashes={},
