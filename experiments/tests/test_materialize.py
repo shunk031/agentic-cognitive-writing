@@ -411,6 +411,17 @@ def test_checked_in_manifests_are_byte_deterministic() -> None:
 
 
 def test_hellobench_materialization_matches_the_checked_in_bytes() -> None:
+    missing_sources = [
+        source.cache_name
+        for source in materialize_module.HELLOBENCH_FILES
+        if not (BENCHMARK_CACHE_DIR / source.cache_name).is_file()
+    ]
+    if missing_sources:
+        pytest.skip(
+            "verified HelloBench source cache is unavailable: "
+            + ", ".join(missing_sources)
+        )
+
     source_paths = [
         BENCHMARK_CACHE_DIR / source.cache_name
         for source in materialize_module.HELLOBENCH_FILES
