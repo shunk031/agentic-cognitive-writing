@@ -45,6 +45,15 @@ from agentic_cogwriter.judges.validation import (
 )
 
 
+@pytest.fixture
+def hellobench_upstream_user_prompt() -> str:
+    return (
+        (Path(__file__).parent / "fixtures/hellobench_user_prompt.txt")
+        .read_text(encoding="utf-8")
+        .removesuffix("\n")
+    )
+
+
 class FakeTransport:
     def __init__(self, responses: list[dict[str, object]]) -> None:
         self.responses = responses
@@ -499,6 +508,24 @@ def test_hellobench_native_template_keeps_upstream_field_order() -> None:
     assert rendered.index('"response"') < rendered.index('"checklists"')
     assert rendered.index('"checklists"') < rendered.index("1 checklists")
     assert "structured JSON output replaces upstream" in template.raw.decode("utf-8")
+
+
+def test_hellobench_native_template_matches_upstream_user_prompt_bytes(
+    hellobench_upstream_user_prompt: str,
+) -> None:
+    template = JudgeTemplate.load(
+        Path(__file__).parents[1] / "prompts/judges/hellobench-native-v1.md"
+    )
+    values = {
+        "instruction": "Write a memo.",
+        "response": "A response.",
+        "checklists": '[{"checklist_id": 0, "checklist_content": "Be clear."}]',
+        "num_checklist": 1,
+    }
+
+    assert template.render(values).encode("utf-8") == (
+        hellobench_upstream_user_prompt.format(**values).encode("utf-8")
+    )
 
 
 def test_fake_transport_receives_deterministic_zero_temperature_payload(

@@ -1,16 +1,3 @@
-<!--
-Agentic CogWriter HelloBench-native checklist judge prompt
-Version: hellobench-native-v1
-Upstream repository: Quehry/HelloBench
-Upstream source commit: 92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57
-Upstream judge script: llm_judge.py
-Upstream judge script sha256: 1434ba32c15ab33f21ea65cb08e0111ac47e2bdb2e6816dacd61f0365e6ff5dd
-Upstream system line: You are a helpful evaluator. Your task is to evaluate the checklists of the responses given by the Large Language Models (LLMs) based on user instructions. These checklists consist of yes or no questions.
-Parse adaptation: structured JSON output replaces upstream's eval() of a Python list; prompt body bytes are unchanged.
-Upstream USER_PROMPT EOF: no final newline
-Request policy: HelloBench uses exactly one judge request per run, so no prompt-cache reordering applies.
--->
-
 Your core task is to evaluate the checklists based on the user's instruction and LLM's response, with each checklist item being a yes or no question indicating a specific aspect that the LLM's response should meet. You need to judge the checklist item based on the instruction and response. The evaluation results are scored from 0 to 1, with 5 scores in total, which are:
 
 0: The response fails to meet the checklist requirements, demonstrating substantial need for improvement across multiple areas.

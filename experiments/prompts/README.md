@@ -43,7 +43,9 @@ Each manifest row contains:
 source row's `native_payload` checklist for native pointwise judging. HelloBench
 rows carry `native_payload` as a non-empty list of non-empty checklist strings;
 the materializer maps the pinned source row's `checklists` field and verifies
-that `formatted_checklists` and `num_checklist` are present and consistent.
+that `formatted_checklists` and `num_checklist` are present and consistent. Each
+checklist item uses the upstream five-step evaluation scale: `0`, `0.25`, `0.5`,
+`0.75`, or `1`.
 
 `hash` is SHA-256 over the canonical UTF-8 JSON object containing every field
 except `hash` itself. Canonical JSON uses sorted keys, no insignificant
