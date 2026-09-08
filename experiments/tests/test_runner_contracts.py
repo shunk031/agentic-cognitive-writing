@@ -330,6 +330,39 @@ def test_run_removes_generator_config_after_failure(
     )
 
 
+def test_run_removes_generator_config_when_preflight_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_root = tmp_path / "host-provider-config"
+    source_root.mkdir()
+    (source_root / "config.toml").write_text("model = 'test'", encoding="utf-8")
+    (source_root / "auth.json").write_text("{}", encoding="utf-8")
+    runner = _runner(tmp_path / "runs", codex_home=source_root)
+    observed_config_dirs: list[Path] = []
+    prepare = runner._prepare_generator_environment
+
+    def capture_config_dir(platform: str) -> tuple[Path, dict[str, str]]:
+        config_dir, environment = prepare(platform)
+        observed_config_dirs.append(config_dir)
+        return config_dir, environment
+
+    monkeypatch.setattr(runner, "_prepare_generator_environment", capture_config_dir)
+
+    def fail_provenance(_benchmark_name: str) -> dict[str, object]:
+        raise RuntimeError("provenance failure")
+
+    monkeypatch.setattr(
+        "agentic_cogwriter.runner.runner.load_benchmark_provenance",
+        fail_provenance,
+    )
+
+    with pytest.raises(RuntimeError, match="provenance failure"):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    assert len(observed_config_dirs) == 1
+    assert not observed_config_dirs[0].exists()
+
+
 def test_codex_session_snapshot_uses_the_run_generator_config_home(
     tmp_path: Path,
 ) -> None:

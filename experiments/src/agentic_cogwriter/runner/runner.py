@@ -359,43 +359,49 @@ class ExperimentRunner:
         generator_config_dir, generator_environment = (
             self._prepare_generator_environment(platform)
         )
-        manifest_path = run_dir / "run-manifest.json"
-        output_path = run_dir / "output.raw"
-        normalized_path = run_dir / "output.normalized.txt"
-        trace_path = workspace / ".writing" / "trace" / "process.jsonl"
-        prompt_path = run_dir / "prompt.txt"
-        execution_paths = {
-            "cwd": str(workspace.resolve()),
-            "prompt": str(prompt_path.resolve()),
-            "trace_path": str(trace_path.resolve()),
-            "generator_config_dir": str(generator_config_dir.resolve()),
-        }
-        started_at = timestamp()
-        budget = OutputBudget(self.runtime_config.output_budget_tokens)
-        product_gate = _product_gate(prompt, condition, self.runtime_config)
-        attempts = 0
-        evidence_hashes: dict[str, str] = {}
-        staged_files: dict[str, str] = {}
-        token_usage: dict[str, int] | None = None
-        token_accounting_error: str | None = None
-        subagent_spawn_ids: set[str] = set()
-        rollout_collection: dict[str, Any] = {
-            "status": "absent",
-            "reason": "no Codex rollout files collected",
-            "source": "CODEX_HOME/sessions",
-        }
-        spawn_extraction: dict[str, Any] = {
-            "status": "absent",
-            "reason": "no attempt event stream collected",
-            "source": "Codex JSONL event stream",
-        }
-        cli_version = "not_probed"
-        stage_prompt_hashes = self._stage_prompt_hashes(condition)
-        benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
-        protected_goals = workspace / ".writing" / "goals.md"
-        goals_before = (
-            protected_goals.read_bytes() if protected_goals.is_file() else None
-        )
+        preflight_ready = False
+        try:
+            manifest_path = run_dir / "run-manifest.json"
+            output_path = run_dir / "output.raw"
+            normalized_path = run_dir / "output.normalized.txt"
+            trace_path = workspace / ".writing" / "trace" / "process.jsonl"
+            prompt_path = run_dir / "prompt.txt"
+            execution_paths = {
+                "cwd": str(workspace.resolve()),
+                "prompt": str(prompt_path.resolve()),
+                "trace_path": str(trace_path.resolve()),
+                "generator_config_dir": str(generator_config_dir.resolve()),
+            }
+            started_at = timestamp()
+            budget = OutputBudget(self.runtime_config.output_budget_tokens)
+            product_gate = _product_gate(prompt, condition, self.runtime_config)
+            attempts = 0
+            evidence_hashes: dict[str, str] = {}
+            staged_files: dict[str, str] = {}
+            token_usage: dict[str, int] | None = None
+            token_accounting_error: str | None = None
+            subagent_spawn_ids: set[str] = set()
+            rollout_collection: dict[str, Any] = {
+                "status": "absent",
+                "reason": "no Codex rollout files collected",
+                "source": "CODEX_HOME/sessions",
+            }
+            spawn_extraction: dict[str, Any] = {
+                "status": "absent",
+                "reason": "no attempt event stream collected",
+                "source": "Codex JSONL event stream",
+            }
+            cli_version = "not_probed"
+            stage_prompt_hashes = self._stage_prompt_hashes(condition)
+            benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
+            protected_goals = workspace / ".writing" / "goals.md"
+            goals_before = (
+                protected_goals.read_bytes() if protected_goals.is_file() else None
+            )
+            preflight_ready = True
+        finally:
+            if not preflight_ready:
+                shutil.rmtree(generator_config_dir, ignore_errors=True)
 
         try:
             # The started manifest exists before CLI probing or model process creation.
