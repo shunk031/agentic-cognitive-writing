@@ -166,6 +166,8 @@ Before running A1, A2, or A3, the runner loads the corresponding skill from the 
 
 The runner starts one top-level session per condition and prompt. In Codex A4 to A6 runs, the plugin may request native Codex subagents as documented. The plugin must not spawn nested `codex exec` children. If native delegation is unavailable and the `Monitor` performs a delegated role itself, the trace must record that fallback.
 
+Prompt composition carries the assignment, supplied context, and requested output constraints exactly once. For a condition with path-bearing frozen stages, the runner renders those values into the first stage that carries the shared-input block and removes duplicate shared-input sections from later stages in memory. The runner verifies every stage hash before rendering, writes no rendered text back to the frozen files, and fails configuration before CLI probing when a stage contains an unsupported `{{name}}` token. Conditions without path-bearing stages carry the shared inputs in the generic prompt block.
+
 ### Generator and judge separation
 
 The protocol assigns judges by platform. The Codex run with GPT-family generators uses a Claude-family frontier judge and the shared third-family Prometheus 2 [^9] style open evaluator. The Claude Code run with Claude-family generators uses a GPT-family frontier judge and the same open evaluator.

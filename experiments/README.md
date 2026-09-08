@@ -40,6 +40,8 @@ The A1 to A3 wrappers invoke skills from the `cognitive-writing-baselines` packa
 
 The experimenter chooses the platform and condition. Codex uses `codex exec` and Claude Code uses `claude --print`. Before a Codex session starts, the runner stages the selected skill, its references, and any delegated role skills inside the run workspace; the prompt then tells Codex to read `plugin/skills/<skill>/SKILL.md`. Claude Code wrappers use the platform's plugin invocation. The runner sends the assignment and supplied context through one top-level session. Retries reuse the same command policy and do not add content or budget.
 
+The runner composes the assignment, supplied context, and requested output constraints once. A condition with frozen stage files uses the first path-bearing stage as the shared-input carrier, removes repeated shared-input sections from later stage text in memory, and leaves the committed files and wrapper hashes unchanged. The runner replaces the stage handoff token with a plain description because generated output is unavailable while the prompt is composed. A condition whose stages have no path keeps the generic shared-input block. An unknown `{{name}}` token fails configuration before CLI probing or generator execution.
+
 The `--platform` values accepted by `experiments/src/agentic_cogwriter/runner/cli.py` are `codex` for Codex runs and `claude-code` for Claude Code runs. Use the platform value that matches the headless command you intend to execute.
 
 ```bash

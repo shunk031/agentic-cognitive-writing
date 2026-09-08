@@ -5,6 +5,7 @@ import json
 import shutil
 import subprocess
 import tomllib
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -12,12 +13,16 @@ import pytest
 
 from agentic_cogwriter.runner.adapters import PlatformAdapter
 from agentic_cogwriter.runner.cli import build_parser
-from agentic_cogwriter.runner.conditions import PLATFORMS, load_condition_registry
+from agentic_cogwriter.runner.conditions import (
+    PLATFORMS,
+    load_condition_registry,
+)
 from agentic_cogwriter.runner.config import RuntimeConfig
 from agentic_cogwriter.runner.errors import (
     BudgetExceeded,
     ConfigurationError,
     ExecutionError,
+    ManifestError,
     RetrievalViolation,
 )
 from agentic_cogwriter.runner.execution import (
@@ -579,6 +584,86 @@ def test_every_condition_prompt_has_the_uniform_single_turn_contract() -> None:
         for platform in ("codex", "claude-code"):
             prompt = runner._plugin_prompt(condition, _prompt(), platform)
             assert SINGLE_TURN_CONTRACT in prompt
+
+
+@pytest.mark.parametrize(
+    "condition_id", ("A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2")
+)
+@pytest.mark.parametrize("platform", PLATFORMS)
+def test_composed_prompt_has_one_rendered_shared_input_block(
+    condition_id: str, platform: str
+) -> None:
+    runner = ExperimentRunner(_config(), output_root=Path("runs"))
+    condition = load_condition_registry()[condition_id]
+    prompt = runner._plugin_prompt(condition, _prompt(), platform)
+
+    assert prompt.count("Assignment:\nWrite a memo.") == 1
+    assert prompt.count("Supplied context:\nProvided facts only.") == 1
+    assert prompt.count("Requested output constraints:\n{}") == 1
+    assert prompt.count("Assignment:") == 1
+    assert prompt.count("Supplied context:") == 1
+    assert prompt.count("Requested output constraints:") == 1
+    assert "{{" not in prompt
+    assert "}}" not in prompt
+    assert prompt.count("Frozen stage ") == sum(
+        stage.path is not None for stage in condition.stages
+    )
+
+
+def test_composed_prompt_rejects_unknown_stage_token_before_execution(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    condition = load_condition_registry()["A1"]
+    stage_path = tmp_path / "unknown-token-stage.md"
+    content = "Unknown value: {{unknown_token}}\n"
+    stage_path.write_text(content, encoding="utf-8")
+    stage = replace(
+        condition.stages[0],
+        path=stage_path,
+        sha256=hashlib.sha256(content.encode("utf-8")).hexdigest(),
+    )
+    condition = replace(condition, stages=(stage,))
+    executor = _RetryExecutor([_result()])
+    runner = _runner(
+        tmp_path / "runs",
+        condition_registry={"A1": condition},
+        executor=executor,
+    )
+    monkeypatch.setattr(
+        runner,
+        "_probe_cli",
+        lambda _adapter: pytest.fail("unknown tokens must fail before CLI probing"),
+    )
+
+    with pytest.raises(
+        ConfigurationError,
+        match=r"(?=.*unknown-token-stage\.md)(?=.*unknown_token)",
+    ):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    assert executor.calls == []
+
+
+def test_tampered_stage_file_still_fails_hash_check_before_execution(
+    tmp_path: Path,
+) -> None:
+    condition = load_condition_registry()["A1"]
+    stage_path = tmp_path / "tampered-stage.md"
+    assert condition.stages[0].path is not None
+    stage_path.write_bytes(condition.stages[0].path.read_bytes() + b"tampered\n")
+    stage = replace(condition.stages[0], path=stage_path)
+    condition = replace(condition, stages=(stage,))
+    executor = _RetryExecutor([_result()])
+    runner = _runner(
+        tmp_path / "runs",
+        condition_registry={"A1": condition},
+        executor=executor,
+    )
+
+    with pytest.raises(ManifestError, match="Frozen prompt hash mismatch"):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    assert executor.calls == []
 
 
 def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:

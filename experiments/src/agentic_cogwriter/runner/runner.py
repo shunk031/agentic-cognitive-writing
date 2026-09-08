@@ -83,6 +83,18 @@ _GENERATOR_CONFIG_ALLOWLIST = {
     "claude-code": (".credentials.json",),
 }
 _GUIDANCE_MARKERS = ("AGENTS.md", "CLAUDE.md", ".claude", ".codex")
+_STAGE_TOKEN_PATTERN = re.compile(r"\{\{([^{}]+)\}\}")
+_SHARED_STAGE_INPUT_BLOCK = re.compile(
+    r"(?ms)^\s*Assignment:\n\{\{assignment\}\}\n\n"
+    r"Supplied context:\n\{\{supplied_context\}\}\n\n"
+    r"Requested output constraints:\n\{\{output_constraints\}\}\n?"
+)
+_SHARED_STAGE_TOKENS = (
+    "assignment",
+    "supplied_context",
+    "output_constraints",
+)
+_STAGE_RENDERABLE_TOKENS = frozenset((*_SHARED_STAGE_TOKENS, "previous_stage_output"))
 
 
 def _assert_guidance_free_workspace(workspace: Path) -> None:
@@ -393,6 +405,12 @@ class ExperimentRunner:
             }
             cli_version = "not_probed"
             stage_prompt_hashes = self._stage_prompt_hashes(condition)
+            command_prompt = self._plugin_prompt(
+                condition,
+                prompt,
+                platform,
+                codex_prompt_root=Path("plugin"),
+            )
             benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
             protected_goals = workspace / ".writing" / "goals.md"
             goals_before = (
@@ -464,13 +482,6 @@ class ExperimentRunner:
                     spawn_extraction=spawn_extraction,
                 ),
             )
-            command_prompt = self._plugin_prompt(
-                condition,
-                prompt,
-                platform,
-                codex_prompt_root=Path("plugin"),
-            )
-
             prompt_path.write_text(command_prompt, encoding="utf-8")
             evidence_hashes["prompt.txt"] = f"sha256:{sha256_file(prompt_path)}"
             self._write_json(
@@ -938,13 +949,25 @@ class ExperimentRunner:
             ensure_ascii=False,
             sort_keys=True,
         )
-        return (
-            f"{invocation}\n\nAssignment:\n{prompt.input_text}\n\n"
-            f"Supplied context:\n{prompt.supplied_context or '(none)'}\n\n"
-            "Requested output constraints:\n"
-            f"{constraints}"
-            f"{self._stage_prompt_text(condition)}"
+        shared_values = {
+            "assignment": prompt.input_text,
+            "supplied_context": prompt.supplied_context or "(none)",
+            "output_constraints": constraints,
+        }
+        stage_text, carried_tokens = self._stage_prompt_text(condition, shared_values)
+        generic_values = [
+            f"Assignment:\n{shared_values['assignment']}",
+            f"Supplied context:\n{shared_values['supplied_context']}",
+            f"Requested output constraints:\n{shared_values['output_constraints']}",
+        ]
+        generic_block = "\n\n".join(
+            value
+            for token, value in zip(_SHARED_STAGE_TOKENS, generic_values, strict=True)
+            if token not in carried_tokens
         )
+        if generic_block:
+            generic_block = f"\n\n{generic_block}"
+        return f"{invocation}{generic_block}{stage_text}"
 
     def _stage_prompt_hashes(self, condition: ConditionSpec) -> dict[str, str | None]:
         """Re-read frozen stage files and verify the bytes used for the prompt."""
@@ -961,11 +984,14 @@ class ExperimentRunner:
             hashes[stage.stage_id] = observed
         return hashes
 
-    def _stage_prompt_text(self, condition: ConditionSpec) -> str:
-        """Include committed A1-A3 stage instructions in the scored prompt."""
+    def _stage_prompt_text(
+        self, condition: ConditionSpec, shared_values: Mapping[str, str]
+    ) -> tuple[str, set[str]]:
+        """Render committed stage instructions without changing their files."""
 
         chunks: list[str] = []
-        for stage in condition.stages:
+        carried_tokens: set[str] = set()
+        for stage_index, stage in enumerate(condition.stages):
             if stage.path is None:
                 continue
             try:
@@ -976,8 +1002,38 @@ class ExperimentRunner:
                 ) from exc
             if sha256_bytes(content.encode("utf-8")) != stage.sha256:
                 raise ManifestError(f"Frozen prompt hash mismatch: {stage.path}")
+            tokens = _STAGE_TOKEN_PATTERN.findall(content)
+            for token in tokens:
+                if token not in _STAGE_RENDERABLE_TOKENS:
+                    raise ConfigurationError(
+                        f"Cannot render token {{{{{token}}}}} in frozen prompt file "
+                        f"{stage.path}"
+                    )
+
+            stage_values = dict(shared_values)
+            stage_values["previous_stage_output"] = (
+                "(none; this is the first stage)"
+                if stage_index == 0
+                else "(the output produced by the preceding stage in this session)"
+            )
+            if carried_tokens & set(_SHARED_STAGE_TOKENS):
+                content = _SHARED_STAGE_INPUT_BLOCK.sub("", content)
+
+            def render_token(
+                match: re.Match[str],
+                *,
+                stage_values: Mapping[str, str] = stage_values,
+            ) -> str:
+                token = match.group(1)
+                if token in _SHARED_STAGE_TOKENS:
+                    if token in carried_tokens:
+                        return ""
+                    carried_tokens.add(token)
+                return stage_values[token]
+
+            content = _STAGE_TOKEN_PATTERN.sub(render_token, content)
             chunks.append(f"\n\nFrozen stage {stage.stage_id}:\n{content}")
-        return "".join(chunks)
+        return "".join(chunks), carried_tokens
 
     def _wrapper(self, condition: ConditionSpec) -> dict[str, Any]:
         try:
