@@ -28,7 +28,7 @@ The repository includes these experiments-plugin files:
 
 This protocol tests whether the theory-based recursive process improves writing and whether its traces show the predicted goal dynamics.
 
-Flower and Hayes' *A Cognitive Process Theory of Writing*[^1] describes writing as a set of thinking processes that a writer coordinates during composing. The processes are hierarchical and can be embedded in one another. Writing is goal-directed, and writers can create, develop, and regenerate goals as they learn from the act of writing. The `Monitor` coordinates `Planning`, `Translating`, and `Reviewing`.
+Flower and Hayes' _A Cognitive Process Theory of Writing_[^1] describes writing as a set of thinking processes that a writer coordinates during composing. The processes are hierarchical and can be embedded in one another. Writing is goal-directed, and writers can create, develop, and regenerate goals as they learn from the act of writing. The `Monitor` coordinates `Planning`, `Translating`, and `Reviewing`.
 
 The protocol tests that account as an agent process rather than treating the account as a claim about human inner experience.
 
@@ -55,14 +55,14 @@ The protocol also defines process and replication estimands. The primary process
 
 All enabled conditions share the same skill-and-subagent framework and the plugin-written `.writing/trace/process.jsonl` path. The runner invokes exactly one skill for each condition, including the two exploratory conditions when they are enabled. The equal-information policy gives every condition identical input context. The runner must expose the same local tools, context window policy, timeout, output budget, and number of allowed attempts to every condition. No condition may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
 
-| Condition | Control State | Control Unit | Decision | Evolving Structure |
-| --- | --- | --- | --- | --- |
-| A1 Single-pass | assignment + context | whole document | single generation | none |
-| A2 Staged Writing | assignment + preceding stage outputs | fixed stage | static Pre-Write -> Write -> Re-Write | stage artifacts / text |
-| A3 Adaptive Task Planning | D_t, T_t, task results | task node v_t | dependency/BFS scheduling + decompose-or-execute + graph revision | D_t, T_t |
-| A4 Agentic CogWriter | D_t, G_t, H_t | writing process a_t | a_t = pi_Monitor(D_t, G_t, H_t) | D_t, G_t, H_t |
-| A5 w/o Goal Network | D_t, H_t | writing process a_t | a_t = pi_Monitor(D_t, H_t) | D_t, H_t |
-| A6 Fixed Process Order | D_t, G_t, H_t | writing process a_t | fixed cyclic P -> T -> R | D_t, G_t, H_t |
+| Condition                 | Control State                        | Control Unit        | Decision                                                          | Evolving Structure     |
+| ------------------------- | ------------------------------------ | ------------------- | ----------------------------------------------------------------- | ---------------------- |
+| A1 Single-pass            | assignment + context                 | whole document      | single generation                                                 | none                   |
+| A2 Staged Writing         | assignment + preceding stage outputs | fixed stage         | static Pre-Write -> Write -> Re-Write                             | stage artifacts / text |
+| A3 Adaptive Task Planning | D_t, T_t, task results               | task node v_t       | dependency/BFS scheduling + decompose-or-execute + graph revision | D_t, T_t               |
+| A4 Agentic CogWriter      | D_t, G_t, H_t                        | writing process a_t | a_t = pi_Monitor(D_t, G_t, H_t)                                   | D_t, G_t, H_t          |
+| A5 w/o Goal Network       | D_t, H_t                             | writing process a_t | a_t = pi_Monitor(D_t, H_t)                                        | D_t, H_t               |
+| A6 Fixed Process Order    | D_t, G_t, H_t                        | writing process a_t | fixed cyclic P -> T -> R                                          | D_t, G_t, H_t          |
 
 **Single-shot condition A1.** Condition A1 invokes `writing-single-shot` from the planned `experiments/baselines/` package. The skill makes one generation pass from the assignment and supplied context. The condition has no explicit planning or review stage. The skill writes the externally visible generation event to the shared trace path and does not infer hidden goals or stages.
 
@@ -86,7 +86,7 @@ B1 and B2 are EXPLORATORY. Each platform's assigned judges score both conditions
 
 All six core conditions use the same assignment, starting draft, model settings, and user decisions. B1 and B2 use the same settings when the exploratory runs are enabled.
 
-The plugin mapping implements the theory in *A Cognitive Process Theory of Writing*[^1], but that 1981 paper does not specify these files.
+The plugin mapping implements the theory in _A Cognitive Process Theory of Writing_[^1], but that 1981 paper does not specify these files.
 
 The user owns rhetorical intent, factual authority, final wording, and publication.
 
@@ -174,30 +174,30 @@ The open evaluator must belong to a third model family, and the assignment is sy
 
 The runner must pin each value below. A placeholder blocks the run:
 
-| Value | Required setting |
-| --- | --- |
-| Codex generator model | `REQUIRED_AT_RUNTIME`: exact GPT-family model ID and release |
-| Claude Code generator model | `REQUIRED_AT_RUNTIME`: exact Claude-family model ID and release |
-| Codex frontier judge | `REQUIRED_AT_RUNTIME`: exact Claude-family frontier model ID and release |
-| Claude Code frontier judge | `REQUIRED_AT_RUNTIME`: exact GPT-family frontier model ID and release |
-| Shared open evaluator | `REQUIRED_AT_RUNTIME`: exact third-family Prometheus 2 [^9] style evaluator checkpoint, revision, and serving configuration |
-| Generator system and condition prompts | `REQUIRED_AT_RUNTIME`: frozen prompt files and hashes |
-| Judge prompts and JSON schemas | `REQUIRED_AT_RUNTIME`: frozen prompt files, schema files, and hashes |
-| Temperature | `REQUIRED_AT_RUNTIME`: temperature |
-| Top-p or equivalent | `REQUIRED_AT_RUNTIME`: top-p or equivalent |
-| Maximum output tokens | `REQUIRED_AT_RUNTIME`: max output tokens |
-| Stop rules | `REQUIRED_AT_RUNTIME`: stop rules |
-| Timeout | `REQUIRED_AT_RUNTIME`: timeout |
-| Generation seed | `REQUIRED_AT_RUNTIME`: generation seed |
-| Judge seed | `REQUIRED_AT_RUNTIME`: judge seed |
-| Sampling seed | `REQUIRED_AT_RUNTIME`: sampling seed |
-| Presentation seed | `REQUIRED_AT_RUNTIME`: presentation seed where the platform allows it |
-| Codex version | `REQUIRED_AT_RUNTIME`: Codex version |
-| Claude Code version | `REQUIRED_AT_RUNTIME`: Claude Code version |
-| Main plugin commit | `REQUIRED_AT_RUNTIME`: main plugin commit |
-| Experiments plugin commit | `REQUIRED_AT_RUNTIME`: experiments plugin commit |
-| Runner commit | `REQUIRED_AT_RUNTIME`: runner commit |
-| Generator and judge family audit | `REQUIRED_AT_RUNTIME`: recorded base-model families and runtime verification that each selected judge differs from the generator family |
+| Value                                  | Required setting                                                                                                                        |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Codex generator model                  | `REQUIRED_AT_RUNTIME`: exact GPT-family model ID and release                                                                            |
+| Claude Code generator model            | `REQUIRED_AT_RUNTIME`: exact Claude-family model ID and release                                                                         |
+| Codex frontier judge                   | `REQUIRED_AT_RUNTIME`: exact Claude-family frontier model ID and release                                                                |
+| Claude Code frontier judge             | `REQUIRED_AT_RUNTIME`: exact GPT-family frontier model ID and release                                                                   |
+| Shared open evaluator                  | `REQUIRED_AT_RUNTIME`: exact third-family Prometheus 2 [^9] style evaluator checkpoint, revision, and serving configuration             |
+| Generator system and condition prompts | `REQUIRED_AT_RUNTIME`: frozen prompt files and hashes                                                                                   |
+| Judge prompts and JSON schemas         | `REQUIRED_AT_RUNTIME`: frozen prompt files, schema files, and hashes                                                                    |
+| Temperature                            | `REQUIRED_AT_RUNTIME`: temperature                                                                                                      |
+| Top-p or equivalent                    | `REQUIRED_AT_RUNTIME`: top-p or equivalent                                                                                              |
+| Maximum output tokens                  | `REQUIRED_AT_RUNTIME`: max output tokens                                                                                                |
+| Stop rules                             | `REQUIRED_AT_RUNTIME`: stop rules                                                                                                       |
+| Timeout                                | `REQUIRED_AT_RUNTIME`: timeout                                                                                                          |
+| Generation seed                        | `REQUIRED_AT_RUNTIME`: generation seed                                                                                                  |
+| Judge seed                             | `REQUIRED_AT_RUNTIME`: judge seed                                                                                                       |
+| Sampling seed                          | `REQUIRED_AT_RUNTIME`: sampling seed                                                                                                    |
+| Presentation seed                      | `REQUIRED_AT_RUNTIME`: presentation seed where the platform allows it                                                                   |
+| Codex version                          | `REQUIRED_AT_RUNTIME`: Codex version                                                                                                    |
+| Claude Code version                    | `REQUIRED_AT_RUNTIME`: Claude Code version                                                                                              |
+| Main plugin commit                     | `REQUIRED_AT_RUNTIME`: main plugin commit                                                                                               |
+| Experiments plugin commit              | `REQUIRED_AT_RUNTIME`: experiments plugin commit                                                                                        |
+| Runner commit                          | `REQUIRED_AT_RUNTIME`: runner commit                                                                                                    |
+| Generator and judge family audit       | `REQUIRED_AT_RUNTIME`: recorded base-model families and runtime verification that each selected judge differs from the generator family |
 
 The runner records each judge's base-model family and the generator family for every scored output. The runner fails the run when a selected judge shares the generator family. The audit verifies the family labels at runtime rather than trusting configuration names. The run manifest records `inputs.platform` and `models_and_execution.generator_model_family` for each run.
 
@@ -219,13 +219,13 @@ On the primary Codex platform, every output receives both the Claude-family fron
 
 On the Claude Code replication, every output receives the GPT-family frontier judge and the same open evaluator. The replication composite uses the same equal-weight construction, `Q_replication(i) = 0.5 * C_GPT(i) + 0.5 * C_open(i)`. Keep replication inference separate from primary inference. Do not pool platforms. Report cross-platform agreement descriptively for RQ4.
 
-| Dimension | Score 1 | Score 3 | Score 5 |
-| --- | --- | --- | --- |
-| Instruction fulfillment | Misses the central task or constraints. | Completes the main task but misses material requirements. | Meets the task and all material constraints. |
-| Organization and global coherence | Ideas or sections do not form a usable whole. | The response is readable but has visible structural gaps. | The response has a clear structure and sustained global coherence. |
-| Content adequacy and depth | Content is missing, shallow, or unusable for the task. | Content covers the main points with uneven development. | Content is sufficient, developed, and appropriately deep. |
-| Style, voice, and audience fit | Style or voice conflicts with the requested audience or genre. | Style is partly suitable but inconsistent. | Voice, style, and detail fit the audience and genre throughout. |
-| Factuality and constraint fidelity | The response contradicts the supplied context or violates important constraints. | Minor errors or unsupported claims remain. | Claims fit the supplied context, uncertainty is handled honestly, and constraints are obeyed. |
+| Dimension                          | Score 1                                                                          | Score 3                                                   | Score 5                                                                                       |
+| ---------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Instruction fulfillment            | Misses the central task or constraints.                                          | Completes the main task but misses material requirements. | Meets the task and all material constraints.                                                  |
+| Organization and global coherence  | Ideas or sections do not form a usable whole.                                    | The response is readable but has visible structural gaps. | The response has a clear structure and sustained global coherence.                            |
+| Content adequacy and depth         | Content is missing, shallow, or unusable for the task.                           | Content covers the main points with uneven development.   | Content is sufficient, developed, and appropriately deep.                                     |
+| Style, voice, and audience fit     | Style or voice conflicts with the requested audience or genre.                   | Style is partly suitable but inconsistent.                | Voice, style, and detail fit the audience and genre throughout.                               |
+| Factuality and constraint fidelity | The response contradicts the supplied context or violates important constraints. | Minor errors or unsupported claims remain.                | Claims fit the supplied context, uncertainty is handled honestly, and constraints are obeyed. |
 
 The last dimension is judged against the assignment and supplied context. The no-retrieval policy means that a judge must not reward outside fact gathering. A quote must be copied from the output or the supplied context and must be short enough to identify the evidence without reproducing the response.
 
@@ -246,7 +246,7 @@ The pointwise JSON object follows this contract:
     "factuality_constraint_fidelity": 1
   },
   "evidence_quotes": [
-    {"dimension": "instruction_fulfillment", "quote": "<short exact quote>"}
+    { "dimension": "instruction_fulfillment", "quote": "<short exact quote>" }
   ],
   "judge_level_composite": 0.0,
   "uncertainties": ["<short uncertainty or empty array>"]
@@ -266,7 +266,7 @@ The runner retries an invalid judge response only under the fixed retry count in
 
 The benchmark-native composite is the primary reported pointwise estimand and is defined for each benchmark whose pinned prompt manifest carries per-prompt native criteria. The WritingBench manifest carries each query's five native criteria. The judge scores one criterion per request as an integer from 1 to 10 under the frozen versioned native template, following the pinned upstream evaluator. The analysis stage aggregates the criterion scores: the per-output native score is the unweighted mean over that prompt's criteria on the raw native scale without z-scoring, and the native composite averages the two assigned judges with equal weight, mirroring the generic two-judge construction. The runner applies the same JSON validation and retry rules as the generic pointwise stage.
 
-The HelloBench manifest adds its per-prompt checklist criteria when HelloBench generation runs begin, and the same construction applies to those criteria. For a benchmark whose manifest carries no per-prompt native criteria, the generic composite remains the reported pointwise scale and the native composite is `N/A`.
+HelloBench follows its upstream checklist contract rather than the WritingBench request shape. Each manifest row carries 5 to 7 checklist strings. One native-checklist request evaluates every checklist item for that row and returns one structured JSON Lines record containing `checklist_id`, `reason`, and `evaluation_score` for each item. IDs must cover 0 through `num_checklist - 1` without gaps, and scores must be one of 0, 0.25, 0.5, 0.75, or 1. The scorer writes no run-level average; analysis may compute a prompt-level mean after validation. For a benchmark whose manifest carries no per-prompt native criteria, the generic composite remains the reported pointwise scale and the native composite is `N/A`.
 
 ### Balanced pairwise tournament
 
@@ -585,6 +585,7 @@ The owner must close every gate below before the first scored run. The runner re
    - Timeout
    - Retry policy
    - Seeds
+
 6. **Judge configuration.** Fill these assignments and checks:
 
    - Exact Claude-family frontier judge for Codex outputs
@@ -595,6 +596,7 @@ The owner must close every gate below before the first scored run. The runner re
    - Frozen judge prompts, schemas, decoding parameters, and seeds
    - Frozen Bradley-Terry [^11] tie treatment
    - Frozen common ability-scale convention
+
 7. **Length analysis.** Freeze these settings before judging:
 
    - Tokenizer versions
@@ -610,6 +612,7 @@ The owner must close every gate below before the first scored run. The runner re
      - `100 * max(0, 1 - (x / y - 1) / 2)` for `0 < y <= x`
    - Score `0` when `y = 0`
    - Zero-variance z-score rule
+
 8. **Trace conformance.** Run one smoke test for each condition and platform. Validate these properties:
 
    - Trace JSON Lines
@@ -619,6 +622,7 @@ The owner must close every gate below before the first scored run. The runner re
    - Blind labels
    - Pair balance
    - No-retrieval enforcement
+
 9. **Human study.** Approve these study details:
 
    - The 180 to 240 comparison sample
@@ -627,6 +631,7 @@ The owner must close every gate below before the first scored run. The runner re
    - Consent
    - Data handling
    - Any required ethics review
+
 10. **Statistical lock.** Freeze these settings:
 
     - Confirmatory contrast families
@@ -639,22 +644,22 @@ The owner must close every gate below before the first scored run. The runner re
 
 If a new source check contradicts a settled design item or the plugin's documented behavior, stop the experiment and record the conflict. Do not resolve it by changing a condition after results exist.
 
-[^1]: Linda S. Flower and John R. Hayes, "A Cognitive Process Theory of Writing," *College Composition and Communication* 32, no. 4 (1981): 365-387. [DOI](https://doi.org/10.58680/ccc198115885) / [JSTOR](https://www.jstor.org/stable/356600).
+[^1]: Linda S. Flower and John R. Hayes, "A Cognitive Process Theory of Writing," _College Composition and Communication_ 32, no. 4 (1981): 365-387. [DOI](https://doi.org/10.58680/ccc198115885) / [JSTOR](https://www.jstor.org/stable/356600).
 [^2]: Yijia Shao, Yucheng Jiang, Theodore A. Kanell, Peter Xu, Omar Khattab, and Monica S. Lam, "Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models," arXiv preprint arXiv:2402.14207 (2024). [arXiv](https://arxiv.org/abs/2402.14207).
 [^3]: Yuning Wu, Jiahao Mei, Ming Yan, Chenliang Li, Shaopeng Lai, Yuran Ren, Zijia Wang, Ji Zhang, Mengyue Wu, Qin Jin, and Fei Huang, "WritingBench: A Comprehensive Benchmark for Generative Writing," arXiv preprint arXiv:2503.05244 (2025). [arXiv](https://arxiv.org/abs/2503.05244).
 [^4]: Haoran Que, Feiyu Duan, Liqun He, Yutao Mou, Wangchunshu Zhou, Jiaheng Liu, Wenge Rong, Zekun Moore Wang, Jian Yang, Ge Zhang, Junran Peng, Zhaoxiang Zhang, Songyang Zhang, and Kai Chen, "HelloBench: Evaluating Long Text Generation Capabilities of Large Language Models," arXiv preprint arXiv:2409.16191 (2024). [arXiv](https://arxiv.org/abs/2409.16191).
 [^5]: Chaitanya Malaviya, Priyanka Agrawal, Kuzman Ganchev, Pranesh Srinivasan, Fantine Huot, Jonathan Berant, Mark Yatskar, Dipanjan Das, Mirella Lapata, and Chris Alberti, "DOLOMITES: Domain-Specific Long-Form Methodical Tasks," arXiv preprint arXiv:2405.05938 (2024). [arXiv](https://arxiv.org/abs/2405.05938).
-[^6]: S.A. Crossley, Yu Tian, Perpetual Baffour, Alex Franklin, Meg Benner, and Ulrich Boser, "A large-scale corpus for assessing written argumentation: PERSUADE 2.0," *Assessing Writing* 61 (2024): article 100865. [DOI](https://doi.org/10.1016/j.asw.2024.100865).
-[^7]: Shengjie Li and Vincent Ng, "ICLE++: Modeling Fine-Grained Traits for Holistic Essay Scoring," *Proceedings of NAACL-HLT* (2024). [ACL Anthology](https://aclanthology.org/2024.naacl-long.468/).
+[^6]: S.A. Crossley, Yu Tian, Perpetual Baffour, Alex Franklin, Meg Benner, and Ulrich Boser, "A large-scale corpus for assessing written argumentation: PERSUADE 2.0," _Assessing Writing_ 61 (2024): article 100865. [DOI](https://doi.org/10.1016/j.asw.2024.100865).
+[^7]: Shengjie Li and Vincent Ng, "ICLE++: Modeling Fine-Grained Traits for Holistic Essay Scoring," _Proceedings of NAACL-HLT_ (2024). [ACL Anthology](https://aclanthology.org/2024.naacl-long.468/).
 [^8]: Yushi Bai, Jiajie Zhang, Xin Lv, Linzhi Zheng, Siqi Zhu, Lei Hou, Yuxiao Dong, Jie Tang, and Juanzi Li, "LongWriter: Unleashing 10,000+ Word Generation from Long Context LLMs," arXiv preprint arXiv:2408.07055 (2024). [arXiv](https://arxiv.org/abs/2408.07055).
 [^9]: Seungone Kim, Juyoung Suk, Shayne Longpre, Bill Yuchen Lin, Jamin Shin, Sean Welleck, Graham Neubig, Moontae Lee, Kyungjae Lee, and Minjoon Seo, "Prometheus 2: An Open Source Language Model Specialized in Evaluating Other Language Models," arXiv preprint arXiv:2405.01535 (2024). [arXiv](https://arxiv.org/abs/2405.01535).
-[^10]: Wanyu Du, Vipul Raheja, Dhruv Kumar, Zae Myung Kim, Melissa Lopez, and Dongyeop Kang, "Understanding Iterative Revision from Human-Written Text," *Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics* (Volume 1: Long Papers) (2022): 3573-3590. [ACL Anthology](https://aclanthology.org/2022.acl-long.250/).
-[^11]: Ralph Allan Bradley and Milton E. Terry, "Rank Analysis of Incomplete Block Designs: I. The Method of Paired Comparisons," *Biometrika* 39, nos. 3-4 (1952): 324-345. [DOI](https://doi.org/10.1093/biomet/39.3-4.324).
-[^12]: Claude E. Shannon, "A Mathematical Theory of Communication," *Bell System Technical Journal* 27, no. 3 (1948): 379-423. [DOI](https://doi.org/10.1002/j.1538-7305.1948.tb01338.x).
-[^13]: Klaus Krippendorff, "Bivariate Agreement Coefficients for Reliability of Data," *Sociological Methodology* 2 (1970): 139-150. [JSTOR](https://www.jstor.org/stable/270787).
-[^14]: Joseph L. Fleiss, "Measuring Nominal Scale Agreement among Many Raters," *Psychological Bulletin* 76, no. 5 (1971): 378-382. [DOI](https://doi.org/10.1037/h0031619).
-[^15]: Sture Holm, "A Simple Sequentially Rejective Multiple Test Procedure," *Scandinavian Journal of Statistics* 6, no. 2 (1979): 65-70. [JSTOR](https://www.jstor.org/stable/4615733).
-[^16]: Frank Wilcoxon, "Individual Comparisons by Ranking Methods," *Biometrics Bulletin* 1, no. 6 (1945): 80-83. [JSTOR](https://www.jstor.org/stable/3001968).
+[^10]: Wanyu Du, Vipul Raheja, Dhruv Kumar, Zae Myung Kim, Melissa Lopez, and Dongyeop Kang, "Understanding Iterative Revision from Human-Written Text," _Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics_ (Volume 1: Long Papers) (2022): 3573-3590. [ACL Anthology](https://aclanthology.org/2022.acl-long.250/).
+[^11]: Ralph Allan Bradley and Milton E. Terry, "Rank Analysis of Incomplete Block Designs: I. The Method of Paired Comparisons," _Biometrika_ 39, nos. 3-4 (1952): 324-345. [DOI](https://doi.org/10.1093/biomet/39.3-4.324).
+[^12]: Claude E. Shannon, "A Mathematical Theory of Communication," _Bell System Technical Journal_ 27, no. 3 (1948): 379-423. [DOI](https://doi.org/10.1002/j.1538-7305.1948.tb01338.x).
+[^13]: Klaus Krippendorff, "Bivariate Agreement Coefficients for Reliability of Data," _Sociological Methodology_ 2 (1970): 139-150. [JSTOR](https://www.jstor.org/stable/270787).
+[^14]: Joseph L. Fleiss, "Measuring Nominal Scale Agreement among Many Raters," _Psychological Bulletin_ 76, no. 5 (1971): 378-382. [DOI](https://doi.org/10.1037/h0031619).
+[^15]: Sture Holm, "A Simple Sequentially Rejective Multiple Test Procedure," _Scandinavian Journal of Statistics_ 6, no. 2 (1979): 65-70. [JSTOR](https://www.jstor.org/stable/4615733).
+[^16]: Frank Wilcoxon, "Individual Comparisons by Ranking Methods," _Biometrics Bulletin_ 1, no. 6 (1945): 80-83. [JSTOR](https://www.jstor.org/stable/3001968).
 [^17]: Shuangshuang Ying, Yunwen Li, Xingwei Qu, Xin Li, Sheng Jin, Minghao Liu, Zhoufutu Wen, Xeron Du, Tianyu Zheng, Yichi Zhang, Letian Ni, Yuyang Cheng, Zhenzhu Yang, Qiguang Chen, Jingzhe Ding, Shengda Long, Wangchunshu Zhou, Jiazhan Feng, Wanjun Zhong, Libo Qin, Ge Zhang, Wenhao Huang, Wanxiang Che, and Chenghua Lin, "Beyond Correctness: Evaluating Subjective Writing Preferences Across Cultures," arXiv preprint arXiv:2510.14616 (2025). [arXiv](https://arxiv.org/abs/2510.14616).
-[^18]: Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen, "A Cognitive Writing Perspective for Constrained Long-Form Text Generation," *Findings of the Association for Computational Linguistics: ACL 2025* (2025). DOI: [10.18653/v1/2025.findings-acl.511](https://doi.org/10.18653/v1/2025.findings-acl.511). [ACL Anthology](https://aclanthology.org/2025.findings-acl.511/).
-[^19]: Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmidhuber, "Beyond Outlining: Heterogeneous Recursive Planning for Adaptive Long-form Writing with Language Models," *Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing* (2025): 24678-24714. DOI: [10.18653/v1/2025.emnlp-main.1254](https://doi.org/10.18653/v1/2025.emnlp-main.1254). [ACL Anthology](https://aclanthology.org/2025.emnlp-main.1254/).
+[^18]: Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen, "A Cognitive Writing Perspective for Constrained Long-Form Text Generation," _Findings of the Association for Computational Linguistics: ACL 2025_ (2025). DOI: [10.18653/v1/2025.findings-acl.511](https://doi.org/10.18653/v1/2025.findings-acl.511). [ACL Anthology](https://aclanthology.org/2025.findings-acl.511/).
+[^19]: Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmidhuber, "Beyond Outlining: Heterogeneous Recursive Planning for Adaptive Long-form Writing with Language Models," _Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing_ (2025): 24678-24714. DOI: [10.18653/v1/2025.emnlp-main.1254](https://doi.org/10.18653/v1/2025.emnlp-main.1254). [ACL Anthology](https://aclanthology.org/2025.emnlp-main.1254/).

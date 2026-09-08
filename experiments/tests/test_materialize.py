@@ -275,24 +275,37 @@ def test_build_hellobench_uses_requirements_and_fallbacks(tmp_path: Path) -> Non
     second = tmp_path / "second.jsonl"
     first.write_text(
         '{"id": "one", "instruction": "Draft one.", '
-        '"requirements": ["Use headings."]}\n'
+        '"requirements": ["Use headings."], '
+        '"checklists": ["Use headings.", "Keep it concise."], '
+        '"formatted_checklists": "[]", "num_checklist": 2}\n'
     )
     second.write_text(
-        '{"id": "two", "instruction": "Draft two.", "requirements": []}\n'
+        '{"id": "two", "instruction": "Draft two.", "requirements": [], '
+        '"checklists": ["Answer the request."], '
+        '"formatted_checklists": "[]", "num_checklist": 1}\n'
     )
 
     rows = build_hellobench([first, second])
 
     assert len(rows) == 2
     assert rows[0]["requested_output_constraints"] == ["Use headings."]
+    assert rows[0]["native_payload"] == ["Use headings.", "Keep it concise."]
     assert rows[1]["requested_output_constraints"] == [
         "No separate output constraints; follow prompt_text."
     ]
+    assert rows[1]["native_payload"] == ["Answer the request."]
 
-    first.write_text('{"id": 1, "instruction": "Draft."}\n')
+    first.write_text(
+        '{"id": 1, "instruction": "Draft.", "checklists": [], '
+        '"formatted_checklists": "[]", "num_checklist": 0}\n'
+    )
     with pytest.raises(TypeError, match="invalid id/instruction"):
         build_hellobench([first])
-    first.write_text('{"id": "bad", "instruction": "Draft.", "requirements": [1]}\n')
+    first.write_text(
+        '{"id": "bad", "instruction": "Draft.", "requirements": [1], '
+        '"checklists": ["Answer."], "formatted_checklists": "[]", '
+        '"num_checklist": 1}\n'
+    )
     with pytest.raises(ValueError, match="requirements are invalid"):
         build_hellobench([first])
 
@@ -375,14 +388,18 @@ def test_checked_in_manifests_have_schema_hashes_and_expected_counts() -> None:
         assert len(rows) == expected_count
         assert len({row["prompt_id"] for row in rows}) == expected_count
         for row in rows:
-            expected_fields = (
-                set(MANIFEST_FIELDS) | {"native_payload"}
-                if benchmark_name == "writingbench"
-                else set(MANIFEST_FIELDS)
-            )
+            expected_fields = set(MANIFEST_FIELDS)
+            if benchmark_name in {"writingbench", "hellobench"}:
+                expected_fields |= {"native_payload"}
             assert set(row) == expected_fields
             validate_manifest_row(row)
             assert row["hash"] == hash_manifest_row(row)
+            if benchmark_name == "hellobench":
+                assert 5 <= len(row["native_payload"]) <= 7
+                assert all(
+                    isinstance(item, str) and item.strip()
+                    for item in row["native_payload"]
+                )
 
 
 def test_checked_in_manifests_are_byte_deterministic() -> None:
@@ -391,6 +408,19 @@ def test_checked_in_manifests_are_byte_deterministic() -> None:
         rows = [json.loads(line) for line in path.read_text().splitlines()]
 
         assert materialize_module._manifest_bytes(rows) == path.read_bytes()
+
+
+def test_hellobench_materialization_matches_the_checked_in_bytes() -> None:
+    source_paths = [
+        BENCHMARK_CACHE_DIR / source.cache_name
+        for source in materialize_module.HELLOBENCH_FILES
+    ]
+
+    rows = build_hellobench(source_paths)
+    manifest_path = MANIFEST_DIR / "hellobench.jsonl"
+
+    assert len(rows) == EXPECTED_COUNTS["hellobench"]
+    assert materialize_module._manifest_bytes(rows) == manifest_path.read_bytes()
 
 
 def test_checked_in_provenance_records_pins_license_and_split() -> None:
@@ -405,6 +435,15 @@ def test_checked_in_provenance_records_pins_license_and_split() -> None:
     assert provenance["benchmarks"]["hellobench"]["source_version"].endswith(
         "@92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57"
     )
+    assert provenance["benchmarks"]["hellobench"]["native_payload"] == {
+        "manifest_field": "native_payload",
+        "shape": "non-empty list of non-empty strings",
+        "source_fields": [
+            "checklists",
+            "formatted_checklists",
+            "num_checklist",
+        ],
+    }
     dolomites = provenance["benchmarks"]["dolomites"]
     assert dolomites["license"] == "CC-BY-4.0"
     assert dolomites["split"]["observed_counts"] == {"dev": 820, "test": 1037}

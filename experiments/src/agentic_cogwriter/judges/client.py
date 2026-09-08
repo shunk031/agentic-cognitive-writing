@@ -28,12 +28,18 @@ from pydantic_ai.providers.openai import OpenAIProvider
 from .config import JudgeConfig
 from .errors import JudgeConfigurationError, JudgeTransportError, JudgeValidationError
 from .validation import (
+    HelloBenchChecklistRecord,
     NativePointwiseJudgeRecord,
     PairwiseJudgeRecord,
     PointwiseJudgeRecord,
 )
 
-JudgeOutput = PointwiseJudgeRecord | PairwiseJudgeRecord | NativePointwiseJudgeRecord
+JudgeOutput = (
+    PointwiseJudgeRecord
+    | PairwiseJudgeRecord
+    | NativePointwiseJudgeRecord
+    | HelloBenchChecklistRecord
+)
 
 
 @dataclass(frozen=True)
@@ -234,7 +240,12 @@ class OpenAICompatibleClient:
         output = result.output
         if not isinstance(
             output,
-            (PointwiseJudgeRecord, PairwiseJudgeRecord, NativePointwiseJudgeRecord),
+            (
+                PointwiseJudgeRecord,
+                PairwiseJudgeRecord,
+                NativePointwiseJudgeRecord,
+                HelloBenchChecklistRecord,
+            ),
         ):
             raise JudgeTransportError("Judge response has an unexpected output type")
         return JudgeResponse(

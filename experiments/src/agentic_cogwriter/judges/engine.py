@@ -15,9 +15,11 @@ from .config import JudgeConfig, JudgeIdentity
 from .errors import JudgeValidationError
 from .templates import JudgeTemplate
 from .validation import (
+    HelloBenchChecklistRecord,
     NativePointwiseJudgeRecord,
     PairwiseJudgeRecord,
     PointwiseJudgeRecord,
+    validate_native_checklist,
     validate_native_pointwise,
     validate_pairwise,
     validate_pointwise,
@@ -245,5 +247,65 @@ def judge_native_pointwise(
             "response of given query."
         ),
         # Reuse the caller's run-scoped cache namespace across checklist criteria.
+        prompt_cache_key=prompt_cache_key,
+    )
+
+
+def judge_native_checklist(
+    config: JudgeConfig,
+    *,
+    instruction: str,
+    output: str,
+    checklists: tuple[str, ...],
+    prompt_id: str,
+    blind_condition_id: str,
+    platform: str,
+    model: Model | None = None,
+    prompt_cache_key: str = "judge-default",
+) -> JudgeResult:
+    """Score every HelloBench checklist item in one upstream-shaped call."""
+
+    if config.task != "native-checklist":
+        raise JudgeValidationError("Judge configuration task is not native-checklist")
+    if not checklists or not all(item.strip() for item in checklists):
+        raise JudgeValidationError("HelloBench checklists must be non-empty strings")
+    expected = {
+        "prompt_id": prompt_id,
+        "condition_id": blind_condition_id,
+        "platform": platform,
+        "judge_id": config.judge_id,
+    }
+    values = {
+        "instruction": instruction,
+        "response": output,
+        "checklists": json.dumps(
+            [
+                {"checklist_id": index, "checklist_content": checklist}
+                for index, checklist in enumerate(checklists)
+            ],
+            ensure_ascii=False,
+        ),
+        "num_checklist": len(checklists),
+    }
+
+    def validator(value: Any) -> dict[str, Any]:
+        return validate_native_checklist(
+            value,
+            expected=expected,
+            num_checklist=len(checklists),
+        )
+
+    return _run(
+        config,
+        values=values,
+        output_type=HelloBenchChecklistRecord,
+        validator=validator,
+        model=model,
+        system_prompt=(
+            "You are a helpful evaluator. Your task is to evaluate the checklists "
+            "of the responses given by the Large Language Models (LLMs) based on "
+            "user instructions. These checklists consist of yes or no questions."
+        ),
+        # HelloBench issues one request per run, so no prompt-cache reordering is used.
         prompt_cache_key=prompt_cache_key,
     )

@@ -34,9 +34,12 @@ from agentic_cogwriter.judges.scorer import (
 from agentic_cogwriter.judges.templates import JudgeTemplate
 from agentic_cogwriter.judges.validation import (
     POINTWISE_DIMENSIONS,
+    HelloBenchChecklistItem,
+    HelloBenchChecklistRecord,
     NativePointwiseJudgeRecord,
     PairwiseJudgeRecord,
     PointwiseJudgeRecord,
+    validate_native_checklist,
     validate_pairwise,
     validate_pointwise,
 )
@@ -154,6 +157,21 @@ def _native_record(
     return {"score": score, "reason": reason}
 
 
+def _hello_checklist_record(
+    count: int, score: float = 0.75
+) -> dict[str, list[dict[str, object]]]:
+    return {
+        "checklist_items": [
+            {
+                "checklist_id": index,
+                "reason": f"Checklist item {index} is addressed.",
+                "evaluation_score": score,
+            }
+            for index in range(count)
+        ]
+    }
+
+
 def _pairwise_record() -> dict[str, object]:
     return {
         "prompt_id": "p-1",
@@ -199,6 +217,47 @@ def test_pydantic_records_mirror_the_frozen_json_contracts() -> None:
         "reason",
     }
     assert set(NativePointwiseJudgeRecord.model_fields) == {"score", "reason"}
+    assert set(HelloBenchChecklistItem.model_fields) == {
+        "checklist_id",
+        "reason",
+        "evaluation_score",
+    }
+    assert set(HelloBenchChecklistRecord.model_fields) == {"checklist_items"}
+
+
+def test_hellobench_checklist_validation_requires_contiguous_ids_and_scale() -> None:
+    expected = {
+        "prompt_id": "p-1",
+        "condition_id": "blind-condition",
+        "platform": "codex",
+        "judge_id": "judge-1",
+    }
+    valid = _hello_checklist_record(2)
+
+    assert (
+        validate_native_checklist(valid, expected=expected, num_checklist=2)[
+            "checklist_items"
+        ]
+        == valid["checklist_items"]
+    )
+
+    for invalid in (
+        {"checklist_items": valid["checklist_items"][:1]},
+        {
+            "checklist_items": [
+                {**valid["checklist_items"][0], "checklist_id": 2},
+                valid["checklist_items"][1],
+            ]
+        },
+        {
+            "checklist_items": [
+                {**valid["checklist_items"][0], "evaluation_score": 0.1},
+                valid["checklist_items"][1],
+            ]
+        },
+    ):
+        with pytest.raises(JudgeValidationError):
+            validate_native_checklist(invalid, expected=expected, num_checklist=2)
 
 
 def test_pointwise_validation_rejects_unknown_or_out_of_range_scores() -> None:
@@ -419,6 +478,27 @@ def test_writingbench_native_template_keeps_query_and_response_before_criteria()
     assert rendered.index("** Query **") < rendered.index("** Response **")
     assert rendered.index("** Response **") < rendered.index("** Criteria **")
     assert "You are an expert evaluator" in template.raw.decode("utf-8")
+
+
+def test_hellobench_native_template_keeps_upstream_field_order() -> None:
+    template = JudgeTemplate.load(
+        Path(__file__).parents[1] / "prompts/judges/hellobench-native-v1.md"
+    )
+
+    assert template.fields == ("instruction", "response", "checklists", "num_checklist")
+    rendered = template.render(
+        {
+            "instruction": "Write a memo.",
+            "response": "A response.",
+            "checklists": '[{"checklist_id": 0, "checklist_content": "Be clear."}]',
+            "num_checklist": 1,
+        }
+    )
+
+    assert rendered.index('"instruction"') < rendered.index('"response"')
+    assert rendered.index('"response"') < rendered.index('"checklists"')
+    assert rendered.index('"checklists"') < rendered.index("1 checklists")
+    assert "structured JSON output replaces upstream" in template.raw.decode("utf-8")
 
 
 def test_fake_transport_receives_deterministic_zero_temperature_payload(
@@ -949,6 +1029,70 @@ def test_native_pointwise_reproduces_pilot_a4_writingbench_shape(
     assert manifest["task"] == "native-pointwise"
     assert len(manifest["records"]) == 5
     assert len(transport.requests) == 5
+
+
+def test_native_checklist_scores_real_hellobench_row_in_one_request_and_line(
+    tmp_path: Path,
+) -> None:
+    row = json.loads(
+        (Path(__file__).parents[1] / "prompts/manifests/hellobench.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()[0]
+    )
+    run_dir = _run_dir(
+        tmp_path,
+        "A4",
+        "HelloBench fixture response.",
+        prompt_id=row["prompt_id"],
+        assignment=row["prompt_text"],
+        benchmark_name="HelloBench",
+        native_payload=row["native_payload"],
+    )
+    template = Path(__file__).parents[1] / "prompts/judges/hellobench-native-v1.md"
+    config = _config(tmp_path, template, task="native-checklist")
+    response = _hello_checklist_record(len(row["native_payload"]))
+    transport = FakeTransport([{"content": json.dumps(response)}])
+
+    result = score_run(run_dir, config, model=transport.model)
+
+    lines = result.scores_path.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    record = json.loads(lines[0])
+    assert len(record["checklist_items"]) == len(row["native_payload"])
+    assert [item["checklist_id"] for item in record["checklist_items"]] == list(
+        range(len(row["native_payload"]))
+    )
+    assert len(transport.requests) == 1
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert len(manifest["records"]) == 1
+
+
+def test_native_checklist_rejects_an_off_scale_score(tmp_path: Path) -> None:
+    row = json.loads(
+        (Path(__file__).parents[1] / "prompts/manifests/hellobench.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()[0]
+    )
+    run_dir = _run_dir(
+        tmp_path,
+        "A4",
+        "HelloBench fixture response.",
+        prompt_id=row["prompt_id"],
+        assignment=row["prompt_text"],
+        benchmark_name="HelloBench",
+        native_payload=row["native_payload"],
+    )
+    template = Path(__file__).parents[1] / "prompts/judges/hellobench-native-v1.md"
+    config = _config(tmp_path, template, task="native-checklist")
+    invalid = _hello_checklist_record(len(row["native_payload"]), score=0.1)
+    transport = FakeTransport(
+        [{"content": json.dumps(invalid)}, {"content": json.dumps(invalid)}]
+    )
+
+    with pytest.raises(UnexpectedModelBehavior):
+        score_run(run_dir, config, model=transport.model)
+
+    assert not (run_dir / "scores.jsonl").exists()
 
 
 def test_load_run_artifacts_accepts_real_shaped_manifest(tmp_path: Path) -> None:

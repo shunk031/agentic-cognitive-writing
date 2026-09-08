@@ -10,7 +10,7 @@ from typing import Any, Literal, cast
 
 from .errors import JudgeConfigurationError
 
-JudgeTask = Literal["pointwise", "pairwise", "native-pointwise"]
+JudgeTask = Literal["pointwise", "pairwise", "native-pointwise", "native-checklist"]
 JudgeFamily = Literal["claude_frontier", "gpt_frontier", "open_evaluator"]
 JudgeRole = Literal["frontier", "open_evaluator"]
 
@@ -191,9 +191,15 @@ class JudgeConfig:
         """Validate a mapping whose decoding fields mirror runtime configuration."""
 
         task_value = values.get("task", "pointwise")
-        if task_value not in {"pointwise", "pairwise", "native-pointwise"}:
+        if task_value not in {
+            "pointwise",
+            "pairwise",
+            "native-pointwise",
+            "native-checklist",
+        }:
             raise JudgeConfigurationError(
-                "task must be 'pointwise', 'pairwise', or 'native-pointwise'"
+                "task must be 'pointwise', 'pairwise', 'native-pointwise', or "
+                "'native-checklist'"
             )
         task: JudgeTask = task_value
 
