@@ -301,13 +301,32 @@ class ExperimentRunner:
         }
 
     def _prepare_generator_environment(
-        self, platform: str
+        self, platform: str, *, run_id: str
     ) -> tuple[Path, dict[str, str]]:
-        """Build one run-local provider home and its child process environment."""
+        """Build one per-run provider home and its child process environment."""
 
-        config_root = Path(tempfile.mkdtemp(prefix="agentic-cogwriter-generator-"))
+        config_root = (
+            Path.home()
+            / ".cache"
+            / "agentic-cogwriter"
+            / "generator-config"
+            / _safe_component(run_id)
+        ).resolve()
+        temporary_root = Path(tempfile.gettempdir()).resolve()
+        try:
+            config_root.relative_to(temporary_root)
+        except ValueError:
+            pass
+        else:
+            raise ConfigurationError(
+                "Generator configuration root "
+                f"{config_root} is under the system temporary directory "
+                f"{temporary_root}"
+            )
+
         source_root = self.codex_home if platform == "codex" else self.claude_config_dir
         try:
+            config_root.mkdir(mode=0o700, parents=True)
             for filename in _GENERATOR_CONFIG_ALLOWLIST[platform]:
                 source = source_root / filename
                 try:
@@ -369,7 +388,7 @@ class ExperimentRunner:
         # to the workspace instead of the plugin or skill directory.
         (workspace / ".writing" / "trace").mkdir(parents=True)
         generator_config_dir, generator_environment = (
-            self._prepare_generator_environment(platform)
+            self._prepare_generator_environment(platform, run_id=run_id)
         )
         preflight_ready = False
         try:

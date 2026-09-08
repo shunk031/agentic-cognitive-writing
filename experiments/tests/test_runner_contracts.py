@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+import stat
 import subprocess
 import tomllib
 from dataclasses import replace
@@ -211,10 +212,13 @@ def _runner(tmp_path: Path, config: RuntimeConfig | None = None, **kwargs):
 )
 def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     platform: str,
     variable: str,
     allowlist: tuple[str, ...],
 ) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
+    monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
     source_root = tmp_path / "host-provider-config"
     source_root.mkdir()
     for relative in (*allowlist, "AGENTS.md", "CLAUDE.md", "settings.json"):
@@ -225,12 +229,14 @@ def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
     )
     observed_config_dirs: list[Path] = []
     observed_config_files: list[set[str]] = []
+    observed_config_modes: list[int] = []
 
     class InspectingExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
             assert env is not None
             config_root = Path(env[variable])
             observed_config_dirs.append(config_root)
+            observed_config_modes.append(stat.S_IMODE(config_root.stat().st_mode))
             observed_config_files.append(
                 {
                     path.relative_to(config_root).as_posix()
@@ -257,6 +263,15 @@ def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
     assert executor.environments[0] is not None
     assert executor.environments[0][variable] == str(config_root.resolve())
     assert observed_config_files == [set(allowlist)]
+    assert config_root == (
+        tmp_path
+        / "home"
+        / ".cache"
+        / "agentic-cogwriter"
+        / "generator-config"
+        / result.run_id
+    )
+    assert observed_config_modes == [0o700]
     assert config_root not in result.run_dir.parents
     assert result.run_dir not in config_root.parents
     assert not config_root.exists()
@@ -279,22 +294,27 @@ def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
 )
 def test_run_removes_generator_config_after_failure(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     platform: str,
     variable: str,
     allowlist: tuple[str, ...],
 ) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
+    monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
     source_root = tmp_path / "host-provider-config"
     source_root.mkdir()
     for relative in allowlist:
         (source_root / relative).write_text(relative, encoding="utf-8")
     observed_config_dirs: list[Path] = []
     observed_config_files: list[set[str]] = []
+    observed_config_modes: list[int] = []
 
     class InspectingExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
             assert env is not None
             config_root = Path(env[variable])
             observed_config_dirs.append(config_root)
+            observed_config_modes.append(stat.S_IMODE(config_root.stat().st_mode))
             observed_config_files.append(
                 {
                     path.relative_to(config_root).as_posix()
@@ -325,6 +345,15 @@ def test_run_removes_generator_config_after_failure(
 
     run_dir = tmp_path / "runs" / "WritingBench" / "A1" / platform / "failure"
     assert observed_config_files == [set(allowlist)]
+    assert observed_config_dirs[0] == (
+        tmp_path
+        / "home"
+        / ".cache"
+        / "agentic-cogwriter"
+        / "generator-config"
+        / "failure"
+    )
+    assert observed_config_modes == [0o700]
     assert run_dir not in observed_config_dirs[0].parents
     assert observed_config_dirs[0] not in run_dir.parents
     assert not observed_config_dirs[0].exists()
@@ -338,6 +367,8 @@ def test_run_removes_generator_config_after_failure(
 def test_run_removes_generator_config_when_preflight_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
+    monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
     source_root = tmp_path / "host-provider-config"
     source_root.mkdir()
     (source_root / "config.toml").write_text("model = 'test'", encoding="utf-8")
@@ -346,8 +377,10 @@ def test_run_removes_generator_config_when_preflight_fails(
     observed_config_dirs: list[Path] = []
     prepare = runner._prepare_generator_environment
 
-    def capture_config_dir(platform: str) -> tuple[Path, dict[str, str]]:
-        config_dir, environment = prepare(platform)
+    def capture_config_dir(
+        platform: str, *, run_id: str
+    ) -> tuple[Path, dict[str, str]]:
+        config_dir, environment = prepare(platform, run_id=run_id)
         observed_config_dirs.append(config_dir)
         return config_dir, environment
 
@@ -366,6 +399,34 @@ def test_run_removes_generator_config_when_preflight_fails(
 
     assert len(observed_config_dirs) == 1
     assert not observed_config_dirs[0].exists()
+
+
+def test_run_rejects_generator_config_under_system_temp(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path))
+    monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
+    executor = _RetryExecutor([_result()])
+    runner = _runner(tmp_path / "runs", executor=executor)
+    expected_root = (
+        tmp_path
+        / "home"
+        / ".cache"
+        / "agentic-cogwriter"
+        / "generator-config"
+        / "guard"
+    )
+
+    with pytest.raises(
+        ConfigurationError,
+        match="system temporary directory",
+    ) as error:
+        runner.run_prompt(
+            _prompt(), condition_id="A1", platform="codex", run_id="guard"
+        )
+
+    assert str(expected_root) in str(error.value)
+    assert executor.calls == []
 
 
 def test_codex_session_snapshot_uses_the_run_generator_config_home(

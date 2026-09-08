@@ -14,7 +14,7 @@ cd agentic-cognitive-writing
 Before running an experiment, confirm these prerequisites:
 
 - A Docker engine is running (user-supplied: install and start Docker Desktop or an equivalent engine).
-- The host has provider credentials for the selected platform. When present, [`run.sh`](./run.sh) mounts `~/.codex` and `~/.claude` read-only so the runner can copy `config.toml` and `auth.json` for Codex or `.credentials.json` for Claude Code into the run-local configuration directory. Environment-based credentials remain available when either directory is absent.
+- The host has provider credentials for the selected platform. When present, [`run.sh`](./run.sh) mounts `~/.codex` and `~/.claude` read-only so the runner can copy `config.toml` and `auth.json` for Codex or `.credentials.json` for Claude Code into `~/.cache/agentic-cogwriter/generator-config/<run_id>`. The runner creates each root with mode `0700`, removes it after success, failure, or a preflight exception, and rejects a resolved root under the system temporary directory because Codex creates sandbox helper binaries under `CODEX_HOME`. Environment-based credentials remain available when either directory is absent.
 - A plugin checkout exists before the run. A fresh clone contains the plugin directory at the host path `plugin/`; pass that host path to `--codex-plugin-root`. `run.sh` mounts the repository at `/workspace`, so `plugin/` is available inside the container as `/workspace/plugin`. The example passes the host-relative path `plugin`.
 - Inside the container, `codex` runs require `--security-opt seccomp=unconfined` for command sandboxing. The `claude-code` path does not receive that option, and no `SYS_ADMIN` capability is required.
 
