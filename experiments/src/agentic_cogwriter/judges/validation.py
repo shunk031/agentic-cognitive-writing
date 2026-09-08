@@ -6,7 +6,13 @@ import math
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+)
 
 from .errors import JudgeValidationError
 
@@ -99,6 +105,27 @@ class NativePointwiseJudgeRecord(_StrictRecord):
         return value
 
 
+class HelloBenchChecklistItem(_StrictRecord):
+    """One upstream HelloBench checklist result."""
+
+    checklist_id: int
+    reason: str
+    evaluation_score: int | float  # noqa: V107
+
+    @field_validator("reason")  # noqa: V105
+    @classmethod
+    def _non_empty_reason(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("reason must be a non-empty string")
+        return value
+
+
+class HelloBenchChecklistRecord(_StrictRecord):
+    """Structured JSON wrapper for the upstream Python list output."""
+
+    checklist_items: list[HelloBenchChecklistItem]  # noqa: V107
+
+
 class PairwiseEvidence(_StrictRecord):
     """The two output-specific evidence lists in the pairwise contract."""
 
@@ -132,6 +159,13 @@ class PairwiseJudgeRecord(_StrictRecord):
 def _validated_mapping(
     value: Any, model: type[BaseModel], label: str
 ) -> Mapping[str, Any]:
+    parsed = _validated_value(value, model, label)
+    if not isinstance(parsed, Mapping):
+        raise JudgeValidationError(f"{label} must be a JSON object")
+    return parsed
+
+
+def _validated_value(value: Any, model: type[BaseModel], label: str) -> Any:
     try:
         parsed = model.model_validate(value, strict=True)
     except ValidationError as exc:
@@ -273,6 +307,53 @@ def validate_native_pointwise(
         "score": value["score"],
         "reason": value["reason"],
     }
+
+
+def validate_native_checklist(
+    value: Any,
+    *,
+    expected: Mapping[str, str],
+    num_checklist: int,
+) -> dict[str, Any]:
+    """Validate one HelloBench checklist list and attach judge metadata."""
+
+    value = _validated_value(
+        value, HelloBenchChecklistRecord, "HelloBench native response"
+    )
+    if not isinstance(value, Mapping):
+        raise JudgeValidationError("HelloBench native response must be a JSON object")
+    items = value["checklist_items"]
+    if len(items) != num_checklist:
+        raise JudgeValidationError(
+            f"HelloBench response must contain exactly {num_checklist} checklist items"
+        )
+    normalized_items: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, Mapping):
+            raise JudgeValidationError("HelloBench checklist item must be an object")
+        checklist_id = item["checklist_id"]
+        if isinstance(checklist_id, bool) or not isinstance(checklist_id, int):
+            raise JudgeValidationError("HelloBench checklist_id must be an integer")
+        score = item["evaluation_score"]
+        if isinstance(score, bool) or not isinstance(score, (int, float)):
+            raise JudgeValidationError("HelloBench evaluation_score must be numeric")
+        if score not in {0, 0.25, 0.5, 0.75, 1}:
+            raise JudgeValidationError(
+                "HelloBench evaluation_score must be one of 0, 0.25, 0.5, 0.75, or 1"
+            )
+        normalized_items.append(
+            {
+                "checklist_id": checklist_id,
+                "reason": item["reason"],
+                "evaluation_score": float(score),
+            }
+        )
+    checklist_ids = [item["checklist_id"] for item in normalized_items]
+    if sorted(checklist_ids) != list(range(num_checklist)):
+        raise JudgeValidationError(
+            "HelloBench checklist_id must cover 0 through num_checklist - 1"
+        )
+    return {**expected, "checklist_items": normalized_items}
 
 
 def _string_list(value: Any, label: str) -> list[str]:

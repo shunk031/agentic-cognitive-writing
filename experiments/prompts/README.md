@@ -40,7 +40,12 @@ Each manifest row contains:
 
 `prompt_id`, `benchmark_name`, `source_version`, `prompt_text`,
 `requested_output_constraints`, and `hash`. WritingBench rows also carry the
-source row's `native_payload` checklist for native pointwise judging.
+source row's `native_payload` checklist for native pointwise judging. HelloBench
+rows carry `native_payload` as a non-empty list of non-empty checklist strings;
+the materializer maps the pinned source row's `checklists` field and verifies
+that `formatted_checklists` and `num_checklist` are present and consistent. Each
+checklist item uses the upstream five-step evaluation scale: `0`, `0.25`, `0.5`,
+`0.75`, or `1`.
 
 `hash` is SHA-256 over the canonical UTF-8 JSON object containing every field
 except `hash` itself. Canonical JSON uses sorted keys, no insignificant
@@ -48,16 +53,16 @@ whitespace, and `ensure_ascii=false`.
 
 ## Pinned sources and counts
 
-| Benchmark | Pinned source | Source content | Manifest |
-| --- | --- | ---: | ---: |
-| WritingBench | [`X-PLUG/WritingBench@9c24bb67`](https://github.com/X-PLUG/WritingBench/tree/9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad) | `benchmark_query/benchmark_all.jsonl`, SHA-256 `026e3f9482ff3474c802cd43f5cae9fd584e10d0848d3e0a152695434becbc98`, Git blob `e6cd82aabed6fa845f0a28cd2114daad59c012b9` | 1,000 |
-| HelloBench | [`Quehry/HelloBench@92c7d469`](https://github.com/Quehry/HelloBench/tree/92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57) | Five `data/main_data/*.jsonl` files, hashes recorded in [`provenance.json`](provenance.json) | 647 |
-| DoLoMiTes | [`google-deepmind/dolomites@8331dd99`](https://github.com/google-deepmind/dolomites/tree/8331dd998bf510cacc58d10ad613c9e685787747) plus the released [`dolomites_examples.zip`](https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip) | Archive SHA-256 `62ee47b4cdf67d1efd7a21029384a929e3d66cab49989aab85ea3534b8b86c32` | 820 dev rows |
+| Benchmark    | Pinned source                                                                                                                                                                                                                                                  |                                                                                                                                                         Source content |     Manifest |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------: | -----------: |
+| WritingBench | [`X-PLUG/WritingBench@9c24bb67`](https://github.com/X-PLUG/WritingBench/tree/9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad)                                                                                                                                         | `benchmark_query/benchmark_all.jsonl`, SHA-256 `026e3f9482ff3474c802cd43f5cae9fd584e10d0848d3e0a152695434becbc98`, Git blob `e6cd82aabed6fa845f0a28cd2114daad59c012b9` |        1,000 |
+| HelloBench   | [`Quehry/HelloBench@92c7d469`](https://github.com/Quehry/HelloBench/tree/92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57)                                                                                                                                             |                                                                           Five `data/main_data/*.jsonl` files, hashes recorded in [`provenance.json`](provenance.json) |          647 |
+| DoLoMiTes    | [`google-deepmind/dolomites@8331dd99`](https://github.com/google-deepmind/dolomites/tree/8331dd998bf510cacc58d10ad613c9e685787747) plus the released [`dolomites_examples.zip`](https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip) |                                                                                     Archive SHA-256 `62ee47b4cdf67d1efd7a21029384a929e3d66cab49989aab85ea3534b8b86c32` | 820 dev rows |
 
 WritingBench uses the query text and per-query checklist from its curated
-1,000-query file. HelloBench
-uses the `instruction` and separate `requirements` fields from its five main
-testing files. DoLoMiTes combines the task objective, procedure, input
+1,000-query file. HelloBench uses the `instruction` and separate `requirements`
+fields plus the `checklists`, `formatted_checklists`, and `num_checklist` fields
+from its five main testing files. DoLoMiTes combines the task objective, procedure, input
 specification, and supplied example input; its output requirements and notes
 become constraints. Reference outputs are intentionally omitted.
 

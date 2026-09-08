@@ -4,16 +4,16 @@ Agentic CogWriter is the writing system evaluated by the experiment runner in [`
 
 ## Layout
 
-| Directory | Contents |
-| --- | --- |
-| [`config/`](config/) | Runtime gate and model, judge, decoding, seed, and analysis settings |
-| [`prompts/`](prompts/) | One immutable manifest per benchmark |
-| [`conditions/`](conditions/) | A1 to A6 and B1 to B2 wrapper configs, frozen baseline prompt files, and platform adapters |
-| [`src/agentic_cogwriter/runner/`](src/agentic_cogwriter/runner/) | Python subpackage for execution, manifests, budgets, and trace collection |
-| [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) | API judge client, fail-closed validators, artifact scorer, and CLI |
-| [`human/`](human/) | Reserved for human validation |
-| [`analysis/`](analysis/) | Reserved for scoring and statistics |
-| [`manifests/`](manifests/) | Run-artifact documentation and generated output |
+| Directory                                                        | Contents                                                                                   |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [`config/`](config/)                                             | Runtime gate and model, judge, decoding, seed, and analysis settings                       |
+| [`prompts/`](prompts/)                                           | One immutable manifest per benchmark                                                       |
+| [`conditions/`](conditions/)                                     | A1 to A6 and B1 to B2 wrapper configs, frozen baseline prompt files, and platform adapters |
+| [`src/agentic_cogwriter/runner/`](src/agentic_cogwriter/runner/) | Python subpackage for execution, manifests, budgets, and trace collection                  |
+| [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) | API judge client, fail-closed validators, artifact scorer, and CLI                         |
+| [`human/`](human/)                                               | Reserved for human validation                                                              |
+| [`analysis/`](analysis/)                                         | Reserved for scoring and statistics                                                        |
+| [`manifests/`](manifests/)                                       | Run-artifact documentation and generated output                                            |
 
 The human and analysis directories remain reserved. The judge package scores completed run artifacts with one OpenAI-compatible API call per judgment.
 
@@ -77,7 +77,7 @@ The wrapper TOMLs are the source of truth for trace contracts. Each declares the
 
 The scorer in [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) reads a completed run's `run-manifest.json`, `prompt.txt`, and `output.normalized.txt`, then writes `scores.jsonl` and `scores-manifest.json` beside the run artifacts. The manifest records the versioned template hash, source-run hashes, API usage counters, response hash, attempt count, score-record hash, and the runtime judge-family evidence chain. A successful command prints the `scores.jsonl` path. Pairwise scoring writes both presentation records only after both judgments pass validation.
 
-The private judge configuration supplies the requested model, judge identifier, names of the endpoint and credential environment variables, the template path, the API seed, the pairwise presentation seed, decoding settings, timeout, retry count, and an explicit model-family mapping table. Use a configuration outside the repository. Replace every angle-bracket value in the following example with a value you supply at runtime; the template path must point to [`pointwise-v1.md`](prompts/judges/pointwise-v1.md), [`pairwise-v1.md`](prompts/judges/pairwise-v1.md), or [`writingbench-native-v1.md`](prompts/judges/writingbench-native-v1.md).
+The private judge configuration supplies the requested model, judge identifier, names of the endpoint and credential environment variables, the template path, the API seed, the pairwise presentation seed, decoding settings, timeout, retry count, and an explicit model-family mapping table. Use a configuration outside the repository. Replace every angle-bracket value in the following example with a value you supply at runtime; the template path must point to [`pointwise-v1.md`](prompts/judges/pointwise-v1.md), [`pairwise-v1.md`](prompts/judges/pairwise-v1.md), [`writingbench-native-v1.md`](prompts/judges/writingbench-native-v1.md), or [`hellobench-native-v1.md`](prompts/judges/hellobench-native-v1.md).
 
 ```json
 {
@@ -85,9 +85,12 @@ The private judge configuration supplies the requested model, judge identifier, 
   "model": "<judge-model-id>",
   "judge_id": "<judge-id>",
   "model_family_map": {
-    "<claude-frontier-model-id>": {"family": "claude", "role": "frontier"},
-    "<gpt-frontier-model-id>": {"family": "gpt", "role": "frontier"},
-    "<open-evaluator-model-id>": {"family": "prometheus", "role": "open_evaluator"}
+    "<claude-frontier-model-id>": { "family": "claude", "role": "frontier" },
+    "<gpt-frontier-model-id>": { "family": "gpt", "role": "frontier" },
+    "<open-evaluator-model-id>": {
+      "family": "prometheus",
+      "role": "open_evaluator"
+    }
   },
   "base_url_env": "<base-url-environment-variable>",
   "credential_env": "<credential-environment-variable>",
@@ -99,7 +102,7 @@ The private judge configuration supplies the requested model, judge identifier, 
   "maximum_output_tokens": 512,
   "stop_rules": [],
   "timeout": 120,
-  "retry_policy": {"max_retries": 2}
+  "retry_policy": { "max_retries": 2 }
 }
 ```
 
@@ -118,6 +121,17 @@ uv run --project experiments agentic-cogwriter-score \
 ```
 
 The pointwise record follows the five-dimension contract in [`protocol.md`](../docs/experiments/protocol.md). Native WritingBench scoring uses one criterion-level record per checklist item and accepts only integer scores from 1 to 10; aggregation computes averages later. Invalid JSON, missing dimensions, scores outside the task's range, and evidence quotes absent from the output or supplied context are rejected. The configured retry count bounds every additional API call, and every attempt keeps the same prompt and decoding payload.
+
+Run one HelloBench-native judgment with the `native-checklist` task. The scorer makes one judge request for the prompt and writes one JSON Lines record containing every checklist item's `checklist_id`, `reason`, and `evaluation_score`:
+
+```bash
+uv run --project experiments agentic-cogwriter-score \
+  --run-dir /path/to/completed-hellobench-run \
+  --config /path/to/private-hellobench-config.json \
+  --task native-checklist
+```
+
+HelloBench accepts only scores of 0, 0.25, 0.5, 0.75, or 1, with checklist IDs covering 0 through `num_checklist - 1`. The scorer writes no run-level average; analysis computes any prompt-level aggregate after validation.
 
 The pairwise command runs both presentations for one unordered pair. The scorer derives the invocation order from `presentation_seed`, records that seed and the derived order mapping in `scores-manifest.json`, and writes two JSON Lines records only after both presentations validate:
 

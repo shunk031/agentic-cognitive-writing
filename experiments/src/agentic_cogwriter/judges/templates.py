@@ -24,8 +24,13 @@ def _prompt_body(text: str) -> str:
                 "Judge prompt template header comment is unterminated"
             )
         index += 1
+        if index < len(lines) and not lines[index].strip():
+            index += 1
     body = "\n".join(lines[index:])
-    if text.endswith("\n"):
+    omit_terminal_newline = (
+        "Upstream USER_PROMPT EOF: no final newline" in lines[:index]
+    )
+    if text.endswith("\n") and not omit_terminal_newline:
         body += "\n"
     if not body.strip():
         raise JudgeConfigurationError("Judge prompt template has no prompt body")

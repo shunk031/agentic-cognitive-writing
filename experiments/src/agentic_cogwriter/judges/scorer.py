@@ -14,6 +14,7 @@ from ..runner.hashing import sha256_bytes, sha256_file, sha256_json
 from .config import JudgeConfig
 from .engine import (
     JudgeResult,
+    judge_native_checklist,
     judge_native_pointwise,
     judge_pairwise,
     judge_pointwise,
@@ -80,8 +81,8 @@ def _generator_evidence(manifest: Mapping[str, Any]) -> tuple[str, str]:
     return model_id, family
 
 
-def _native_criteria(run: RunArtifacts) -> tuple[dict[str, str], ...]:
-    """Validate the WritingBench checklist before making any native calls."""
+def _writingbench_criteria(run: RunArtifacts) -> tuple[dict[str, str], ...]:
+    """Validate the WritingBench checklist before making native calls."""
 
     inputs = run.manifest.get("inputs")
     benchmark_name = (
@@ -111,6 +112,25 @@ def _native_criteria(run: RunArtifacts) -> tuple[dict[str, str], ...]:
             raise RunArtifactError("WritingBench native checklist has invalid values")
         criteria.append({key: criterion[key] for key in required})
     return tuple(criteria)
+
+
+def _hellobench_checklists(run: RunArtifacts) -> tuple[str, ...]:
+    """Validate the HelloBench string checklist before its single native call."""
+
+    inputs = run.manifest.get("inputs")
+    benchmark_name = (
+        inputs.get("benchmark_name") if isinstance(inputs, Mapping) else None
+    )
+    if benchmark_name != "HelloBench":
+        raise RunArtifactError("native-checklist scoring requires a HelloBench run")
+    payload = run.native_payload
+    if not isinstance(payload, list) or not payload:
+        raise RunArtifactError("HelloBench run manifest needs a native checklist")
+    if not all(isinstance(item, str) and item.strip() for item in payload):
+        raise RunArtifactError(
+            "HelloBench native checklist must contain non-empty strings"
+        )
+    return tuple(payload)
 
 
 def _prompt_parts(path: Path) -> tuple[str, str]:
@@ -401,7 +421,7 @@ def score_run(
                 model=model,
                 prompt_cache_key=prompt_cache_key,
             )
-            for criterion in _native_criteria(first)
+            for criterion in _writingbench_criteria(first)
         )
         family_audit = _family_audit(config, results[0], first)
         for result in results[1:]:
@@ -417,6 +437,30 @@ def score_run(
             (first,),
             results,
             family_audit,
+        )
+
+    if config.task == "native-checklist":
+        if compare_run_dir is not None:
+            raise RunArtifactError(
+                "native-checklist scoring does not accept a comparison run"
+            )
+        result = judge_native_checklist(
+            config,
+            instruction=first.assignment,
+            output=first.output,
+            checklists=_hellobench_checklists(first),
+            prompt_id=first.prompt_id,
+            blind_condition_id=first.blind_condition_id,
+            platform=first.platform,
+            model=model,
+            prompt_cache_key=prompt_cache_key,
+        )
+        return _write_score_artifacts(
+            (output_path or first.run_dir / "scores.jsonl").resolve(),
+            config,
+            (first,),
+            (result,),
+            _family_audit(config, result, first),
         )
 
     if compare_run_dir is None:

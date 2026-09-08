@@ -47,9 +47,10 @@ MANIFEST_FIELDS = (
     "requested_output_constraints",
     "hash",
 )
-# WritingBench is the only checked-in manifest whose native evaluator payload is
-# materialized; keeping the base tuple unchanged preserves the other manifests.
+# Native evaluator payloads are optional at the manifest schema level and are
+# validated against the named benchmark below.
 WRITINGBENCH_MANIFEST_FIELDS = (*MANIFEST_FIELDS[:-1], "native_payload", "hash")
+HELLOBENCH_MANIFEST_FIELDS = WRITINGBENCH_MANIFEST_FIELDS
 
 EXPECTED_COUNTS = {
     "writingbench": 1000,
@@ -134,10 +135,7 @@ def hash_manifest_row(row: dict[str, Any]) -> str:
 def validate_manifest_row(row: dict[str, Any]) -> None:
     """Validate one row against the experiment prompt-manifest contract."""
 
-    if set(row) not in (
-        set(MANIFEST_FIELDS),
-        set(WRITINGBENCH_MANIFEST_FIELDS),
-    ):
+    if set(row) not in (set(MANIFEST_FIELDS), set(WRITINGBENCH_MANIFEST_FIELDS)):
         raise ValueError(f"manifest fields are invalid, got {sorted(row)!r}")
     for field in ("prompt_id", "benchmark_name", "source_version", "prompt_text"):
         if not isinstance(row[field], str) or not row[field]:
@@ -178,8 +176,20 @@ def validate_manifest_row(row: dict[str, Any]) -> None:
                 raise ValueError(
                     "WritingBench checklist values must be non-empty strings"
                 )
+    elif row["benchmark_name"] == "HelloBench":
+        if set(row) != set(HELLOBENCH_MANIFEST_FIELDS):
+            raise ValueError(
+                "HelloBench rows must include the native_payload checklist"
+            )
+        native_payload = row["native_payload"]
+        if not isinstance(native_payload, list) or not native_payload:
+            raise ValueError("HelloBench native_payload must be a non-empty list")
+        if not all(isinstance(item, str) and item.strip() for item in native_payload):
+            raise ValueError("HelloBench native_payload must contain non-empty strings")
     elif "native_payload" in row:
-        raise ValueError("native_payload is only supported for WritingBench rows")
+        raise ValueError(
+            "native_payload is only supported for WritingBench and HelloBench rows"
+        )
     if not isinstance(row["hash"], str) or len(row["hash"]) != 64:
         raise ValueError("hash must be a 64-character SHA-256 hex digest")
     if row["hash"] != hash_manifest_row(row):
@@ -331,6 +341,28 @@ def build_hellobench(source_paths: Iterable[Path]) -> list[dict[str, Any]]:
                 isinstance(item, str) for item in constraints
             ):
                 raise ValueError(f"HelloBench requirements are invalid for {source_id}")
+            checklists = source_row.get("checklists")
+            if (
+                not isinstance(checklists, list)
+                or not checklists
+                or not all(
+                    isinstance(item, str) and item.strip() for item in checklists
+                )
+            ):
+                raise ValueError(f"HelloBench checklists are invalid for {source_id}")
+            if not isinstance(source_row.get("formatted_checklists"), str) or not (
+                source_row["formatted_checklists"].strip()
+            ):
+                raise ValueError(
+                    f"HelloBench formatted_checklists are invalid for {source_id}"
+                )
+            num_checklist = source_row.get("num_checklist")
+            if (
+                isinstance(num_checklist, bool)
+                or not isinstance(num_checklist, int)
+                or num_checklist != len(checklists)
+            ):
+                raise ValueError(f"HelloBench num_checklist is invalid for {source_id}")
             if not constraints:
                 constraints = ["No separate output constraints; follow prompt_text."]
             rows.append(
@@ -340,6 +372,7 @@ def build_hellobench(source_paths: Iterable[Path]) -> list[dict[str, Any]]:
                     source_version=f"Quehry/HelloBench@{HELLOBENCH_COMMIT}",
                     prompt_text=prompt_text,
                     requested_output_constraints=constraints,
+                    native_payload=checklists,
                 )
             )
     return rows
@@ -445,6 +478,15 @@ def provenance(observed_dolomites_counts: dict[str, int]) -> dict[str, Any]:
                     }
                     for source in HELLOBENCH_FILES
                 ],
+                "native_payload": {
+                    "source_fields": [
+                        "checklists",
+                        "formatted_checklists",
+                        "num_checklist",
+                    ],
+                    "manifest_field": "native_payload",
+                    "shape": "non-empty list of non-empty strings",
+                },
                 "license": "MIT",
                 "redistribution": (
                     "Prompt manifest only; source files are acquired by the script."
