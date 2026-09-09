@@ -12,7 +12,7 @@ docker build \
   --file experiments/docker/Dockerfile .
 ```
 
-Run `uv run --package agentic-cogwriter agentic-cogwriter-runner` with the same mounts as `run.sh`. The image includes both pinned CLIs, and the runner selects the platform from the experiment arguments:
+Run `uv run --package agentic-cogwriter agentic-cogwriter-runner` with the same individual provider-file mounts as `run.sh`. Resolve each existing host provider file with `readlink -f` before adding its read-only mount. The image includes both pinned CLIs, and the runner selects the platform from the experiment arguments:
 
 ```bash
 docker run --rm --init \
@@ -20,10 +20,10 @@ docker run --rm --init \
   --user "$(id -u):$(id -g)" \
   --workdir /workspace \
   --mount "type=bind,src=$PWD,dst=/workspace" \
-  --mount "type=bind,src=$HOME/.codex/config.toml,dst=/home/cog-writer-agent/.codex/config.toml,readonly" \
+  --mount "type=bind,src=$(readlink -f "$HOME/.codex/config.toml"),dst=/home/cog-writer-agent/.codex/config.toml,readonly" \
   --env-file "$PWD/experiments/docker/provider.env" \
   agentic-cognitive-writing-experiment:local \
   uv run --package agentic-cogwriter agentic-cogwriter-runner --help
 ```
 
-Add `--mount "type=bind,src=/path/to/ca-bundle.pem,dst=/run/user-ca.pem,readonly"` only if your network requires an additional proxy CA. Pass standard proxy variables with Docker's `--env NAME` form only if your network requires proxy forwarding. Provide provider credentials via the gitignored env file and pass them only at run time.
+Add the matching `auth.json` or `.credentials.json` mount when the file exists. Add `--mount "type=bind,src=/path/to/ca-bundle.pem,dst=/run/user-ca.pem,readonly"` only if your network requires an additional proxy CA. Pass standard proxy variables with Docker's `--env NAME` form only if your network requires proxy forwarding. Provide provider credentials via the gitignored env file and pass them only at run time.

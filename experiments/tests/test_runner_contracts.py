@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
+import os
 import shutil
+import stat
 import subprocess
+import time
 import tomllib
 from dataclasses import replace
 from pathlib import Path
@@ -34,7 +38,11 @@ from agentic_cogwriter.runner.execution import (
     reject_retrieval,
 )
 from agentic_cogwriter.runner.manifest import PromptRecord
-from agentic_cogwriter.runner.runner import ExperimentRunner, SessionSnapshot
+from agentic_cogwriter.runner.runner import (
+    ExperimentRunner,
+    SessionSnapshot,
+    _synthesized_codex_config,
+)
 from agentic_cogwriter.runner.trace import TraceValidationError, validate_trace
 
 WRITING_TRACE_PROCESSES = (
@@ -60,6 +68,18 @@ SINGLE_TURN_CONTRACT = (
 )
 
 
+pytestmark = pytest.mark.usefixtures(  # noqa: V107
+    "_keep_generator_config_out_of_system_temp"
+)
+
+
+@pytest.fixture  # noqa: V103
+def _keep_generator_config_out_of_system_temp(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
+
+
 def _runtime_values() -> dict[str, object]:
     return {
         "codex_generator_model": "gpt-test",
@@ -70,6 +90,7 @@ def _runtime_values() -> dict[str, object]:
         "generator_system_and_condition_prompts": "frozen",
         "judge_prompts_and_json_schemas": "frozen",
         "temperature": 0,
+        "codex_reasoning_effort": "xhigh",
         "top_p_or_equivalent": 1,
         "maximum_output_tokens": 100,
         "stop_rules": [],
@@ -211,26 +232,69 @@ def _runner(tmp_path: Path, config: RuntimeConfig | None = None, **kwargs):
 )
 def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     platform: str,
     variable: str,
     allowlist: tuple[str, ...],
 ) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
     source_root = tmp_path / "host-provider-config"
     source_root.mkdir()
     for relative in (*allowlist, "AGENTS.md", "CLAUDE.md", "settings.json"):
+        if platform == "codex" and relative == "config.toml":
+            continue
         (source_root / relative).write_text(relative, encoding="utf-8")
+    if platform == "codex":
+        (source_root / "config.toml").write_text(
+            """
+model_provider = "test-provider"
+model_reasoning_effort = "host-value"
+personality = "host personality"
+instructions = "host instructions"
+model_instructions_file = "host-instructions.md"
+web_search = "live"
+
+[agents]
+reviewer = "host-agent"
+
+[mcp_servers.host]
+command = "host-mcp"
+
+[features]
+unstable = true
+
+[model_providers.test-provider]
+name = "test-provider"
+base_url = "https://provider.invalid"
+wire_api = "responses"
+requires_openai_auth = true
+http_headers = { "X-Header" = "header-value" }
+env_http_headers = { "X-Env-Header" = "env-value" }
+query_params = { "api-version" = "version-value" }
+
+[model_providers.test-provider.auth]
+command = "provider-auth"
+args = ["--token", "token-value"]
+refresh_interval_ms = 120000
+""".strip()
+            + "\n",
+            encoding="utf-8",
+        )
     (source_root / "plugins" / "ignored.plugin").mkdir(parents=True)
     (source_root / "plugins" / "ignored.plugin" / "manifest.json").write_text(
         "ignored", encoding="utf-8"
     )
     observed_config_dirs: list[Path] = []
     observed_config_files: list[set[str]] = []
+    observed_config_modes: list[int] = []
+    observed_config_contents: list[dict[str, object]] = []
 
     class InspectingExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
             assert env is not None
             config_root = Path(env[variable])
             observed_config_dirs.append(config_root)
+            observed_config_modes.append(stat.S_IMODE(config_root.stat().st_mode))
             observed_config_files.append(
                 {
                     path.relative_to(config_root).as_posix()
@@ -238,6 +302,12 @@ def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
                     if path.is_file()
                 }
             )
+            if platform == "codex":
+                observed_config_contents.append(
+                    tomllib.loads(
+                        (config_root / "config.toml").read_text(encoding="utf-8")
+                    )
+                )
             return super().run(
                 command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
             )
@@ -257,6 +327,31 @@ def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
     assert executor.environments[0] is not None
     assert executor.environments[0][variable] == str(config_root.resolve())
     assert observed_config_files == [set(allowlist)]
+    assert config_root == (tmp_path / "runs" / ".generator-config" / result.run_id)
+    assert observed_config_modes == [0o700]
+    if platform == "codex":
+        assert observed_config_contents == [
+            {
+                "model_provider": "test-provider",
+                "model_reasoning_effort": "xhigh",
+                "model_providers": {
+                    "test-provider": {
+                        "name": "test-provider",
+                        "base_url": "https://provider.invalid",
+                        "wire_api": "responses",
+                        "requires_openai_auth": True,
+                        "http_headers": {"X-Header": "header-value"},
+                        "env_http_headers": {"X-Env-Header": "env-value"},
+                        "query_params": {"api-version": "version-value"},
+                        "auth": {
+                            "command": "provider-auth",
+                            "args": ["--token", "token-value"],
+                            "refresh_interval_ms": 120000,
+                        },
+                    }
+                },
+            }
+        ]
     assert config_root not in result.run_dir.parents
     assert result.run_dir not in config_root.parents
     assert not config_root.exists()
@@ -279,22 +374,32 @@ def test_run_uses_per_run_generator_config_and_copies_only_allowlist(
 )
 def test_run_removes_generator_config_after_failure(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     platform: str,
     variable: str,
     allowlist: tuple[str, ...],
 ) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
     source_root = tmp_path / "host-provider-config"
     source_root.mkdir()
     for relative in allowlist:
+        if platform == "codex" and relative == "config.toml":
+            (source_root / relative).write_text(
+                'model_provider = "test"\n\n[model_providers.test]\nname = "test"\n',
+                encoding="utf-8",
+            )
+            continue
         (source_root / relative).write_text(relative, encoding="utf-8")
     observed_config_dirs: list[Path] = []
     observed_config_files: list[set[str]] = []
+    observed_config_modes: list[int] = []
 
     class InspectingExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
             assert env is not None
             config_root = Path(env[variable])
             observed_config_dirs.append(config_root)
+            observed_config_modes.append(stat.S_IMODE(config_root.stat().st_mode))
             observed_config_files.append(
                 {
                     path.relative_to(config_root).as_posix()
@@ -325,6 +430,10 @@ def test_run_removes_generator_config_after_failure(
 
     run_dir = tmp_path / "runs" / "WritingBench" / "A1" / platform / "failure"
     assert observed_config_files == [set(allowlist)]
+    assert observed_config_dirs[0] == (
+        tmp_path / "runs" / ".generator-config" / "failure"
+    )
+    assert observed_config_modes == [0o700]
     assert run_dir not in observed_config_dirs[0].parents
     assert observed_config_dirs[0] not in run_dir.parents
     assert not observed_config_dirs[0].exists()
@@ -338,16 +447,22 @@ def test_run_removes_generator_config_after_failure(
 def test_run_removes_generator_config_when_preflight_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
     source_root = tmp_path / "host-provider-config"
     source_root.mkdir()
-    (source_root / "config.toml").write_text("model = 'test'", encoding="utf-8")
+    (source_root / "config.toml").write_text(
+        'model_provider = "test"\n\n[model_providers.test]\nname = "test"\n',
+        encoding="utf-8",
+    )
     (source_root / "auth.json").write_text("{}", encoding="utf-8")
     runner = _runner(tmp_path / "runs", codex_home=source_root)
     observed_config_dirs: list[Path] = []
     prepare = runner._prepare_generator_environment
 
-    def capture_config_dir(platform: str) -> tuple[Path, dict[str, str]]:
-        config_dir, environment = prepare(platform)
+    def capture_config_dir(
+        platform: str, *, run_id: str, lock_file=None
+    ) -> tuple[Path, dict[str, str]]:
+        config_dir, environment = prepare(platform, run_id=run_id, lock_file=lock_file)
         observed_config_dirs.append(config_dir)
         return config_dir, environment
 
@@ -368,9 +483,218 @@ def test_run_removes_generator_config_when_preflight_fails(
     assert not observed_config_dirs[0].exists()
 
 
-def test_codex_session_snapshot_uses_the_run_generator_config_home(
+def test_generator_config_collision_does_not_remove_existing_directory(
     tmp_path: Path,
 ) -> None:
+    output_root = tmp_path / "runs"
+    runner = _runner(output_root)
+    existing_root = output_root / ".generator-config" / "collision"
+    existing_root.mkdir(parents=True)
+    sentinel = existing_root / "sentinel"
+    sentinel.write_text("keep", encoding="utf-8")
+
+    with pytest.raises(FileExistsError):
+        runner._prepare_generator_environment("codex", run_id="collision")
+
+    assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
+def test_generator_config_sweep_rejects_symlinked_parent(
+    tmp_path: Path,
+) -> None:
+    output_root = tmp_path / "runs"
+    output_root.mkdir()
+    outside_root = tmp_path / "outside-generator-config"
+    outside_root.mkdir()
+    config_parent = output_root / ".generator-config"
+    config_parent.symlink_to(outside_root, target_is_directory=True)
+    runner = _runner(output_root)
+
+    with pytest.raises(ConfigurationError, match="symlink"):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    assert not (output_root / "WritingBench").exists()
+
+
+def test_run_refuses_when_generator_config_lock_is_held(
+    tmp_path: Path,
+) -> None:
+    output_root = tmp_path / "runs"
+    config_parent = output_root / ".generator-config"
+    config_parent.mkdir(parents=True)
+    lock_path = config_parent / ".lock"
+    runner = _runner(output_root)
+
+    with lock_path.open("a+") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        with pytest.raises(ConfigurationError, match="another run holds"):
+            runner.run_prompt(
+                _prompt(), condition_id="A1", platform="codex", run_id="locked"
+            )
+
+    assert not (output_root / "WritingBench" / "A1" / "codex" / "locked").exists()
+
+
+@pytest.mark.parametrize("target_exists", [True, False])
+def test_generator_config_lock_rejects_symlink(
+    tmp_path: Path, target_exists: bool
+) -> None:
+    output_root = tmp_path / "runs"
+    config_parent = output_root / ".generator-config"
+    config_parent.mkdir(parents=True)
+    outside_lock = tmp_path / "outside.lock"
+    if target_exists:
+        outside_lock.write_text("keep", encoding="utf-8")
+    (config_parent / ".lock").symlink_to(outside_lock)
+    runner = _runner(output_root)
+
+    with pytest.raises(ConfigurationError, match="lock"):
+        runner._acquire_generator_config_lock()
+
+    assert outside_lock.exists() is target_exists
+    if target_exists:
+        assert outside_lock.read_text(encoding="utf-8") == "keep"
+
+
+def test_runner_sweeps_stale_generator_config_before_new_root(
+    tmp_path: Path,
+) -> None:
+    output_root = tmp_path / "runs"
+    stale_root = output_root / ".generator-config" / "stale"
+    stale_root.mkdir(parents=True)
+    (stale_root / "auth.json").write_text("stale", encoding="utf-8")
+    stale_time = time.time() - 60
+    os.utime(stale_root, (stale_time, stale_time))
+    runner = _runner(output_root)
+
+    config_root, _environment = runner._prepare_generator_environment(
+        "claude-code", run_id="fresh"
+    )
+    try:
+        assert not stale_root.exists()
+        assert config_root.exists()
+    finally:
+        shutil.rmtree(config_root, ignore_errors=True)
+
+
+def test_codex_config_rejects_missing_selected_provider_table(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "host-provider-config"
+    source_root.mkdir()
+    (source_root / "config.toml").write_text(
+        'model_provider = "missing"\n\n[model_providers.other]\nname = "other"\n',
+        encoding="utf-8",
+    )
+    executor = _RetryExecutor([_result()])
+    runner = _runner(tmp_path / "runs", codex_home=source_root, executor=executor)
+
+    with pytest.raises(ConfigurationError, match="missing.*model_providers"):
+        runner._prepare_generator_environment("codex", run_id="missing-provider")
+
+    assert executor.calls == []
+    assert not (tmp_path / "runs" / ".generator-config" / "missing-provider").exists()
+
+
+def test_codex_config_rejects_unallowlisted_provider_key(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "host-provider-config"
+    source_root.mkdir()
+    (source_root / "config.toml").write_text(
+        """
+model_provider = "test"
+
+[model_providers.test]
+name = "test"
+experimental_bearer_token = "secret"
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    runner = _runner(tmp_path / "runs", codex_home=source_root)
+
+    with pytest.raises(ConfigurationError, match="experimental_bearer_token"):
+        runner._prepare_generator_environment("codex", run_id="rejected-key")
+
+    assert not (tmp_path / "runs" / ".generator-config" / "rejected-key").exists()
+
+
+def test_synthesized_codex_config_drops_known_provider_capabilities() -> None:
+    source_config = {
+        "model_provider": "test",
+        "model_providers": {
+            "test": {
+                "name": "test",
+                "supports_standalone_web_search": True,
+                "supports_websockets": False,
+            }
+        },
+    }
+
+    parsed = tomllib.loads(_synthesized_codex_config(source_config, "xhigh"))
+
+    assert parsed["model_providers"]["test"] == {"name": "test"}
+
+
+def test_synthesized_codex_config_round_trips_escaped_unicode_values() -> None:
+    source_config = {
+        "model_provider": "quoted-provider",
+        "model_providers": {
+            "quoted-provider": {
+                "name": 'name "quoted"',
+                "base_url": r"https://provider.invalid/path\\segment",
+                "wire_api": "responses",
+                "env_key": "TOKEN_日本",
+                "requires_openai_auth": True,
+                "http_headers": {"X-Header": 'value "quoted" \\ 日本'},
+                "env_http_headers": {"X-Env": "環境"},
+                "query_params": {"q": "a\\b"},
+                "auth": {
+                    "command": r"auth\\helper",
+                    "args": ["--label", '値 "quoted"'],
+                    "refresh_interval_ms": 42,
+                },
+            }
+        },
+    }
+
+    rendered = _synthesized_codex_config(source_config, "xhigh")
+    parsed = tomllib.loads(rendered)
+
+    assert parsed == {
+        "model_provider": "quoted-provider",
+        "model_reasoning_effort": "xhigh",
+        "model_providers": {
+            "quoted-provider": source_config["model_providers"]["quoted-provider"]
+        },
+    }
+
+
+def test_run_rejects_generator_config_under_system_temp(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path))
+    executor = _RetryExecutor([_result()])
+    runner = _runner(tmp_path / "runs", executor=executor)
+    expected_root = tmp_path / "runs" / ".generator-config" / "guard"
+
+    with pytest.raises(
+        ConfigurationError,
+        match="system temporary directory",
+    ) as error:
+        runner.run_prompt(
+            _prompt(), condition_id="A1", platform="codex", run_id="guard"
+        )
+
+    assert str(expected_root) in str(error.value)
+    assert executor.calls == []
+
+
+def test_codex_session_snapshot_uses_the_run_generator_config_home(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
     host_codex_home = tmp_path / "host-codex"
     host_sessions = host_codex_home / "sessions"
     host_sessions.mkdir(parents=True)
@@ -1460,6 +1784,10 @@ def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> No
         "judge_families": "runtime-verified in the score manifest",
     }
     assert manifest["models_and_execution"]["generator_model_family"] == "gpt"
+    assert (
+        manifest["models_and_execution"]["decoding"]["codex_reasoning_effort"]
+        == "xhigh"
+    )
 
 
 def test_runner_rejects_unmapped_generator_model_before_starting_run(

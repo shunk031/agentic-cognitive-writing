@@ -4,10 +4,10 @@
 # @brief Run the experiment runner inside the disposable Docker environment.
 # @description
 #   The script builds the pinned image on first use, mounts the repository
-#   read-write at /workspace, mounts available host Codex and Claude Code
-#   configuration directories read-only at the container user's configuration
-#   paths, and mounts host runs/ at /run-output. The runner copies only its
-#   provider-file allowlist into each run-local configuration directory.
+#   read-write at /workspace, mounts available allowlisted provider files
+#   read-only at the container user's configuration paths, and mounts host
+#   runs/ at /run-output. The runner materializes only its provider-file
+#   allowlist into each run-local configuration directory.
 #   Provider values come from an optional runtime env file; common proxy
 #   variables pass through when set.
 #   When both auth options are set, the script generates a temporary helper
@@ -90,6 +90,28 @@ function append_proxy_env() {
     fi
 }
 
+# @description Resolve existing provider files on the host and mount them read-only in the container.
+# @arg $1 host_root Host provider configuration directory.
+# @arg $2 container_root Container provider configuration directory.
+# @arg $3 provider_files Allowlisted provider file names.
+function append_provider_file_mounts() {
+    local host_root="$1"
+    local container_root="$2"
+    shift 2
+
+    local provider_file source resolved_source
+    for provider_file in "$@"; do
+        source="${host_root}/${provider_file}"
+        [[ -e "${source}" ]] || continue
+        resolved_source="$(readlink -f -- "${source}")" || die "cannot resolve provider file ${source}"
+        [[ -f "${resolved_source}" ]] || die "provider path is not a regular file: ${source}"
+        docker_args+=(
+            --mount
+            "type=bind,src=${resolved_source},dst=${container_root}/${provider_file},readonly"
+        )
+    done
+}
+
 while (($# > 0)); do
     case "$1" in
         --env-file)
@@ -142,8 +164,8 @@ while (($# > 0)); do
 done
 
 [[ -n "${HOME:-}" ]] || die 'HOME must identify the host home directory'
-host_codex_home="${HOME}/.codex"
-host_claude_home="${HOME}/.claude"
+host_codex_home="${CODEX_HOME:-$HOME/.codex}"
+host_claude_home="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 host_output_root="${repo_root}/runs"
 
 if [[ -n "${env_file}" ]]; then
@@ -180,19 +202,14 @@ docker_args=(
     --env HOME=/home/cog-writer-agent
 )
 
-if [[ -d "${host_codex_home}" ]]; then
-    docker_args+=(
-        --mount
-        "type=bind,src=${host_codex_home},dst=/home/cog-writer-agent/.codex,readonly"
-    )
-fi
-
-if [[ -d "${host_claude_home}" ]]; then
-    docker_args+=(
-        --mount
-        "type=bind,src=${host_claude_home},dst=/home/cog-writer-agent/.claude,readonly"
-    )
-fi
+append_provider_file_mounts \
+    "${host_codex_home}" \
+    /home/cog-writer-agent/.codex \
+    config.toml auth.json
+append_provider_file_mounts \
+    "${host_claude_home}" \
+    /home/cog-writer-agent/.claude \
+    .credentials.json
 
 platform=''
 output_root_set=false

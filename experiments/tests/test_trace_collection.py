@@ -16,6 +16,17 @@ from agentic_cogwriter.runner.execution import ExecutionResult
 from agentic_cogwriter.runner.manifest import PromptRecord
 from agentic_cogwriter.runner.runner import ExperimentRunner
 
+pytestmark = pytest.mark.usefixtures(  # noqa: V107
+    "_keep_generator_config_out_of_system_temp"
+)
+
+
+@pytest.fixture  # noqa: V103
+def _keep_generator_config_out_of_system_temp(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
+
 
 def _plugin_source(tmp_path):
     root = tmp_path / "plugin-source"
@@ -159,6 +170,7 @@ def _config():
             "generator_system_and_condition_prompts": "frozen",
             "judge_prompts_and_json_schemas": "frozen",
             "temperature": 0,
+            "codex_reasoning_effort": "xhigh",
             "top_p_or_equivalent": 1,
             "maximum_output_tokens": 100,
             "stop_rules": [],
