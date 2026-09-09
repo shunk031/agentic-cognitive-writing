@@ -38,8 +38,7 @@ Read these before choosing a process:
 - `.writing/draft.md`
 - relevant files in `.writing/memory/`
 - the latest entries in `.writing/trace/process.jsonl`
-- `plugin/skills/agentic-cog-writer/references/goals-format.md`
-- `plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md`
+- `references/trace-jsonl-schema.md`
 
 Leave `goals.md` untouched, whether it exists or not.
 

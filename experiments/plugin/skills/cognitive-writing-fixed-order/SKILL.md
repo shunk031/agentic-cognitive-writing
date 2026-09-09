@@ -39,8 +39,8 @@ Read these before the first process:
 - `.writing/draft.md`
 - relevant files in `.writing/memory/`
 - the latest entries in `.writing/trace/process.jsonl`
-- `plugin/skills/agentic-cog-writer/references/goals-format.md`
-- `plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md`
+- `references/goals-format.md`
+- `references/trace-jsonl-schema.md`
 
 If `assignment.md` is missing or underspecified, ask for:
 

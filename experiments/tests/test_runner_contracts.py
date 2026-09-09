@@ -164,10 +164,6 @@ def _plugin_source(tmp_path: Path) -> Path:
         path = root / "skills" / skill / "SKILL.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(skill)
-    for reference in ("goals-format.md", "trace-jsonl-schema.md"):
-        path = root / "skills" / "agentic-cog-writer" / "references" / reference
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(reference)
     return root
 
 
@@ -1078,16 +1074,15 @@ def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6(
     source_root = tmp_path / "plugin-source"
     files = {
         f"skills/{skill_name}/SKILL.md": "experiment skill\n",
-        "skills/agentic-cog-writer/references/goals-format.md": (
-            "goals reference\n"
-        ),
-        "skills/agentic-cog-writer/references/trace-jsonl-schema.md": (
-            "trace schema\n"
-        ),
+        f"skills/{skill_name}/references/trace-jsonl-schema.md": "trace schema\n",
         "skills/planning/SKILL.md": "planning role\n",
         "skills/translating/SKILL.md": "translating role\n",
         "skills/reviewing/SKILL.md": "reviewing role\n",
     }
+    if condition_id == "A6":
+        files[f"skills/{skill_name}/references/goals-format.md"] = (
+            "goals reference\n"
+        )
     for relative, content in files.items():
         path = source_root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1122,11 +1117,15 @@ def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6(
     staged_files = manifest["staged_files"]
     assert set(staged_files) == {
         f"plugin/skills/{skill_name}/SKILL.md",
-        "plugin/skills/agentic-cog-writer/references/goals-format.md",
-        "plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md",
+        f"plugin/skills/{skill_name}/references/trace-jsonl-schema.md",
         "plugin/skills/planning/SKILL.md",
         "plugin/skills/translating/SKILL.md",
         "plugin/skills/reviewing/SKILL.md",
+        *(
+            {f"plugin/skills/{skill_name}/references/goals-format.md"}
+            if condition_id == "A6"
+            else set()
+        ),
     }
     for relative, content in files.items():
         staged = result.run_dir / "workspace" / "plugin" / relative
@@ -1134,6 +1133,83 @@ def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6(
         assert staged_files[f"plugin/{relative}"] == (
             "sha256:" + hashlib.sha256(content.encode()).hexdigest()
         )
+
+
+def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
+    tmp_path: Path,
+) -> None:
+    main_root = tmp_path / "main-plugin"
+    experiment_root = tmp_path / "experiment-plugin"
+    for skill in (
+        "agentic-cog-writer",
+        "planning",
+        "translating",
+        "reviewing",
+    ):
+        shutil.copytree(
+            Path("plugin/skills") / skill,
+            main_root / "skills" / skill,
+        )
+    shutil.copytree(
+        Path("experiments/plugin/skills/cognitive-writing-fixed-order"),
+        experiment_root / "skills" / "cognitive-writing-fixed-order",
+    )
+    wrapper_path = tmp_path / "a6-wrapper.toml"
+    wrapper_path.write_text(
+        "[plugins]\n"
+        f"paths = [{json.dumps(str(main_root))}, {json.dumps(str(experiment_root))}]\n"
+    )
+    condition = replace(load_condition_registry()["A6"], plugin_config=wrapper_path)
+    runner = ExperimentRunner(
+        _config(),
+        output_root=tmp_path / "runs",
+        codex_plugin_root=experiment_root,
+        codex_home=tmp_path / "codex-home",
+    )
+
+    staged_files = runner._stage_codex_plugin(condition, tmp_path / "workspace")
+
+    assert set(staged_files) == {
+        "plugin/skills/cognitive-writing-fixed-order/SKILL.md",
+        "plugin/skills/cognitive-writing-fixed-order/agents/openai.yaml",
+        "plugin/skills/cognitive-writing-fixed-order/evals/evals.json",
+        "plugin/skills/cognitive-writing-fixed-order/references/goals-format.md",
+        "plugin/skills/cognitive-writing-fixed-order/references/trace-jsonl-schema.md",
+        "plugin/skills/planning/SKILL.md",
+        "plugin/skills/planning/agents/openai.yaml",
+        "plugin/skills/reviewing/SKILL.md",
+        "plugin/skills/reviewing/agents/openai.yaml",
+        "plugin/skills/translating/SKILL.md",
+        "plugin/skills/translating/agents/openai.yaml",
+    }
+
+
+def test_experiment_reference_copies_match_agentic_writer_sources() -> None:
+    reference_pairs = (
+        (
+            Path("plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md"),
+            Path(
+                "experiments/plugin/skills/cognitive-writing-no-goal-network/"
+                "references/trace-jsonl-schema.md"
+            ),
+        ),
+        (
+            Path("plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md"),
+            Path(
+                "experiments/plugin/skills/cognitive-writing-fixed-order/"
+                "references/trace-jsonl-schema.md"
+            ),
+        ),
+        (
+            Path("plugin/skills/agentic-cog-writer/references/goals-format.md"),
+            Path(
+                "experiments/plugin/skills/cognitive-writing-fixed-order/"
+                "references/goals-format.md"
+            ),
+        ),
+    )
+    for source, copy in reference_pairs:
+        assert copy.read_bytes() == source.read_bytes()
 
 
 def test_run_records_unique_codex_subagent_spawns(tmp_path: Path) -> None:

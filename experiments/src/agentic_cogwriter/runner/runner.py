@@ -1395,9 +1395,14 @@ class ExperimentRunner:
     def _codex_source_roots(self, condition: ConditionSpec) -> tuple[Path, ...]:
         """Return configured roots from which Codex skill files can be staged."""
 
-        if self.codex_plugin_root is not None:
-            return (self.codex_plugin_root.resolve(),)
-        return self._configured_plugin_paths(condition)
+        configured_roots = self._configured_plugin_paths(condition)
+        if self.codex_plugin_root is None:
+            return configured_roots
+        explicit_root = self.codex_plugin_root.resolve()
+        return (
+            explicit_root,
+            *tuple(root for root in configured_roots if root != explicit_root),
+        )
 
     def _codex_plugin_root(self, condition: ConditionSpec) -> Path:
         """Select the root containing the skill file referenced by Codex."""
@@ -1418,14 +1423,8 @@ class ExperimentRunner:
     )
     _CODEX_DELEGATED_SKILL_DIRECTORIES = {
         "agentic-cog-writer": _CODEX_ROLE_SKILL_DIRECTORIES,
-        "cognitive-writing-no-goal-network": (
-            *_CODEX_ROLE_SKILL_DIRECTORIES,
-            Path("skills") / "agentic-cog-writer" / "references",
-        ),
-        "cognitive-writing-fixed-order": (
-            *_CODEX_ROLE_SKILL_DIRECTORIES,
-            Path("skills") / "agentic-cog-writer" / "references",
-        ),
+        "cognitive-writing-no-goal-network": _CODEX_ROLE_SKILL_DIRECTORIES,
+        "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
     }
 
     def _stage_codex_plugin(
