@@ -1084,6 +1084,7 @@ def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6(
 
     runner = ExperimentRunner(
         _config(),
+        output_root=tmp_path / "runs",
         codex_plugin_root=source_root,
     )
 
