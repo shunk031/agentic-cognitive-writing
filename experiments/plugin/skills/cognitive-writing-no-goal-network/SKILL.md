@@ -38,7 +38,6 @@ Read these before choosing a process:
 - `.writing/draft.md`
 - relevant files in `.writing/memory/`
 - the latest entries in `.writing/trace/process.jsonl`
-- `references/trace-jsonl-schema.md`
 
 Leave `goals.md` untouched, whether it exists or not.
 
@@ -101,7 +100,7 @@ Do not write a script that spawns `codex exec` children. If native delegation is
 
 ## Trace contract
 
-Every process switch must append one valid JSON object to `.writing/trace/process.jsonl`. A process-switch object includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Optional `artifacts` lists project-relative files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts`, when present, is an array of project-relative path strings. Keep the code-formatted role names `Planning`, `Translating`, and `Reviewing` in surrounding prose, but write JSON `process`, `from_process`, and `to_process` values with the lowercase contract tokens `planning`, `translating`, and `reviewing`. Do not write goal fields or experiment-specific fields. For example:
+Every process switch must append one valid JSON object to `.writing/trace/process.jsonl`. `event_type` is `process_switch`; goal events are not written in this condition. A process-switch object includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Optional `artifacts` lists project-relative files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts`, when present, is an array of project-relative path strings. Keep the code-formatted role names `Planning`, `Translating`, and `Reviewing` in surrounding prose, but write JSON `process`, `from_process`, and `to_process` values with the lowercase contract tokens `planning`, `translating`, and `reviewing`. Do not write goal fields or experiment-specific fields. For example:
 
 ```json
 {
