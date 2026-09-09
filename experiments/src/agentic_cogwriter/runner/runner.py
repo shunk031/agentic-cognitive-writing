@@ -9,6 +9,7 @@ import re
 import shutil
 import stat
 import tempfile
+import time
 import tomllib
 import uuid
 from collections.abc import Callable, Mapping
@@ -134,6 +135,83 @@ def _safe_component(value: str) -> str:
     return "".join(
         char if char.isalnum() or char in {"-", "_", "."} else "_" for char in value
     )
+
+
+_TOML_BARE_KEY = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def _toml_key(value: str, *, context: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ConfigurationError(f"{context} must be a non-empty string")
+    if _TOML_BARE_KEY.fullmatch(value):
+        return value
+    return json.dumps(value)
+
+
+def _toml_scalar(value: Any, *, context: str) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, str):
+        return json.dumps(value)
+    raise ConfigurationError(
+        f"{context} must be a string, boolean, or integer in the provider config"
+    )
+
+
+def _synthesized_codex_config(
+    source_config: Mapping[str, Any], reasoning_effort: str
+) -> str:
+    provider_name = source_config.get("model_provider")
+    if not isinstance(provider_name, str) or not provider_name:
+        raise ConfigurationError("Codex config must name a non-empty model_provider")
+    providers = source_config.get("model_providers")
+    if not isinstance(providers, Mapping) or provider_name not in providers:
+        raise ConfigurationError(
+            "Codex config model_provider "
+            f"{provider_name!r} has no matching model_providers table"
+        )
+    provider = providers[provider_name]
+    if not isinstance(provider, Mapping):
+        raise ConfigurationError(
+            f"Codex config model provider {provider_name!r} must be a table"
+        )
+
+    provider_key = _toml_key(provider_name, context="Codex config model_provider")
+    lines = [
+        f"model_provider = {_toml_scalar(provider_name, context='model_provider')}",
+        "model_reasoning_effort = "
+        f"{_toml_scalar(reasoning_effort, context='model_reasoning_effort')}",
+        "",
+        f"[model_providers.{provider_key}]",
+    ]
+    auth = provider.get("auth")
+    for key, value in provider.items():
+        if key == "auth":
+            continue
+        if isinstance(value, Mapping):
+            raise ConfigurationError(
+                f"Codex provider key {key!r} has an unsupported nested table"
+            )
+        lines.append(
+            f"{_toml_key(key, context='Codex provider key')} = "
+            f"{_toml_scalar(value, context=f'Codex provider key {key!r}')}"
+        )
+    if auth is not None:
+        if not isinstance(auth, Mapping):
+            raise ConfigurationError("Codex provider auth must be a table")
+        lines.extend(["", f"[model_providers.{provider_key}.auth]"])
+        for key, value in auth.items():
+            if isinstance(value, Mapping):
+                raise ConfigurationError(
+                    f"Codex provider auth key {key!r} has an unsupported nested table"
+                )
+            lines.append(
+                f"{_toml_key(key, context='Codex provider auth key')} = "
+                f"{_toml_scalar(value, context=f'Codex provider auth key {key!r}')}"
+            )
+    return "\n".join(lines) + "\n"
 
 
 def _validate_final_product(
@@ -275,6 +353,7 @@ class ExperimentRunner:
         claude_config_dir: Path | None = None,
     ):
         self.runtime_config = runtime_config
+        self._process_started_at = time.time()
         self.output_root = output_root.resolve()
         self.executor = executor or SubprocessExecutor()
         self.conditions = condition_registry or load_condition_registry()
@@ -320,9 +399,12 @@ class ExperimentRunner:
                 f"{temporary_root}"
             )
 
+        self._sweep_stale_generator_configs()
         source_root = self.codex_home if platform == "codex" else self.claude_config_dir
+        created_config_root = False
         try:
-            config_root.mkdir(mode=0o700, parents=True)
+            config_root.mkdir(mode=0o700, parents=True, exist_ok=False)
+            created_config_root = True
             for filename in _GENERATOR_CONFIG_ALLOWLIST[platform]:
                 source = source_root / filename
                 try:
@@ -334,18 +416,71 @@ class ExperimentRunner:
                 if not present:
                     continue
                 try:
-                    shutil.copy2(source, config_root / filename)
+                    destination = config_root / filename
+                    if platform == "codex" and filename == "config.toml":
+                        try:
+                            source_config = tomllib.loads(
+                                source.read_text(encoding="utf-8")
+                            )
+                        except (OSError, tomllib.TOMLDecodeError) as exc:
+                            raise ConfigurationError(
+                                f"Cannot parse Codex config {source}"
+                            ) from exc
+                        destination.write_text(
+                            _synthesized_codex_config(
+                                source_config,
+                                self.runtime_config.codex_reasoning_effort,
+                            ),
+                            encoding="utf-8",
+                        )
+                    else:
+                        shutil.copy2(source, destination)
                 except OSError as exc:
                     raise ConfigurationError(
                         f"Cannot copy provider file {source} to {config_root}"
                     ) from exc
         except Exception:
-            shutil.rmtree(config_root, ignore_errors=True)
+            if created_config_root:
+                shutil.rmtree(config_root, ignore_errors=True)
             raise
 
         child_environment = dict(os.environ)
         child_environment[_GENERATOR_CONFIG_ENV[platform]] = str(config_root.resolve())
         return config_root, child_environment
+
+    def _sweep_stale_generator_configs(self) -> None:
+        """Remove provider roots left by an earlier process invocation."""
+
+        config_parent = self.output_root / ".generator-config"
+        try:
+            entries = tuple(config_parent.iterdir())
+        except FileNotFoundError:
+            return
+        except OSError as exc:
+            raise ConfigurationError(
+                f"Cannot inspect generator configuration root {config_parent}"
+            ) from exc
+
+        for entry in entries:
+            try:
+                entry_stat = entry.lstat()
+            except FileNotFoundError:
+                continue
+            except OSError as exc:
+                raise ConfigurationError(
+                    f"Cannot inspect stale generator configuration {entry}"
+                ) from exc
+            if entry_stat.st_mtime >= self._process_started_at:
+                continue
+            try:
+                if stat.S_ISDIR(entry_stat.st_mode):
+                    shutil.rmtree(entry)
+                else:
+                    entry.unlink()
+            except OSError as exc:
+                raise ConfigurationError(
+                    f"Cannot remove stale generator configuration {entry}"
+                ) from exc
 
     def run_prompt(
         self,
@@ -1273,6 +1408,9 @@ class ExperimentRunner:
                 ),
                 "decoding": {
                     "temperature": self.runtime_config.get("temperature"),
+                    "codex_reasoning_effort": self.runtime_config.get(
+                        "codex_reasoning_effort"
+                    ),
                     "top_p_or_equivalent": self.runtime_config.get(
                         "top_p_or_equivalent"
                     ),

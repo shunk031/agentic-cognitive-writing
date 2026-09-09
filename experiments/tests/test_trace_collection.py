@@ -170,6 +170,7 @@ def _config():
             "generator_system_and_condition_prompts": "frozen",
             "judge_prompts_and_json_schemas": "frozen",
             "temperature": 0,
+            "codex_reasoning_effort": "xhigh",
             "top_p_or_equivalent": 1,
             "maximum_output_tokens": 100,
             "stop_rules": [],

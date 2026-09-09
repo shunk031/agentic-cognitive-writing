@@ -7,6 +7,7 @@
   "generator_system_and_condition_prompts": "REQUIRED_AT_RUNTIME",
   "judge_prompts_and_json_schemas": "REQUIRED_AT_RUNTIME",
   "temperature": "REQUIRED_AT_RUNTIME",
+  "codex_reasoning_effort": "REQUIRED_AT_RUNTIME",
   "top_p_or_equivalent": "REQUIRED_AT_RUNTIME",
   "maximum_output_tokens": "REQUIRED_AT_RUNTIME",
   "stop_rules": "REQUIRED_AT_RUNTIME",

@@ -24,6 +24,7 @@ REQUIRED_RUNTIME_FIELDS = (
     "generator_system_and_condition_prompts",
     "judge_prompts_and_json_schemas",
     "temperature",
+    "codex_reasoning_effort",
     "top_p_or_equivalent",
     "maximum_output_tokens",
     "stop_rules",
@@ -142,6 +143,15 @@ class RuntimeConfig:
         if timeout <= 0:
             raise ConfigurationError("timeout must be positive")
         return timeout
+
+    @property
+    def codex_reasoning_effort(self) -> str:
+        """Return the reasoning effort written into the isolated Codex config."""
+
+        value = self.values.get("codex_reasoning_effort")
+        if not isinstance(value, str) or not value.strip():
+            raise ConfigurationError("codex_reasoning_effort must be a string")
+        return value.strip()
 
     @property
     def retry_count(self) -> int:

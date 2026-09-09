@@ -6,8 +6,8 @@
 #   The script builds the pinned image on first use, mounts the repository
 #   read-write at /workspace, mounts available allowlisted provider files
 #   read-only at the container user's configuration paths, and mounts host
-#   runs/ at /run-output. The runner copies only its provider-file allowlist
-#   into each run-local configuration directory.
+#   runs/ at /run-output. The runner materializes only its provider-file
+#   allowlist into each run-local configuration directory.
 #   Provider values come from an optional runtime env file; common proxy
 #   variables pass through when set.
 #   When both auth options are set, the script generates a temporary helper
@@ -164,8 +164,8 @@ while (($# > 0)); do
 done
 
 [[ -n "${HOME:-}" ]] || die 'HOME must identify the host home directory'
-host_codex_home="${HOME}/.codex"
-host_claude_home="${HOME}/.claude"
+host_codex_home="${CODEX_HOME:-$HOME/.codex}"
+host_claude_home="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 host_output_root="${repo_root}/runs"
 
 if [[ -n "${env_file}" ]]; then
