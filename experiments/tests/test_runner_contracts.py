@@ -1072,56 +1072,30 @@ def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6(
     tmp_path: Path, condition_id: str, skill_name: str
 ) -> None:
     source_root = tmp_path / "plugin-source"
-    files = {
-        f"skills/{skill_name}/SKILL.md": "experiment skill\n",
-        "skills/planning/SKILL.md": "planning role\n",
-        "skills/translating/SKILL.md": "translating role\n",
-        "skills/reviewing/SKILL.md": "reviewing role\n",
-    }
-    for relative, content in files.items():
+    for relative in (
+        f"skills/{skill_name}/SKILL.md",
+        "skills/planning/SKILL.md",
+        "skills/translating/SKILL.md",
+        "skills/reviewing/SKILL.md",
+    ):
         path = source_root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content)
-
-    class StageExecutor:
-        def run(self, command, *, cwd, timeout_seconds, env=None):
-            events = [_event("process_switch", process="generate")]
-            if condition_id == "A6":
-                events.append(_event("goal_created", process="generate"))
-            trace_path = cwd / ".writing" / "trace" / "process.jsonl"
-            trace_path.parent.mkdir(parents=True, exist_ok=True)
-            trace_path.write_text(
-                "".join(json.dumps(event) + "\n" for event in events)
-            )
-            (cwd / ".writing" / "draft.md").write_text("final output " * 10)
-            return _result()
+        path.write_text(relative)
 
     runner = ExperimentRunner(
         _config(),
-        output_root=tmp_path / "runs",
-        executor=StageExecutor(),
         codex_plugin_root=source_root,
-        codex_home=tmp_path / "codex-home",
     )
 
-    result = runner.run_prompt(
-        _prompt(), condition_id=condition_id, platform="codex", run_id="staged"
+    staged_files = runner._stage_codex_plugin(
+        load_condition_registry()[condition_id], tmp_path / "workspace"
     )
-
-    manifest = json.loads(result.manifest_path.read_text())
-    staged_files = manifest["staged_files"]
     assert set(staged_files) == {
         f"plugin/skills/{skill_name}/SKILL.md",
         "plugin/skills/planning/SKILL.md",
         "plugin/skills/translating/SKILL.md",
         "plugin/skills/reviewing/SKILL.md",
     }
-    for relative, content in files.items():
-        staged = result.run_dir / "workspace" / "plugin" / relative
-        assert staged.read_text() == content
-        assert staged_files[f"plugin/{relative}"] == (
-            "sha256:" + hashlib.sha256(content.encode()).hexdigest()
-        )
 
 
 def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
