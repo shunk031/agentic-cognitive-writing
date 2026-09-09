@@ -150,6 +150,10 @@ _CODEX_PROVIDER_SCHEMA = {
     "query_params": "string_map",
     "auth": "table",
 }
+_CODEX_PROVIDER_DROPPED_KEYS = (
+    "supports_standalone_web_search",
+    "supports_websockets",
+)
 _CODEX_AUTH_SCHEMA = {
     "command": "string",
     "args": "string_array",
@@ -246,6 +250,8 @@ def _synthesized_codex_config(
         f"[model_providers.{provider_key}]",
     ]
     for key, value in provider.items():
+        if key in _CODEX_PROVIDER_DROPPED_KEYS:
+            continue
         kind = _CODEX_PROVIDER_SCHEMA.get(key)
         if kind is None:
             raise ConfigurationError(f"Codex provider key {key!r} is not allowed")
@@ -484,7 +490,17 @@ class ExperimentRunner:
         config_parent = self._generator_config_parent()
         lock_path = config_parent / ".lock"
         try:
-            lock_fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
+            lock_fd = os.open(
+                lock_path,
+                os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC,
+                0o600,
+            )
+            if not stat.S_ISREG(os.fstat(lock_fd).st_mode):
+                os.close(lock_fd)
+                lock_fd = -1
+                raise ConfigurationError(
+                    f"Generator configuration lock {lock_path} must be a regular file"
+                )
             lock_file = os.fdopen(lock_fd, "a+", encoding="utf-8")
             fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as exc:

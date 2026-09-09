@@ -535,6 +535,27 @@ def test_run_refuses_when_generator_config_lock_is_held(
     assert not (output_root / "WritingBench" / "A1" / "codex" / "locked").exists()
 
 
+@pytest.mark.parametrize("target_exists", [True, False])
+def test_generator_config_lock_rejects_symlink(
+    tmp_path: Path, target_exists: bool
+) -> None:
+    output_root = tmp_path / "runs"
+    config_parent = output_root / ".generator-config"
+    config_parent.mkdir(parents=True)
+    outside_lock = tmp_path / "outside.lock"
+    if target_exists:
+        outside_lock.write_text("keep", encoding="utf-8")
+    (config_parent / ".lock").symlink_to(outside_lock)
+    runner = _runner(output_root)
+
+    with pytest.raises(ConfigurationError, match="lock"):
+        runner._acquire_generator_config_lock()
+
+    assert outside_lock.exists() is target_exists
+    if target_exists:
+        assert outside_lock.read_text(encoding="utf-8") == "keep"
+
+
 def test_runner_sweeps_stale_generator_config_before_new_root(
     tmp_path: Path,
 ) -> None:
@@ -597,6 +618,23 @@ experimental_bearer_token = "secret"
         runner._prepare_generator_environment("codex", run_id="rejected-key")
 
     assert not (tmp_path / "runs" / ".generator-config" / "rejected-key").exists()
+
+
+def test_synthesized_codex_config_drops_known_provider_capabilities() -> None:
+    source_config = {
+        "model_provider": "test",
+        "model_providers": {
+            "test": {
+                "name": "test",
+                "supports_standalone_web_search": True,
+                "supports_websockets": False,
+            }
+        },
+    }
+
+    parsed = tomllib.loads(_synthesized_codex_config(source_config, "xhigh"))
+
+    assert parsed["model_providers"]["test"] == {"name": "test"}
 
 
 def test_synthesized_codex_config_round_trips_escaped_unicode_values() -> None:
