@@ -177,6 +177,7 @@ pyrightconfig.json
 
 # Repository-specific experiment outputs
 .cache/
+runs/
 # Local Docker experiment environment values.
 experiments/docker/*.env
 experiments/docker/*.pem
