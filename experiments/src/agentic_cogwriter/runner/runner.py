@@ -1413,6 +1413,21 @@ class ExperimentRunner:
             f"Plugin wrapper {condition.plugin_config} has no configured plugin path"
         )
 
+    _CODEX_ROLE_SKILL_DIRECTORIES = tuple(
+        Path("skills") / role for role in ("planning", "translating", "reviewing")
+    )
+    _CODEX_DELEGATED_SKILL_DIRECTORIES = {
+        "agentic-cog-writer": _CODEX_ROLE_SKILL_DIRECTORIES,
+        "cognitive-writing-no-goal-network": (
+            *_CODEX_ROLE_SKILL_DIRECTORIES,
+            Path("skills") / "agentic-cog-writer" / "references",
+        ),
+        "cognitive-writing-fixed-order": (
+            *_CODEX_ROLE_SKILL_DIRECTORIES,
+            Path("skills") / "agentic-cog-writer" / "references",
+        ),
+    }
+
     def _stage_codex_plugin(
         self, condition: ConditionSpec, workspace: Path
     ) -> dict[str, str]:
@@ -1427,12 +1442,10 @@ class ExperimentRunner:
                 if root != selected_root
             ),
         )
-        required_directories = [Path("skills") / condition.skill_name]
-        if condition.skill_name == "agentic-cog-writer":
-            required_directories.extend(
-                Path("skills") / role
-                for role in ("planning", "translating", "reviewing")
-            )
+        required_directories = [
+            Path("skills") / condition.skill_name,
+            *self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(condition.skill_name, ()),
+        ]
         sources: dict[Path, Path] = {}
         for relative in required_directories:
             source = next(

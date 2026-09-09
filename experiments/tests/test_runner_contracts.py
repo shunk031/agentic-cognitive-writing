@@ -164,6 +164,10 @@ def _plugin_source(tmp_path: Path) -> Path:
         path = root / "skills" / skill / "SKILL.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(skill)
+    for reference in ("goals-format.md", "trace-jsonl-schema.md"):
+        path = root / "skills" / "agentic-cog-writer" / "references" / reference
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(reference)
     return root
 
 
@@ -1059,6 +1063,77 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
             result.run_dir / "workspace" / ".writing" / "trace" / "process.jsonl"
         ).resolve()
     )
+
+
+@pytest.mark.parametrize(
+    ("condition_id", "skill_name"),
+    (
+        ("A5", "cognitive-writing-no-goal-network"),
+        ("A6", "cognitive-writing-fixed-order"),
+    ),
+)
+def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6(
+    tmp_path: Path, condition_id: str, skill_name: str
+) -> None:
+    source_root = tmp_path / "plugin-source"
+    files = {
+        f"skills/{skill_name}/SKILL.md": "experiment skill\n",
+        "skills/agentic-cog-writer/references/goals-format.md": (
+            "goals reference\n"
+        ),
+        "skills/agentic-cog-writer/references/trace-jsonl-schema.md": (
+            "trace schema\n"
+        ),
+        "skills/planning/SKILL.md": "planning role\n",
+        "skills/translating/SKILL.md": "translating role\n",
+        "skills/reviewing/SKILL.md": "reviewing role\n",
+    }
+    for relative, content in files.items():
+        path = source_root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+
+    class StageExecutor:
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            events = [_event("process_switch", process="generate")]
+            if condition_id == "A6":
+                events.append(_event("goal_created", process="generate"))
+            trace_path = cwd / ".writing" / "trace" / "process.jsonl"
+            trace_path.parent.mkdir(parents=True, exist_ok=True)
+            trace_path.write_text(
+                "".join(json.dumps(event) + "\n" for event in events)
+            )
+            (cwd / ".writing" / "draft.md").write_text("final output " * 10)
+            return _result()
+
+    runner = ExperimentRunner(
+        _config(),
+        output_root=tmp_path / "runs",
+        executor=StageExecutor(),
+        codex_plugin_root=source_root,
+        codex_home=tmp_path / "codex-home",
+    )
+
+    result = runner.run_prompt(
+        _prompt(), condition_id=condition_id, platform="codex", run_id="staged"
+    )
+
+    manifest = json.loads(result.manifest_path.read_text())
+    staged_files = manifest["staged_files"]
+    assert set(staged_files) == {
+        f"plugin/skills/{skill_name}/SKILL.md",
+        "plugin/skills/agentic-cog-writer/references/goals-format.md",
+        "plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md",
+        "plugin/skills/planning/SKILL.md",
+        "plugin/skills/translating/SKILL.md",
+        "plugin/skills/reviewing/SKILL.md",
+    }
+    for relative, content in files.items():
+        staged = result.run_dir / "workspace" / "plugin" / relative
+        assert staged.read_text() == content
+        assert staged_files[f"plugin/{relative}"] == (
+            "sha256:" + hashlib.sha256(content.encode()).hexdigest()
+        )
 
 
 def test_run_records_unique_codex_subagent_spawns(tmp_path: Path) -> None:
