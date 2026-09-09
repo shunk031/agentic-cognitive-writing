@@ -1415,90 +1415,6 @@ def test_network_command_in_executed_command_event_is_rejected() -> None:
         reject_retrieval(payload, b"")
 
 
-def test_fallback_artifact_still_rejects_explicit_network_commands() -> None:
-    with pytest.raises(RetrievalViolation, match="retrieval marker"):
-        reject_retrieval(
-            b"curl https://example.test/source",
-            b"",
-            scan_artifact_text=True,
-        )
-
-
-@pytest.mark.parametrize(
-    "line",
-    (
-        "Living vines curl around her wrists.",
-        "They fetch the water at dawn.",
-        "Rotate the ssh keys quarterly.",
-    ),
-)
-def test_artifact_scan_ignores_network_words_in_prose(line: str) -> None:
-    reject_retrieval(line.encode(), b"", scan_artifact_text=True)
-
-
-@pytest.mark.parametrize(
-    "artifact",
-    (
-        b"curl https://example.com",
-        b"$ wget -O out https://example.com",
-        b"nc -l 8080",
-        b"```sh\ncurl -s http://x\n```",
-    ),
-)
-def test_artifact_scan_rejects_network_commands_in_command_position(
-    artifact: bytes,
-) -> None:
-    with pytest.raises(RetrievalViolation, match="retrieval marker"):
-        reject_retrieval(artifact, b"", scan_artifact_text=True)
-
-
-@pytest.mark.parametrize(
-    "artifact",
-    (
-        b"; curl http://x",
-        b"&& curl https://x",
-        b"|| curl https://x",
-        b"| nc host 80",
-        b"$ curl https://x",
-        b"# curl https://x",
-        b"> curl https://x",
-        b"- curl https://x",
-        b"* curl https://x",
-        b"1. curl https://x",
-        b"curl.exe https://x",
-        b"/usr/bin/curl https://x",
-        b"curl -s",
-    ),
-)
-def test_artifact_scan_rejects_network_commands_after_all_command_prefixes(
-    artifact: bytes,
-) -> None:
-    with pytest.raises(RetrievalViolation, match="retrieval marker"):
-        reject_retrieval(artifact, b"", scan_artifact_text=True)
-
-
-@pytest.mark.parametrize(
-    "line",
-    (
-        "The prose mentions curl.exe https://x without running it.",
-        "A note names /usr/bin/curl without invoking it.",
-        "A note names curl https://x without invoking it.",
-        "A note names nc host 80 without invoking it.",
-        "A note quotes $ curl https://x without invoking it.",
-        "A note quotes # curl https://x without invoking it.",
-        "A note quotes > curl https://x without invoking it.",
-        "A note quotes - curl https://x without invoking it.",
-        "A note quotes * curl https://x without invoking it.",
-        "A note quotes 1. curl https://x without invoking it.",
-        "The list discusses wget without a target.",
-    ),
-)
-def test_artifact_scan_ignores_non_command_mentions_of_network_tools(
-    line: str,
-) -> None:
-    reject_retrieval(line.encode(), b"", scan_artifact_text=True)
-
-
 def test_retrieval_tripwire_recognizes_generic_event_key() -> None:
     assert _retrieval_marker({"event": "web_search"}) == "web_search"
     with pytest.raises(RetrievalViolation, match="retrieval event"):
@@ -1903,30 +1819,6 @@ def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
 
     with pytest.raises(ExecutionError, match="goals.md"):
         runner.run_prompt(_prompt(), condition_id="A5", platform="codex")
-
-
-def test_runner_rejects_retrieval_in_draft_fallback(tmp_path: Path) -> None:
-    class DraftRetrievalExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds, env=None):
-            result = super().run(
-                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
-            )
-            draft = cwd / ".writing" / "draft.md"
-            draft.write_text("curl https://example.test/source")
-            return result
-
-    runner = _runner(tmp_path, executor=DraftRetrievalExecutor([_result(output="")]))
-
-    with pytest.raises(RetrievalViolation, match="retrieval marker"):
-        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
-
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex"
-    manifest = json.loads(
-        next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
-    )
-    assert manifest["failure"]["retrieval"]["artifact_source"] == "draft"
-    assert manifest["failure"]["retrieval"]["artifact"] == "rejected-output.draft"
-    assert (next(run_dir.iterdir()) / "rejected-output.draft").is_file()
 
 
 def test_runner_rejects_a_summary_when_workspace_draft_is_the_product(

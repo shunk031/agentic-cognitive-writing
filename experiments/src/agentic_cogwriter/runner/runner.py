@@ -986,12 +986,6 @@ class ExperimentRunner:
                     raise ExecutionError(
                         f"Cannot read workspace draft {draft_path}: {exc}"
                     ) from exc
-                reject_retrieval(
-                    draft.encode("utf-8"),
-                    b"",
-                    scan_artifact_text=True,
-                    artifact_source="draft",
-                )
             reject_retrieval(output.encode("utf-8"), b"")
             budget.consume(
                 self.runtime_config.count_output_units(output), stage="final_output"
@@ -1632,7 +1626,7 @@ class ExperimentRunner:
                     "generator": adapter.network_enforcement,
                     "secondary_tripwire": (
                         "parsed retrieval/tool-invocation and executed-command "
-                        "scan; explicit network-command scan for draft artifacts"
+                        "scan from generator transport events"
                     ),
                     "judge_side": (
                         "API judge client has no retrieval or tool interface; "

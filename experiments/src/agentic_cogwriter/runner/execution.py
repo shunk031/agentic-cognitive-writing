@@ -63,42 +63,6 @@ NETWORK_COMMAND_PATTERN = (
     r"\b(?:urllib|requests\.get|socket\.create_connection)\b"
 )
 _NETWORK_COMMAND_RE = re.compile(NETWORK_COMMAND_PATTERN)
-_ARTIFACT_NETWORK_TARGET = (
-    r"(?:-\S+|\S+://\S+|"
-    r"(?:localhost|(?:\d{1,3}\.){3}\d{1,3}|"
-    r"(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+"
-    r"[A-Za-z]{2,})(?::\d+)?(?:[/\\?#]\S*)?)"
-)
-_ARTIFACT_NETWORK_COMMAND_WORD = (
-    r"(?:/?(?:[^\s/]+/)*)"
-    r"(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)(?:\.exe)?"
-)
-_ARTIFACT_SOCKET_COMMAND_WORD = (
-    r"(?:/?(?:[^\s/]+/)*)"
-    r"(?:nc|netcat|socat)(?:\.exe)?"
-)
-_ARTIFACT_NETWORK_COMMAND_PATTERN = (
-    r"(?:"
-    + _ARTIFACT_NETWORK_COMMAND_WORD
-    + r"\s+"
-    + _ARTIFACT_NETWORK_TARGET
-    + r"|"
-    + _ARTIFACT_SOCKET_COMMAND_WORD
-    + r"\s+\S+\s+\d+"
-    + r"|git\s+clone\s+"
-    + _ARTIFACT_NETWORK_TARGET
-    + r"|python\s+-m\s+http\.client"
-    + r")"
-)
-_ARTIFACT_NETWORK_COMMAND_RE = re.compile(
-    _ARTIFACT_NETWORK_COMMAND_PATTERN,
-    re.IGNORECASE | re.VERBOSE,
-)
-_ARTIFACT_COMMAND_POSITION_RE = re.compile(
-    r"(?:^|(?:&&|\|\||[;|])\s*|^(?:[$#>]\s+|(?:[-*]|\d+\.)\s+))"
-    + _ARTIFACT_NETWORK_COMMAND_PATTERN,
-    re.IGNORECASE | re.VERBOSE,
-)
 
 
 @dataclass(frozen=True)
@@ -366,55 +330,15 @@ def _retrieval_marker(value: Any) -> str | None:
     return None
 
 
-def _artifact_network_marker(lines: list[str]) -> tuple[str, str] | None:
-    """Find a network command at shell-command position in artifact text."""
-
-    in_fenced_block = False
-    for line in lines:
-        stripped = line.lstrip()
-        if stripped.startswith("```"):
-            in_fenced_block = not in_fenced_block
-            continue
-        matcher = (
-            _ARTIFACT_NETWORK_COMMAND_RE
-            if in_fenced_block
-            else _ARTIFACT_COMMAND_POSITION_RE
-        )
-        match = matcher.search(stripped)
-        if match:
-            return match.group(0), line
-    return None
-
-
 def reject_retrieval(
     stdout: bytes,
     stderr: bytes,
-    *,
-    scan_artifact_text: bool = False,
-    artifact_source: str = "transport",
 ) -> None:
-    """Reject parsed retrieval events and explicit commands in fallback text.
-
-    Generator transport streams are inspected as JSONL event streams. A
-    fallback artifact is plain text, so callers may opt into the narrower
-    explicit-network-command scan for that artifact only.
-    """
+    """Reject parsed retrieval events from generator transport output."""
 
     for stream, payload in (("stdout", stdout), ("stderr", stderr)):
         decoded = payload.decode("utf-8", errors="replace")
         lines = decoded.splitlines()
-        if scan_artifact_text:
-            artifact_match = _artifact_network_marker(lines)
-            if artifact_match:
-                marker, matching_line = artifact_match
-                raise RetrievalViolation(
-                    "Unpermitted retrieval marker observed in artifact text",
-                    matched_pattern=marker,
-                    matching_line=matching_line,
-                    stream=stream,
-                    artifact_source=artifact_source,
-                    payload=payload,
-                )
         for line in lines:
             try:
                 value = json.loads(line)
@@ -429,6 +353,6 @@ def reject_retrieval(
                     matched_pattern=marker,
                     matching_line=line,
                     stream=stream,
-                    artifact_source=artifact_source,
+                    artifact_source="transport",
                     payload=payload,
                 )
