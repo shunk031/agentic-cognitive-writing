@@ -64,20 +64,41 @@ NETWORK_COMMAND_PATTERN = (
 )
 _NETWORK_COMMAND_RE = re.compile(NETWORK_COMMAND_PATTERN)
 _ARTIFACT_NETWORK_TARGET = (
-    r"(?:-\S+|(?:https?|ftp)://\S+|"
+    r"(?:-\S+|\S+://\S+|"
     r"(?:localhost|(?:\d{1,3}\.){3}\d{1,3}|"
     r"(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+"
     r"[A-Za-z]{2,})(?::\d+)?(?:[/\\?#]\S*)?)"
 )
-_ARTIFACT_NETWORK_COMMAND_RE = re.compile(
-    r"(?ix)"
-    r"(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)\s+"
+_ARTIFACT_NETWORK_COMMAND_WORD = (
+    r"(?:/?(?:[^\s/]+/)*)"
+    r"(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)(?:\.exe)?"
+)
+_ARTIFACT_SOCKET_COMMAND_WORD = (
+    r"(?:/?(?:[^\s/]+/)*)"
+    r"(?:nc|netcat|socat)(?:\.exe)?"
+)
+_ARTIFACT_NETWORK_COMMAND_PATTERN = (
+    r"(?:"
+    + _ARTIFACT_NETWORK_COMMAND_WORD
+    + r"\s+"
     + _ARTIFACT_NETWORK_TARGET
+    + r"|"
+    + _ARTIFACT_SOCKET_COMMAND_WORD
+    + r"\s+\S+\s+\d+"
     + r"|git\s+clone\s+"
     + _ARTIFACT_NETWORK_TARGET
     + r"|python\s+-m\s+http\.client"
+    + r")"
 )
-_SHELL_PROMPT_RE = re.compile(r"^(?:[$>]\s+)")
+_ARTIFACT_NETWORK_COMMAND_RE = re.compile(
+    _ARTIFACT_NETWORK_COMMAND_PATTERN,
+    re.IGNORECASE | re.VERBOSE,
+)
+_ARTIFACT_COMMAND_POSITION_RE = re.compile(
+    r"(?:^|(?:&&|\|\||[;|])\s*|^(?:[$#>]\s+|(?:[-*]|\d+\.)\s+))"
+    + _ARTIFACT_NETWORK_COMMAND_PATTERN,
+    re.IGNORECASE | re.VERBOSE,
+)
 
 
 @dataclass(frozen=True)
@@ -354,8 +375,12 @@ def _artifact_network_marker(lines: list[str]) -> tuple[str, str] | None:
         if stripped.startswith("```"):
             in_fenced_block = not in_fenced_block
             continue
-        candidate = stripped if in_fenced_block else _SHELL_PROMPT_RE.sub("", stripped)
-        match = _ARTIFACT_NETWORK_COMMAND_RE.match(candidate)
+        matcher = (
+            _ARTIFACT_NETWORK_COMMAND_RE
+            if in_fenced_block
+            else _ARTIFACT_COMMAND_POSITION_RE
+        )
+        match = matcher.search(stripped)
         if match:
             return match.group(0), line
     return None

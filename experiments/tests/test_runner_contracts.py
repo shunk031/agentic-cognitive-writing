@@ -83,6 +83,10 @@ STAGE_SESSION_HEADER = (
     "each stage's output is the input of the next, and only the final stage's "
     "output is the final response."
 )
+SINGLE_STAGE_SESSION_HEADER = (
+    "The following frozen stage runs within this single session; its output is the "
+    "final response."
+)
 
 
 pytestmark = pytest.mark.usefixtures(  # noqa: V107
@@ -967,24 +971,32 @@ def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
 
 
 @pytest.mark.parametrize(
-    ("condition_id", "stage_count", "first_stage"),
+    ("condition_id", "stage_count", "first_stage", "expected_header"),
     (
-        ("A1", 1, "single_shot"),
-        ("A2", 3, "pre_write"),
-        ("B2", 5, "perspective_discovery"),
+        ("A1", 1, "single_shot", SINGLE_STAGE_SESSION_HEADER),
+        ("A2", 3, "pre_write", STAGE_SESSION_HEADER.format(count=3)),
+        (
+            "B2",
+            5,
+            "perspective_discovery",
+            STAGE_SESSION_HEADER.format(count=5),
+        ),
     ),
 )
 def test_composed_prompt_identifies_the_single_session_stage_chain(
-    condition_id: str, stage_count: int, first_stage: str
+    condition_id: str,
+    stage_count: int,
+    first_stage: str,
+    expected_header: str,
 ) -> None:
     runner = ExperimentRunner(_config(), output_root=Path("runs"))
     prompt = runner._plugin_prompt(
         load_condition_registry()[condition_id], _prompt(), "codex"
     )
-    sentence = STAGE_SESSION_HEADER.format(count=stage_count)
-
-    assert prompt.count(sentence) == 1
-    assert prompt.index(sentence) < prompt.index(f"Frozen stage {first_stage}")
+    assert prompt.count(expected_header) == 1
+    assert prompt.index(expected_header) < prompt.index(f"Frozen stage {first_stage}")
+    if stage_count == 1:
+        assert STAGE_SESSION_HEADER.format(count=1) not in prompt
 
 
 def test_composed_prompt_omits_the_stage_chain_header_without_frozen_paths() -> None:
@@ -1438,6 +1450,53 @@ def test_artifact_scan_rejects_network_commands_in_command_position(
 ) -> None:
     with pytest.raises(RetrievalViolation, match="retrieval marker"):
         reject_retrieval(artifact, b"", scan_artifact_text=True)
+
+
+@pytest.mark.parametrize(
+    "artifact",
+    (
+        b"; curl http://x",
+        b"&& curl https://x",
+        b"|| curl https://x",
+        b"| nc host 80",
+        b"$ curl https://x",
+        b"# curl https://x",
+        b"> curl https://x",
+        b"- curl https://x",
+        b"* curl https://x",
+        b"1. curl https://x",
+        b"curl.exe https://x",
+        b"/usr/bin/curl https://x",
+        b"curl -s",
+    ),
+)
+def test_artifact_scan_rejects_network_commands_after_all_command_prefixes(
+    artifact: bytes,
+) -> None:
+    with pytest.raises(RetrievalViolation, match="retrieval marker"):
+        reject_retrieval(artifact, b"", scan_artifact_text=True)
+
+
+@pytest.mark.parametrize(
+    "line",
+    (
+        "The prose mentions curl.exe https://x without running it.",
+        "A note names /usr/bin/curl without invoking it.",
+        "A note names curl https://x without invoking it.",
+        "A note names nc host 80 without invoking it.",
+        "A note quotes $ curl https://x without invoking it.",
+        "A note quotes # curl https://x without invoking it.",
+        "A note quotes > curl https://x without invoking it.",
+        "A note quotes - curl https://x without invoking it.",
+        "A note quotes * curl https://x without invoking it.",
+        "A note quotes 1. curl https://x without invoking it.",
+        "The list discusses wget without a target.",
+    ),
+)
+def test_artifact_scan_ignores_non_command_mentions_of_network_tools(
+    line: str,
+) -> None:
+    reject_retrieval(line.encode(), b"", scan_artifact_text=True)
 
 
 def test_retrieval_tripwire_recognizes_generic_event_key() -> None:
