@@ -1061,6 +1061,113 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("condition_id", "skill_name"),
+    (
+        ("A5", "cognitive-writing-no-goal-network"),
+        ("A6", "cognitive-writing-fixed-order"),
+    ),
+)
+def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6(
+    tmp_path: Path, condition_id: str, skill_name: str
+) -> None:
+    source_root = tmp_path / "plugin-source"
+    for relative in (
+        f"skills/{skill_name}/SKILL.md",
+        "skills/planning/SKILL.md",
+        "skills/translating/SKILL.md",
+        "skills/reviewing/SKILL.md",
+    ):
+        path = source_root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(relative)
+
+    runner = ExperimentRunner(
+        _config(),
+        output_root=tmp_path / "runs",
+        codex_plugin_root=source_root,
+    )
+
+    staged_files = runner._stage_codex_plugin(
+        load_condition_registry()[condition_id], tmp_path / "workspace"
+    )
+    assert set(staged_files) == {
+        f"plugin/skills/{skill_name}/SKILL.md",
+        "plugin/skills/planning/SKILL.md",
+        "plugin/skills/translating/SKILL.md",
+        "plugin/skills/reviewing/SKILL.md",
+    }
+
+
+def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
+    tmp_path: Path,
+) -> None:
+    main_root = tmp_path / "main-plugin"
+    experiment_root = tmp_path / "experiment-plugin"
+    for skill in (
+        "agentic-cog-writer",
+        "planning",
+        "translating",
+        "reviewing",
+    ):
+        shutil.copytree(
+            Path("plugin/skills") / skill,
+            main_root / "skills" / skill,
+        )
+    shutil.copytree(
+        Path("experiments/plugin/skills/cognitive-writing-fixed-order"),
+        experiment_root / "skills" / "cognitive-writing-fixed-order",
+    )
+    wrapper_path = tmp_path / "a6-wrapper.toml"
+    wrapper_path.write_text(
+        "[plugins]\n"
+        f"paths = [{json.dumps(str(main_root))}, {json.dumps(str(experiment_root))}]\n"
+    )
+    condition = replace(load_condition_registry()["A6"], plugin_config=wrapper_path)
+    runner = ExperimentRunner(
+        _config(),
+        output_root=tmp_path / "runs",
+        codex_plugin_root=experiment_root,
+        codex_home=tmp_path / "codex-home",
+    )
+
+    staged_files = runner._stage_codex_plugin(condition, tmp_path / "workspace")
+
+    assert set(staged_files) == {
+        "plugin/skills/cognitive-writing-fixed-order/SKILL.md",
+        "plugin/skills/cognitive-writing-fixed-order/agents/openai.yaml",
+        "plugin/skills/cognitive-writing-fixed-order/evals/evals.json",
+        "plugin/skills/planning/SKILL.md",
+        "plugin/skills/planning/agents/openai.yaml",
+        "plugin/skills/reviewing/SKILL.md",
+        "plugin/skills/reviewing/agents/openai.yaml",
+        "plugin/skills/translating/SKILL.md",
+        "plugin/skills/translating/agents/openai.yaml",
+    }
+
+
+def test_codex_explicit_root_must_contain_invoked_skill_before_execution(
+    tmp_path: Path,
+) -> None:
+    explicit_root = tmp_path / "empty-plugin"
+    explicit_root.mkdir()
+    executor = _RetryExecutor([_result()])
+    runner = ExperimentRunner(
+        _config(),
+        output_root=tmp_path / "runs",
+        executor=executor,
+        codex_plugin_root=explicit_root,
+        codex_home=tmp_path / "codex-home",
+    )
+
+    with pytest.raises(ConfigurationError, match="Explicit Codex plugin root"):
+        runner.run_prompt(
+            _prompt(), condition_id="A4", platform="codex", run_id="missing-skill"
+        )
+
+    assert executor.calls == []
+
+
 def test_run_records_unique_codex_subagent_spawns(tmp_path: Path) -> None:
     class SpawnRolloutExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):

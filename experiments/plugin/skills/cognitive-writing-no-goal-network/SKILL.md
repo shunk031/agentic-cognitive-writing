@@ -66,6 +66,7 @@ At each turn, the `Monitor` must:
 4. For a `Planning` delegation, request problem representation, Generate, and Organize. Do not request Goal-setting or ask the agent to write `goals.md`. If the agent proposes a hierarchical goal, report it as an observation without changing the file.
 5. Re-read changed state and reconcile the role's work with the assignment. Update `draft.md` or `memory/` as appropriate. Keep user-authored text and uncertain claims visible.
 6. Tell the user:
+
    - what changed
    - that the assignment remains the implicit objective
    - what remains uncertain
@@ -99,8 +100,19 @@ Do not write a script that spawns `codex exec` children. If native delegation is
 
 ## Trace contract
 
-Every process switch must append one valid JSON object to `.writing/trace/process.jsonl`. A process-switch object includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Optional `artifacts` lists project-relative files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts`, when present, is an array of project-relative path strings. Keep the code-formatted role names `Planning`, `Translating`, and `Reviewing` in surrounding prose, but write JSON `process`, `from_process`, and `to_process` values with the lowercase contract tokens `planning`, `translating`, and `reviewing`. Do not write goal fields or experiment-specific fields. For example:
+Every process switch must append one valid JSON object to `.writing/trace/process.jsonl`. `event_type` is `process_switch`; goal events are not written in this condition. A process-switch object includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Optional `artifacts` lists project-relative files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts`, when present, is an array of project-relative path strings. Keep the code-formatted role names `Planning`, `Translating`, and `Reviewing` in surrounding prose, but write JSON `process`, `from_process`, and `to_process` values with the lowercase contract tokens `planning`, `translating`, and `reviewing`. Do not write goal fields or experiment-specific fields. For example:
 
 ```json
-{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"monitor","process":"planning","decision":"Choose planning for the assignment's implicit objective.","evidence":[".writing/assignment.md"],"open_uncertainty":[],"from_process":null,"to_process":"planning","artifacts":[".writing/assignment.md"]}
+{
+  "timestamp": "2026-01-15T09:00:00+09:00",
+  "event_type": "process_switch",
+  "responsible_agent": "monitor",
+  "process": "planning",
+  "decision": "Choose planning for the assignment's implicit objective.",
+  "evidence": [".writing/assignment.md"],
+  "open_uncertainty": [],
+  "from_process": null,
+  "to_process": "planning",
+  "artifacts": [".writing/assignment.md"]
+}
 ```
