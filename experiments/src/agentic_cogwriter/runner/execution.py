@@ -63,6 +63,21 @@ NETWORK_COMMAND_PATTERN = (
     r"\b(?:urllib|requests\.get|socket\.create_connection)\b"
 )
 _NETWORK_COMMAND_RE = re.compile(NETWORK_COMMAND_PATTERN)
+_ARTIFACT_NETWORK_TARGET = (
+    r"(?:-\S+|(?:https?|ftp)://\S+|"
+    r"(?:localhost|(?:\d{1,3}\.){3}\d{1,3}|"
+    r"(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+"
+    r"[A-Za-z]{2,})(?::\d+)?(?:[/\\?#]\S*)?)"
+)
+_ARTIFACT_NETWORK_COMMAND_RE = re.compile(
+    r"(?ix)"
+    r"(?:curl|wget|fetch|httpie|nc|netcat|socat|ssh)\s+"
+    + _ARTIFACT_NETWORK_TARGET
+    + r"|git\s+clone\s+"
+    + _ARTIFACT_NETWORK_TARGET
+    + r"|python\s+-m\s+http\.client"
+)
+_SHELL_PROMPT_RE = re.compile(r"^(?:[$>]\s+)")
 
 
 @dataclass(frozen=True)
@@ -330,6 +345,22 @@ def _retrieval_marker(value: Any) -> str | None:
     return None
 
 
+def _artifact_network_marker(lines: list[str]) -> tuple[str, str] | None:
+    """Find a network command at shell-command position in artifact text."""
+
+    in_fenced_block = False
+    for line in lines:
+        stripped = line.lstrip()
+        if stripped.startswith("```"):
+            in_fenced_block = not in_fenced_block
+            continue
+        candidate = stripped if in_fenced_block else _SHELL_PROMPT_RE.sub("", stripped)
+        match = _ARTIFACT_NETWORK_COMMAND_RE.match(candidate)
+        if match:
+            return match.group(0), line
+    return None
+
+
 def reject_retrieval(
     stdout: bytes,
     stderr: bytes,
@@ -346,18 +377,20 @@ def reject_retrieval(
 
     for stream, payload in (("stdout", stdout), ("stderr", stderr)):
         decoded = payload.decode("utf-8", errors="replace")
-        for line in decoded.splitlines():
-            if scan_artifact_text:
-                match = _NETWORK_COMMAND_RE.search(line)
-                if match:
-                    raise RetrievalViolation(
-                        "Unpermitted retrieval marker observed in artifact text",
-                        matched_pattern=match.group(0),
-                        matching_line=line,
-                        stream=stream,
-                        artifact_source=artifact_source,
-                        payload=payload,
-                    )
+        lines = decoded.splitlines()
+        if scan_artifact_text:
+            artifact_match = _artifact_network_marker(lines)
+            if artifact_match:
+                marker, matching_line = artifact_match
+                raise RetrievalViolation(
+                    "Unpermitted retrieval marker observed in artifact text",
+                    matched_pattern=marker,
+                    matching_line=matching_line,
+                    stream=stream,
+                    artifact_source=artifact_source,
+                    payload=payload,
+                )
+        for line in lines:
             try:
                 value = json.loads(line)
             except json.JSONDecodeError:

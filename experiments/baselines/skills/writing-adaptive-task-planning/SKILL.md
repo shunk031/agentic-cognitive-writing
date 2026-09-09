@@ -17,7 +17,7 @@ Retrieval tasks are disabled under the equal-information policy. The graph may c
 
 The final response must contain the complete final text (the runner enforces this; a parallel runner change exists).
 
-This adaptation uses the task graph as its only planning structure. Leave `.writing/goals.md` untouched and emit no goal events. The user owns rhetorical intent, factual authority, final wording, and publication. The coordinator owns graph state, ready-task scheduling, subagent dispatch, persistence, and trace recording. Typed task subagents own their returned reasoning or composition results. A native subagent must not launch a nested `codex exec` process.
+This adaptation uses the task graph as its only planning structure. Do not create or modify `.writing/goals.md` and emit no goal events. The user owns rhetorical intent, factual authority, final wording, and publication. The coordinator owns graph state, ready-task scheduling, subagent dispatch, persistence, and trace recording. Typed task subagents own their returned reasoning or composition results. A native subagent must not launch a nested `codex exec` process.
 
 ## Persisted graph contract
 

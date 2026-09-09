@@ -1313,6 +1313,14 @@ class ExperimentRunner:
 
         chunks: list[str] = []
         carried_tokens: set[str] = set()
+        path_stage_count = sum(stage.path is not None for stage in condition.stages)
+        if path_stage_count:
+            chunks.append(
+                "\n\n"
+                f"The following {path_stage_count} frozen stages run in order within "
+                "this single session; each stage's output is the input of the next, "
+                "and only the final stage's output is the final response."
+            )
         for stage_index, stage in enumerate(condition.stages):
             if stage.path is None:
                 continue

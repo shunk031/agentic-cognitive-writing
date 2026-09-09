@@ -17,7 +17,7 @@ claude_code = "claude_print"
 codex = """Read the skill file at {codex_plugin_root}/skills/cognitive-writing-no-goal-network/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact.
 
 Single-turn contract:
-This is a single-turn task with no interactive user; never ask clarification questions. When the assignment underspecifies audience, purpose, or scope, apply genre-appropriate defaults and record the assumptions. Conditions with a `.writing/` workspace record assumptions there. Do not state assumptions briefly at the top of the deliverable. Conditions without `.writing/` apply assumptions without an extra preamble. Do not change the deliverable's content contract."""
+This is a single-turn task with no interactive user; never ask clarification questions. When the assignment underspecifies audience, purpose, or scope, apply genre-appropriate defaults and record the assumptions. Conditions with a `.writing/` workspace record assumptions in `.writing/assumptions.md`. Do not state assumptions briefly at the top of the deliverable. Conditions without `.writing/` apply assumptions without an extra preamble. Do not change the deliverable's content contract."""
 
 claude_code = """/cognitive-writing-experiments:cognitive-writing-no-goal-network
 
@@ -25,7 +25,7 @@ Workspace contract:
 Create and update every `.writing/` file under the session working directory, never under the plugin or skill directory. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact.
 
 Single-turn contract:
-This is a single-turn task with no interactive user; never ask clarification questions. When the assignment underspecifies audience, purpose, or scope, apply genre-appropriate defaults and record the assumptions. Conditions with a `.writing/` workspace record assumptions there. Do not state assumptions briefly at the top of the deliverable. Conditions without `.writing/` apply assumptions without an extra preamble. Do not change the deliverable's content contract."""
+This is a single-turn task with no interactive user; never ask clarification questions. When the assignment underspecifies audience, purpose, or scope, apply genre-appropriate defaults and record the assumptions. Conditions with a `.writing/` workspace record assumptions in `.writing/assumptions.md`. Do not state assumptions briefly at the top of the deliverable. Conditions without `.writing/` apply assumptions without an extra preamble. Do not change the deliverable's content contract."""
 
 [install]
 claude_code = ["/plugin marketplace add .", "/plugin install agentic-cognitive-writing@agentic-cognitive-writing-process", "/plugin install cognitive-writing-experiments@agentic-cognitive-writing-process"]
