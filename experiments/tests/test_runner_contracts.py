@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import os
@@ -37,7 +38,11 @@ from agentic_cogwriter.runner.execution import (
     reject_retrieval,
 )
 from agentic_cogwriter.runner.manifest import PromptRecord
-from agentic_cogwriter.runner.runner import ExperimentRunner, SessionSnapshot
+from agentic_cogwriter.runner.runner import (
+    ExperimentRunner,
+    SessionSnapshot,
+    _synthesized_codex_config,
+)
 from agentic_cogwriter.runner.trace import TraceValidationError, validate_trace
 
 WRITING_TRACE_PROCESSES = (
@@ -263,9 +268,14 @@ name = "test-provider"
 base_url = "https://provider.invalid"
 wire_api = "responses"
 requires_openai_auth = true
+http_headers = { "X-Header" = "header-value" }
+env_http_headers = { "X-Env-Header" = "env-value" }
+query_params = { "api-version" = "version-value" }
 
 [model_providers.test-provider.auth]
 command = "provider-auth"
+args = ["--token", "token-value"]
+refresh_interval_ms = 120000
 """.strip()
             + "\n",
             encoding="utf-8",
@@ -330,7 +340,14 @@ command = "provider-auth"
                         "base_url": "https://provider.invalid",
                         "wire_api": "responses",
                         "requires_openai_auth": True,
-                        "auth": {"command": "provider-auth"},
+                        "http_headers": {"X-Header": "header-value"},
+                        "env_http_headers": {"X-Env-Header": "env-value"},
+                        "query_params": {"api-version": "version-value"},
+                        "auth": {
+                            "command": "provider-auth",
+                            "args": ["--token", "token-value"],
+                            "refresh_interval_ms": 120000,
+                        },
                     }
                 },
             }
@@ -443,9 +460,9 @@ def test_run_removes_generator_config_when_preflight_fails(
     prepare = runner._prepare_generator_environment
 
     def capture_config_dir(
-        platform: str, *, run_id: str
+        platform: str, *, run_id: str, lock_file=None
     ) -> tuple[Path, dict[str, str]]:
-        config_dir, environment = prepare(platform, run_id=run_id)
+        config_dir, environment = prepare(platform, run_id=run_id, lock_file=lock_file)
         observed_config_dirs.append(config_dir)
         return config_dir, environment
 
@@ -480,6 +497,42 @@ def test_generator_config_collision_does_not_remove_existing_directory(
         runner._prepare_generator_environment("codex", run_id="collision")
 
     assert sentinel.read_text(encoding="utf-8") == "keep"
+
+
+def test_generator_config_sweep_rejects_symlinked_parent(
+    tmp_path: Path,
+) -> None:
+    output_root = tmp_path / "runs"
+    output_root.mkdir()
+    outside_root = tmp_path / "outside-generator-config"
+    outside_root.mkdir()
+    config_parent = output_root / ".generator-config"
+    config_parent.symlink_to(outside_root, target_is_directory=True)
+    runner = _runner(output_root)
+
+    with pytest.raises(ConfigurationError, match="symlink"):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    assert not (output_root / "WritingBench").exists()
+
+
+def test_run_refuses_when_generator_config_lock_is_held(
+    tmp_path: Path,
+) -> None:
+    output_root = tmp_path / "runs"
+    config_parent = output_root / ".generator-config"
+    config_parent.mkdir(parents=True)
+    lock_path = config_parent / ".lock"
+    runner = _runner(output_root)
+
+    with lock_path.open("a+") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        with pytest.raises(ConfigurationError, match="another run holds"):
+            runner.run_prompt(
+                _prompt(), condition_id="A1", platform="codex", run_id="locked"
+            )
+
+    assert not (output_root / "WritingBench" / "A1" / "codex" / "locked").exists()
 
 
 def test_runner_sweeps_stale_generator_config_before_new_root(
@@ -520,6 +573,64 @@ def test_codex_config_rejects_missing_selected_provider_table(
 
     assert executor.calls == []
     assert not (tmp_path / "runs" / ".generator-config" / "missing-provider").exists()
+
+
+def test_codex_config_rejects_unallowlisted_provider_key(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "host-provider-config"
+    source_root.mkdir()
+    (source_root / "config.toml").write_text(
+        """
+model_provider = "test"
+
+[model_providers.test]
+name = "test"
+experimental_bearer_token = "secret"
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+    runner = _runner(tmp_path / "runs", codex_home=source_root)
+
+    with pytest.raises(ConfigurationError, match="experimental_bearer_token"):
+        runner._prepare_generator_environment("codex", run_id="rejected-key")
+
+    assert not (tmp_path / "runs" / ".generator-config" / "rejected-key").exists()
+
+
+def test_synthesized_codex_config_round_trips_escaped_unicode_values() -> None:
+    source_config = {
+        "model_provider": "quoted-provider",
+        "model_providers": {
+            "quoted-provider": {
+                "name": 'name "quoted"',
+                "base_url": r"https://provider.invalid/path\\segment",
+                "wire_api": "responses",
+                "env_key": "TOKEN_日本",
+                "requires_openai_auth": True,
+                "http_headers": {"X-Header": 'value "quoted" \\ 日本'},
+                "env_http_headers": {"X-Env": "環境"},
+                "query_params": {"q": "a\\b"},
+                "auth": {
+                    "command": r"auth\\helper",
+                    "args": ["--label", '値 "quoted"'],
+                    "refresh_interval_ms": 42,
+                },
+            }
+        },
+    }
+
+    rendered = _synthesized_codex_config(source_config, "xhigh")
+    parsed = tomllib.loads(rendered)
+
+    assert parsed == {
+        "model_provider": "quoted-provider",
+        "model_reasoning_effort": "xhigh",
+        "model_providers": {
+            "quoted-provider": source_config["model_providers"]["quoted-provider"]
+        },
+    }
 
 
 def test_run_rejects_generator_config_under_system_temp(

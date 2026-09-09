@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import fcntl
 import json
 import math
 import os
@@ -138,6 +139,22 @@ def _safe_component(value: str) -> str:
 
 
 _TOML_BARE_KEY = re.compile(r"^[A-Za-z0-9_-]+$")
+_CODEX_PROVIDER_SCHEMA = {
+    "name": "scalar",
+    "base_url": "scalar",
+    "wire_api": "scalar",
+    "env_key": "scalar",
+    "requires_openai_auth": "scalar",
+    "http_headers": "string_map",
+    "env_http_headers": "string_map",
+    "query_params": "string_map",
+    "auth": "table",
+}
+_CODEX_AUTH_SCHEMA = {
+    "command": "string",
+    "args": "string_array",
+    "refresh_interval_ms": "integer",
+}
 
 
 def _toml_key(value: str, *, context: str) -> str:
@@ -158,6 +175,48 @@ def _toml_scalar(value: Any, *, context: str) -> str:
     raise ConfigurationError(
         f"{context} must be a string, boolean, or integer in the provider config"
     )
+
+
+def _toml_string_map(value: Any, *, context: str) -> str:
+    if not isinstance(value, Mapping):
+        raise ConfigurationError(f"{context} must be a string-to-string map")
+    entries: list[str] = []
+    for key, item in value.items():
+        if not isinstance(key, str) or not isinstance(item, str):
+            raise ConfigurationError(f"{context} must be a string-to-string map")
+        entries.append(
+            f"{_toml_key(key, context=f'{context} key')} = "
+            f"{_toml_scalar(item, context=f'{context} value')}"
+        )
+    return "{ " + ", ".join(entries) + " }" if entries else "{}"
+
+
+def _toml_string_array(value: Any, *, context: str) -> str:
+    if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+        raise ConfigurationError(f"{context} must be an array of strings")
+    return (
+        "["
+        + ", ".join(_toml_scalar(item, context=f"{context} item") for item in value)
+        + "]"
+    )
+
+
+def _toml_schema_value(value: Any, kind: str, *, context: str) -> str:
+    if kind == "scalar":
+        return _toml_scalar(value, context=context)
+    if kind == "string":
+        if not isinstance(value, str):
+            raise ConfigurationError(f"{context} must be a string")
+        return _toml_scalar(value, context=context)
+    if kind == "integer":
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise ConfigurationError(f"{context} must be an integer")
+        return str(value)
+    if kind == "string_map":
+        return _toml_string_map(value, context=context)
+    if kind == "string_array":
+        return _toml_string_array(value, context=context)
+    raise ConfigurationError(f"Unknown Codex configuration schema kind {kind!r}")
 
 
 def _synthesized_codex_config(
@@ -186,30 +245,33 @@ def _synthesized_codex_config(
         "",
         f"[model_providers.{provider_key}]",
     ]
-    auth = provider.get("auth")
     for key, value in provider.items():
-        if key == "auth":
+        kind = _CODEX_PROVIDER_SCHEMA.get(key)
+        if kind is None:
+            raise ConfigurationError(f"Codex provider key {key!r} is not allowed")
+        if kind == "table":
             continue
-        if isinstance(value, Mapping):
-            raise ConfigurationError(
-                f"Codex provider key {key!r} has an unsupported nested table"
-            )
         lines.append(
             f"{_toml_key(key, context='Codex provider key')} = "
-            f"{_toml_scalar(value, context=f'Codex provider key {key!r}')}"
+            f"{_toml_schema_value(value, kind, context=f'Codex provider key {key!r}')}"
         )
-    if auth is not None:
+    if "auth" in provider:
+        auth = provider["auth"]
         if not isinstance(auth, Mapping):
             raise ConfigurationError("Codex provider auth must be a table")
         lines.extend(["", f"[model_providers.{provider_key}.auth]"])
         for key, value in auth.items():
-            if isinstance(value, Mapping):
+            kind = _CODEX_AUTH_SCHEMA.get(key)
+            if kind is None:
                 raise ConfigurationError(
-                    f"Codex provider auth key {key!r} has an unsupported nested table"
+                    f"Codex provider auth key {key!r} is not allowed"
                 )
+            serialized_value = _toml_schema_value(
+                value, kind, context=f"Codex provider auth key {key!r}"
+            )
             lines.append(
                 f"{_toml_key(key, context='Codex provider auth key')} = "
-                f"{_toml_scalar(value, context=f'Codex provider auth key {key!r}')}"
+                f"{serialized_value}"
             )
     return "\n".join(lines) + "\n"
 
@@ -379,23 +441,106 @@ class ExperimentRunner:
             "claude-code": PlatformAdapter.load(root / "claude_print.toml"),
         }
 
+    def _generator_config_parent(self) -> Path:
+        config_parent = self.output_root / ".generator-config"
+        try:
+            parent_stat = config_parent.lstat()
+        except FileNotFoundError:
+            try:
+                config_parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+            except OSError as exc:
+                raise ConfigurationError(
+                    f"Cannot create generator configuration root {config_parent}"
+                ) from exc
+            try:
+                parent_stat = config_parent.lstat()
+            except OSError as exc:
+                raise ConfigurationError(
+                    f"Cannot inspect generator configuration root {config_parent}"
+                ) from exc
+        except OSError as exc:
+            raise ConfigurationError(
+                f"Cannot inspect generator configuration root {config_parent}"
+            ) from exc
+
+        if stat.S_ISLNK(parent_stat.st_mode):
+            raise ConfigurationError(
+                f"Generator configuration root {config_parent} must not be a symlink"
+            )
+        if not stat.S_ISDIR(parent_stat.st_mode):
+            raise ConfigurationError(
+                f"Generator configuration root {config_parent} must be a directory"
+            )
+        try:
+            config_parent.resolve().relative_to(self.output_root.resolve())
+        except ValueError as exc:
+            raise ConfigurationError(
+                "Generator configuration root "
+                f"{config_parent} must remain inside output root {self.output_root}"
+            ) from exc
+        return config_parent
+
+    def _acquire_generator_config_lock(self):
+        config_parent = self._generator_config_parent()
+        lock_path = config_parent / ".lock"
+        try:
+            lock_fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
+            lock_file = os.fdopen(lock_fd, "a+", encoding="utf-8")
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            if "lock_file" in locals():
+                lock_file.close()
+            elif "lock_fd" in locals():
+                os.close(lock_fd)
+            raise ConfigurationError(
+                f"Cannot acquire generator configuration lock {lock_path}: "
+                "another run holds the output root"
+            ) from exc
+        except OSError as exc:
+            if "lock_file" in locals():
+                lock_file.close()
+            elif "lock_fd" in locals():
+                os.close(lock_fd)
+            raise ConfigurationError(
+                f"Cannot acquire generator configuration lock {lock_path}"
+            ) from exc
+        return lock_file
+
+    @staticmethod
+    def _release_generator_config_lock(lock_file) -> None:
+        try:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+        finally:
+            lock_file.close()
+
     def _prepare_generator_environment(
+        self, platform: str, *, run_id: str, lock_file=None
+    ) -> tuple[Path, dict[str, str]]:
+        owns_lock = lock_file is None
+        if owns_lock:
+            lock_file = self._acquire_generator_config_lock()
+        try:
+            return self._prepare_generator_environment_locked(platform, run_id=run_id)
+        finally:
+            if owns_lock:
+                self._release_generator_config_lock(lock_file)
+
+    def _prepare_generator_environment_locked(
         self, platform: str, *, run_id: str
     ) -> tuple[Path, dict[str, str]]:
         """Build one per-run provider home and its child process environment."""
 
-        config_root = (
-            self.output_root / ".generator-config" / _safe_component(run_id)
-        ).resolve()
+        config_root = self.output_root / ".generator-config" / _safe_component(run_id)
         temporary_root = Path(tempfile.gettempdir()).resolve()
         try:
-            config_root.relative_to(temporary_root)
+            resolved_config_root = config_root.resolve()
+            resolved_config_root.relative_to(temporary_root)
         except ValueError:
             pass
         else:
             raise ConfigurationError(
                 "Generator configuration root "
-                f"{config_root} is under the system temporary directory "
+                f"{resolved_config_root} is under the system temporary directory "
                 f"{temporary_root}"
             )
 
@@ -451,7 +596,7 @@ class ExperimentRunner:
     def _sweep_stale_generator_configs(self) -> None:
         """Remove provider roots left by an earlier process invocation."""
 
-        config_parent = self.output_root / ".generator-config"
+        config_parent = self._generator_config_parent()
         try:
             entries = tuple(config_parent.iterdir())
         except FileNotFoundError:
@@ -462,6 +607,8 @@ class ExperimentRunner:
             ) from exc
 
         for entry in entries:
+            if entry.name == ".lock":
+                continue
             try:
                 entry_stat = entry.lstat()
             except FileNotFoundError:
@@ -504,23 +651,30 @@ class ExperimentRunner:
         _generator_model_family(self.runtime_config, platform)
 
         run_id = run_id or uuid.uuid4().hex
-        run_dir = (
-            self.output_root
-            / _safe_component(prompt.benchmark_name)
-            / _safe_component(condition_id)
-            / _safe_component(platform)
-            / _safe_component(run_id)
-        ).resolve()
-        workspace = run_dir / "workspace"
-        _assert_guidance_free_workspace(workspace)
-        run_dir.mkdir(parents=True, exist_ok=False)
-        workspace.mkdir()
-        # Pre-create the trace directory so skills anchor `.writing/` writes
-        # to the workspace instead of the plugin or skill directory.
-        (workspace / ".writing" / "trace").mkdir(parents=True)
-        generator_config_dir, generator_environment = (
-            self._prepare_generator_environment(platform, run_id=run_id)
-        )
+        generator_config_lock = self._acquire_generator_config_lock()
+        try:
+            run_dir = (
+                self.output_root
+                / _safe_component(prompt.benchmark_name)
+                / _safe_component(condition_id)
+                / _safe_component(platform)
+                / _safe_component(run_id)
+            ).resolve()
+            workspace = run_dir / "workspace"
+            _assert_guidance_free_workspace(workspace)
+            run_dir.mkdir(parents=True, exist_ok=False)
+            workspace.mkdir()
+            # Pre-create the trace directory so skills anchor `.writing/` writes
+            # to the workspace instead of the plugin or skill directory.
+            (workspace / ".writing" / "trace").mkdir(parents=True)
+            generator_config_dir, generator_environment = (
+                self._prepare_generator_environment(
+                    platform, run_id=run_id, lock_file=generator_config_lock
+                )
+            )
+        except BaseException:
+            self._release_generator_config_lock(generator_config_lock)
+            raise
         preflight_ready = False
         try:
             manifest_path = run_dir / "run-manifest.json"
@@ -570,6 +724,7 @@ class ExperimentRunner:
         finally:
             if not preflight_ready:
                 shutil.rmtree(generator_config_dir, ignore_errors=True)
+                self._release_generator_config_lock(generator_config_lock)
 
         try:
             # The started manifest exists before CLI probing or model process creation.
@@ -963,6 +1118,7 @@ class ExperimentRunner:
             raise
         finally:
             shutil.rmtree(generator_config_dir, ignore_errors=True)
+            self._release_generator_config_lock(generator_config_lock)
 
     def _probe_cli(self, adapter: PlatformAdapter) -> str:
         if isinstance(self.executor, SubprocessExecutor):
