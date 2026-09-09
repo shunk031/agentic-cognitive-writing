@@ -1184,6 +1184,28 @@ def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
     }
 
 
+def test_codex_explicit_root_must_contain_invoked_skill_before_execution(
+    tmp_path: Path,
+) -> None:
+    explicit_root = tmp_path / "empty-plugin"
+    explicit_root.mkdir()
+    executor = _RetryExecutor([_result()])
+    runner = ExperimentRunner(
+        _config(),
+        output_root=tmp_path / "runs",
+        executor=executor,
+        codex_plugin_root=explicit_root,
+        codex_home=tmp_path / "codex-home",
+    )
+
+    with pytest.raises(ConfigurationError, match="Explicit Codex plugin root"):
+        runner.run_prompt(
+            _prompt(), condition_id="A4", platform="codex", run_id="missing-skill"
+        )
+
+    assert executor.calls == []
+
+
 def test_experiment_reference_copies_match_agentic_writer_sources() -> None:
     reference_pairs = (
         (

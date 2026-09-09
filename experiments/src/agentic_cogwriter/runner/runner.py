@@ -1407,8 +1407,17 @@ class ExperimentRunner:
     def _codex_plugin_root(self, condition: ConditionSpec) -> Path:
         """Select the root containing the skill file referenced by Codex."""
 
-        paths = self._codex_source_roots(condition)
         skill_relative = Path("skills") / condition.skill_name / "SKILL.md"
+        if self.codex_plugin_root is not None:
+            explicit_root = self.codex_plugin_root.resolve()
+            if not (explicit_root / skill_relative).is_file():
+                raise ConfigurationError(
+                    f"Explicit Codex plugin root {explicit_root} does not contain "
+                    f"the invoked skill {condition.skill_name!r}"
+                )
+            return explicit_root
+
+        paths = self._codex_source_roots(condition)
         for path in paths:
             if (path / skill_relative).is_file():
                 return path
