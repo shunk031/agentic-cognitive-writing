@@ -17,7 +17,7 @@ The runner gives this condition the same assignment, supplied context, context-w
 
 The coordinator and every subagent may use only `.writing/assignment.md`, the supplied context, the persisted plan, and outputs produced by this run. No actor may browse, search, call a retrieval tool, access the Internet, or use an external source. If the supplied context does not establish a claim, preserve the uncertainty or omit the claim.
 
-This adaptation has no goal network. Leave `.writing/goals.md` untouched, emit no goal events, and do not treat the structured document plan as a replacement goal file. The plan exists only to condition segment generation and is persisted at `.writing/baselines/cogwriter-style/plan.json` for run inspection.
+This adaptation has no goal network. Do not create or modify `.writing/goals.md`, emit no goal events, and do not treat the structured document plan as a replacement goal file. The plan exists only to condition segment generation and is persisted at `.writing/baselines/cogwriter-style/plan.json` for run inspection.
 
 The user owns rhetorical intent, factual authority, final wording, and publication. The coordinator owns the fixed top-level order, subagent dispatch, assembly, and trace recording. Planning and generation subagents own their returned artifacts. A native subagent must not launch a nested `codex exec` process.
 

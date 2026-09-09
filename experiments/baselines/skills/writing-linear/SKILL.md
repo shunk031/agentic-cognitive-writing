@@ -17,7 +17,7 @@ The user owns rhetorical intent, factual authority, final wording, and publicati
 
 ## Procedure
 
-1. Read `.writing/assignment.md` and the supplied context. Leave `.writing/goals.md` untouched and do not create goal events.
+1. Read `.writing/assignment.md` and the supplied context. Do not create or modify `.writing/goals.md` and do not create goal events.
 2. Run one `Pre-Write` pass that converts the assignment into a compact document plan, requirements checklist, and section intent. Store its output at `.writing/baselines/linear/pre-write.md` or the runner-designated equivalent.
 3. Append the first schema-valid `process_switch` event for `null -> pre-write`, naming the runner as the responsible actor and citing the assignment and pre-write handoff.
 4. Run one `Write` pass using the assignment, supplied context, and complete Pre-Write output. Store the draft at `.writing/baselines/linear/write.md`.

@@ -21,7 +21,7 @@ Use this skill only when the user explicitly requests a controlled no-goal-netwo
 
 ## Read the state first
 
-Create missing files and directories without overwriting existing content. The no-goal-network variant never creates or edits `goals.md`. Treat these files as the user's externalized task environment and long-term memory:
+Create missing files and directories without overwriting existing content. Do not create or modify `.writing/goals.md`. Treat these files as the user's externalized task environment and long-term memory:
 
 ```text
 .writing/
@@ -39,7 +39,7 @@ Read these before choosing a process:
 - relevant files in `.writing/memory/`
 - the latest entries in `.writing/trace/process.jsonl`
 
-Leave `goals.md` untouched, whether it exists or not.
+Do not create or modify `.writing/goals.md`, whether it exists or not.
 
 Treat the assignment as the single implicit objective. Do not use a hierarchical goal to fill missing user intent.
 

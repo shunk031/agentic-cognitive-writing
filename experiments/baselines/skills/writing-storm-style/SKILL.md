@@ -21,7 +21,7 @@ The user owns rhetorical intent, factual authority, final wording, and publicati
 
 ## Procedure
 
-1. Read `.writing/assignment.md` and the supplied context. Leave `.writing/goals.md` untouched and do not create goal events.
+1. Read `.writing/assignment.md` and the supplied context. Do not create or modify `.writing/goals.md` and do not create goal events.
 2. Run one perspective-discovery pass. Save the discovered perspectives at `.writing/baselines/storm-style/perspectives.md` or the runner-designated equivalent.
 3. Run one simulated-question-answering pass. The question-asker and expert may be separate subagents, but both receive the same supplied context and must not retrieve information. Save the questions and answers at `.writing/baselines/storm-style/question-answering.md`.
 4. Run one outline pass from the assignment, perspectives, and question-answering output. Save the outline at `.writing/baselines/storm-style/outline.md`.

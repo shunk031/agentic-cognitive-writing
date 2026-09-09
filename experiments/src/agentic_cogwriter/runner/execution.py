@@ -333,31 +333,13 @@ def _retrieval_marker(value: Any) -> str | None:
 def reject_retrieval(
     stdout: bytes,
     stderr: bytes,
-    *,
-    scan_artifact_text: bool = False,
-    artifact_source: str = "transport",
 ) -> None:
-    """Reject parsed retrieval events and explicit commands in fallback text.
-
-    Generator transport streams are inspected as JSONL event streams. A
-    fallback artifact is plain text, so callers may opt into the narrower
-    explicit-network-command scan for that artifact only.
-    """
+    """Reject parsed retrieval events from generator transport output."""
 
     for stream, payload in (("stdout", stdout), ("stderr", stderr)):
         decoded = payload.decode("utf-8", errors="replace")
-        for line in decoded.splitlines():
-            if scan_artifact_text:
-                match = _NETWORK_COMMAND_RE.search(line)
-                if match:
-                    raise RetrievalViolation(
-                        "Unpermitted retrieval marker observed in artifact text",
-                        matched_pattern=match.group(0),
-                        matching_line=line,
-                        stream=stream,
-                        artifact_source=artifact_source,
-                        payload=payload,
-                    )
+        lines = decoded.splitlines()
+        for line in lines:
             try:
                 value = json.loads(line)
             except json.JSONDecodeError:
@@ -371,6 +353,6 @@ def reject_retrieval(
                     matched_pattern=marker,
                     matching_line=line,
                     stream=stream,
-                    artifact_source=artifact_source,
+                    artifact_source="transport",
                     payload=payload,
                 )

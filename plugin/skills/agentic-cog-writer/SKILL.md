@@ -87,7 +87,13 @@ At each turn, the `Monitor` should:
 
    Ask for a decision when the next move depends on the user's intent or factual authority.
 
-Before sending the final response, write the complete current document to `.writing/draft.md`. The run is `INVALID` unless `.writing/draft.md` exists before the final response and the final response contains the complete final text. The final response cannot substitute for the required draft.
+Before sending the final response, complete this non-skippable checklist:
+
+1. The complete current document is written to `.writing/draft.md`.
+2. The trace holds one goal event (`goal_created`, `goal_developed`, or `goal_regenerated`) for every goal recorded in `goals.md` during this run.
+3. The final response contains the complete final text.
+
+The run is `INVALID` unless `.writing/draft.md` exists before the final response and the final response contains the complete final text. The final response cannot substitute for the required draft.
 
 ## Non-linear control rules
 

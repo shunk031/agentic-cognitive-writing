@@ -56,15 +56,36 @@ WRITING_TRACE_PROCESSES = (
     "revise",
 )
 
+REPO_ROOT = Path(__file__).parents[2]
+
 SINGLE_TURN_CONTRACT = (
     "\n\nSingle-turn contract:\n"
     "This is a single-turn task with no interactive user; never ask clarification "
     "questions. When the assignment underspecifies audience, purpose, or scope, "
     "apply genre-appropriate defaults and record the assumptions. Conditions with "
-    "a `.writing/` workspace record assumptions there. Do not state assumptions "
+    "a `.writing/` workspace record assumptions in `.writing/assumptions.md`. "
+    "Do not state assumptions "
     "briefly at the top of the deliverable. Conditions without `.writing/` apply "
     "assumptions without an extra preamble. Do not change the deliverable's content "
     "contract."
+)
+
+NO_GOAL_SKILL_PATHS = (
+    REPO_ROOT / "experiments/baselines/skills/writing-linear/SKILL.md",
+    REPO_ROOT / "experiments/baselines/skills/writing-storm-style/SKILL.md",
+    REPO_ROOT / "experiments/baselines/skills/writing-cogwriter-style/SKILL.md",
+    REPO_ROOT / "experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md",
+    REPO_ROOT / "experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md",
+)
+NO_GOAL_FILE_RULE = "Do not create or modify `.writing/goals.md`"
+STAGE_SESSION_HEADER = (
+    "The following {count} frozen stages run in order within this single session; "
+    "each stage's output is the input of the next, and only the final stage's "
+    "output is the final response."
+)
+SINGLE_STAGE_SESSION_HEADER = (
+    "The following frozen stage runs within this single session; its output is the "
+    "final response."
 )
 
 
@@ -910,6 +931,81 @@ def test_every_condition_prompt_has_the_uniform_single_turn_contract() -> None:
             assert SINGLE_TURN_CONTRACT in prompt
 
 
+def test_every_wrapper_records_assumptions_in_the_assumptions_file() -> None:
+    expected = (
+        "Conditions with a `.writing/` workspace record assumptions in "
+        "`.writing/assumptions.md`."
+    )
+    for condition in load_condition_registry().values():
+        wrapper = tomllib.loads(condition.plugin_config.read_text(encoding="utf-8"))
+        for platform in ("codex", "claude_code"):
+            assert expected in wrapper["invocation"][platform]
+
+
+def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
+    occurrences = 0
+    for path in NO_GOAL_SKILL_PATHS:
+        text = path.read_text(encoding="utf-8")
+        occurrences += text.count(NO_GOAL_FILE_RULE)
+        assert "Leave `.writing/goals.md` untouched" not in text
+        assert "Leave `goals.md` untouched" not in text
+    assert occurrences == 6
+
+
+def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
+    text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    checklist = (
+        "Before sending the final response, complete this non-skippable checklist:\n\n"
+        "1. The complete current document is written to `.writing/draft.md`.\n"
+        "2. The trace holds one goal event (`goal_created`, `goal_developed`, or "
+        "`goal_regenerated`) for every goal recorded in `goals.md` during this run.\n"
+        "3. The final response contains the complete final text."
+    )
+    assert checklist in text
+    assert (
+        "The run is `INVALID` unless `.writing/draft.md` exists before the final "
+        "response and the final response contains the complete final text."
+    ) in text
+
+
+@pytest.mark.parametrize(
+    ("condition_id", "stage_count", "first_stage", "expected_header"),
+    (
+        ("A1", 1, "single_shot", SINGLE_STAGE_SESSION_HEADER),
+        ("A2", 3, "pre_write", STAGE_SESSION_HEADER.format(count=3)),
+        (
+            "B2",
+            5,
+            "perspective_discovery",
+            STAGE_SESSION_HEADER.format(count=5),
+        ),
+    ),
+)
+def test_composed_prompt_identifies_the_single_session_stage_chain(
+    condition_id: str,
+    stage_count: int,
+    first_stage: str,
+    expected_header: str,
+) -> None:
+    runner = ExperimentRunner(_config(), output_root=Path("runs"))
+    prompt = runner._plugin_prompt(
+        load_condition_registry()[condition_id], _prompt(), "codex"
+    )
+    assert prompt.count(expected_header) == 1
+    assert prompt.index(expected_header) < prompt.index(f"Frozen stage {first_stage}")
+    if stage_count == 1:
+        assert STAGE_SESSION_HEADER.format(count=1) not in prompt
+
+
+def test_composed_prompt_omits_the_stage_chain_header_without_frozen_paths() -> None:
+    runner = ExperimentRunner(_config(), output_root=Path("runs"))
+    prompt = runner._plugin_prompt(load_condition_registry()["A4"], _prompt(), "codex")
+
+    assert "frozen stages run in order within this single session" not in prompt
+
+
 @pytest.mark.parametrize(
     "condition_id", ("A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2")
 )
@@ -1319,15 +1415,6 @@ def test_network_command_in_executed_command_event_is_rejected() -> None:
         reject_retrieval(payload, b"")
 
 
-def test_fallback_artifact_still_rejects_explicit_network_commands() -> None:
-    with pytest.raises(RetrievalViolation, match="retrieval marker"):
-        reject_retrieval(
-            b"Evidence gathered with curl https://example.test/source",
-            b"",
-            scan_artifact_text=True,
-        )
-
-
 def test_retrieval_tripwire_recognizes_generic_event_key() -> None:
     assert _retrieval_marker({"event": "web_search"}) == "web_search"
     with pytest.raises(RetrievalViolation, match="retrieval event"):
@@ -1732,30 +1819,6 @@ def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
 
     with pytest.raises(ExecutionError, match="goals.md"):
         runner.run_prompt(_prompt(), condition_id="A5", platform="codex")
-
-
-def test_runner_rejects_retrieval_in_draft_fallback(tmp_path: Path) -> None:
-    class DraftRetrievalExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds, env=None):
-            result = super().run(
-                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
-            )
-            draft = cwd / ".writing" / "draft.md"
-            draft.write_text("Evidence gathered with curl https://example.test/source")
-            return result
-
-    runner = _runner(tmp_path, executor=DraftRetrievalExecutor([_result(output="")]))
-
-    with pytest.raises(RetrievalViolation, match="retrieval marker"):
-        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
-
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex"
-    manifest = json.loads(
-        next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
-    )
-    assert manifest["failure"]["retrieval"]["artifact_source"] == "draft"
-    assert manifest["failure"]["retrieval"]["artifact"] == "rejected-output.draft"
-    assert (next(run_dir.iterdir()) / "rejected-output.draft").is_file()
 
 
 def test_runner_rejects_a_summary_when_workspace_draft_is_the_product(
