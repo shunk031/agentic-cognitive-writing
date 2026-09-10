@@ -150,7 +150,9 @@ The pairwise records follow the balanced tournament contract in [`protocol.md`](
 
 ## Score many runs and aggregate
 
-The batch command scores every completed run below each `--runs-root`, skips task artifacts that already have a `scores-manifest.json`, and logs scorer exceptions in `scoring-errors.jsonl` beside the affected root. Pointwise artifacts live under `scores/pointwise/`, native artifacts use their task name, and pairwise artifacts add a pair-specific directory so tasks do not overwrite one another.
+The batch command selects one canonical run for each `(benchmark, condition, prompt, platform)` key. The selector chooses the latest completed run by `started_at`, or the latest failed run when no completed run exists. Only completed canonical runs receive jobs. Pairwise jobs use the fixed A4-versus-A1, A2, A3, A5, and A6 contrasts for each prompt, and a failed canonical side removes that pair from the job list. Existing task artifacts with a `scores-manifest.json` are skipped, and scorer exceptions are appended to `scoring-errors.jsonl` beside the owning runs root.
+
+Each task stores `scores.jsonl` and `scores-manifest.json` below `scores/<task>/<judge_id>/`. Pairwise artifacts add a pair directory below that path. A native configuration applies when its template filename identifies `WritingBench` or `HelloBench`; runs for benchmarks without a matching native configuration are skipped.
 
 ```bash
 uv run --project experiments agentic-cogwriter-score-batch \
@@ -161,14 +163,14 @@ uv run --project experiments agentic-cogwriter-score-batch \
   --native-config /path/to/hellobench-native-config.json
 ```
 
-The aggregation command reads completed run manifests and score manifests, then writes `aggregation.json` and `aggregation.md` under the requested output directory. The report includes completion failures, generic and native quality summaries, pairwise counts and Bradley-Terry strengths, token costs, and the run counts used for each table. Supply prices as JSON objects with `input`, `cached_input`, and `output` values in cost units per one million tokens.
+The aggregation command applies the same retry selector, reads completed canonical run manifests and score manifests, then writes `aggregation.json` and `aggregation.md` under the requested output directory. The report includes completion failures, generic and native quality summaries, pairwise counts and Bradley-Terry strengths, token costs, and the run counts used for each table. Supply each price argument as a JSON file path. Each file contains `input`, `cached_input`, and `output` values in cost units per one million tokens.
 
 ```bash
 uv run --project experiments agentic-cogwriter-aggregate \
   --runs-root /path/to/codex-runs \
   --runs-root /path/to/replication-runs \
-  --generation-prices '{"input":0,"cached_input":0,"output":0}' \
-  --judge-prices '{"input":0,"cached_input":0,"output":0}' \
+  --generation-prices /path/to/generation-prices.json \
+  --judge-prices /path/to/judge-prices.json \
   --output-dir /path/to/analysis-report
 ```
 

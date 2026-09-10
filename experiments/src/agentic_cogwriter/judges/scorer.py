@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from collections.abc import Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -298,7 +301,7 @@ def _write_score_artifacts(
         for result in results
     )
     scores_path.parent.mkdir(parents=True, exist_ok=True)
-    scores_path.write_bytes(record_bytes)
+    _atomic_write(scores_path, record_bytes)
     first_result = results[0]
     score_manifest: dict[str, Any] = {
         "schema_version": 1,
@@ -344,9 +347,12 @@ def _write_score_artifacts(
     }
     if tournament is not None:
         score_manifest["tournament"] = tournament
-    manifest_path.write_text(
-        json.dumps(score_manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
+    _atomic_write(
+        manifest_path,
+        (
+            json.dumps(score_manifest, ensure_ascii=False, indent=2, sort_keys=True)
+            + "\n"
+        ).encode("utf-8"),
     )
     return ScoreRunResult(
         scores_path=scores_path,
@@ -358,6 +364,21 @@ def _write_score_artifacts(
 
 def _manifest_path(scores_path: Path) -> Path:
     return scores_path.with_name(scores_path.stem + "-manifest.json")
+
+
+def _atomic_write(path: Path, data: bytes) -> None:
+    """Replace one score artifact only after its temporary file is complete."""
+
+    fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        with suppress(FileNotFoundError):
+            os.unlink(temporary)
 
 
 def score_run(

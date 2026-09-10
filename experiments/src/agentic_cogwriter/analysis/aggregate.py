@@ -1,16 +1,17 @@
-"""Aggregate runner and score manifests into JSON and Markdown reports."""
-
 from __future__ import annotations
 
 import argparse
-import itertools
 import json
 import math
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from statistics import fmean
 from typing import Any
+
+from ..runner.hashing import sha256_file
+from .common import CONTRASTS, RunRecord, select_canonical_runs
 
 PRICE_KEYS = ("input", "cached_input", "output")
 DIMENSIONS = (
@@ -23,35 +24,7 @@ DIMENSIONS = (
 
 
 @dataclass(frozen=True)
-class RunRecord:
-    """A run manifest indexed by its content hash."""
-
-    path: Path
-    manifest: dict[str, Any]
-    manifest_hash: str
-
-    @property
-    def benchmark(self) -> str:
-        return str(self.manifest.get("inputs", {}).get("benchmark_name", "unknown"))
-
-    @property
-    def condition(self) -> str:
-        return str(self.manifest.get("inputs", {}).get("condition_id", "unknown"))
-
-    @property
-    def prompt(self) -> str:
-        return str(self.manifest.get("inputs", {}).get("prompt_id", "unknown"))
-
-    @property
-    def platform(self) -> str:
-        return str(self.manifest.get("inputs", {}).get("platform", "unknown"))
-
-
-@dataclass(frozen=True)
 class ScoreArtifact:
-    """One score JSON Lines file and its source runs."""
-
-    path: Path
     manifest: dict[str, Any]
     records: tuple[dict[str, Any], ...]
     sources: tuple[RunRecord, ...]
@@ -60,14 +33,17 @@ class ScoreArtifact:
     def task(self) -> str:
         return str(self.manifest.get("task", "unknown"))
 
+    @property
+    def judge_id(self) -> str:
+        judge = self.manifest.get("judge")
+        return (
+            str(judge.get("judge_id", "unknown"))
+            if isinstance(judge, Mapping)
+            else "unknown"
+        )
 
-def _manifest_hash(path: Path) -> str:
-    import hashlib
 
-    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def _json_object(path: Path) -> dict[str, Any] | None:
+def _json(path: Path) -> dict[str, Any] | None:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError):
@@ -75,192 +51,181 @@ def _json_object(path: Path) -> dict[str, Any] | None:
     return value if isinstance(value, dict) else None
 
 
-def _runs(roots: Sequence[Path]) -> dict[str, RunRecord]:
-    result: dict[str, RunRecord] = {}
-    for root in roots:
-        for path in sorted(root.resolve().rglob("run-manifest.json")):
-            manifest = _json_object(path)
-            if manifest is None:
-                continue
-            inputs = manifest.get("inputs")
-            if not isinstance(inputs, dict):
-                continue
-            if not all(
-                isinstance(inputs.get(field), str)
-                for field in ("benchmark_name", "condition_id", "prompt_id")
-            ):
-                continue
-            digest = _manifest_hash(path)
-            result[digest] = RunRecord(path.parent, manifest, digest)
-    return result
-
-
-def _score_path(manifest_path: Path) -> Path:
-    stem = manifest_path.name.removesuffix("-manifest.json")
-    return manifest_path.with_name(stem + ".jsonl")
-
-
-def _source_runs(
-    manifest: Mapping[str, Any], run_index: Mapping[str, RunRecord]
-) -> tuple[RunRecord, ...]:
-    values = manifest.get("source_runs", [])
-    if not isinstance(values, list):
-        return ()
-    result: list[RunRecord] = []
-    for value in values:
-        if not isinstance(value, Mapping):
-            return ()
-        digest = value.get("run_manifest_sha256")
-        if isinstance(digest, str) and digest in run_index:
-            result.append(run_index[digest])
-        else:
-            return ()
-    return tuple(result)
-
-
-def _score_artifacts(
-    roots: Sequence[Path], run_index: Mapping[str, RunRecord]
-) -> list[ScoreArtifact]:
+def _artifacts(roots: Sequence[Path], runs: Sequence[RunRecord]) -> list[ScoreArtifact]:
+    index = {
+        "sha256:" + sha256_file(run.path / "run-manifest.json"): run for run in runs
+    }
     result: list[ScoreArtifact] = []
     seen: set[Path] = set()
-    for root in roots:
-        for manifest_path in sorted(root.resolve().rglob("scores-manifest.json")):
+    for root_value in roots:
+        for manifest_path in sorted(root_value.resolve().rglob("scores-manifest.json")):
             if manifest_path in seen:
                 continue
             seen.add(manifest_path)
-            manifest = _json_object(manifest_path)
-            score_path = _score_path(manifest_path)
+            manifest = _json(manifest_path)
+            score_path = manifest_path.parent / "scores.jsonl"
             if manifest is None or not score_path.is_file():
                 continue
-            sources = _source_runs(manifest, run_index)
-            if not sources or any(
-                run.manifest.get("status") != "completed" for run in sources
-            ):
+            sources: list[RunRecord] = []
+            for source in manifest.get("source_runs", []):
+                digest = (
+                    source.get("run_manifest_sha256")
+                    if isinstance(source, Mapping)
+                    else None
+                )
+                if not isinstance(digest, str) or digest not in index:
+                    sources = []
+                    break
+                sources.append(index[digest])
+            if not sources or any(run.status != "completed" for run in sources):
                 continue
-            records: list[dict[str, Any]] = []
             try:
-                lines = score_path.read_text(encoding="utf-8").splitlines()
-            except (OSError, UnicodeError):
+                records = tuple(
+                    value
+                    for line in score_path.read_text(encoding="utf-8").splitlines()
+                    if isinstance(value := json.loads(line), dict)
+                )
+            except (OSError, UnicodeError, json.JSONDecodeError):
                 continue
-            try:
-                for line in lines:
-                    value = json.loads(line)
-                    if not isinstance(value, dict):
-                        raise ValueError
-                    records.append(value)
-            except (ValueError, json.JSONDecodeError):
-                continue
-            result.append(ScoreArtifact(score_path, manifest, tuple(records), sources))
+            result.append(ScoreArtifact(manifest, records, tuple(sources)))
     return result
 
 
-def _failure_prefix(manifest: Mapping[str, Any]) -> str:
-    failure = manifest.get("failure")
-    if isinstance(failure, Mapping):
-        message = failure.get("message", failure.get("error", "unknown failure"))
-    else:
-        message = "unknown failure"
-    return str(message).splitlines()[0][:120]
+def _rows(
+    groups: Mapping[tuple[str, ...], Any],
+    labels: tuple[str, ...],
+    summarize: Callable[[Any], Mapping[str, Any]],
+) -> list[dict[str, Any]]:
+    return [
+        {**dict(zip(labels, key, strict=True)), **summarize(value)}
+        for key, value in sorted(groups.items())
+    ]
 
 
-def _completion_table(runs: Sequence[RunRecord]) -> dict[str, Any]:
-    grouped: dict[tuple[str, str], list[RunRecord]] = defaultdict(list)
+def _completion(runs: Sequence[RunRecord]) -> dict[str, Any]:
+    groups: dict[tuple[str, str, str], list[RunRecord]] = defaultdict(list)
     for run in runs:
-        grouped[(run.benchmark, run.condition)].append(run)
-    rows: list[dict[str, Any]] = []
-    for (benchmark, condition), values in sorted(grouped.items()):
+        groups[(run.benchmark, run.platform, run.condition)].append(run)
+
+    def summary(values: Sequence[RunRecord]) -> Mapping[str, Any]:
         failures: dict[str, int] = defaultdict(int)
         for run in values:
-            if run.manifest.get("status") != "completed":
-                failures[_failure_prefix(run.manifest)] += 1
-        rows.append(
-            {
-                "benchmark": benchmark,
-                "condition": condition,
-                "run_count": len(values),
-                "completed_runs": sum(
-                    run.manifest.get("status") == "completed" for run in values
-                ),
-                "failed_runs": sum(
-                    run.manifest.get("status") != "completed" for run in values
-                ),
-                "failure_messages": dict(sorted(failures.items())),
-            }
-        )
-    return {"rows": rows, "run_count": len(runs)}
+            if run.status != "completed":
+                failure = run.manifest.get("failure")
+                message = (
+                    failure.get("message", failure.get("error", "unknown failure"))
+                    if isinstance(failure, Mapping)
+                    else "unknown failure"
+                )
+                failures[str(message).splitlines()[0][:120]] += 1
+        return {
+            "run_count": len(values),
+            "completed_runs": sum(run.status == "completed" for run in values),
+            "failed_runs": sum(run.status != "completed" for run in values),
+            "failure_messages": dict(sorted(failures.items())),
+        }
+
+    return {
+        "rows": _rows(groups, ("benchmark", "platform", "condition"), summary),
+        "run_count": len(runs),
+    }
 
 
-def _mean(values: Sequence[float]) -> float | None:
-    return sum(values) / len(values) if values else None
-
-
-def _pointwise_table(artifacts: Sequence[ScoreArtifact]) -> dict[str, Any]:
-    observations: list[tuple[ScoreArtifact, RunRecord, dict[str, Any]]] = []
+def _pointwise(artifacts: Sequence[ScoreArtifact]) -> dict[str, Any]:
+    observations: list[tuple[RunRecord, Mapping[str, Any], str]] = []
     for artifact in artifacts:
         if artifact.task != "pointwise" or len(artifact.sources) != 1:
             continue
         for record in artifact.records:
-            if isinstance(record.get("scores"), Mapping) and all(
-                isinstance(record["scores"].get(dimension), (int, float))
-                and not isinstance(record["scores"].get(dimension), bool)
+            scores = record.get("scores")
+            if isinstance(scores, Mapping) and all(
+                isinstance(scores.get(dimension), (int, float))
+                and not isinstance(scores.get(dimension), bool)
                 for dimension in DIMENSIONS
             ):
-                observations.append((artifact, artifact.sources[0], record))
+                observations.append(
+                    (
+                        artifact.sources[0],
+                        record,
+                        str(record.get("judge_id", artifact.judge_id)),
+                    )
+                )
 
-    values: dict[tuple[str, str, str], list[float]] = defaultdict(list)
-    for _artifact, run, record in observations:
-        scores = record["scores"]
+    values: dict[tuple[str, str, str, str], list[float]] = defaultdict(list)
+    for run, record, judge in observations:
         for dimension in DIMENSIONS:
-            values[
-                (run.benchmark, str(record.get("judge_id", "unknown")), dimension)
-            ].append(float(scores[dimension]))
-
-    means: dict[tuple[str, str, str], float] = {}
-    deviations: dict[tuple[str, str, str], float] = {}
-    for key, items in values.items():
-        mean = sum(items) / len(items)
-        means[key] = mean
-        deviations[key] = math.sqrt(
-            sum((item - mean) ** 2 for item in items) / len(items)
-        )
-
-    grouped: dict[tuple[str, str], dict[str, list[float]]] = defaultdict(
-        lambda: {dimension: [] for dimension in DIMENSIONS} | {"composite": []}
-    )
-    run_ids: dict[tuple[str, str], set[Path]] = defaultdict(set)
-    for _artifact, run, record in observations:
-        group = (run.benchmark, run.condition)
-        scores = record["scores"]
-        z_scores: list[float] = []
-        for dimension in DIMENSIONS:
-            raw = float(scores[dimension])
-            key = (run.benchmark, str(record.get("judge_id", "unknown")), dimension)
-            grouped[group][dimension].append(raw)
-            scale = deviations[key]
-            z_scores.append((raw - means[key]) / scale if scale else 0.0)
-        grouped[group]["composite"].append(sum(z_scores) / len(z_scores))
-        run_ids[group].add(run.path)
-
-    rows = []
-    for (benchmark, condition), items in sorted(grouped.items()):
-        rows.append(
+            values[(run.platform, judge, run.benchmark, dimension)].append(
+                float(record["scores"][dimension])
+            )
+    centers = {key: fmean(items) for key, items in values.items()}
+    deviations = {
+        key: math.sqrt(fmean([(x - centers[key]) ** 2 for x in items]))
+        for key, items in values.items()
+    }
+    judges: dict[tuple[str, str, str, str], dict[str, Any]] = {}
+    for run, record, judge in observations:
+        key = (run.platform, run.benchmark, run.condition, judge)
+        entry = judges.setdefault(
+            key,
             {
-                "benchmark": benchmark,
-                "condition": condition,
-                "run_count": len(run_ids[(benchmark, condition)]),
-                "record_count": len(items["composite"]),
-                "dimension_means": {
-                    dimension: _mean(items[dimension]) for dimension in DIMENSIONS
+                "dimensions": defaultdict(list),
+                "composites": [],
+                "runs": set(),
+                "records": 0,
+            },
+        )
+        z_scores = []
+        for dimension in DIMENSIONS:
+            raw = float(record["scores"][dimension])
+            entry["dimensions"][dimension].append(raw)
+            scale = deviations[(run.platform, judge, run.benchmark, dimension)]
+            z_scores.append(
+                (raw - centers[(run.platform, judge, run.benchmark, dimension)]) / scale
+                if scale
+                else 0.0
+            )
+        entry["composites"].append(fmean(z_scores))
+        entry["runs"].add(run.path)
+        entry["records"] += 1
+
+    groups: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
+    for (platform, benchmark, condition, judge), entry in judges.items():
+        groups[(platform, benchmark, condition)].append(
+            {
+                "judge": judge,
+                "dimensions": {
+                    dimension: fmean(entry["dimensions"][dimension])
+                    for dimension in DIMENSIONS
                 },
-                "z_scored_composite_mean": _mean(items["composite"]),
+                "composite": fmean(entry["composites"]),
+                "runs": entry["runs"],
+                "records": entry["records"],
             }
         )
-    return {"rows": rows, "run_count": len({run.path for _, run, _ in observations})}
+
+    def summary(entries: Sequence[Mapping[str, Any]]) -> Mapping[str, Any]:
+        return {
+            "run_count": len(set().union(*(entry["runs"] for entry in entries))),
+            "record_count": sum(entry["records"] for entry in entries),
+            "dimension_means": {
+                dimension: fmean(entry["dimensions"][dimension] for entry in entries)
+                for dimension in DIMENSIONS
+            },
+            "judge_composites": {
+                entry["judge"]: entry["composite"] for entry in entries
+            },
+            "z_scored_composite_mean": fmean(entry["composite"] for entry in entries),
+        }
+
+    return {
+        "rows": _rows(groups, ("platform", "benchmark", "condition"), summary),
+        "run_count": len({run.path for run, _record, _judge in observations}),
+    }
 
 
-def _native_table(artifacts: Sequence[ScoreArtifact]) -> dict[str, Any]:
-    grouped: dict[tuple[str, str], list[float]] = defaultdict(list)
-    run_ids: dict[tuple[str, str], set[Path]] = defaultdict(set)
+def _native(artifacts: Sequence[ScoreArtifact]) -> dict[str, Any]:
+    judges: dict[tuple[str, str, str, str], list[float]] = defaultdict(list)
+    runs: dict[tuple[str, str, str, str], set[Path]] = defaultdict(set)
     scales: dict[str, str] = {}
     for artifact in artifacts:
         if (
@@ -291,279 +256,319 @@ def _native_table(artifacts: Sequence[ScoreArtifact]) -> dict[str, Any]:
                     )
             scales[run.benchmark] = "0-1"
         if values:
-            key = (run.benchmark, run.condition)
-            grouped[key].append(sum(values) / len(values))
-            run_ids[key].add(run.path)
+            key = (run.platform, run.benchmark, run.condition, artifact.judge_id)
+            judges[key].append(fmean(values))
+            runs[key].add(run.path)
 
-    rows = [
-        {
-            "benchmark": benchmark,
-            "condition": condition,
-            "run_count": len(run_ids[(benchmark, condition)]),
-            "mean_score": _mean(values),
-            "scale": scales.get(benchmark, "unknown"),
-        }
-        for (benchmark, condition), values in sorted(grouped.items())
-    ]
-    return {"rows": rows, "run_count": sum(len(value) for value in run_ids.values())}
-
-
-def _pair_mapping(artifact: ScoreArtifact) -> dict[str, tuple[int, int]]:
-    mapping: dict[str, tuple[int, int]] = {}
-    tournament = artifact.manifest.get("tournament")
-    order_mapping = (
-        tournament.get("order_mapping") if isinstance(tournament, Mapping) else None
-    )
-    if isinstance(order_mapping, list):
-        for item in order_mapping:
-            if not isinstance(item, Mapping) or not isinstance(
-                item.get("presentation"), str
-            ):
-                continue
-            first = 0 if item.get("first_output") == "first_run" else 1
-            second = 0 if item.get("second_output") == "first_run" else 1
-            mapping[item["presentation"]] = (first, second)
-    return mapping or {"A|B": (0, 1), "B|A": (1, 0)}
-
-
-def _pairwise_table(
-    artifacts: Sequence[ScoreArtifact], runs: Sequence[RunRecord]
-) -> dict[str, Any]:
-    outcomes: dict[tuple[str, str, str, str, frozenset[str]], list[str]] = defaultdict(
-        list
-    )
-    contrast_counts: dict[tuple[str, str], dict[str, int]] = defaultdict(
-        lambda: {"wins": 0, "ties": 0, "losses": 0, "run_count": 0}
-    )
-    contrast_runs: dict[tuple[str, str], set[Path]] = defaultdict(set)
-    games: dict[str, list[tuple[str, str, str]]] = defaultdict(list)
-    scored_pairs: set[tuple[str, str, str, frozenset[str]]] = set()
-    feeding_runs: set[Path] = set()
-    for artifact in artifacts:
-        if artifact.task != "pairwise" or len(artifact.sources) != 2:
-            continue
-        first, second = artifact.sources
-        if (
-            first.benchmark != second.benchmark
-            or first.prompt != second.prompt
-            or first.platform != second.platform
-        ):
-            continue
-        mapping = _pair_mapping(artifact)
-        pair = frozenset((first.condition, second.condition))
-        pair_key = (first.benchmark, first.prompt, first.platform, pair)
-        scored_pairs.add(pair_key)
-        feeding_runs.update(run.path for run in artifact.sources)
-        left, right = sorted(pair)
-        if "A4" in pair:
-            left, right = (
-                "A4",
-                next(condition for condition in pair if condition != "A4"),
-            )
-        label = f"{left}:{right}"
-        for record in artifact.records:
-            presentation = str(record.get("presentation", "A|B"))
-            first_index, second_index = mapping.get(presentation, (0, 1))
-            winner = record.get("winner")
-            if winner == "tie":
-                canonical = "tie"
-                outcome = "tie"
-            elif winner in {"A", "B"}:
-                winner_index = first_index if winner == "A" else second_index
-                winner_condition = artifact.sources[winner_index].condition
-                canonical = winner_condition
-                outcome = "left" if winner_condition == left else "right"
-            else:
-                continue
-            outcomes[
-                (first.benchmark, first.prompt, first.platform, label, pair)
-            ].append(canonical)
-            games[first.benchmark].append((left, right, outcome))
-            counts = contrast_counts[(first.benchmark, label)]
-            contrast_runs[(first.benchmark, label)].update(
-                run.path for run in artifact.sources
-            )
-            if outcome == "left":
-                counts["wins"] += 1
-            elif outcome == "right":
-                counts["losses"] += 1
-            else:
-                counts["ties"] += 1
-            counts["run_count"] = len(contrast_runs[(first.benchmark, label)])
-
-    expected_pairs: set[tuple[str, str, str, frozenset[str]]] = set()
-    grouped: dict[tuple[str, str, str], set[str]] = defaultdict(set)
-    for run in runs:
-        if run.manifest.get("status") == "completed":
-            grouped[(run.benchmark, run.prompt, run.platform)].add(run.condition)
-    for (benchmark, prompt, platform), conditions in grouped.items():
-        for first, second in itertools.combinations(sorted(conditions), 2):
-            expected_pairs.add(
-                (benchmark, prompt, platform, frozenset((first, second)))
-            )
-    missing_by_benchmark: dict[str, int] = defaultdict(int)
-    for benchmark, _prompt, _platform, _pair in expected_pairs - scored_pairs:
-        missing_by_benchmark[benchmark] += 1
-
-    benchmark_data: dict[str, Any] = {}
-    for benchmark in sorted(
-        set(benchmark for benchmark, _label in contrast_counts)
-        | set(missing_by_benchmark)
-    ):
-        contrasts: dict[str, Any] = {}
-        consistency_values: list[float] = []
-        for (candidate_benchmark, label), counts in sorted(contrast_counts.items()):
-            if candidate_benchmark != benchmark:
-                continue
-            pair_outcomes = [
-                values
-                for (
-                    value_benchmark,
-                    _prompt,
-                    _platform,
-                    value_label,
-                    _pair,
-                ), values in outcomes.items()
-                if value_benchmark == benchmark and value_label == label
-            ]
-            available = sum(len(values) >= 2 for values in pair_outcomes)
-            consistent = sum(
-                len(set(values)) == 1 for values in pair_outcomes if len(values) >= 2
-            )
-            rate = consistent / available if available else None
-            if rate is not None:
-                consistency_values.append(rate)
-            contrasts[label] = {
-                **counts,
-                "position_consistency_rate": rate,
+    groups: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
+    for (platform, benchmark, condition, judge), values in judges.items():
+        groups[(platform, benchmark, condition)].append(
+            {
+                "judge": judge,
+                "score": fmean(values),
+                "runs": runs[(platform, benchmark, condition, judge)],
             }
-        strengths = fit_bradley_terry(games.get(benchmark, []))
-        benchmark_data[benchmark] = {
-            "contrasts": contrasts,
-            "position_consistency_rate": (
-                sum(consistency_values) / len(consistency_values)
-                if consistency_values
-                else None
-            ),
-            "strengths": strengths,
-            "missing_pairs": missing_by_benchmark.get(benchmark, 0),
-            "run_count": len(
-                {
-                    run.path
-                    for run in runs
-                    if run.benchmark == benchmark
-                    and run.manifest.get("status") == "completed"
-                }
-            ),
+        )
+
+    def summary(entries: Sequence[Mapping[str, Any]]) -> Mapping[str, Any]:
+        return {
+            "run_count": len(set().union(*(entry["runs"] for entry in entries))),
+            "judge_scores": {entry["judge"]: entry["score"] for entry in entries},
+            "mean_score": fmean(entry["score"] for entry in entries),
         }
-    return {
-        "benchmarks": benchmark_data,
-        "missing_pairs": sum(missing_by_benchmark.values()),
-        "run_count": len(feeding_runs),
-    }
+
+    rows = _rows(groups, ("platform", "benchmark", "condition"), summary)
+    for row in rows:
+        row["scale"] = scales.get(row["benchmark"], "unknown")
+    return {"rows": rows, "run_count": sum(len(value) for value in runs.values())}
+
+
+def _mapping(artifact: ScoreArtifact) -> dict[str, tuple[int, int]]:
+    tournament = artifact.manifest.get("tournament")
+    result: dict[str, tuple[int, int]] = {}
+    for item in (
+        tournament.get("order_mapping", []) if isinstance(tournament, Mapping) else []
+    ):
+        if isinstance(item, Mapping) and isinstance(item.get("presentation"), str):
+            result[item["presentation"]] = (
+                0 if item.get("first_output") == "first_run" else 1,
+                0 if item.get("second_output") == "first_run" else 1,
+            )
+    return result or {"A|B": (0, 1), "B|A": (1, 0)}
 
 
 def fit_bradley_terry(
     games: Sequence[tuple[str, str, str]], *, max_iterations: int = 10_000
-) -> dict[str, float]:
-    """Fit Bradley-Terry strengths with iterative MM and half-credit ties."""
+) -> dict[str, Any]:
+    """Fit a tie-aware Bradley-Terry model with iterative MM updates."""
 
     conditions = sorted(
         {condition for left, right, _outcome in games for condition in (left, right)}
     )
-    strengths = {condition: 1.0 for condition in conditions}
-    wins = defaultdict(float)
+    wins: dict[str, float] = defaultdict(float)
+    losses: dict[str, float] = defaultdict(float)
     played: dict[tuple[str, str], int] = defaultdict(int)
     for left, right, outcome in games:
         if left == right:
             continue
-        pair: tuple[str, str] = (min(left, right), max(left, right))
-        played[pair] += 1
+        played[tuple(sorted((left, right)))] += 1
         if outcome == "left":
             wins[left] += 1
+            losses[right] += 1
         elif outcome == "right":
             wins[right] += 1
+            losses[left] += 1
         elif outcome == "tie":
             wins[left] += 0.5
             wins[right] += 0.5
-    for _ in range(max_iterations):
-        updated: dict[str, float] = {}
+            losses[left] += 0.5
+            losses[right] += 0.5
+    if not conditions or not played:
+        return {"status": "no data", "strengths": {}}
+    if any(wins[item] == 0 or losses[item] == 0 for item in conditions):
+        return {"status": "complete separation", "strengths": {}}
+
+    strengths = dict.fromkeys(conditions, 1.0)
+    for iteration in range(1, max_iterations + 1):
+        updated = {}
         for condition in conditions:
-            denominator = 0.0
-            for (left, right), count in played.items():
-                if condition in {left, right}:
-                    other = right if condition == left else left
-                    denominator += count / (strengths[condition] + strengths[other])
-            updated[condition] = (
-                wins[condition] / denominator if denominator else strengths[condition]
+            denominator = sum(
+                count / (strengths[condition] + strengths[other])
+                for (left, right), count in played.items()
+                if condition in {left, right}
+                for other in (right if condition == left else left,)
             )
-        scale = (
-            math.exp(
-                sum(math.log(max(value, 1e-12)) for value in updated.values())
-                / len(updated)
-            )
-            if updated
-            else 1.0
-        )
+            updated[condition] = wins[condition] / denominator if denominator else 0.0
+        if any(value <= 0 or not math.isfinite(value) for value in updated.values()):
+            return {"status": "complete separation", "strengths": {}}
+        scale = math.exp(fmean(math.log(value) for value in updated.values()))
         updated = {condition: value / scale for condition, value in updated.items()}
-        if (
-            max(
-                (
-                    abs(updated[condition] - strengths[condition])
-                    for condition in conditions
-                ),
-                default=0.0,
-            )
-            < 1e-10
-        ):
-            strengths = updated
-            break
+        if max(abs(updated[item] - strengths[item]) for item in conditions) < 1e-10:
+            return {"status": "ok", "strengths": updated, "iterations": iteration}
         strengths = updated
-    return strengths
+    return {"status": "non-convergence", "strengths": {}, "iterations": max_iterations}
 
 
-def _token_usage(value: Mapping[str, Any]) -> dict[str, int]:
-    def integer(*names: str) -> int:
-        for name in names:
-            candidate = value.get(name)
-            if (
-                isinstance(candidate, int)
-                and not isinstance(candidate, bool)
-                and candidate >= 0
-            ):
-                return candidate
-        return 0
+def _slot(data: dict[str, Any], benchmark: str, platform: str) -> dict[str, Any]:
+    return (
+        data.setdefault(benchmark, {})
+        .setdefault("platforms", {})
+        .setdefault(
+            platform,
+            {"judges": {}, "expected_pairs": 0, "scored": set(), "runs": set()},
+        )
+    )
 
-    total_input = integer("input_tokens", "prompt_tokens")
-    cached = integer("cached_input_tokens", "cached_tokens", "cache_read_tokens")
-    output = integer("output_tokens", "completion_tokens")
-    output += integer("reasoning_output_tokens", "reasoning_tokens")
+
+def _pairwise(
+    artifacts: Sequence[ScoreArtifact], runs: Sequence[RunRecord]
+) -> dict[str, Any]:
+    expected: dict[tuple[str, str], int] = defaultdict(int)
+    completed_counts: dict[tuple[str, str], int] = defaultdict(int)
+    for run in {(r.benchmark, r.prompt, r.platform) for r in runs}:
+        expected[(run[0], run[2])] += len(CONTRASTS)
+    for run in runs:
+        if run.status == "completed":
+            completed_counts[(run.benchmark, run.platform)] += 1
+    pairs: dict[tuple[str, str, str, str, str, str], ScoreArtifact] = {}
+    for artifact in artifacts:
+        if artifact.task != "pairwise" or len(artifact.sources) != 2:
+            continue
+        first, second = artifact.sources
+        if (first.benchmark, first.prompt, first.platform) != (
+            second.benchmark,
+            second.prompt,
+            second.platform,
+        ):
+            continue
+        contrast = next(
+            (
+                pair
+                for pair in CONTRASTS
+                if {first.condition, second.condition} == set(pair)
+            ),
+            None,
+        )
+        if contrast:
+            pairs.setdefault(
+                (
+                    first.benchmark,
+                    first.platform,
+                    first.prompt,
+                    *contrast,
+                    artifact.judge_id,
+                ),
+                artifact,
+            )
+
+    judges: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for (benchmark, platform, prompt, left, right, judge), artifact in pairs.items():
+        group = judges.setdefault(
+            (benchmark, platform, judge),
+            {
+                "games": [],
+                "counts": defaultdict(lambda: {"wins": 0, "ties": 0, "losses": 0}),
+                "consistent": [],
+                "pairs": set(),
+                "runs": set(),
+            },
+        )
+        mapping = _mapping(artifact)
+        records: dict[str, list[Mapping[str, Any]]] = defaultdict(list)
+        for record in artifact.records:
+            if record.get("presentation") in {"A|B", "B|A"} and record.get(
+                "winner"
+            ) in {"A", "B", "tie"}:
+                records[record["presentation"]].append(record)
+        if len(records["A|B"]) != 1 or len(records["B|A"]) != 1:
+            continue
+        outcomes: list[str] = []
+        for presentation in ("A|B", "B|A"):
+            record = records[presentation][0]
+            first_index, second_index = mapping.get(presentation, (0, 1))
+            winner = record["winner"]
+            outcome = (
+                "tie"
+                if winner == "tie"
+                else artifact.sources[
+                    first_index if winner == "A" else second_index
+                ].condition
+            )
+            outcomes.append(outcome)
+            result = (
+                "left" if outcome == left else "right" if outcome == right else "tie"
+            )
+            group["games"].append((left, right, result))
+            group["counts"][f"{left}:{right}"][
+                {"left": "wins", "right": "losses", "tie": "ties"}[result]
+            ] += 1
+        group["consistent"].append(float(outcomes[0] == outcomes[1]))
+        group["pairs"].add((prompt, left, right))
+        group["runs"].update(source.path for source in artifact.sources)
+
+    report: dict[str, Any] = {}
+    for (benchmark, platform, judge), group in judges.items():
+        slot = _slot(report, benchmark, platform)
+        fit = fit_bradley_terry(group["games"])
+        slot["judges"][judge] = {
+            "contrasts": dict(sorted(group["counts"].items())),
+            "position_consistency_rate": fmean(group["consistent"])
+            if group["consistent"]
+            else None,
+            "strengths": fit["strengths"],
+            "fit_status": fit["status"],
+            "scored_pairs": len(group["pairs"]),
+            "run_count": len(group["runs"]),
+        }
+        slot["scored"].update(group["pairs"])
+        slot["runs"].update(group["runs"])
+    for key, count in expected.items():
+        _slot(report, *key)["expected_pairs"] += count
+
+    missing = 0
+    total_runs: set[Path] = set()
+    for benchmark, value in report.items():
+        for platform, data in value["platforms"].items():
+            data["missing_pairs"] = data["expected_pairs"] - len(data["scored"])
+            data["scored_pairs"] = len(data.pop("scored"))
+            data["run_count"] = completed_counts.get(
+                (benchmark, platform), len(data["runs"])
+            )
+            total_runs.update(data.pop("runs"))
+            positions = [
+                judge["position_consistency_rate"]
+                for judge in data["judges"].values()
+                if judge["position_consistency_rate"] is not None
+            ]
+            data["position_consistency_rate"] = fmean(positions) if positions else None
+            data["contrasts"] = {
+                label: {
+                    field: sum(
+                        judge["contrasts"].get(label, {}).get(field, 0)
+                        for judge in data["judges"].values()
+                    )
+                    for field in ("wins", "ties", "losses")
+                }
+                for label in (f"{left}:{right}" for left, right in CONTRASTS)
+                if any(label in judge["contrasts"] for judge in data["judges"].values())
+            }
+            fits = [
+                judge
+                for judge in data["judges"].values()
+                if judge["fit_status"] == "ok"
+            ]
+            statuses = {judge["fit_status"] for judge in data["judges"].values()}
+            data["fit_status"] = (
+                "ok"
+                if statuses == {"ok"}
+                else ", ".join(sorted(statuses))
+                if statuses
+                else "no data"
+            )
+            data["strengths"] = (
+                {
+                    condition: fmean(
+                        judge["strengths"][condition]
+                        for judge in fits
+                        if condition in judge["strengths"]
+                    )
+                    for condition in sorted(
+                        {
+                            condition
+                            for judge in fits
+                            for condition in judge["strengths"]
+                        }
+                    )
+                }
+                if fits and len(fits) == len(data["judges"])
+                else {}
+            )
+            missing += data["missing_pairs"]
     return {
-        "input": max(total_input - cached, 0),
-        "cached_input": cached,
-        "output": output,
+        "benchmarks": report,
+        "missing_pairs": missing,
+        "run_count": len(total_runs),
     }
 
 
-def _add_tokens(target: dict[str, int], value: Mapping[str, Any]) -> None:
-    usage = _token_usage(value)
-    for key in PRICE_KEYS:
-        target[key] += usage[key]
+def _integer(value: Mapping[str, Any], names: tuple[str, ...]) -> int:
+    for name in names:
+        item = value.get(name)
+        if isinstance(item, int) and not isinstance(item, bool) and item >= 0:
+            return item
+    return 0
 
 
-def _cost(tokens: Mapping[str, int], prices: Mapping[str, float]) -> float:
-    return sum(tokens[key] * prices[key] for key in PRICE_KEYS) / 1_000_000
+def _priced_rows(
+    groups: Mapping[Any, Any], labels: tuple[str, ...], prices: Mapping[str, float]
+) -> tuple[list[dict[str, Any]], dict[str, int], float]:
+    def summary(
+        value: tuple[dict[str, int], set[Path], int | None],
+    ) -> Mapping[str, Any]:
+        tokens, paths, records = value
+        return {
+            "run_count": len(paths),
+            **({"record_count": records} if records is not None else {}),
+            "tokens": tokens,
+            "cost": sum(tokens[key] * prices[key] for key in PRICE_KEYS) / 1_000_000,
+        }
+
+    rows = _rows(groups, labels, summary)
+    total_tokens = {key: sum(row["tokens"][key] for row in rows) for key in PRICE_KEYS}
+    return rows, total_tokens, sum(row["cost"] for row in rows)
 
 
-def _generation_cost(
+def _generation(
     runs: Sequence[RunRecord], prices: Mapping[str, float]
 ) -> dict[str, Any]:
-    grouped: dict[tuple[str, str], dict[str, int]] = defaultdict(
-        lambda: {key: 0 for key in PRICE_KEYS}
-    )
+    groups: dict[tuple[str, str, str], tuple[dict[str, int], set[Path], None]] = {}
     for run in runs:
-        key = (run.benchmark, run.condition)
-        for event_path in sorted(run.path.glob("attempt-*.events.jsonl")):
+        key = (run.platform, run.benchmark, run.condition)
+        if key not in groups:
+            groups[key] = (dict.fromkeys(PRICE_KEYS, 0), set(), None)
+        tokens, paths, _ = groups[key]
+        paths.add(run.path)
+        for event_path in run.path.glob("attempt-*.events.jsonl"):
             try:
                 lines = event_path.read_text(encoding="utf-8").splitlines()
             except (OSError, UnicodeError):
@@ -573,243 +578,168 @@ def _generation_cost(
                     event = json.loads(line)
                 except json.JSONDecodeError:
                     continue
+                usage = event.get("usage") if isinstance(event, Mapping) else None
                 if (
-                    isinstance(event, Mapping)
-                    and event.get("type") == "turn.completed"
-                    and isinstance(event.get("usage"), Mapping)
+                    not isinstance(event, Mapping)
+                    or event.get("type") != "turn.completed"
+                    or not isinstance(usage, Mapping)
                 ):
-                    _add_tokens(grouped[key], event["usage"])
-    run_counts: dict[tuple[str, str], int] = defaultdict(int)
-    for run in runs:
-        run_counts[(run.benchmark, run.condition)] += 1
-    rows = [
-        {
-            "benchmark": benchmark,
-            "condition": condition,
-            "run_count": run_counts[(benchmark, condition)],
-            "tokens": tokens,
-            "cost": _cost(tokens, prices),
-        }
-        for (benchmark, condition), tokens in sorted(grouped.items())
-    ]
-    totals = {key: sum(row["tokens"][key] for row in rows) for key in PRICE_KEYS}
-    return {
-        "rows": rows,
-        "cost": sum(row["cost"] for row in rows),
-        "tokens": totals,
-    }
+                    continue
+                cached = _integer(
+                    usage, ("cached_input_tokens", "cached_tokens", "cache_read_tokens")
+                )
+                tokens["input"] += max(
+                    _integer(usage, ("input_tokens", "prompt_tokens")) - cached, 0
+                )
+                tokens["cached_input"] += cached
+                tokens["output"] += _integer(usage, ("output_tokens",)) + _integer(
+                    usage, ("reasoning_output_tokens", "reasoning_tokens")
+                )
+    rows, total_tokens, cost = _priced_rows(
+        groups, ("platform", "benchmark", "condition"), prices
+    )
+    return {"rows": rows, "tokens": total_tokens, "cost": cost}
 
 
 def _judge_cost(
     artifacts: Sequence[ScoreArtifact], prices: Mapping[str, float]
 ) -> dict[str, Any]:
-    grouped: dict[str, dict[str, int]] = defaultdict(
-        lambda: {key: 0 for key in PRICE_KEYS}
-    )
-    artifact_runs: dict[str, set[Path]] = defaultdict(set)
-    record_counts: dict[str, int] = defaultdict(int)
+    groups: dict[str, tuple[dict[str, int], set[Path], int]] = {}
     for artifact in artifacts:
-        target = grouped[artifact.task]
-        artifact_runs[artifact.task].update(run.path for run in artifact.sources)
-        records = artifact.manifest.get("records")
-        if not isinstance(records, list):
-            continue
-        for value in records:
-            record_counts[artifact.task] += 1
-            if isinstance(value, Mapping) and isinstance(value.get("usage"), Mapping):
-                _add_tokens(target, value["usage"])
-    rows = [
-        {
-            "task": task,
-            "run_count": len(artifact_runs[task]),
-            "record_count": record_counts[task],
-            "tokens": tokens,
-            "cost": _cost(tokens, prices),
-        }
-        for task, tokens in sorted(grouped.items())
-    ]
-    totals = {key: sum(row["tokens"][key] for row in rows) for key in PRICE_KEYS}
-    return {
-        "rows": rows,
-        "cost": sum(row["cost"] for row in rows),
-        "tokens": totals,
-    }
+        if artifact.task not in groups:
+            groups[artifact.task] = (dict.fromkeys(PRICE_KEYS, 0), set(), 0)
+        tokens, paths, count = groups[artifact.task]
+        paths.update(source.path for source in artifact.sources)
+        for item in artifact.manifest.get("records", []):
+            usage = item.get("usage") if isinstance(item, Mapping) else None
+            if not isinstance(usage, Mapping):
+                continue
+            cached = _integer(
+                usage, ("cached_tokens", "cached_input_tokens", "cache_read_tokens")
+            )
+            tokens["input"] += max(
+                _integer(usage, ("prompt_tokens", "input_tokens")) - cached, 0
+            )
+            tokens["cached_input"] += cached
+            tokens["output"] += _integer(usage, ("completion_tokens",))
+            count += 1
+        groups[artifact.task] = (tokens, paths, count)
+    rows, total_tokens, cost = _priced_rows(
+        {(key,): value for key, value in groups.items()}, ("task",), prices
+    )
+    return {"rows": rows, "tokens": total_tokens, "cost": cost}
 
 
-def parse_prices(value: str | Mapping[str, Any]) -> dict[str, float]:
-    """Parse a JSON object or JSON-file path containing per-million prices."""
-
-    if isinstance(value, Mapping):
-        document = value
-    else:
-        candidate = Path(value).expanduser()
-        if candidate.is_file():
-            document = json.loads(candidate.read_text(encoding="utf-8"))
-        else:
-            document = json.loads(value)
-    if not isinstance(document, Mapping) or not set(PRICE_KEYS) <= set(document):
+def _prices(path: Path) -> dict[str, float]:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, Mapping) or not set(PRICE_KEYS) <= set(value):
         raise ValueError("prices must contain input, cached_input, and output")
-    prices: dict[str, float] = {}
+    result = {}
     for key in PRICE_KEYS:
-        number = document[key]
+        number = value[key]
         if (
             isinstance(number, bool)
             or not isinstance(number, (int, float))
             or number < 0
         ):
             raise ValueError(f"price {key} must be a non-negative number")
-        prices[key] = float(number)
-    return prices
+        result[key] = float(number)
+    return result
 
 
 def _markdown(report: Mapping[str, Any]) -> str:
     lines = [
         "# Aggregation report",
         "",
-        "## Completion",
-        "",
-        "| Benchmark | Condition | Runs | Completed | Failed | Failure prefixes |",
-        "| --- | --- | ---: | ---: | ---: | --- |",
+        "The report uses canonical runs selected by the shared run selector.",
     ]
-    for row in report["completion"]["rows"]:
-        failures = (
-            "; ".join(
-                f"{key} ({value})" for key, value in row["failure_messages"].items()
+    for title, key in (
+        ("Completion", "completion"),
+        ("Generic pointwise", "pointwise"),
+        ("Native", "native"),
+    ):
+        lines += [
+            "",
+            f"## {title}",
+            "",
+            "| Row | Runs | Details |",
+            "| --- | ---: | --- |",
+        ]
+        for row in report[key]["rows"]:
+            label = "/".join(
+                str(row.get(field, ""))
+                for field in ("platform", "benchmark", "condition")
             )
-            or "None"
-        )
-        row_text = (
-            f"| {row['benchmark']} | {row['condition']} | {row['run_count']} | "
-            f"{row['completed_runs']} | {row['failed_runs']} | {failures} |"
-        )
-        lines.append(row_text)
-    lines.extend(
-        [
-            "",
-            "## Generic pointwise",
-            "",
-            "| Benchmark | Condition | Runs | Record count | Dimension means | "
-            "Z-scored composite |",
-            "| --- | --- | ---: | ---: | --- | ---: |",
-        ]
-    )
-    for row in report["pointwise"]["rows"]:
-        dimensions = "; ".join(
-            f"{key}={value:.3f}"
-            for key, value in row["dimension_means"].items()
-            if value is not None
-        )
-        composite = row["z_scored_composite_mean"]
-        composite_text = f"{composite:.3f}" if composite is not None else "N/A"
-        lines.append(
-            f"| {row['benchmark']} | {row['condition']} | {row['run_count']} | "
-            f"{row['record_count']} | {dimensions} | {composite_text} |"
-        )
-    lines.extend(
-        [
-            "",
-            "## Native",
-            "",
-            "| Benchmark | Condition | Runs | Mean score | Scale |",
-            "| --- | --- | ---: | ---: | --- |",
-        ]
-    )
-    for row in report["native"]["rows"]:
-        lines.append(
-            f"| {row['benchmark']} | {row['condition']} | {row['run_count']} | "
-            f"{row['mean_score']:.3f} | {row['scale']} |"
-        )
-    lines.extend(["", "## Pairwise", ""])
+            detail = ", ".join(
+                f"{field}={value}"
+                for field, value in row.items()
+                if field not in {"platform", "benchmark", "condition", "run_count"}
+            )
+            lines.append(f"| {label} | {row['run_count']} | {detail} |")
+    lines += ["", "## Pairwise"]
     for benchmark, value in report["pairwise"]["benchmarks"].items():
-        position_rate = value["position_consistency_rate"]
-        position_text = position_rate if position_rate is not None else "N/A"
-        lines.extend(
-            [
-                f"### {benchmark}",
-                "",
-                f"Position-consistency rate: {position_text}",
-                "",
-                "| Contrast | Wins | Ties | Losses | Position consistency |",
-                "| --- | ---: | ---: | ---: | ---: |",
-            ]
-        )
-        for label, counts in value["contrasts"].items():
-            rate = counts["position_consistency_rate"]
-            rate_text = rate if rate is not None else "N/A"
+        for platform, data in value["platforms"].items():
             lines.append(
-                f"| {label} | {counts['wins']} | {counts['ties']} | "
-                f"{counts['losses']} | {rate_text} |"
+                f"- {benchmark}/{platform}: expected={data['expected_pairs']}, "
+                f"scored={data['scored_pairs']}, missing={data['missing_pairs']}, "
+                f"fit={data['fit_status']}, "
+                f"position_consistency={data['position_consistency_rate']}"
             )
-        strengths = ", ".join(
-            f"{key}={score:.3f}" for key, score in value["strengths"].items()
-        )
-        lines.append(f"\nBradley-Terry strengths: {strengths}")
-        lines.append(f"Missing pairs: {value['missing_pairs']}")
-    lines.extend(
-        [
-            "",
-            "## Cost",
-            "",
-            "| Benchmark | Condition | Generation cost | Generation tokens |",
-            "| --- | --- | ---: | --- |",
-        ]
-    )
+            lines.append(f"  strengths={json.dumps(data['strengths'], sort_keys=True)}")
+    lines += [
+        "",
+        "## Cost",
+        "",
+        "| Kind | Name | Runs | Cost | Tokens |",
+        "| --- | --- | ---: | ---: | --- |",
+    ]
     for row in report["cost"]["generation"]:
-        tokens = ", ".join(f"{key}={value}" for key, value in row["tokens"].items())
-        lines.append(
-            f"| {row['benchmark']} | {row['condition']} | "
-            f"{row['cost']:.6f} | {tokens} |"
+        label = "/".join(
+            str(row.get(field, "")) for field in ("platform", "benchmark", "condition")
         )
-    lines.extend(
-        ["", "| Judge task | Judge cost | Judge tokens |", "| --- | ---: | --- |"]
-    )
+        lines.append(
+            f"| generation | {label} | {row['run_count']} | "
+            f"{row['cost']:.6f} | {row['tokens']} |"
+        )
     for row in report["cost"]["judge"]:
-        tokens = ", ".join(f"{key}={value}" for key, value in row["tokens"].items())
-        lines.append(f"| {row['task']} | {row['cost']:.6f} | {tokens} |")
-    lines.append(
-        f"\nTotal generation cost: {report['cost']['totals']['generation_cost']:.6f}"
-    )
-    lines.append(f"Total judge cost: {report['cost']['totals']['judge_cost']:.6f}")
-    lines.append(f"Total cost: {report['cost']['totals']['total_cost']:.6f}")
-    return "\n".join(lines) + "\n"
+        lines.append(
+            f"| judge | {row['task']} | {row['run_count']} | "
+            f"{row['cost']:.6f} | {row['tokens']} |"
+        )
+    totals = report["cost"]["totals"]
+    lines += ["", f"Total cost: {totals['total_cost']:.6f}", ""]
+    return "\n".join(lines)
 
 
 def aggregate_runs(
     runs_roots: Sequence[Path],
     *,
-    generation_prices: Mapping[str, Any],
-    judge_prices: Mapping[str, Any],
+    generation_prices: Path,
+    judge_prices: Path,
     output_dir: Path,
 ) -> dict[str, Any]:
-    """Build and write the complete aggregation report."""
+    """Write aggregation.json and aggregation.md for canonical runs."""
 
-    generation = parse_prices(generation_prices)
-    judge = parse_prices(judge_prices)
-    run_index = _runs(runs_roots)
-    runs = list(run_index.values())
-    artifacts = _score_artifacts(runs_roots, run_index)
-    completion = _completion_table(runs)
-    pointwise = _pointwise_table(artifacts)
-    native = _native_table(artifacts)
-    pairwise = _pairwise_table(artifacts, runs)
-    generation_data = _generation_cost(runs, generation)
-    judge_data = _judge_cost(artifacts, judge)
-    report: dict[str, Any] = {
-        "completion": completion,
-        "pointwise": pointwise,
-        "native": native,
-        "pairwise": pairwise,
+    runs = select_canonical_runs(list(runs_roots))
+    artifacts = _artifacts(runs_roots, runs)
+    generation = _generation(runs, _prices(generation_prices))
+    judge = _judge_cost(artifacts, _prices(judge_prices))
+    report = {
+        "completion": _completion(runs),
+        "pointwise": _pointwise(artifacts),
+        "native": _native(artifacts),
+        "pairwise": _pairwise(artifacts, runs),
         "cost": {
-            "generation": generation_data["rows"],
-            "judge": judge_data["rows"],
+            "generation": generation["rows"],
+            "judge": judge["rows"],
             "totals": {
-                "generation_cost": generation_data["cost"],
-                "judge_cost": judge_data["cost"],
-                "total_cost": generation_data["cost"] + judge_data["cost"],
-                "generation_tokens": generation_data["tokens"],
-                "judge_tokens": judge_data["tokens"],
+                "generation_cost": generation["cost"],
+                "judge_cost": judge["cost"],
+                "total_cost": generation["cost"] + judge["cost"],
+                "generation_tokens": generation["tokens"],
+                "judge_tokens": judge["tokens"],
                 "total_tokens": {
-                    key: generation_data["tokens"][key] + judge_data["tokens"][key]
+                    key: generation["tokens"][key] + judge["tokens"][key]
                     for key in PRICE_KEYS
                 },
             },
@@ -817,8 +747,7 @@ def aggregate_runs(
     }
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "aggregation.json").write_text(
-        json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     (output_dir / "aggregation.md").write_text(_markdown(report), encoding="utf-8")
     return report
@@ -829,8 +758,8 @@ def build_parser() -> argparse.ArgumentParser:
         description="Aggregate completed experiment scores."
     )
     parser.add_argument("--runs-root", type=Path, action="append", required=True)
-    parser.add_argument("--generation-prices", required=True)
-    parser.add_argument("--judge-prices", required=True)
+    parser.add_argument("--generation-prices", type=Path, required=True)
+    parser.add_argument("--judge-prices", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     return parser
 
@@ -839,10 +768,13 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     report = aggregate_runs(
         args.runs_root,
-        generation_prices=parse_prices(args.generation_prices),
-        judge_prices=parse_prices(args.judge_prices),
+        generation_prices=args.generation_prices,
+        judge_prices=args.judge_prices,
         output_dir=args.output_dir,
     )
     print(args.output_dir / "aggregation.md")
-    print(f"run_count={report['completion']['run_count']}")
+    print(
+        f"run_count={report['completion']['run_count']} "
+        f"missing_pairs={report['pairwise']['missing_pairs']}"
+    )
     return 0
