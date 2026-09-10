@@ -73,7 +73,7 @@ At each turn, the `Monitor` should:
    - revising
 3. Before every process switch, append a `process_switch` event naming the responsible process or agent and recording the decision, evidence, and open uncertainty. Record a separate goal event whenever a goal is created, developed, or regenerated. Use the exact fields in the trace reference.
 4. Delegate the selected role using the platform instructions in Delegation briefs.
-5. Re-read the changed state and reconcile the agent's work with the active goal. Update the appropriate project state:
+5. Re-read the changed state and reconcile the agent's work with the active goal. After every Translating pass, compare the new draft with every active goal in goals.md, then record a goal_developed or goal_regenerated event for each goal the draft changed, or state in the next process_switch decision that the goal network needed no change and why. Update the appropriate project state:
    - `goals.md`
    - `draft.md`
    - `memory/`

@@ -73,6 +73,14 @@ SINGLE_TURN_CONTRACT = (
     "assumptions without an extra preamble. Do not change the deliverable's content "
     "contract."
 )
+DELEGATION_CONTRACT = (
+    "Delegation contract:\n"
+    "Native subagent delegation is available in this environment. Delegate every "
+    "role the skill assigns to a role agent by spawning a Codex subagent as the "
+    "skill's delegation brief instructs; performing a delegated role as the "
+    "coordinator is not permitted in this run and fails the run."
+)
+DELEGATING_CONDITIONS = ("A3", "A4", "A5", "A6", "B1")
 
 NO_GOAL_SKILL_PATHS = (
     REPO_ROOT / "experiments/baselines/skills/writing-linear/SKILL.md",
@@ -901,9 +909,19 @@ def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> No
         assert "SKILL.md" in invocation
         assert "codex" not in wrapper["install"]
         assert "complete final text itself" in invocation
+        if condition.condition_id in DELEGATING_CONDITIONS:
+            assert DELEGATION_CONTRACT in invocation
+        else:
+            assert DELEGATION_CONTRACT not in invocation
         prompt = runner._plugin_prompt(condition, _prompt(), "codex")
         assert f"plugin/skills/{condition.skill_name}/SKILL.md" in prompt
         assert "complete final text itself" in prompt
+
+
+def test_claude_code_wrappers_do_not_receive_codex_delegation_contract() -> None:
+    for condition in load_condition_registry().values():
+        wrapper = tomllib.loads(condition.plugin_config.read_text(encoding="utf-8"))
+        assert DELEGATION_CONTRACT not in wrapper["invocation"]["claude_code"]
 
 
 CLAUDE_WORKSPACE_CONTRACT = (
@@ -1115,7 +1133,11 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
                 + "\n"
             )
             (cwd / ".writing" / "draft.md").write_text("final output " * 10)
-            return _result()
+            result = _result(subagent_spawns=1)
+            rollout = Path(env["CODEX_HOME"]) / "sessions" / "attempt.jsonl"
+            rollout.parent.mkdir(parents=True, exist_ok=True)
+            rollout.write_bytes(result.stdout)
+            return result
 
     runner = ExperimentRunner(
         _config(),
@@ -1286,6 +1308,73 @@ def test_run_records_unique_codex_subagent_spawns(tmp_path: Path) -> None:
 
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["subagent_spawn_count"] == 2
+    assert manifest["delegation_check"] == {
+        "required": False,
+        "spawn_count": 2,
+        "passed": True,
+    }
+
+
+def test_required_delegation_fails_closed_without_spawn_event(tmp_path: Path) -> None:
+    condition = replace(load_condition_registry()["A1"], require_delegation=True)
+    runner = _runner(
+        tmp_path,
+        condition_registry={"A1": condition},
+        executor=_RetryExecutor([_result()]),
+    )
+
+    with pytest.raises(
+        ExecutionError,
+        match=(
+            "Condition A1 requires native role delegation; no spawn_agent event "
+            "was observed"
+        ),
+    ):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    manifest = json.loads(
+        (
+            tmp_path
+            / "WritingBench"
+            / "A1"
+            / "codex"
+            / next((tmp_path / "WritingBench" / "A1" / "codex").iterdir()).name
+            / "run-manifest.json"
+        ).read_text()
+    )
+    assert manifest["delegation_check"] == {
+        "required": True,
+        "spawn_count": 0,
+        "passed": False,
+    }
+
+
+def test_required_delegation_passes_with_spawn_events(tmp_path: Path) -> None:
+    class SpawnRolloutExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+            rollout = Path(env["CODEX_HOME"]) / "sessions" / "attempt.jsonl"
+            rollout.parent.mkdir(parents=True, exist_ok=True)
+            rollout.write_bytes(result.stdout)
+            return result
+
+    condition = replace(load_condition_registry()["A1"], require_delegation=True)
+    runner = _runner(
+        tmp_path,
+        condition_registry={"A1": condition},
+        executor=SpawnRolloutExecutor([_result(subagent_spawns=2)]),
+    )
+
+    result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["delegation_check"] == {
+        "required": True,
+        "spawn_count": 2,
+        "passed": True,
+    }
 
 
 def test_extract_subagent_spawn_count_deduplicates_started_and_completed_events() -> (
@@ -2304,12 +2393,17 @@ def test_a3_production_shaped_trace_and_draft_gate(tmp_path: Path) -> None:
                 )
             )
             (cwd / ".writing" / "draft.md").write_text("final " * 60)
+            rollout = Path(env["CODEX_HOME"]) / "sessions" / "attempt.jsonl"
+            rollout.parent.mkdir(parents=True, exist_ok=True)
+            rollout.write_bytes(result.stdout)
             return result
 
     output = "final " * 60
     runner = _runner(
         tmp_path,
-        executor=A3Executor([_result(output=output, usage={"output_tokens": 60})]),
+        executor=A3Executor(
+            [_result(output=output, usage={"output_tokens": 60}, subagent_spawns=1)]
+        ),
     )
     result = runner.run_prompt(_prompt(), condition_id="A3", platform="codex")
     events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
