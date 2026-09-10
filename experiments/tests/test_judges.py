@@ -145,6 +145,33 @@ def _config(
     )
 
 
+def _judge_config_path(tmp_path: Path, template: Path, **overrides: object) -> Path:
+    values: dict[str, object] = {
+        "task": "pointwise",
+        "model": "open-model",
+        "judge_id": "judge-1",
+        "model_family_map": {
+            "gpt-frontier": {"family": "gpt", "role": "frontier"},
+            "open-model": {"family": "prometheus", "role": "open_evaluator"},
+        },
+        "base_url_env": "TEST_JUDGE_BASE_URL",
+        "credential_env": "TEST_JUDGE_CREDENTIAL",
+        "template_path": str(template),
+        "seed": 19,
+        "presentation_seed": 23,
+        "temperature": 0,
+        "top_p_or_equivalent": 1,
+        "maximum_output_tokens": 120,
+        "stop_rules": [],
+        "timeout": 10,
+        "retry_policy": {"max_retries": 1},
+    }
+    values.update(overrides)
+    path = tmp_path / "judge.json"
+    path.write_text(json.dumps(values), encoding="utf-8")
+    return path
+
+
 def _pointwise_record(judge_family: str = "open_evaluator") -> dict[str, object]:
     return {
         "prompt_id": "p-1",
@@ -364,6 +391,59 @@ def test_judge_config_rejects_non_boolean_same_family_flag(tmp_path: Path) -> No
         JudgeConfigurationError, match="allow_same_family_judge must be a boolean"
     ):
         _config(tmp_path, template, allow_same_family_judge="true")
+
+
+def test_judge_config_load_defaults_to_rejecting_same_family_judge(
+    tmp_path: Path,
+) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+
+    config = JudgeConfig.load(
+        _judge_config_path(tmp_path, template, model="gpt-frontier")
+    )
+
+    assert config.allow_same_family_judge is False
+    identity = config.resolve_model_identity("gpt-frontier")
+    with pytest.raises(JudgeConfigurationError, match="overlap"):
+        config.validate_family_audit(identity, "gpt")
+
+
+@pytest.mark.parametrize("value", [1, "true"])
+def test_judge_config_load_rejects_non_boolean_same_family_values(
+    tmp_path: Path, value: object
+) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+
+    with pytest.raises(
+        JudgeConfigurationError, match="allow_same_family_judge must be a boolean"
+    ):
+        JudgeConfig.load(
+            _judge_config_path(
+                tmp_path,
+                template,
+                allow_same_family_judge=value,
+            )
+        )
+
+
+def test_judge_config_load_accepts_true_same_family_flag(tmp_path: Path) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+
+    config = JudgeConfig.load(
+        _judge_config_path(
+            tmp_path,
+            template,
+            model="gpt-frontier",
+            allow_same_family_judge=True,
+        )
+    )
+
+    assert config.allow_same_family_judge is True
+    identity = config.resolve_model_identity("gpt-frontier")
+    assert config.validate_family_audit(identity, "gpt") == ("exploratory-same-family")
 
 
 def test_family_audit_rejects_frontier_generator_overlap(tmp_path: Path) -> None:
