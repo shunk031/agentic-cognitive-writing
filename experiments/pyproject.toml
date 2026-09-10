@@ -10,6 +10,8 @@ agentic-cogwriter-materialize = "agentic_cogwriter.prompts.materialize:main"
 agentic-cogwriter-recompute-dolomites-split = "agentic_cogwriter.prompts.recompute_dolomites_split:main"
 agentic-cogwriter-runner = "agentic_cogwriter.runner.cli:main"
 agentic-cogwriter-score = "agentic_cogwriter.judges.cli:main"
+agentic-cogwriter-score-batch = "agentic_cogwriter.analysis.batch:main"
+agentic-cogwriter-aggregate = "agentic_cogwriter.analysis.aggregate:main"
 
 [dependency-groups]
 dev = ["pytest>=8.3,<9"]

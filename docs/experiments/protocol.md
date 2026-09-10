@@ -270,6 +270,8 @@ The benchmark-native composite is the primary reported pointwise estimand and is
 
 HelloBench follows its upstream checklist contract rather than the WritingBench request shape. Each manifest row carries 5 to 7 checklist strings. One native-checklist request evaluates every checklist item for that row and returns one structured JSON Lines record containing `checklist_id`, `reason`, and `evaluation_score` for each item. IDs must cover 0 through `num_checklist - 1` without gaps, and scores must be one of 0, 0.25, 0.5, 0.75, or 1. The scorer writes no run-level average; analysis may compute a prompt-level mean after validation. For a benchmark whose manifest carries no per-prompt native criteria, the generic composite remains the reported pointwise scale and the native composite is `N/A`.
 
+The analysis-stage implementation for these summaries is the `agentic-cogwriter-aggregate` command documented in [`experiments/README.md`](../../experiments/README.md).
+
 ### Balanced pairwise tournament
 
 The balanced tournament supplies the confirmatory estimand. The six core conditions A1-A6 produce 15 unordered condition pairs. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. The two presentations produce 30 judgments per prompt per judge. Apply these controls:

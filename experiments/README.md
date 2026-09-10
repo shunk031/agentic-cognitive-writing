@@ -148,6 +148,30 @@ uv run --project experiments agentic-cogwriter-score \
 
 The pairwise records follow the balanced tournament contract in [`protocol.md`](../docs/experiments/protocol.md), including both `A|B` and `B|A` presentations, a winner of `A`, `B`, or `tie`, and verbatim evidence for both outputs. If either presentation fails after the configured retries, the scorer writes no aggregate score artifact. Native WritingBench scoring consumes the checklist carried by the run manifest and writes no run-level average.
 
+## Score many runs and aggregate
+
+The batch command scores every completed run below each `--runs-root`, skips task artifacts that already have a `scores-manifest.json`, and logs scorer exceptions in `scoring-errors.jsonl` beside the affected root. Pointwise artifacts live under `scores/pointwise/`, native artifacts use their task name, and pairwise artifacts add a pair-specific directory so tasks do not overwrite one another.
+
+```bash
+uv run --project experiments agentic-cogwriter-score-batch \
+  --runs-root /path/to/codex-runs \
+  --pointwise-config /path/to/pointwise-config.json \
+  --pairwise-config /path/to/pairwise-config.json \
+  --native-config /path/to/writingbench-native-config.json \
+  --native-config /path/to/hellobench-native-config.json
+```
+
+The aggregation command reads completed run manifests and score manifests, then writes `aggregation.json` and `aggregation.md` under the requested output directory. The report includes completion failures, generic and native quality summaries, pairwise counts and Bradley-Terry strengths, token costs, and the run counts used for each table. Supply prices as JSON objects with `input`, `cached_input`, and `output` values in cost units per one million tokens.
+
+```bash
+uv run --project experiments agentic-cogwriter-aggregate \
+  --runs-root /path/to/codex-runs \
+  --runs-root /path/to/replication-runs \
+  --generation-prices '{"input":0,"cached_input":0,"output":0}' \
+  --judge-prices '{"input":0,"cached_input":0,"output":0}' \
+  --output-dir /path/to/analysis-report
+```
+
 ## Policy enforcement
 
 The runner gives every condition the same assignment, supplied context, timeout, retry count, and output budget. It rejects a run when the parsed transport event stream records a web search, browser or retrieval tool invocation, or a network command in an executed-command event. URLs and retrieval words in assistant text, configuration echoes, and generic error events do not trigger the transport tripwire.
