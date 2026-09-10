@@ -51,13 +51,26 @@ def _parse_offset_timestamp(value: Any) -> datetime | None:
 
 
 def assess_trace_timestamps(
-    events: Sequence[Mapping[str, Any]],
+    events: Sequence[Mapping[str, Any]] | Path,
     *,
     started_at: str,
     manifest_written_at: str,
 ) -> dict[str, int | bool]:
     """Summarize trace timestamp validity without failing the run."""
 
+    if isinstance(events, Path):
+        try:
+            lines = events.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeError):
+            lines = []
+        parsed_events: list[dict[str, Any]] = []
+        for line in lines:
+            try:
+                value = json.loads(line)
+            except json.JSONDecodeError:
+                value = {}
+            parsed_events.append(value if isinstance(value, dict) else {})
+        events = parsed_events
     started = _parse_offset_timestamp(started_at)
     manifest_written = _parse_offset_timestamp(manifest_written_at)
     window_start = started - timedelta(seconds=60) if started else None
@@ -71,11 +84,7 @@ def assess_trace_timestamps(
         if parsed is None:
             unparseable += 1
             continue
-        if (
-            window_start is None
-            or window_end is None
-            or not window_start <= parsed <= window_end
-        ):
+        if not (window_start and window_end and window_start <= parsed <= window_end):
             out_of_window += 1
         if previous is not None and parsed < previous:
             non_monotonic += 1

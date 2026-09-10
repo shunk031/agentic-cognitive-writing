@@ -364,8 +364,6 @@ The trace analysis measures observable process behavior and relates it to produc
 
 Each trace line is one JSON object. The documented event types are `process_switch`, `goal_created`, `goal_developed`, and `goal_regenerated`. Process-switch events include `from_process` and `to_process`. Goal events include `goal_id` and `parent_goal_id`. The plugin records responsible actor, decision, evidence, and uncertainty.
 
-The analysis orders events by line order and does not use timestamps; the run manifest records timestamp plausibility for reporting.
-
 A3's trace events use the shared schema's `process` field with values `task-decomposition`, `task-execution`, and `task-revision`. These values identify task-graph actions, and the analysis must not count them as writing-process switches.
 
 For A1 and A2, the baseline skills write only externally observed generation or stage events in the same per-run trace location. A3 writes the task-graph events described above. An adapter must not invent goals, hidden decisions, or internal reasoning. Plugin-specific fields that cannot be observed are `N/A` in the derived analysis. The baseline traces support structural comparisons.
@@ -377,6 +375,8 @@ The trace is an operational analogue of a thinking-aloud protocol, not a direct 
 ### Process metrics from traces
 
 The analysis extracts these measures from the traces and uses goal files only for A4 and A6.
+
+The analysis orders events by line order and does not use timestamps; the run manifest records timestamp plausibility for reporting.
 
 **Goal count.** For A4 and A6, count all three goal event types and add the unique active goal IDs in `.writing/goals.md`. For A5, report zero because the variant records no goal events and does not create or modify `.writing/goals.md`. Report a total. When the kind is available, also report content, process, and criterion goals.
 

@@ -34,7 +34,6 @@ The `Monitor` is the main agent running this skill. The `Monitor` chooses the ne
    ```
 
 2. Read these before choosing an operation:
-
    - `.writing/assignment.md`
    - `.writing/goals.md`
    - `.writing/draft.md`
@@ -42,7 +41,6 @@ The `Monitor` is the main agent running this skill. The `Monitor` chooses the ne
    - the latest entries in `.writing/trace/process.jsonl`
 
    If `.writing/assignment.md` is missing or underspecified, ask the user for:
-
    - topic
    - audience
    - exigency
@@ -51,7 +49,6 @@ The `Monitor` is the main agent running this skill. The `Monitor` chooses the ne
    - constraints
 
    Do not silently invent a rhetorical problem.
-
 3. Keep `goals.md` in the notation described in [`references/goals-format.md`](references/goals-format.md). Update it whenever a goal is created, developed, or regenerated. Preserve the history instead of replacing an earlier goal without recording what changed.
 4. Read [`references/trace-jsonl-schema.md`](references/trace-jsonl-schema.md) before writing the first trace entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
 
@@ -61,35 +58,28 @@ At each turn, the `Monitor` should:
 
 1. Identify the active goal and its parent. If a sub-goal resolves, pop back to the parent goal before choosing the next operation.
 2. Compare the active goal with:
-
    - the rhetorical problem
    - the current draft
    - retrieved memory
    - open uncertainty
 
    Use that comparison to select `Planning`, `Translating`, or `Reviewing`. `Planning` may mean:
-
    - exploring
    - organizing
    - setting a goal
 
    `Reviewing` may mean:
-
    - evaluating
    - revising
-
 3. Before every process switch, append a `process_switch` event naming the responsible process or agent and recording the decision, evidence, and open uncertainty. Record a separate goal event whenever a goal is created, developed, or regenerated. Use the exact fields in the trace reference.
 4. Delegate the selected role using the platform instructions in Delegation briefs.
 5. Re-read the changed state and reconcile the agent's work with the active goal. Update the appropriate project state:
-
    - `goals.md`
    - `draft.md`
    - `memory/`
 
    Keep user-authored text and uncertain claims visible rather than silently normalizing them.
-
 6. Tell the user:
-
    - what changed
    - which goal is active
    - what remains uncertain
@@ -139,20 +129,7 @@ If native delegation is unavailable, perform the role as the `Monitor` and recor
 Every process switch and every goal creation, development, or regeneration must append one valid JSON object to `.writing/trace/process.jsonl`. A process-switch object includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. A goal event also includes `goal_id` and `parent_goal_id`. Optional `artifacts` lists project-relative files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; `goal_id` is a string; `parent_goal_id` is a string or `null`; and `artifacts`, when present, is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. Keep the code-formatted role names `Planning`, `Translating`, and `Reviewing` in surrounding prose, but write JSON `process`, `from_process`, and `to_process` values with the lowercase contract tokens `planning`, `translating`, and `reviewing`. Do not add experiment-specific fields to the shared trace contract. For example:
 
 ```json
-{
-  "timestamp": "2026-01-15T09:00:00+09:00",
-  "event_type": "process_switch",
-  "responsible_agent": "monitor",
-  "process": "planning",
-  "decision": "Choose planning for the active goal and current uncertainty.",
-  "evidence": [".writing/assignment.md", ".writing/goals.md"],
-  "open_uncertainty": [
-    "The audience's highest-priority concern is not yet known."
-  ],
-  "from_process": null,
-  "to_process": "planning",
-  "artifacts": [".writing/goals.md"]
-}
+{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"monitor","process":"planning","decision":"Choose planning for the active goal and current uncertainty.","evidence":[".writing/assignment.md",".writing/goals.md"],"open_uncertainty":["The audience's highest-priority concern is not yet known."],"from_process":null,"to_process":"planning","artifacts":[".writing/goals.md"]}
 ```
 
 ## References

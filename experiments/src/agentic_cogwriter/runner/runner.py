@@ -1003,6 +1003,11 @@ class ExperimentRunner:
             if condition.goal_events == "forbidden":
                 assert_untouched(protected_goals, goals_before)
             required_trace = ".writing/trace/process.jsonl"
+            trace_timestamps = assess_trace_timestamps(
+                trace_path,
+                started_at=started_at,
+                manifest_written_at=timestamp(),
+            )
             if not trace_path.is_file():
                 raise ExecutionError(
                     f"Condition {condition.condition_id} produced no plugin trace at "
@@ -1016,7 +1021,7 @@ class ExperimentRunner:
                     f"trace from {trace_path}"
                 )
             reject_retrieval(copied_trace.read_bytes(), b"")
-            trace_events = validate_trace(
+            validate_trace(
                 copied_trace,
                 condition_id=condition.condition_id,
                 declared_processes=condition.trace_processes,
@@ -1027,12 +1032,6 @@ class ExperimentRunner:
                 process_order=condition.process_order,
                 require_goal_events=condition.require_goal_events,
             )
-            trace_timestamps = assess_trace_timestamps(
-                trace_events,
-                started_at=started_at,
-                manifest_written_at=timestamp(),
-            )
-
             output_path.write_bytes(output.encode("utf-8"))
             normalized_path.write_text(output, encoding="utf-8")
             self._write_json(

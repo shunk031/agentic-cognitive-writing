@@ -32,22 +32,9 @@ The user owns rhetorical intent, factual authority, final wording, and publicati
 The trace contract is fixed at exactly five `process_switch` events. Every event's `process` must be one of `perspective-discovery`, `simulated-question-answering`, `outline`, `per-section-draft`, or `polish`, in this exact order. The transitions are `null -> perspective-discovery`, `perspective-discovery -> simulated-question-answering`, `simulated-question-answering -> outline`, `outline -> per-section-draft`, and `per-section-draft -> polish`. Append every event to `.writing/trace/process.jsonl`. Each event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`, plus `artifacts` for relevant stage files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts` is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. Use `responsible_agent: "runner"`, cite the preceding inputs and current stage artifact in `evidence`, preserve unknowns in `open_uncertainty`, and list project-relative files in `artifacts`. Do not append retrieval, evidence, citation, goal, or hidden-reasoning events. For example:
 
 ```json
-{
-  "timestamp": "2026-01-15T09:00:00+09:00",
-  "event_type": "process_switch",
-  "responsible_agent": "runner",
-  "process": "perspective-discovery",
-  "decision": "Identify useful perspectives from the assignment and supplied context.",
-  "evidence": [".writing/assignment.md"],
-  "open_uncertainty": [
-    "The audience's highest-priority concern is not yet known."
-  ],
-  "from_process": null,
-  "to_process": "perspective-discovery",
-  "artifacts": [".writing/baselines/storm-style/perspectives.md"]
-}
+{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"runner","process":"perspective-discovery","decision":"Identify useful perspectives from the assignment and supplied context.","evidence":[".writing/assignment.md"],"open_uncertainty":["The audience's highest-priority concern is not yet known."],"from_process":null,"to_process":"perspective-discovery","artifacts":[".writing/baselines/storm-style/perspectives.md"]}
 ```
 
 The five-stage mapping follows STORM[^1]'s separation of perspective-guided questioning, simulated conversation, outline creation, section-oriented writing, and polishing. The adaptation omits the released system's Internet research and citation behavior because those operations would violate the shared policy.
 
-[^1]: Yijia Shao, Yucheng Jiang, Theodore Kanell, Peter Xu, Omar Khattab, and Monica Lam, "Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models," _Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies_ (NAACL 2024), 2024, https://doi.org/10.18653/v1/2024.naacl-long.347.
+[^1]: Yijia Shao, Yucheng Jiang, Theodore Kanell, Peter Xu, Omar Khattab, and Monica Lam, "Assisting in Writing Wikipedia-like Articles From Scratch with Large Language Models," *Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies* (NAACL 2024), 2024, https://doi.org/10.18653/v1/2024.naacl-long.347.

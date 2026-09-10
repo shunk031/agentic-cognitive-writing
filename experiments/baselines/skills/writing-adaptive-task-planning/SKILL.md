@@ -41,14 +41,12 @@ Store task results under `.writing/baselines/adaptive-task-planning/results/` wh
 3. Ask the subagent whether the task is atomic under the two enabled types. If the task is not atomic, ask it for typed child tasks and dependencies. Add the children to the graph, mark the parent `suspended`, and persist the graph before scheduling another task.
 4. If the task is atomic, dispatch its typed executor. A reasoning executor returns a bounded reasoning or planning artifact. A composition executor returns prose for its task. Store the result, mark the task `silent`, update dependent tasks, and persist the graph.
 5. After each composition task completes and its result is stored, re-read the current aggregated text, meaning the composition results produced so far in dependency order. Before scheduling the next task, the coordinator may perform text-conditioned graph revision. Allowed revision operations are:
-
    - revise the goal text of an active or suspended task
    - add new typed child tasks with dependencies under any non-silent task
    - retire an active or suspended task by marking it `silent` with a result that notes the retirement
    - add or reorder dependencies among non-silent tasks while keeping the graph acyclic
 
    Each revision appends one schema-valid `process_switch` event with `process: "task-revision"`. The event's `evidence` cites the specific current-text observation that motivated the revision, and its `decision` names the affected task IDs. Revision must not modify or reopen a silent task's result, rewrite already-composed text because composition tasks own prose, introduce task types beyond `reasoning` and `composition`, select or name a writing process, touch `.writing/goals.md`, or emit goal events.
-
 6. Continue the recursive decompose-or-execute loop until the root composition task is silent. Aggregate composition results in dependency and child order and write the final document to `.writing/draft.md`.
 7. Append one schema-valid `process_switch` event to `.writing/trace/process.jsonl` for each observable graph action that enters a top-level task state. The trace contract has a variable event count with a minimum of one event for a successful run. Every event's `process` value must be exactly one of `task-decomposition`, `task-execution`, or `task-revision`; no other process value is allowed. Explain the task ID, type, dependency evidence, and state change in `decision` and `evidence`. The trace must never claim that a writing-process choice occurred when only the task graph changed.
 
@@ -63,20 +61,9 @@ The run is `INVALID` unless all three checks pass. Returning the complete text w
 Every trace event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Use `responsible_agent: "runner"`, add the graph and relevant result files to `artifacts`, and preserve unresolved dependencies or claims in `open_uncertainty`. Retrieval, evidence, and citation fields are `N/A` by design in the runner's derived accounting, not fabricated trace events. Do not append goal events or hidden reasoning. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts` is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. For example:
 
 ```json
-{
-  "timestamp": "2026-01-15T09:00:00+09:00",
-  "event_type": "process_switch",
-  "responsible_agent": "runner",
-  "process": "task-decomposition",
-  "decision": "Decompose the root composition task into typed child tasks.",
-  "evidence": [".writing/baselines/adaptive-task-planning/task-graph.json"],
-  "open_uncertainty": [],
-  "from_process": null,
-  "to_process": "task-decomposition",
-  "artifacts": [".writing/baselines/adaptive-task-planning/task-graph.json"]
-}
+{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"runner","process":"task-decomposition","decision":"Decompose the root composition task into typed child tasks.","evidence":[".writing/baselines/adaptive-task-planning/task-graph.json"],"open_uncertainty":[],"from_process":null,"to_process":"task-decomposition","artifacts":[".writing/baselines/adaptive-task-planning/task-graph.json"]}
 ```
 
 The adaptation follows WriteHERE[^1]'s released typed task graph, dependency-aware states, recursive decomposition, and interleaved execution semantics. It does not reproduce the original retrieval agent, prompts, models, frontend, benchmark, or graph implementation. The experiment compares task-structure adaptation under a common no-retrieval information policy.
 
-[^1]: Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmidhuber, "Beyond Outlining: Heterogeneous Recursive Planning for Adaptive Long-form Writing with Language Models," _Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing_ (EMNLP 2025), 2025, https://aclanthology.org/2025.emnlp-main.1254/.
+[^1]: Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmidhuber, "Beyond Outlining: Heterogeneous Recursive Planning for Adaptive Long-form Writing with Language Models," *Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing* (EMNLP 2025), 2025, https://aclanthology.org/2025.emnlp-main.1254/.

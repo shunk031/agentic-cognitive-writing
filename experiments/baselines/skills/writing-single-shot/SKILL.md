@@ -25,18 +25,7 @@ The trace contract is fixed at exactly one `process_switch` event. Its only allo
 Example shape:
 
 ```json
-{
-  "timestamp": "2026-01-15T09:00:00+09:00",
-  "event_type": "process_switch",
-  "responsible_agent": "runner",
-  "process": "generate",
-  "from_process": null,
-  "to_process": "generate",
-  "decision": "Generate the complete document in one pass from the assignment and supplied context.",
-  "evidence": [".writing/assignment.md", "supplied context"],
-  "open_uncertainty": [],
-  "artifacts": []
-}
+{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"runner","process":"generate","from_process":null,"to_process":"generate","decision":"Generate the complete document in one pass from the assignment and supplied context.","evidence":[".writing/assignment.md","supplied context"],"open_uncertainty":[],"artifacts":[]}
 ```
 
 Do not add another trace line for a retry, formatting step, or hidden decision. A failed run is accounted for by the runner; the skill must not turn failure handling into an unplanned stage.

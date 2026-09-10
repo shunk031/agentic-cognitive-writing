@@ -35,20 +35,9 @@ The user owns rhetorical intent, factual authority, final wording, and publicati
 The trace contract is fixed at exactly four `process_switch` events. Every event's `process` must be one of `initial-planning`, `immediate-plan-revision`, `parallel-segment-generation`, or `length-review`, in this exact order. The transitions are `null -> initial-planning`, `initial-planning -> immediate-plan-revision`, `immediate-plan-revision -> parallel-segment-generation`, and `parallel-segment-generation -> length-review`. Each event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`; each event also includes `artifacts` for relevant plan, segment, or draft files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts` is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. Use `responsible_agent: "runner"`, cite the stage inputs, and list the relevant plan, segment, or draft files in `artifacts`. Do not append goal events, retrieval events, or private reasoning. If a subagent fallback is needed because native delegation is unavailable, the runner records that observable fallback in the event evidence while keeping the top-level order fixed. For example:
 
 ```json
-{
-  "timestamp": "2026-01-15T09:00:00+09:00",
-  "event_type": "process_switch",
-  "responsible_agent": "runner",
-  "process": "initial-planning",
-  "decision": "Create the initial ordered segment plan.",
-  "evidence": [".writing/assignment.md"],
-  "open_uncertainty": ["The final segment lengths still need confirmation."],
-  "from_process": null,
-  "to_process": "initial-planning",
-  "artifacts": [".writing/baselines/cogwriter-style/plan-initial.json"]
-}
+{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"runner","process":"initial-planning","decision":"Create the initial ordered segment plan.","evidence":[".writing/assignment.md"],"open_uncertainty":["The final segment lengths still need confirmation."],"from_process":null,"to_process":"initial-planning","artifacts":[".writing/baselines/cogwriter-style/plan-initial.json"]}
 ```
 
 The adaptation does not claim to reproduce CogWriter[^1]'s original models, prompts, dataset, token limits, monitoring implementation, or reported results. The adaptation preserves the published control-flow ideas needed for this comparison and makes the platform, input, budget, and no-retrieval differences explicit.
 
-[^1]: Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen, "A Cognitive Writing Perspective for Constrained Long-Form Text Generation," _Findings of the Association for Computational Linguistics: ACL 2025_ (Findings of ACL 2025), 2025, https://doi.org/10.18653/v1/2025.findings-acl.511.
+[^1]: Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen, "A Cognitive Writing Perspective for Constrained Long-Form Text Generation," *Findings of the Association for Computational Linguistics: ACL 2025* (Findings of ACL 2025), 2025, https://doi.org/10.18653/v1/2025.findings-acl.511.

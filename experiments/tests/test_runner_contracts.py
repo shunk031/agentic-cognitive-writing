@@ -1773,13 +1773,77 @@ def test_run_fails_on_schema_invalid_plugin_trace(tmp_path: Path) -> None:
             trace_path = cwd / ".writing" / "trace" / "process.jsonl"
             event = json.loads(trace_path.read_text())
             del event["evidence"]
+            event["timestamp"] = "not-a-timestamp"
             trace_path.write_text(json.dumps(event) + "\n")
             return result
 
     runner = _runner(tmp_path, executor=InvalidTraceExecutor([_result()]))
 
     with pytest.raises(TraceValidationError, match="evidence"):
-        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+        runner.run_prompt(
+            _prompt(),
+            condition_id="A1",
+            platform="codex",
+            run_id="invalid-trace",
+        )
+
+    manifest = json.loads(
+        (
+            tmp_path
+            / "WritingBench"
+            / "A1"
+            / "codex"
+            / "invalid-trace"
+            / "run-manifest.json"
+        ).read_text()
+    )
+    assert manifest["trace_timestamps"] == {
+        "events": 1,
+        "unparseable": 1,
+        "out_of_window": 0,
+        "non_monotonic": 0,
+        "plausible": False,
+    }
+
+
+def test_run_records_empty_trace_timestamp_summary_when_trace_is_missing(
+    tmp_path: Path,
+) -> None:
+    class MissingTraceExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+            (cwd / ".writing" / "trace" / "process.jsonl").unlink()
+            return result
+
+    runner = _runner(tmp_path, executor=MissingTraceExecutor([_result()]))
+
+    with pytest.raises(ExecutionError, match="produced no plugin trace"):
+        runner.run_prompt(
+            _prompt(),
+            condition_id="A1",
+            platform="codex",
+            run_id="missing-trace",
+        )
+
+    manifest = json.loads(
+        (
+            tmp_path
+            / "WritingBench"
+            / "A1"
+            / "codex"
+            / "missing-trace"
+            / "run-manifest.json"
+        ).read_text()
+    )
+    assert manifest["trace_timestamps"] == {
+        "events": 0,
+        "unparseable": 0,
+        "out_of_window": 0,
+        "non_monotonic": 0,
+        "plausible": True,
+    }
 
 
 class _RetryExecutor:
