@@ -6,10 +6,15 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from test_judges import FakeTransport
+from test_judges import _config as judge_config
+from test_judges import _template as judge_template
 
 from agentic_cogwriter.analysis import aggregate as aggregate_module
 from agentic_cogwriter.analysis import batch as batch_module
 from agentic_cogwriter.analysis.common import select_canonical_runs
+from agentic_cogwriter.judges import scorer as scorer_module
+from agentic_cogwriter.judges.scorer import blind_condition_id
 
 DIMENSIONS = (
     "instruction_fulfillment",
@@ -244,69 +249,83 @@ def test_score_batch_removes_orphan_before_retry(
 ) -> None:
     root = tmp_path / "runs"
     run = _run(root, "WritingBench", "A1", "p1")
+    (run / "output.normalized.txt").write_text("Generated answer", encoding="utf-8")
+    (run / "prompt.txt").write_text(
+        "Assignment:\nWrite a memo.\n\n"
+        "Supplied context:\nProvided fact.\n\n"
+        "Requested output constraints:\n{}\n",
+        encoding="utf-8",
+    )
+    manifest = json.loads((run / "run-manifest.json").read_text(encoding="utf-8"))
+    manifest["models_and_execution"] = {
+        "generator_model_id": "generator-model",
+        "generator_model_family": "gpt",
+    }
+    manifest["scoring"] = {"status": "eligible"}
+    (run / "run-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     pointwise = tmp_path / "pointwise.json"
     pairwise = tmp_path / "pairwise.json"
-    pointwise.write_text("{}", encoding="utf-8")
-    pairwise.write_text("{}", encoding="utf-8")
+    pointwise_template = judge_template(tmp_path / "pointwise.txt", "pointwise")
+    pairwise_template = judge_template(tmp_path / "pairwise.txt", "pairwise")
     configs = {
-        pointwise: SimpleNamespace(
-            task="pointwise", judge_id="judge-1", template_path=Path("pointwise-v1.md")
-        ),
-        pairwise: SimpleNamespace(
-            task="pairwise", judge_id="judge-1", template_path=Path("pairwise-v1.md")
-        ),
+        pointwise: judge_config(tmp_path, pointwise_template),
+        pairwise: judge_config(tmp_path, pairwise_template, task="pairwise"),
     }
     monkeypatch.setattr(batch_module.JudgeConfig, "load", lambda path: configs[path])
-    calls = 0
+    response = {
+        "prompt_id": "p1",
+        "condition_id": blind_condition_id("A1"),
+        "platform": "codex",
+        "judge_id": "judge-1",
+        "judge_family": "open_evaluator",
+        "scores": dict.fromkeys(DIMENSIONS, 4),
+        "evidence_quotes": [
+            {"dimension": dimension, "quote": "Generated answer"}
+            for dimension in DIMENSIONS
+        ],
+        "judge_level_composite": 0.0,
+        "uncertainties": [],
+    }
+    transport = FakeTransport(
+        [{"content": json.dumps(response)}, {"content": json.dumps(response)}]
+    )
+    real_atomic_write = scorer_module._atomic_write
+    atomic_calls = 0
 
-    def fake_score_run(
-        run_dir: Path,
-        config: object,
-        *,
-        compare_run_dir: Path | None = None,
-        output_path: Path | None = None,
-        model: object | None = None,
-    ) -> object:
-        del compare_run_dir, model
-        nonlocal calls
-        calls += 1
-        assert output_path is not None
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text("{}\n", encoding="utf-8")
-        if calls == 1:
+    def fail_manifest_write(path: Path, data: bytes) -> None:
+        nonlocal atomic_calls
+        atomic_calls += 1
+        if atomic_calls == 2:
             raise OSError("manifest write failed")
-        _score_manifest(
-            output_path.parent,
-            config.task,
-            [run_dir],
-            [],
-            judge_id=config.judge_id,
-        )
-        return object()
+        real_atomic_write(path, data)
 
-    monkeypatch.setattr(batch_module, "score_run", fake_score_run)
+    monkeypatch.setattr(scorer_module, "_atomic_write", fail_manifest_write)
     first = batch_module.run_batch(
         [root],
         pointwise_config=pointwise,
         pairwise_config=pairwise,
         native_configs=[],
         concurrency=1,
+        model=transport.model,
     )
     assert first["failed"] == 1
     orphan = run / "scores" / "pointwise" / "judge-1" / "scores.jsonl"
     assert orphan.is_file()
     assert not orphan.with_name("scores-manifest.json").exists()
 
+    monkeypatch.setattr(scorer_module, "_atomic_write", real_atomic_write)
     second = batch_module.run_batch(
         [root],
         pointwise_config=pointwise,
         pairwise_config=pairwise,
         native_configs=[],
         concurrency=1,
+        model=transport.model,
     )
 
     assert second["scored"] == 1
-    assert calls == 2
+    assert atomic_calls == 2
+    assert orphan.is_file()
     assert orphan.with_name("scores-manifest.json").is_file()
     errors = (root / "scoring-errors.jsonl").read_text(encoding="utf-8").splitlines()
     assert json.loads(errors[-1])["error"] == "removed orphan scores.jsonl"
