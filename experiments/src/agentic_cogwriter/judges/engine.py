@@ -19,6 +19,7 @@ from .validation import (
     NativePointwiseJudgeRecord,
     PairwiseJudgeRecord,
     PointwiseJudgeRecord,
+    parse_native_checklist,
     validate_native_checklist,
     validate_native_pointwise,
     validate_pairwise,
@@ -47,6 +48,7 @@ def _run(
     model: Model | None = None,
     prompt_cache_key: str = "judge-default",
     system_prompt: str | None = None,
+    text_output: bool = False,
 ) -> JudgeResult:
     template = JudgeTemplate.load(config.template_path)
     prompt = template.render(values)
@@ -55,13 +57,19 @@ def _run(
     # Keep retries and final record normalization in one callback seam so the
     # native score/reason response needs no parallel judge engine.
     def validate_output(output: JudgeOutput) -> None:
-        validator(output.model_dump())
+        if text_output:
+            if not isinstance(output, str):
+                raise JudgeValidationError("HelloBench native response must be text")
+            validator(parse_native_checklist(output).model_dump())
+        else:
+            validator(output.model_dump())
 
     response = client.complete(
         prompt,
         output_type=output_type,
         output_validator=validate_output,
         system_prompt=system_prompt,
+        text_output=text_output,
         # Reuse the caller's run-scoped cache namespace at the transport seam.
         prompt_cache_key=prompt_cache_key,
     )
@@ -306,6 +314,7 @@ def judge_native_checklist(
             "of the responses given by the Large Language Models (LLMs) based on "
             "user instructions. These checklists consist of yes or no questions."
         ),
+        text_output=True,
         # HelloBench issues one request per run, so no prompt-cache reordering is used.
         prompt_cache_key=prompt_cache_key,
     )

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ast
+import json
 import math
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -124,6 +126,89 @@ class HelloBenchChecklistRecord(_StrictRecord):
     """Structured JSON wrapper for the upstream Python list output."""
 
     checklist_items: list[HelloBenchChecklistItem]  # noqa: V107
+
+
+MAX_NATIVE_CHECKLIST_RESPONSE_CHARS = 200_000
+"""Maximum raw response length accepted by the HelloBench checklist parser."""
+
+
+def parse_native_checklist(text: str) -> HelloBenchChecklistRecord:
+    """Parse the upstream HelloBench list response into the stored record shape."""
+
+    if len(text) > MAX_NATIVE_CHECKLIST_RESPONSE_CHARS:
+        raise JudgeValidationError(
+            "HelloBench native response exceeds "
+            f"{MAX_NATIVE_CHECKLIST_RESPONSE_CHARS} characters"
+        )
+
+    try:
+        parsed: Any = json.loads(text)
+    except json.JSONDecodeError:
+        try:
+            parsed = ast.literal_eval(text)
+        except (SyntaxError, ValueError) as exc:
+            raise JudgeValidationError(
+                "HelloBench native response must be a JSON or Python list"
+            ) from exc
+
+    if isinstance(parsed, Mapping):
+        if len(parsed) != 1:
+            raise JudgeValidationError(
+                "HelloBench native response wrapper must have one list value"
+            )
+        parsed = next(iter(parsed.values()))
+    if not isinstance(parsed, list):
+        raise JudgeValidationError("HelloBench native response must be a list")
+
+    items: list[dict[str, Any]] = []
+    for item in parsed:
+        if not isinstance(item, Mapping):
+            raise JudgeValidationError("HelloBench checklist item must be an object")
+        if set(item) != set(HelloBenchChecklistItem.model_fields):
+            raise JudgeValidationError(
+                "HelloBench checklist item keys must be exactly "
+                "checklist_id, reason, and evaluation_score"
+            )
+
+        checklist_id = item["checklist_id"]
+        reason = item["reason"]
+        evaluation_score = item["evaluation_score"]
+
+        if isinstance(checklist_id, bool):
+            raise JudgeValidationError("HelloBench checklist_id must be an integer")
+        if isinstance(checklist_id, str) and checklist_id.isdigit():
+            checklist_id = int(checklist_id)
+        elif not isinstance(checklist_id, int):
+            raise JudgeValidationError("HelloBench checklist_id must be an integer")
+
+        if isinstance(evaluation_score, bool):
+            raise JudgeValidationError("HelloBench evaluation_score must be numeric")
+        if isinstance(evaluation_score, str):
+            try:
+                evaluation_score = float(evaluation_score)
+            except ValueError as exc:
+                raise JudgeValidationError(
+                    "HelloBench evaluation_score must be numeric"
+                ) from exc
+        elif not isinstance(evaluation_score, (int, float)):
+            raise JudgeValidationError("HelloBench evaluation_score must be numeric")
+
+        items.append(
+            {
+                "checklist_id": checklist_id,
+                "reason": reason,
+                "evaluation_score": evaluation_score,
+            }
+        )
+
+    try:
+        return HelloBenchChecklistRecord.model_validate(
+            {"checklist_items": items}, strict=True
+        )
+    except ValidationError as exc:
+        raise JudgeValidationError(
+            "HelloBench native response has invalid checklist fields"
+        ) from exc
 
 
 class PairwiseEvidence(_StrictRecord):

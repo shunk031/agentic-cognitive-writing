@@ -33,12 +33,14 @@ from agentic_cogwriter.judges.scorer import (
 )
 from agentic_cogwriter.judges.templates import JudgeTemplate
 from agentic_cogwriter.judges.validation import (
+    MAX_NATIVE_CHECKLIST_RESPONSE_CHARS,
     POINTWISE_DIMENSIONS,
     HelloBenchChecklistItem,
     HelloBenchChecklistRecord,
     NativePointwiseJudgeRecord,
     PairwiseJudgeRecord,
     PointwiseJudgeRecord,
+    parse_native_checklist,
     validate_native_checklist,
     validate_pairwise,
     validate_pointwise,
@@ -267,6 +269,132 @@ def test_hellobench_checklist_validation_requires_contiguous_ids_and_scale() -> 
     ):
         with pytest.raises(JudgeValidationError):
             validate_native_checklist(invalid, expected=expected, num_checklist=2)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        json.dumps(
+            [
+                {
+                    "checklist_id": "0",
+                    "reason": "The first item is addressed.",
+                    "evaluation_score": "0.75",
+                },
+                {
+                    "checklist_id": "1",
+                    "reason": "The second item is addressed.",
+                    "evaluation_score": "1",
+                },
+            ]
+        ),
+        "[{'checklist_id': '0', 'reason': 'The first item is addressed.', "
+        "'evaluation_score': '0.75'}, {'checklist_id': '1', "
+        "'reason': 'The second item is addressed.', 'evaluation_score': '1'}]",
+        json.dumps(
+            {
+                "checklist_items": [
+                    {
+                        "checklist_id": "0",
+                        "reason": "The first item is addressed.",
+                        "evaluation_score": "0.75",
+                    },
+                    {
+                        "checklist_id": "1",
+                        "reason": "The second item is addressed.",
+                        "evaluation_score": "1",
+                    },
+                ]
+            }
+        ),
+    ],
+)
+def test_native_checklist_accepts_upstream_response_shapes(
+    tmp_path: Path, content: str
+) -> None:
+    template = tmp_path / "judge.txt"
+    template.write_text(
+        "{instruction}\n{response}\n{checklists}\n{num_checklist}\n",
+        encoding="utf-8",
+    )
+    config = _config(tmp_path, template, task="native-checklist")
+    transport = FakeTransport([{"content": content}])
+
+    from agentic_cogwriter.judges.engine import judge_native_checklist
+
+    result = judge_native_checklist(
+        config,
+        instruction="Write a memo.",
+        output="A response.",
+        checklists=("First item", "Second item"),
+        prompt_id="p-1",
+        blind_condition_id="blind-condition",
+        platform="codex",
+        model=transport.model,
+    )
+
+    assert result.record["checklist_items"] == [
+        {
+            "checklist_id": 0,
+            "reason": "The first item is addressed.",
+            "evaluation_score": 0.75,
+        },
+        {
+            "checklist_id": 1,
+            "reason": "The second item is addressed.",
+            "evaluation_score": 1.0,
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    "item",
+    [
+        {
+            "checklist_id": "0",
+            "reason": "The item is addressed.",
+            "evaluation_score": "0.75",
+            "extra": "reject this",
+        },
+        {
+            "checklist_id": "0",
+            "reason": "The item is addressed.",
+        },
+    ],
+)
+def test_native_checklist_parser_requires_exact_item_keys(
+    item: dict[str, str],
+) -> None:
+    with pytest.raises(JudgeValidationError, match="exactly"):
+        parse_native_checklist(json.dumps([item]))
+
+
+def test_native_checklist_parser_accepts_the_length_limit() -> None:
+    content = json.dumps(
+        [
+            {
+                "checklist_id": "0",
+                "reason": "The item is addressed.",
+                "evaluation_score": "0.75",
+            }
+        ]
+    )
+    content = content + " " * (MAX_NATIVE_CHECKLIST_RESPONSE_CHARS - len(content))
+
+    parsed = parse_native_checklist(content)
+
+    assert len(content) == MAX_NATIVE_CHECKLIST_RESPONSE_CHARS
+    assert parsed.checklist_items[0].evaluation_score == 0.75
+
+
+def test_native_checklist_parser_rejects_an_oversized_python_literal() -> None:
+    content = (
+        "[{'checklist_id': '0', 'reason': 'The item is addressed.', "
+        "'evaluation_score': '0.75'}]" + " " * MAX_NATIVE_CHECKLIST_RESPONSE_CHARS
+    )
+
+    with pytest.raises(JudgeValidationError, match="200000"):
+        parse_native_checklist(content)
 
 
 def test_pointwise_validation_rejects_unknown_or_out_of_range_scores() -> None:
@@ -657,6 +785,92 @@ def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
         "total_tokens": 12,
         "cached_tokens": 8,
     }
+
+
+def test_native_checklist_text_mode_omits_response_format_but_pointwise_keeps_it(
+    tmp_path: Path,
+) -> None:
+    captured: list[dict[str, Any]] = []
+
+    import httpx2 as httpx
+
+    async def respond(request: httpx.Request) -> httpx.Response:
+        payload = json.loads(request.content)
+        captured.append(payload)
+        if "response_format" in payload:
+            content = json.dumps(_pointwise_record())
+        else:
+            content = json.dumps(
+                [
+                    {
+                        "checklist_id": "0",
+                        "reason": "The checklist item is addressed.",
+                        "evaluation_score": "0.75",
+                    }
+                ]
+            )
+        return httpx.Response(
+            200,
+            json={
+                "id": "chatcmpl-test",
+                "object": "chat.completion",
+                "created": 1,
+                "model": payload["model"],
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {"role": "assistant", "content": content},
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 10,
+                    "completion_tokens": 2,
+                    "total_tokens": 12,
+                },
+            },
+        )
+
+    async_client = httpx.AsyncClient(
+        transport=httpx.MockTransport(respond),
+        base_url="https://gateway.test/v1",
+    )
+    model = OpenAIChatModel(
+        "open-model",
+        provider=OpenAIProvider(
+            base_url="https://gateway.test/v1",
+            api_key="test-key",
+            http_client=async_client,
+        ),
+        profile=OpenAIModelProfile(
+            openai_supports_reasoning=False,
+            openai_reasoning_enabled_by_default=False,
+            openai_chat_supports_max_completion_tokens=True,
+        ),
+    )
+    try:
+        native_config = _config(
+            tmp_path, tmp_path / "native.txt", task="native-checklist"
+        )
+        pointwise_config = _config(tmp_path, tmp_path / "pointwise.txt")
+        native_response = OpenAICompatibleClient(native_config, model=model).complete(
+            "Evaluate the checklist.",
+            output_type=HelloBenchChecklistRecord,
+            text_output=True,
+            system_prompt="Evaluate the checklist.",
+        )
+        pointwise_response = OpenAICompatibleClient(
+            pointwise_config, model=model
+        ).complete("Return the pointwise record.", output_type=PointwiseJudgeRecord)
+    finally:
+        asyncio.run(async_client.aclose())
+
+    assert native_response.output.checklist_items[0].evaluation_score == 0.75
+    assert "response_format" not in captured[0]
+    assert captured[1]["response_format"] == {"type": "json_object"}
+    assert pointwise_response.output == PointwiseJudgeRecord.model_validate(
+        _pointwise_record()
+    )
 
 
 def test_gpt56_native_template_splits_shared_text_before_criterion(

@@ -32,6 +32,7 @@ from .validation import (
     NativePointwiseJudgeRecord,
     PairwiseJudgeRecord,
     PointwiseJudgeRecord,
+    parse_native_checklist,
 )
 
 JudgeOutput = (
@@ -145,6 +146,7 @@ class OpenAICompatibleClient:
         output_validator: Callable[[JudgeOutput], None] | None = None,
         prompt_cache_key: str = "judge-default",
         system_prompt: str | None = None,
+        text_output: bool = False,
     ) -> JudgeResponse:
         """Run one pydantic-ai request with bounded structured-output retries."""
 
@@ -170,11 +172,11 @@ class OpenAICompatibleClient:
             }
 
         model = self.model or self._configured_model()
-        agent: Agent[object, JudgeOutput] = Agent(
+        agent: Agent[object, Any] = Agent(
             model,
-            # Templates carry the JSON contract; parse their text without
-            # output tools.
-            output_type=PromptedOutput(output_type, template=False),
+            output_type=(
+                str if text_output else PromptedOutput(output_type, template=False)
+            ),
             system_prompt=system_prompt
             or "Return only the JSON object requested by the user.",
             model_settings=settings,
@@ -183,9 +185,16 @@ class OpenAICompatibleClient:
         if output_validator is not None:
 
             @agent.output_validator  # noqa: V103
-            def _validate_output(output: JudgeOutput) -> JudgeOutput:
+            def _validate_output(output: Any) -> Any:
                 try:
-                    output_validator(output)
+                    if text_output:
+                        if not isinstance(output, str):
+                            raise JudgeValidationError(
+                                "HelloBench native response must be text"
+                            )
+                        output_validator(output)  # type: ignore[arg-type]
+                    else:
+                        output_validator(output)
                 except JudgeValidationError as error:
                     raise ModelRetry(str(error)) from error
                 return output
@@ -238,6 +247,14 @@ class OpenAICompatibleClient:
         content = _response_content(result.response)
         usage = _usage(result.usage)
         output = result.output
+        if text_output:
+            if output_type is not HelloBenchChecklistRecord or not isinstance(
+                output, str
+            ):
+                raise JudgeTransportError(
+                    "Text output is supported only for HelloBench checklist records"
+                )
+            output = parse_native_checklist(output)
         if not isinstance(
             output,
             (
