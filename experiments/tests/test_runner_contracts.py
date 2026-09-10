@@ -1377,19 +1377,80 @@ def test_required_delegation_passes_with_spawn_events(tmp_path: Path) -> None:
     }
 
 
-def test_extract_subagent_spawn_count_deduplicates_started_and_completed_events() -> (
-    None
-):
-    stream = (
-        b'{"type":"item.started","item":{"id":"collab-1",'
-        b'"type":"collab_tool_call","tool":"spawn_agent"}}\n'
-        b'{"type":"item.completed","item":{"id":"collab-1",'
-        b'"type":"collab_tool_call","tool":"spawn_agent"}}\n'
-        b'{"type":"item.completed","item":{"id":"collab-2",'
-        b'"type":"collab_tool_call","tool":"spawn_agent"}}\n'
+def test_failed_spawn_event_fails_required_delegation(tmp_path: Path) -> None:
+    class SpawnRolloutExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+            rollout = Path(env["CODEX_HOME"]) / "sessions" / "attempt.jsonl"
+            rollout.parent.mkdir(parents=True, exist_ok=True)
+            rollout.write_bytes(result.stdout)
+            return result
+
+    condition = replace(load_condition_registry()["A1"], require_delegation=True)
+    runner = _runner(
+        tmp_path,
+        condition_registry={"A1": condition},
+        executor=SpawnRolloutExecutor(
+            [_result(subagent_spawns=1, spawn_status="failed")]
+        ),
     )
 
-    assert extract_subagent_spawn_count(stream) == 2
+    with pytest.raises(
+        ExecutionError,
+        match=(
+            "Condition A1 requires native role delegation; no spawn_agent event "
+            "was observed"
+        ),
+    ):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex"
+    manifest = json.loads(
+        next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
+    )
+    assert manifest["delegation_check"] == {
+        "required": True,
+        "spawn_count": 0,
+        "passed": False,
+    }
+
+
+def test_extract_subagent_spawn_count_ignores_failed_completed_spawn() -> None:
+    stream = (
+        b'{"type":"item.completed","item":{"id":"collab-1",'
+        b'"type":"collab_tool_call","tool":"spawn_agent",'
+        b'"status":"failed","receiver_thread_ids":[]}}\n'
+    )
+
+    assert extract_subagent_spawn_count(stream) == 0
+
+
+def test_extract_subagent_spawn_count_ignores_in_progress_spawn() -> None:
+    stream = (
+        b'{"type":"item.started","item":{"id":"collab-1",'
+        b'"type":"collab_tool_call","tool":"spawn_agent",'
+        b'"status":"in_progress","receiver_thread_ids":["thread-1"]}}\n'
+        b'{"type":"item.updated","item":{"id":"collab-1",'
+        b'"type":"collab_tool_call","tool":"spawn_agent",'
+        b'"status":"in_progress","receiver_thread_ids":["thread-1"]}}\n'
+    )
+
+    assert extract_subagent_spawn_count(stream) == 0
+
+
+def test_extract_subagent_spawn_count_accepts_completed_spawn_with_receiver() -> None:
+    stream = (
+        b'{"type":"item.started","item":{"id":"collab-1",'
+        b'"type":"collab_tool_call","tool":"spawn_agent",'
+        b'"status":"in_progress","receiver_thread_ids":[]}}\n'
+        b'{"type":"item.completed","item":{"id":"collab-1",'
+        b'"type":"collab_tool_call","tool":"spawn_agent",'
+        b'"status":"completed","receiver_thread_ids":["thread-1"]}}\n'
+    )
+
+    assert extract_subagent_spawn_count(stream) == 1
     assert extract_subagent_spawn_count(b'{"type":"item.completed"}\n') == 0
 
 
@@ -1959,6 +2020,8 @@ def _result(
     timed_out: bool = False,
     usage: dict[str, int] | None = None,
     subagent_spawns: int = 0,
+    spawn_status: str = "completed",
+    receiver_thread_ids: list[str] | None = None,
     include_usage: bool = True,
 ) -> ExecutionResult:
     payload = {
@@ -1972,6 +2035,12 @@ def _result(
             "id": f"collab-{index}",
             "type": "collab_tool_call",
             "tool": "spawn_agent",
+            "status": spawn_status,
+            "receiver_thread_ids": (
+                receiver_thread_ids
+                if receiver_thread_ids is not None
+                else [f"receiver-{index}"]
+            ),
         }
         stream.extend(
             [

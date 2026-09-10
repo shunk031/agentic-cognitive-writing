@@ -85,6 +85,23 @@ def test_registry_parses_delegation_requirement_with_false_default() -> None:
     } == {"A3", "A4", "A5", "A6", "B1"}
 
 
+def test_registry_rejects_non_boolean_delegation_requirement(tmp_path: Path) -> None:
+    conditions_dir = _copy_conditions(tmp_path)
+    wrapper_path = conditions_dir / "a4_plugin.toml"
+    wrapper_path.write_text(
+        wrapper_path.read_text(encoding="utf-8").replace(
+            "require_delegation = true", 'require_delegation = "true"'
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        ConfigurationError,
+        match="trace.require_delegation must be a boolean",
+    ):
+        load_condition_registry(conditions_dir)
+
+
 def test_missing_condition_wrapper_is_an_error(tmp_path: Path) -> None:
     conditions_dir = _copy_conditions(tmp_path)
     (conditions_dir / "a4_plugin.toml").unlink()

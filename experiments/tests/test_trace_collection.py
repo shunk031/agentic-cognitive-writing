@@ -93,6 +93,7 @@ class FakeExecutor:
                     )
                     if any(
                         f"skills/{skill_name}/SKILL.md" in argument
+                        or skill_name in argument
                         for argument in command
                     )
                 ),
@@ -160,6 +161,8 @@ class FakeExecutor:
                 "id": f"collab-{index}",
                 "type": "collab_tool_call",
                 "tool": "spawn_agent",
+                "status": "completed",
+                "receiver_thread_ids": [f"receiver-{index}"],
             }
             payload_stream.extend(
                 [
@@ -413,6 +416,31 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
             "task-revision",
         ],
         "require_goal_events": False,
+    }
+
+
+def test_claude_code_delegating_condition_bypasses_codex_delegation_gate(
+    tmp_path,
+):
+    prompt = PromptRecord(
+        prompt_id="p-1",
+        benchmark_name="WritingBench",
+        source_version="test",
+        prompt_text="Write a memo.",
+        supplied_context="Provided facts only.",
+        requested_output_constraints={},
+        row_hash="row-hash",
+    )
+    runner = _runner(tmp_path, executor=FakeExecutor())
+
+    result = runner.run_prompt(prompt, condition_id="A3", platform="claude-code")
+
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["status"] == "completed"
+    assert manifest["delegation_check"] == {
+        "required": True,
+        "spawn_count": 0,
+        "passed": True,
     }
 
 
