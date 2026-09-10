@@ -13,6 +13,7 @@ from .errors import JudgeConfigurationError
 JudgeTask = Literal["pointwise", "pairwise", "native-pointwise", "native-checklist"]
 JudgeFamily = Literal["claude_frontier", "gpt_frontier", "open_evaluator"]
 JudgeRole = Literal["frontier", "open_evaluator"]
+FamilyAuditMode = Literal["enforced", "exploratory-same-family"]
 
 
 @dataclass(frozen=True)
@@ -168,6 +169,7 @@ class JudgeConfig:
     timeout_seconds: float
     max_retries: int
     presentation_seed: int | None
+    allow_same_family_judge: bool = False
     source_path: Path | None = None
 
     @classmethod
@@ -208,6 +210,10 @@ class JudgeConfig:
         if not judge_id:
             raise JudgeConfigurationError("judge_id must be a non-empty string")
         model_family_map = _model_family_map(values)
+
+        allow_same_family_judge = values.get("allow_same_family_judge", False)
+        if not isinstance(allow_same_family_judge, bool):
+            raise JudgeConfigurationError("allow_same_family_judge must be a boolean")
 
         base_url_env = _required_string(values, "base_url_env", "base_url_env_name")
         credential_env = _required_string(
@@ -311,6 +317,7 @@ class JudgeConfig:
             timeout_seconds=timeout_seconds,
             max_retries=max_retries,
             presentation_seed=presentation_seed,
+            allow_same_family_judge=allow_same_family_judge,
             source_path=source_path,
         )
 
@@ -340,7 +347,7 @@ class JudgeConfig:
 
     def validate_family_audit(
         self, identity: JudgeIdentity, generator_family: str
-    ) -> None:
+    ) -> FamilyAuditMode:
         """Reject empty generator families and family overlap."""
 
         generator_base = _base_family(generator_family)
@@ -348,5 +355,8 @@ class JudgeConfig:
             raise JudgeConfigurationError(
                 "run manifest needs a non-empty generator model family"
             )
-        if identity.mapped_family == generator_base:
+        if identity.mapped_family != generator_base:
+            return "enforced"
+        if not self.allow_same_family_judge:
             raise JudgeConfigurationError("judge and generator model families overlap")
+        return "exploratory-same-family"

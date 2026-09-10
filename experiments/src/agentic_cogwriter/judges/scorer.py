@@ -242,13 +242,14 @@ def _presentation_orders(pair_id: str, seed: int) -> tuple[str, str]:
 def _family_audit(
     config: JudgeConfig, result: JudgeResult, run: RunArtifacts
 ) -> dict[str, str]:
-    config.validate_family_audit(result.judge_identity, run.generator_family)
+    mode = config.validate_family_audit(result.judge_identity, run.generator_family)
     return {
         "reported_model_id": result.judge_identity.reported_model_id,
         "mapped_family": result.judge_identity.mapped_family,
         "judge_family": result.judge_identity.judge_family,
         "generator_model_id": run.generator_model_id,
         "generator_family": run.generator_family,
+        "mode": mode,
     }
 
 
