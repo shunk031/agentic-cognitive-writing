@@ -43,6 +43,7 @@ from .hashing import sha256_bytes, sha256_file
 from .manifest import PromptRecord, load_benchmark_provenance
 from .trace import (
     assert_untouched,
+    assess_trace_timestamps,
     collect_plugin_trace,
     timestamp,
     validate_trace,
@@ -712,6 +713,7 @@ class ExperimentRunner:
             staged_files: dict[str, str] = {}
             token_usage: dict[str, int] | None = None
             token_accounting_error: str | None = None
+            trace_timestamps: Mapping[str, Any] | None = None
             subagent_spawn_ids: set[str] = set()
             rollout_collection: dict[str, Any] = {
                 "status": "absent",
@@ -1001,6 +1003,11 @@ class ExperimentRunner:
             if condition.goal_events == "forbidden":
                 assert_untouched(protected_goals, goals_before)
             required_trace = ".writing/trace/process.jsonl"
+            trace_timestamps = assess_trace_timestamps(
+                trace_path,
+                started_at=started_at,
+                manifest_written_at=timestamp(),
+            )
             if not trace_path.is_file():
                 raise ExecutionError(
                     f"Condition {condition.condition_id} produced no plugin trace at "
@@ -1025,7 +1032,6 @@ class ExperimentRunner:
                 process_order=condition.process_order,
                 require_goal_events=condition.require_goal_events,
             )
-
             output_path.write_bytes(output.encode("utf-8"))
             normalized_path.write_text(output, encoding="utf-8")
             self._write_json(
@@ -1054,6 +1060,7 @@ class ExperimentRunner:
                     token_accounting_error=token_accounting_error,
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
+                    trace_timestamps=trace_timestamps,
                 ),
             )
             return RunResult(
@@ -1091,6 +1098,12 @@ class ExperimentRunner:
                     "stream": stream,
                     "artifact_source": exc.artifact_source,
                 }
+            if trace_timestamps is None:
+                trace_timestamps = assess_trace_timestamps(
+                    trace_path,
+                    started_at=started_at,
+                    manifest_written_at=timestamp(),
+                )
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -1122,6 +1135,7 @@ class ExperimentRunner:
                     token_accounting_error=token_accounting_error,
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
+                    trace_timestamps=trace_timestamps,
                     failure=failure,
                 ),
             )
@@ -1517,6 +1531,7 @@ class ExperimentRunner:
         token_accounting_error: str | None = None,
         rollout_collection: Mapping[str, Any] | None = None,
         spawn_extraction: Mapping[str, Any] | None = None,
+        trace_timestamps: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         if platform == "codex":
@@ -1720,6 +1735,8 @@ class ExperimentRunner:
         # can score the immutable row without reopening or refetching its source.
         if prompt.native_payload is not None:
             manifest["inputs"]["native_payload"] = prompt.native_payload
+        if trace_timestamps is not None:
+            manifest["trace_timestamps"] = dict(trace_timestamps)
         if output_hash is not None:
             manifest["output_hash"] = output_hash
         if trace_hash is not None:

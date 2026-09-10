@@ -378,6 +378,8 @@ The trace is an operational analogue of a thinking-aloud protocol, not a direct 
 
 The analysis extracts these measures from the traces and uses goal files only for A4 and A6.
 
+The analysis orders events by line order and does not use timestamps; the run manifest records timestamp plausibility for reporting.
+
 **Goal count.** For A4 and A6, count all three goal event types and add the unique active goal IDs in `.writing/goals.md`. For A5, report zero because the variant records no goal events and does not create or modify `.writing/goals.md`. Report a total. When the kind is available, also report content, process, and criterion goals.
 
 **Goal specificity.** Code whether each goal has these properties:

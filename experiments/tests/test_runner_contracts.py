@@ -43,7 +43,11 @@ from agentic_cogwriter.runner.runner import (
     SessionSnapshot,
     _synthesized_codex_config,
 )
-from agentic_cogwriter.runner.trace import TraceValidationError, validate_trace
+from agentic_cogwriter.runner.trace import (
+    TraceValidationError,
+    assess_trace_timestamps,
+    validate_trace,
+)
 
 WRITING_TRACE_PROCESSES = (
     "planning",
@@ -1468,6 +1472,82 @@ def test_trace_validation_requires_contract_fields(tmp_path: Path) -> None:
         )
 
 
+def test_trace_timestamp_plausibility_rejects_fabricated_midnight_values() -> None:
+    events = [
+        {"timestamp": "2026-09-08T00:00:00+00:00"},
+        {"timestamp": "2026-09-08T00:00:00+00:00"},
+    ]
+
+    assert assess_trace_timestamps(
+        events,
+        started_at="2026-09-08T12:00:00+00:00",
+        manifest_written_at="2026-09-08T12:00:30+00:00",
+    ) == {
+        "events": 2,
+        "unparseable": 0,
+        "out_of_window": 2,
+        "non_monotonic": 0,
+        "plausible": False,
+    }
+
+
+def test_trace_timestamp_plausibility_accepts_in_window_increasing_values() -> None:
+    events = [
+        {"timestamp": "2026-09-08T12:00:01+00:00"},
+        {"timestamp": "2026-09-08T12:00:02+00:00"},
+    ]
+
+    assert assess_trace_timestamps(
+        events,
+        started_at="2026-09-08T12:00:00+00:00",
+        manifest_written_at="2026-09-08T12:00:30+00:00",
+    ) == {
+        "events": 2,
+        "unparseable": 0,
+        "out_of_window": 0,
+        "non_monotonic": 0,
+        "plausible": True,
+    }
+
+
+def test_trace_timestamp_plausibility_counts_unparseable_values() -> None:
+    events = [
+        {"timestamp": "not-a-timestamp"},
+        {"timestamp": "2026-09-08T12:00:02+00:00"},
+    ]
+
+    assert assess_trace_timestamps(
+        events,
+        started_at="2026-09-08T12:00:00+00:00",
+        manifest_written_at="2026-09-08T12:00:30+00:00",
+    ) == {
+        "events": 2,
+        "unparseable": 1,
+        "out_of_window": 0,
+        "non_monotonic": 0,
+        "plausible": False,
+    }
+
+
+def test_trace_timestamp_plausibility_counts_non_monotonic_values() -> None:
+    events = [
+        {"timestamp": "2026-09-08T12:00:02+00:00"},
+        {"timestamp": "2026-09-08T12:00:01+00:00"},
+    ]
+
+    assert assess_trace_timestamps(
+        events,
+        started_at="2026-09-08T12:00:00+00:00",
+        manifest_written_at="2026-09-08T12:00:30+00:00",
+    ) == {
+        "events": 2,
+        "unparseable": 0,
+        "out_of_window": 0,
+        "non_monotonic": 1,
+        "plausible": False,
+    }
+
+
 def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -> None:
     a2_path = tmp_path / "a2.jsonl"
     a2_path.write_text(
@@ -1693,13 +1773,77 @@ def test_run_fails_on_schema_invalid_plugin_trace(tmp_path: Path) -> None:
             trace_path = cwd / ".writing" / "trace" / "process.jsonl"
             event = json.loads(trace_path.read_text())
             del event["evidence"]
+            event["timestamp"] = "not-a-timestamp"
             trace_path.write_text(json.dumps(event) + "\n")
             return result
 
     runner = _runner(tmp_path, executor=InvalidTraceExecutor([_result()]))
 
     with pytest.raises(TraceValidationError, match="evidence"):
-        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+        runner.run_prompt(
+            _prompt(),
+            condition_id="A1",
+            platform="codex",
+            run_id="invalid-trace",
+        )
+
+    manifest = json.loads(
+        (
+            tmp_path
+            / "WritingBench"
+            / "A1"
+            / "codex"
+            / "invalid-trace"
+            / "run-manifest.json"
+        ).read_text()
+    )
+    assert manifest["trace_timestamps"] == {
+        "events": 1,
+        "unparseable": 1,
+        "out_of_window": 0,
+        "non_monotonic": 0,
+        "plausible": False,
+    }
+
+
+def test_run_records_empty_trace_timestamp_summary_when_trace_is_missing(
+    tmp_path: Path,
+) -> None:
+    class MissingTraceExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+            (cwd / ".writing" / "trace" / "process.jsonl").unlink()
+            return result
+
+    runner = _runner(tmp_path, executor=MissingTraceExecutor([_result()]))
+
+    with pytest.raises(ExecutionError, match="produced no plugin trace"):
+        runner.run_prompt(
+            _prompt(),
+            condition_id="A1",
+            platform="codex",
+            run_id="missing-trace",
+        )
+
+    manifest = json.loads(
+        (
+            tmp_path
+            / "WritingBench"
+            / "A1"
+            / "codex"
+            / "missing-trace"
+            / "run-manifest.json"
+        ).read_text()
+    )
+    assert manifest["trace_timestamps"] == {
+        "events": 0,
+        "unparseable": 0,
+        "out_of_window": 0,
+        "non_monotonic": 0,
+        "plausible": True,
+    }
 
 
 class _RetryExecutor:
@@ -2074,6 +2218,35 @@ def test_runner_fails_on_over_budget_turn_usage(tmp_path: Path) -> None:
 
     with pytest.raises(BudgetExceeded, match="budget"):
         runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+
+def test_pre_trace_failure_records_trace_timestamp_summary(tmp_path: Path) -> None:
+    runner = _runner(
+        tmp_path,
+        executor=_RetryExecutor(
+            [_result(usage={"output_tokens": 80, "reasoning_output_tokens": 21})]
+        ),
+    )
+
+    with pytest.raises(BudgetExceeded, match="budget"):
+        runner.run_prompt(
+            _prompt(),
+            condition_id="A1",
+            platform="codex",
+            run_id="pre-trace-failure",
+        )
+
+    manifest = json.loads(
+        (
+            tmp_path
+            / "WritingBench"
+            / "A1"
+            / "codex"
+            / "pre-trace-failure"
+            / "run-manifest.json"
+        ).read_text()
+    )
+    assert manifest["trace_timestamps"]["events"] == 1
 
 
 def test_non_draft_condition_has_a_nontrivial_product_floor(tmp_path: Path) -> None:

@@ -301,7 +301,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A3"].process_order is None
 
 
-def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
+def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path, monkeypatch):
     prompt = PromptRecord(
         prompt_id="p-1",
         benchmark_name="WritingBench",
@@ -310,6 +310,10 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
         supplied_context="Provided facts only.",
         requested_output_constraints={},
         row_hash="row-hash",
+    )
+    monkeypatch.setattr(
+        "agentic_cogwriter.runner.runner.timestamp",
+        lambda: "2026-09-08T12:00:30+00:00",
     )
     executor = FakeExecutor()
     runner = _runner(tmp_path, executor=executor)
@@ -337,6 +341,13 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path):
     assert manifest["trace_hash"] == (
         "sha256:" + hashlib.sha256(result.trace_path.read_bytes()).hexdigest()
     )
+    assert manifest["trace_timestamps"] == {
+        "events": 3,
+        "unparseable": 0,
+        "out_of_window": 3,
+        "non_monotonic": 0,
+        "plausible": False,
+    }
     assert not (result.run_dir / "checksums.json").exists()
 
 
