@@ -82,7 +82,7 @@ def _score_manifest(
     judge_id: str = "judge-1",
     usages: list[dict[str, int]] | None = None,
 ) -> None:
-    path.mkdir(parents=True)
+    path.mkdir(parents=True, exist_ok=True)
     (path / "scores.jsonl").write_text(
         "".join(json.dumps(record) + "\n" for record in records),
         encoding="utf-8",
@@ -237,6 +237,79 @@ def test_score_batch_is_idempotent_and_drops_failed_pair_members(
     assert json.loads(errors[0])["task"] == "pointwise"
     assert all(failed.name not in call for call in calls)
     assert all(a4.name not in call for call in calls)
+
+
+def test_score_batch_removes_orphan_before_retry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "runs"
+    run = _run(root, "WritingBench", "A1", "p1")
+    pointwise = tmp_path / "pointwise.json"
+    pairwise = tmp_path / "pairwise.json"
+    pointwise.write_text("{}", encoding="utf-8")
+    pairwise.write_text("{}", encoding="utf-8")
+    configs = {
+        pointwise: SimpleNamespace(
+            task="pointwise", judge_id="judge-1", template_path=Path("pointwise-v1.md")
+        ),
+        pairwise: SimpleNamespace(
+            task="pairwise", judge_id="judge-1", template_path=Path("pairwise-v1.md")
+        ),
+    }
+    monkeypatch.setattr(batch_module.JudgeConfig, "load", lambda path: configs[path])
+    calls = 0
+
+    def fake_score_run(
+        run_dir: Path,
+        config: object,
+        *,
+        compare_run_dir: Path | None = None,
+        output_path: Path | None = None,
+        model: object | None = None,
+    ) -> object:
+        del compare_run_dir, model
+        nonlocal calls
+        calls += 1
+        assert output_path is not None
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text("{}\n", encoding="utf-8")
+        if calls == 1:
+            raise OSError("manifest write failed")
+        _score_manifest(
+            output_path.parent,
+            config.task,
+            [run_dir],
+            [],
+            judge_id=config.judge_id,
+        )
+        return object()
+
+    monkeypatch.setattr(batch_module, "score_run", fake_score_run)
+    first = batch_module.run_batch(
+        [root],
+        pointwise_config=pointwise,
+        pairwise_config=pairwise,
+        native_configs=[],
+        concurrency=1,
+    )
+    assert first["failed"] == 1
+    orphan = run / "scores" / "pointwise" / "judge-1" / "scores.jsonl"
+    assert orphan.is_file()
+    assert not orphan.with_name("scores-manifest.json").exists()
+
+    second = batch_module.run_batch(
+        [root],
+        pointwise_config=pointwise,
+        pairwise_config=pairwise,
+        native_configs=[],
+        concurrency=1,
+    )
+
+    assert second["scored"] == 1
+    assert calls == 2
+    assert orphan.with_name("scores-manifest.json").is_file()
+    errors = (root / "scoring-errors.jsonl").read_text(encoding="utf-8").splitlines()
+    assert json.loads(errors[-1])["error"] == "removed orphan scores.jsonl"
 
 
 def test_aggregate_uses_expected_pairs_judge_groups_and_completion_only_tokens(

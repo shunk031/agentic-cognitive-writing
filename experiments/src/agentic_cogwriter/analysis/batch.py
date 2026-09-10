@@ -66,6 +66,25 @@ def _jobs(
         if (output_path.parent / "scores-manifest.json").is_file():
             skipped += 1
             return
+        if output_path.is_file():
+            output_path.unlink()
+            with (run.root / "scoring-errors.jsonl").open(
+                "a", encoding="utf-8"
+            ) as stream:
+                stream.write(
+                    json.dumps(
+                        {
+                            "timestamp": datetime.now(UTC).isoformat(),
+                            "task": task,
+                            "run_dir": str(run.path),
+                            "compare_run_dir": str(compare.path) if compare else None,
+                            "error_type": "OrphanScoreArtifact",
+                            "error": "removed orphan scores.jsonl",
+                        },
+                        ensure_ascii=False,
+                    )
+                    + "\n"
+                )
         jobs.append(ScoreJob(run.root, task, run, compare, output_path, config))
         scheduled["native" if task.startswith("native-") else task] += 1
 
