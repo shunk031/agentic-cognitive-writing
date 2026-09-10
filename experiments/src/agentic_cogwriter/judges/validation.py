@@ -128,8 +128,18 @@ class HelloBenchChecklistRecord(_StrictRecord):
     checklist_items: list[HelloBenchChecklistItem]  # noqa: V107
 
 
+MAX_NATIVE_CHECKLIST_RESPONSE_CHARS = 200_000
+"""Maximum raw response length accepted by the HelloBench checklist parser."""
+
+
 def parse_native_checklist(text: str) -> HelloBenchChecklistRecord:
     """Parse the upstream HelloBench list response into the stored record shape."""
+
+    if len(text) > MAX_NATIVE_CHECKLIST_RESPONSE_CHARS:
+        raise JudgeValidationError(
+            "HelloBench native response exceeds "
+            f"{MAX_NATIVE_CHECKLIST_RESPONSE_CHARS} characters"
+        )
 
     try:
         parsed: Any = json.loads(text)
@@ -154,14 +164,15 @@ def parse_native_checklist(text: str) -> HelloBenchChecklistRecord:
     for item in parsed:
         if not isinstance(item, Mapping):
             raise JudgeValidationError("HelloBench checklist item must be an object")
-        try:
-            checklist_id = item["checklist_id"]
-            reason = item["reason"]
-            evaluation_score = item["evaluation_score"]
-        except KeyError as exc:
+        if set(item) != set(HelloBenchChecklistItem.model_fields):
             raise JudgeValidationError(
-                "HelloBench checklist item is missing a required field"
-            ) from exc
+                "HelloBench checklist item keys must be exactly "
+                "checklist_id, reason, and evaluation_score"
+            )
+
+        checklist_id = item["checklist_id"]
+        reason = item["reason"]
+        evaluation_score = item["evaluation_score"]
 
         if isinstance(checklist_id, bool):
             raise JudgeValidationError("HelloBench checklist_id must be an integer")

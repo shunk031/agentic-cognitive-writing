@@ -33,12 +33,14 @@ from agentic_cogwriter.judges.scorer import (
 )
 from agentic_cogwriter.judges.templates import JudgeTemplate
 from agentic_cogwriter.judges.validation import (
+    MAX_NATIVE_CHECKLIST_RESPONSE_CHARS,
     POINTWISE_DIMENSIONS,
     HelloBenchChecklistItem,
     HelloBenchChecklistRecord,
     NativePointwiseJudgeRecord,
     PairwiseJudgeRecord,
     PointwiseJudgeRecord,
+    parse_native_checklist,
     validate_native_checklist,
     validate_pairwise,
     validate_pointwise,
@@ -343,6 +345,56 @@ def test_native_checklist_accepts_upstream_response_shapes(
             "evaluation_score": 1.0,
         },
     ]
+
+
+@pytest.mark.parametrize(
+    "item",
+    [
+        {
+            "checklist_id": "0",
+            "reason": "The item is addressed.",
+            "evaluation_score": "0.75",
+            "extra": "reject this",
+        },
+        {
+            "checklist_id": "0",
+            "reason": "The item is addressed.",
+        },
+    ],
+)
+def test_native_checklist_parser_requires_exact_item_keys(
+    item: dict[str, str],
+) -> None:
+    with pytest.raises(JudgeValidationError, match="exactly"):
+        parse_native_checklist(json.dumps([item]))
+
+
+def test_native_checklist_parser_accepts_the_length_limit() -> None:
+    content = json.dumps(
+        [
+            {
+                "checklist_id": "0",
+                "reason": "The item is addressed.",
+                "evaluation_score": "0.75",
+            }
+        ]
+    )
+    content = content + " " * (MAX_NATIVE_CHECKLIST_RESPONSE_CHARS - len(content))
+
+    parsed = parse_native_checklist(content)
+
+    assert len(content) == MAX_NATIVE_CHECKLIST_RESPONSE_CHARS
+    assert parsed.checklist_items[0].evaluation_score == 0.75
+
+
+def test_native_checklist_parser_rejects_an_oversized_python_literal() -> None:
+    content = (
+        "[{'checklist_id': '0', 'reason': 'The item is addressed.', "
+        "'evaluation_score': '0.75'}]" + " " * MAX_NATIVE_CHECKLIST_RESPONSE_CHARS
+    )
+
+    with pytest.raises(JudgeValidationError, match="200000"):
+        parse_native_checklist(content)
 
 
 def test_pointwise_validation_rejects_unknown_or_out_of_range_scores() -> None:
