@@ -27,10 +27,21 @@ The user owns rhetorical intent, factual authority, final wording, and publicati
 
 Before sending the final response, write the final document to `.writing/draft.md`. The run is `INVALID` unless `.writing/draft.md` exists before the final response and the final response contains the complete final text. The final response cannot substitute for the required draft.
 
-The trace contract is fixed at exactly three `process_switch` events. Every event's `process` must be one of `pre-write`, `write`, or `re-write`, in this exact order. The transitions are `null -> pre-write`, `pre-write -> write`, and `write -> re-write`. Append every event to `.writing/trace/process.jsonl`. Each event is a `process_switch` object with `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`, plus `artifacts` for stage files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts` is an array of project-relative path strings. Use `responsible_agent: "runner"`, preserve the exact stage names in `process`, `from_process`, and `to_process`, and add stage artifacts to `artifacts`. Do not append goal, retrieval, evidence, citation, or hidden-reasoning events. For example:
+The trace contract is fixed at exactly three `process_switch` events. Every event's `process` must be one of `pre-write`, `write`, or `re-write`, in this exact order. The transitions are `null -> pre-write`, `pre-write -> write`, and `write -> re-write`. Append every event to `.writing/trace/process.jsonl`. Each event is a `process_switch` object with `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`, plus `artifacts` for stage files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts` is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. Use `responsible_agent: "runner"`, preserve the exact stage names in `process`, `from_process`, and `to_process`, and add stage artifacts to `artifacts`. Do not append goal, retrieval, evidence, citation, or hidden-reasoning events. For example:
 
 ```json
-{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"runner","process":"pre-write","decision":"Convert the assignment into a document plan.","evidence":[".writing/assignment.md"],"open_uncertainty":[],"from_process":null,"to_process":"pre-write","artifacts":[".writing/baselines/linear/pre-write.md"]}
+{
+  "timestamp": "2026-01-15T09:00:00+09:00",
+  "event_type": "process_switch",
+  "responsible_agent": "runner",
+  "process": "pre-write",
+  "decision": "Convert the assignment into a document plan.",
+  "evidence": [".writing/assignment.md"],
+  "open_uncertainty": [],
+  "from_process": null,
+  "to_process": "pre-write",
+  "artifacts": [".writing/baselines/linear/pre-write.md"]
+}
 ```
 
 The stage outputs are handoffs, not optional notes. The Write pass must receive all of the Pre-Write output, and the Re-Write pass must receive all of the Write output. Do not replace a stage with a direct final generation or add a review loop.

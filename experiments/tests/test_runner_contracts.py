@@ -43,7 +43,11 @@ from agentic_cogwriter.runner.runner import (
     SessionSnapshot,
     _synthesized_codex_config,
 )
-from agentic_cogwriter.runner.trace import TraceValidationError, validate_trace
+from agentic_cogwriter.runner.trace import (
+    TraceValidationError,
+    assess_trace_timestamps,
+    validate_trace,
+)
 
 WRITING_TRACE_PROCESSES = (
     "planning",
@@ -1466,6 +1470,82 @@ def test_trace_validation_requires_contract_fields(tmp_path: Path) -> None:
             condition_id="A4",
             declared_processes=WRITING_TRACE_PROCESSES,
         )
+
+
+def test_trace_timestamp_plausibility_rejects_fabricated_midnight_values() -> None:
+    events = [
+        {"timestamp": "2026-09-08T00:00:00+00:00"},
+        {"timestamp": "2026-09-08T00:00:00+00:00"},
+    ]
+
+    assert assess_trace_timestamps(
+        events,
+        started_at="2026-09-08T12:00:00+00:00",
+        manifest_written_at="2026-09-08T12:00:30+00:00",
+    ) == {
+        "events": 2,
+        "unparseable": 0,
+        "out_of_window": 2,
+        "non_monotonic": 0,
+        "plausible": False,
+    }
+
+
+def test_trace_timestamp_plausibility_accepts_in_window_increasing_values() -> None:
+    events = [
+        {"timestamp": "2026-09-08T12:00:01+00:00"},
+        {"timestamp": "2026-09-08T12:00:02+00:00"},
+    ]
+
+    assert assess_trace_timestamps(
+        events,
+        started_at="2026-09-08T12:00:00+00:00",
+        manifest_written_at="2026-09-08T12:00:30+00:00",
+    ) == {
+        "events": 2,
+        "unparseable": 0,
+        "out_of_window": 0,
+        "non_monotonic": 0,
+        "plausible": True,
+    }
+
+
+def test_trace_timestamp_plausibility_counts_unparseable_values() -> None:
+    events = [
+        {"timestamp": "not-a-timestamp"},
+        {"timestamp": "2026-09-08T12:00:02+00:00"},
+    ]
+
+    assert assess_trace_timestamps(
+        events,
+        started_at="2026-09-08T12:00:00+00:00",
+        manifest_written_at="2026-09-08T12:00:30+00:00",
+    ) == {
+        "events": 2,
+        "unparseable": 1,
+        "out_of_window": 0,
+        "non_monotonic": 0,
+        "plausible": False,
+    }
+
+
+def test_trace_timestamp_plausibility_counts_non_monotonic_values() -> None:
+    events = [
+        {"timestamp": "2026-09-08T12:00:02+00:00"},
+        {"timestamp": "2026-09-08T12:00:01+00:00"},
+    ]
+
+    assert assess_trace_timestamps(
+        events,
+        started_at="2026-09-08T12:00:00+00:00",
+        manifest_written_at="2026-09-08T12:00:30+00:00",
+    ) == {
+        "events": 2,
+        "unparseable": 0,
+        "out_of_window": 0,
+        "non_monotonic": 1,
+        "plausible": False,
+    }
 
 
 def test_trace_validation_enforces_stage_counts_and_goal_rules(tmp_path: Path) -> None:

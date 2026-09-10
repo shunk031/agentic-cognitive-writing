@@ -43,6 +43,7 @@ from .hashing import sha256_bytes, sha256_file
 from .manifest import PromptRecord, load_benchmark_provenance
 from .trace import (
     assert_untouched,
+    assess_trace_timestamps,
     collect_plugin_trace,
     timestamp,
     validate_trace,
@@ -712,6 +713,7 @@ class ExperimentRunner:
             staged_files: dict[str, str] = {}
             token_usage: dict[str, int] | None = None
             token_accounting_error: str | None = None
+            trace_timestamps: Mapping[str, Any] | None = None
             subagent_spawn_ids: set[str] = set()
             rollout_collection: dict[str, Any] = {
                 "status": "absent",
@@ -1014,7 +1016,7 @@ class ExperimentRunner:
                     f"trace from {trace_path}"
                 )
             reject_retrieval(copied_trace.read_bytes(), b"")
-            validate_trace(
+            trace_events = validate_trace(
                 copied_trace,
                 condition_id=condition.condition_id,
                 declared_processes=condition.trace_processes,
@@ -1024,6 +1026,11 @@ class ExperimentRunner:
                 max_events=condition.max_events,
                 process_order=condition.process_order,
                 require_goal_events=condition.require_goal_events,
+            )
+            trace_timestamps = assess_trace_timestamps(
+                trace_events,
+                started_at=started_at,
+                manifest_written_at=timestamp(),
             )
 
             output_path.write_bytes(output.encode("utf-8"))
@@ -1054,6 +1061,7 @@ class ExperimentRunner:
                     token_accounting_error=token_accounting_error,
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
+                    trace_timestamps=trace_timestamps,
                 ),
             )
             return RunResult(
@@ -1122,6 +1130,7 @@ class ExperimentRunner:
                     token_accounting_error=token_accounting_error,
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
+                    trace_timestamps=trace_timestamps,
                     failure=failure,
                 ),
             )
@@ -1517,6 +1526,7 @@ class ExperimentRunner:
         token_accounting_error: str | None = None,
         rollout_collection: Mapping[str, Any] | None = None,
         spawn_extraction: Mapping[str, Any] | None = None,
+        trace_timestamps: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         if platform == "codex":
@@ -1720,6 +1730,8 @@ class ExperimentRunner:
         # can score the immutable row without reopening or refetching its source.
         if prompt.native_payload is not None:
             manifest["inputs"]["native_payload"] = prompt.native_payload
+        if trace_timestamps is not None:
+            manifest["trace_timestamps"] = dict(trace_timestamps)
         if output_hash is not None:
             manifest["output_hash"] = output_hash
         if trace_hash is not None:

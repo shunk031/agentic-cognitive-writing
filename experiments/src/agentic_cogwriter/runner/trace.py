@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import shutil
-from datetime import UTC, datetime
+from collections.abc import Mapping, Sequence
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,59 @@ def timestamp() -> str:
     """Return a timezone-aware ISO 8601 timestamp."""
 
     return datetime.now(UTC).isoformat()
+
+
+def _parse_offset_timestamp(value: Any) -> datetime | None:
+    """Parse an ISO 8601 timestamp only when it includes a UTC offset."""
+
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return None
+    return parsed
+
+
+def assess_trace_timestamps(
+    events: Sequence[Mapping[str, Any]],
+    *,
+    started_at: str,
+    manifest_written_at: str,
+) -> dict[str, int | bool]:
+    """Summarize trace timestamp validity without failing the run."""
+
+    started = _parse_offset_timestamp(started_at)
+    manifest_written = _parse_offset_timestamp(manifest_written_at)
+    window_start = started - timedelta(seconds=60) if started else None
+    window_end = manifest_written + timedelta(seconds=60) if manifest_written else None
+    unparseable = 0
+    out_of_window = 0
+    non_monotonic = 0
+    previous: datetime | None = None
+    for event in events:
+        parsed = _parse_offset_timestamp(event.get("timestamp"))
+        if parsed is None:
+            unparseable += 1
+            continue
+        if (
+            window_start is None
+            or window_end is None
+            or not window_start <= parsed <= window_end
+        ):
+            out_of_window += 1
+        if previous is not None and parsed < previous:
+            non_monotonic += 1
+        previous = parsed
+    return {
+        "events": len(events),
+        "unparseable": unparseable,
+        "out_of_window": out_of_window,
+        "non_monotonic": non_monotonic,
+        "plausible": not (unparseable or out_of_window or non_monotonic),
+    }
 
 
 def _read_trace_events(path: Path) -> list[dict[str, Any]]:
