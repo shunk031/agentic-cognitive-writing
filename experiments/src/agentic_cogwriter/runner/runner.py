@@ -1098,6 +1098,12 @@ class ExperimentRunner:
                     "stream": stream,
                     "artifact_source": exc.artifact_source,
                 }
+            if trace_timestamps is None:
+                trace_timestamps = assess_trace_timestamps(
+                    trace_path,
+                    started_at=started_at,
+                    manifest_written_at=timestamp(),
+                )
             self._write_json(
                 manifest_path,
                 self._manifest(

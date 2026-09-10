@@ -2220,6 +2220,35 @@ def test_runner_fails_on_over_budget_turn_usage(tmp_path: Path) -> None:
         runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
 
+def test_pre_trace_failure_records_trace_timestamp_summary(tmp_path: Path) -> None:
+    runner = _runner(
+        tmp_path,
+        executor=_RetryExecutor(
+            [_result(usage={"output_tokens": 80, "reasoning_output_tokens": 21})]
+        ),
+    )
+
+    with pytest.raises(BudgetExceeded, match="budget"):
+        runner.run_prompt(
+            _prompt(),
+            condition_id="A1",
+            platform="codex",
+            run_id="pre-trace-failure",
+        )
+
+    manifest = json.loads(
+        (
+            tmp_path
+            / "WritingBench"
+            / "A1"
+            / "codex"
+            / "pre-trace-failure"
+            / "run-manifest.json"
+        ).read_text()
+    )
+    assert manifest["trace_timestamps"]["events"] == 1
+
+
 def test_non_draft_condition_has_a_nontrivial_product_floor(tmp_path: Path) -> None:
     prompt = PromptRecord(
         prompt_id="p-1",
