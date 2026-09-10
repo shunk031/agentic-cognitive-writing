@@ -126,7 +126,7 @@ uv run --project experiments agentic-cogwriter-score \
 
 The pointwise record follows the five-dimension contract in [`protocol.md`](../docs/experiments/protocol.md). Native WritingBench scoring uses one criterion-level record per checklist item and accepts only integer scores from 1 to 10; aggregation computes averages later. Invalid JSON, missing dimensions, scores outside the task's range, and evidence quotes absent from the output or supplied context are rejected. The configured retry count bounds every additional API call, and every attempt keeps the same prompt and decoding payload.
 
-Run one HelloBench-native judgment with the `native-checklist` task. The scorer makes one judge request for the prompt and writes one JSON Lines record containing every checklist item's `checklist_id`, `reason`, and `evaluation_score`:
+Run one HelloBench-native judgment with the `native-checklist` task. The scorer accepts the upstream checklist list and normalizes it into one JSON Lines record containing every checklist item's `checklist_id`, `reason`, and `evaluation_score`:
 
 ```bash
 uv run --project experiments agentic-cogwriter-score \
