@@ -96,6 +96,7 @@ The private judge configuration supplies the requested model, judge identifier, 
       "role": "open_evaluator"
     }
   },
+  "allow_same_family_judge": false,
   "base_url_env": "<base-url-environment-variable>",
   "credential_env": "<credential-environment-variable>",
   "template_path": "/path/to/repository/experiments/prompts/judges/pointwise-v1.md",
@@ -110,7 +111,7 @@ The private judge configuration supplies the requested model, judge identifier, 
 }
 ```
 
-The base URL and credential environment variables named in the private configuration must be set before the command runs. The scorer resolves both values at call time and never copies either value into a score artifact. The endpoint response must report a model identifier present in `model_family_map`; the scorer derives the judge family from that mapping instead of trusting a configured family label. The judge engine in [`src/agentic_cogwriter/judges/engine.py`](src/agentic_cogwriter/judges/engine.py) replaces the prompt's `runtime-verified` marker with that runtime-derived protocol value before the score record is written. The completed run's `run-manifest.json` must contain `models_and_execution.generator_model_id` and `models_and_execution.generator_model_family`. The scorer rejects any judge whose base family overlaps the generator family.
+The base URL and credential environment variables named in the private configuration must be set before the command runs. The scorer resolves both values at call time and never copies either value into a score artifact. The endpoint response must report a model identifier present in `model_family_map`; the scorer derives the judge family from that mapping instead of trusting a configured family label. The judge engine in [`src/agentic_cogwriter/judges/engine.py`](src/agentic_cogwriter/judges/engine.py) replaces the prompt's `runtime-verified` marker with that runtime-derived protocol value before the score record is written. The completed run's `run-manifest.json` must contain `models_and_execution.generator_model_id` and `models_and_execution.generator_model_family`. The optional `allow_same_family_judge` field defaults to `false`; set it to `true` only for exploratory same-family scoring, and `scores-manifest.json` records whether the family audit was `enforced` or `exploratory-same-family`.
 
 gpt-5-family judges cannot pin `temperature`; determinism relies on the recorded seed, and the judge manifest records the effective decoding settings as `provider-default` when a setting is omitted.
 

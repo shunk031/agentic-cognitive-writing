@@ -112,6 +112,7 @@ def _config(
     *,
     model: str = "open-model",
     model_family_map: dict[str, object] | None = None,
+    allow_same_family_judge: object = False,
     temperature: object = 0,
     top_p: object = 1,
 ) -> JudgeConfig:
@@ -125,6 +126,7 @@ def _config(
             "gpt-frontier": {"family": "gpt", "role": "frontier"},
             "open-model": {"family": "prometheus", "role": "open_evaluator"},
         },
+        "allow_same_family_judge": allow_same_family_judge,
         "base_url_env": "TEST_JUDGE_BASE_URL",
         "credential_env": "TEST_JUDGE_CREDENTIAL",
         "template_path": str(template),
@@ -354,6 +356,16 @@ def test_judge_config_accepts_provider_default_decoding(tmp_path: Path) -> None:
     assert config.top_p is None
 
 
+def test_judge_config_rejects_non_boolean_same_family_flag(tmp_path: Path) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+
+    with pytest.raises(
+        JudgeConfigurationError, match="allow_same_family_judge must be a boolean"
+    ):
+        _config(tmp_path, template, allow_same_family_judge="true")
+
+
 def test_family_audit_rejects_frontier_generator_overlap(tmp_path: Path) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
@@ -376,6 +388,35 @@ def test_family_audit_rejects_frontier_generator_overlap(tmp_path: Path) -> None
         )
 
     assert not (run_dir / "scores.jsonl").exists()
+
+
+def test_family_audit_allows_explicit_same_family_judge(tmp_path: Path) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+    config = _config(
+        tmp_path,
+        template,
+        model="gpt-frontier",
+        allow_same_family_judge=True,
+    )
+    run_dir = _run_dir(tmp_path, "A1", "evidence")
+    response = _pointwise_record("gpt_frontier")
+    response["condition_id"] = blind_condition_id("A1")
+    response["evidence_quotes"] = [
+        {"dimension": dimension, "quote": "evidence"}
+        for dimension in POINTWISE_DIMENSIONS
+    ]
+
+    result = score_run(
+        run_dir,
+        config,
+        model=FakeTransport(
+            [{"content": json.dumps(response), "model": "gpt-frontier"}]
+        ).model,
+    )
+
+    manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["family_audit"]["mode"] == "exploratory-same-family"
 
 
 def test_family_audit_allows_incomplete_non_overlapping_map(tmp_path: Path) -> None:
@@ -1242,6 +1283,7 @@ def test_score_run_writes_protocol_jsonl_and_hashed_manifest(tmp_path: Path) -> 
         "judge_family": "open_evaluator",
         "generator_model_id": "generator-model",
         "generator_family": "gpt",
+        "mode": "enforced",
     }
 
 
