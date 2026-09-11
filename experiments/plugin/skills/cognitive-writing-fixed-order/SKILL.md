@@ -66,7 +66,7 @@ At each pass, the `Monitor` must:
 3. Compare the active goal with the rhetorical problem, draft, retrieved memory, and open uncertainty. Use that evidence within the current prescribed process. Do not choose a different next process because a local preference suggests it.
 4. Before every process switch, append a `process_switch` event naming the responsible process or agent and recording its decision, evidence, and open uncertainty. Record a separate goal event whenever a goal is created, developed, or regenerated. Use the exact fields in the trace contract below.
 5. Delegate the current role using the Delegation section.
-6. Re-read changed state and reconcile the role's work with the active goal. Update the appropriate project state:
+6. Re-read changed state and reconcile the role's work with the active goal. After every Translating pass, compare the new draft with every active goal in goals.md, then record a goal_developed or goal_regenerated event for each goal the draft changed, or state in the next process_switch decision that the goal network needed no change and why. Update the appropriate project state:
 
    - `goals.md`
    - `draft.md`

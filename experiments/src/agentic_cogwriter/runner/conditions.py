@@ -52,6 +52,7 @@ class ConditionSpec:
     max_events: int | None
     process_order: tuple[str, ...] | None
     require_goal_events: bool
+    require_delegation: bool
     product_requires_draft: bool
 
     @property
@@ -282,6 +283,11 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
         raise ConfigurationError(
             f"Wrapper {wrapper_path} cannot require forbidden goal events"
         )
+    require_delegation = trace.get("require_delegation", False)
+    if not isinstance(require_delegation, bool):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} trace.require_delegation must be a boolean"
+        )
     return ConditionSpec(
         condition_id=condition_id,
         analysis_family=analysis_family,
@@ -297,6 +303,7 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
         max_events=max_events,
         process_order=tuple(process_order) if process_order is not None else None,
         require_goal_events=require_goal_events,
+        require_delegation=require_delegation,
         product_requires_draft=product_requires_draft,
     )
 

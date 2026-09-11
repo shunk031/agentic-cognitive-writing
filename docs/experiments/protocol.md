@@ -55,6 +55,8 @@ The protocol also defines process and replication estimands. The primary process
 
 All enabled conditions share the same skill-and-subagent framework and the plugin-written `.writing/trace/process.jsonl` path. The runner invokes exactly one skill for each condition, including the two exploratory conditions when they are enabled. The equal-information policy gives every condition identical input context. The runner must expose the same local tools, context window policy, timeout, output budget, and number of allowed attempts to every condition. No condition may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
 
+Delegating conditions record a `delegation_check` in the run manifest, and a Codex run without a spawned role agent is invalid.
+
 | Condition                 | Control State                        | Control Unit        | Decision                                                          | Evolving Structure     |
 | ------------------------- | ------------------------------------ | ------------------- | ----------------------------------------------------------------- | ---------------------- |
 | A1 Single-pass            | assignment + context                 | whole document      | single generation                                                 | none                   |

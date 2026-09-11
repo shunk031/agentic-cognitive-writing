@@ -62,13 +62,19 @@ def _runner(tmp_path, *, config=None, **kwargs):
 
 class FakeExecutor:
     def __init__(
-        self, *, output="final output " * 10, retrieval=False, write_trace=True
+        self,
+        *,
+        output="final output " * 10,
+        retrieval=False,
+        write_trace=True,
+        subagent_spawns=0,
     ):
         self.calls = []
         self.environments = []
         self.output = output
         self.retrieval = retrieval
         self.write_trace = write_trace
+        self.subagent_spawns = subagent_spawns
 
     def run(self, command, *, cwd, timeout_seconds, env=None):
         self.calls.append((command, cwd, timeout_seconds))
@@ -87,6 +93,7 @@ class FakeExecutor:
                     )
                     if any(
                         f"skills/{skill_name}/SKILL.md" in argument
+                        or skill_name in argument
                         for argument in command
                     )
                 ),
@@ -149,6 +156,26 @@ class FakeExecutor:
             payload,
             {"type": "turn.completed", "usage": {"output_tokens": 1}},
         ]
+        for index in range(self.subagent_spawns):
+            item = {
+                "id": f"collab-{index}",
+                "type": "collab_tool_call",
+                "tool": "spawn_agent",
+                "status": "completed",
+                "receiver_thread_ids": [f"receiver-{index}"],
+            }
+            payload_stream.extend(
+                [
+                    {"type": "item.started", "item": item},
+                    {"type": "item.completed", "item": item},
+                ]
+            )
+        if self.subagent_spawns:
+            rollout = Path(env["CODEX_HOME"]) / "sessions" / "attempt.jsonl"
+            rollout.parent.mkdir(parents=True, exist_ok=True)
+            rollout.write_text(
+                "\n".join(json.dumps(event) for event in payload_stream) + "\n"
+            )
         return ExecutionResult(
             returncode=0,
             stdout=(
@@ -361,7 +388,7 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
         requested_output_constraints={},
         row_hash="row-hash",
     )
-    runner = _runner(tmp_path, executor=FakeExecutor())
+    runner = _runner(tmp_path, executor=FakeExecutor(subagent_spawns=1))
 
     result = runner.run_prompt(prompt, condition_id="A3", platform="codex")
 
@@ -389,6 +416,31 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
             "task-revision",
         ],
         "require_goal_events": False,
+    }
+
+
+def test_claude_code_delegating_condition_bypasses_codex_delegation_gate(
+    tmp_path,
+):
+    prompt = PromptRecord(
+        prompt_id="p-1",
+        benchmark_name="WritingBench",
+        source_version="test",
+        prompt_text="Write a memo.",
+        supplied_context="Provided facts only.",
+        requested_output_constraints={},
+        row_hash="row-hash",
+    )
+    runner = _runner(tmp_path, executor=FakeExecutor())
+
+    result = runner.run_prompt(prompt, condition_id="A3", platform="claude-code")
+
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["status"] == "completed"
+    assert manifest["delegation_check"] == {
+        "required": True,
+        "spawn_count": 0,
+        "passed": True,
     }
 
 

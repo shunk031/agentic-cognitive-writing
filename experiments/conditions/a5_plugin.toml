@@ -17,7 +17,10 @@ claude_code = "claude_print"
 codex = """Read the skill file at {codex_plugin_root}/skills/cognitive-writing-no-goal-network/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact.
 
 Single-turn contract:
-This is a single-turn task with no interactive user; never ask clarification questions. When the assignment underspecifies audience, purpose, or scope, apply genre-appropriate defaults and record the assumptions. Conditions with a `.writing/` workspace record assumptions in `.writing/assumptions.md`. Do not state assumptions briefly at the top of the deliverable. Conditions without `.writing/` apply assumptions without an extra preamble. Do not change the deliverable's content contract."""
+This is a single-turn task with no interactive user; never ask clarification questions. When the assignment underspecifies audience, purpose, or scope, apply genre-appropriate defaults and record the assumptions. Conditions with a `.writing/` workspace record assumptions in `.writing/assumptions.md`. Do not state assumptions briefly at the top of the deliverable. Conditions without `.writing/` apply assumptions without an extra preamble. Do not change the deliverable's content contract.
+
+Delegation contract:
+Native subagent delegation is available in this environment. Delegate every role the skill assigns to a role agent by spawning a Codex subagent as the skill's delegation brief instructs; performing a delegated role as the coordinator is not permitted in this run and fails the run."""
 
 claude_code = """/cognitive-writing-experiments:cognitive-writing-no-goal-network
 
@@ -35,6 +38,7 @@ retrieval = "not_applicable"
 evidence = "plugin_recorded"
 citation = "plugin_recorded"
 goal_events = "forbidden"
+require_delegation = true
 event_types = ["process_switch", "goal_created", "goal_developed", "goal_regenerated"]
 min_events = 1
 processes = ["planning", "generate", "organize", "goal-setting", "translating", "reviewing", "evaluate", "revise"]

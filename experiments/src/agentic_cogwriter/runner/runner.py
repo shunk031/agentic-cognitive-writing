@@ -1032,6 +1032,15 @@ class ExperimentRunner:
                 process_order=condition.process_order,
                 require_goal_events=condition.require_goal_events,
             )
+            if (
+                condition.require_delegation
+                and platform == "codex"
+                and len(subagent_spawn_ids) < 1
+            ):
+                raise ExecutionError(
+                    f"Condition {condition.condition_id} requires native role "
+                    "delegation; no spawn_agent event was observed"
+                )
             output_path.write_bytes(output.encode("utf-8"))
             normalized_path.write_text(output, encoding="utf-8")
             self._write_json(
@@ -1682,6 +1691,15 @@ class ExperimentRunner:
             ),
             "output_units_used": budget.used if budget else 0,
             "subagent_spawn_count": subagent_spawn_count,
+            "delegation_check": {
+                "required": condition.require_delegation,
+                "spawn_count": subagent_spawn_count,
+                "passed": (
+                    not condition.require_delegation
+                    or platform != "codex"
+                    or subagent_spawn_count >= 1
+                ),
+            },
             "token_accounting": {
                 "status": token_accounting_status,
                 "source": "Codex turn.completed usage",

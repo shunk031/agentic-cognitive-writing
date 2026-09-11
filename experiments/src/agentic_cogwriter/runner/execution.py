@@ -253,6 +253,13 @@ def _subagent_spawn_ids(data: bytes) -> set[str]:
             raise SpawnEventError(
                 "malformed spawn_agent event: collab_tool_call needs a non-empty id"
             )
+        if value.get("type") != "item.completed":
+            continue
+        if item.get("status") != "completed":
+            continue
+        receiver_thread_ids = item.get("receiver_thread_ids")
+        if not isinstance(receiver_thread_ids, list) or not receiver_thread_ids:
+            continue
         spawn_ids.add(item_id)
     return spawn_ids
 

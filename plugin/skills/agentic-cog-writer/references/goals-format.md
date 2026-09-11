@@ -24,6 +24,8 @@ Use stable goal identifiers, one goal per line, and indentation for parent-child
 | 2026-01-15T09:18:00+09:00 | regenerated | G0 | none | The opening revealed that the real purpose is adoption, not explanation. | draft.md, reviewer note |
 ```
 
+Set the history table's timestamp column to the current wall-clock time obtained from the shell at write time, for example `date -Is`; never copy timestamps from examples.
+
 `kind` may be `content`, `process`, or `criterion`. Use `status` values `pending`, `active`, `blocked`, `resolved`, or `superseded`. Keep a regenerated goal's original ID in history and give the replacement a new ID when its meaning materially changes. A small wording refinement can stay under the same ID, but record it as `developed` in the history.
 
 ## Update rules
