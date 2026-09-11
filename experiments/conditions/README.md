@@ -6,4 +6,6 @@ The frozen files under `prompts/` remain prompt specifications with content hash
 
 A4 invokes `agentic-cog-writer` from `agentic-cognitive-writing`. A5 and A6 invoke `cognitive-writing-no-goal-network` and `cognitive-writing-fixed-order` from `cognitive-writing-experiments`. B1 and B2 invoke `writing-cogwriter-style` and `writing-storm-style` from the baseline package. The B1 and B2 wrappers mark their conditions as exploratory.
 
+Shared prompt paragraphs live in [`contracts/`](contracts/). The runner appends `single_turn.md` to Codex invocations, adds `delegation.md` when `require_delegation = true`, and appends `workspace.md` followed by `single_turn.md` to Claude Code invocations; wrapper files retain only condition-specific invocation text.
+
 Every condition uses `.writing/trace/process.jsonl` written by its selected skill. The no-retrieval A3 and B2 wrappers omit citation generation and mark retrieval, evidence, and citation traces as `N/A` in their wrapper policies.
