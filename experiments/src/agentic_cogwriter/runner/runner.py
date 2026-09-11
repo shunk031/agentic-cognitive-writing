@@ -13,7 +13,7 @@ import tempfile
 import time
 import tomllib
 import uuid
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -98,6 +98,11 @@ _SHARED_STAGE_TOKENS = (
     "output_constraints",
 )
 _STAGE_RENDERABLE_TOKENS = frozenset((*_SHARED_STAGE_TOKENS, "previous_stage_output"))
+_CONTRACT_PATHS = {
+    "single_turn": EXPERIMENTS_ROOT / "conditions/contracts/single_turn.md",
+    "workspace": EXPERIMENTS_ROOT / "conditions/contracts/workspace.md",
+    "delegation": EXPERIMENTS_ROOT / "conditions/contracts/delegation.md",
+}
 
 
 def _assert_guidance_free_workspace(workspace: Path) -> None:
@@ -727,11 +732,13 @@ class ExperimentRunner:
             }
             cli_version = "not_probed"
             stage_prompt_hashes = self._stage_prompt_hashes(condition)
+            contract_hashes: dict[str, str] = {}
             command_prompt = self._plugin_prompt(
                 condition,
                 prompt,
                 platform,
                 codex_prompt_root=Path("plugin"),
+                contract_hashes=contract_hashes,
             )
             benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
             protected_goals = workspace / ".writing" / "goals.md"
@@ -759,6 +766,7 @@ class ExperimentRunner:
                     cli_version=cli_version,
                     budget=budget,
                     stage_prompt_hashes=stage_prompt_hashes,
+                    contract_hashes=contract_hashes,
                     benchmark_provenance=benchmark_provenance,
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
@@ -793,6 +801,7 @@ class ExperimentRunner:
                     cli_version=cli_version,
                     budget=budget,
                     stage_prompt_hashes=stage_prompt_hashes,
+                    contract_hashes=contract_hashes,
                     benchmark_provenance=benchmark_provenance,
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
@@ -820,6 +829,7 @@ class ExperimentRunner:
                     cli_version=cli_version,
                     budget=budget,
                     stage_prompt_hashes=stage_prompt_hashes,
+                    contract_hashes=contract_hashes,
                     benchmark_provenance=benchmark_provenance,
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
@@ -948,6 +958,7 @@ class ExperimentRunner:
                         attempts=attempts,
                         budget=budget,
                         stage_prompt_hashes=stage_prompt_hashes,
+                        contract_hashes=contract_hashes,
                         benchmark_provenance=benchmark_provenance,
                         execution_paths=execution_paths,
                         evidence_hashes=evidence_hashes,
@@ -1059,6 +1070,7 @@ class ExperimentRunner:
                     output_hash=f"sha256:{sha256_file(output_path)}",
                     trace_hash=f"sha256:{sha256_file(copied_trace)}",
                     stage_prompt_hashes=stage_prompt_hashes,
+                    contract_hashes=contract_hashes,
                     benchmark_provenance=benchmark_provenance,
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
@@ -1134,6 +1146,7 @@ class ExperimentRunner:
                     attempts=attempts,
                     budget=budget,
                     stage_prompt_hashes=stage_prompt_hashes,
+                    contract_hashes=contract_hashes,
                     benchmark_provenance=benchmark_provenance,
                     execution_paths=execution_paths,
                     evidence_hashes=evidence_hashes,
@@ -1254,6 +1267,24 @@ class ExperimentRunner:
             return result, attempts
         raise ExecutionError("Headless turn exhausted retry policy")
 
+    @staticmethod
+    def _read_contracts() -> tuple[dict[str, str], dict[str, str]]:
+        """Read and hash the shared prompt contracts for one composition."""
+
+        texts: dict[str, str] = {}
+        hashes: dict[str, str] = {}
+        for name, path in _CONTRACT_PATHS.items():
+            try:
+                raw = path.read_bytes()
+                text = raw.decode("utf-8")
+            except (OSError, UnicodeError) as exc:
+                raise ManifestError(f"Cannot read contract file {path}: {exc}") from exc
+            if not text.strip():
+                raise ManifestError(f"Contract file {path} is empty")
+            texts[name] = text
+            hashes[name] = sha256_bytes(raw)
+        return texts, hashes
+
     def _plugin_prompt(
         self,
         condition: ConditionSpec,
@@ -1261,6 +1292,7 @@ class ExperimentRunner:
         platform: str,
         *,
         codex_prompt_root: str | Path | None = None,
+        contract_hashes: MutableMapping[str, str] | None = None,
     ) -> str:
         wrapper = self._wrapper(condition)
         key = platform.replace("-", "_")
@@ -1283,6 +1315,20 @@ class ExperimentRunner:
                     f"Plugin wrapper {condition.plugin_config} has an unresolved "
                     "Codex plugin root"
                 )
+        contract_texts, observed_contract_hashes = self._read_contracts()
+        if contract_hashes is not None:
+            contract_hashes.update(observed_contract_hashes)
+        contract_names = (
+            ("single_turn", "delegation")
+            if platform == "codex" and condition.require_delegation
+            else ("single_turn",)
+            if platform == "codex"
+            else ("workspace", "single_turn")
+        )
+        contracts = "\n\n".join(
+            contract_texts[name].removesuffix("\n") for name in contract_names
+        )
+        invocation = f"{invocation}\n\n{contracts}"
         constraints = json.dumps(
             prompt.requested_output_constraints,
             ensure_ascii=False,
@@ -1527,6 +1573,7 @@ class ExperimentRunner:
         attempts: int = 0,
         budget: OutputBudget | None = None,
         stage_prompt_hashes: Mapping[str, str | None] | None = None,
+        contract_hashes: Mapping[str, str] | None = None,
         benchmark_provenance: Mapping[str, Any] | None = None,
         output_hash: str | None = None,
         trace_hash: str | None = None,
@@ -1574,6 +1621,7 @@ class ExperimentRunner:
                     stage.stage_id: (stage_prompt_hashes or {}).get(stage.stage_id)
                     for stage in condition.stages
                 },
+                "contract_hashes": dict(contract_hashes or {}),
                 "trace_policy": condition.trace_policy_dict,
                 "trace_contract": {
                     "goal_events": condition.goal_events,

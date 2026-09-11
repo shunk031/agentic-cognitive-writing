@@ -61,6 +61,11 @@ WRITING_TRACE_PROCESSES = (
 )
 
 REPO_ROOT = Path(__file__).parents[2]
+CONTRACTS_ROOT = REPO_ROOT / "experiments/conditions/contracts"
+PROMPT_SNAPSHOT_PATH = (
+    REPO_ROOT
+    / "experiments/tests/fixtures/plugin_prompts_before_contract_extraction.json"
+)
 
 SINGLE_TURN_CONTRACT = (
     "\n\nSingle-turn contract:\n"
@@ -73,6 +78,7 @@ SINGLE_TURN_CONTRACT = (
     "assumptions without an extra preamble. Do not change the deliverable's content "
     "contract."
 )
+SINGLE_TURN_CONTRACT_TEXT = SINGLE_TURN_CONTRACT.removeprefix("\n\n") + "\n"
 DELEGATION_CONTRACT = (
     "Delegation contract:\n"
     "Native subagent delegation is available in this environment. Delegate every "
@@ -80,6 +86,7 @@ DELEGATION_CONTRACT = (
     "skill's delegation brief instructs; performing a delegated role as the "
     "coordinator is not permitted in this run and fails the run."
 )
+DELEGATION_CONTRACT_TEXT = DELEGATION_CONTRACT + "\n"
 DELEGATING_CONDITIONS = ("A3", "A4", "A5", "A6", "B1")
 
 NO_GOAL_SKILL_PATHS = (
@@ -909,19 +916,21 @@ def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> No
         assert "SKILL.md" in invocation
         assert "codex" not in wrapper["install"]
         assert "complete final text itself" in invocation
-        if condition.condition_id in DELEGATING_CONDITIONS:
-            assert DELEGATION_CONTRACT in invocation
-        else:
-            assert DELEGATION_CONTRACT not in invocation
         prompt = runner._plugin_prompt(condition, _prompt(), "codex")
         assert f"plugin/skills/{condition.skill_name}/SKILL.md" in prompt
         assert "complete final text itself" in prompt
+        if condition.condition_id in DELEGATING_CONDITIONS:
+            assert DELEGATION_CONTRACT in prompt
+        else:
+            assert DELEGATION_CONTRACT not in prompt
 
 
 def test_claude_code_wrappers_do_not_receive_codex_delegation_contract() -> None:
     for condition in load_condition_registry().values():
-        wrapper = tomllib.loads(condition.plugin_config.read_text(encoding="utf-8"))
-        assert DELEGATION_CONTRACT not in wrapper["invocation"]["claude_code"]
+        prompt = ExperimentRunner(_config(), output_root=Path("runs"))._plugin_prompt(
+            condition, _prompt(), "claude-code"
+        )
+        assert DELEGATION_CONTRACT not in prompt
 
 
 CLAUDE_WORKSPACE_CONTRACT = (
@@ -931,16 +940,58 @@ CLAUDE_WORKSPACE_CONTRACT = (
     "must contain the complete final text itself, not a summary or a link to a "
     "workspace artifact."
 )
+CLAUDE_WORKSPACE_CONTRACT_TEXT = CLAUDE_WORKSPACE_CONTRACT + "\n"
+
+
+def test_composed_prompts_match_the_pre_extraction_snapshot() -> None:
+    expected = json.loads(PROMPT_SNAPSHOT_PATH.read_text(encoding="utf-8"))
+    runner = ExperimentRunner(_config(), output_root=Path("runs"))
+    conditions = load_condition_registry()
+
+    actual = {
+        platform: {
+            condition_id: runner._plugin_prompt(
+                conditions[condition_id], _prompt(), platform
+            )
+            for condition_id in conditions
+        }
+        for platform in PLATFORMS
+    }
+
+    assert actual == expected
+
+
+def test_contract_files_preserve_the_existing_paragraph_bytes() -> None:
+    expected = {
+        "single_turn": SINGLE_TURN_CONTRACT_TEXT,
+        "workspace": CLAUDE_WORKSPACE_CONTRACT_TEXT,
+        "delegation": DELEGATION_CONTRACT_TEXT,
+    }
+
+    assert {
+        name: (CONTRACTS_ROOT / f"{name}.md").read_text(encoding="utf-8")
+        for name in expected
+    } == expected
+
+
+def test_wrappers_leave_shared_contracts_to_prompt_composition() -> None:
+    shared_contracts = (
+        SINGLE_TURN_CONTRACT,
+        CLAUDE_WORKSPACE_CONTRACT,
+        DELEGATION_CONTRACT,
+    )
+    for condition in load_condition_registry().values():
+        wrapper = tomllib.loads(condition.plugin_config.read_text(encoding="utf-8"))
+        for platform in ("codex", "claude_code"):
+            invocation = wrapper["invocation"][platform]
+            assert all(contract not in invocation for contract in shared_contracts)
 
 
 def test_every_claude_code_invocation_anchors_workspace_and_final_text() -> None:
     runner = ExperimentRunner(_config(), output_root=Path("runs"))
     for condition in load_condition_registry().values():
-        wrapper = tomllib.loads(condition.plugin_config.read_text(encoding="utf-8"))
-        invocation = wrapper["invocation"]["claude_code"]
-
-        assert CLAUDE_WORKSPACE_CONTRACT in invocation
         prompt = runner._plugin_prompt(condition, _prompt(), "claude-code")
+        assert CLAUDE_WORKSPACE_CONTRACT in prompt
         assert "complete final text itself" in prompt
         assert "session working directory" in prompt
 
@@ -959,9 +1010,11 @@ def test_every_wrapper_records_assumptions_in_the_assumptions_file() -> None:
         "`.writing/assumptions.md`."
     )
     for condition in load_condition_registry().values():
-        wrapper = tomllib.loads(condition.plugin_config.read_text(encoding="utf-8"))
         for platform in ("codex", "claude_code"):
-            assert expected in wrapper["invocation"][platform]
+            prompt = ExperimentRunner(
+                _config(), output_root=Path("runs")
+            )._plugin_prompt(condition, _prompt(), platform.replace("_", "-"))
+            assert expected in prompt
 
 
 def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
@@ -2245,6 +2298,13 @@ def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> No
     assert manifest["inputs"]["stage_prompt_hashes"]["single_shot"] == (
         "99964b369a76d8cb88ec375cda4e553a5b993483ca05b14e46c3c3fb3d3014cf"
     )
+    assert manifest["inputs"]["contract_hashes"] == {
+        "delegation": hashlib.sha256(DELEGATION_CONTRACT_TEXT.encode()).hexdigest(),
+        "single_turn": hashlib.sha256(SINGLE_TURN_CONTRACT_TEXT.encode()).hexdigest(),
+        "workspace": hashlib.sha256(
+            CLAUDE_WORKSPACE_CONTRACT_TEXT.encode()
+        ).hexdigest(),
+    }
     assert manifest["models_and_execution"]["judge_verification"] == {
         "declared_audit": {
             "generator_model_family_map": {
