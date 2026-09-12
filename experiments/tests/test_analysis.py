@@ -15,6 +15,7 @@ from agentic_cogwriter.analysis import batch as batch_module
 from agentic_cogwriter.analysis.common import select_canonical_runs
 from agentic_cogwriter.judges import scorer as scorer_module
 from agentic_cogwriter.judges.scorer import blind_condition_id
+from agentic_cogwriter.runner.hashing import sha256_json
 
 DIMENSIONS = (
     "instruction_fulfillment",
@@ -41,6 +42,20 @@ def _run(
     run_id = run_id or prompt
     path = root / benchmark / condition / platform / run_id
     path.mkdir(parents=True)
+    prompt_row: dict[str, object] = {
+        "prompt_id": prompt,
+        "benchmark_name": benchmark,
+        "source_version": "test@1",
+        "prompt_text": "Write a memo.",
+        "requested_output_constraints": {},
+    }
+    prompt_row["hash"] = sha256_json(prompt_row)
+    manifest_path = root / "manifests" / f"{benchmark.casefold()}.jsonl"
+    manifest_bytes = (
+        json.dumps(prompt_row, ensure_ascii=False, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_bytes(manifest_bytes)
     manifest = {
         "schema_version": 1,
         "started_at": started_at,
@@ -50,6 +65,8 @@ def _run(
             "condition_id": condition,
             "prompt_id": prompt,
             "platform": platform,
+            "prompt_hash": prompt_row["hash"],
+            "prompt_manifest_hash": hashlib.sha256(manifest_bytes).hexdigest(),
         },
     }
     if status != "completed":
@@ -248,6 +265,7 @@ def test_score_batch_removes_orphan_before_retry(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     root = tmp_path / "runs"
+    monkeypatch.setattr(scorer_module, "MANIFESTS_DIR", root / "manifests")
     run = _run(root, "WritingBench", "A1", "p1")
     (run / "output.normalized.txt").write_text("Generated answer", encoding="utf-8")
     (run / "prompt.txt").write_text(

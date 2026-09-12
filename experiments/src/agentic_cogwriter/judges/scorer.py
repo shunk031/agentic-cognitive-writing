@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import tempfile
 from collections.abc import Mapping
 from contextlib import suppress
@@ -14,7 +13,10 @@ from typing import Any
 
 from pydantic_ai.models import Model
 
+from ..paths import MANIFESTS_DIR
+from ..runner.errors import ManifestError
 from ..runner.hashing import sha256_bytes, sha256_file, sha256_json
+from ..runner.manifest import load_prompt_manifest
 from .config import JudgeConfig
 from .engine import (
     JudgeResult,
@@ -24,10 +26,6 @@ from .engine import (
     judge_pointwise,
 )
 from .errors import RunArtifactError
-
-_PROMPT_SECTION_HEADING = re.compile(
-    r"(?m)^#{2,3} (Assignment|Supplied context|Requested output constraints)\n\n?"
-)
 
 
 @dataclass(frozen=True)
@@ -141,33 +139,30 @@ def _hellobench_checklists(run: RunArtifacts) -> tuple[str, ...]:
     return tuple(payload)
 
 
-def _prompt_parts(path: Path) -> tuple[str, str]:
+def _prompt_inputs(inputs: Mapping[str, Any]) -> tuple[str, str, str]:
+    benchmark_name = _required_text(inputs.get("benchmark_name"), "benchmark_name")
+    prompt_id = _required_text(inputs.get("prompt_id"), "prompt_id")
+    prompt_hash = _required_text(inputs.get("prompt_hash"), "prompt_hash")
+    prompt_manifest_hash = _required_text(
+        inputs.get("prompt_manifest_hash"), "prompt_manifest_hash"
+    )
+    manifest_path = MANIFESTS_DIR / f"{benchmark_name.casefold()}.jsonl"
     try:
-        text = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeError) as exc:
-        raise RunArtifactError(f"Cannot read runner prompt artifact {path}") from exc
-    headings = {
-        match.group(1): match for match in _PROMPT_SECTION_HEADING.finditer(text)
-    }
-    assignment_heading = headings.get("Assignment")
-    context_heading = headings.get("Supplied context")
-    constraints_heading = headings.get("Requested output constraints")
-    if assignment_heading is None or context_heading is None:
+        prompt_manifest = load_prompt_manifest(manifest_path)
+        prompt = prompt_manifest.get(prompt_id)
+    except ManifestError as exc:
         raise RunArtifactError(
-            "runner prompt artifact does not contain Assignment and Supplied context"
+            f"Cannot load prompt record {benchmark_name}/{prompt_id}"
+        ) from exc
+    if prompt_manifest.manifest_hash != prompt_manifest_hash:
+        raise RunArtifactError("prompt manifest hash mismatch")
+    if prompt.row_hash != prompt_hash:
+        raise RunArtifactError("prompt hash mismatch")
+    if prompt.prompt_text is None:
+        raise RunArtifactError(
+            f"Prompt record {benchmark_name}/{prompt_id} has no prompt text"
         )
-    assignment = text[assignment_heading.end() : context_heading.start()].removesuffix(
-        "\n\n"
-    )
-    context_end = (
-        constraints_heading.start() if constraints_heading is not None else len(text)
-    )
-    context = text[context_heading.end() : context_end].removesuffix("\n\n")
-    if context == "(none)":
-        context = ""
-    if not assignment.strip():
-        raise RunArtifactError("runner prompt artifact has an empty assignment")
-    return assignment, context
+    return prompt_id, prompt.prompt_text, prompt.supplied_context or ""
 
 
 def load_run_artifacts(run_dir: Path) -> RunArtifacts:
@@ -200,13 +195,12 @@ def load_run_artifacts(run_dir: Path) -> RunArtifacts:
     inputs = manifest.get("inputs")
     if not isinstance(inputs, Mapping):
         raise RunArtifactError("run manifest needs an inputs object")
-    prompt_id = _required_text(inputs.get("prompt_id"), "prompt_id")
+    prompt_id, assignment, context = _prompt_inputs(inputs)
     condition_id = _required_text(inputs.get("condition_id"), "condition_id")
     try:
         output = output_path.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
         raise RunArtifactError(f"Cannot read normalized output {output_path}") from exc
-    assignment, context = _prompt_parts(prompt_path)
     generator_model_id, generator_family = _generator_evidence(manifest)
     return RunArtifacts(
         run_dir=run_dir,
