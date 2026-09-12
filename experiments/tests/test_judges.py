@@ -15,6 +15,7 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.models.openai import OpenAIChatModel, OpenAIModelProfile
 from pydantic_ai.providers.openai import OpenAIProvider
 
+from agentic_cogwriter.judges import scorer as scorer_module
 from agentic_cogwriter.judges.client import (
     OpenAICompatibleClient,
     normalize_usage,
@@ -45,6 +46,7 @@ from agentic_cogwriter.judges.validation import (
     validate_pairwise,
     validate_pointwise,
 )
+from agentic_cogwriter.runner.hashing import sha256_json
 
 
 @pytest.fixture
@@ -88,6 +90,27 @@ class FakeTransport:
             parts=[TextPart(content=str(response["content"]))],
             usage=RequestUsage(input_tokens=11, output_tokens=7),
         )
+
+
+class CapturingTransport(FakeTransport):
+    def __init__(self, responses: list[dict[str, object]]) -> None:
+        super().__init__(responses)
+        self.messages: list[list[ModelRequest | MessageResponse]] = []
+
+    def complete(
+        self,
+        messages: list[ModelRequest | MessageResponse],
+        info: AgentInfo,
+    ) -> ModelResponse:
+        self.messages.append(messages)
+        return super().complete(messages, info)
+
+
+@pytest.fixture(autouse=True)
+def isolated_prompt_manifests(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    manifest_dir = tmp_path / "manifests"
+    manifest_dir.mkdir()
+    monkeypatch.setattr(scorer_module, "MANIFESTS_DIR", manifest_dir, raising=False)
 
 
 def _template(path: Path, task: str) -> Path:
@@ -1313,16 +1336,37 @@ def _run_dir(
     assignment: str = "Write a memo.",
     benchmark_name: str | None = None,
     native_payload: object | None = None,
+    prompt_artifact: str | None = None,
 ) -> Path:
     run_dir = tmp_path / condition_id
-    run_dir.mkdir()
+    run_dir.mkdir(parents=True)
     (run_dir / "output.normalized.txt").write_text(output, encoding="utf-8")
     (run_dir / "prompt.txt").write_text(
-        f"Assignment:\n{assignment}\n\n"
-        "Supplied context:\nProvided fact.\n\n"
-        "Requested output constraints:\n{}\n",
+        prompt_artifact
+        or (
+            f"## Assignment\n{assignment}\n\n"
+            "## Supplied context\nProvided fact.\n\n"
+            "## Requested output constraints\n{}\n"
+        ),
         encoding="utf-8",
     )
+    benchmark_name = benchmark_name or "WritingBench"
+    prompt_row: dict[str, object] = {
+        "prompt_id": prompt_id,
+        "benchmark_name": benchmark_name,
+        "source_version": "test@1",
+        "prompt_text": assignment,
+        "supplied_context": "Provided fact.",
+        "requested_output_constraints": {},
+    }
+    if native_payload is not None:
+        prompt_row["native_payload"] = native_payload
+    prompt_row["hash"] = sha256_json(prompt_row)
+    manifest_path = scorer_module.MANIFESTS_DIR / f"{benchmark_name.casefold()}.jsonl"
+    manifest_bytes = (
+        json.dumps(prompt_row, ensure_ascii=False, sort_keys=True) + "\n"
+    ).encode("utf-8")
+    manifest_path.write_bytes(manifest_bytes)
     (run_dir / "run-manifest.json").write_text(
         json.dumps(
             {
@@ -1330,14 +1374,12 @@ def _run_dir(
                 "status": "completed",
                 "run_id": condition_id,
                 "inputs": {
+                    "benchmark_name": benchmark_name,
+                    "prompt_hash": prompt_row["hash"],
+                    "prompt_manifest_hash": hashlib.sha256(manifest_bytes).hexdigest(),
                     "prompt_id": prompt_id,
                     "condition_id": condition_id,
                     "platform": "codex",
-                    **(
-                        {"benchmark_name": benchmark_name}
-                        if benchmark_name is not None
-                        else {}
-                    ),
                     **(
                         {"native_payload": native_payload}
                         if native_payload is not None
@@ -1465,6 +1507,98 @@ def test_load_run_artifacts_accepts_real_shaped_manifest(tmp_path: Path) -> None
     assert artifacts.platform == "codex"
     assert artifacts.generator_model_id == "generator-model"
     assert artifacts.generator_family == "gpt"
+
+
+def test_label_and_heading_prompt_artifacts_score_identically(tmp_path: Path) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+    config = _config(tmp_path, template)
+    legacy = _run_dir(
+        tmp_path / "legacy",
+        "A1",
+        "Provided fact.",
+        prompt_artifact=(
+            "Assignment:\nWrite a memo.\n\n"
+            "Supplied context:\nProvided fact.\n\n"
+            "Requested output constraints:\n{}\n"
+        ),
+    )
+    headings = _run_dir(
+        tmp_path / "headings",
+        "A1",
+        "Provided fact.",
+        prompt_artifact=(
+            "## Assignment\n\nWrite a memo.\n\n"
+            "## Supplied context\n\nProvided fact.\n\n"
+            "## Requested output constraints\n\n{}\n"
+        ),
+    )
+
+    def response() -> dict[str, object]:
+        value = _pointwise_record()
+        value["condition_id"] = blind_condition_id("A1")
+        value["evidence_quotes"] = [
+            {"dimension": dimension, "quote": "Provided fact."}
+            for dimension in POINTWISE_DIMENSIONS
+        ]
+        return value
+
+    legacy_result = score_run(
+        legacy,
+        config,
+        model=FakeTransport([{"content": json.dumps(response())}]).model,
+    )
+    headings_result = score_run(
+        headings,
+        config,
+        model=FakeTransport([{"content": json.dumps(response())}]).model,
+    )
+
+    assert legacy_result.result.record == headings_result.result.record
+
+
+def test_prompt_text_starting_with_assignment_heading_reaches_judge_intact(
+    tmp_path: Path,
+) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+    config = _config(tmp_path, template)
+    assignment = "## Assignment\nThe heading is part of the user prompt."
+    run_dir = _run_dir(
+        tmp_path,
+        "A1",
+        "Provided fact.",
+        assignment=assignment,
+        prompt_artifact="legacy artifact text that is not scored",
+    )
+    response = _pointwise_record()
+    response["condition_id"] = blind_condition_id("A1")
+    response["evidence_quotes"] = [
+        {"dimension": dimension, "quote": "Provided fact."}
+        for dimension in POINTWISE_DIMENSIONS
+    ]
+    transport = CapturingTransport([{"content": json.dumps(response)}])
+
+    score_run(run_dir, config, model=transport.model)
+
+    rendered = "\n".join(
+        part.content
+        for message in transport.messages[0]
+        for part in message.parts
+        if isinstance(part.content, str)
+    )
+    assert assignment in rendered
+
+
+def test_load_run_artifacts_rejects_prompt_hash_mismatch(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path, "A1", "Provided fact.")
+    manifest_path = run_dir / "run-manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["inputs"]["prompt_hash"] = "not-the-row-hash"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(RunArtifactError, match="prompt hash mismatch"):
+        load_run_artifacts(run_dir)
 
 
 @pytest.mark.parametrize(

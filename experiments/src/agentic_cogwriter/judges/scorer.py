@@ -13,7 +13,10 @@ from typing import Any
 
 from pydantic_ai.models import Model
 
+from ..paths import MANIFESTS_DIR
+from ..runner.errors import ManifestError
 from ..runner.hashing import sha256_bytes, sha256_file, sha256_json
+from ..runner.manifest import load_prompt_manifest
 from .config import JudgeConfig
 from .engine import (
     JudgeResult,
@@ -136,30 +139,30 @@ def _hellobench_checklists(run: RunArtifacts) -> tuple[str, ...]:
     return tuple(payload)
 
 
-def _prompt_parts(path: Path) -> tuple[str, str]:
-    try:
-        text = path.read_text(encoding="utf-8")
-    except (OSError, UnicodeError) as exc:
-        raise RunArtifactError(f"Cannot read runner prompt artifact {path}") from exc
-    assignment_marker = "Assignment:\n"
-    context_marker = "\n\nSupplied context:\n"
-    constraints_marker = "\n\nRequested output constraints:\n"
-    if assignment_marker not in text or context_marker not in text:
-        raise RunArtifactError(
-            "runner prompt artifact does not contain Assignment and Supplied context"
-        )
-    assignment = text.split(assignment_marker, 1)[1].split(context_marker, 1)[0]
-    context_start = text.split(context_marker, 1)[1]
-    context = (
-        context_start.split(constraints_marker, 1)[0]
-        if constraints_marker in context_start
-        else context_start
+def _prompt_inputs(inputs: Mapping[str, Any]) -> tuple[str, str, str]:
+    benchmark_name = _required_text(inputs.get("benchmark_name"), "benchmark_name")
+    prompt_id = _required_text(inputs.get("prompt_id"), "prompt_id")
+    prompt_hash = _required_text(inputs.get("prompt_hash"), "prompt_hash")
+    prompt_manifest_hash = _required_text(
+        inputs.get("prompt_manifest_hash"), "prompt_manifest_hash"
     )
-    if context == "(none)":
-        context = ""
-    if not assignment.strip():
-        raise RunArtifactError("runner prompt artifact has an empty assignment")
-    return assignment, context
+    manifest_path = MANIFESTS_DIR / f"{benchmark_name.casefold()}.jsonl"
+    try:
+        prompt_manifest = load_prompt_manifest(manifest_path)
+        prompt = prompt_manifest.get(prompt_id)
+    except ManifestError as exc:
+        raise RunArtifactError(
+            f"Cannot load prompt record {benchmark_name}/{prompt_id}"
+        ) from exc
+    if prompt_manifest.manifest_hash != prompt_manifest_hash:
+        raise RunArtifactError("prompt manifest hash mismatch")
+    if prompt.row_hash != prompt_hash:
+        raise RunArtifactError("prompt hash mismatch")
+    if prompt.prompt_text is None:
+        raise RunArtifactError(
+            f"Prompt record {benchmark_name}/{prompt_id} has no prompt text"
+        )
+    return prompt_id, prompt.prompt_text, prompt.supplied_context or ""
 
 
 def load_run_artifacts(run_dir: Path) -> RunArtifacts:
@@ -192,13 +195,12 @@ def load_run_artifacts(run_dir: Path) -> RunArtifacts:
     inputs = manifest.get("inputs")
     if not isinstance(inputs, Mapping):
         raise RunArtifactError("run manifest needs an inputs object")
-    prompt_id = _required_text(inputs.get("prompt_id"), "prompt_id")
+    prompt_id, assignment, context = _prompt_inputs(inputs)
     condition_id = _required_text(inputs.get("condition_id"), "condition_id")
     try:
         output = output_path.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
         raise RunArtifactError(f"Cannot read normalized output {output_path}") from exc
-    assignment, context = _prompt_parts(prompt_path)
     generator_model_id, generator_family = _generator_evidence(manifest)
     return RunArtifacts(
         run_dir=run_dir,

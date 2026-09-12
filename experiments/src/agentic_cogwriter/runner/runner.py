@@ -88,9 +88,9 @@ _GENERATOR_CONFIG_ALLOWLIST = {
 _GUIDANCE_MARKERS = ("AGENTS.md", "CLAUDE.md", ".claude", ".codex")
 _STAGE_TOKEN_PATTERN = re.compile(r"\{\{([^{}]+)\}\}")
 _SHARED_STAGE_INPUT_BLOCK = re.compile(
-    r"(?ms)^\s*Assignment:\n\{\{assignment\}\}\n\n"
-    r"Supplied context:\n\{\{supplied_context\}\}\n\n"
-    r"Requested output constraints:\n\{\{output_constraints\}\}\n?"
+    r"(?ms)^### Assignment\n\n?\{\{assignment\}\}\n\n"
+    r"### Supplied context\n\n?\{\{supplied_context\}\}\n\n"
+    r"### Requested output constraints\n\n?\{\{output_constraints\}\}\n?"
 )
 _SHARED_STAGE_TOKENS = (
     "assignment",
@@ -1341,9 +1341,9 @@ class ExperimentRunner:
         }
         stage_text, carried_tokens = self._stage_prompt_text(condition, shared_values)
         generic_values = [
-            f"Assignment:\n{shared_values['assignment']}",
-            f"Supplied context:\n{shared_values['supplied_context']}",
-            f"Requested output constraints:\n{shared_values['output_constraints']}",
+            f"## Assignment\n{shared_values['assignment']}",
+            f"## Supplied context\n{shared_values['supplied_context']}",
+            f"## Requested output constraints\n{shared_values['output_constraints']}",
         ]
         generic_block = "\n\n".join(
             value
@@ -1430,7 +1430,7 @@ class ExperimentRunner:
                 return stage_values[token]
 
             content = _STAGE_TOKEN_PATTERN.sub(render_token, content)
-            chunks.append(f"\n\nFrozen stage {stage.stage_id}:\n{content}")
+            chunks.append(f"\n\n{content}")
         return "".join(chunks), carried_tokens
 
     def _wrapper(self, condition: ConditionSpec) -> dict[str, Any]:

@@ -24,7 +24,7 @@ def test_registry_parses_stages_from_condition_wrappers() -> None:
     assert [stage.stage_id for stage in a1_stages] == ["single_shot"]
     assert a1_stages[0].path == CONDITIONS_DIR / "prompts" / "a1_single_shot.md"
     assert a1_stages[0].sha256 == (
-        "99964b369a76d8cb88ec375cda4e553a5b993483ca05b14e46c3c3fb3d3014cf"
+        "17f8982911d5087d60e901087f7e78bb1652e3443d285f1a8ebdc6d5f6f09728"
     )
     assert [stage.stage_id for stage in registry["A2"].stages] == [
         "pre_write",
