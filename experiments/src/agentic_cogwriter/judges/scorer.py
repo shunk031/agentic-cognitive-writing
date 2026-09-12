@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 from collections.abc import Mapping
 from contextlib import suppress
@@ -23,6 +24,10 @@ from .engine import (
     judge_pointwise,
 )
 from .errors import RunArtifactError
+
+_PROMPT_SECTION_HEADING = re.compile(
+    r"(?m)^#{2,3} (Assignment|Supplied context|Requested output constraints)\n\n?"
+)
 
 
 @dataclass(frozen=True)
@@ -141,20 +146,23 @@ def _prompt_parts(path: Path) -> tuple[str, str]:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
         raise RunArtifactError(f"Cannot read runner prompt artifact {path}") from exc
-    assignment_marker = "Assignment:\n"
-    context_marker = "\n\nSupplied context:\n"
-    constraints_marker = "\n\nRequested output constraints:\n"
-    if assignment_marker not in text or context_marker not in text:
+    headings = {
+        match.group(1): match for match in _PROMPT_SECTION_HEADING.finditer(text)
+    }
+    assignment_heading = headings.get("Assignment")
+    context_heading = headings.get("Supplied context")
+    constraints_heading = headings.get("Requested output constraints")
+    if assignment_heading is None or context_heading is None:
         raise RunArtifactError(
             "runner prompt artifact does not contain Assignment and Supplied context"
         )
-    assignment = text.split(assignment_marker, 1)[1].split(context_marker, 1)[0]
-    context_start = text.split(context_marker, 1)[1]
-    context = (
-        context_start.split(constraints_marker, 1)[0]
-        if constraints_marker in context_start
-        else context_start
+    assignment = text[assignment_heading.end() : context_heading.start()].removesuffix(
+        "\n\n"
     )
+    context_end = (
+        constraints_heading.start() if constraints_heading is not None else len(text)
+    )
+    context = text[context_heading.end() : context_end].removesuffix("\n\n")
     if context == "(none)":
         context = ""
     if not assignment.strip():

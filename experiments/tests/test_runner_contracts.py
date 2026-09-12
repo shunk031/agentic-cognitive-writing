@@ -4,6 +4,7 @@ import fcntl
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -68,7 +69,7 @@ PROMPT_SNAPSHOT_PATH = (
 )
 
 SINGLE_TURN_CONTRACT = (
-    "\n\nSingle-turn contract:\n"
+    "\n\n## Single-turn contract\n\n"
     "This is a single-turn task with no interactive user; never ask clarification "
     "questions. When the assignment underspecifies audience, purpose, or scope, "
     "apply genre-appropriate defaults and record the assumptions. Conditions with "
@@ -80,7 +81,7 @@ SINGLE_TURN_CONTRACT = (
 )
 SINGLE_TURN_CONTRACT_TEXT = SINGLE_TURN_CONTRACT.removeprefix("\n\n") + "\n"
 DELEGATION_CONTRACT = (
-    "Delegation contract:\n"
+    "## Delegation contract\n\n"
     "Native subagent delegation is available in this environment. Delegate every "
     "role the skill assigns to a role agent by spawning a Codex subagent as the "
     "skill's delegation brief instructs; performing a delegated role as the "
@@ -934,7 +935,7 @@ def test_claude_code_wrappers_do_not_receive_codex_delegation_contract() -> None
 
 
 CLAUDE_WORKSPACE_CONTRACT = (
-    "Workspace contract:\n"
+    "## Workspace contract\n\n"
     "Create and update every `.writing/` file under the session working "
     "directory, never under the plugin or skill directory. The final response "
     "must contain the complete final text itself, not a summary or a link to a "
@@ -943,7 +944,7 @@ CLAUDE_WORKSPACE_CONTRACT = (
 CLAUDE_WORKSPACE_CONTRACT_TEXT = CLAUDE_WORKSPACE_CONTRACT + "\n"
 
 
-def test_composed_prompts_match_the_pre_extraction_snapshot() -> None:
+def test_composed_prompts_match_the_composed_prompt_snapshot() -> None:
     expected = json.loads(PROMPT_SNAPSHOT_PATH.read_text(encoding="utf-8"))
     runner = ExperimentRunner(_config(), output_root=Path("runs"))
     conditions = load_condition_registry()
@@ -1046,14 +1047,14 @@ def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
 
 
 @pytest.mark.parametrize(
-    ("condition_id", "stage_count", "first_stage", "expected_header"),
+    ("condition_id", "stage_count", "first_heading", "expected_header"),
     (
-        ("A1", 1, "single_shot", SINGLE_STAGE_SESSION_HEADER),
-        ("A2", 3, "pre_write", STAGE_SESSION_HEADER.format(count=3)),
+        ("A1", 1, "## A1 single-shot", SINGLE_STAGE_SESSION_HEADER),
+        ("A2", 3, "## A2 Pre-Write", STAGE_SESSION_HEADER.format(count=3)),
         (
             "B2",
             5,
-            "perspective_discovery",
+            "## A3 perspective discovery",
             STAGE_SESSION_HEADER.format(count=5),
         ),
     ),
@@ -1061,7 +1062,7 @@ def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
 def test_composed_prompt_identifies_the_single_session_stage_chain(
     condition_id: str,
     stage_count: int,
-    first_stage: str,
+    first_heading: str,
     expected_header: str,
 ) -> None:
     runner = ExperimentRunner(_config(), output_root=Path("runs"))
@@ -1069,7 +1070,7 @@ def test_composed_prompt_identifies_the_single_session_stage_chain(
         load_condition_registry()[condition_id], _prompt(), "codex"
     )
     assert prompt.count(expected_header) == 1
-    assert prompt.index(expected_header) < prompt.index(f"Frozen stage {first_stage}")
+    assert prompt.index(expected_header) < prompt.index(first_heading)
     if stage_count == 1:
         assert STAGE_SESSION_HEADER.format(count=1) not in prompt
 
@@ -1092,17 +1093,80 @@ def test_composed_prompt_has_one_rendered_shared_input_block(
     condition = load_condition_registry()[condition_id]
     prompt = runner._plugin_prompt(condition, _prompt(), platform)
 
-    assert prompt.count("Assignment:\nWrite a memo.") == 1
-    assert prompt.count("Supplied context:\nProvided facts only.") == 1
-    assert prompt.count("Requested output constraints:\n{}") == 1
-    assert prompt.count("Assignment:") == 1
-    assert prompt.count("Supplied context:") == 1
-    assert prompt.count("Requested output constraints:") == 1
+    assert prompt.count("Write a memo.") == 1
+    assert prompt.count("Provided facts only.") == 1
+    assert prompt.count("{}") == 1
+    assert prompt.count("Assignment\n") == 1
+    assert prompt.count("Supplied context\n") == 1
+    assert prompt.count("Requested output constraints\n") == 1
     assert "{{" not in prompt
     assert "}}" not in prompt
-    assert prompt.count("Frozen stage ") == sum(
-        stage.path is not None for stage in condition.stages
-    )
+
+
+FROZEN_STAGE_HEADINGS = {
+    "A1": [
+        "## A1 single-shot",
+        "### Assignment",
+        "### Supplied context",
+        "### Requested output constraints",
+    ],
+    "A2": [
+        "## A2 Pre-Write",
+        "### Assignment",
+        "### Supplied context",
+        "### Requested output constraints",
+        "### Previous stage output",
+        "## A2 Write",
+        "### Pre-Write output",
+        "## A2 Re-Write",
+        "### Draft to revise",
+    ],
+    "B2": [
+        "## A3 perspective discovery",
+        "### Assignment",
+        "### Supplied context",
+        "### Requested output constraints",
+        "## A3 simulated question answering",
+        "### Discovered perspectives",
+        "## A3 outline",
+        "### Prior planning output",
+        "## A3 draft",
+        "### Outline",
+        "## A3 polish",
+        "### Draft",
+    ],
+}
+
+
+def test_composed_prompt_uses_ordered_headings_without_label_lines() -> None:
+    runner = ExperimentRunner(_config(), output_root=Path("runs"))
+    conditions = load_condition_registry()
+
+    for condition_id, condition in conditions.items():
+        for platform in PLATFORMS:
+            prompt = runner._plugin_prompt(condition, _prompt(), platform)
+            headings = re.findall(r"(?m)^#{2,3} .+$", prompt)
+            expected = (
+                (["## Workspace contract"] if platform == "claude-code" else [])
+                + ["## Single-turn contract"]
+                + (
+                    ["## Delegation contract"]
+                    if platform == "codex" and condition.require_delegation
+                    else []
+                )
+                + FROZEN_STAGE_HEADINGS.get(
+                    condition_id,
+                    [
+                        "## Assignment",
+                        "## Supplied context",
+                        "## Requested output constraints",
+                    ],
+                )
+            )
+
+            assert not re.search(r"(?m)^[A-Z][A-Za-z -]+:$", prompt)
+            assert headings == expected
+            assert sum(heading.endswith("Assignment") for heading in headings) == 1
 
 
 def test_composed_prompt_rejects_unknown_stage_token_before_execution(
@@ -2296,7 +2360,7 @@ def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> No
         "026e3f9482ff3474c802cd43f5cae9fd584e10d0848d3e0a152695434becbc98"
     )
     assert manifest["inputs"]["stage_prompt_hashes"]["single_shot"] == (
-        "99964b369a76d8cb88ec375cda4e553a5b993483ca05b14e46c3c3fb3d3014cf"
+        "17f8982911d5087d60e901087f7e78bb1652e3443d285f1a8ebdc6d5f6f09728"
     )
     assert manifest["inputs"]["contract_hashes"] == {
         "delegation": hashlib.sha256(DELEGATION_CONTRACT_TEXT.encode()).hexdigest(),

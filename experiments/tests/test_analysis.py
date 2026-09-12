@@ -251,9 +251,9 @@ def test_score_batch_removes_orphan_before_retry(
     run = _run(root, "WritingBench", "A1", "p1")
     (run / "output.normalized.txt").write_text("Generated answer", encoding="utf-8")
     (run / "prompt.txt").write_text(
-        "Assignment:\nWrite a memo.\n\n"
-        "Supplied context:\nProvided fact.\n\n"
-        "Requested output constraints:\n{}\n",
+        "## Assignment\nWrite a memo.\n\n"
+        "## Supplied context\nProvided fact.\n\n"
+        "## Requested output constraints\n{}\n",
         encoding="utf-8",
     )
     manifest = json.loads((run / "run-manifest.json").read_text(encoding="utf-8"))

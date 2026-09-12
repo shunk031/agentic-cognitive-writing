@@ -1318,9 +1318,9 @@ def _run_dir(
     run_dir.mkdir()
     (run_dir / "output.normalized.txt").write_text(output, encoding="utf-8")
     (run_dir / "prompt.txt").write_text(
-        f"Assignment:\n{assignment}\n\n"
-        "Supplied context:\nProvided fact.\n\n"
-        "Requested output constraints:\n{}\n",
+        f"## Assignment\n{assignment}\n\n"
+        "## Supplied context\nProvided fact.\n\n"
+        "## Requested output constraints\n{}\n",
         encoding="utf-8",
     )
     (run_dir / "run-manifest.json").write_text(
@@ -1465,6 +1465,22 @@ def test_load_run_artifacts_accepts_real_shaped_manifest(tmp_path: Path) -> None
     assert artifacts.platform == "codex"
     assert artifacts.generator_model_id == "generator-model"
     assert artifacts.generator_family == "gpt"
+
+
+def test_load_run_artifacts_accepts_frozen_stage_headings(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path, "A1", "Provided fact.")
+    (run_dir / "prompt.txt").write_text(
+        "## A1 single-shot\n\n"
+        "### Assignment\n\nWrite a memo.\n\n"
+        "### Supplied context\n\nProvided fact.\n\n"
+        "### Requested output constraints\n\n{}\n",
+        encoding="utf-8",
+    )
+
+    artifacts = load_run_artifacts(run_dir)
+
+    assert artifacts.assignment == "Write a memo."
+    assert artifacts.context == "Provided fact."
 
 
 @pytest.mark.parametrize(
