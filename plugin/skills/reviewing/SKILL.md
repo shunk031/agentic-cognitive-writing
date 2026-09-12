@@ -26,6 +26,7 @@ Your work contains two embedded sub-processes, which you perform inside this pro
 ## Sub-processes
 
 1. Evaluate: test the draft and plan against:
+
    - the rhetorical problem
    - the audience
    - active goals
@@ -36,6 +37,7 @@ Your work contains two embedded sub-processes, which you perform inside this pro
    - local wording
 
    Distinguish goal and evidence failures from organization and sentence failures.
+
 2. Revise: make only the requested or clearly authorized changes in the delegated scope. Preserve the writer's intent, call out factual gaps, and state whether the change is local or changes the goal network.
 
 ## Boundaries
@@ -54,4 +56,5 @@ Return a concise report with:
 - evidence from the relevant assignment, goal, memory, or draft state;
 - revisions made and their scope;
 - unsupported claims and open uncertainty;
+- when the delegation brief includes a goal network, give one verdict for each active goal, identified by ID, using exactly one of `keep`, `develop`, or `regenerate`. Use one line per goal in the form `- <goal ID> — <keep|develop|regenerate>: <one sentence of evidence from the draft>`. The verdict word must be lowercase: use exactly `keep`, `develop`, or `regenerate`, not `Keep`, `Develop`, `Regenerate`, or another synonym. For `regenerate`, include the proposed replacement purpose in that sentence. Omit this item when the brief has no goal network;
 - whether the `Monitor` should return to the parent goal, plan, translate, or review again
