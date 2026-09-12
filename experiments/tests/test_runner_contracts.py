@@ -1046,6 +1046,40 @@ def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
     ) in text
 
 
+def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
+    reviewing_text = (
+        REPO_ROOT / "plugin/skills/reviewing/SKILL.md"
+    ).read_text(encoding="utf-8")
+    for requirement in (
+        "one verdict for each active goal",
+        "identified by ID",
+        "exactly one of `keep`, `develop`, or `regenerate`",
+        "one sentence of evidence from the draft",
+        "include the proposed replacement purpose",
+        "brief has no goal network",
+        "Use one line per goal in the form",
+        "The verdict word must be lowercase",
+        "not `Keep`, `Develop`, `Regenerate`, or another synonym",
+    ):
+        assert requirement in reviewing_text
+
+    for path in (
+        REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md",
+        REPO_ROOT
+        / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md",
+    ):
+        text = path.read_text(encoding="utf-8")
+        assert "every active goal with its ID" in text
+        assert "For every `regenerate` verdict" in text
+        assert "record a `goal_regenerated` event and a `goals.md` history row" in text
+        assert "a new goal ID while keeping the original in history" in text
+        assert (
+            "rejected regeneration of <goal id>: <reason>"
+            in text
+        )
+        assert "record `goal_developed` for each `develop` verdict" in text
+
+
 @pytest.mark.parametrize(
     ("condition_id", "stage_count", "first_heading", "expected_header"),
     (

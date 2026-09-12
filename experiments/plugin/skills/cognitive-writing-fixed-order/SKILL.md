@@ -66,7 +66,7 @@ At each pass, the `Monitor` must:
 3. Compare the active goal with the rhetorical problem, draft, retrieved memory, and open uncertainty. Use that evidence within the current prescribed process. Do not choose a different next process because a local preference suggests it.
 4. Before every process switch, append a `process_switch` event naming the responsible process or agent and recording its decision, evidence, and open uncertainty. Record a separate goal event whenever a goal is created, developed, or regenerated. Use the exact fields in the trace contract below.
 5. Delegate the current role using the Delegation section.
-6. Re-read changed state and reconcile the role's work with the active goal. After every Translating pass, compare the new draft with every active goal in goals.md, then record a goal_developed or goal_regenerated event for each goal the draft changed, or state in the next process_switch decision that the goal network needed no change and why. Update the appropriate project state:
+6. After every `Reviewing` pass, re-read changed state and reconcile the role's report with the active goal. For a `Reviewing` report with a goal network, process every per-goal verdict: record `goal_developed` for each `develop` verdict. For every `regenerate` verdict, either record a `goal_regenerated` event and a `goals.md` history row with a new goal ID while keeping the original in history as required by `goals-format.md`, or reject it. Write each rejection in the next `process_switch` decision as `rejected regeneration of <goal id>: <reason>`. After every Translating pass, compare the new draft with every active goal in goals.md, then record a goal_developed or goal_regenerated event for each goal the draft changed, or state in the next process_switch decision that the goal network needed no change and why. Update the appropriate project state:
 
    - `goals.md`
    - `draft.md`
@@ -96,8 +96,7 @@ An interruption must not select a new order. After any sub-goal resolves, return
 For every delegation, pass:
 
 - the project root
-- the active goal ID
-- the parent goal ID
+- the current goal context: for `Reviewing`, every active goal with its ID plus the parent goal ID; otherwise, the active and parent goal IDs
 - relevant uncertainty
 - the requested output
 
@@ -113,5 +112,18 @@ Do not write a script that spawns `codex exec` children. If native delegation is
 Every process switch and every goal creation, development, or regeneration must append one valid JSON object to `.writing/trace/process.jsonl`. `event_type` is one of `process_switch`, `goal_created`, `goal_developed`, or `goal_regenerated`. A process-switch object includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. A goal event also includes `goal_id` and `parent_goal_id`. Optional `artifacts` lists project-relative files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; `goal_id` is a string; `parent_goal_id` is a string or `null`; and `artifacts`, when present, is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. Keep the code-formatted role names `Planning`, `Translating`, and `Reviewing` in surrounding prose, but write JSON `process`, `from_process`, and `to_process` values with the lowercase contract tokens `planning`, `translating`, and `reviewing`. Do not add experiment-specific fields to the shared trace contract. For example:
 
 ```json
-{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"monitor","process":"planning","decision":"Begin the prescribed planning pass for the active goal.","evidence":[".writing/assignment.md",".writing/goals.md"],"open_uncertainty":["The audience's highest-priority concern is not yet known."],"from_process":null,"to_process":"planning","artifacts":[".writing/goals.md"]}
+{
+  "timestamp": "2026-01-15T09:00:00+09:00",
+  "event_type": "process_switch",
+  "responsible_agent": "monitor",
+  "process": "planning",
+  "decision": "Begin the prescribed planning pass for the active goal.",
+  "evidence": [".writing/assignment.md", ".writing/goals.md"],
+  "open_uncertainty": [
+    "The audience's highest-priority concern is not yet known."
+  ],
+  "from_process": null,
+  "to_process": "planning",
+  "artifacts": [".writing/goals.md"]
+}
 ```
