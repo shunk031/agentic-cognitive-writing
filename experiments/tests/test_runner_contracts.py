@@ -1084,6 +1084,17 @@ def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
         "reasons, or `regeneration proposals: none` when no `regenerate` verdict was "
         "received."
     )
+    post_review_sentence = (
+        "Append that post-`Reviewing` `process_switch` carrying the enumeration before "
+        "either continuing or completing the run."
+    )
+    continuing_sentence = (
+        "If the run continues, set its `to_process` to the next process."
+    )
+    terminal_sentence = (
+        "If the run ends after `Reviewing`, set its `process` and `from_process` to "
+        "`reviewing` and its `to_process` to `null` before completing the run."
+    )
 
     for path in (
         REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md",
@@ -1095,6 +1106,9 @@ def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
         assert disposition_sentence in text
         assert regeneration_sentence in text
         assert enumeration_sentence in text
+        assert post_review_sentence in text
+        assert continuing_sentence in text
+        assert terminal_sentence in text
         assert "record `goal_developed` for each `develop` verdict" not in text
 
     a5_text = (
