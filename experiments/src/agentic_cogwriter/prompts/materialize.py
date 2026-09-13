@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import sys
 import urllib.request
 import zipfile
@@ -27,6 +28,24 @@ WRITINGBENCH_COMMIT = "9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad"
 WRITINGBENCH_BLOB_SHA1 = "e6cd82aabed6fa845f0a28cd2114daad59c012b9"
 HELLOBENCH_COMMIT = "92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57"
 DOLOMITES_COMMIT = "8331dd998bf510cacc58d10ad613c9e685787747"
+HABERMAS_COMMIT = "7923b71966c14136077c78d7841bc9e1a182dfe0"
+HABERMAS_DEFAULT_COUNT = 10
+HABERMAS_SEED = 20260908
+HABERMAS_LIKERT_MIDPOINT = 4
+HABERMAS_LIKERT_VALUES = {
+    "STRONGLY_DISAGREE": 1,
+    "DISAGREE": 2,
+    "SOMEWHAT_DISAGREE": 3,
+    "NEUTRAL": 4,
+    "SOMEWHAT_AGREE": 5,
+    "AGREE": 6,
+    "STRONGLY_AGREE": 7,
+}
+HABERMAS_ASSIGNMENT = (
+    "A group of participants answered the question with the opinions supplied. "
+    "Write a statement the group could endorse."
+)
+HABERMAS_OUTPUT_CONSTRAINT = "Write only the requested group statement."
 DOLOMITES_ARCHIVE_SHA256 = (
     "62ee47b4cdf67d1efd7a21029384a929e3d66cab49989aab85ea3534b8b86c32"
 )
@@ -37,6 +56,14 @@ WRITINGBENCH_URL = (
 )
 DOLOMITES_ARCHIVE_URL = (
     "https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip"
+)
+HABERMAS_CANDIDATE_COMPARISONS_URL = (
+    "https://storage.googleapis.com/habermas_machine/datasets/"
+    "hm_all_candidate_comparisons.parquet"
+)
+HABERMAS_POSITION_STATEMENT_RATINGS_URL = (
+    "https://storage.googleapis.com/habermas_machine/datasets/"
+    "hm_all_position_statement_ratings.parquet"
 )
 
 MANIFEST_FIELDS = (
@@ -51,17 +78,36 @@ MANIFEST_FIELDS = (
 # validated against the named benchmark below.
 WRITINGBENCH_MANIFEST_FIELDS = (*MANIFEST_FIELDS[:-1], "native_payload", "hash")
 HELLOBENCH_MANIFEST_FIELDS = WRITINGBENCH_MANIFEST_FIELDS
+HABERMAS_MANIFEST_FIELDS = (*MANIFEST_FIELDS[:-1], "supplied_context", "hash")
 
 EXPECTED_COUNTS = {
     "writingbench": 1000,
     "hellobench": 647,
     "dolomites": 820,
+    "habermas": HABERMAS_DEFAULT_COUNT,
 }
 
 BENCHMARKS = tuple(EXPECTED_COUNTS)
 
 DOLOMITES_DEV_MEMBER = "dolomites_examples/dolomites_examples.dev.public.jsonl"
 DOLOMITES_TEST_MEMBER = "dolomites_examples/dolomites_examples.test.noreference.jsonl"
+
+HABERMAS_CANDIDATE_FIELDS = (
+    "question.id",
+    "question.text",
+    "question.split",
+    "launch_id",
+    "round_id",
+    "iteration_index",
+    "own_opinion.metadata.participant_id",
+    "own_opinion.text",
+)
+HABERMAS_RATING_FIELDS = (
+    "question.id",
+    "launch_id",
+    "metadata.participant_id",
+    "ratings.agreement",
+)
 
 
 @dataclass(frozen=True)
@@ -118,6 +164,20 @@ DOLOMITES_ARCHIVE = RemoteFile(
     DOLOMITES_ARCHIVE_SHA256,
 )
 
+HABERMAS_FILES = (
+    RemoteFile(
+        "habermas-machine-hm_all_candidate_comparisons.parquet",
+        HABERMAS_CANDIDATE_COMPARISONS_URL,
+        "7cf8d5ce3fce8853b36f0ffe1158424f7813867e422e313db4df0a5f9e03e4a4",
+    ),
+    RemoteFile(
+        "habermas-machine-hm_all_position_statement_ratings.parquet",
+        HABERMAS_POSITION_STATEMENT_RATINGS_URL,
+        "b6debcb3e2413d26b7e8b96c7927517b7a5f304c502c30b28a9af1d307255763",
+    ),
+)
+HABERMAS_CANDIDATE_FILE, HABERMAS_RATINGS_FILE = HABERMAS_FILES
+
 
 def pretty_json(value: Any) -> str:
     """Serialize a plain JSON document in the checked-in data-file format."""
@@ -135,7 +195,11 @@ def hash_manifest_row(row: dict[str, Any]) -> str:
 def validate_manifest_row(row: dict[str, Any]) -> None:
     """Validate one row against the experiment prompt-manifest contract."""
 
-    if set(row) not in (set(MANIFEST_FIELDS), set(WRITINGBENCH_MANIFEST_FIELDS)):
+    if set(row) not in (
+        set(MANIFEST_FIELDS),
+        set(WRITINGBENCH_MANIFEST_FIELDS),
+        set(HABERMAS_MANIFEST_FIELDS),
+    ):
         raise ValueError(f"manifest fields are invalid, got {sorted(row)!r}")
     for field in ("prompt_id", "benchmark_name", "source_version", "prompt_text"):
         if not isinstance(row[field], str) or not row[field]:
@@ -186,10 +250,23 @@ def validate_manifest_row(row: dict[str, Any]) -> None:
             raise ValueError("HelloBench native_payload must be a non-empty list")
         if not all(isinstance(item, str) and item.strip() for item in native_payload):
             raise ValueError("HelloBench native_payload must contain non-empty strings")
+    elif row["benchmark_name"] == "HabermasMachine":
+        if set(row) != set(HABERMAS_MANIFEST_FIELDS):
+            raise ValueError(
+                "HabermasMachine rows must include supplied_context and omit "
+                "native_payload"
+            )
+        if (
+            not isinstance(row["supplied_context"], str)
+            or not row["supplied_context"].strip()
+        ):
+            raise ValueError("HabermasMachine supplied_context must be non-empty")
     elif "native_payload" in row:
         raise ValueError(
             "native_payload is only supported for WritingBench and HelloBench rows"
         )
+    elif "supplied_context" in row:
+        raise ValueError("supplied_context is only supported for HabermasMachine rows")
     if not isinstance(row["hash"], str) or len(row["hash"]) != 64:
         raise ValueError("hash must be a 64-character SHA-256 hex digest")
     if row["hash"] != hash_manifest_row(row):
@@ -264,6 +341,7 @@ def _manifest_row(
     prompt_text: str,
     requested_output_constraints: list[str],
     native_payload: list[dict[str, Any]] | None = None,
+    supplied_context: str | None = None,
 ) -> dict[str, Any]:
     row: dict[str, Any] = {
         "prompt_id": prompt_id,
@@ -274,6 +352,8 @@ def _manifest_row(
     }
     if native_payload is not None:
         row["native_payload"] = native_payload
+    if supplied_context is not None:
+        row["supplied_context"] = supplied_context
     row["hash"] = hash_manifest_row(row)
     validate_manifest_row(row)
     return row
@@ -291,8 +371,14 @@ def _manifest_bytes(rows: Iterable[dict[str, Any]]) -> bytes:
     return b"".join(encoded_rows)
 
 
-def _write_manifest(output_dir: Path, name: str, rows: list[dict[str, Any]]) -> Path:
-    expected = EXPECTED_COUNTS[name]
+def _write_manifest(
+    output_dir: Path,
+    name: str,
+    rows: list[dict[str, Any]],
+    *,
+    expected_count: int | None = None,
+) -> Path:
+    expected = EXPECTED_COUNTS[name] if expected_count is None else expected_count
     if len(rows) != expected:
         raise ValueError(f"{name} expected {expected} rows, observed {len(rows)}")
     target = output_dir / f"{name}.jsonl"
@@ -443,7 +529,170 @@ def build_dolomites(archive_path: Path) -> tuple[list[dict[str, Any]], dict[str,
     return rows, counts
 
 
-def provenance(observed_dolomites_counts: dict[str, int]) -> dict[str, Any]:
+def _read_parquet_rows(path: Path, fields: tuple[str, ...]) -> list[dict[str, Any]]:
+    try:
+        import pyarrow.parquet as parquet
+    except ImportError as exc:
+        raise RuntimeError(
+            "HabermasMachine materialization requires the pyarrow dependency"
+        ) from exc
+
+    available = set(parquet.read_schema(path).names)
+    missing = [field for field in fields if field not in available]
+    if missing:
+        raise ValueError(
+            f"HabermasMachine source {path} is missing fields: {', '.join(missing)}"
+        )
+    return parquet.read_table(path, columns=list(fields)).to_pylist()
+
+
+def _habermas_value(value: Any, field: str) -> str:
+    if value is None:
+        raise ValueError(f"HabermasMachine {field} must not be null")
+    value = value.item() if hasattr(value, "item") else value
+    text = str(value)
+    if not text:
+        raise ValueError(f"HabermasMachine {field} must not be empty")
+    return text
+
+
+def _is_ood_test(value: Any) -> bool:
+    return value == "OOD_TEST" or value == 4
+
+
+def _short_launch_id(launch_id: str) -> str:
+    return launch_id[:8]
+
+
+def build_habermas(
+    candidate_comparisons_path: Path,
+    position_statement_ratings_path: Path,
+    *,
+    count: int = HABERMAS_DEFAULT_COUNT,
+    seed: int = HABERMAS_SEED,
+) -> list[dict[str, Any]]:
+    """Select disagreement groups and build Habermas Machine prompt rows."""
+
+    if count < 1:
+        raise ValueError("HabermasMachine count must be positive")
+
+    candidate_rows = _read_parquet_rows(
+        candidate_comparisons_path, HABERMAS_CANDIDATE_FIELDS
+    )
+    groups: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for source_row in candidate_rows:
+        if not _is_ood_test(source_row["question.split"]):
+            continue
+        if source_row["iteration_index"] != 0:
+            continue
+        question_id = _habermas_value(source_row["question.id"], "question.id")
+        launch_id = _habermas_value(source_row["launch_id"], "launch_id")
+        round_id = _habermas_value(source_row["round_id"], "round_id")
+        key = (question_id, launch_id, round_id)
+        group = groups.setdefault(
+            key,
+            {
+                "question_text": source_row["question.text"],
+                "opinions": {},
+            },
+        )
+        participant_id = _habermas_value(
+            source_row["own_opinion.metadata.participant_id"],
+            "own_opinion.metadata.participant_id",
+        )
+        opinion = source_row["own_opinion.text"]
+        if isinstance(opinion, str) and opinion.strip():
+            group["opinions"][participant_id] = opinion
+
+    rating_rows = _read_parquet_rows(
+        position_statement_ratings_path, HABERMAS_RATING_FIELDS
+    )
+    ratings: dict[tuple[str, str], list[Any]] = {}
+    participant_order: dict[tuple[str, str], list[str]] = {}
+    for source_row in rating_rows:
+        question_id = _habermas_value(source_row["question.id"], "question.id")
+        launch_id = _habermas_value(source_row["launch_id"], "launch_id")
+        participant_id = _habermas_value(
+            source_row["metadata.participant_id"], "metadata.participant_id"
+        )
+        agreement = source_row["ratings.agreement"]
+        if not isinstance(agreement, list) or len(agreement) != 1:
+            continue
+        agreement_name = agreement[0]
+        if agreement_name not in HABERMAS_LIKERT_VALUES:
+            continue
+        key = (question_id, launch_id)
+        ratings.setdefault(key, []).append(HABERMAS_LIKERT_VALUES[agreement_name])
+        if participant_id not in participant_order.setdefault(key, []):
+            participant_order[key].append(participant_id)
+
+    eligible: list[tuple[tuple[str, str, str], str, str]] = []
+    for key in sorted(groups):
+        question_id, launch_id, round_id = key
+        group = groups[key]
+        opinions = group["opinions"]
+        if len(opinions) != 5 or len(set(opinions.values())) != 5:
+            continue
+        question_text = group["question_text"]
+        if not isinstance(question_text, str) or not question_text.strip():
+            continue
+        group_ratings = ratings.get((question_id, launch_id), [])
+        numeric_ratings = [
+            float(value)
+            for value in group_ratings
+            if isinstance(value, (int, float)) and not isinstance(value, bool)
+        ]
+        if not (
+            any(value < HABERMAS_LIKERT_MIDPOINT for value in numeric_ratings)
+            and any(value > HABERMAS_LIKERT_MIDPOINT for value in numeric_ratings)
+        ):
+            continue
+        ordered_participants = participant_order.get((question_id, launch_id), [])
+        if len(ordered_participants) != 5 or any(
+            participant not in opinions for participant in ordered_participants
+        ):
+            continue
+        ordered_opinions = [
+            opinions[participant] for participant in ordered_participants
+        ]
+        eligible.append(
+            (
+                key,
+                question_text,
+                "\n".join(
+                    f"{index}. {opinion}"
+                    for index, opinion in enumerate(ordered_opinions, start=1)
+                ),
+            )
+        )
+
+    if count > len(eligible):
+        raise ValueError(
+            f"requested {count} HabermasMachine groups, but only "
+            f"{len(eligible)} meet the selection criterion"
+        )
+    selected = random.Random(seed).sample(eligible, count)
+    selected.sort(key=lambda item: item[0])
+    rows = []
+    for (question_id, launch_id, _), question_text, supplied_context in selected:
+        rows.append(
+            _manifest_row(
+                prompt_id=f"habermas-{question_id}-{_short_launch_id(launch_id)}",
+                benchmark_name="HabermasMachine",
+                source_version=f"google-deepmind/habermas_machine@{HABERMAS_COMMIT}",
+                prompt_text=f"{HABERMAS_ASSIGNMENT}\n\nQuestion:\n{question_text}",
+                requested_output_constraints=[HABERMAS_OUTPUT_CONSTRAINT],
+                supplied_context=supplied_context,
+            )
+        )
+    return rows
+
+
+def provenance(
+    observed_dolomites_counts: dict[str, int],
+    *,
+    habermas_count: int = HABERMAS_DEFAULT_COUNT,
+) -> dict[str, Any]:
     return {
         "schema_version": "1.0",
         "manifest_hash": "sha256(canonical JSON row without hash)",
@@ -520,6 +769,73 @@ def provenance(observed_dolomites_counts: dict[str, int]) -> dict[str, Any]:
                     "split_script": "recompute_dolomites_split.py",
                 },
             },
+            "habermas": {
+                "name": "HabermasMachine",
+                "repository": (
+                    "https://github.com/google-deepmind/habermas_machine/tree/"
+                    f"{HABERMAS_COMMIT}"
+                ),
+                "source_version": (
+                    f"google-deepmind/habermas_machine@{HABERMAS_COMMIT}"
+                ),
+                "source_files": [
+                    {
+                        "path": source.cache_name,
+                        "url": source.url,
+                        "sha256": source.sha256,
+                    }
+                    for source in HABERMAS_FILES
+                ],
+                "source_fields": {
+                    "candidate_comparisons": list(HABERMAS_CANDIDATE_FIELDS),
+                    "position_statement_ratings": list(HABERMAS_RATING_FIELDS),
+                },
+                "license": "CC-BY-4.0",
+                "license_url": "https://creativecommons.org/licenses/by/4.0/",
+                "citation": (
+                    "Tessler et al., AI can help humans find common ground in "
+                    "democratic deliberation, Science 386(6719), 2024, "
+                    "https://doi.org/10.1126/science.adq2852"
+                ),
+                "attribution": (
+                    "Tessler et al., AI can help humans find common ground in "
+                    "democratic deliberation, Science 386(6719), 2024, "
+                    "https://doi.org/10.1126/science.adq2852; Google DeepMind "
+                    "Habermas Machine other materials, CC BY 4.0 "
+                    "(https://creativecommons.org/licenses/by/4.0/). Changes: "
+                    "selected OOD_TEST deliberation groups and converted their "
+                    "five participant opinions into supplied context."
+                ),
+                "redistribution": (
+                    "Prompt manifest only, with attribution above; source files "
+                    "are acquired by the script."
+                ),
+                "manifest": "manifests/habermas.jsonl",
+                "item_count": habermas_count,
+                "selection": {
+                    "split": "OOD_TEST",
+                    "seed": HABERMAS_SEED,
+                    "count": habermas_count,
+                    "criterion": (
+                        "questions from the OOD_TEST split; groups at "
+                        "iteration_index 0 whose five own_opinion.text values are "
+                        "all distinct and non-empty; disagreement measured from "
+                        "hm_all_position_statement_ratings as the participants of "
+                        "that launch having ratings.agreement values on both sides "
+                        "of the scale's midpoint for that question"
+                    ),
+                    "sampling": (
+                        "eligible (question.id, launch_id, round_id) groups sorted "
+                        "by question.id before random sampling"
+                    ),
+                    "likert_midpoint": HABERMAS_LIKERT_MIDPOINT,
+                    "participant_order": "metadata.participant_id source order",
+                },
+                "manifest_fields": {
+                    "supplied_context": "numbered original participant opinions",
+                    "native_payload": "omitted",
+                },
+            },
         },
     }
 
@@ -529,7 +845,11 @@ def _write_json(path: Path, value: Any) -> None:
 
 
 def materialize(
-    benchmarks: Iterable[str], output_dir: Path, cache_dir: Path
+    benchmarks: Iterable[str],
+    output_dir: Path,
+    cache_dir: Path,
+    *,
+    habermas_count: int = HABERMAS_DEFAULT_COUNT,
 ) -> dict[str, int]:
     selected = tuple(benchmarks)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -554,8 +874,23 @@ def materialize(
         _write_manifest(output_dir, "dolomites", rows)
         counts["dolomites"] = len(rows)
 
+    if "habermas" in selected:
+        candidate_path = acquire(HABERMAS_CANDIDATE_FILE, cache_dir)
+        ratings_path = acquire(HABERMAS_RATINGS_FILE, cache_dir)
+        rows = build_habermas(
+            candidate_path,
+            ratings_path,
+            count=habermas_count,
+            seed=HABERMAS_SEED,
+        )
+        _write_manifest(output_dir, "habermas", rows, expected_count=habermas_count)
+        counts["habermas"] = len(rows)
+
     if set(selected) == set(BENCHMARKS):
-        _write_json(output_dir.parent / "provenance.json", provenance(observed_split))
+        _write_json(
+            output_dir.parent / "provenance.json",
+            provenance(observed_split, habermas_count=habermas_count),
+        )
     return counts
 
 
@@ -569,13 +904,24 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE_DIR)
+    parser.add_argument(
+        "--habermas-count",
+        type=int,
+        default=HABERMAS_DEFAULT_COUNT,
+        help="number of HabermasMachine groups to sample",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv or sys.argv[1:])
     selected = BENCHMARKS if args.benchmark == "all" else (args.benchmark,)
-    counts = materialize(selected, args.output_dir, args.cache_dir)
+    counts = materialize(
+        selected,
+        args.output_dir,
+        args.cache_dir,
+        habermas_count=args.habermas_count,
+    )
     for benchmark_name, count in counts.items():
         print(f"{benchmark_name}: {count}")
     return 0
