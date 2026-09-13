@@ -87,6 +87,12 @@ EXPECTED_COUNTS = {
     "dolomites": 820,
     "habermas": HABERMAS_DEFAULT_COUNT,
 }
+MANIFEST_FILENAMES = {
+    "writingbench": "writingbench.jsonl",
+    "hellobench": "hellobench.jsonl",
+    "dolomites": "dolomites.jsonl",
+    "habermas": "habermasmachine.jsonl",
+}
 
 BENCHMARKS = tuple(EXPECTED_COUNTS)
 
@@ -383,7 +389,7 @@ def _write_manifest(
     expected = EXPECTED_COUNTS[name] if expected_count is None else expected_count
     if len(rows) != expected:
         raise ValueError(f"{name} expected {expected} rows, observed {len(rows)}")
-    target = output_dir / f"{name}.jsonl"
+    target = output_dir / MANIFEST_FILENAMES[name]
     write_immutable(target, _manifest_bytes(rows))
     return target
 
@@ -831,7 +837,7 @@ def provenance(
                     "Prompt manifest only, with attribution above; source files "
                     "are acquired by the script."
                 ),
-                "manifest": "manifests/habermas.jsonl",
+                "manifest": "manifests/habermasmachine.jsonl",
                 "item_count": habermas_count,
                 "selection": {
                     "split": "OOD_TEST",

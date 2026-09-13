@@ -31,7 +31,7 @@
       "item_count": 10,
       "license": "CC-BY-4.0",
       "license_url": "https://creativecommons.org/licenses/by/4.0/",
-      "manifest": "manifests/habermas.jsonl",
+      "manifest": "manifests/habermasmachine.jsonl",
       "manifest_fields": {
         "native_payload": "omitted",
         "supplied_context": "numbered original participant opinions"

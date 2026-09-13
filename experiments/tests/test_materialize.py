@@ -31,6 +31,7 @@ from agentic_cogwriter.prompts.materialize import (
     HABERMAS_COMMIT,
     HABERMAS_FILES,
     HABERMAS_RATINGS_FILE,
+    MANIFEST_FILENAMES,
     MANIFEST_FIELDS,
     RemoteFile,
     acquire,
@@ -616,7 +617,7 @@ def test_habermas_loader_preserves_supplied_context(tmp_path: Path) -> None:
         }
     )
     row["hash"] = hash_manifest_row(row)
-    path = tmp_path / "habermas.jsonl"
+    path = tmp_path / "habermasmachine.jsonl"
     path.write_bytes(canonical_json(row) + b"\n")
 
     loaded = load_prompt_manifest(path)
@@ -644,7 +645,7 @@ def test_habermas_source_cache_guard() -> None:
     assert len(rows) == EXPECTED_COUNTS["habermas"]
     assert (
         materialize_module._manifest_bytes(rows)
-        == (MANIFEST_DIR / "habermas.jsonl").read_bytes()
+        == (MANIFEST_DIR / "habermasmachine.jsonl").read_bytes()
     )
 
 
@@ -687,7 +688,7 @@ def test_write_manifest_enforces_the_expected_count(tmp_path: Path) -> None:
 
 def test_checked_in_manifests_have_schema_hashes_and_expected_counts() -> None:
     for benchmark_name, expected_count in EXPECTED_COUNTS.items():
-        path = MANIFEST_DIR / f"{benchmark_name}.jsonl"
+        path = MANIFEST_DIR / MANIFEST_FILENAMES[benchmark_name]
         rows = [json.loads(line) for line in path.read_text().splitlines()]
 
         assert len(rows) == expected_count
@@ -709,9 +710,19 @@ def test_checked_in_manifests_have_schema_hashes_and_expected_counts() -> None:
                 )
 
 
+def test_checked_in_manifest_stems_match_benchmark_names() -> None:
+    for path in MANIFEST_DIR.glob("*.jsonl"):
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+
+        assert rows
+        benchmark_names = {row["benchmark_name"].casefold() for row in rows}
+        assert len(benchmark_names) == 1
+        assert path.stem == next(iter(benchmark_names))
+
+
 def test_checked_in_manifests_are_byte_deterministic() -> None:
     for benchmark_name in BENCHMARKS:
-        path = MANIFEST_DIR / f"{benchmark_name}.jsonl"
+        path = MANIFEST_DIR / MANIFEST_FILENAMES[benchmark_name]
         rows = [json.loads(line) for line in path.read_text().splitlines()]
 
         assert materialize_module._manifest_bytes(rows) == path.read_bytes()

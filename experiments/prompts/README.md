@@ -85,7 +85,9 @@ The materializer sorts the full `(question_id, launch_id, round_id)` key before
 seeded sampling. The materializer orders opinions by the first occurrence of
 each participant in the ratings file. Every selected group has completed
 opinions, and the selector rejects the upstream `No opinion was provided.`
-sentinel.
+sentinel. The default pilot is stored in
+[`manifests/habermasmachine.jsonl`](manifests/habermasmachine.jsonl), matching
+the scorer's casefolded benchmark-name lookup.
 Pass a different `--habermas-count` value to materialize another count.
 
 ### DoLoMiTes split gate
