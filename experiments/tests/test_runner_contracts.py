@@ -1046,6 +1046,94 @@ def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
     ) in text
 
 
+def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
+    reviewing_text = (
+        REPO_ROOT / "plugin/skills/reviewing/SKILL.md"
+    ).read_text(encoding="utf-8")
+    for requirement in (
+        "one verdict for each active goal",
+        "identified by ID",
+        "exactly one of `keep`, `develop`, or `regenerate`",
+        "one sentence of evidence from the draft",
+        "include the proposed replacement purpose",
+        "brief has no goal network",
+        "Use one line per goal in the form",
+        "The verdict word must be lowercase",
+        "not `Keep`, `Develop`, `Regenerate`, or another synonym",
+    ):
+        assert requirement in reviewing_text
+
+    disposition_sentence = (
+        "Treat `Reviewing` verdicts as proposals. Record `goal_developed` only when "
+        "the Monitor updates that goal and adds its `goals.md` history row; "
+        "otherwise record an unacted-on `develop` verdict as a disposition without "
+        "a goal event."
+    )
+    regeneration_sentence = (
+        "For every `regenerate` verdict, either accept it or reject it. On acceptance, "
+        "update `goals.md` with a history row that keeps the original goal ID marked "
+        "`superseded` and gives the replacement a new goal ID, and emit "
+        "`goal_regenerated` with the replacement's `goal_id` and the original goal's "
+        "`parent_goal_id`; on rejection, write `rejected regeneration of <goal id>: "
+        "<reason>` in the next `process_switch` decision."
+    )
+    enumeration_sentence = (
+        "The next `process_switch` decision after a `Reviewing` pass must enumerate "
+        "every received `regenerate` verdict as `regeneration proposals: G2 accepted "
+        "(<reason>); G4 rejected (<reason>)`, substituting the actual goal IDs and "
+        "reasons, or `regeneration proposals: none` when no `regenerate` verdict was "
+        "received."
+    )
+    post_review_sentence = (
+        "Append that post-`Reviewing` `process_switch` carrying the enumeration before "
+        "either continuing or completing the run."
+    )
+    continuing_sentence = (
+        "If the run continues, set its `to_process` to the next process."
+    )
+    terminal_sentence = (
+        "If the run ends after `Reviewing`, set its `process` and `from_process` to "
+        "`reviewing` and its `to_process` to `null` before completing the run."
+    )
+
+    for path in (
+        REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md",
+        REPO_ROOT
+        / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md",
+    ):
+        text = path.read_text(encoding="utf-8")
+        assert "every active goal with its ID" in text
+        assert disposition_sentence in text
+        assert regeneration_sentence in text
+        assert enumeration_sentence in text
+        assert post_review_sentence in text
+        assert continuing_sentence in text
+        assert terminal_sentence in text
+        assert "record `goal_developed` for each `develop` verdict" not in text
+
+    a5_text = (
+        REPO_ROOT
+        / "experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md"
+    ).read_text(encoding="utf-8")
+    a5_delegation = a5_text.split("## Delegation", 1)[1].split(
+        "## Trace contract", 1
+    )[0]
+    assert "- the assignment summary" in a5_delegation
+    assert "goal network" not in a5_delegation.lower()
+    assert "active goal" not in a5_delegation.lower()
+
+    fixed_cycle_sentence = (
+        "After a `regenerate` disposition, do not return to `Planning` within the "
+        "current pass or change the fixed order; complete the `Reviewing` pass, "
+        "then begin the next pass with `Planning`."
+    )
+    fixed_order_text = (
+        REPO_ROOT
+        / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert fixed_cycle_sentence in fixed_order_text
+
+
 @pytest.mark.parametrize(
     ("condition_id", "stage_count", "first_heading", "expected_header"),
     (
