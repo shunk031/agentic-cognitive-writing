@@ -565,6 +565,8 @@ The primary benchmarks do not represent every genre or language. The argumentati
 
 The [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) supports this scope assessment.
 
+**Goal regeneration coverage.** The three primary benchmarks state each task's purpose, audience, and constraints in the prompt, so the writer rarely has to discover its purpose while composing. In an exploratory pilot on the Codex platform, 56 completed A4 runs on the 60 longest prompts across the three benchmarks recorded 236 goal creations and 341 goal developments but no goal regeneration, and the `Reviewing` role proposed no regeneration in any of those runs even though its report carries a per-goal verdict channel and the `Monitor` records every proposal and its disposition in the trace. The protocol therefore treats regeneration as a process the benchmarks may never elicit: the RQ3 analysis reports regeneration counts and proposal dispositions as observed, and a zero count is a finding about the task set, not evidence against the theory. A prompt source whose purpose emerges during composing would be needed to test the regeneration prediction.
+
 **Trace completeness.** A crash, truncation, or adapter gap can hide a process event. The runner reports trace completeness and treats ambiguous or missing events as data-quality findings. The runner does not impute a goal or process switch.
 
 **Data and licensing.** The protocol has explicit gates for the unresolved items below:
