@@ -45,7 +45,8 @@ HABERMAS_ASSIGNMENT = (
     "A group of participants answered the question with the opinions supplied. "
     "Write a statement the group could endorse."
 )
-HABERMAS_OUTPUT_CONSTRAINT = "Write only the requested group statement."
+HABERMAS_OUTPUT_CONSTRAINT = "No separate output constraints; follow prompt_text."
+HABERMAS_MISSING_OPINION = "No opinion was provided."
 DOLOMITES_ARCHIVE_SHA256 = (
     "62ee47b4cdf67d1efd7a21029384a929e3d66cab49989aab85ea3534b8b86c32"
 )
@@ -101,6 +102,7 @@ HABERMAS_CANDIDATE_FIELDS = (
     "iteration_index",
     "own_opinion.metadata.participant_id",
     "own_opinion.text",
+    "own_opinion.metadata.status",
 )
 HABERMAS_RATING_FIELDS = (
     "question.id",
@@ -564,6 +566,10 @@ def _short_launch_id(launch_id: str) -> str:
     return launch_id[:8]
 
 
+def _format_habermas_opinion(opinion: str) -> str:
+    return opinion.replace("\n", "\n   ")
+
+
 def build_habermas(
     candidate_comparisons_path: Path,
     position_statement_ratings_path: Path,
@@ -594,6 +600,7 @@ def build_habermas(
             {
                 "question_text": source_row["question.text"],
                 "opinions": {},
+                "invalid_opinion": False,
             },
         )
         participant_id = _habermas_value(
@@ -601,8 +608,19 @@ def build_habermas(
             "own_opinion.metadata.participant_id",
         )
         opinion = source_row["own_opinion.text"]
-        if isinstance(opinion, str) and opinion.strip():
-            group["opinions"][participant_id] = opinion
+        status = _habermas_value(
+            source_row["own_opinion.metadata.status"],
+            "own_opinion.metadata.status",
+        )
+        if (
+            status != "COMPLETED"
+            or not isinstance(opinion, str)
+            or not opinion.strip()
+            or opinion == HABERMAS_MISSING_OPINION
+        ):
+            group["invalid_opinion"] = True
+            continue
+        group["opinions"][participant_id] = opinion
 
     rating_rows = _read_parquet_rows(
         position_statement_ratings_path, HABERMAS_RATING_FIELDS
@@ -630,6 +648,8 @@ def build_habermas(
     for key in sorted(groups):
         question_id, launch_id, round_id = key
         group = groups[key]
+        if group["invalid_opinion"]:
+            continue
         opinions = group["opinions"]
         if len(opinions) != 5 or len(set(opinions.values())) != 5:
             continue
@@ -660,7 +680,7 @@ def build_habermas(
                 key,
                 question_text,
                 "\n".join(
-                    f"{index}. {opinion}"
+                    f"{index}. {_format_habermas_opinion(opinion)}"
                     for index, opinion in enumerate(ordered_opinions, start=1)
                 ),
             )
@@ -671,6 +691,7 @@ def build_habermas(
             f"requested {count} HabermasMachine groups, but only "
             f"{len(eligible)} meet the selection criterion"
         )
+    eligible.sort(key=lambda item: item[0])
     selected = random.Random(seed).sample(eligible, count)
     selected.sort(key=lambda item: item[0])
     rows = []
@@ -680,7 +701,7 @@ def build_habermas(
                 prompt_id=f"habermas-{question_id}-{_short_launch_id(launch_id)}",
                 benchmark_name="HabermasMachine",
                 source_version=f"google-deepmind/habermas_machine@{HABERMAS_COMMIT}",
-                prompt_text=f"{HABERMAS_ASSIGNMENT}\n\nQuestion:\n{question_text}",
+                prompt_text=f"{HABERMAS_ASSIGNMENT}\n\n### Question\n{question_text}",
                 requested_output_constraints=[HABERMAS_OUTPUT_CONSTRAINT],
                 supplied_context=supplied_context,
             )
@@ -825,11 +846,19 @@ def provenance(
                         "of the scale's midpoint for that question"
                     ),
                     "sampling": (
-                        "eligible (question.id, launch_id, round_id) groups sorted "
-                        "by question.id before random sampling"
+                        "sort the full (question_id, launch_id, round_id) key "
+                        "before seeded sampling"
                     ),
                     "likert_midpoint": HABERMAS_LIKERT_MIDPOINT,
-                    "participant_order": "metadata.participant_id source order",
+                    "participant_order": (
+                        "first occurrence of each participant in the ratings file"
+                    ),
+                    "missing_opinion_gate": (
+                        "Every group member must have "
+                        "own_opinion.metadata.status COMPLETED and "
+                        "own_opinion.text must not equal "
+                        "'No opinion was provided.'"
+                    ),
                 },
                 "manifest_fields": {
                     "supplied_context": "numbered original participant opinions",

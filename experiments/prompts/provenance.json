@@ -43,8 +43,9 @@
         "count": 10,
         "criterion": "questions from the OOD_TEST split; groups at iteration_index 0 whose five own_opinion.text values are all distinct and non-empty; disagreement measured from hm_all_position_statement_ratings as the participants of that launch having ratings.agreement values on both sides of the scale's midpoint for that question",
         "likert_midpoint": 4,
-        "participant_order": "metadata.participant_id source order",
-        "sampling": "eligible (question.id, launch_id, round_id) groups sorted by question.id before random sampling",
+        "missing_opinion_gate": "Every group member must have own_opinion.metadata.status COMPLETED and own_opinion.text must not equal 'No opinion was provided.'",
+        "participant_order": "first occurrence of each participant in the ratings file",
+        "sampling": "sort the full (question_id, launch_id, round_id) key before seeded sampling",
         "seed": 20260908,
         "split": "OOD_TEST"
       },
@@ -57,7 +58,8 @@
           "round_id",
           "iteration_index",
           "own_opinion.metadata.participant_id",
-          "own_opinion.text"
+          "own_opinion.text",
+          "own_opinion.metadata.status"
         ],
         "position_statement_ratings": [
           "question.id",

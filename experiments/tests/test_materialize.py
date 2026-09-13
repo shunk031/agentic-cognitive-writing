@@ -349,7 +349,9 @@ def test_build_dolomites_rejects_an_unexpected_split(tmp_path: Path) -> None:
         build_dolomites(archive)
 
 
-def _write_habermas_sources(tmp_path: Path) -> tuple[Path, Path]:
+def _write_habermas_sources(
+    tmp_path: Path, *, include_missing: bool = False
+) -> tuple[Path, Path]:
     pa = pytest.importorskip("pyarrow")
     pq = pytest.importorskip("pyarrow.parquet")
     candidate_rows: list[dict[str, Any]] = []
@@ -372,6 +374,7 @@ def _write_habermas_sources(tmp_path: Path) -> tuple[Path, Path]:
                     "iteration_index": 0,
                     "own_opinion.metadata.participant_id": worker_id,
                     "own_opinion.text": opinion,
+                    "own_opinion.metadata.status": "COMPLETED",
                 }
             )
 
@@ -409,6 +412,20 @@ def _write_habermas_sources(tmp_path: Path) -> tuple[Path, Path]:
         0,
         {f"p{index}": f"Train {index}" for index in range(1, 6)},
     )
+    if include_missing:
+        add_group(
+            "q-missing",
+            "OOD_TEST",
+            "launch-5",
+            0,
+            {
+                "p1": "Missing one",
+                "p2": "Missing two",
+                "p3": "Missing three",
+                "p4": "Missing four",
+                "p5": "No opinion was provided.",
+            },
+        )
     candidate_path = tmp_path / "candidate.parquet"
     pq.write_table(pa.Table.from_pylist(candidate_rows), candidate_path)
 
@@ -430,6 +447,11 @@ def _write_habermas_sources(tmp_path: Path) -> tuple[Path, Path]:
             "q-train",
             ["DISAGREE", "AGREE", "DISAGREE", "AGREE", "DISAGREE"],
         ),
+        (
+            "launch-5",
+            "q-missing",
+            ["DISAGREE", "AGREE", "DISAGREE", "AGREE", "DISAGREE"],
+        ),
     ):
         for index, agreement in enumerate(values, start=1):
             rating_rows.append(
@@ -443,6 +465,76 @@ def _write_habermas_sources(tmp_path: Path) -> tuple[Path, Path]:
                 }
             )
     ratings_path = tmp_path / "ratings.parquet"
+    pq.write_table(pa.Table.from_pylist(rating_rows), ratings_path)
+    return candidate_path, ratings_path
+
+
+def _write_habermas_ordering_sources(tmp_path: Path) -> tuple[Path, Path]:
+    pa = pytest.importorskip("pyarrow")
+    pq = pytest.importorskip("pyarrow.parquet")
+    candidate_rows: list[dict[str, Any]] = []
+    for launch_id, round_id, opinions in (
+        (
+            "launch-b",
+            "round-2",
+            [
+                ("p5", "B five"),
+                ("p1", "B one"),
+                ("p3", "B three"),
+                ("p2", "B two"),
+                ("p4", "B four"),
+            ],
+        ),
+        (
+            "launch-a",
+            "round-10",
+            [
+                ("p5", "A five"),
+                ("p1", "A one"),
+                ("p3", "A three\nA follow-up"),
+                ("p2", "A two"),
+                ("p4", "A four"),
+            ],
+        ),
+    ):
+        for participant_id, opinion in opinions:
+            candidate_rows.append(
+                {
+                    "question.id": "q-shared",
+                    "question.text": "Question q-shared",
+                    "question.split": "OOD_TEST",
+                    "launch_id": launch_id,
+                    "round_id": round_id,
+                    "iteration_index": 0,
+                    "own_opinion.metadata.participant_id": participant_id,
+                    "own_opinion.text": opinion,
+                    "own_opinion.metadata.status": "COMPLETED",
+                }
+            )
+    candidate_path = tmp_path / "ordering-candidate.parquet"
+    pq.write_table(pa.Table.from_pylist(candidate_rows), candidate_path)
+
+    rating_rows: list[dict[str, Any]] = []
+    for launch_id in (
+        "launch-b",
+        "launch-a",
+    ):
+        for participant_id, agreement in zip(
+            ("p3", "p1", "p5", "p2", "p4"),
+            ("DISAGREE", "AGREE", "DISAGREE", "AGREE", "DISAGREE"),
+            strict=True,
+        ):
+            rating_rows.append(
+                {
+                    "question.id": "q-shared",
+                    "launch_id": launch_id,
+                    "metadata.participant_id": participant_id,
+                    "question_index": 1,
+                    "rating_index": 0,
+                    "ratings.agreement": [agreement],
+                }
+            )
+    ratings_path = tmp_path / "ordering-ratings.parquet"
     pq.write_table(pa.Table.from_pylist(rating_rows), ratings_path)
     return candidate_path, ratings_path
 
@@ -462,7 +554,7 @@ def test_build_habermas_selects_disagreement_and_orders_context(
         f"google-deepmind/habermas_machine@{HABERMAS_COMMIT}"
     )
     assert row["prompt_text"] == (
-        f"{HABERMAS_ASSIGNMENT}\n\nQuestion:\nQuestion q-eligible"
+        f"{HABERMAS_ASSIGNMENT}\n\n### Question\nQuestion q-eligible"
     )
     assert row["supplied_context"] == (
         "1. Opinion one\n"
@@ -472,10 +564,32 @@ def test_build_habermas_selects_disagreement_and_orders_context(
         "5. Opinion five"
     )
     assert row["requested_output_constraints"] == [
-        "Write only the requested group statement."
+        "No separate output constraints; follow prompt_text."
     ]
     assert "native_payload" not in row
     validate_manifest_row(row)
+
+
+def test_build_habermas_excludes_missing_opinions(tmp_path: Path) -> None:
+    candidate_path, ratings_path = _write_habermas_sources(
+        tmp_path, include_missing=True
+    )
+
+    with pytest.raises(ValueError, match="requested 2 HabermasMachine groups"):
+        build_habermas(candidate_path, ratings_path, count=2, seed=20260908)
+
+
+def test_build_habermas_sorts_full_group_key_before_sampling(
+    tmp_path: Path,
+) -> None:
+    candidate_path, ratings_path = _write_habermas_ordering_sources(tmp_path)
+
+    rows = build_habermas(candidate_path, ratings_path, count=1, seed=20260908)
+
+    assert rows[0]["prompt_id"] == "habermas-q-shared-launch-a"
+    assert rows[0]["supplied_context"] == (
+        "1. A three\n   A follow-up\n2. A one\n3. A five\n4. A two\n5. A four"
+    )
 
 
 def test_build_habermas_is_seeded_and_counted(tmp_path: Path) -> None:
@@ -511,6 +625,7 @@ def test_habermas_loader_preserves_supplied_context(tmp_path: Path) -> None:
 
 
 def test_habermas_source_cache_guard() -> None:
+    pytest.importorskip("pyarrow")
     missing_sources = [
         source.cache_name
         for source in HABERMAS_FILES
@@ -654,6 +769,12 @@ def test_checked_in_provenance_records_pins_license_and_split() -> None:
     assert habermas["license"] == "CC-BY-4.0"
     assert habermas["item_count"] == EXPECTED_COUNTS["habermas"]
     assert habermas["selection"]["seed"] == 20260908
+    assert habermas["selection"]["sampling"] == (
+        "sort the full (question_id, launch_id, round_id) key before seeded sampling"
+    )
+    assert habermas["selection"]["participant_order"] == (
+        "first occurrence of each participant in the ratings file"
+    )
     assert habermas["source_fields"]["candidate_comparisons"] == list(
         materialize_module.HABERMAS_CANDIDATE_FIELDS
     )

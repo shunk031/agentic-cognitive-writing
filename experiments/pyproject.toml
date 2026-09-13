@@ -3,7 +3,7 @@ name = "agentic-cogwriter"
 version = "0.1.0"
 description = "Materialize prompts and run Agentic CogWriter experiments"
 requires-python = ">=3.11"
-dependencies = ["pydantic-ai-slim[openai]==2.38.0", "pyarrow>=18,<24"]
+dependencies = ["pydantic-ai-slim[openai]==2.38.0"]
 
 [project.scripts]
 agentic-cogwriter-materialize = "agentic_cogwriter.prompts.materialize:main"
@@ -15,6 +15,7 @@ agentic-cogwriter-aggregate = "agentic_cogwriter.analysis.aggregate:main"
 
 [dependency-groups]
 dev = ["pytest>=8.3,<9"]
+materialize = ["pyarrow>=18,<24"]
 
 [build-system]
 requires = ["uv_build>=0.12.6,<0.13"]

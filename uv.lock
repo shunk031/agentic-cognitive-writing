@@ -28,7 +28,6 @@ name = "agentic-cogwriter"
 version = "0.1.0"
 source = { editable = "experiments" }
 dependencies = [
-    { name = "pyarrow" },
     { name = "pydantic-ai-slim", extra = ["openai"] },
 ]
 
@@ -36,15 +35,16 @@ dependencies = [
 dev = [
     { name = "pytest" },
 ]
+materialize = [
+    { name = "pyarrow" },
+]
 
 [package.metadata]
-requires-dist = [
-    { name = "pyarrow", specifier = ">=18,<24" },
-    { name = "pydantic-ai-slim", extras = ["openai"], specifier = "==2.38.0" },
-]
+requires-dist = [{ name = "pydantic-ai-slim", extras = ["openai"], specifier = "==2.38.0" }]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=8.3,<9" }]
+materialize = [{ name = "pyarrow", specifier = ">=18,<24" }]
 
 [[package]]
 name = "annotated-types"

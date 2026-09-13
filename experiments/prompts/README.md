@@ -7,15 +7,19 @@ This directory contains the pinned benchmark prompt manifests for experimenters 
 Run from the repository root:
 
 ```bash
-uv run --package agentic-cogwriter agentic-cogwriter-materialize --benchmark all
-uv run --package agentic-cogwriter agentic-cogwriter-recompute-dolomites-split
-uv run pytest
+uv run --frozen --group materialize --package agentic-cogwriter agentic-cogwriter-materialize --benchmark all
+uv run --frozen --package agentic-cogwriter agentic-cogwriter-recompute-dolomites-split
+uv run --frozen pytest
 ```
 
 The materializer downloads only pinned source files into `.cache/benchmarks/`,
 verifies each source hash before parsing it, and does not check raw upstream
 files into git. Existing manifests and provenance records are immutable:
 regeneration succeeds only when the bytes are identical.
+
+The `materialize` dependency group provides the Parquet reader needed for
+HabermasMachine source files. Runner and scorer commands do not require that
+group.
 
 ## Data layout
 
@@ -69,13 +73,19 @@ specification, and supplied example input; its output requirements and notes
 become constraints. Reference outputs are intentionally omitted.
 
 HabermasMachine uses `question.text` for the question, `own_opinion.text` for
-participant opinions, `own_opinion.metadata.participant_id` for their source
-order, and `ratings.agreement` with `metadata.participant_id` for disagreement
-selection. The materializer reads only
+participant opinions, `own_opinion.metadata.participant_id` and
+`own_opinion.metadata.status` for the completed participant records, and
+`ratings.agreement` with `metadata.participant_id` for disagreement selection.
+The materializer reads only
 `hm_all_candidate_comparisons.parquet` and
 `hm_all_position_statement_ratings.parquet`; their URLs, SHA-256 values, and
 full field lists are recorded in [`provenance.json`](provenance.json). The
 default pilot samples ten eligible `(question.id, launch_id, round_id)` groups.
+The materializer sorts the full `(question_id, launch_id, round_id)` key before
+seeded sampling. The materializer orders opinions by the first occurrence of
+each participant in the ratings file. Every selected group has completed
+opinions, and the selector rejects the upstream `No opinion was provided.`
+sentinel.
 Pass a different `--habermas-count` value to materialize another count.
 
 ### DoLoMiTes split gate
