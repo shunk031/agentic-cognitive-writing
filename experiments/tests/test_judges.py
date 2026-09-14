@@ -1507,6 +1507,7 @@ def test_load_run_artifacts_accepts_real_shaped_manifest(tmp_path: Path) -> None
     assert artifacts.platform == "codex"
     assert artifacts.generator_model_id == "generator-model"
     assert artifacts.generator_family == "gpt"
+    assert artifacts.context == "Provided fact."
 
 
 def test_label_and_heading_prompt_artifacts_score_identically(tmp_path: Path) -> None:

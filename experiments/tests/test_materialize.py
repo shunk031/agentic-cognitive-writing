@@ -26,10 +26,17 @@ from agentic_cogwriter.prompts.materialize import (
     DOLOMITES_DEV_MEMBER,
     DOLOMITES_TEST_MEMBER,
     EXPECTED_COUNTS,
+    HABERMAS_ASSIGNMENT,
+    HABERMAS_CANDIDATE_FILE,
+    HABERMAS_COMMIT,
+    HABERMAS_FILES,
+    HABERMAS_RATINGS_FILE,
+    MANIFEST_FILENAMES,
     MANIFEST_FIELDS,
     RemoteFile,
     acquire,
     build_dolomites,
+    build_habermas,
     build_hellobench,
     build_writingbench,
     canonical_json,
@@ -343,6 +350,305 @@ def test_build_dolomites_rejects_an_unexpected_split(tmp_path: Path) -> None:
         build_dolomites(archive)
 
 
+def _write_habermas_sources(
+    tmp_path: Path, *, include_missing: bool = False
+) -> tuple[Path, Path]:
+    pa = pytest.importorskip("pyarrow")
+    pq = pytest.importorskip("pyarrow.parquet")
+    candidate_rows: list[dict[str, Any]] = []
+
+    def add_group(
+        question_id: str,
+        split: str,
+        launch_id: str,
+        round_id: int,
+        opinions: dict[str, str],
+    ) -> None:
+        for worker_id, opinion in opinions.items():
+            candidate_rows.append(
+                {
+                    "question.id": question_id,
+                    "question.text": f"Question {question_id}",
+                    "question.split": split,
+                    "launch_id": launch_id,
+                    "round_id": round_id,
+                    "iteration_index": 0,
+                    "own_opinion.metadata.participant_id": worker_id,
+                    "own_opinion.text": opinion,
+                    "own_opinion.metadata.status": "COMPLETED",
+                }
+            )
+
+    add_group(
+        "q-eligible",
+        "OOD_TEST",
+        "launch-1",
+        0,
+        {
+            "p3": "Opinion three",
+            "p1": "Opinion one",
+            "p5": "Opinion five",
+            "p2": "Opinion two",
+            "p4": "Opinion four",
+        },
+    )
+    add_group(
+        "q-no-disagreement",
+        "OOD_TEST",
+        "launch-2",
+        0,
+        {f"p{index}": f"Other {index}" for index in range(1, 6)},
+    )
+    add_group(
+        "q-duplicate",
+        "OOD_TEST",
+        "launch-3",
+        0,
+        {f"p{index}": "Repeated" for index in range(1, 6)},
+    )
+    add_group(
+        "q-train",
+        "TRAIN",
+        "launch-4",
+        0,
+        {f"p{index}": f"Train {index}" for index in range(1, 6)},
+    )
+    if include_missing:
+        add_group(
+            "q-missing",
+            "OOD_TEST",
+            "launch-5",
+            0,
+            {
+                "p1": "Missing one",
+                "p2": "Missing two",
+                "p3": "Missing three",
+                "p4": "Missing four",
+                "p5": "No opinion was provided.",
+            },
+        )
+    candidate_path = tmp_path / "candidate.parquet"
+    pq.write_table(pa.Table.from_pylist(candidate_rows), candidate_path)
+
+    rating_rows: list[dict[str, Any]] = []
+    for launch_id, question_id, values in (
+        (
+            "launch-1",
+            "q-eligible",
+            ["DISAGREE", "AGREE", "SOMEWHAT_DISAGREE", "SOMEWHAT_AGREE", "NEUTRAL"],
+        ),
+        ("launch-2", "q-no-disagreement", ["NEUTRAL"] * 5),
+        (
+            "launch-3",
+            "q-duplicate",
+            ["DISAGREE", "AGREE", "DISAGREE", "AGREE", "DISAGREE"],
+        ),
+        (
+            "launch-4",
+            "q-train",
+            ["DISAGREE", "AGREE", "DISAGREE", "AGREE", "DISAGREE"],
+        ),
+        (
+            "launch-5",
+            "q-missing",
+            ["DISAGREE", "AGREE", "DISAGREE", "AGREE", "DISAGREE"],
+        ),
+    ):
+        for index, agreement in enumerate(values, start=1):
+            rating_rows.append(
+                {
+                    "question.id": question_id,
+                    "launch_id": launch_id,
+                    "metadata.participant_id": f"p{index}",
+                    "question_index": index,
+                    "rating_index": 0,
+                    "ratings.agreement": [agreement],
+                }
+            )
+    ratings_path = tmp_path / "ratings.parquet"
+    pq.write_table(pa.Table.from_pylist(rating_rows), ratings_path)
+    return candidate_path, ratings_path
+
+
+def _write_habermas_ordering_sources(tmp_path: Path) -> tuple[Path, Path]:
+    pa = pytest.importorskip("pyarrow")
+    pq = pytest.importorskip("pyarrow.parquet")
+    candidate_rows: list[dict[str, Any]] = []
+    for launch_id, round_id, opinions in (
+        (
+            "launch-b",
+            "round-2",
+            [
+                ("p5", "B five"),
+                ("p1", "B one"),
+                ("p3", "B three"),
+                ("p2", "B two"),
+                ("p4", "B four"),
+            ],
+        ),
+        (
+            "launch-a",
+            "round-10",
+            [
+                ("p5", "A five"),
+                ("p1", "A one"),
+                ("p3", "A three\nA follow-up"),
+                ("p2", "A two"),
+                ("p4", "A four"),
+            ],
+        ),
+    ):
+        for participant_id, opinion in opinions:
+            candidate_rows.append(
+                {
+                    "question.id": "q-shared",
+                    "question.text": "Question q-shared",
+                    "question.split": "OOD_TEST",
+                    "launch_id": launch_id,
+                    "round_id": round_id,
+                    "iteration_index": 0,
+                    "own_opinion.metadata.participant_id": participant_id,
+                    "own_opinion.text": opinion,
+                    "own_opinion.metadata.status": "COMPLETED",
+                }
+            )
+    candidate_path = tmp_path / "ordering-candidate.parquet"
+    pq.write_table(pa.Table.from_pylist(candidate_rows), candidate_path)
+
+    rating_rows: list[dict[str, Any]] = []
+    for launch_id in (
+        "launch-b",
+        "launch-a",
+    ):
+        for participant_id, agreement in zip(
+            ("p3", "p1", "p5", "p2", "p4"),
+            ("DISAGREE", "AGREE", "DISAGREE", "AGREE", "DISAGREE"),
+            strict=True,
+        ):
+            rating_rows.append(
+                {
+                    "question.id": "q-shared",
+                    "launch_id": launch_id,
+                    "metadata.participant_id": participant_id,
+                    "question_index": 1,
+                    "rating_index": 0,
+                    "ratings.agreement": [agreement],
+                }
+            )
+    ratings_path = tmp_path / "ordering-ratings.parquet"
+    pq.write_table(pa.Table.from_pylist(rating_rows), ratings_path)
+    return candidate_path, ratings_path
+
+
+def test_build_habermas_selects_disagreement_and_orders_context(
+    tmp_path: Path,
+) -> None:
+    candidate_path, ratings_path = _write_habermas_sources(tmp_path)
+
+    rows = build_habermas(candidate_path, ratings_path, count=1, seed=20260908)
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["prompt_id"] == "habermas-q-eligible-launch-1"
+    assert row["benchmark_name"] == "HabermasMachine"
+    assert row["source_version"] == (
+        f"google-deepmind/habermas_machine@{HABERMAS_COMMIT}"
+    )
+    assert row["prompt_text"] == (
+        f"{HABERMAS_ASSIGNMENT}\n\n### Question\nQuestion q-eligible"
+    )
+    assert row["supplied_context"] == (
+        "1. Opinion one\n"
+        "2. Opinion two\n"
+        "3. Opinion three\n"
+        "4. Opinion four\n"
+        "5. Opinion five"
+    )
+    assert row["requested_output_constraints"] == [
+        "No separate output constraints; follow prompt_text."
+    ]
+    assert "native_payload" not in row
+    validate_manifest_row(row)
+
+
+def test_build_habermas_excludes_missing_opinions(tmp_path: Path) -> None:
+    candidate_path, ratings_path = _write_habermas_sources(
+        tmp_path, include_missing=True
+    )
+
+    with pytest.raises(ValueError, match="requested 2 HabermasMachine groups"):
+        build_habermas(candidate_path, ratings_path, count=2, seed=20260908)
+
+
+def test_build_habermas_sorts_full_group_key_before_sampling(
+    tmp_path: Path,
+) -> None:
+    candidate_path, ratings_path = _write_habermas_ordering_sources(tmp_path)
+
+    rows = build_habermas(candidate_path, ratings_path, count=1, seed=20260908)
+
+    assert rows[0]["prompt_id"] == "habermas-q-shared-launch-a"
+    assert rows[0]["supplied_context"] == (
+        "1. A three\n   A follow-up\n2. A one\n3. A five\n4. A two\n5. A four"
+    )
+
+
+def test_build_habermas_is_seeded_and_counted(tmp_path: Path) -> None:
+    candidate_path, ratings_path = _write_habermas_sources(tmp_path)
+
+    first = build_habermas(candidate_path, ratings_path, count=1, seed=20260908)
+    second = build_habermas(candidate_path, ratings_path, count=1, seed=20260908)
+
+    assert first == second
+    with pytest.raises(ValueError, match="requested 2 HabermasMachine groups"):
+        build_habermas(candidate_path, ratings_path, count=2, seed=20260908)
+
+
+def test_habermas_loader_preserves_supplied_context(tmp_path: Path) -> None:
+    from agentic_cogwriter.runner.manifest import load_prompt_manifest
+
+    row = _test_manifest_row("habermas-q-eligible-launch-1")
+    row.update(
+        {
+            "benchmark_name": "HabermasMachine",
+            "source_version": "google-deepmind/habermas_machine@test",
+            "prompt_text": HABERMAS_ASSIGNMENT,
+            "supplied_context": "1. First opinion\n2. Second opinion",
+        }
+    )
+    row["hash"] = hash_manifest_row(row)
+    path = tmp_path / "habermasmachine.jsonl"
+    path.write_bytes(canonical_json(row) + b"\n")
+
+    loaded = load_prompt_manifest(path)
+
+    assert loaded.get(row["prompt_id"]).supplied_context == row["supplied_context"]
+
+
+def test_habermas_source_cache_guard() -> None:
+    pytest.importorskip("pyarrow")
+    missing_sources = [
+        source.cache_name
+        for source in HABERMAS_FILES
+        if not (BENCHMARK_CACHE_DIR / source.cache_name).is_file()
+    ]
+    if missing_sources:
+        pytest.skip(
+            "verified Habermas Machine source cache is unavailable: "
+            + ", ".join(missing_sources)
+        )
+
+    rows = build_habermas(
+        BENCHMARK_CACHE_DIR / HABERMAS_CANDIDATE_FILE.cache_name,
+        BENCHMARK_CACHE_DIR / HABERMAS_RATINGS_FILE.cache_name,
+    )
+    assert len(rows) == EXPECTED_COUNTS["habermas"]
+    assert (
+        materialize_module._manifest_bytes(rows)
+        == (MANIFEST_DIR / "habermasmachine.jsonl").read_bytes()
+    )
+
+
 def test_dolomites_archive_counts_are_recomputed_from_member_contents(
     tmp_path: Path,
 ) -> None:
@@ -382,7 +688,7 @@ def test_write_manifest_enforces_the_expected_count(tmp_path: Path) -> None:
 
 def test_checked_in_manifests_have_schema_hashes_and_expected_counts() -> None:
     for benchmark_name, expected_count in EXPECTED_COUNTS.items():
-        path = MANIFEST_DIR / f"{benchmark_name}.jsonl"
+        path = MANIFEST_DIR / MANIFEST_FILENAMES[benchmark_name]
         rows = [json.loads(line) for line in path.read_text().splitlines()]
 
         assert len(rows) == expected_count
@@ -391,6 +697,8 @@ def test_checked_in_manifests_have_schema_hashes_and_expected_counts() -> None:
             expected_fields = set(MANIFEST_FIELDS)
             if benchmark_name in {"writingbench", "hellobench"}:
                 expected_fields |= {"native_payload"}
+            if benchmark_name == "habermas":
+                expected_fields |= {"supplied_context"}
             assert set(row) == expected_fields
             validate_manifest_row(row)
             assert row["hash"] == hash_manifest_row(row)
@@ -402,9 +710,19 @@ def test_checked_in_manifests_have_schema_hashes_and_expected_counts() -> None:
                 )
 
 
+def test_checked_in_manifest_stems_match_benchmark_names() -> None:
+    for path in MANIFEST_DIR.glob("*.jsonl"):
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+
+        assert rows
+        benchmark_names = {row["benchmark_name"].casefold() for row in rows}
+        assert len(benchmark_names) == 1
+        assert path.stem == next(iter(benchmark_names))
+
+
 def test_checked_in_manifests_are_byte_deterministic() -> None:
     for benchmark_name in BENCHMARKS:
-        path = MANIFEST_DIR / f"{benchmark_name}.jsonl"
+        path = MANIFEST_DIR / MANIFEST_FILENAMES[benchmark_name]
         rows = [json.loads(line) for line in path.read_text().splitlines()]
 
         assert materialize_module._manifest_bytes(rows) == path.read_bytes()
@@ -455,6 +773,22 @@ def test_checked_in_provenance_records_pins_license_and_split() -> None:
             "num_checklist",
         ],
     }
+    habermas = provenance["benchmarks"]["habermas"]
+    assert habermas["source_version"] == (
+        f"google-deepmind/habermas_machine@{HABERMAS_COMMIT}"
+    )
+    assert habermas["license"] == "CC-BY-4.0"
+    assert habermas["item_count"] == EXPECTED_COUNTS["habermas"]
+    assert habermas["selection"]["seed"] == 20260908
+    assert habermas["selection"]["sampling"] == (
+        "sort the full (question_id, launch_id, round_id) key before seeded sampling"
+    )
+    assert habermas["selection"]["participant_order"] == (
+        "first occurrence of each participant in the ratings file"
+    )
+    assert habermas["source_fields"]["candidate_comparisons"] == list(
+        materialize_module.HABERMAS_CANDIDATE_FIELDS
+    )
     dolomites = provenance["benchmarks"]["dolomites"]
     assert dolomites["license"] == "CC-BY-4.0"
     assert dolomites["split"]["observed_counts"] == {"dev": 820, "test": 1037}
@@ -528,8 +862,13 @@ def test_materialize_dispatches_selected_benchmarks(
     )
     monkeypatch.setattr(
         materialize_module,
+        "build_habermas",
+        lambda *args, **kwargs: [],
+    )
+    monkeypatch.setattr(
+        materialize_module,
         "_write_manifest",
-        lambda directory, name, rows: directory / f"{name}.jsonl",
+        lambda directory, name, rows, **kwargs: directory / f"{name}.jsonl",
     )
     written: list[Path] = []
     monkeypatch.setattr(
@@ -550,7 +889,7 @@ def test_materialize_cli_prints_counts(
     monkeypatch.setattr(
         materialize_module,
         "materialize",
-        lambda benchmarks, output_dir, cache_dir: {"writingbench": 1000},
+        lambda benchmarks, output_dir, cache_dir, **kwargs: {"writingbench": 1000},
     )
 
     assert materialize_module.main(["--benchmark", "writingbench"]) == 0

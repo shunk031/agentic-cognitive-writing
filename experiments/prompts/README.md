@@ -7,9 +7,9 @@ This directory contains the pinned benchmark prompt manifests for experimenters 
 Run from the repository root:
 
 ```bash
-uv run --package agentic-cogwriter agentic-cogwriter-materialize --benchmark all
-uv run --package agentic-cogwriter agentic-cogwriter-recompute-dolomites-split
-uv run pytest
+uv run --frozen --group materialize --package agentic-cogwriter agentic-cogwriter-materialize --benchmark all
+uv run --frozen --package agentic-cogwriter agentic-cogwriter-recompute-dolomites-split
+uv run --frozen pytest
 ```
 
 The materializer downloads only pinned source files into `.cache/benchmarks/`,
@@ -17,9 +17,13 @@ verifies each source hash before parsing it, and does not check raw upstream
 files into git. Existing manifests and provenance records are immutable:
 regeneration succeeds only when the bytes are identical.
 
+The `materialize` dependency group provides the Parquet reader needed for
+HabermasMachine source files. Runner and scorer commands do not require that
+group.
+
 ## Data layout
 
-The three checked-in JSONL files are the only prompt inputs permitted by the
+The four checked-in JSONL files are the only prompt inputs permitted by the
 experiment protocol. The materialization code belongs to the
 `agentic-cogwriter` uv workspace member under `experiments/src`; this directory
 contains data files only:
@@ -45,7 +49,8 @@ rows carry `native_payload` as a non-empty list of non-empty checklist strings;
 the materializer maps the pinned source row's `checklists` field and verifies
 that `formatted_checklists` and `num_checklist` are present and consistent. Each
 checklist item uses the upstream five-step evaluation scale: `0`, `0.25`, `0.5`,
-`0.75`, or `1`.
+`0.75`, or `1`. HabermasMachine rows carry `supplied_context` as a numbered list
+of participant opinions and omit `native_payload`.
 
 `hash` is SHA-256 over the canonical UTF-8 JSON object containing every field
 except `hash` itself. Canonical JSON uses sorted keys, no insignificant
@@ -53,11 +58,12 @@ whitespace, and `ensure_ascii=false`.
 
 ## Pinned sources and counts
 
-| Benchmark    | Pinned source                                                                                                                                                                                                                                                  |                                                                                                                                                         Source content |     Manifest |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------: | -----------: |
-| WritingBench | [`X-PLUG/WritingBench@9c24bb67`](https://github.com/X-PLUG/WritingBench/tree/9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad)                                                                                                                                         | `benchmark_query/benchmark_all.jsonl`, SHA-256 `026e3f9482ff3474c802cd43f5cae9fd584e10d0848d3e0a152695434becbc98`, Git blob `e6cd82aabed6fa845f0a28cd2114daad59c012b9` |        1,000 |
-| HelloBench   | [`Quehry/HelloBench@92c7d469`](https://github.com/Quehry/HelloBench/tree/92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57)                                                                                                                                             |                                                                           Five `data/main_data/*.jsonl` files, hashes recorded in [`provenance.json`](provenance.json) |          647 |
-| DoLoMiTes    | [`google-deepmind/dolomites@8331dd99`](https://github.com/google-deepmind/dolomites/tree/8331dd998bf510cacc58d10ad613c9e685787747) plus the released [`dolomites_examples.zip`](https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip) |                                                                                     Archive SHA-256 `62ee47b4cdf67d1efd7a21029384a929e3d66cab49989aab85ea3534b8b86c32` | 820 dev rows |
+| Benchmark       | Pinned source                                                                                                                                                                                                                                                  |                                                                                                                                                         Source content |     Manifest |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------: | -----------: |
+| WritingBench    | [`X-PLUG/WritingBench@9c24bb67`](https://github.com/X-PLUG/WritingBench/tree/9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad)                                                                                                                                         | `benchmark_query/benchmark_all.jsonl`, SHA-256 `026e3f9482ff3474c802cd43f5cae9fd584e10d0848d3e0a152695434becbc98`, Git blob `e6cd82aabed6fa845f0a28cd2114daad59c012b9` |        1,000 |
+| HelloBench      | [`Quehry/HelloBench@92c7d469`](https://github.com/Quehry/HelloBench/tree/92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57)                                                                                                                                             |                                                                           Five `data/main_data/*.jsonl` files, hashes recorded in [`provenance.json`](provenance.json) |          647 |
+| DoLoMiTes       | [`google-deepmind/dolomites@8331dd99`](https://github.com/google-deepmind/dolomites/tree/8331dd998bf510cacc58d10ad613c9e685787747) plus the released [`dolomites_examples.zip`](https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip) |                                                                                     Archive SHA-256 `62ee47b4cdf67d1efd7a21029384a929e3d66cab49989aab85ea3534b8b86c32` | 820 dev rows |
+| HabermasMachine | [`google-deepmind/habermas_machine@7923b719`](https://github.com/google-deepmind/habermas_machine/tree/7923b71966c14136077c78d7841bc9e1a182dfe0) plus two pinned Parquet files recorded in [`provenance.json`](provenance.json)                                |                                                         OOD_TEST groups with five distinct opinions and agreement ratings on both sides of midpoint 4; seed `20260908` |           10 |
 
 WritingBench uses the query text and per-query checklist from its curated
 1,000-query file. HelloBench uses the `instruction` and separate `requirements`
@@ -65,6 +71,24 @@ fields plus the `checklists`, `formatted_checklists`, and `num_checklist` fields
 from its five main testing files. DoLoMiTes combines the task objective, procedure, input
 specification, and supplied example input; its output requirements and notes
 become constraints. Reference outputs are intentionally omitted.
+
+HabermasMachine uses `question.text` for the question, `own_opinion.text` for
+participant opinions, `own_opinion.metadata.participant_id` and
+`own_opinion.metadata.status` for the completed participant records, and
+`ratings.agreement` with `metadata.participant_id` for disagreement selection.
+The materializer reads only
+`hm_all_candidate_comparisons.parquet` and
+`hm_all_position_statement_ratings.parquet`; their URLs, SHA-256 values, and
+full field lists are recorded in [`provenance.json`](provenance.json). The
+default pilot samples ten eligible `(question.id, launch_id, round_id)` groups.
+The materializer sorts the full `(question_id, launch_id, round_id)` key before
+seeded sampling. The materializer orders opinions by the first occurrence of
+each participant in the ratings file. Every selected group has completed
+opinions, and the selector rejects the upstream `No opinion was provided.`
+sentinel. The default pilot is stored in
+[`manifests/habermasmachine.jsonl`](manifests/habermasmachine.jsonl), matching
+the scorer's casefolded benchmark-name lookup.
+Pass a different `--habermas-count` value to materialize another count.
 
 ### DoLoMiTes split gate
 
@@ -81,5 +105,12 @@ WritingBench prompt material is Apache-2.0. HelloBench prompt material is MIT.
 DoLoMiTes materials are CC BY 4.0. Redistributing DoLoMiTes-derived material
 requires attribution to DeepMind Technologies Limited and the following note:
 development examples became prompt rows, and reference outputs were omitted.
+HabermasMachine materials are CC BY 4.0. The manifest attributes Tessler et al.,
+"AI can help humans find common ground in democratic deliberation," _Science_
+386(6719), 2024, [10.1126/science.adq2852](https://doi.org/10.1126/science.adq2852),
+and Google DeepMind's Habermas Machine release. The manifest changes the source
+by selecting ten OOD_TEST groups and placing their five participant opinions in
+`supplied_context`; the [CC BY 4.0 license](https://creativecommons.org/licenses/by/4.0/)
+applies to the other materials.
 The machine-readable license and provenance record is in
 [`provenance.json`](provenance.json).

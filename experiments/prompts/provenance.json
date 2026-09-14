@@ -25,6 +25,63 @@
         "split_script": "recompute_dolomites_split.py"
       }
     },
+    "habermas": {
+      "attribution": "Tessler et al., AI can help humans find common ground in democratic deliberation, Science 386(6719), 2024, https://doi.org/10.1126/science.adq2852; Google DeepMind Habermas Machine other materials, CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Changes: selected OOD_TEST deliberation groups and converted their five participant opinions into supplied context.",
+      "citation": "Tessler et al., AI can help humans find common ground in democratic deliberation, Science 386(6719), 2024, https://doi.org/10.1126/science.adq2852",
+      "item_count": 10,
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "manifest": "manifests/habermasmachine.jsonl",
+      "manifest_fields": {
+        "native_payload": "omitted",
+        "supplied_context": "numbered original participant opinions"
+      },
+      "name": "HabermasMachine",
+      "redistribution": "Prompt manifest only, with attribution above; source files are acquired by the script.",
+      "repository": "https://github.com/google-deepmind/habermas_machine/tree/7923b71966c14136077c78d7841bc9e1a182dfe0",
+      "selection": {
+        "count": 10,
+        "criterion": "questions from the OOD_TEST split; groups at iteration_index 0 whose five own_opinion.text values are all distinct and non-empty; disagreement measured from hm_all_position_statement_ratings as the participants of that launch having ratings.agreement values on both sides of the scale's midpoint for that question",
+        "likert_midpoint": 4,
+        "missing_opinion_gate": "Every group member must have own_opinion.metadata.status COMPLETED and own_opinion.text must not equal 'No opinion was provided.'",
+        "participant_order": "first occurrence of each participant in the ratings file",
+        "sampling": "sort the full (question_id, launch_id, round_id) key before seeded sampling",
+        "seed": 20260908,
+        "split": "OOD_TEST"
+      },
+      "source_fields": {
+        "candidate_comparisons": [
+          "question.id",
+          "question.text",
+          "question.split",
+          "launch_id",
+          "round_id",
+          "iteration_index",
+          "own_opinion.metadata.participant_id",
+          "own_opinion.text",
+          "own_opinion.metadata.status"
+        ],
+        "position_statement_ratings": [
+          "question.id",
+          "launch_id",
+          "metadata.participant_id",
+          "ratings.agreement"
+        ]
+      },
+      "source_files": [
+        {
+          "path": "habermas-machine-hm_all_candidate_comparisons.parquet",
+          "sha256": "7cf8d5ce3fce8853b36f0ffe1158424f7813867e422e313db4df0a5f9e03e4a4",
+          "url": "https://storage.googleapis.com/habermas_machine/datasets/hm_all_candidate_comparisons.parquet"
+        },
+        {
+          "path": "habermas-machine-hm_all_position_statement_ratings.parquet",
+          "sha256": "b6debcb3e2413d26b7e8b96c7927517b7a5f304c502c30b28a9af1d307255763",
+          "url": "https://storage.googleapis.com/habermas_machine/datasets/hm_all_position_statement_ratings.parquet"
+        }
+      ],
+      "source_version": "google-deepmind/habermas_machine@7923b71966c14136077c78d7841bc9e1a182dfe0"
+    },
     "hellobench": {
       "item_count": 647,
       "license": "MIT",
