@@ -21,6 +21,16 @@ The `materialize` dependency group provides the Parquet reader needed for
 HabermasMachine source files. Runner and scorer commands do not require that
 group.
 
+## Pilot and hard prompt subsets
+
+The committed [`prompt_sets.json`](prompt_sets.json) artifact records the prompt IDs used by the pilot and hard runs. The generator reads only the committed manifests and does not access the network:
+
+```bash
+uv run --frozen --project experiments agentic-cogwriter-write-prompt-sets
+```
+
+The pilot uses seed `20260908`. WritingBench and DoLoMiTes share one `random.Random` stream and each samples ten sorted IDs. HelloBench starts a fresh stream, samples two IDs from each category, and processes categories in sorted order. The hard subset excludes pilot IDs. The difficulty score is the prompt word count plus the largest requested length matched in `prompt_text` followed by the JSON dump of `requested_output_constraints`, using `words`, `字`, or `tokens`. Prompts with more than 6,000 prompt words or a requested length above 6,000 are excluded. The generator takes the top 20 IDs by descending score, prompt-word count, requested length, and prompt ID.
+
 ## Data layout
 
 The four checked-in JSONL files are the only prompt inputs permitted by the
