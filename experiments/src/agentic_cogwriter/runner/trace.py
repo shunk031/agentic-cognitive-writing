@@ -65,6 +65,8 @@ def assess_trace_timestamps(
             lines = []
         parsed_events: list[dict[str, Any]] = []
         for line in lines:
+            if not line.strip():
+                continue
             try:
                 value = json.loads(line)
             except json.JSONDecodeError:

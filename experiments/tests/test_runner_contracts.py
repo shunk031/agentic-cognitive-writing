@@ -1931,6 +1931,30 @@ def test_trace_timestamp_plausibility_accepts_in_window_increasing_values() -> N
     }
 
 
+def test_trace_timestamp_plausibility_skips_blank_lines_from_path(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "process.jsonl"
+    events = [_event(), _event()]
+    events[0]["timestamp"] = "2026-09-08T12:00:01+00:00"
+    events[1]["timestamp"] = "2026-09-08T12:00:02+00:00"
+    path.write_text(
+        "\n" + "\n".join(json.dumps(event) for event in events) + "\n"
+    )
+
+    assert assess_trace_timestamps(
+        path,
+        started_at="2026-09-08T12:00:00+00:00",
+        manifest_written_at="2026-09-08T12:00:30+00:00",
+    ) == {
+        "events": 2,
+        "unparseable": 0,
+        "out_of_window": 0,
+        "non_monotonic": 0,
+        "plausible": True,
+    }
+
+
 def test_trace_timestamp_plausibility_counts_unparseable_values() -> None:
     events = [
         {"timestamp": "not-a-timestamp"},
