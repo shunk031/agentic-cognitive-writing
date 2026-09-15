@@ -1827,6 +1827,72 @@ def test_trace_validation_requires_contract_fields(tmp_path: Path) -> None:
         )
 
 
+def test_trace_validation_skips_leading_blank_lines(tmp_path: Path) -> None:
+    path = tmp_path / "process.jsonl"
+    event = _event()
+    path.write_text("\n  \n" + json.dumps(event) + "\n")
+
+    assert validate_trace(
+        path,
+        condition_id="A1",
+        declared_processes=WRITING_TRACE_PROCESSES,
+        goal_events="forbidden",
+        allowed_event_types=("process_switch",),
+    ) == [event]
+
+
+def test_trace_validation_skips_interior_blank_lines(tmp_path: Path) -> None:
+    path = tmp_path / "process.jsonl"
+    events = [_event(process="planning"), _event(process="generate")]
+    path.write_text(
+        json.dumps(events[0]) + "\n\n\t\n" + json.dumps(events[1]) + "\n"
+    )
+
+    assert validate_trace(
+        path,
+        condition_id="A1",
+        declared_processes=WRITING_TRACE_PROCESSES,
+        goal_events="forbidden",
+        allowed_event_types=("process_switch",),
+        min_events=2,
+    ) == events
+
+
+def test_trace_validation_rejects_trace_containing_only_blank_lines(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "process.jsonl"
+    path.write_text("\n  \t\n")
+
+    with pytest.raises(TraceValidationError, match=r"Trace .* is empty"):
+        validate_trace(
+            path,
+            condition_id="A1",
+            declared_processes=WRITING_TRACE_PROCESSES,
+            goal_events="forbidden",
+            allowed_event_types=("process_switch",),
+        )
+
+
+def test_trace_validation_reports_malformed_line_physical_line_number(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "process.jsonl"
+    path.write_text(json.dumps(_event()) + "\n\nnot-json\n")
+
+    with pytest.raises(
+        TraceValidationError,
+        match=r"process\.jsonl:3 is not standalone JSON",
+    ):
+        validate_trace(
+            path,
+            condition_id="A1",
+            declared_processes=WRITING_TRACE_PROCESSES,
+            goal_events="forbidden",
+            allowed_event_types=("process_switch",),
+        )
+
+
 def test_trace_timestamp_plausibility_rejects_fabricated_midnight_values() -> None:
     events = [
         {"timestamp": "2026-09-08T00:00:00+00:00"},

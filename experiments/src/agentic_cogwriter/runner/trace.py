@@ -105,12 +105,10 @@ def _read_trace_events(path: Path) -> list[dict[str, Any]]:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeError) as exc:
         raise TraceValidationError(f"Cannot read trace {path}: {exc}") from exc
-    if not lines:
-        raise TraceValidationError(f"Trace {path} is empty")
     events: list[dict[str, Any]] = []
     for line_number, line in enumerate(lines, start=1):
         if not line.strip():
-            raise TraceValidationError(f"Trace {path}:{line_number} is blank")
+            continue
         try:
             value = json.loads(line)
         except json.JSONDecodeError as exc:
@@ -122,6 +120,8 @@ def _read_trace_events(path: Path) -> list[dict[str, Any]]:
                 f"Trace {path}:{line_number} must contain an object"
             )
         events.append(value)
+    if not events:
+        raise TraceValidationError(f"Trace {path} is empty")
     return events
 
 
