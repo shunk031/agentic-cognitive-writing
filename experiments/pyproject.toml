@@ -7,6 +7,7 @@ dependencies = ["pydantic-ai-slim[openai]==2.38.0"]
 
 [project.scripts]
 agentic-cogwriter-materialize = "agentic_cogwriter.prompts.materialize:main"
+agentic-cogwriter-write-prompt-sets = "agentic_cogwriter.prompts.prompt_sets:main"
 agentic-cogwriter-recompute-dolomites-split = "agentic_cogwriter.prompts.recompute_dolomites_split:main"
 agentic-cogwriter-runner = "agentic_cogwriter.runner.cli:main"
 agentic-cogwriter-score = "agentic_cogwriter.judges.cli:main"
