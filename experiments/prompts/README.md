@@ -23,7 +23,7 @@ group.
 
 ## Pilot and hard prompt subsets
 
-The committed [`prompt_sets.json`](prompt_sets.json) artifact records the prompt IDs used by the pilot and hard runs. The generator reads only the committed manifests and does not access the network:
+The committed [`prompt_sets.json`](prompt_sets.json) artifact records the prompt IDs used by the pilot, hard, and hard100 runs. The generator reads only the committed manifests and does not access the network:
 
 ```bash
 uv run --frozen --project experiments agentic-cogwriter-write-prompt-sets

@@ -121,11 +121,26 @@ EXPECTED_BENCHMARKS = {
 def test_checked_in_prompt_sets_match_the_recorded_selection() -> None:
     artifact = json.loads(PROMPT_SET_PATH.read_text(encoding="utf-8"))
 
-    assert artifact["benchmarks"] == EXPECTED_BENCHMARKS
-    for benchmark in EXPECTED_BENCHMARKS:
+    for benchmark, expected in EXPECTED_BENCHMARKS.items():
+        assert {
+            key: artifact["benchmarks"][benchmark][key] for key in expected
+        } == expected
         assert set(artifact["benchmarks"][benchmark]["pilot"]).isdisjoint(
             artifact["benchmarks"][benchmark]["hard"]
         )
+
+
+def test_checked_in_hard100_starts_with_hard() -> None:
+    artifact = json.loads(PROMPT_SET_PATH.read_text(encoding="utf-8"))
+    hard_count = artifact["rule"]["counts"]["hard"]
+    hard100_count = artifact["rule"]["counts"]["hard100"]
+
+    assert hard_count == 20
+    assert hard100_count == 100
+    for benchmark in EXPECTED_BENCHMARKS:
+        benchmark_sets = artifact["benchmarks"][benchmark]
+        assert len(benchmark_sets["hard100"]) == hard100_count
+        assert benchmark_sets["hard100"][:hard_count] == benchmark_sets["hard"]
 
 
 def test_prompt_sets_regenerate_byte_for_byte_from_committed_manifests(
