@@ -76,18 +76,33 @@ def render_trace(events: Sequence[Mapping[str, Any]]) -> str:
         parts.extend(f"{field}={_compact(event[field])}" for field in fields if field in event)
         lines.append("- " + " | ".join(parts))
     return "\n".join(lines) or "(no trace events)"
-def summarize_localization(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+def summarize_localization(
+    records: Sequence[Mapping[str, Any]],
+    expected: Mapping[tuple[str, str], int] | None = None,
+    missing: Mapping[tuple[str, str], Sequence[str]] | None = None,
+) -> dict[str, Any]:
     summary: dict[str, Any] = {}
     for condition in ("A4", "A5"):
         summary[condition] = {}
         for outcome in ("lost", "won"):
             cell = [r for r in records if r.get("condition") == condition and r.get("outcome") == outcome]
             total = len(cell)
-            summary[condition][outcome] = {
+            cell_summary: dict[str, Any] = {
                 "n": total,
                 "anticipated": sum(r.get("rating") == "anticipated" for r in cell) / total if total else 0.0,
                 "partially": sum(r.get("rating") == "partially" for r in cell) / total if total else 0.0,
             }
+            if expected is not None:
+                expected_total = expected.get((condition, outcome), total)
+                cell_summary.update(
+                    {
+                        "n": f"{total}/{expected_total}",
+                        "completed": total,
+                        "expected": expected_total,
+                        "missing": list((missing or {}).get((condition, outcome), [])),
+                    }
+                )
+            summary[condition][outcome] = cell_summary
     return summary
 def summarize_goal_faithfulness(assessments: Sequence[Mapping[str, Any]], run_ratings: Mapping[str, Sequence[str]]) -> dict[str, Any]:
     total = len(assessments)
@@ -293,13 +308,21 @@ def _markdown(summary: Mapping[str, Any]) -> str:
         "",
         "## Question 1: failure localization",
         "",
-        "| Condition | Outcome | Calls | Anticipated | Partially |",
+        "Rates use completed calls; N is completed/expected.",
+        "",
+        "| Condition | Outcome | N | Anticipated | Partially |",
         "| --- | --- | ---: | ---: | ---: |",
     ]
     for condition in ("A4", "A5"):
         for outcome in ("lost", "won"):
             cell = summary["question1"][condition][outcome]
             lines.append(f"| {condition} | {outcome} | {cell['n']} | {pct(cell['anticipated'])} | {pct(cell['partially'])} |")
+    if summary.get("missing"):
+        lines += ["", "Missing judge calls:", ""]
+        lines.extend(
+            f"- {item['benchmark']} {item['prompt_id']} {item['condition'] or item['kind']} {item['outcome'] or ''}".rstrip()
+            for item in summary["missing"]
+        )
     goals = summary["question2"]
     lines += [
         "",
@@ -324,6 +347,7 @@ def run_audit(
     seed: int = DEFAULT_SEED,
     sample_size: int = 100,
     max_cost: float = 40.0,
+    allow_missing: bool = False,
     prices: Mapping[str, float] | None = None,
 ) -> dict[str, Any]:
     if concurrency < 1 or sample_size < 1:
@@ -349,6 +373,7 @@ def run_audit(
     failures = calls = successes = 0
     total_cost = 0.0
     new_cost = 0.0
+    missing_jobs: list[Job] = []
     futures: dict[Future[Any], Job] = {}
     executor = ThreadPoolExecutor(max_workers=concurrency)
     try:
@@ -370,6 +395,7 @@ def run_audit(
             except Exception:
                 if not _artifact(job, config.judge_id).is_file():
                     calls += 1
+                    missing_jobs.append(job)
                 failures += 1
                 if fresh >= 20 and calls <= 20 and failures == calls:
                     raise AuditBlocked("the first 20 judge calls failed") from None
@@ -386,16 +412,29 @@ def run_audit(
         for future in futures:
             future.cancel()
         executor.shutdown(wait=True, cancel_futures=True)
-    if failures:
+    if failures and not allow_missing:
         raise RuntimeError(f"{failures} audit calls failed")
     loc = [result.record for job, result in results if job.kind == "localization"]
     assessments = [{"run_id": job.run.path.name, **assessment} for job, result in results if job.kind == "goals" for assessment in result.record["assessments"]]
     ratings = {job.run.path.name: [a["rating"] for a in result.record["assessments"]] for job, result in results if job.kind == "goals"}
+    expected_cells = {
+        (condition, outcome): sum(
+            job.kind == "localization" and job.condition == condition and job.outcome == outcome
+            for job in jobs
+        )
+        for condition in ("A4", "A5")
+        for outcome in ("lost", "won")
+    }
+    missing_cells = {
+        cell: [job.run.prompt for job in missing_jobs if job.condition == cell[0] and job.outcome == cell[1]]
+        for cell in expected_cells
+    }
     summary = {
         "schema_version": 1,
         "seed": seed,
         "sample_size": sample_size,
         "decisive_pairs": len(pairs),
+        "allow_missing": allow_missing,
         "calls": {
             "planned": len(jobs),
             "judge_calls": len(jobs),
@@ -404,7 +443,17 @@ def run_audit(
             "failed": failures,
             "judge_cost": total_cost,
         },
-        "question1": summarize_localization(loc),
+        "missing": [
+            {
+                "kind": job.kind,
+                "benchmark": job.run.benchmark,
+                "prompt_id": job.run.prompt,
+                "condition": job.condition,
+                "outcome": job.outcome,
+            }
+            for job in missing_jobs
+        ],
+        "question1": summarize_localization(loc, expected_cells, missing_cells),
         "question2": summarize_goal_faithfulness(assessments, ratings),
         "judge": {
             "judge_id": config.judge_id,
@@ -433,6 +482,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--sample-size", type=int, default=100)
     parser.add_argument("--max-cost", type=float, default=40.0)
+    parser.add_argument("--allow-missing", action="store_true")
     return parser
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
@@ -446,6 +496,7 @@ def main(argv: list[str] | None = None) -> int:
             seed=args.seed,
             sample_size=args.sample_size,
             max_cost=args.max_cost,
+            allow_missing=args.allow_missing,
         )
     except AuditBlocked as error:
         print(f"BLOCKED: {error}")

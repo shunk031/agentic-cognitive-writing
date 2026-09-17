@@ -85,3 +85,20 @@ def test_summary_arithmetic_uses_goal_and_run_denominators() -> None:
         "runs": 2,
         "all_goals_at_least_partially": 1.0,
     }
+
+
+def test_localization_summary_lists_missing_calls_as_completed_over_expected() -> None:
+    fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    summary = summarize_localization(
+        fixture["localization_records"],
+        {("A4", "lost"): 3},
+        {("A4", "lost"): ["p3"]},
+    )
+    assert summary["A4"]["lost"] == {
+        "n": "2/3",
+        "completed": 2,
+        "expected": 3,
+        "missing": ["p3"],
+        "anticipated": 0.5,
+        "partially": 0.5,
+    }
