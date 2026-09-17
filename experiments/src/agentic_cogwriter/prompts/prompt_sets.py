@@ -16,6 +16,7 @@ BENCHMARKS = ("hellobench", "writingbench", "dolomites")
 SEED = 20260908
 PILOT_COUNT = 10
 HARD_COUNT = 20
+HARD100_COUNT = 100
 HELLOBENCH_PILOT_PER_CATEGORY = 2
 MAX_LENGTH = 6000
 REQUESTED_LENGTH_REGEX = r"(\d[\d,]{2,})\s*(?:-|\s)?(?:words?|字|tokens?)"
@@ -60,6 +61,7 @@ def write_prompt_sets(
 
     requested_length_pattern = re.compile(REQUESTED_LENGTH_REGEX, re.IGNORECASE)
     hard: dict[str, list[str]] = {}
+    hard100: dict[str, list[str]] = {}
     for benchmark in BENCHMARKS:
         scored: list[tuple[int, int, int, str]] = []
         for row in manifests[benchmark]:
@@ -90,12 +92,17 @@ def write_prompt_sets(
             )
         scored.sort(reverse=True)
         hard[benchmark] = [prompt_id for *_, prompt_id in scored[:HARD_COUNT]]
+        hard100[benchmark] = [prompt_id for *_, prompt_id in scored[:HARD100_COUNT]]
 
     artifact = {
         "schema_version": "1.0",
         "rule": {
             "seed": SEED,
-            "counts": {"pilot": PILOT_COUNT, "hard": HARD_COUNT},
+            "counts": {
+                "pilot": PILOT_COUNT,
+                "hard": HARD_COUNT,
+                "hard100": HARD100_COUNT,
+            },
             "hellobench_pilot_per_category": HELLOBENCH_PILOT_PER_CATEGORY,
             "difficulty": "prompt word count + requested output length",
             "difficulty_input": (
@@ -117,7 +124,11 @@ def write_prompt_sets(
             "sort_order": "descending",
         },
         "benchmarks": {
-            benchmark: {"pilot": pilot[benchmark], "hard": hard[benchmark]}
+            benchmark: {
+                "pilot": pilot[benchmark],
+                "hard": hard[benchmark],
+                "hard100": hard100[benchmark],
+            }
             for benchmark in BENCHMARKS
         },
     }
