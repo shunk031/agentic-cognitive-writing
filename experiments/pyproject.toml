@@ -13,6 +13,7 @@ agentic-cogwriter-runner = "agentic_cogwriter.runner.cli:main"
 agentic-cogwriter-score = "agentic_cogwriter.judges.cli:main"
 agentic-cogwriter-score-batch = "agentic_cogwriter.analysis.batch:main"
 agentic-cogwriter-aggregate = "agentic_cogwriter.analysis.aggregate:main"
+agentic-cogwriter-trace-audit = "agentic_cogwriter.analysis.trace_audit:main"
 
 [dependency-groups]
 dev = ["pytest>=8.3,<9"]

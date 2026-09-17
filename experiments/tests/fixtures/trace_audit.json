@@ -1,0 +1,28 @@
+{
+  "events": [
+    {
+      "timestamp": "2026-01-01T00:00:00Z",
+      "event_type": "goal_created",
+      "process": "planning",
+      "decision": "Create G1.",
+      "evidence": ["assignment.md"],
+      "open_uncertainty": ["Missing source."],
+      "goal_id": "G1",
+      "parent_goal_id": "G0"
+    }
+  ],
+  "localization_records": [
+    {"condition": "A4", "outcome": "lost", "rating": "anticipated"},
+    {"condition": "A4", "outcome": "lost", "rating": "partially"},
+    {"condition": "A4", "outcome": "won", "rating": "not"}
+  ],
+  "goal_assessments": [
+    {"run_id": "r1", "rating": "satisfied"},
+    {"run_id": "r1", "rating": "partially"},
+    {"run_id": "r2", "rating": "satisfied"}
+  ],
+  "run_ratings": {
+    "r1": ["satisfied", "partially"],
+    "r2": ["satisfied"]
+  }
+}

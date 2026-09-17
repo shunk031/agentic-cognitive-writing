@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from typing import Any, cast
 
+from pydantic import BaseModel
 from pydantic_ai import (
     Agent,
     CachePoint,
@@ -27,20 +28,12 @@ from pydantic_ai.providers.openai import OpenAIProvider
 
 from .config import JudgeConfig
 from .errors import JudgeConfigurationError, JudgeTransportError, JudgeValidationError
-from .validation import (
-    HelloBenchChecklistRecord,
-    NativePointwiseJudgeRecord,
-    PairwiseJudgeRecord,
-    PointwiseJudgeRecord,
-    parse_native_checklist,
-)
+from .validation import HelloBenchChecklistRecord, parse_native_checklist
 
-JudgeOutput = (
-    PointwiseJudgeRecord
-    | PairwiseJudgeRecord
-    | NativePointwiseJudgeRecord
-    | HelloBenchChecklistRecord
-)
+# The shared transport accepts any strict Pydantic record. Existing engine
+# callers still select the protocol records above, while analysis modules can
+# define their own validated response schema without another HTTP client.
+JudgeOutput = BaseModel
 
 
 @dataclass(frozen=True)
@@ -255,15 +248,7 @@ class OpenAICompatibleClient:
                     "Text output is supported only for HelloBench checklist records"
                 )
             output = parse_native_checklist(output)
-        if not isinstance(
-            output,
-            (
-                PointwiseJudgeRecord,
-                PairwiseJudgeRecord,
-                NativePointwiseJudgeRecord,
-                HelloBenchChecklistRecord,
-            ),
-        ):
+        if not isinstance(output, BaseModel):
             raise JudgeTransportError("Judge response has an unexpected output type")
         return JudgeResponse(
             content=content,
