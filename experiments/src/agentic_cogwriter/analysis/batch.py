@@ -12,7 +12,7 @@ from pydantic_ai.models import Model
 
 from ..judges.config import JudgeConfig
 from ..judges.scorer import score_run
-from .common import CONTRASTS, RunRecord, select_canonical_runs
+from .common import CONTRASTS, RunRecord, parse_contrasts, select_canonical_runs
 
 TASK_ROOT = "scores"
 
@@ -53,6 +53,7 @@ def _jobs(
     pointwise: JudgeConfig,
     pairwise: JudgeConfig,
     native: tuple[tuple[str, JudgeConfig], ...],
+    contrasts: tuple[tuple[str, str], ...] = CONTRASTS,
 ) -> tuple[list[ScoreJob], int, dict[str, int]]:
     jobs: list[ScoreJob] = []
     skipped = 0
@@ -101,7 +102,7 @@ def _jobs(
     }
     groups = {(run.benchmark, run.prompt, run.platform) for run in runs}
     for benchmark, prompt, platform in sorted(groups):
-        for left, right in CONTRASTS:
+        for left, right in contrasts:
             first = index.get((benchmark, left, prompt, platform))
             second = index.get((benchmark, right, prompt, platform))
             if first is None or second is None:
@@ -121,6 +122,7 @@ def run_batch(
     concurrency: int = 4,
     dry_run: bool = False,
     model: Model | None = None,
+    contrasts: tuple[tuple[str, str], ...] = CONTRASTS,
 ) -> dict[str, int]:
     """Score one canonical run per key and continue after individual failures."""
 
@@ -146,7 +148,11 @@ def run_batch(
     }
     canonical = select_canonical_runs(runs_roots)
     jobs, skipped, scheduled = _jobs(
-        canonical, pointwise=pointwise, pairwise=pairwise, native=native
+        canonical,
+        pointwise=pointwise,
+        pairwise=pairwise,
+        native=native,
+        contrasts=contrasts,
     )
     totals["skipped"] += skipped
     for task, count in scheduled.items():
@@ -207,6 +213,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--pointwise-config", type=Path, required=True)
     parser.add_argument("--pairwise-config", type=Path, required=True)
     parser.add_argument("--native-config", type=Path, action="append", default=[])
+    parser.add_argument(
+        "--contrasts",
+        type=parse_contrasts,
+        default=CONTRASTS,
+        metavar="LEFT:RIGHT,...",
+    )
     parser.add_argument("--concurrency", type=int, default=4)
     parser.add_argument("--dry-run", action="store_true")
     return parser
@@ -221,6 +233,7 @@ def main(argv: list[str] | None = None) -> int:
         native_configs=args.native_config,
         concurrency=args.concurrency,
         dry_run=args.dry_run,
+        contrasts=args.contrasts,
     )
     print(
         "scored={scored} skipped={skipped} failed={failed} "

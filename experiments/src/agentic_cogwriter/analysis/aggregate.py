@@ -11,7 +11,7 @@ from statistics import fmean
 from typing import Any
 
 from ..runner.hashing import sha256_file
-from .common import CONTRASTS, RunRecord, select_canonical_runs
+from .common import CONTRASTS, RunRecord, parse_contrasts, select_canonical_runs
 
 PRICE_KEYS = ("input", "cached_input", "output")
 DIMENSIONS = (
@@ -361,12 +361,15 @@ def _slot(data: dict[str, Any], benchmark: str, platform: str) -> dict[str, Any]
 
 
 def _pairwise(
-    artifacts: Sequence[ScoreArtifact], runs: Sequence[RunRecord]
+    artifacts: Sequence[ScoreArtifact],
+    runs: Sequence[RunRecord],
+    *,
+    contrasts: tuple[tuple[str, str], ...] = CONTRASTS,
 ) -> dict[str, Any]:
     expected: dict[tuple[str, str], int] = defaultdict(int)
     completed_counts: dict[tuple[str, str], int] = defaultdict(int)
     for run in {(r.benchmark, r.prompt, r.platform) for r in runs}:
-        expected[(run[0], run[2])] += len(CONTRASTS)
+        expected[(run[0], run[2])] += len(contrasts)
     for run in runs:
         if run.status == "completed":
             completed_counts[(run.benchmark, run.platform)] += 1
@@ -384,7 +387,7 @@ def _pairwise(
         contrast = next(
             (
                 pair
-                for pair in CONTRASTS
+                for pair in contrasts
                 if {first.condition, second.condition} == set(pair)
             ),
             None,
@@ -489,7 +492,7 @@ def _pairwise(
                     )
                     for field in ("wins", "ties", "losses")
                 }
-                for label in (f"{left}:{right}" for left, right in CONTRASTS)
+                for label in (f"{left}:{right}" for left, right in contrasts)
                 if any(label in judge["contrasts"] for judge in data["judges"].values())
             }
             fits = [
@@ -717,6 +720,7 @@ def aggregate_runs(
     generation_prices: Path,
     judge_prices: Path,
     output_dir: Path,
+    contrasts: tuple[tuple[str, str], ...] = CONTRASTS,
 ) -> dict[str, Any]:
     """Write aggregation.json and aggregation.md for canonical runs."""
 
@@ -728,7 +732,7 @@ def aggregate_runs(
         "completion": _completion(runs),
         "pointwise": _pointwise(artifacts),
         "native": _native(artifacts),
-        "pairwise": _pairwise(artifacts, runs),
+        "pairwise": _pairwise(artifacts, runs, contrasts=contrasts),
         "cost": {
             "generation": generation["rows"],
             "judge": judge["rows"],
@@ -761,6 +765,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--generation-prices", type=Path, required=True)
     parser.add_argument("--judge-prices", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--contrasts",
+        type=parse_contrasts,
+        default=CONTRASTS,
+        metavar="LEFT:RIGHT,...",
+    )
     return parser
 
 
@@ -771,6 +781,7 @@ def main(argv: list[str] | None = None) -> int:
         generation_prices=args.generation_prices,
         judge_prices=args.judge_prices,
         output_dir=args.output_dir,
+        contrasts=args.contrasts,
     )
     print(args.output_dir / "aggregation.md")
     print(
