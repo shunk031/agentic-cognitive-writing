@@ -65,6 +65,8 @@ Every `process_switch` event includes `timestamp`, `event_type`, `responsible_ag
 
 Keep `evidence` and `open_uncertainty` as JSON arrays of strings on every event, even when an array has one item. Never emit either field as a bare string.
 
+Use these literal one-line JSON shapes when there is nothing to cite, replacing the illustrative timestamp with `date -Is`: `{"timestamp":"2026-01-01T00:00:00+00:00","event_type":"process_switch","responsible_agent":"Monitor","process":"planning","decision":"Choose planning for the active goal.","evidence":[],"open_uncertainty":[],"from_process":null,"to_process":"planning"}` and `{"timestamp":"2026-01-01T00:00:00+00:00","event_type":"goal_created","responsible_agent":"Writer","process":"goal-setting","decision":"Create the next middle-range goal.","evidence":[],"open_uncertainty":[],"from_process":null,"to_process":null,"goal_id":"G1","parent_goal_id":null}`.
+
 Get every timestamp from `date -Is` at write time. Append to `.writing/trace/process.jsonl`; never rewrite or truncate it. Because sentence-level recursion creates many events, append a batch with one shell command and one heredoc when practical. Each line in the heredoc must remain one standalone JSON object. Do not write a JSON array, invent experiment-specific fields, or reuse an old timestamp. Before each switch, identify `from_process` and `to_process` explicitly. Set the first `from_process` to `null`. Use `null` for `to_process` only when the writing run ends. Keep process names lowercase in JSON. Use one event per line even when several events share a shell command. The shell supplies the timestamp for each event at the time of the append.
 
 ## Review decisions
