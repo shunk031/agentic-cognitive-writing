@@ -27,19 +27,22 @@ Work in the session's current directory. Create missing files without overwritin
 └── trace/process.jsonl
 ```
 
-Initialize `.writing/trace/process.jsonl` before writing any goals or process events. Create the trace file without truncating existing content. Read `assignment.md`, `goals.md`, `draft.md`, relevant `memory/` files, and the latest trace entries before choosing a process. If the assignment leaves the audience, purpose, scope, genre, or constraints unclear, make a reasonable single-turn assumption and record it in `.writing/assumptions.md`. Do not ask a clarifying question.
+Initialize `.writing/trace/process.jsonl` before writing any goals or process events. Run the trace-initialization command separately from the command that writes initial goals. Create the trace file without truncating existing content. Read `assignment.md`, `goals.md`, `draft.md`, relevant `memory/` files, and the latest trace entries before choosing a process. If the assignment leaves the audience, purpose, scope, genre, or constraints unclear, make a reasonable single-turn assumption and record it in `.writing/assumptions.md`. Do not ask a clarifying question.
 
 When the initial goal network is missing, write `goals.md` and append one `goal_created` event for every goal in that initial network in the same shell command, before any `Translating` switch. The trace file must already exist before that command. Never write a goal first and defer its event to a later command.
 
-Use this order for an initial network. Repeat the event append for every goal line written in the heredoc:
+Use this order for an initial network. First run the initialization command, then run one new shell command that writes `goals.md` and appends one `goal_created` event for every goal line written in the heredoc:
 
 ```sh
 mkdir -p .writing/trace .writing/memory
 : >> .writing/trace/process.jsonl
+```
+
+```sh
+stamp=$(date -Is)
 cat >> .writing/goals.md <<'EOF'
 G1 | parent: null | State the task's purpose and scope. | kind: content | status: active
 EOF
-stamp=$(date -Is)
 printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"goal_created\",\"responsible_agent\":\"Writer\",\"process\":\"goal-setting\",\"decision\":\"Create G1 for the task purpose.\",\"evidence\":[\".writing/goals.md\"],\"open_uncertainty\":[],\"goal_id\":\"G1\",\"parent_goal_id\":null}" >> .writing/trace/process.jsonl
 ```
 
@@ -82,12 +85,14 @@ Replace process values and evidence with the current state. Keep the word-count 
 
 Every `evaluate` event means a `process_switch` whose `process` is `evaluate`. Append it only after the paragraph exists. Its `evidence` array must contain the opening phrase of the paragraph just appended, copied verbatim with punctuation and case unchanged. Read the phrase back from `.writing/draft.md` in the same shell command; never retype or paraphrase it. Check mechanically that the quote is a substring of that paragraph. A `revise` switch must identify the most recent passage it changes.
 
-For example, read back the last appended paragraph with `tail` and `head`, take its opening eight words, and use `$quote` directly in the event instead of typing the words again:
+For example, read back the last appended paragraph with `tail` and `head`, take its opening eight words, check the substring, and append the evaluate event from `$quote` in that same shell command:
 
 ```sh
 paragraph=$(tail -n 2 .writing/draft.md | head -n 1)
 quote=$(printf '%s\n' "$paragraph" | awk '{for (i=1; i<=8 && i<=NF; i++) printf "%s%s", $i, (i<8 && i<NF ? OFS : ORS)}')
 case "$paragraph" in *"$quote"*) ;; *) exit 1 ;; esac
+stamp=$(date -Is)
+printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"process_switch\",\"responsible_agent\":\"Monitor\",\"process\":\"evaluate\",\"decision\":\"Evaluate the appended paragraph.\",\"evidence\":[\"$quote\"],\"open_uncertainty\":[],\"from_process\":\"translating\",\"to_process\":\"evaluate\"}" >> .writing/trace/process.jsonl
 ```
 
 ## Processes and trace events
@@ -98,14 +103,15 @@ Every event has `timestamp`, `event_type`, `responsible_agent`, `process`, `deci
 
 For `goal_created`, set `parent_goal_id` to the immediate parent. For `goal_developed`, retain the goal's current parent. For `goal_regenerated`, use the replacement ID as `goal_id` and the superseded ID as `parent_goal_id`. Record the reason in `decision` and concrete support in `evidence`. Use an empty `open_uncertainty` array when no uncertainty remains.
 
-Use these literal one-line JSON shapes when there is nothing to cite, replacing the illustrative timestamp with `date -Is`:
+Use these shell forms when there is nothing to cite. Assign `stamp` in the same command before appending the line; never copy a timestamp from an example:
 
-```json
-{"timestamp":"2026-01-01T00:00:00+00:00","event_type":"process_switch","responsible_agent":"Monitor","process":"evaluate","decision":"Evaluate the appended paragraph.","evidence":[],"open_uncertainty":[],"from_process":"translating","to_process":"evaluate"}
-{"timestamp":"2026-01-01T00:00:00+00:00","event_type":"goal_created","responsible_agent":"Writer","process":"goal-setting","decision":"Create the next middle-range goal.","evidence":[],"open_uncertainty":[],"from_process":null,"to_process":null,"goal_id":"G1","parent_goal_id":null}
+```sh
+stamp=$(date -Is)
+printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"process_switch\",\"responsible_agent\":\"Monitor\",\"process\":\"evaluate\",\"decision\":\"Evaluate the appended paragraph.\",\"evidence\":[],\"open_uncertainty\":[],\"from_process\":\"translating\",\"to_process\":\"evaluate\"}" >> .writing/trace/process.jsonl
+printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"goal_created\",\"responsible_agent\":\"Writer\",\"process\":\"goal-setting\",\"decision\":\"Create the next middle-range goal.\",\"evidence\":[],\"open_uncertainty\":[],\"goal_id\":\"G1\",\"parent_goal_id\":null}" >> .writing/trace/process.jsonl
 ```
 
-Get every timestamp from `date -Is` at write time. Append to `.writing/trace/process.jsonl`; never rewrite or truncate it. Use one shell command and one quoted heredoc for a related event batch when practical. Each line remains one standalone JSON object. Append one `process_switch` for each process switch, with the first `from_process` set to `null`. Keep process names lowercase in JSON. Do not invent fields or reuse an old timestamp. Read back the appended lines when the command permits and repair malformed JSON before continuing.
+Every shell command that appends one or more trace lines must execute `stamp=$(date -Is)` in that same command before its first trace append and interpolate `$stamp` into every line in that command. The next command must execute `date -Is` again; never type, estimate, copy, or reuse a timestamp across commands. Append to `.writing/trace/process.jsonl`; never rewrite or truncate it. Use one shell command and one quoted heredoc for a related event batch when practical. Each line remains one standalone JSON object. Append one `process_switch` for each process switch, with the first `from_process` set to `null`. Keep process names lowercase in JSON. Do not invent fields or reuse an old timestamp. Read back the appended lines when the command permits and repair malformed JSON before continuing.
 
 For the sequence of `process_switch` events, the first `from_process` is `null`. Every later `from_process` must equal the immediately preceding `process_switch` event's `to_process`. Goal events do not reset this chain. Before finishing, compare the `from_process` and `to_process` values mechanically in trace order. Do not append a final `reviewing` switch with a stale source.
 
