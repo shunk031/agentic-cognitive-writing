@@ -41,31 +41,32 @@ When the Writer creates a goal, update the network and append `goal_created`. Wh
 
 ## Compose recursively at sentence level
 
-The paper's process model treats processes as optional and allows them to embed at any level. Figure 2 shows planning, translating, and reviewing embedded while the Writer works on one sentence. A7 operationalizes observable embedding by treating each sentence as the composing unit and fixing the smallest operational batch at a few sentences serving one local goal. That batch size is an experimental choice, not a rule imposed by the paper.
+The paper's process model treats processes as optional and allows them to embed at any level. Figure 2 remains the theoretical anchor: planning, translating, and reviewing embed while the Writer works on one sentence. This experiment fixes the smallest observable unit at one paragraph because the writer batches to subsection scale when the unit is left at the sentence. A paragraph is one locally coherent block serving one local goal, not a whole section or subsection.
 
-For each local passage, let the `Monitor` choose the next process, translate the passage, and use its text to choose what happens next. `generate` and `evaluate` may interrupt any process at any time. When a local goal resolves, pop back to its immediate parent. When an exploration burst yields useful material, return to the top-level goal and consolidate it into a more specific goal. When a trial passage shows that the active goal needs a new purpose or level of abstraction, use Write and Regenerate immediately. Do not pop or regenerate mechanically after every sentence.
+For each paragraph, let the `Monitor` choose the next process, translate the paragraph, and use its text to choose what happens next. `generate` and `evaluate` may interrupt any process at any time. When an `evaluate` step finds that the paragraph elaborates or narrows its active goal, update that goal and append `goal_developed` in the evaluate command, following the paper's "State and Develop" pattern. Do not force `goal_developed` when the goal is unchanged. When a local goal resolves, pop back to its immediate parent. When an exploration burst yields useful material, return to the top-level goal and consolidate it into a more specific goal. When a trial paragraph shows that the active goal needs a new purpose or level of abstraction, use Write and Regenerate immediately. Do not pop or regenerate mechanically after every paragraph.
 
 ## Mechanical incremental composition
 
 The draft is built by appending to `.writing/draft.md`. Never assemble a full draft and write it in one operation. Never use a replacement write, `>`, or a whole-file rewrite. The only exception is a local revision of the most recent passage. Replace only that passage, append a `process_switch` whose `process` is `revise` in the same shell command, and then return to append-only writing. Never rewrite an earlier passage.
 
-Each `Translating` step appends at most a few sentences, normally one to three, for one local goal. In the same shell command, append that passage first and then append its `process_switch` plus any goal events to `.writing/trace/process.jsonl`. Do not predeclare future passages or events. Do not write any trace event in a setup-only command before the first draft append. A quoted heredoc may hold the short passage and one JSON object per line. The shell command must use `>>` for the draft and trace. Keep evidence factual at append time, such as the existing draft quote, file path, or goal ID, never future-tense evidence.
+Each `Translating` step appends exactly one paragraph serving one local goal, at most about 120 words. Never append more than 200 words. If a coherent paragraph would exceed about 120 words, split it into two append commands and put an `evaluate` step between them. Each append command must contain one paragraph only, never a subsection or several blank-line-separated paragraphs. In the same shell command, append that paragraph first and then append its `process_switch` plus any goal events to `.writing/trace/process.jsonl`. Do not predeclare future paragraphs or events. Do not write any trace event in a setup-only command before the first draft append. A quoted heredoc may hold the short paragraph and one JSON object per line. The shell command must use `>>` for the draft and trace. Keep evidence factual at append time, such as the existing draft quote, file path, or goal ID, never future-tense evidence.
 
 Use one shell command with this order for every translating batch:
 
 ```sh
 fragment=$(cat <<'EOF'
-One sentence, or a few sentences for one local goal.
+One paragraph of no more than about 120 words for one local goal.
 EOF
 )
+test "$(printf '%s\n' "$fragment" | wc -w)" -le 120
 printf '%s\n' "$fragment" >> .writing/draft.md
 stamp=$(date -Is)
 printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"process_switch\",\"responsible_agent\":\"Monitor\",\"process\":\"translating\",\"decision\":\"Append the local passage.\",\"evidence\":[],\"open_uncertainty\":[],\"from_process\":\"planning\",\"to_process\":\"translating\"}" >> .writing/trace/process.jsonl
 ```
 
-Replace process values and evidence with the current state. Append any goal events in that same command, each with its own `date -Is` value.
+Replace process values and evidence with the current state. Keep the word-count check before the draft append in a real command. Append any goal events in that same command, each with its own `date -Is` value. If a paragraph is split, finish the first command, append its `evaluate` event, then run the second command.
 
-Every `evaluate` event means a `process_switch` whose `process` is `evaluate`. Append it only after the passage exists. Its `evidence` array must contain the exact first six words of the passage in a quoted string. If one sentence has fewer than six words, evaluate a few-sentence passage so six words are available. A `revise` switch must identify the most recent passage it changes.
+Every `evaluate` event means a `process_switch` whose `process` is `evaluate`. Append it only after the paragraph exists. Its `evidence` array must contain the exact first six words of the paragraph in a quoted string. If a paragraph has fewer than six words, evaluate a short adjacent passage so six words are available. A `revise` switch must identify the most recent passage it changes.
 
 ## Processes and trace events
 
