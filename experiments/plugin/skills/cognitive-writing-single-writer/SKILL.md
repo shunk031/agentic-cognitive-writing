@@ -5,17 +5,17 @@ description: "Experimental A7 writing skill based on Flower and Hayes's single W
 
 # Cognitive writing single writer
 
-Use this skill only for the A7 experimental condition. The skill models the single Writer described in "A Cognitive Process Model" and "The Monitor" in Flower and Hayes's _A Cognitive Process Theory of Writing_.
+Use this skill only for A7. Flower and Hayes's _A Cognitive Process Theory of Writing_[^1] models one Writer with Planning, Translating, and Reviewing under a Monitor. The paper says nothing about software agents. A7 operationalizes that model as one main agent that is both Writer and Monitor, with no subagents.
 
 ## One Writer and one Monitor
 
-The main agent is the sole Writer and Monitor. Do not spawn subagents, role agents, delegation tools, or another writing process. The Writer owns planning, generating, translating, evaluating, revising, and goal-setting.
+The main agent is the only Writer. Do not spawn subagents, role agents, delegation tools, or another writing process. The wrapper sets `require_delegation = false`.
 
-The Monitor is a strategist. Choose the next process from the active goal network, the rhetorical problem, and the growing text. Do not impose a fixed stage order. Use one default style: plan briefly at the top level, compose sentence by sentence, and plan locally when the current sentence or goal needs it. A writer may instead explore for a time or move toward polished prose quickly when the active goals support that choice.
+The `Monitor` is the strategist. Choose the next process from the current goal network, the rhetorical problem, and the growing text. Do not impose a stage sequence. Use this default style: plan briefly at the top level, compose one sentence or a few sentences at a time, and plan locally when needed. A writer may instead explore for a time or move toward polished prose quickly when the active goals support that choice.
 
 ## Read and preserve the writing state
 
-Work in the session's current directory. Create missing files without overwriting existing user content:
+Work in the session's current directory. Create missing files without overwriting user content:
 
 ```text
 .writing/
@@ -27,80 +27,71 @@ Work in the session's current directory. Create missing files without overwritin
 └── trace/process.jsonl
 ```
 
-Read `assignment.md`, `goals.md`, `draft.md`, relevant `memory/` files, and the latest trace entries before choosing a process. If the assignment leaves the audience, purpose, scope, genre, or constraints unclear, apply a reasonable single-turn assumption and record it in `.writing/assumptions.md`. Do not ask a clarifying question in this condition.
+Read `assignment.md`, `goals.md`, `draft.md`, relevant `memory/` files, and the latest trace entries before choosing a process. If the assignment leaves the audience, purpose, scope, genre, or constraints unclear, make a reasonable single-turn assumption and record it in `.writing/assumptions.md`. Do not ask a clarifying question.
 
-Follow the repository writing contract for structure, links, claims, and plain English. Apply the `unslop` skill before finishing: remove filler, AI-pattern phrasing, vague claims, and unnecessary headings without changing the assignment's meaning.
+Follow the repository writing contract for structure, links, claims, and plain English. Apply the `unslop` skill before finishing. Remove filler, AI-pattern phrasing, vague claims, and unnecessary headings without changing the task's meaning.
 
 ## Keep a working goal network
 
-The `Planning` process creates goals while composing. Treat goals as the working network described in "Writing is a goal-directed process" and "Goals, Topic, and Text", not as a ledger or checklist. Middle-range goals are the main planning output: they connect an abstract intention to a sentence-level choice.
+The paper's "Writing is a goal-directed process" and "Goals, Topic, and Text" sections describe goals created, developed, and revised during composing. The paper predicts that good and poor writers differ in the quantity and quality of middle-range goals that bridge intention and prose. A7 therefore asks the Writer to make those goals explicit. The prediction belongs to the paper, and the explicit file representation belongs to this experiment.
 
-Keep `.writing/goals.md` to the current network only. Each goal has one line with a stable ID, its parent ID, a one-line statement, `kind` (`process` or `content`), and `status` (`active`, `resolved`, or `superseded`). Use indentation to show parent and child relationships. Do not add a history table, per-goal verdict list, or proposal list. Goal history belongs in the trace.
+Treat `.writing/goals.md` as the current hierarchical network, not a ledger. Each line has a stable goal ID, parent ID, one-line statement, `kind` (`process` or `content`), and `status` (`active`, `resolved`, or `superseded`). Use indentation for parent and child relationships. Keep no history table, verdict list, or proposal list in the file. History lives in the trace.
 
-When the Writer creates a goal, update the network and append `goal_created`. When the Writer makes an existing goal more specific, update it and append `goal_developed`. When a trial sentence shows that the active goal is wrong or too abstract, regenerate it immediately: mark the old ID `superseded`, create a new active ID, make the old ID its `parent_goal_id`, and append `goal_regenerated`. Do not use a proposal-and-acceptance step.
+When the Writer creates a goal, update the network and append `goal_created`. When the Writer makes an existing goal more specific, update it and append `goal_developed`. When an evaluated passage shows that the active goal is wrong or too abstract, regenerate it immediately: mark the old ID `superseded`, create a new active ID, use the old ID as `parent_goal_id`, and append `goal_regenerated`. There is no proposal-and-acceptance step.
 
 ## Compose recursively at sentence level
 
-Follow the recursive behavior described in "A Cognitive Process Model" and Figure 2's embedding example:
+The paper's process model treats processes as optional and allows them to embed at any level. Figure 2 shows planning, translating, and reviewing embedded while the Writer works on one sentence. A7 operationalizes observable embedding by treating each sentence as the composing unit and fixing the smallest operational batch at a few sentences serving one local goal. That batch size is an experimental choice, not a rule imposed by the paper.
 
-1. Let the Monitor select an active goal and the next process.
-2. Before switching, append one `process_switch` event.
-3. Translate one sentence or a few sentences serving one local goal. Never translate a whole section at once.
-4. Evaluate the new sentence against the active goal, the rhetorical problem, and the text so far. Revise locally, plan locally, continue, or pop back to the parent goal according to that evaluation.
-5. If the sentence changes what the Writer understands, develop or regenerate the goal immediately, then continue composing under the new network.
+For each local passage, let the `Monitor` choose the next process, translate the passage, and use its text to choose what happens next. `generate` and `evaluate` may interrupt any process at any time. When a local goal resolves, pop back to its immediate parent. When an exploration burst yields useful material, return to the top-level goal and consolidate it into a more specific goal. When a trial passage shows that the active goal needs a new purpose or level of abstraction, use Write and Regenerate immediately. Do not pop or regenerate mechanically after every sentence.
 
-`generate` and `evaluate` may interrupt any process at any time. An interruption may call a local planning, translating, or reviewing pass and then return to the interrupted parent goal. Use "Explore and Consolidate" after an exploration burst by returning to the top-level goal and making the next goal more specific. Use "Write and Regenerate" when a failed trial sentence teaches the Writer that the current goal needs replacement. These are composing behaviors, not separate stages.
+## Mechanical incremental composition
 
-The growing text is part of the task environment. Use each new sentence as evidence about what can come next. Do not let the immediately preceding sentence replace the active higher-level goal. Pop back to the parent when a local sentence is complete. Do not let an early outline prevent a later goal change. Let the text, topic knowledge, and current goals constrain one another.
+The draft is built by appending to `.writing/draft.md`. Never assemble a full draft and write it in one operation. Never use a replacement write, `>`, or a whole-file rewrite. The only exception is a local revision of the most recent passage. Replace only that passage, append a `process_switch` whose `process` is `revise` in the same shell command, and then return to append-only writing. Never rewrite an earlier passage.
 
-Planning may retrieve or generate ideas. Planning may organize ideas into a more useful representation. Planning may set a process goal such as exploring, returning later, or opening with a question. Translating turns the current local representation into prose. Reviewing may read the growing text as a springboard for further translating. Evaluating may judge the text or an unwritten plan. Revising may change a sentence or the goal that produced it. Goal-setting may create a middle-range bridge between intention and prose.
+Each `Translating` step appends at most a few sentences, normally one to three, for one local goal. In the same shell command, append that passage first and then append its `process_switch` plus any goal events to `.writing/trace/process.jsonl`. Do not predeclare future passages or events. Do not write any trace event in a setup-only command before the first draft append. A quoted heredoc may hold the short passage and one JSON object per line. The shell command must use `>>` for the draft and trace. Keep evidence factual at append time, such as the existing draft quote, file path, or goal ID, never future-tense evidence.
 
-The Monitor chooses among these actions from the current state. The Monitor may remain in one process for several local sentences. The Monitor may switch processes when a sentence reveals a conflict. The Monitor may return to a higher-level goal after a local goal resolves. The Monitor may finish only after the draft, goal network, and trace agree.
+Use one shell command with this order for every translating batch:
+
+```sh
+fragment=$(cat <<'EOF'
+One sentence, or a few sentences for one local goal.
+EOF
+)
+printf '%s\n' "$fragment" >> .writing/draft.md
+stamp=$(date -Is)
+printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"process_switch\",\"responsible_agent\":\"Monitor\",\"process\":\"translating\",\"decision\":\"Append the local passage.\",\"evidence\":[],\"open_uncertainty\":[],\"from_process\":\"planning\",\"to_process\":\"translating\"}" >> .writing/trace/process.jsonl
+```
+
+Replace process values and evidence with the current state. Append any goal events in that same command, each with its own `date -Is` value.
+
+Every `evaluate` event means a `process_switch` whose `process` is `evaluate`. Append it only after the passage exists. Its `evidence` array must contain the exact first six words of the passage in a quoted string. If one sentence has fewer than six words, evaluate a few-sentence passage so six words are available. A `revise` switch must identify the most recent passage it changes.
 
 ## Processes and trace events
 
-Use only these process values in trace events: `planning`, `generate`, `organize`, `goal-setting`, `translating`, `reviewing`, `evaluate`, and `revise`. These tokens are exact, not inflected English: write `evaluate`, never `evaluating`; `generate`, never `generating`; `organize`, never `organizing`; and `revise`, never `revising`.
+The exact process tokens are `planning`, `generate`, `organize`, `goal-setting`, `translating`, `reviewing`, `evaluate`, and `revise`. Use only these tokens in JSON. No other process token is allowed, including `evaluating`, `generating`, `organizing`, or `revising`.
 
-Every `process_switch` event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Every goal event includes those base fields plus `goal_id` and `parent_goal_id`. Keep the shared trace contract unchanged. Use `goal_id` for the affected goal. For `goal_created`, set `parent_goal_id` to the goal's immediate parent. For `goal_developed`, retain the goal's current parent. For `goal_regenerated`, use the replacement ID as `goal_id` and the superseded old ID as `parent_goal_id`. Record the reason for each change in `decision` and its concrete support in `evidence`. Use an empty `open_uncertainty` array when no uncertainty remains.
+Every event has `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, and `open_uncertainty`. The first five fields are strings, and `evidence` and `open_uncertainty` are JSON arrays of strings. A `process_switch` also has `from_process` and `to_process`, each a declared process token or `null`. A goal event also has string `goal_id` and string-or-null `parent_goal_id`. Keep the shared trace contract unchanged.
 
-Keep `evidence` and `open_uncertainty` as JSON arrays of strings on every event, even when an array has one item. Never emit either field as a bare string.
+For `goal_created`, set `parent_goal_id` to the immediate parent. For `goal_developed`, retain the goal's current parent. For `goal_regenerated`, use the replacement ID as `goal_id` and the superseded ID as `parent_goal_id`. Record the reason in `decision` and concrete support in `evidence`. Use an empty `open_uncertainty` array when no uncertainty remains.
 
-Use these literal one-line JSON shapes when there is nothing to cite, replacing the illustrative timestamp with `date -Is`: `{"timestamp":"2026-01-01T00:00:00+00:00","event_type":"process_switch","responsible_agent":"Monitor","process":"planning","decision":"Choose planning for the active goal.","evidence":[],"open_uncertainty":[],"from_process":null,"to_process":"planning"}` and `{"timestamp":"2026-01-01T00:00:00+00:00","event_type":"goal_created","responsible_agent":"Writer","process":"goal-setting","decision":"Create the next middle-range goal.","evidence":[],"open_uncertainty":[],"from_process":null,"to_process":null,"goal_id":"G1","parent_goal_id":null}`.
+Use these literal one-line JSON shapes when there is nothing to cite, replacing the illustrative timestamp with `date -Is`:
 
-Get every timestamp from `date -Is` at write time. Append to `.writing/trace/process.jsonl`; never rewrite or truncate it. Because sentence-level recursion creates many events, append a batch with one shell command and one heredoc when practical. Each line in the heredoc must remain one standalone JSON object. Do not write a JSON array, invent experiment-specific fields, or reuse an old timestamp. Before each switch, identify `from_process` and `to_process` explicitly. Set the first `from_process` to `null`. Use `null` for `to_process` only when the writing run ends. Keep process names lowercase in JSON. Use one event per line even when several events share a shell command. The shell supplies the timestamp for each event at the time of the append.
+```json
+{"timestamp":"2026-01-01T00:00:00+00:00","event_type":"process_switch","responsible_agent":"Monitor","process":"planning","decision":"Choose planning for the active goal.","evidence":[],"open_uncertainty":[],"from_process":null,"to_process":"planning"}
+{"timestamp":"2026-01-01T00:00:00+00:00","event_type":"goal_created","responsible_agent":"Writer","process":"goal-setting","decision":"Create the next middle-range goal.","evidence":[],"open_uncertainty":[],"from_process":null,"to_process":null,"goal_id":"G1","parent_goal_id":null}
+```
 
-## Review decisions
+Get every timestamp from `date -Is` at write time. Append to `.writing/trace/process.jsonl`; never rewrite or truncate it. Use one shell command and one quoted heredoc for a related event batch when practical. Each line remains one standalone JSON object. Append one `process_switch` for each process switch, with the first `from_process` set to `null`. Keep process names lowercase in JSON. Do not invent fields or reuse an old timestamp. Read back the appended lines when the command permits and repair malformed JSON before continuing.
 
-Review the sentence against the active content goal. Review the sentence against the active process goal. Review the sentence against the rhetorical problem. Review the sentence against the text already written. If the sentence is adequate, mark the local goal resolved when its work is done. If the sentence needs wording changes, use `revise` and keep the same goal. If the sentence needs a missing idea, use `generate` or `planning` locally. If the sentence exposes a more specific path, use `goal-setting` and append `goal_developed`. If the sentence invalidates the active goal, regenerate it without waiting for approval. If a local goal resolves, pop to its immediate parent before selecting the next process. If an exploration burst produces useful material, consolidate it under the top-level goal. If a trial sentence fails, keep the failure as evidence for the next goal decision. Do not hide failed trials by rewriting the trace. Do not turn an evaluation into a per-goal verdict list in `goals.md`. Keep the current network readable enough for the next Writer step.
+## Local checks
 
-## Event batching
+Before each local passage, check the active goal and the text already written. After each append, check the new draft tail and the appended JSON lines. Confirm that each `evaluate` quote has exactly six passage words. Confirm that each goal update has its required identifiers. Confirm that the current network contains no history table. Confirm that no process switch implies a fixed stage order.
 
-Use one shell command for a group of related events. Use a quoted heredoc so the shell does not alter JSON text. Put one JSON object on each line of the heredoc. Include the full base field set on every object. Include `from_process` and `to_process` on every `process_switch` object. Include `goal_id` and `parent_goal_id` on every goal object. Run `date -Is` in the same append command that writes the event. Do not use a timestamp copied from this file or an earlier session. Append the batch to `.writing/trace/process.jsonl`. Read back the appended lines after a batch when the shell command permits. Repair a malformed line before continuing the writing loop. Never replace the entire trace with a newly generated log.
+## Review and finish
 
-The trace records the Writer's decisions, not hidden internal reasoning. Use concise evidence such as a file path, goal ID, or draft sentence. State unresolved factual or rhetorical questions in `open_uncertainty`. Keep `responsible_agent` as the main Writer or Monitor actor. Do not name a subagent because A7 has no subagents.
+Review each new passage against its active content goal, process goal, rhetorical problem, audience, purpose, and text already written. Use `generate` or `planning` for a missing idea, `goal-setting` for a more specific path, `reviewing` to read the growing text, and `revise` for a local wording change. Use `goal_developed` when the goal's purpose stays stable but becomes specific. Use `goal_regenerated` when writing changes its purpose or abstraction level. Use the current text as evidence about what comes next, but keep higher-level goals visible. Do not make a section boundary a process boundary or wait for a complete outline before translating.
 
-## Writer's operating rules
+Before the final response, read `.writing/draft.md` and return exactly its complete contents, with no summary, link, preamble, or code fence. Keep assumptions in `.writing/assumptions.md`, not in the draft. Check that every current network change has its trace event, every trace line is standalone JSON, every process value is declared above, and no subagent was spawned.
 
-Keep the rhetorical problem visible while working on local sentences. Keep the audience and purpose visible when evaluating a sentence. Treat the draft as both an output and a source of new information. Treat a failed sentence as evidence, not as a reason to stop. Use content goals for what the draft should say or do for its audience. Use process goals for how the Writer will continue composing. Prefer middle-range goals over repeated abstract intentions. Resolve a local goal only when its sentence-level work is complete. Pop to a parent goal when the local goal no longer controls the next move. Create a child goal when the current goal needs a concrete next action. Develop a goal when its purpose stays stable but its wording becomes specific. Regenerate a goal when writing changes the purpose or the level of abstraction. Keep superseded goals visible in the current network until the trace records the change. Do not copy trace history into `goals.md`. Do not use a section boundary as a process boundary. Do not wait for a complete outline before translating. Do not stop reviewing because a sentence is grammatically correct. Check whether the sentence advances its active goal. Check whether the sentence fits the text that precedes it. Check whether the sentence changes what the Writer now understands. Let the Monitor choose the next process after each meaningful evaluation. Use the user's assignment as the authority for intent and constraints. Keep unsupported claims visible in `open_uncertainty`. Preserve user-authored wording unless the active goal requires revision.
-
-## Line-level checks
-
-Check the assignment before planning. Check the active goal before translating. Check the sentence before continuing. Check the trace after appending.
-
-Check the draft before completing the response.
-
-Check that the current network contains no history table.
-
-Check that every goal event has both goal identifiers.
-
-Check that the old goal is superseded when a new goal replaces it.
-
-Check that no process switch implies a fixed stage order.
-
-Check that the Monitor remains the decision-maker for each process switch.
-
-Check that the main agent remains the only Writer throughout the run.
-
-## Finish the single-turn task
-
-Before the final response, write the complete draft to `.writing/draft.md`. The final response must contain the complete draft text, not a summary or a link to the file. Keep assumptions in `.writing/assumptions.md` and do not add an assumptions preamble to the draft. Check that every current network change has its corresponding trace event, every trace line is standalone JSON, and every process value is declared above.
+[^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387. DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885) / JSTOR: [https://www.jstor.org/stable/356600](https://www.jstor.org/stable/356600)
