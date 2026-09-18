@@ -12,7 +12,7 @@
     },
     {
       "name": "cognitive-writing-experiments",
-      "description": "Controlled process variants for comparing writing-process choices, including fixed process order and removal of the hierarchical goal network.",
+      "description": "Controlled process variants for comparing writing-process choices, including fixed process order, removal of the hierarchical goal network, and a single-writer implementation.",
       "source": "./experiments/plugin"
     },
     {

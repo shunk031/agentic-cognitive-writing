@@ -48,7 +48,7 @@ def test_registry_parses_stages_from_condition_wrappers() -> None:
         stage.path is not None and stage.sha256 is not None
         for stage in registry["B2"].stages
     )
-    for condition_id in ("A4", "A5", "A6", "B1"):
+    for condition_id in ("A4", "A5", "A6", "A7", "B1"):
         stages = registry[condition_id].stages
         assert [stage.stage_id for stage in stages] == ["plugin_session"]
         assert stages[0].path is None
@@ -69,6 +69,7 @@ def test_registry_keeps_wrapper_paths_and_families() -> None:
         "A4": "confirmatory",
         "A5": "confirmatory",
         "A6": "confirmatory",
+        "A7": "exploratory",
         "B1": "exploratory",
         "B2": "exploratory",
     }
@@ -106,7 +107,7 @@ def test_missing_condition_wrapper_is_an_error(tmp_path: Path) -> None:
     conditions_dir = _copy_conditions(tmp_path)
     (conditions_dir / "a4_plugin.toml").unlink()
 
-    with pytest.raises(ConfigurationError, match="exactly A1 through A6"):
+    with pytest.raises(ConfigurationError, match="exactly A1 through A7"):
         load_condition_registry(conditions_dir)
 
 
@@ -118,7 +119,7 @@ def test_stray_condition_wrapper_is_an_error(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    with pytest.raises(ConfigurationError, match="exactly A1 through A6"):
+    with pytest.raises(ConfigurationError, match="exactly A1 through A7"):
         load_condition_registry(conditions_dir)
 
 

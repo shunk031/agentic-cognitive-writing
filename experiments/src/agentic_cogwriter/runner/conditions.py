@@ -12,7 +12,7 @@ from ..paths import EXPERIMENTS_ROOT
 from .errors import ConfigurationError
 from .hashing import sha256_bytes
 
-CONDITION_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2")
+CONDITION_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "B1", "B2")
 PLATFORMS = ("codex", "claude-code")
 KNOWN_TRACE_EVENT_TYPES = frozenset(
     {
@@ -324,6 +324,6 @@ def load_condition_registry(
         loaded[spec.condition_id] = spec
     if set(loaded) != set(CONDITION_IDS):
         raise ConfigurationError(
-            "Condition wrappers must define exactly A1 through A6, B1, and B2"
+            "Condition wrappers must define exactly A1 through A7, B1, and B2"
         )
     return {condition_id: loaded[condition_id] for condition_id in CONDITION_IDS}

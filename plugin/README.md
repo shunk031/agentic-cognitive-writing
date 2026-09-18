@@ -60,7 +60,7 @@ The `Monitor` is the part of the skill that decides what to work on next and inv
 - `translating` handles delegated drafting.
 - `reviewing` handles delegated evaluation and revision.
 
-The separate [`cognitive-writing-experiments` package](https://github.com/shunk031/agentic-cognitive-writing) contains `cognitive-writing-fixed-order` and `cognitive-writing-no-goal-network` for controlled comparisons.
+The separate [`cognitive-writing-experiments` package](https://github.com/shunk031/agentic-cognitive-writing) contains `cognitive-writing-fixed-order`, `cognitive-writing-no-goal-network`, and `cognitive-writing-single-writer` for controlled comparisons.
 
 ## Files maintained in your writing project
 
