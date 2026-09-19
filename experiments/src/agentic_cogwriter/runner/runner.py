@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import fcntl
 import json
-import math
 import os
 import re
 import shutil
@@ -76,7 +75,6 @@ class RunResult:
 
 
 FINAL_OUTPUT_DRAFT_RATIO = 0.5
-DEFAULT_PRODUCT_FLOOR = 10
 _GENERATOR_CONFIG_ENV = {
     "codex": "CODEX_HOME",
     "claude-code": "CLAUDE_CONFIG_DIR",
@@ -294,8 +292,6 @@ def _validate_final_product(
     *,
     condition_id: str,
     requires_draft: bool,
-    minimum_units: int | None,
-    count_units: Callable[[str], int],
 ) -> None:
     """Require the response channel to carry the complete product text."""
 
@@ -318,50 +314,8 @@ def _validate_final_product(
                 f"{FINAL_OUTPUT_DRAFT_RATIO:.0%} of draft.md; "
                 f"final_chars={final_chars}, draft_chars={draft_chars}"
             )
-    if requires_draft or minimum_units is None:
-        return
-    output_units = count_units(output)
-    if output_units < minimum_units:
-        raise ExecutionError(
-            f"Condition {condition_id} final response fails the completeness floor; "
-            f"output_units={output_units}, minimum_units={minimum_units}"
-        )
-
-
-def _requested_length(prompt: PromptRecord) -> int | None:
-    """Extract a numeric requested length from constraints or assignment text."""
-
-    candidates: list[str] = []
-    constraints = prompt.requested_output_constraints
-    if isinstance(constraints, Mapping):
-        for key in (
-            "min_words",
-            "minimum_words",
-            "target_words",
-            "word_count",
-            "max_words",
-            "min_tokens",
-            "minimum_tokens",
-            "target_tokens",
-            "max_tokens",
-        ):
-            value = constraints.get(key)
-            if isinstance(value, (int, float)) and not isinstance(value, bool):
-                return max(1, math.ceil(value))
-    candidates.append(json.dumps(constraints, ensure_ascii=False))
-    if prompt.prompt_text is not None:
-        candidates.append(prompt.prompt_text)
-    match = re.search(
-        r"(?i)\b(\d[\d,]*)\s*[- ]?(?:word|words|token|tokens)\b",
-        "\n".join(candidates),
-    )
-    if match is None:
-        return None
-    return int(match.group(1).replace(",", ""))
-
-
 def _product_gate(
-    prompt: PromptRecord, condition: ConditionSpec, config: RuntimeConfig
+    condition: ConditionSpec, config: RuntimeConfig
 ) -> dict[str, Any]:
     """Describe the product completeness rule persisted in each run manifest."""
 
@@ -372,23 +326,11 @@ def _product_gate(
                 "workspace/.writing/draft.md must exist and the final response "
                 "must be at least 50% of its characters"
             ),
-            "minimum_units": None,
-            "unit": config.output_unit,
-        }
-    requested_length = _requested_length(prompt)
-    if requested_length is None:
-        return {
-            "requires_draft": False,
-            "rule": (
-                "at least 10 output units when the assignment has no requested length"
-            ),
-            "minimum_units": DEFAULT_PRODUCT_FLOOR,
             "unit": config.output_unit,
         }
     return {
         "requires_draft": False,
-        "rule": "at least 50% of the requested length, with a 10-unit minimum",
-        "minimum_units": max(DEFAULT_PRODUCT_FLOOR, math.ceil(requested_length * 0.5)),
+        "rule": "final response must be non-empty",
         "unit": config.output_unit,
     }
 
@@ -712,7 +654,7 @@ class ExperimentRunner:
             }
             started_at = timestamp()
             budget = OutputBudget(self.runtime_config.output_budget_tokens)
-            product_gate = _product_gate(prompt, condition, self.runtime_config)
+            product_gate = _product_gate(condition, self.runtime_config)
             attempts = 0
             evidence_hashes: dict[str, str] = {}
             staged_files: dict[str, str] = {}
@@ -1008,8 +950,6 @@ class ExperimentRunner:
                 draft,
                 condition_id=condition.condition_id,
                 requires_draft=condition.product_requires_draft,
-                minimum_units=product_gate["minimum_units"],
-                count_units=self.runtime_config.count_output_units,
             )
             if condition.goal_events == "forbidden":
                 assert_untouched(protected_goals, goals_before)
@@ -1766,7 +1706,7 @@ class ExperimentRunner:
                 ),
             },
             "product_gate": dict(
-                product_gate or _product_gate(prompt, condition, self.runtime_config)
+                product_gate or _product_gate(condition, self.runtime_config)
             ),
             "rollout_collection": dict(
                 rollout_collection

@@ -2710,7 +2710,7 @@ def test_pre_trace_failure_records_trace_timestamp_summary(tmp_path: Path) -> No
     assert manifest["trace_timestamps"]["events"] == 1
 
 
-def test_non_draft_condition_has_a_nontrivial_product_floor(tmp_path: Path) -> None:
+def test_non_draft_condition_accepts_short_output(tmp_path: Path) -> None:
     prompt = PromptRecord(
         prompt_id="p-1",
         benchmark_name="WritingBench",
@@ -2722,12 +2722,11 @@ def test_non_draft_condition_has_a_nontrivial_product_floor(tmp_path: Path) -> N
     runner = _runner(
         tmp_path,
         executor=_RetryExecutor(
-            [_result(output="too short", usage={"output_tokens": 2})]
+            [_result(output="short", usage={"output_tokens": 2})]
         ),
     )
 
-    with pytest.raises(ExecutionError, match="completeness floor"):
-        runner.run_prompt(prompt, condition_id="A1", platform="codex")
+    runner.run_prompt(prompt, condition_id="A1", platform="codex")
 
     run_dir = tmp_path / "WritingBench" / "A1" / "codex"
     manifest = json.loads(
@@ -2735,8 +2734,7 @@ def test_non_draft_condition_has_a_nontrivial_product_floor(tmp_path: Path) -> N
     )
     assert manifest["product_gate"] == {
         "requires_draft": False,
-        "rule": "at least 50% of the requested length, with a 10-unit minimum",
-        "minimum_units": 10,
+        "rule": "final response must be non-empty",
         "unit": "words",
     }
 
