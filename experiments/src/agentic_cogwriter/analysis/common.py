@@ -1,11 +1,34 @@
 from __future__ import annotations
 
+import argparse
 import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from ..runner.conditions import CONDITION_IDS
+
 CONTRASTS = (("A4", "A1"), ("A4", "A2"), ("A4", "A3"), ("A4", "A5"), ("A4", "A6"))
+
+
+def parse_contrasts(value: str) -> tuple[tuple[str, str], ...]:
+    contrasts: list[tuple[str, str]] = []
+    for item in value.split(","):
+        parts = [part.strip() for part in item.split(":")]
+        if len(parts) != 2 or not all(parts):
+            raise argparse.ArgumentTypeError(
+                "contrasts must be comma-separated LEFT:RIGHT pairs"
+            )
+        left, right = parts
+        if left not in CONDITION_IDS or right not in CONDITION_IDS:
+            raise argparse.ArgumentTypeError(f"unknown condition in contrast {item!r}")
+        if left == right:
+            raise argparse.ArgumentTypeError(f"contrast sides must differ: {item!r}")
+        contrast = (left, right)
+        if contrast in contrasts or (right, left) in contrasts:
+            raise argparse.ArgumentTypeError(f"duplicate contrast: {item!r}")
+        contrasts.append(contrast)
+    return tuple(contrasts)
 
 
 @dataclass(frozen=True)

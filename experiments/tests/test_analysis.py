@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
+from collections.abc import Callable
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -12,7 +14,8 @@ from test_judges import _template as judge_template
 
 from agentic_cogwriter.analysis import aggregate as aggregate_module
 from agentic_cogwriter.analysis import batch as batch_module
-from agentic_cogwriter.analysis.common import select_canonical_runs
+from agentic_cogwriter.analysis import common as common_module
+from agentic_cogwriter.analysis.common import parse_contrasts, select_canonical_runs
 from agentic_cogwriter.judges import scorer as scorer_module
 from agentic_cogwriter.judges.scorer import blind_condition_id
 from agentic_cogwriter.runner.hashing import sha256_json
@@ -170,6 +173,182 @@ def test_canonical_selection_prefers_latest_completed_then_latest_failed(
     selected = select_canonical_runs([root])
 
     assert {run.path for run in selected} == {latest, only_failed}
+
+
+def test_parse_contrasts_validates_condition_ids_and_pairs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        common_module, "CONDITION_IDS", (*common_module.CONDITION_IDS, "A7")
+    )
+
+    assert parse_contrasts("A7:A1,A7:A5") == (("A7", "A1"), ("A7", "A5"))
+    for value in ("A7:A7", "A7:A1,A7:A1", "A7:A1,A1:A7", "A7:C1", "A7"):
+        with pytest.raises(argparse.ArgumentTypeError):
+            parse_contrasts(value)
+
+
+@pytest.mark.parametrize(
+    ("main", "required_args"),
+    (
+        (
+            batch_module.main,
+            (
+                "--runs-root",
+                "/runs",
+                "--pointwise-config",
+                "/pointwise.json",
+                "--pairwise-config",
+                "/pairwise.json",
+            ),
+        ),
+        (
+            aggregate_module.main,
+            (
+                "--runs-root",
+                "/runs",
+                "--generation-prices",
+                "/generation.json",
+                "--judge-prices",
+                "/judge.json",
+                "--output-dir",
+                "/report",
+            ),
+        ),
+    ),
+)
+@pytest.mark.parametrize(
+    ("value", "reason"),
+    (
+        ("Z9:A1", "unknown condition in contrast 'Z9:A1'"),
+        ("A1:A1", "contrast sides must differ: 'A1:A1'"),
+        ("A4:A1,A4:A1", "duplicate contrast: 'A4:A1'"),
+        ("A4:A1,A1:A4", "duplicate contrast: 'A1:A4'"),
+        ("A4", "contrasts must be comma-separated LEFT:RIGHT pairs"),
+    ),
+)
+def test_contrast_cli_reports_validation_reason(
+    main: Callable[[list[str] | None], int],
+    required_args: tuple[str, ...],
+    value: str,
+    reason: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as error:
+        main([*required_args, "--contrasts", value])
+
+    assert error.value.code == 2
+    assert f"argument --contrasts: {reason}" in capsys.readouterr().err
+
+
+def test_configurable_contrasts_keep_artifacts_disjoint_and_aggregate_selected_pairs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        common_module, "CONDITION_IDS", (*common_module.CONDITION_IDS, "A7")
+    )
+    root = tmp_path / "runs"
+    for condition in ("A1", "A2", "A3", "A4", "A5", "A6"):
+        _run(root, "WritingBench", condition, "p1")
+    pointwise = tmp_path / "pointwise.json"
+    pairwise = tmp_path / "pairwise.json"
+    pointwise.write_text("{}", encoding="utf-8")
+    pairwise.write_text("{}", encoding="utf-8")
+    configs = {
+        pointwise: SimpleNamespace(
+            task="pointwise", judge_id="judge-1", template_path=Path("pointwise-v1.md")
+        ),
+        pairwise: SimpleNamespace(
+            task="pairwise", judge_id="judge-1", template_path=Path("pairwise-v1.md")
+        ),
+    }
+    monkeypatch.setattr(batch_module.JudgeConfig, "load", lambda path: configs[path])
+
+    def fake_score_run(
+        run_dir: Path,
+        config: object,
+        *,
+        compare_run_dir: Path | None = None,
+        output_path: Path | None = None,
+        model: object | None = None,
+    ) -> object:
+        del model
+        assert output_path is not None
+        records = (
+            [
+                {"presentation": "A|B", "winner": "A"},
+                {"presentation": "B|A", "winner": "B"},
+            ]
+            if config.task == "pairwise"
+            else []
+        )
+        _score_manifest(
+            output_path.parent,
+            config.task,
+            [run_dir, compare_run_dir] if compare_run_dir else [run_dir],
+            records,
+            judge_id=config.judge_id,
+        )
+        return object()
+
+    monkeypatch.setattr(batch_module, "score_run", fake_score_run)
+    batch_args = [
+        "--runs-root",
+        str(root),
+        "--pointwise-config",
+        str(pointwise),
+        "--pairwise-config",
+        str(pairwise),
+        "--concurrency",
+        "1",
+    ]
+    assert batch_module.main(batch_args) == 0
+    default_paths = {
+        path.parent
+        for path in root.rglob("scores.jsonl")
+        if "pairwise" in path.parts
+    }
+    assert len(default_paths) == 5
+
+    a7 = _run(root, "WritingBench", "A7", "p1")
+    assert batch_module.main([*batch_args, "--contrasts", "A7:A1,A7:A5"]) == 0
+    all_paths = {
+        path.parent
+        for path in root.rglob("scores.jsonl")
+        if "pairwise" in path.parts
+    }
+    custom_paths = all_paths - default_paths
+    assert custom_paths == {
+        a7 / "scores" / "pairwise" / "judge-1" / "p1-A1",
+        a7 / "scores" / "pairwise" / "judge-1" / "p1-A5",
+    }
+    assert default_paths.isdisjoint(custom_paths)
+
+    prices = tmp_path / "prices.json"
+    prices.write_text(json.dumps({"input": 0, "cached_input": 0, "output": 0}))
+    output_dir = tmp_path / "report"
+    assert aggregate_module.main(
+        [
+            "--runs-root",
+            str(root),
+            "--generation-prices",
+            str(prices),
+            "--judge-prices",
+            str(prices),
+            "--output-dir",
+            str(output_dir),
+            "--contrasts",
+            "A7:A1,A7:A5",
+        ]
+    ) == 0
+    report = json.loads((output_dir / "aggregation.json").read_text(encoding="utf-8"))
+    pairwise_report = report["pairwise"]["benchmarks"]["WritingBench"][
+        "platforms"
+    ]["codex"]
+    assert pairwise_report["contrasts"] == {
+        "A7:A1": {"wins": 2, "ties": 0, "losses": 0},
+        "A7:A5": {"wins": 2, "ties": 0, "losses": 0},
+    }
 
 
 def test_score_batch_is_idempotent_and_drops_failed_pair_members(

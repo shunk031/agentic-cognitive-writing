@@ -151,7 +151,7 @@ The pairwise records follow the balanced tournament contract in [`protocol.md`](
 
 ## Score many runs and aggregate
 
-The batch command selects one canonical run for each `(benchmark, condition, prompt, platform)` key. The selector chooses the latest completed run by `started_at`, or the latest failed run when no completed run exists. Only completed canonical runs receive jobs. Pairwise jobs use the fixed A4-versus-A1, A2, A3, A5, and A6 contrasts for each prompt, and a failed canonical side removes that pair from the job list. Existing task artifacts with a `scores-manifest.json` are skipped, and scorer exceptions are appended to `scoring-errors.jsonl` beside the owning runs root.
+The batch command selects one canonical run for each `(benchmark, condition, prompt, platform)` key. The selector chooses the latest completed run by `started_at`, or the latest failed run when no completed run exists. Only completed canonical runs receive jobs. Pairwise jobs use the five default contrasts A4:A1, A4:A2, A4:A3, A4:A5, and A4:A6; pass `--contrasts LEFT:RIGHT,...` to select another set, and a failed canonical side removes that pair from the job list. Existing task artifacts with a `scores-manifest.json` are skipped, and scorer exceptions are appended to `scoring-errors.jsonl` beside the owning runs root.
 
 Each task stores `scores.jsonl` and `scores-manifest.json` below `scores/<task>/<judge_id>/`. Pairwise artifacts add a pair directory below that path. A native configuration applies when its template filename identifies `WritingBench` or `HelloBench`; runs for benchmarks without a matching native configuration are skipped.
 
