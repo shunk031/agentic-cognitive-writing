@@ -20,8 +20,8 @@ status=0
 for skills_root in "${skill_roots[@]}"; do
   for skill_dir in "$skills_root"/*/; do
     [[ -d "$skill_dir" ]] || continue
-    uv run --with pyyaml python "$tmp_dir/anthropic-quick_validate.py" "$skill_dir" || status=1
-    uv run --with pyyaml python "$tmp_dir/openai-quick_validate.py" "$skill_dir" || status=1
+    uv run --frozen --with pyyaml python "$tmp_dir/anthropic-quick_validate.py" "$skill_dir" || status=1
+    uv run --frozen --with pyyaml python "$tmp_dir/openai-quick_validate.py" "$skill_dir" || status=1
   done
 done
 exit "$status"
