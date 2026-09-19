@@ -4,16 +4,16 @@ Agentic CogWriter is the writing system evaluated by the experiment runner in [`
 
 ## Layout
 
-| Directory                                                        | Contents                                                                                   |
-| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [`config/`](config/)                                             | Runtime gate and model, judge, decoding, seed, and analysis settings                       |
-| [`prompts/`](prompts/)                                           | One immutable manifest per benchmark                                                       |
-| [`conditions/`](conditions/)                                     | A1 to A6 and B1 to B2 wrapper configs, frozen baseline prompt files, and platform adapters |
-| [`src/agentic_cogwriter/runner/`](src/agentic_cogwriter/runner/) | Python subpackage for execution, manifests, budgets, and trace collection                  |
-| [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) | API judge client, fail-closed validators, artifact scorer, and CLI                         |
-| [`human/`](human/)                                               | Reserved for human validation                                                              |
-| [`analysis/`](analysis/)                                         | Reserved for scoring and statistics                                                        |
-| [`manifests/`](manifests/)                                       | Run-artifact documentation and generated output                                            |
+| Directory | Contents |
+| --- | --- |
+| [`config/`](config/) | Runtime gate and model, judge, decoding, seed, and analysis settings |
+| [`prompts/`](prompts/) | One immutable manifest per benchmark |
+| [`conditions/`](conditions/) | A1 to A7 and B1 to B2 wrapper configs, frozen baseline prompt files, and platform adapters |
+| [`src/agentic_cogwriter/runner/`](src/agentic_cogwriter/runner/) | Python subpackage for execution, manifests, budgets, and trace collection |
+| [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) | API judge client, fail-closed validators, artifact scorer, and CLI |
+| [`human/`](human/) | Reserved for human validation |
+| [`analysis/`](analysis/) | Reserved for scoring and statistics |
+| [`manifests/`](manifests/) | Run-artifact documentation and generated output |
 
 The human and analysis directories remain reserved. The judge package scores completed run artifacts with one OpenAI-compatible API call per judgment.
 
@@ -34,7 +34,7 @@ Use the committed manifests under [`prompts/manifests/`](prompts/manifests/). To
 
 The experimenter then creates a complete runtime configuration outside the tracked placeholder file. The configuration must replace every `REQUIRED_AT_RUNTIME` value in [`config/runtime.json`](config/runtime.json), including model and judge assignments, decoding, output budget, timeout, retry policy, seeds, CLI versions, plugin commits, and analysis gates. The `generator_and_judge_family_audit.generator_model_family_map` object must map each exact configured generator model ID to its family; the runner records the selected family in `run-manifest.json` and refuses to start a scored run when the ID is unmappable. The runner refuses to start a scored run while one value remains open or a required field is missing.
 
-The A1 to A3 wrappers invoke skills from the `cognitive-writing-baselines` package. The A4 Agentic CogWriter condition uses the `agentic-cognitive-writing` package. A5 and A6 use the `cognitive-writing-experiments` package together with the main package. B1 and B2 use the baseline package and are reported as exploratory conditions.
+The A1 to A3 wrappers invoke skills from the `cognitive-writing-baselines` package. The A4 Agentic CogWriter condition uses the `agentic-cognitive-writing` package. A5, A6, and A7 use the `cognitive-writing-experiments` package together with the main package. A7, B1, and B2 are reported as exploratory conditions.
 
 ## Run one condition and prompt
 
@@ -73,7 +73,7 @@ Each successful run contains the following files:
 
 The run manifest records absolute execution paths and the authoritative SHA-256 hashes for output, trace, transport evidence, and staged skill files. The runner also copies `.writing/goals.md` and `.writing/draft.md` when the selected skill creates them. It does not rewrite claims or paragraph boundaries during normalization.
 
-The final response must contain the complete product text. For A2 to A6, `.writing/draft.md` must exist and the final response must contain at least half of its characters. B1 and B2 use the same draft gate. A1 is the only no-draft baseline and uses a non-empty completeness floor, measured in the configured output unit, with a 10-unit minimum or half of an explicitly requested length when that length is larger. The runner never substitutes `.writing/draft.md` for the response.
+The final response must contain the complete product text. For A2 to A7, `.writing/draft.md` must exist and the final response must contain at least half of its characters. B1 and B2 use the same draft gate. A1 is the only no-draft baseline and uses a non-empty completeness floor, measured in the configured output unit, with a 10-unit minimum or half of an explicitly requested length when that length is larger. The runner never substitutes `.writing/draft.md` for the response.
 
 The wrapper TOMLs are the source of truth for trace contracts. Each declares the allowed event types, goal-event policy, event-count bounds, process values, and any exact process-transition order. The runner rejects events outside those declarations; `process_switch` events always require `from_process` and `to_process`, and forbidden-goal conditions also require the run not to create or modify `.writing/goals.md`.
 

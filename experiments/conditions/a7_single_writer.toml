@@ -1,0 +1,36 @@
+condition_id = "A7"
+skill = "cognitive-writing-single-writer"
+analysis_family = "exploratory"
+product_requires_draft = true
+
+[package]
+name = "cognitive-writing-experiments"
+
+[plugins]
+paths = ["plugin", "experiments/plugin"]
+
+[adapters]
+codex = "codex_exec"
+claude_code = "claude_print"
+
+[invocation]
+codex = """Read the skill file at {codex_plugin_root}/skills/cognitive-writing-single-writer/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact."""
+
+claude_code = """/cognitive-writing-experiments:cognitive-writing-single-writer"""
+
+[install]
+claude_code = ["/plugin marketplace add .", "/plugin install agentic-cognitive-writing@agentic-cognitive-writing-process", "/plugin install cognitive-writing-experiments@agentic-cognitive-writing-process"]
+
+[trace]
+retrieval = "not_applicable"
+evidence = "plugin_recorded"
+citation = "plugin_recorded"
+goal_events = "allowed"
+require_goal_events = true
+require_delegation = false
+event_types = ["process_switch", "goal_created", "goal_developed", "goal_regenerated"]
+min_events = 1
+processes = ["planning", "generate", "organize", "goal-setting", "translating", "reviewing", "evaluate", "revise"]
+
+[[stages]]
+id = "plugin_session"

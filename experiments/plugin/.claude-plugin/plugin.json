@@ -1,6 +1,6 @@
 {
   "name": "cognitive-writing-experiments",
-  "description": "Controlled-comparison variants of the agentic-cog-writer skill.",
+  "description": "Controlled-comparison variants of the agentic-cog-writer skill, including fixed-order, no-goal-network, and single-writer conditions.",
   "version": "0.1.0",
   "license": "Apache-2.0",
   "author": {

@@ -37,6 +37,7 @@ def _plugin_source(tmp_path):
         "agentic-cog-writer",
         "cognitive-writing-no-goal-network",
         "cognitive-writing-fixed-order",
+        "cognitive-writing-single-writer",
         "writing-cogwriter-style",
         "writing-adaptive-task-planning",
         "planning",
@@ -238,10 +239,10 @@ def _config():
 def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions():
     registry = load_condition_registry()
 
-    assert set(registry) == {*(f"A{index}" for index in range(1, 7)), "B1", "B2"}
+    assert set(registry) == {*(f"A{index}" for index in range(1, 8)), "B1", "B2"}
     assert [
         registry[condition].skill_name
-        for condition in ("A1", "A2", "A3", "A4", "A5", "A6", "B1", "B2")
+        for condition in ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "B1", "B2")
     ] == [
         "writing-single-shot",
         "writing-linear",
@@ -249,6 +250,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "agentic-cog-writer",
         "cognitive-writing-no-goal-network",
         "cognitive-writing-fixed-order",
+        "cognitive-writing-single-writer",
         "writing-cogwriter-style",
         "writing-storm-style",
     ]
@@ -281,7 +283,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     )
     assert all(
         registry[condition].analysis_family == "exploratory"
-        for condition in ("B1", "B2")
+        for condition in ("A7", "B1", "B2")
     )
     assert registry["A1"].trace_processes == ("generate",)
     assert registry["A2"].trace_processes == ("pre-write", "write", "re-write")
@@ -290,6 +292,16 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "task-execution",
         "task-revision",
     )
+    assert registry["A7"].trace_processes == (
+        "planning",
+        "generate",
+        "organize",
+        "goal-setting",
+        "translating",
+        "reviewing",
+        "evaluate",
+        "revise",
+    )
     assert registry["B2"].trace_processes == (
         "perspective-discovery",
         "simulated-question-answering",
@@ -297,8 +309,9 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "per-section-draft",
         "polish",
     )
-    assert [registry[f"A{index}"].product_requires_draft for index in range(1, 7)] == [
+    assert [registry[f"A{index}"].product_requires_draft for index in range(1, 8)] == [
         False,
+        True,
         True,
         True,
         True,
@@ -313,6 +326,9 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A5"].goal_events == "forbidden"
     assert registry["A6"].goal_events == "allowed"
     assert registry["A6"].require_goal_events is True
+    assert registry["A7"].goal_events == "allowed"
+    assert registry["A7"].require_goal_events is True
+    assert registry["A7"].require_delegation is False
     assert registry["A1"].event_types == ("process_switch",)
     assert registry["A4"].event_types == (
         "process_switch",
