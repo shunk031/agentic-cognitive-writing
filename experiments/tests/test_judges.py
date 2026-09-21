@@ -140,6 +140,7 @@ def _config(
     allow_same_family_judge: object = False,
     temperature: object = 0,
     top_p: object = 1,
+    reasoning_effort: object = None,
 ) -> JudgeConfig:
     values: dict[str, object] = {
         "task": task,
@@ -159,6 +160,7 @@ def _config(
         "presentation_seed": 23,
         "temperature": temperature,
         "top_p_or_equivalent": top_p,
+        "reasoning_effort": reasoning_effort,
         "maximum_output_tokens": 120,
         "stop_rules": [],
         "timeout": 10,
@@ -534,6 +536,42 @@ def test_judge_config_accepts_provider_default_decoding(tmp_path: Path) -> None:
     assert config.top_p is None
 
 
+@pytest.mark.parametrize(
+    "reasoning_effort", ["none", "low", "medium", "high", "xhigh", "max"]
+)
+def test_judge_config_accepts_documented_reasoning_efforts(
+    tmp_path: Path, reasoning_effort: str
+) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+
+    config = _config(tmp_path, template, reasoning_effort=reasoning_effort)
+
+    assert config.reasoning_effort == reasoning_effort
+
+
+def test_judge_config_absent_reasoning_effort_uses_provider_default(
+    tmp_path: Path,
+) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+
+    config = _config(tmp_path, template)
+
+    assert config.reasoning_effort is None
+
+
+@pytest.mark.parametrize("reasoning_effort", ["minimal", "unknown", 1, True])
+def test_judge_config_rejects_unsupported_reasoning_effort(
+    tmp_path: Path, reasoning_effort: object
+) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+
+    with pytest.raises(JudgeConfigurationError, match="reasoning_effort"):
+        _config(tmp_path, template, reasoning_effort=reasoning_effort)
+
+
 def test_judge_config_rejects_non_boolean_same_family_flag(tmp_path: Path) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
@@ -834,7 +872,12 @@ def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
     tmp_path: Path,
 ) -> None:
     template = Path(__file__).parents[1] / "prompts/judges/pointwise-v1.md"
-    config = _config(tmp_path, template, model="gpt-5.6-terra")
+    config = _config(
+        tmp_path,
+        template,
+        model="gpt-5.6-terra",
+        reasoning_effort="low",
+    )
     captured: list[dict[str, Any]] = []
 
     # Exercise the pinned OpenAI request mapper so the regression checks the
@@ -923,6 +966,7 @@ def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
         "mode": "explicit",
         "ttl": "30m",
     }
+    assert payload["reasoning_effort"] == "low"
     assert response.usage == {
         "prompt_tokens": 10,
         "completion_tokens": 2,
@@ -1186,6 +1230,7 @@ def test_provider_default_decoding_fields_are_omitted_from_payload(
     payload = transport.requests[0]
     assert "temperature" not in payload
     assert "top_p" not in payload
+    assert "reasoning_effort" not in payload
     assert payload["max_completion_tokens"] == 120
 
 
@@ -1633,7 +1678,7 @@ def test_load_run_artifacts_requires_manifest_interface_fields(
 def test_score_run_writes_protocol_jsonl_and_hashed_manifest(tmp_path: Path) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
-    config = _config(tmp_path, template)
+    config = _config(tmp_path, template, reasoning_effort="low")
     run_dir = _run_dir(tmp_path, "A1", "Provided fact.")
     transport = FakeTransport(
         [
@@ -1686,6 +1731,7 @@ def test_score_run_writes_protocol_jsonl_and_hashed_manifest(tmp_path: Path) -> 
         "judge_family",
         "reported_model_id",
         "seed",
+        "reasoning_effort",
         "temperature",
         "top_p",
         "max_output_tokens",
@@ -1704,6 +1750,7 @@ def test_score_run_writes_protocol_jsonl_and_hashed_manifest(tmp_path: Path) -> 
         "usage",
     }
     assert record["judge_family"] == "open_evaluator"
+    assert manifest["judge"]["reasoning_effort"] == "low"
     assert manifest["records"][0]["record_sha256"].startswith("sha256:")
     assert manifest["records"][0]["usage"]["total_tokens"] == 18
     assert manifest["family_audit"] == {

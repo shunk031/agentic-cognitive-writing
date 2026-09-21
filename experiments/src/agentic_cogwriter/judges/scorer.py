@@ -317,6 +317,11 @@ def _write_score_artifacts(
             "judge_family": first_result.judge_identity.judge_family,
             "reported_model_id": first_result.judge_identity.reported_model_id,
             "seed": config.seed,
+            "reasoning_effort": (
+                config.reasoning_effort
+                if config.reasoning_effort is not None
+                else "provider-default"
+            ),
             "temperature": (
                 config.temperature
                 if config.temperature is not None

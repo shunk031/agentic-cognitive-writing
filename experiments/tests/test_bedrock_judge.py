@@ -153,6 +153,11 @@ def test_bedrock_transport_builds_request_and_maps_cache_usage(
     }
 
 
+def test_bedrock_transport_rejects_reasoning_effort(tmp_path: Path) -> None:
+    with pytest.raises(JudgeConfigurationError, match="reasoning_effort"):
+        _config(tmp_path, transport="bedrock", reasoning_effort="low")
+
+
 @pytest.mark.parametrize("transport", ["anthropic", "bedrock-runtime", 1, None])
 def test_judge_config_rejects_unknown_transport(
     tmp_path: Path, transport: object
