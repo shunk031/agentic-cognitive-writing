@@ -65,7 +65,7 @@ def normalize_usage(value: Mapping[str, Any]) -> dict[str, int]:
         if token_value < 0:
             raise JudgeTransportError(f"Judge usage has negative {field}")
         result[field] = token_value
-    for field in ("reasoning_tokens", "cached_tokens"):
+    for field in ("reasoning_tokens", "cached_tokens", "cache_write_tokens"):
         if field not in value:
             continue
         token_value = value[field]
@@ -93,6 +93,9 @@ def _usage(run_usage: RunUsage) -> dict[str, int]:
     cached_tokens = run_usage.cache_read_tokens
     if cached_tokens:
         values["cached_tokens"] = cached_tokens
+    cache_write_tokens = run_usage.cache_write_tokens
+    if cache_write_tokens:
+        values["cache_write_tokens"] = cache_write_tokens
     return normalize_usage(values)
 
 
@@ -122,6 +125,27 @@ class OpenAICompatibleClient:
         if not credential:
             raise JudgeConfigurationError(
                 "Configured judge credential environment variable is unset"
+            )
+        if self.config.transport == "bedrock":
+            try:
+                import boto3
+                from pydantic_ai.models.bedrock import BedrockConverseModel
+                from pydantic_ai.providers.bedrock import BedrockProvider
+            except ImportError as error:
+                raise JudgeConfigurationError(
+                    "Bedrock transport requires the bedrock dependency group"
+                ) from error
+            bedrock_client = boto3.client(
+                "bedrock-runtime",
+                endpoint_url=base_url,
+                region_name=self.config.region_name,
+                aws_access_key_id="test",
+                aws_secret_access_key="test",
+                aws_session_token=credential,
+            )
+            return BedrockConverseModel(
+                self.config.model,
+                provider=BedrockProvider(bedrock_client=bedrock_client),
             )
         return OpenAIChatModel(
             self.config.model,
@@ -158,7 +182,7 @@ class OpenAICompatibleClient:
             settings["stop_sequences"] = list(self.config.stop_rules)
         if self.config.temperature is not None:
             settings["temperature"] = self.config.temperature
-        if self.config.top_p is not None:
+        if self.config.top_p is not None and self.config.transport == "openai":
             settings["top_p"] = self.config.top_p
         if self.config.max_output_tokens is not None:
             settings["max_tokens"] = self.config.max_output_tokens
