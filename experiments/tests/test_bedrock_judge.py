@@ -11,6 +11,8 @@ from agentic_cogwriter.judges.config import JudgeConfig
 from agentic_cogwriter.judges.errors import JudgeConfigurationError
 from agentic_cogwriter.judges.validation import HelloBenchChecklistRecord
 
+boto3 = pytest.importorskip("boto3")
+
 
 class _FakeEvents:
     def register_first(self, *_args: Any, **_kwargs: Any) -> None:
@@ -103,8 +105,6 @@ def _config(tmp_path: Path, **overrides: object) -> JudgeConfig:
 def test_bedrock_transport_builds_request_and_maps_cache_usage(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    import boto3
-
     fake_client = _FakeBedrockClient()
     captured: dict[str, Any] = {}
 

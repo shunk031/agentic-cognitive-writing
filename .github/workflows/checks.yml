@@ -117,4 +117,4 @@ jobs:
         if: ${{ steps.workspace.outputs.available == 'true' }}
         env:
           UV_LOCKED: "1"
-        run: uv run pytest
+        run: uv run --extra bedrock pytest
