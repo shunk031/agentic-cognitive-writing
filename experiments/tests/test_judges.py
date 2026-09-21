@@ -973,7 +973,10 @@ def test_gpt56_http_transport_maps_optional_reasoning_effort(
         "mode": "explicit",
         "ttl": "30m",
     }
-    assert payload.get("reasoning_effort") == expected_reasoning_effort
+    if expected_reasoning_effort is None:
+        assert "reasoning_effort" not in payload
+    else:
+        assert payload["reasoning_effort"] == expected_reasoning_effort
     assert response.usage == {
         "prompt_tokens": 10,
         "completion_tokens": 2,
