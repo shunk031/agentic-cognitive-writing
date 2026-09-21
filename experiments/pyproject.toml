@@ -14,6 +14,11 @@ agentic-cogwriter-score = "agentic_cogwriter.judges.cli:main"
 agentic-cogwriter-score-batch = "agentic_cogwriter.analysis.batch:main"
 agentic-cogwriter-aggregate = "agentic_cogwriter.analysis.aggregate:main"
 
+[project.optional-dependencies]
+bedrock = [
+    "pydantic-ai-slim[bedrock]==2.38.0",
+]
+
 [dependency-groups]
 dev = ["pytest>=8.3,<9"]
 materialize = ["pyarrow>=18,<24"]

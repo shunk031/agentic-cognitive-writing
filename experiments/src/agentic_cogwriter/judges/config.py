@@ -11,6 +11,7 @@ from typing import Any, Literal, cast
 from .errors import JudgeConfigurationError
 
 JudgeTask = Literal["pointwise", "pairwise", "native-pointwise", "native-checklist"]
+JudgeTransport = Literal["openai", "bedrock"]
 JudgeFamily = Literal["claude_frontier", "gpt_frontier", "open_evaluator"]
 JudgeRole = Literal["frontier", "open_evaluator"]
 FamilyAuditMode = Literal["enforced", "exploratory-same-family"]
@@ -170,6 +171,8 @@ class JudgeConfig:
     max_retries: int
     presentation_seed: int | None
     allow_same_family_judge: bool = False
+    transport: JudgeTransport = "openai"
+    region_name: str = "us-east-1"
     source_path: Path | None = None
 
     @classmethod
@@ -214,6 +217,15 @@ class JudgeConfig:
         allow_same_family_judge = values.get("allow_same_family_judge", False)
         if not isinstance(allow_same_family_judge, bool):
             raise JudgeConfigurationError("allow_same_family_judge must be a boolean")
+
+        transport_value = values.get("transport", "openai")
+        if transport_value not in {"openai", "bedrock"}:
+            raise JudgeConfigurationError("transport must be 'openai' or 'bedrock'")
+        transport: JudgeTransport = transport_value
+        region_name_value = values.get("region_name", "us-east-1")
+        if not isinstance(region_name_value, str) or not region_name_value.strip():
+            raise JudgeConfigurationError("region_name must be a non-empty string")
+        region_name = region_name_value.strip()
 
         base_url_env = _required_string(values, "base_url_env", "base_url_env_name")
         credential_env = _required_string(
@@ -318,6 +330,8 @@ class JudgeConfig:
             max_retries=max_retries,
             presentation_seed=presentation_seed,
             allow_same_family_judge=allow_same_family_judge,
+            transport=transport,
+            region_name=region_name,
             source_path=source_path,
         )
 
