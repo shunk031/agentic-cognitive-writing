@@ -33,6 +33,7 @@ RUN apt-get update \
         curl \
         bubblewrap="${BWRAP_VERSION}" \
         git="${GIT_VERSION}" \
+        socat \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=uv /uv /uvx /usr/local/bin/
