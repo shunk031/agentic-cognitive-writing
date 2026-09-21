@@ -12,9 +12,15 @@ from .errors import JudgeConfigurationError
 
 JudgeTask = Literal["pointwise", "pairwise", "native-pointwise", "native-checklist"]
 JudgeTransport = Literal["openai", "bedrock"]
+JudgeReasoningEffort = Literal[
+    "none", "minimal", "low", "medium", "high", "xhigh", "max"
+]
 JudgeFamily = Literal["claude_frontier", "gpt_frontier", "open_evaluator"]
 JudgeRole = Literal["frontier", "open_evaluator"]
 FamilyAuditMode = Literal["enforced", "exploratory-same-family"]
+_REASONING_EFFORTS = frozenset(
+    {"none", "minimal", "low", "medium", "high", "xhigh", "max"}
+)
 
 
 @dataclass(frozen=True)
@@ -171,6 +177,7 @@ class JudgeConfig:
     max_retries: int
     presentation_seed: int | None
     allow_same_family_judge: bool = False
+    reasoning_effort: JudgeReasoningEffort | None = None
     transport: JudgeTransport = "openai"
     region_name: str = "us-east-1"
     source_path: Path | None = None
@@ -226,6 +233,22 @@ class JudgeConfig:
         if not isinstance(region_name_value, str) or not region_name_value.strip():
             raise JudgeConfigurationError("region_name must be a non-empty string")
         region_name = region_name_value.strip()
+
+        reasoning_effort_value = values.get("reasoning_effort")
+        if reasoning_effort_value is not None:
+            if (
+                not isinstance(reasoning_effort_value, str)
+                or reasoning_effort_value not in _REASONING_EFFORTS
+            ):
+                allowed = ", ".join(sorted(_REASONING_EFFORTS))
+                raise JudgeConfigurationError(
+                    f"reasoning_effort must be one of: {allowed}"
+                )
+            if transport == "bedrock":
+                raise JudgeConfigurationError(
+                    "reasoning_effort is not supported with Bedrock transport"
+                )
+        reasoning_effort = cast(JudgeReasoningEffort | None, reasoning_effort_value)
 
         base_url_env = _required_string(values, "base_url_env", "base_url_env_name")
         credential_env = _required_string(
@@ -330,6 +353,7 @@ class JudgeConfig:
             max_retries=max_retries,
             presentation_seed=presentation_seed,
             allow_same_family_judge=allow_same_family_judge,
+            reasoning_effort=reasoning_effort,
             transport=transport,
             region_name=region_name,
             source_path=source_path,

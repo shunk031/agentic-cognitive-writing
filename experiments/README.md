@@ -81,16 +81,16 @@ The wrapper TOMLs are the source of truth for trace contracts. Each declares the
 
 The scorer in [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) reads a completed run's `run-manifest.json`, `prompt.txt`, and `output.normalized.txt`, then writes `scores.jsonl` and `scores-manifest.json` beside the run artifacts. The manifest records the versioned template hash, source-run hashes, API usage counters, response hash, attempt count, score-record hash, and the runtime judge-family evidence chain. A successful command prints the `scores.jsonl` path. Pairwise scoring writes both presentation records only after both judgments pass validation.
 
-The private judge configuration supplies the requested model, judge identifier, names of the endpoint and credential environment variables, the template path, the API seed, the pairwise presentation seed, decoding settings, timeout, retry count, and an explicit model-family mapping table. Use a configuration outside the repository. Replace every angle-bracket value in the following example with a value you supply at runtime; the template path must point to [`pointwise-v1.md`](prompts/judges/pointwise-v1.md), [`pairwise-v1.md`](prompts/judges/pairwise-v1.md), [`writingbench-native-v1.md`](prompts/judges/writingbench-native-v1.md), or [`hellobench-native-v1.md`](prompts/judges/hellobench-native-v1.md).
+The private judge configuration supplies the requested model, judge identifier, names of the endpoint and credential environment variables, the template path, the API seed, the pairwise presentation seed, decoding settings, timeout, retry count, and an explicit model-family mapping table. Use a configuration outside the repository. Replace every angle-bracket value in the following example with a value you supply at runtime; the template path must point to [`pointwise-v1.md`](prompts/judges/pointwise-v1.md), [`pairwise-v1.md`](prompts/judges/pairwise-v1.md), [`writingbench-native-v1.md`](prompts/judges/writingbench-native-v1.md), or [`hellobench-native-v1.md`](prompts/judges/hellobench-native-v1.md). The example uses `gpt-5.6-sol` with `medium` pinned explicitly. Omit the field only when reproducing a run that intentionally uses the provider default.
 
 ```json
 {
   "task": "pointwise",
-  "model": "<judge-model-id>",
+  "model": "gpt-5.6-sol",
   "judge_id": "<judge-id>",
   "model_family_map": {
     "<claude-frontier-model-id>": { "family": "claude", "role": "frontier" },
-    "<gpt-frontier-model-id>": { "family": "gpt", "role": "frontier" },
+    "gpt-5.6-sol": { "family": "gpt", "role": "frontier" },
     "<open-evaluator-model-id>": {
       "family": "prometheus",
       "role": "open_evaluator"
@@ -102,6 +102,7 @@ The private judge configuration supplies the requested model, judge identifier, 
   "template_path": "/path/to/repository/experiments/prompts/judges/pointwise-v1.md",
   "seed": 12345,
   "presentation_seed": 67890,
+  "reasoning_effort": "medium",
   "temperature": null,
   "top_p_or_equivalent": 1,
   "maximum_output_tokens": 512,
@@ -112,6 +113,8 @@ The private judge configuration supplies the requested model, judge identifier, 
 ```
 
 The base URL and credential environment variables named in the private configuration must be set before the command runs. The scorer resolves both values at call time and never copies either value into a score artifact. The endpoint response must report a model identifier present in `model_family_map`; the scorer derives the judge family from that mapping instead of trusting a configured family label. The judge engine in [`src/agentic_cogwriter/judges/engine.py`](src/agentic_cogwriter/judges/engine.py) replaces the prompt's `runtime-verified` marker with that runtime-derived protocol value before the score record is written. The completed run's `run-manifest.json` must contain `models_and_execution.generator_model_id` and `models_and_execution.generator_model_family`. The optional `allow_same_family_judge` field defaults to `false`; set it to `true` only for exploratory same-family scoring, and `scores-manifest.json` records whether the family audit was `enforced` or `exploratory-same-family`.
+
+The [OpenAI Chat Completions reference](https://developers.openai.com/api/docs/api-reference/chat/create) lists `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max` for `reasoning_effort`; accepted values differ by model because the provider enforces model-specific support. The [gpt-5.6-sol model page](https://developers.openai.com/api/docs/models/gpt-5.6-sol) lists `none`, `low`, `medium`, `high`, `xhigh`, and `max`, with `medium` as the documented default for the GPT-5.6 family. The `reasoning_effort` key pins the selected value in a judge configuration and in the score manifest. The score manifest records `provider-default` when the key is absent. The field applies only to the OpenAI-compatible transport. Bedrock configurations must omit it because the Converse API has no documented equivalent used by this client. Replication judging remains a separate configuration decision.
 
 gpt-5-family judges cannot pin `temperature`; determinism relies on the recorded seed, and the judge manifest records the effective decoding settings as `provider-default` when a setting is omitted.
 
