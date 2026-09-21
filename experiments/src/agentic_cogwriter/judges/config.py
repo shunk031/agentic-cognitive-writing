@@ -12,11 +12,15 @@ from .errors import JudgeConfigurationError
 
 JudgeTask = Literal["pointwise", "pairwise", "native-pointwise", "native-checklist"]
 JudgeTransport = Literal["openai", "bedrock"]
-JudgeReasoningEffort = Literal["none", "low", "medium", "high", "xhigh", "max"]
+JudgeReasoningEffort = Literal[
+    "none", "minimal", "low", "medium", "high", "xhigh", "max"
+]
 JudgeFamily = Literal["claude_frontier", "gpt_frontier", "open_evaluator"]
 JudgeRole = Literal["frontier", "open_evaluator"]
 FamilyAuditMode = Literal["enforced", "exploratory-same-family"]
-_REASONING_EFFORTS = frozenset({"none", "low", "medium", "high", "xhigh", "max"})
+_REASONING_EFFORTS = frozenset(
+    {"none", "minimal", "low", "medium", "high", "xhigh", "max"}
+)
 
 
 @dataclass(frozen=True)

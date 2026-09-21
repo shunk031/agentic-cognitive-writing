@@ -537,7 +537,8 @@ def test_judge_config_accepts_provider_default_decoding(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "reasoning_effort", ["none", "low", "medium", "high", "xhigh", "max"]
+    "reasoning_effort",
+    ["none", "minimal", "low", "medium", "high", "xhigh", "max"],
 )
 def test_judge_config_accepts_documented_reasoning_efforts(
     tmp_path: Path, reasoning_effort: str
@@ -561,7 +562,7 @@ def test_judge_config_absent_reasoning_effort_uses_provider_default(
     assert config.reasoning_effort is None
 
 
-@pytest.mark.parametrize("reasoning_effort", ["minimal", "unknown", 1, True])
+@pytest.mark.parametrize("reasoning_effort", ["unknown", 1, True])
 def test_judge_config_rejects_unsupported_reasoning_effort(
     tmp_path: Path, reasoning_effort: object
 ) -> None:
@@ -868,15 +869,21 @@ def test_fake_transport_receives_deterministic_zero_temperature_payload(
     assert payload["max_completion_tokens"] == 120
 
 
-def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
+@pytest.mark.parametrize(
+    ("reasoning_effort", "expected_reasoning_effort"),
+    [("low", "low"), (None, None)],
+)
+def test_gpt56_http_transport_maps_optional_reasoning_effort(
     tmp_path: Path,
+    reasoning_effort: str | None,
+    expected_reasoning_effort: str | None,
 ) -> None:
     template = Path(__file__).parents[1] / "prompts/judges/pointwise-v1.md"
     config = _config(
         tmp_path,
         template,
         model="gpt-5.6-terra",
-        reasoning_effort="low",
+        reasoning_effort=reasoning_effort,
     )
     captured: list[dict[str, Any]] = []
 
@@ -966,7 +973,7 @@ def test_gpt56_fake_transport_receives_prompt_cache_payload_and_usage(
         "mode": "explicit",
         "ttl": "30m",
     }
-    assert payload["reasoning_effort"] == "low"
+    assert payload.get("reasoning_effort") == expected_reasoning_effort
     assert response.usage == {
         "prompt_tokens": 10,
         "completion_tokens": 2,
@@ -1786,3 +1793,4 @@ def test_score_manifest_records_provider_default_decoding(
     manifest = json.loads(result.manifest_path.read_text(encoding="utf-8"))
     assert manifest["judge"]["temperature"] == "provider-default"
     assert manifest["judge"]["top_p"] == "provider-default"
+    assert manifest["judge"]["reasoning_effort"] == "provider-default"
