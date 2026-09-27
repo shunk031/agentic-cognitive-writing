@@ -141,7 +141,7 @@ uv run --project experiments agentic-cogwriter-score \
 
 HelloBench accepts only scores of 0, 0.25, 0.5, 0.75, or 1, with checklist IDs covering 0 through `num_checklist - 1`. The scorer writes no run-level average; analysis computes any prompt-level aggregate after validation.
 
-The pairwise command runs both presentations for one unordered pair. The scorer derives the invocation order from `presentation_seed`, records that seed and the derived order mapping in `scores-manifest.json`, and writes two JSON Lines records only after both presentations validate:
+The pairwise command runs both presentations for one unordered pair. The scorer derives the invocation order from `presentation_seed`, records that seed and the derived order mapping in `scores-manifest.json`, and writes two JSON Lines records only after both presentations validate. The aggregation stage retains both records as the record-pooled sensitivity estimand and also emits a prompt-collapsed confirmatory estimand: agreement after semantic winner mapping gives one prompt-level winner, while any disagreement, including winner-versus-tie, gives a prompt-level tie.
 
 ```bash
 uv run --project experiments agentic-cogwriter-score \
@@ -167,7 +167,7 @@ uv run --project experiments agentic-cogwriter-score-batch \
   --native-config /path/to/hellobench-native-config.json
 ```
 
-The aggregation command applies the same retry selector, reads completed canonical run manifests and score manifests, then writes `aggregation.json` and `aggregation.md` under the requested output directory. The report includes completion failures, generic and native quality summaries, pairwise counts and Bradley-Terry strengths, token costs, and the run counts used for each table. Supply each price argument as a JSON file path. Each file contains `input`, `cached_input`, and `output` values in cost units per one million tokens.
+The aggregation command applies the same retry selector, reads completed canonical run manifests and score manifests, then writes `aggregation.json` and `aggregation.md` under the requested output directory. The report includes completion failures, generic and native quality summaries, legacy record-pooled pairwise counts and Bradley-Terry strengths, prompt-collapsed pairwise counts with exact sign tests and Wilson intervals, presentation-disagreement diagnostics, token costs, and the run counts used for each table. Supply each price argument as a JSON file path. Each file contains `input`, `cached_input`, and `output` values in cost units per one million tokens. Pass `--holm-family-root` once for each independent run root when separate run-level reports must share one Holm family.
 
 ```bash
 uv run --project experiments agentic-cogwriter-aggregate \

@@ -297,6 +297,82 @@ def _mapping(artifact: ScoreArtifact) -> dict[str, tuple[int, int]]:
     return result or {"A|B": (0, 1), "B|A": (1, 0)}
 
 
+def exact_two_sided_sign_test(wins: int, losses: int) -> float:
+    """Return the exact two-sided sign-test p-value, excluding ties."""
+
+    non_ties = wins + losses
+    if non_ties == 0:
+        return 1.0
+    lower_tail = sum(
+        math.comb(non_ties, index) for index in range(min(wins, losses) + 1)
+    )
+    return min(1.0, 2.0 * lower_tail / (2**non_ties))
+
+
+def wilson_interval(
+    wins: int, losses: int, *, confidence: float = 0.95
+) -> tuple[float | None, float | None]:
+    """Return a Wilson score interval for the win rate, excluding ties."""
+
+    non_ties = wins + losses
+    if non_ties == 0:
+        return None, None
+    if not 0 < confidence < 1:
+        raise ValueError("confidence must be between zero and one")
+    # The confirmatory analysis uses the standard normal 95 percent critical
+    # value. Keep the calculation dependency-free so the aggregation command
+    # remains usable in the frozen experiment environment.
+    z = 1.959963984540054
+    rate = wins / non_ties
+    denominator = 1 + z**2 / non_ties
+    center = (rate + z**2 / (2 * non_ties)) / denominator
+    margin = (
+        z
+        * math.sqrt(rate * (1 - rate) / non_ties + z**2 / (4 * non_ties**2))
+        / denominator
+    )
+    return center - margin, center + margin
+
+
+def holm_adjusted_pvalues(pvalues: Sequence[float]) -> list[float]:
+    """Apply Holm's step-down correction while preserving input order."""
+
+    if not pvalues:
+        return []
+    if any(not 0 <= value <= 1 for value in pvalues):
+        raise ValueError("p-values must be between zero and one")
+    ordered = sorted(enumerate(pvalues), key=lambda item: (item[1], item[0]))
+    adjusted = [0.0] * len(pvalues)
+    running = 0.0
+    size = len(pvalues)
+    for rank, (index, value) in enumerate(ordered):
+        running = max(running, min(1.0, (size - rank) * value))
+        adjusted[index] = running
+    return adjusted
+
+
+def _sign_statistics(
+    wins: int,
+    losses: int,
+    ties: int,
+    *,
+    holm_pvalue: float | None = None,
+) -> dict[str, Any]:
+    low, high = wilson_interval(wins, losses)
+    p_raw = exact_two_sided_sign_test(wins, losses)
+    return {
+        "wins": wins,
+        "losses": losses,
+        "ties": ties,
+        "n_non_tie": wins + losses,
+        "win_rate": wins / (wins + losses) if wins + losses else None,
+        "p_raw": p_raw,
+        "p_holm": p_raw if holm_pvalue is None else holm_pvalue,
+        "wilson_low": low,
+        "wilson_high": high,
+    }
+
+
 def fit_bradley_terry(
     games: Sequence[tuple[str, str, str]], *, max_iterations: int = 10_000
 ) -> dict[str, Any]:
@@ -365,6 +441,7 @@ def _pairwise(
     runs: Sequence[RunRecord],
     *,
     contrasts: tuple[tuple[str, str], ...] = CONTRASTS,
+    holm_pvalues: Mapping[tuple[str, str, str, str], float] | None = None,
 ) -> dict[str, Any]:
     expected: dict[tuple[str, str], int] = defaultdict(int)
     completed_counts: dict[tuple[str, str], int] = defaultdict(int)
@@ -411,6 +488,11 @@ def _pairwise(
             {
                 "games": [],
                 "counts": defaultdict(lambda: {"wins": 0, "ties": 0, "losses": 0}),
+                "collapsed_counts": defaultdict(
+                    lambda: {"wins": 0, "ties": 0, "losses": 0}
+                ),
+                "prompt_totals": defaultdict(int),
+                "disagreements": defaultdict(int),
                 "consistent": [],
                 "pairs": set(),
                 "runs": set(),
@@ -445,6 +527,21 @@ def _pairwise(
             group["counts"][f"{left}:{right}"][
                 {"left": "wins", "right": "losses", "tie": "ties"}[result]
             ] += 1
+        # One prompt contributes a winner only when both semantic outcomes
+        # agree; every disagreement, including winner-versus-tie, is a tie.
+        collapsed_result = (
+            "left"
+            if outcomes[0] == outcomes[1] == left
+            else "right"
+            if outcomes[0] == outcomes[1] == right
+            else "tie"
+        )
+        group["collapsed_counts"][f"{left}:{right}"][
+            {"left": "wins", "right": "losses", "tie": "ties"}[collapsed_result]
+        ] += 1
+        group["prompt_totals"][f"{left}:{right}"] += 1
+        if outcomes[0] != outcomes[1]:
+            group["disagreements"][f"{left}:{right}"] += 1
         group["consistent"].append(float(outcomes[0] == outcomes[1]))
         group["pairs"].add((prompt, left, right))
         group["runs"].update(source.path for source in artifact.sources)
@@ -455,6 +552,9 @@ def _pairwise(
         fit = fit_bradley_terry(group["games"])
         slot["judges"][judge] = {
             "contrasts": dict(sorted(group["counts"].items())),
+            "_collapsed_counts": dict(sorted(group["collapsed_counts"].items())),
+            "_prompt_totals": dict(sorted(group["prompt_totals"].items())),
+            "_disagreements": dict(sorted(group["disagreements"].items())),
             "position_consistency_rate": fmean(group["consistent"])
             if group["consistent"]
             else None,
@@ -484,17 +584,66 @@ def _pairwise(
                 if judge["position_consistency_rate"] is not None
             ]
             data["position_consistency_rate"] = fmean(positions) if positions else None
-            data["contrasts"] = {
-                label: {
+            cells: dict[str, dict[str, int]] = {}
+            record_cells: dict[str, dict[str, Any]] = {}
+            collapsed_cells: dict[str, dict[str, Any]] = {}
+            for left, right in contrasts:
+                label = f"{left}:{right}"
+                if not any(
+                    label in judge["contrasts"] for judge in data["judges"].values()
+                ):
+                    continue
+                record_counts = {
                     field: sum(
                         judge["contrasts"].get(label, {}).get(field, 0)
                         for judge in data["judges"].values()
                     )
                     for field in ("wins", "ties", "losses")
                 }
-                for label in (f"{left}:{right}" for left, right in contrasts)
-                if any(label in judge["contrasts"] for judge in data["judges"].values())
-            }
+                collapsed_counts = {
+                    field: sum(
+                        judge["_collapsed_counts"].get(label, {}).get(field, 0)
+                        for judge in data["judges"].values()
+                    )
+                    for field in ("wins", "ties", "losses")
+                }
+                prompt_total = sum(
+                    judge["_prompt_totals"].get(label, 0)
+                    for judge in data["judges"].values()
+                )
+                disagreements = sum(
+                    judge["_disagreements"].get(label, 0)
+                    for judge in data["judges"].values()
+                )
+                record_stats = _sign_statistics(
+                    record_counts["wins"],
+                    record_counts["losses"],
+                    record_counts["ties"],
+                )
+                collapsed_stats = _sign_statistics(
+                    collapsed_counts["wins"],
+                    collapsed_counts["losses"],
+                    collapsed_counts["ties"],
+                )
+                if holm_pvalues is not None:
+                    record_stats["p_holm"] = holm_pvalues.get(
+                        (benchmark, platform, label, "record_pooled"),
+                        record_stats["p_raw"],
+                    )
+                    collapsed_stats["p_holm"] = holm_pvalues.get(
+                        (benchmark, platform, label, "prompt_collapsed"),
+                        collapsed_stats["p_raw"],
+                    )
+                cells[label] = record_counts
+                record_cells[label] = record_stats
+                collapsed_cells[label] = {
+                    **collapsed_stats,
+                    "presentation_disagreements": disagreements,
+                    "prompt_total": prompt_total,
+                }
+            data["contrasts"] = cells
+            data["record_pooled"] = record_cells
+            data["prompt_collapsed"] = collapsed_cells
             fits = [
                 judge
                 for judge in data["judges"].values()
@@ -527,6 +676,22 @@ def _pairwise(
                 else {}
             )
             missing += data["missing_pairs"]
+    if holm_pvalues is None:
+        for _benchmark, value in report.items():
+            for data in value["platforms"].values():
+                for method in ("record_pooled", "prompt_collapsed"):
+                    labels = list(data[method])
+                    adjusted = holm_adjusted_pvalues(
+                        [data[method][label]["p_raw"] for label in labels]
+                    )
+                    for label, pvalue in zip(labels, adjusted, strict=True):
+                        data[method][label]["p_holm"] = pvalue
+    for value in report.values():
+        for data in value["platforms"].values():
+            for judge in data["judges"].values():
+                judge.pop("_collapsed_counts", None)
+                judge.pop("_prompt_totals", None)
+                judge.pop("_disagreements", None)
     return {
         "benchmarks": report,
         "missing_pairs": missing,
@@ -689,6 +854,19 @@ def _markdown(report: Mapping[str, Any]) -> str:
                 f"position_consistency={data['position_consistency_rate']}"
             )
             lines.append(f"  strengths={json.dumps(data['strengths'], sort_keys=True)}")
+            for label, pooled in data["record_pooled"].items():
+                collapsed = data["prompt_collapsed"][label]
+                lines.append(
+                    f"  {label}: record_pooled={pooled['wins']}/{pooled['losses']}/"
+                    f"{pooled['ties']} p={pooled['p_raw']} p_holm={pooled['p_holm']} "
+                    f"CI=({pooled['wilson_low']},{pooled['wilson_high']}); "
+                    f"prompt_collapsed={collapsed['wins']}/{collapsed['losses']}/"
+                    f"{collapsed['ties']} p={collapsed['p_raw']} "
+                    f"p_holm={collapsed['p_holm']} "
+                    f"CI=({collapsed['wilson_low']},{collapsed['wilson_high']}) "
+                    f"disagreements={collapsed['presentation_disagreements']} "
+                    f"prompts={collapsed['prompt_total']}"
+                )
     lines += [
         "",
         "## Cost",
@@ -714,6 +892,48 @@ def _markdown(report: Mapping[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _holm_family_for_root(
+    family_roots: Sequence[Path],
+    current_root: Path,
+    *,
+    contrasts: tuple[tuple[str, str], ...],
+) -> dict[tuple[str, str, str, str], float]:
+    """Get per-cell Holm values from a family of independent run roots."""
+
+    raw: dict[tuple[str, str, str], list[tuple[Path, str, float]]] = defaultdict(list)
+    for root_value in family_roots:
+        root = root_value.resolve()
+        runs = select_canonical_runs([root])
+        pairwise = _pairwise(
+            _artifacts([root], runs),
+            runs,
+            contrasts=contrasts,
+        )
+        for benchmark, benchmark_data in pairwise["benchmarks"].items():
+            for platform, data in benchmark_data["platforms"].items():
+                for label, cell in data.get("record_pooled", {}).items():
+                    raw[(benchmark, platform, "record_pooled")].append(
+                        (root, label, cell["p_raw"])
+                    )
+                for label, cell in data.get("prompt_collapsed", {}).items():
+                    raw[(benchmark, platform, "prompt_collapsed")].append(
+                        (root, label, cell["p_raw"])
+                    )
+
+    adjusted_for_current: dict[tuple[str, str, str, str], float] = {}
+    current_root = current_root.resolve()
+    for (benchmark, platform, method), values in raw.items():
+        adjusted = holm_adjusted_pvalues([value[2] for value in values])
+        for (root, label, _pvalue), adjusted_value in zip(
+            values, adjusted, strict=True
+        ):
+            if root == current_root:
+                adjusted_for_current[(benchmark, platform, label, method)] = (
+                    adjusted_value
+                )
+    return adjusted_for_current
+
+
 def aggregate_runs(
     runs_roots: Sequence[Path],
     *,
@@ -721,18 +941,37 @@ def aggregate_runs(
     judge_prices: Path,
     output_dir: Path,
     contrasts: tuple[tuple[str, str], ...] = CONTRASTS,
+    holm_family_roots: Sequence[Path] | None = None,
 ) -> dict[str, Any]:
-    """Write aggregation.json and aggregation.md for canonical runs."""
+    """Write aggregation.json and aggregation.md for canonical runs.
+
+    ``holm_family_roots`` supplies independent run roots whose raw p-values
+    form the confirmatory Holm family. The output remains scoped to
+    ``runs_roots``; callers should provide one current root and the full
+    family when reporting separate run-level files.
+    """
 
     runs = select_canonical_runs(list(runs_roots))
     artifacts = _artifacts(runs_roots, runs)
     generation = _generation(runs, _prices(generation_prices))
     judge = _judge_cost(artifacts, _prices(judge_prices))
+    holm_pvalues = None
+    if holm_family_roots and len(runs_roots) == 1:
+        holm_pvalues = _holm_family_for_root(
+            holm_family_roots,
+            runs_roots[0],
+            contrasts=contrasts,
+        )
     report = {
         "completion": _completion(runs),
         "pointwise": _pointwise(artifacts),
         "native": _native(artifacts),
-        "pairwise": _pairwise(artifacts, runs, contrasts=contrasts),
+        "pairwise": _pairwise(
+            artifacts,
+            runs,
+            contrasts=contrasts,
+            holm_pvalues=holm_pvalues,
+        ),
         "cost": {
             "generation": generation["rows"],
             "judge": judge["rows"],
@@ -771,6 +1010,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=CONTRASTS,
         metavar="LEFT:RIGHT,...",
     )
+    parser.add_argument(
+        "--holm-family-root",
+        type=Path,
+        action="append",
+        help="independent run root included in the confirmatory Holm family",
+    )
     return parser
 
 
@@ -782,6 +1027,7 @@ def main(argv: list[str] | None = None) -> int:
         judge_prices=args.judge_prices,
         output_dir=args.output_dir,
         contrasts=args.contrasts,
+        holm_family_roots=args.holm_family_root,
     )
     print(args.output_dir / "aggregation.md")
     print(

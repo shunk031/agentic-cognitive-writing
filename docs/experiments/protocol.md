@@ -279,13 +279,17 @@ The analysis-stage implementation for these summaries is the `agentic-cogwriter-
 
 ### Balanced pairwise tournament
 
-The balanced tournament supplies the confirmatory estimand. The six core conditions A1-A6 produce 15 unordered condition pairs. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. The two presentations produce 30 judgments per prompt per judge. Apply these controls:
+The balanced tournament supplies the pairwise evidence. The six core conditions A1-A6 produce 15 unordered condition pairs. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. The two presentations produce 30 judgments per prompt per judge. Apply these controls:
 
 - Blind the condition labels.
 - Randomize output order with a recorded seed.
 - Record ties as explicit outcomes.
 
 These controls follow the evaluation survey's judge design in [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) and its position and verbosity bias mitigations.
+
+The prompt-collapsed pairwise estimand is confirmatory because the two presentation judgments for one unordered pair and prompt are repeated measurements, not independent observations. After mapping each presentation winner back to its semantic condition, one prompt-level outcome is recorded: agreement on a condition gives that condition the win, while any disagreement, including a winner-versus-tie result, gives the prompt a tie. The confirmatory sign test excludes those prompt-level ties, and the analysis reports the exact two-sided p-value, the Holm-adjusted p-value for the prespecified family, and a 95 percent Wilson interval. For the three-run report with eight contrasts, the family contains 24 benchmark-by-run-by-contrast cells for each benchmark.
+
+The record-pooled pairwise estimand retains both mapped presentation records as separate observations. The aggregation report keeps its raw win, loss, and tie counts and corresponding inferential summaries as a sensitivity analysis for presentation-order behavior. Record-pooled observations must not be described as independent trials or used as the confirmatory inference.
 
 The pairwise JSON object follows this contract, and every record must include the fields shown below.
 
