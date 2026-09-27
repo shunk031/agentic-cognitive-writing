@@ -344,6 +344,7 @@ def aggregate_cross_family(
     report = {
         "schema_version": 1,
         "note": "No multiplicity correction is applied to this robustness check.",
+        "eligible_pair_count": len(rows),
         "provenance": _provenance(
             manifests, (cross_family_judge_id, reference_judge_id)
         ),

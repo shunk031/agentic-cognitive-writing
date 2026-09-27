@@ -51,6 +51,7 @@ def _pair(
     *,
     model: str = "us.anthropic.claude-sonnet-5",
     effort: str = "medium",
+    records: list[dict[str, str]] | None = None,
 ) -> None:
     pair_id = (
         f"{source_runs[0].parent.parent.name}-{source_runs[1].parent.parent.name}-"
@@ -58,7 +59,7 @@ def _pair(
     )
     path = root / "scores" / judge_id / pair_id
     path.mkdir(parents=True)
-    records = [
+    records = records or [
         {"presentation": presentation, "winner": winner}
         for presentation, winner in zip(("A|B", "B|A"), winners, strict=True)
     ]
@@ -141,6 +142,62 @@ def test_aggregate_cross_family_groups_and_compares_both_levels(
     assert metric["benchmarks"]["HelloBench"]["losses"] == 1
     assert report["pooled"]["commit_rate"]["numerator"] == 3
     assert "holm" not in json.dumps(report).lower()
+
+
+def test_aggregate_cross_family_excludes_incomplete_pair_manifests(
+    tmp_path: Path,
+) -> None:
+    _fixture(tmp_path)
+
+    missing_reference = [
+        _run(tmp_path, "WritingBench", condition, "missing-reference")
+        for condition in ("A4", "A1")
+    ]
+    _pair(tmp_path, missing_reference, "claude", ("A", "B"))
+
+    one_presentation = [
+        _run(tmp_path, "WritingBench", condition, "one-presentation")
+        for condition in ("A4", "A1")
+    ]
+    _pair(
+        tmp_path,
+        one_presentation,
+        "claude",
+        ("A", "B"),
+        records=[{"presentation": "A|B", "winner": "A"}],
+    )
+    _pair(tmp_path, one_presentation, "gpt", ("A", "B"))
+
+    invalid_record = [
+        _run(tmp_path, "WritingBench", condition, "invalid-record")
+        for condition in ("A4", "A1")
+    ]
+    _pair(
+        tmp_path,
+        invalid_record,
+        "claude",
+        ("A", "B"),
+        records=[
+            {"presentation": "A|B", "winner": "invalid"},
+            {"presentation": "B|A", "winner": "A"},
+        ],
+    )
+    _pair(tmp_path, invalid_record, "gpt", ("A", "B"))
+
+    report = aggregate_cross_family(
+        tmp_path,
+        cross_family_judge_id="claude",
+        reference_judge_id="gpt",
+        contrasts=(("A4", "A1"),),
+    )
+
+    metric = report["contrasts"]["A4:A1"]
+    assert report["eligible_pair_count"] == 4
+    assert metric["n"] == report["eligible_pair_count"]
+    assert metric["presentation_agreement"]["denominator"] == 8
+    assert metric["prompt_collapsed_agreement"]["denominator"] == 4
+    assert report["pooled"]["presentation_agreement"]["denominator"] == 8
+    assert report["pooled"]["prompt_collapsed_agreement"]["denominator"] == 4
 
 
 def test_cross_family_cli_writes_json(tmp_path: Path) -> None:
