@@ -1,7 +1,7 @@
 <!--
 Agentic CogWriter pointwise judge prompt
 Version: pointwise-v1
-Protocol source: docs/experiments/protocol.md, Pointwise quality from two judges
+Protocol source: docs/experiments/protocol.md, descriptive pointwise quality
 FastChat source path: fastchat/llm_judge/data/judge_prompts.jsonl
 FastChat source sha256: fd283293406d024f44c174b094ef48031d0687a4682fd3a56b29b138f80281b6
 FastChat adaptation: single-v1 neutral-judge framing only; the five-dimension rubric is protocol-defined.

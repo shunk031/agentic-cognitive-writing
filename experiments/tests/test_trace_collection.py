@@ -279,11 +279,11 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "retrieval": "N/A",
     }
     assert all(
-        registry[f"A{index}"].analysis_family == "confirmatory" for index in range(1, 7)
+        registry[f"A{index}"].analysis_family == "confirmatory" for index in range(1, 8)
     )
     assert all(
         registry[condition].analysis_family == "exploratory"
-        for condition in ("A7", "B1", "B2")
+        for condition in ("B1", "B2")
     )
     assert registry["A1"].trace_processes == ("generate",)
     assert registry["A2"].trace_processes == ("pre-write", "write", "re-write")
