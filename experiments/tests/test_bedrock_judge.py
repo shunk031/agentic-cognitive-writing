@@ -143,6 +143,7 @@ def test_bedrock_transport_builds_request_and_maps_cache_usage(
     assert request["modelId"] == "us.anthropic.claude-opus-5"
     assert request["inferenceConfig"]["maxTokens"] == 64
     assert "topP" not in request["inferenceConfig"]
+    assert "additionalModelRequestFields" not in request
     assert response.output.checklist_items[0].checklist_id == 0
     assert response.usage == {
         "prompt_tokens": 110,
@@ -156,6 +157,30 @@ def test_bedrock_transport_builds_request_and_maps_cache_usage(
 def test_bedrock_transport_rejects_reasoning_effort(tmp_path: Path) -> None:
     with pytest.raises(JudgeConfigurationError, match="reasoning_effort"):
         _config(tmp_path, transport="bedrock", reasoning_effort="low")
+
+
+def test_bedrock_transport_sends_anthropic_effort_in_model_fields(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    fake_client = _FakeBedrockClient()
+
+    def fake_boto3_client(*args: Any, **kwargs: Any) -> _FakeBedrockClient:
+        return fake_client
+
+    monkeypatch.setattr(boto3, "client", fake_boto3_client)
+    monkeypatch.setenv("TEST_JUDGE_BASE_URL", "https://gateway.test/")
+    monkeypatch.setenv("TEST_JUDGE_CREDENTIAL", "token-is-not-printed")
+    config = _config(tmp_path, transport="bedrock", effort="medium")
+
+    OpenAICompatibleClient(config).complete(
+        "Return one checklist item.",
+        output_type=HelloBenchChecklistRecord,
+        text_output=True,
+    )
+
+    assert fake_client.requests[0]["additionalModelRequestFields"] == {
+        "output_config": {"effort": "medium"}
+    }
 
 
 @pytest.mark.parametrize("transport", ["anthropic", "bedrock-runtime", 1, None])

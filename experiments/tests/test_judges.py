@@ -138,9 +138,11 @@ def _config(
     model: str = "open-model",
     model_family_map: dict[str, object] | None = None,
     allow_same_family_judge: object = False,
+    transport: object = "openai",
     temperature: object = 0,
     top_p: object = 1,
     reasoning_effort: object = None,
+    effort: object = None,
 ) -> JudgeConfig:
     values: dict[str, object] = {
         "task": task,
@@ -153,6 +155,7 @@ def _config(
             "open-model": {"family": "prometheus", "role": "open_evaluator"},
         },
         "allow_same_family_judge": allow_same_family_judge,
+        "transport": transport,
         "base_url_env": "TEST_JUDGE_BASE_URL",
         "credential_env": "TEST_JUDGE_CREDENTIAL",
         "template_path": str(template),
@@ -161,6 +164,7 @@ def _config(
         "temperature": temperature,
         "top_p_or_equivalent": top_p,
         "reasoning_effort": reasoning_effort,
+        "effort": effort,
         "maximum_output_tokens": 120,
         "stop_rules": [],
         "timeout": 10,
@@ -560,6 +564,38 @@ def test_judge_config_absent_reasoning_effort_uses_provider_default(
     config = _config(tmp_path, template)
 
     assert config.reasoning_effort is None
+
+
+@pytest.mark.parametrize("effort", ["low", "medium", "high", "xhigh", "max"])
+def test_judge_config_accepts_documented_anthropic_efforts(
+    tmp_path: Path, effort: str
+) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+
+    config = _config(tmp_path, template, effort=effort, transport="bedrock")
+
+    assert config.effort == effort
+
+
+def test_judge_config_absent_effort_uses_provider_default(tmp_path: Path) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+
+    config = _config(tmp_path, template)
+
+    assert config.effort is None
+
+
+@pytest.mark.parametrize("effort", ["unknown", 1, True])
+def test_judge_config_rejects_unsupported_effort(
+    tmp_path: Path, effort: object
+) -> None:
+    template = tmp_path / "judge.txt"
+    _template(template, "pointwise")
+
+    with pytest.raises(JudgeConfigurationError, match="effort"):
+        _config(tmp_path, template, effort=effort, transport="bedrock")
 
 
 @pytest.mark.parametrize("reasoning_effort", ["unknown", 1, True])
@@ -1742,6 +1778,7 @@ def test_score_run_writes_protocol_jsonl_and_hashed_manifest(tmp_path: Path) -> 
         "reported_model_id",
         "seed",
         "reasoning_effort",
+        "effort",
         "temperature",
         "top_p",
         "max_output_tokens",
@@ -1761,6 +1798,7 @@ def test_score_run_writes_protocol_jsonl_and_hashed_manifest(tmp_path: Path) -> 
     }
     assert record["judge_family"] == "open_evaluator"
     assert manifest["judge"]["reasoning_effort"] == "low"
+    assert manifest["judge"]["effort"] == "provider-default"
     assert manifest["records"][0]["record_sha256"].startswith("sha256:")
     assert manifest["records"][0]["usage"]["total_tokens"] == 18
     assert manifest["family_audit"] == {
@@ -1797,3 +1835,4 @@ def test_score_manifest_records_provider_default_decoding(
     assert manifest["judge"]["temperature"] == "provider-default"
     assert manifest["judge"]["top_p"] == "provider-default"
     assert manifest["judge"]["reasoning_effort"] == "provider-default"
+    assert manifest["judge"]["effort"] == "provider-default"

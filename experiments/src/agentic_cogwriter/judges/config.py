@@ -15,12 +15,14 @@ JudgeTransport = Literal["openai", "bedrock"]
 JudgeReasoningEffort = Literal[
     "none", "minimal", "low", "medium", "high", "xhigh", "max"
 ]
+JudgeAnthropicEffort = Literal["low", "medium", "high", "xhigh", "max"]
 JudgeFamily = Literal["claude_frontier", "gpt_frontier", "open_evaluator"]
 JudgeRole = Literal["frontier", "open_evaluator"]
 FamilyAuditMode = Literal["enforced", "exploratory-same-family"]
 _REASONING_EFFORTS = frozenset(
     {"none", "minimal", "low", "medium", "high", "xhigh", "max"}
 )
+_ANTHROPIC_EFFORTS = frozenset({"low", "medium", "high", "xhigh", "max"})
 
 
 @dataclass(frozen=True)
@@ -178,6 +180,7 @@ class JudgeConfig:
     presentation_seed: int | None
     allow_same_family_judge: bool = False
     reasoning_effort: JudgeReasoningEffort | None = None
+    effort: JudgeAnthropicEffort | None = None
     transport: JudgeTransport = "openai"
     region_name: str = "us-east-1"
     source_path: Path | None = None
@@ -249,6 +252,20 @@ class JudgeConfig:
                     "reasoning_effort is not supported with Bedrock transport"
                 )
         reasoning_effort = cast(JudgeReasoningEffort | None, reasoning_effort_value)
+
+        effort_value = values.get("effort")
+        if effort_value is not None:
+            if (
+                not isinstance(effort_value, str)
+                or effort_value not in _ANTHROPIC_EFFORTS
+            ):
+                allowed = ", ".join(sorted(_ANTHROPIC_EFFORTS))
+                raise JudgeConfigurationError(f"effort must be one of: {allowed}")
+            if transport != "bedrock":
+                raise JudgeConfigurationError(
+                    "effort is only supported with Bedrock transport"
+                )
+        effort = cast(JudgeAnthropicEffort | None, effort_value)
 
         base_url_env = _required_string(values, "base_url_env", "base_url_env_name")
         credential_env = _required_string(
@@ -354,6 +371,7 @@ class JudgeConfig:
             presentation_seed=presentation_seed,
             allow_same_family_judge=allow_same_family_judge,
             reasoning_effort=reasoning_effort,
+            effort=effort,
             transport=transport,
             region_name=region_name,
             source_path=source_path,

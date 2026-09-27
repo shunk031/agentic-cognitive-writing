@@ -322,6 +322,9 @@ def _write_score_artifacts(
                 if config.reasoning_effort is not None
                 else "provider-default"
             ),
+            "effort": (
+                config.effort if config.effort is not None else "provider-default"
+            ),
             "temperature": (
                 config.temperature
                 if config.temperature is not None
