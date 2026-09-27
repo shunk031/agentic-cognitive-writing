@@ -32,7 +32,7 @@ Flower and Hayes' _A Cognitive Process Theory of Writing_[^1] describes writing 
 
 The protocol tests that account as an agent process rather than treating the account as a claim about human inner experience.
 
-The core experiment has six conditions, identified as A1 through A6, and the protocol adds B1 and B2 as exploratory conditions. The experiment holds the assignment, supplied context, tool budget, output budget, and no-retrieval rule constant across all enabled conditions. Only the process instructions and the resulting observable process differ. The benchmark and judge choices follow [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
+The study has seven confirmatory conditions, identified as A1 through A7. B1 and B2 are exploratory baselines used only in the Habermas pilot. The experiment holds the assignment, supplied context, tool budget, output budget, and no-retrieval rule constant across all enabled conditions. Only the process instructions and the resulting observable process differ. The benchmark and judge choices follow [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md).
 
 The research questions (RQ) are:
 
@@ -43,15 +43,15 @@ The research questions (RQ) are:
 
 The protocol defines the analysis terms used below. An estimand is the quantity that the analysis plans to estimate. Pointwise scoring gives each output an independent rubric score. Benchmark-native pointwise scoring judges an output against the criteria that the benchmark ships for its own prompts instead of a shared generic rubric. A Bradley-Terry model [^11] estimates relative condition abilities from pairwise choices. Holm correction [^15] controls the family-wise error rate.
 
-The pairwise Bradley-Terry [^11] two-judge average is the sole CONFIRMATORY estimand. The average is the prespecified quantity used for confirmatory tests. Use one correction family per benchmark on the primary Codex pairwise average. Each family contains the five comparisons of the theory-based condition A4 with the five other core conditions A1, A2, A3, A5, and A6, for 15 confirmatory tests total.
+The confirmatory estimand is the prompt-collapsed benchmark-level pairwise preference. Map both presentation winners back to their semantic conditions, give a prompt the winner when the presentations agree, and give it a tie for any disagreement, including a winner-versus-tie result. Exclude prompt-level ties from the exact two-sided sign test. Apply Holm correction to the 24-cell family for each benchmark, formed by the eight locked contrasts across three independent runs. The contrasts are A4:A1, A4:A2, A4:A3, A4:A5, A4:A6, A7:A1, A7:A4, and A7:A5.
 
-The benchmark-native pointwise two-judge composite is a PRIMARY REPORTED estimand but NON-CONFIRMATORY. Report the native composite with intervals and attach no Holm-adjusted claims. The generic five-dimension pointwise composite is a sensitivity and judge-diagnostic estimand. All other contrasts remain exploratory.
+The current scored study uses one judge family per platform. A second judge family has not been run. If a second family is added later, report it as a cross-family check rather than averaging it into the confirmatory estimand. Bradley-Terry strengths, generic pointwise scores, and benchmark-native scores are descriptive outputs reported for completeness, not confirmatory estimands. The record-pooled pairwise analysis is a sensitivity analysis. All contrasts outside the eight locked contrasts are exploratory.
 
-This estimand assignment revises the original protocol, which made the generic pointwise composite the sole confirmatory estimand. The revision precedes the statistical lock and every confirmatory scoring run. A ten-prompt WritingBench pilot, recorded in the [session handoff](https://github.com/shunk031/agentic-cognitive-writing/issues/32), showed that the generic five-dimension scale saturates while benchmark-native criteria and pairwise comparisons discriminate among conditions. Pilot outputs and pilot scores enter no confirmatory analysis; confirmatory runs regenerate outputs from the frozen prompt manifests.
+The current estimand assignment was fixed before the statistical lock and every confirmatory scoring run. A ten-prompt WritingBench pilot, recorded in the [session handoff](https://github.com/shunk031/agentic-cognitive-writing/issues/32), showed that the generic five-dimension scale saturates while benchmark-native criteria and pairwise comparisons discriminate among conditions. Pilot outputs and pilot scores enter no confirmatory analysis; confirmatory runs regenerate outputs from the frozen prompt manifests.
 
-The protocol also defines process and replication estimands. The primary process estimands are goal events, adaptive process switches, within-process operation counts, and pop-back events. Report rates and distributions for each. The replication estimand is the direction and size of the A4 treatment effect under the secondary platform. Report it separately from the primary platform.
+The protocol also defines process and replication estimands. The primary process estimands are goal events, adaptive process switches, within-process operation counts, and pop-back events. Report rates and distributions for each. The replication estimand is the direction and size of the selected pairwise effects under the secondary platform. Report it separately from the primary platform.
 
-## Six core conditions and two exploratory conditions
+## Seven confirmatory conditions and two exploratory conditions
 
 All enabled conditions share the same skill-and-subagent framework and the plugin-written `.writing/trace/process.jsonl` path. The runner invokes exactly one skill for each condition, including the two exploratory conditions when they are enabled. The equal-information policy gives every condition identical input context. The runner must expose the same local tools, context window policy, timeout, output budget, and number of allowed attempts to every condition. No condition may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
 
@@ -65,6 +65,7 @@ Delegating conditions record a `delegation_check` in the run manifest, and a Cod
 | A4 Agentic CogWriter      | D_t, G_t, H_t                        | writing process a_t | a_t = pi_Monitor(D_t, G_t, H_t)                                   | D_t, G_t, H_t          |
 | A5 w/o Goal Network       | D_t, H_t                             | writing process a_t | a_t = pi_Monitor(D_t, H_t)                                        | D_t, H_t               |
 | A6 Fixed Process Order    | D_t, G_t, H_t                        | writing process a_t | fixed cyclic P -> T -> R                                          | D_t, G_t, H_t          |
+| A7 Single Writer          | D_t, G_t, H_t                        | writing process a_t | one Writer and Monitor coordinate P -> T -> R                    | D_t, G_t, H_t          |
 
 **Single-shot condition A1.** Condition A1 invokes `writing-single-shot` from the planned `experiments/baselines/` package. The skill makes one generation pass from the assignment and supplied context. The condition has no explicit planning or review stage. The skill writes the externally visible generation event to the shared trace path and does not infer hidden goals or stages.
 
@@ -78,15 +79,17 @@ Delegating conditions record a `delegation_check` in the run manifest, and a Cod
 
 **Fixed-order condition A6.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin and retains Agentic CogWriter's full state: current text, goal network, and process history. The process implementations remain unchanged. A6 replaces only the `Monitor`'s selection function with the fixed cycle `Planning -> Translating -> Reviewing` and differs from A4 only in that selection rule. The runner keeps the ordinary goal network and records process switches, goal events, and process-history updates under the shared trace contract.
 
+**Single-writer condition A7.** Condition A7 invokes `cognitive-writing-single-writer` from the `cognitive-writing-experiments` plugin. One main Writer performs the planning, translating, and reviewing work while maintaining the goal network and process history. The runner records the same shared trace fields without delegating these roles to separate subagents.
+
 **CogWriter-style exploratory condition B1.** Condition B1 invokes `writing-cogwriter-style` as an adaptation of CogWriter [^18], not as a reproduction of that system. The skill uses a structured plan and plan revision, parallel segment generation, length review, a fixed top-level order, and no goal network. The skill writes its observable actions to the shared trace path.
 
 **STORM-style exploratory condition B2 without retrieval.** Condition B2 invokes `writing-storm-style` from the planned `experiments/baselines/` package. The skill uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish, following [STORM](https://github.com/stanford-oval/storm)[^2]. Citation generation is omitted under the equal-information policy. The skill separates planning from writing and omits retrieval and source gathering while writing its observable stage events to the shared trace path.
 
 **B2 trace and evidence handling.** The skill writes the five stage events to the shared trace path. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The no-retrieval adaptation follows the benchmark evidence in [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) and the platform evidence in [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md).
 
-B1 and B2 are EXPLORATORY. Each platform's assigned judges score both conditions pointwise. The runner compares each exploratory condition with A4 in pairwise judgments, runs both presentation orders, and reports intervals without Holm-adjusted claims. The 15-pair confirmatory tournament remains the tournament among A1-A6, and the confirmatory family remains exactly the 15 Holm-corrected A4-versus-A1, A2, A3, A5, and A6 contrasts on the primary pairwise Bradley-Terry [^11] two-judge average.
+B1 and B2 are exploratory baselines used only in the Habermas pilot. A7 is a confirmatory condition. The current confirmatory family consists of the eight prompt-collapsed contrasts listed above, with exact sign tests and Holm correction over 24 run-by-contrast cells per benchmark. Other pairwise comparisons may be reported descriptively or as exploratory results without confirmatory claims.
 
-All six core conditions use the same assignment, starting draft, model settings, and user decisions. B1 and B2 use the same settings when the exploratory runs are enabled.
+All seven confirmatory conditions use the same assignment, starting draft, model settings, and user decisions. B1 and B2 use the same settings in the Habermas pilot.
 
 The plugin mapping implements the theory in _A Cognitive Process Theory of Writing_[^1], but that 1981 paper does not specify these files.
 
@@ -151,9 +154,9 @@ The plugin ships its adapters through these repository files:
 
 ### Platform assignments
 
-The primary platform is OpenAI Codex headless, invoked with `codex exec`, with the six core conditions and any enabled exploratory conditions invoking one skill per condition over one pinned generator model from the Generative Pre-trained Transformer (GPT) family. Conditions A1-A3 invoke `writing-single-shot`, `writing-linear`, and `writing-adaptive-task-planning` from the planned `experiments/baselines/` package. Condition A4 invokes `agentic-cog-writer`, and conditions A5 and A6 invoke their named skills from the `cognitive-writing-experiments` plugin. The [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) describes the primary platform's skill and adapter design.
+The primary platform is OpenAI Codex headless, invoked with `codex exec`, with the seven confirmatory conditions and any enabled exploratory conditions invoking one skill per condition over one pinned generator model from the Generative Pre-trained Transformer (GPT) family. Conditions A1-A3 invoke `writing-single-shot`, `writing-linear`, and `writing-adaptive-task-planning` from the planned `experiments/baselines/` package. Condition A4 invokes `agentic-cog-writer`, and conditions A5-A7 invoke their named skills from the `cognitive-writing-experiments` plugin. The [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) describes the primary platform's skill and adapter design.
 
-The secondary replication runs the same condition specifications under Claude Code headless with one pinned Claude-family generator model. Conditions A1-A3 invoke the corresponding baseline skills, condition A4 invokes `agentic-cog-writer`, and conditions A5 and A6 invoke the corresponding skills from the `cognitive-writing-experiments` plugin. The runner applies the same skill invocation to B1 and B2 when exploratory runs are enabled.
+The secondary replication runs the same condition specifications under Claude Code headless with one pinned Claude-family generator model. Conditions A1-A3 invoke the corresponding baseline skills, condition A4 invokes `agentic-cog-writer`, and conditions A5-A7 invoke the corresponding skills from the `cognitive-writing-experiments` plugin. The runner applies the same skill invocation to B1 and B2 when the Habermas pilot is enabled.
 
 The runner must record the installed Codex and Claude Code CLI versions and validate each exact headless invocation before a run. The [Codex non-interactive mode guide](https://developers.openai.com/codex/non-interactive-mode) and [Claude Code headless mode guide](https://docs.anthropic.com/en/docs/claude-code/headless) provide invocation references.
 
@@ -164,15 +167,15 @@ The runner uses these conceptual interfaces:
 
 The runner will version the command flags in experiments/conditions/ when the runner lands and record them in every run manifest. The run must not silently fall back to an interactive mode.
 
-Before running A1, A2, or A3, the runner loads the corresponding skill from the planned `experiments/baselines/` package. Before running A4, A5, or A6, the runner installs the main `agentic-cognitive-writing` plugin. Before running A5 or A6, the runner also installs the `cognitive-writing-experiments` plugin. The main plugin provides the role skills and agents that the experiment plugin uses. The runner records both plugin commits in the run manifest.
+Before running A1, A2, or A3, the runner loads the corresponding skill from the planned `experiments/baselines/` package. Before running A4-A7, the runner installs the main `agentic-cognitive-writing` plugin. Before running A5-A7, the runner also installs the `cognitive-writing-experiments` plugin. The main plugin provides the role skills and agents that the experiment plugin uses. The runner records both plugin commits in the run manifest.
 
-The runner starts one top-level session per condition and prompt. In Codex A4 to A6 runs, the plugin may request native Codex subagents as documented. The plugin must not spawn nested `codex exec` children. If native delegation is unavailable and the `Monitor` performs a delegated role itself, the trace must record that fallback.
+The runner starts one top-level session per condition and prompt. In Codex A4 to A6 runs, the plugin may request native Codex subagents as documented. A7 keeps the Writer and Monitor in the top-level session. The plugin must not spawn nested `codex exec` children. If native delegation is unavailable and the `Monitor` performs a delegated role itself, the trace must record that fallback.
 
 Prompt composition carries the assignment, supplied context, and requested output constraints exactly once. For a condition with path-bearing frozen stages, the runner renders those values into the first stage that carries the shared-input block and removes duplicate shared-input sections from later stages in memory. The runner verifies every stage hash before rendering, writes no rendered text back to the frozen files, and fails configuration before CLI probing when a stage contains an unsupported `{{name}}` token. Conditions without path-bearing stages carry the shared inputs in the generic prompt block.
 
 ### Generator and judge separation
 
-The protocol assigns judges by platform. The Codex run with GPT-family generators uses a Claude-family frontier judge and the shared third-family Prometheus 2 [^9] style open evaluator. The Claude Code run with Claude-family generators uses a GPT-family frontier judge and the same open evaluator.
+The protocol defines non-overlapping judge assignments by platform for cross-family checks. A Codex run with GPT-family generators may use a Claude-family frontier judge or the shared third-family Prometheus 2 [^9] style open evaluator. A Claude Code run with Claude-family generators may use a GPT-family frontier judge or the same open evaluator. The current scored study uses one configured judge family per platform and does not average these assignments.
 
 The open evaluator must belong to a third model family, and the assignment is symmetric across the two platform runs. The runtime family audit enforces judge/generator family non-overlap per scoring run; it does not require declaring the full family set for a single-judge run.
 
@@ -216,15 +219,15 @@ The runner measures output quality and length as separate outcomes. The product 
 
 The runner preserves the raw output byte-for-byte and also stores the normalized text used for token and word counts. Normalization may remove only transport wrappers defined in the runner specification. Normalization must not rewrite content, repair claims, or change paragraph boundaries.
 
-### Generic pointwise quality from two judges
+### Generic pointwise quality
 
-The generic pointwise scale supplies the sensitivity and judge-diagnostic estimand and stays comparable across benchmarks. Each assigned judge scores every output independently on five dimensions. Each raw score is an integer from 1 to 5. The judge returns a short evidence quote for each dimension.
+The generic pointwise scale is descriptive and judge-diagnostic, and stays comparable across benchmarks. Each assigned judge scores every output independently on five dimensions. Each raw score is an integer from 1 to 5. The judge returns a short evidence quote for each dimension.
 
 For each platform, the runner z-scores each dimension within each benchmark and judge. The runner then averages the five z-scores into that judge's level composite. For platform `p`, judge `j`, benchmark `b`, dimension `d`, and output `i`, the value is `z(i,p,j,b,d) = (raw(i,p,j,b,d) - mean(p,j,b,d)) / sd(p,j,b,d)`. A zero standard deviation uses the frozen zero-variance rule in the runtime gate. Length compliance never enters a quality score.
 
-On the primary Codex platform, every output receives both the Claude-family frontier judge and the open evaluator. The generic pointwise composite is the equal-weight mean of the two judge-level composites, `Q_primary(i) = 0.5 * C_Claude(i) + 0.5 * C_open(i)`. Report per-judge raw scores and per-judge composites as additional sensitivity analyses.
+The current scored study uses one configured judge family per platform. Report its raw scores and composites by judge. If a second judge family is run later, report its scores separately as a cross-family check rather than forming a confirmatory average.
 
-On the Claude Code replication, every output receives the GPT-family frontier judge and the same open evaluator. The replication composite uses the same equal-weight construction, `Q_replication(i) = 0.5 * C_GPT(i) + 0.5 * C_open(i)`. Keep replication inference separate from primary inference. Do not pool platforms. Report cross-platform agreement descriptively for RQ4.
+Keep replication scoring separate from primary scoring. Do not pool platforms. Report cross-platform agreement descriptively for RQ4.
 
 | Dimension                          | Score 1                                                                          | Score 3                                                   | Score 5                                                                                       |
 | ---------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
@@ -271,7 +274,7 @@ The runner retries an invalid judge response only under the fixed retry count in
 
 ### Benchmark-native pointwise quality
 
-The benchmark-native composite is the primary reported pointwise estimand and is defined for each benchmark whose pinned prompt manifest carries per-prompt native criteria. The WritingBench manifest carries each query's five native criteria. The judge scores one criterion per request as an integer from 1 to 10 under the frozen versioned native template, following the pinned upstream evaluator. The analysis stage aggregates the criterion scores: the per-output native score is the unweighted mean over that prompt's criteria on the raw native scale without z-scoring, and the native composite averages the two assigned judges with equal weight, mirroring the generic two-judge construction. The runner applies the same JSON validation and retry rules as the generic pointwise stage.
+The benchmark-native composite is a descriptive pointwise scale defined for each benchmark whose pinned prompt manifest carries per-prompt native criteria. The WritingBench manifest carries each query's five native criteria. The judge scores one criterion per request as an integer from 1 to 10 under the frozen versioned native template, following the pinned upstream evaluator. The analysis stage aggregates the criterion scores: the per-output native score is the unweighted mean over that prompt's criteria on the raw native scale without z-scoring. The current scored study does not average two judge families. A later family is a separate cross-family check. The runner applies the same JSON validation and retry rules as the generic pointwise stage.
 
 HelloBench follows its upstream checklist contract rather than the WritingBench request shape. Each manifest row carries 5 to 7 checklist strings. One native-checklist request evaluates every checklist item for that row and returns one structured JSON Lines record containing `checklist_id`, `reason`, and `evaluation_score` for each item. IDs must cover 0 through `num_checklist - 1` without gaps, and scores must be one of 0, 0.25, 0.5, 0.75, or 1. The scorer writes no run-level average; analysis may compute a prompt-level mean after validation. For a benchmark whose manifest carries no per-prompt native criteria, the generic composite remains the reported pointwise scale and the native composite is `N/A`.
 
@@ -279,7 +282,7 @@ The analysis-stage implementation for these summaries is the `agentic-cogwriter-
 
 ### Balanced pairwise tournament
 
-The balanced tournament supplies the pairwise evidence. The six core conditions A1-A6 produce 15 unordered condition pairs. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. The two presentations produce 30 judgments per prompt per judge. Apply these controls:
+The balanced tournament supplies the pairwise evidence for selected contrasts. The confirmatory set contains A4:A1, A4:A2, A4:A3, A4:A5, A4:A6, A7:A1, A7:A4, and A7:A5. For every prompt and assigned judge, run both A/B and B/A presentations. A/B places output A first. B/A places output B first. Each selected pair therefore produces two presentation judgments per prompt per judge. Apply these controls:
 
 - Blind the condition labels.
 - Randomize output order with a recorded seed.
@@ -312,15 +315,15 @@ The pairwise JSON object follows this contract, and every record must include th
 }
 ```
 
-Group pairwise records on `(platform, judge_id, benchmark)` before fitting each judge-specific Bradley-Terry [^11] model, because each confirmatory family covers one benchmark. Use `judge_family` to verify each group against the runtime judge manifest. Compute the equal-weight average from those per-judge fits within each platform and benchmark. Do not combine records from different platforms, judges, or benchmarks before fitting.
+For descriptive Bradley-Terry [^11] summaries, group pairwise records on `(platform, judge_id, benchmark)` before fitting each judge-specific model. Use `judge_family` to verify each group against the runtime judge manifest. Report the per-judge fits and any equal-weight summaries for completeness only. Do not combine records from different platforms, judges, or benchmarks before fitting, and do not use a judge average for confirmatory inference.
 
-Fit each Bradley-Terry [^11] model with a predeclared tie treatment. For condition `a` within one benchmark, let `theta_Codex(a, Claude)` and `theta_Codex(a, open)` be the judge-specific ability estimates under the same reference-condition constraint. The Codex pairwise average is `theta_primary(a) = 0.5 * theta_Codex(a, Claude) + 0.5 * theta_Codex(a, open)`. For the replication, use `theta_replication(a) = 0.5 * theta_ClaudeCode(a, GPT) + 0.5 * theta_ClaudeCode(a, open)`.
+Fit each Bradley-Terry [^11] model with a predeclared tie treatment and a common reference-condition constraint. A later second judge family remains a separate cross-family check rather than a confirmatory average.
 
 Fit and report the two platform models separately. Report these pairwise outputs:
 
 - Per-judge win rates
 - Per-judge Bradley-Terry [^11] ability estimates
-- Equal-weight judge averages
+- Descriptive judge-family summaries
 - Raw win, loss, and tie counts
 
 If the selected implementation cannot fit ties, count each tie as half a win in the tie-aware win rate.
@@ -444,11 +447,11 @@ The analysis correlates process measures with per-prompt product quality. It rep
 
 ## Confirmatory and exploratory analysis
 
-The analysis keeps primary and replication inference separate and reserves confirmatory claims for the primary pairwise Bradley-Terry [^11] two-judge average.
+The analysis keeps primary and replication results separate and reserves confirmatory claims for the prompt-collapsed benchmark-level pairwise preference. The current scored study uses one judge family per platform. Bradley-Terry strengths, pointwise scores, and native scales are descriptive, and a later second judge family is a cross-family check rather than a confirmatory average.
 
 The prompt is the paired unit. Each condition receives the same prompt, and platform replications use the same prompt manifest. Invalid or missing outputs remain in the run accounting. The report gives the failure count and reason by condition and benchmark. The report does not silently drop a condition that fails more often.
 
-For pointwise quality, compute the benchmark-native composite where the pinned manifest defines native criteria and the generic composite for every output, for each prompt and condition on each platform. Report the A4-versus-A1, A2, A3, A5, and A6 contrasts on both composites, using paired bootstrap intervals or a paired Wilcoxon signed-rank test [^16] across prompts, with no Holm-adjusted claims. Report these results:
+For pointwise quality, compute the benchmark-native composite where the pinned manifest defines native criteria and the generic composite for every output, for each prompt and condition on each platform. Report selected contrasts on both composites as descriptive results, using paired bootstrap intervals or a paired Wilcoxon signed-rank test [^16] across prompts, with no Holm-adjusted claims. Report these results:
 
 - Mean and median paired differences
 - Confidence intervals
@@ -457,16 +460,18 @@ For pointwise quality, compute the benchmark-native composite where the pinned m
 
 Report raw native criterion means, raw 1 to 5 generic means, judge-level composites, and per-judge contrasts as sensitivity analyses. Run the same analysis by benchmark. Keep Codex and Claude Code inference separate.
 
-For pairwise quality, the confirmatory contrasts compare condition A4 with the five other core conditions A1, A2, A3, A5, and A6 on the equal-weight pairwise average within each primary benchmark. Use prompt-level paired resampling for uncertainty and for the confirmatory p-values. Report these results on each platform:
+For pairwise quality, the confirmatory estimand compares the eight locked contrasts listed above using one prompt-level outcome per benchmark, contrast, and run. Agreement between the two presentations gives the semantic winner. Any presentation disagreement, including a winner-versus-tie result, gives a tie. Exclude ties from the exact two-sided sign test, apply the per-benchmark 24-cell Holm correction across the eight contrasts and three independent runs, and report a 95 percent Wilson interval. Report these results on each platform:
 
-- Raw wins, losses, and ties
-- Per-judge tie-aware win rates
-- Per-judge Bradley-Terry [^11] ability estimates
-- Equal-weight judge average
+- Prompt-collapsed wins, losses, and ties
+- Exact sign-test p-value and Holm-adjusted p-value
+- Wilson interval and presentation-disagreement count
+- Prompt total
+- Record-pooled wins, losses, ties, and inferential summaries as a sensitivity analysis
+- Bradley-Terry [^11] strengths as descriptive outputs
 
-Report the effect size on the selected Bradley-Terry [^11] scale or the paired difference in tie-aware win rate. Keep Codex and Claude Code inference separate.
+Report the prompt-collapsed win rate as the confirmatory effect size. Keep Codex and Claude Code results separate.
 
-For RQ1 and RQ2, run the 15 confirmatory contrasts on the primary Codex pairwise average. Compare condition A4 with the five other core conditions A1, A2, A3, A5, and A6 within each primary benchmark. Report the same five contrasts on the Claude Code replication separately, without pooled or confirmatory inference.
+For RQ1 and RQ2, run the eight confirmatory contrasts on the primary runs within each primary benchmark. The three independent runs supply the 24-cell Holm family for each benchmark. Report the same contrasts on the Claude Code replication separately as descriptive results, without pooled or confirmatory inference.
 
 For RQ4, compare platforms descriptively by the following measures and do not pool platforms:
 
@@ -474,14 +479,15 @@ For RQ4, compare platforms descriptively by the following measures and do not po
 - Rank agreement
 - Standardized effect size
 
-Apply Holm correction [^15] within each primary-benchmark family of five confirmatory contrasts on the primary Codex pairwise average. Do not apply the correction to the native or generic pointwise composite or to any other contrast. Report both pointwise composites with uncertainty intervals and no Holm-adjusted claims. Freeze these settings before outcome inspection:
+Apply Holm correction [^15] within each primary-benchmark family of 24 prompt-collapsed cells from the eight contrasts and three independent runs. Do not apply the correction to the record-pooled sensitivity analysis, Bradley-Terry strengths, native or generic pointwise composites, or any other contrast. Report pointwise composites with uncertainty intervals and no Holm-adjusted claims. Freeze these settings before outcome inspection:
 
 - Alternative hypotheses
 - Missing-value rules
 - Bootstrap resample count
 - Confidence level
 - Effect-size definitions
-- Bradley-Terry [^11] tie treatment
+- Prompt-collapse disagreement rule
+- Bradley-Terry [^11] tie treatment for descriptive summaries
 - Ability-scale convention
 
 Mark exploratory subgroup results clearly. Do not use them to replace the confirmatory estimates.
@@ -523,7 +529,7 @@ The runner validates these conditions:
 - A4 to A6 contain the fields required by their selected plugin skill.
 - A5 and A6 manifests record the selected skill from the experiments plugin.
 - Blind labels are independent of condition IDs.
-- All 15 unordered pairs have both presentation orders.
+- Every scored unordered pair has both presentation orders.
 
 A validation failure stops publication of the affected result.
 
@@ -541,7 +547,7 @@ The [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets
 
 - Blind labels
 - Both presentation orders
-- Two judge families
+- One configured judge family per current run; a later second family is a cross-family check
 - Evidence quotes
 - Length-stratified results
 - Overlap audits
