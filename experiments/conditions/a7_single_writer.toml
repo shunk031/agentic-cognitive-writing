@@ -1,6 +1,6 @@
 condition_id = "A7"
 skill = "cognitive-writing-single-writer"
-analysis_family = "exploratory"
+analysis_family = "confirmatory"
 product_requires_draft = true
 
 [package]

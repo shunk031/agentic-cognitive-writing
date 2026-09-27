@@ -69,7 +69,7 @@ def test_registry_keeps_wrapper_paths_and_families() -> None:
         "A4": "confirmatory",
         "A5": "confirmatory",
         "A6": "confirmatory",
-        "A7": "exploratory",
+        "A7": "confirmatory",
         "B1": "exploratory",
         "B2": "exploratory",
     }
