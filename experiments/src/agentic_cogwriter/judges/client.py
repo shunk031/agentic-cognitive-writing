@@ -194,6 +194,14 @@ class OpenAICompatibleClient:
             cast(dict[str, Any], settings)["openai_reasoning_effort"] = (
                 self.config.reasoning_effort
             )
+        if self.config.effort is not None:
+            if self.config.transport != "bedrock":
+                raise JudgeConfigurationError(
+                    "effort is only supported with Bedrock transport"
+                )
+            cast(dict[str, Any], settings)[
+                "bedrock_additional_model_requests_fields"
+            ] = {"output_config": {"effort": self.config.effort}}
         if self.config.model.casefold().startswith("gpt-5.6"):
             # Keep the run-directory key and explicit 30-minute policy on every retry.
             typed_settings = cast(dict[str, Any], settings)
