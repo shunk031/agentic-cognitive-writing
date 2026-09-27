@@ -304,18 +304,14 @@ def test_configurable_contrasts_keep_artifacts_disjoint_and_aggregate_selected_p
     ]
     assert batch_module.main(batch_args) == 0
     default_paths = {
-        path.parent
-        for path in root.rglob("scores.jsonl")
-        if "pairwise" in path.parts
+        path.parent for path in root.rglob("scores.jsonl") if "pairwise" in path.parts
     }
     assert len(default_paths) == 5
 
     a7 = _run(root, "WritingBench", "A7", "p1")
     assert batch_module.main([*batch_args, "--contrasts", "A7:A1,A7:A5"]) == 0
     all_paths = {
-        path.parent
-        for path in root.rglob("scores.jsonl")
-        if "pairwise" in path.parts
+        path.parent for path in root.rglob("scores.jsonl") if "pairwise" in path.parts
     }
     custom_paths = all_paths - default_paths
     assert custom_paths == {
@@ -327,24 +323,27 @@ def test_configurable_contrasts_keep_artifacts_disjoint_and_aggregate_selected_p
     prices = tmp_path / "prices.json"
     prices.write_text(json.dumps({"input": 0, "cached_input": 0, "output": 0}))
     output_dir = tmp_path / "report"
-    assert aggregate_module.main(
-        [
-            "--runs-root",
-            str(root),
-            "--generation-prices",
-            str(prices),
-            "--judge-prices",
-            str(prices),
-            "--output-dir",
-            str(output_dir),
-            "--contrasts",
-            "A7:A1,A7:A5",
-        ]
-    ) == 0
+    assert (
+        aggregate_module.main(
+            [
+                "--runs-root",
+                str(root),
+                "--generation-prices",
+                str(prices),
+                "--judge-prices",
+                str(prices),
+                "--output-dir",
+                str(output_dir),
+                "--contrasts",
+                "A7:A1,A7:A5",
+            ]
+        )
+        == 0
+    )
     report = json.loads((output_dir / "aggregation.json").read_text(encoding="utf-8"))
-    pairwise_report = report["pairwise"]["benchmarks"]["WritingBench"][
-        "platforms"
-    ]["codex"]
+    pairwise_report = report["pairwise"]["benchmarks"]["WritingBench"]["platforms"][
+        "codex"
+    ]
     assert pairwise_report["contrasts"] == {
         "A7:A1": {"wins": 2, "ties": 0, "losses": 0},
         "A7:A5": {"wins": 2, "ties": 0, "losses": 0},
@@ -713,7 +712,7 @@ def test_aggregate_reports_prompt_collapsed_pairwise_statistics(tmp_path: Path) 
         contrasts=(("A4", "A1"),),
     )
     cell = report["pairwise"]["benchmarks"]["WritingBench"]["platforms"]["codex"][
-        "prompt_collapsed"
+        "prompt_collapsed_across_judges"
     ]["A4:A1"]
     record_cell = report["pairwise"]["benchmarks"]["WritingBench"]["platforms"][
         "codex"
@@ -734,10 +733,12 @@ def test_aggregate_reports_prompt_collapsed_pairwise_statistics(tmp_path: Path) 
         "n_non_tie": 2,
         "win_rate": 0.5,
         "p_raw": 1.0,
-        "p_holm": 1.0,
+        "p_holm_report_local": 1.0,
         "wilson_low": pytest.approx(0.094531205734, rel=1e-9),
         "wilson_high": pytest.approx(0.905468794266, rel=1e-9),
         "presentation_disagreements": 2,
+        "judge_disagreements": 0,
+        "judge_prompt_observations": 4,
         "prompt_total": 4,
     }
     assert record_cell["wins"] == 3
@@ -773,7 +774,7 @@ def test_aggregate_exposes_wilson_and_pooled_collapsed_significance_difference(
         contrasts=(("A4", "A1"),),
     )
     cell = report["pairwise"]["benchmarks"]["WritingBench"]["platforms"]["codex"][
-        "prompt_collapsed"
+        "prompt_collapsed_across_judges"
     ]["A4:A1"]
     record_cell = report["pairwise"]["benchmarks"]["WritingBench"]["platforms"][
         "codex"
@@ -785,6 +786,188 @@ def test_aggregate_exposes_wilson_and_pooled_collapsed_significance_difference(
     assert record_cell["losses"] == 0
     assert record_cell["p_raw"] == pytest.approx(0.00048828125)
     assert record_cell["wilson_low"] == pytest.approx(0.7575, abs=0.01)
+
+
+def test_prompt_collapse_is_one_unique_prompt_across_judges(tmp_path: Path) -> None:
+    root = tmp_path / "runs"
+    prices = tmp_path / "prices.json"
+    prices.write_text(json.dumps({"input": 0, "cached_input": 0, "output": 0}))
+    judge_outcomes = {
+        "judge-1": (("A", "B"), ("B", "A"), ("B", "A"), ("A", "B")),
+        "judge-2": (("A", "B"), ("A", "B"), ("B", "A"), ("A", "B")),
+    }
+    for index in range(4):
+        a4 = _run(root, "WritingBench", "A4", f"p{index}")
+        a1 = _run(root, "WritingBench", "A1", f"p{index}")
+        for judge_id, outcomes in judge_outcomes.items():
+            pair = a4 / "scores" / "pairwise" / judge_id / f"pair-{index}"
+            _score_manifest(
+                pair,
+                "pairwise",
+                [a4, a1],
+                _pairwise_records(outcomes[index]),
+                judge_id=judge_id,
+            )
+
+    report = aggregate_module.aggregate_runs(
+        [root],
+        generation_prices=prices,
+        judge_prices=prices,
+        output_dir=tmp_path / "out",
+        contrasts=(("A4", "A1"),),
+    )
+    data = report["pairwise"]["benchmarks"]["WritingBench"]["platforms"]["codex"]
+    collapsed = data["prompt_collapsed_across_judges"]["A4:A1"]
+
+    assert collapsed["wins"] == 2
+    assert collapsed["losses"] == 1
+    assert collapsed["ties"] == 1
+    assert collapsed["prompt_total"] == 4
+    assert collapsed["judge_disagreements"] == 1
+    assert collapsed["judge_prompt_observations"] == 8
+
+
+def test_confirmatory_cli_wires_the_three_run_holm_family(tmp_path: Path) -> None:
+    parser = aggregate_module.build_parser()
+    args = parser.parse_args(
+        [
+            "--runs-root",
+            str(tmp_path / "run-1"),
+            "--holm-family-root",
+            str(tmp_path / "run-1"),
+            "--holm-family-root",
+            str(tmp_path / "run-2"),
+            "--holm-family-root",
+            str(tmp_path / "run-3"),
+            "--generation-prices",
+            str(tmp_path / "generation.json"),
+            "--judge-prices",
+            str(tmp_path / "judge.json"),
+            "--output-dir",
+            str(tmp_path / "out"),
+            "--contrasts",
+            "A4:A1,A4:A2,A4:A3,A4:A5,A4:A6,A7:A1,A7:A4,A7:A5",
+        ]
+    )
+
+    assert args.holm_family_root == [
+        tmp_path / "run-1",
+        tmp_path / "run-2",
+        tmp_path / "run-3",
+    ]
+    assert args.contrasts == aggregate_module.CONFIRMATORY_CONTRASTS
+
+
+def test_confirmatory_cli_accepts_documented_multi_root_example(
+    tmp_path: Path,
+) -> None:
+    prices = tmp_path / "prices.json"
+    prices.write_text(json.dumps({"input": 0, "cached_input": 0, "output": 0}))
+    output_dir = tmp_path / "out"
+
+    assert (
+        aggregate_module.main(
+            [
+                "--runs-root",
+                str(tmp_path / "run-1"),
+                "--holm-family-root",
+                str(tmp_path / "run-1"),
+                "--holm-family-root",
+                str(tmp_path / "run-2"),
+                "--holm-family-root",
+                str(tmp_path / "run-3"),
+                "--generation-prices",
+                str(prices),
+                "--judge-prices",
+                str(prices),
+                "--output-dir",
+                str(output_dir),
+                "--contrasts",
+                "A4:A1,A4:A2,A4:A3,A4:A5,A4:A6,A7:A1,A7:A4,A7:A5",
+            ]
+        )
+        == 0
+    )
+    assert (output_dir / "aggregation.json").is_file()
+    assert (output_dir / "aggregation.md").is_file()
+
+
+def test_confirmatory_cli_rejects_missing_holm_family(tmp_path: Path) -> None:
+    prices = tmp_path / "prices.json"
+    prices.write_text(json.dumps({"input": 0, "cached_input": 0, "output": 0}))
+
+    with pytest.raises(SystemExit):
+        aggregate_module.main(
+            [
+                "--runs-root",
+                str(tmp_path / "run-1"),
+                "--generation-prices",
+                str(prices),
+                "--judge-prices",
+                str(prices),
+                "--output-dir",
+                str(tmp_path / "out"),
+                "--contrasts",
+                "A4:A1,A4:A2,A4:A3,A4:A5,A4:A6,A7:A1,A7:A4,A7:A5",
+            ]
+        )
+
+
+def test_confirmatory_cli_rejects_duplicate_holm_family_root(tmp_path: Path) -> None:
+    prices = tmp_path / "prices.json"
+    prices.write_text(json.dumps({"input": 0, "cached_input": 0, "output": 0}))
+    root = tmp_path / "run-1"
+
+    with pytest.raises(ValueError, match="unique"):
+        aggregate_module.main(
+            [
+                "--runs-root",
+                str(root),
+                "--holm-family-root",
+                str(root),
+                "--holm-family-root",
+                str(root),
+                "--holm-family-root",
+                str(tmp_path / "run-3"),
+                "--generation-prices",
+                str(prices),
+                "--judge-prices",
+                str(prices),
+                "--output-dir",
+                str(tmp_path / "out"),
+                "--contrasts",
+                "A4:A1,A4:A2,A4:A3,A4:A5,A4:A6,A7:A1,A7:A4,A7:A5",
+            ]
+        )
+
+
+def test_confirmatory_cli_rejects_current_root_outside_holm_family(
+    tmp_path: Path,
+) -> None:
+    prices = tmp_path / "prices.json"
+    prices.write_text(json.dumps({"input": 0, "cached_input": 0, "output": 0}))
+
+    with pytest.raises(ValueError, match="member of the Holm family"):
+        aggregate_module.main(
+            [
+                "--runs-root",
+                str(tmp_path / "run-1"),
+                "--holm-family-root",
+                str(tmp_path / "run-2"),
+                "--holm-family-root",
+                str(tmp_path / "run-3"),
+                "--holm-family-root",
+                str(tmp_path / "run-4"),
+                "--generation-prices",
+                str(prices),
+                "--judge-prices",
+                str(prices),
+                "--output-dir",
+                str(tmp_path / "out"),
+                "--contrasts",
+                "A4:A1,A4:A2,A4:A3,A4:A5,A4:A6,A7:A1,A7:A4,A7:A5",
+            ]
+        )
 
 
 def test_holm_adjustment_handles_the_24_cell_family() -> None:

@@ -167,14 +167,17 @@ uv run --project experiments agentic-cogwriter-score-batch \
   --native-config /path/to/hellobench-native-config.json
 ```
 
-The aggregation command applies the same retry selector, reads completed canonical run manifests and score manifests, then writes `aggregation.json` and `aggregation.md` under the requested output directory. The report includes completion failures, generic and native quality summaries, legacy record-pooled pairwise counts and Bradley-Terry strengths, prompt-collapsed pairwise counts with exact sign tests and Wilson intervals, presentation-disagreement diagnostics, token costs, and the run counts used for each table. Supply each price argument as a JSON file path. Each file contains `input`, `cached_input`, and `output` values in cost units per one million tokens. Pass `--holm-family-root` once for each independent run root when separate run-level reports must share one Holm family.
+The aggregation command applies the same retry selector, reads completed canonical run manifests and score manifests, then writes `aggregation.json` and `aggregation.md` under the requested output directory. The report includes completion failures, generic and native quality summaries, legacy record-pooled pairwise counts and Bradley-Terry strengths, prompt-collapsed pairwise counts with exact sign tests and Wilson intervals, presentation- and judge-disagreement diagnostics, token costs, and the run counts used for each table. The JSON field `prompt_collapsed_across_judges` contains the confirmatory cells. With multiple judges, the estimand still counts one unique prompt: judges agreeing on a winner preserve it, and any judge disagreement becomes a tie. Supply each price argument as a JSON file path. Each file contains `input`, `cached_input`, and `output` values in cost units per one million tokens. A confirmatory eight-contrast report must pass one current `--runs-root` and the three independent roots as `--holm-family-root`; the output records the family size, member labels, and derivation next to the adjusted p-values.
 
 ```bash
 uv run --project experiments agentic-cogwriter-aggregate \
-  --runs-root /path/to/codex-runs \
-  --runs-root /path/to/replication-runs \
+  --runs-root /path/to/run-1 \
+  --holm-family-root /path/to/run-1 \
+  --holm-family-root /path/to/run-2 \
+  --holm-family-root /path/to/run-3 \
   --generation-prices /path/to/generation-prices.json \
   --judge-prices /path/to/judge-prices.json \
+  --contrasts A4:A1,A4:A2,A4:A3,A4:A5,A4:A6,A7:A1,A7:A4,A7:A5 \
   --output-dir /path/to/analysis-report
 ```
 
