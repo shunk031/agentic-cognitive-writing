@@ -1,0 +1,187 @@
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+
+\begin{tabular}{lllll}
+\toprule
+
+\lcell{\textbf{Method}}
+&
+\lcell{\textbf{Control State}}
+&
+\lcell{\textbf{Control Unit}}
+&
+\ccell{\textbf{Decision}}
+&
+\lcell{\textbf{Evolving Structure}}
+\\
+
+\midrule
+
+\lcell{
+  Re$^3$ \\
+  \cite{yang2022re3}
+}
+&
+\lcell{
+  Plan $P$ \\
+  Text $D_t$
+}
+&
+\lcell{
+  Passage
+}
+&
+\ccell{
+  $D_{t+1}
+   =
+   \underbrace{\pi_{\mathrm{gen}}}
+   _{\mathclap{\text{generation policy}}}
+   (P,D_t)$
+}
+&
+\lcell{
+  Text $D_t$
+}
+\\
+
+\midrule
+
+\lcell{
+  STORM \\
+  \cite{shao2024assisting}
+}
+&
+\lcell{
+  Outline $O_t$ \\
+  Evidence $E_t$
+}
+&
+\lcell{
+  Section
+}
+&
+\ccell{
+  $D_t
+   =
+   \underbrace{\pi_{\mathrm{gen}}}
+   _{\mathclap{\text{generation policy}}}
+   (O_t,E_t)$
+}
+&
+\lcell{
+  Text $D_t$
+}
+\\
+
+\midrule
+
+\lcell{
+  CogWriter \\
+  \cite{wan2025cognitive}
+}
+&
+\lcell{
+  Hierarchical plan $P$ \\
+  Constraints $C$ \\
+  Text $D_t$
+}
+&
+\lcell{
+  Plan \\
+  output
+}
+&
+\ccell{
+  $\underbrace{\pi_{\mathrm{check}}}
+   _{\mathclap{\text{validation policy}}}
+   (P,D,C)
+   \in
+   \{\mathrm{accept},\mathrm{revise}\}$
+}
+&
+\lcell{
+  Plan $P$ \\
+  Text $D_t$
+}
+\\
+
+\midrule
+
+\lcell{
+  WriteHERE \\
+  \cite{xiong2025beyond}
+}
+&
+\lcell{
+  Task graph $T_t$ \\
+  Written text $D_t$
+}
+&
+\lcell{
+  Task node \\
+  $v_t$
+}
+&
+\ccell{
+  $v_t
+   =
+   \underbrace{\pi_{\mathrm{task}}}
+   _{\mathclap{\text{task-selection policy}}}
+   (T_t)$
+}
+&
+\lcell{
+  Task graph $T_t$
+}
+\\
+
+\midrule
+
+\lcell{
+  \textbf{Ours}
+}
+&
+\lcell{
+  \textbf{Text $D_t$} \\
+  \textbf{Goal network $G_t$} \\
+  \textbf{Process history $H_t$}
+}
+&
+\lcell{
+  \textbf{Writing} \\
+  \textbf{process $a_t$}
+}
+&
+\ccell{
+  $a_t
+   =
+   \underbrace{\pi_{\mathrm{monitor}}}
+   _{\mathclap{\text{process-selection policy}}}
+   (D_t,G_t,H_t)$
+}
+&
+\lcell{
+  \textbf{Text $D_t$} \\
+  \textbf{Goal network $G_t$} \\
+  \textbf{Process state}
+}
+\\
+
+\bottomrule
+\end{tabular}
+
+\caption{
+Architecture-level comparison of long-form writing systems.
+Here, $\pi$ denotes a decision policy, with its lowercase word subscript
+indicating the type of decision made. $t$ is a writing step; $P$ is a plan,
+$O_t$ an outline, $E_t$ evidence, and $C$ constraints. $D_t$ denotes the text
+at step $t$, $G_t$ the evolving writer-goal network, $H_t$ the process history,
+$T_t$ the dynamic task graph, $v_t$ the selected task node, and $a_t$ the
+selected writing process.
+The equations provide a common abstraction of the architectures
+rather than reproducing their original formulations.
+}
+\label{tab:architecture-level-comparison}
+\end{table*}

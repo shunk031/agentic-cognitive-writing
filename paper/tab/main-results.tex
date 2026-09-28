@@ -1,0 +1,36 @@
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{lcc cc cc}
+\toprule
+\textbf{Condition}
+& \multicolumn{2}{c}{\textbf{WritingBench}}
+& \multicolumn{2}{c}{\textbf{HelloBench}}
+& \multicolumn{2}{c}{\textbf{DoLoMiTes}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+& \textbf{Native} & \textbf{Pointwise}
+& \textbf{Native} & \textbf{Pointwise}
+& \textbf{Native} & \textbf{Pointwise} \\
+\midrule
+\condSinglePass
+& \WritingAoneNative & \WritingAonePoint
+& \HelloAoneNative & \HelloAonePoint
+& -- & \DoLoAonePoint \\
+\condStaged
+& \WritingAtwoNative & \WritingAtwoPoint
+& \HelloAtwoNative & \HelloAtwoPoint
+& -- & \DoLoAtwoPoint \\
+\condTaskPlanning
+& \WritingAthreeNative & \WritingAthreePoint
+& \HelloAthreeNative & \HelloAthreePoint
+& -- & \DoLoAthreePoint \\
+\condFull
+& \WritingAfourNative & \WritingAfourPoint
+& \HelloAfourNative & \HelloAfourPoint
+& -- & \DoLoAfourPoint \\
+\bottomrule
+\end{tabular}
+\caption{Native and pointwise product scores from the first replication for the four primary conditions, as defined in Section~\ref{sec:evaluation}. Completion is reported in Table~\ref{tab:process-summary}.}
+\label{tab:main-results}
+\end{table*}

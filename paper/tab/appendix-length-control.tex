@@ -1,0 +1,19 @@
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Output-length ratio} & \textbf{W/L/T} & \shortstack{\textbf{Longer-side}\\\textbf{win rate}} \\
+\midrule
+1.00--1.05 & \LengthRatioOneToOneZeroFiveWLT & \LengthRatioOneToOneZeroFiveRate \\
+1.05--1.10 & \LengthRatioOneZeroFiveToOneTenWLT & \LengthRatioOneZeroFiveToOneTenRate \\
+1.10--1.25 & \LengthRatioOneTenToOneTwentyFiveWLT & \LengthRatioOneTenToOneTwentyFiveRate \\
+1.25--1.50 & \LengthRatioOneTwentyFiveToOneFiftyWLT & \LengthRatioOneTwentyFiveToOneFiftyRate \\
+1.50--2.00 & \LengthRatioOneFiftyToTwoWLT & \LengthRatioOneFiftyToTwoRate \\
+2.00+ & \LengthRatioTwoPlusWLT & \LengthRatioTwoPlusRate \\
+\bottomrule
+\end{tabular}
+\caption{Prompt-collapsed pairwise outcomes from the first replication by output-length ratio. The longer side is the first-listed outcome in each row; ties are excluded from the win-rate denominator. Output units come from the run manifests.}
+\label{tab:appendix-length-control}
+\end{table}

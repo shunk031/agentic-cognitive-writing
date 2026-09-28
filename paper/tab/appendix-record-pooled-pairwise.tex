@@ -1,0 +1,57 @@
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Contrast}
+& \textbf{WritingBench}
+& \textbf{HelloBench}
+& \textbf{DoLoMiTes}
+& \shortstack{\textbf{Pooled mean (SD);}\\\textbf{Wilson interval, first replication}} \\
+\midrule
+\condFull\ vs \condSinglePass
+& \RecordWritingFourOneRateMean\ (\RecordWritingFourOneRateSD)
+& \RecordHelloFourOneRateMean\ (\RecordHelloFourOneRateSD)
+& \RecordDoLoFourOneRateMean\ (\RecordDoLoFourOneRateSD)
+& \RecordPooledFourOneRateMean\ (\RecordPooledFourOneRateSD); \RecordPooledFourOneInterval \\
+\condFull\ vs \condStaged
+& \RecordWritingFourTwoRateMean\ (\RecordWritingFourTwoRateSD)
+& \RecordHelloFourTwoRateMean\ (\RecordHelloFourTwoRateSD)
+& \RecordDoLoFourTwoRateMean\ (\RecordDoLoFourTwoRateSD)
+& \RecordPooledFourTwoRateMean\ (\RecordPooledFourTwoRateSD); \RecordPooledFourTwoInterval \\
+\condFull\ vs \condTaskPlanning
+& \RecordWritingFourThreeRateMean\ (\RecordWritingFourThreeRateSD)
+& \RecordHelloFourThreeRateMean\ (\RecordHelloFourThreeRateSD)
+& \RecordDoLoFourThreeRateMean\ (\RecordDoLoFourThreeRateSD)
+& \RecordPooledFourThreeRateMean\ (\RecordPooledFourThreeRateSD); \RecordPooledFourThreeInterval \\
+\condFull\ vs \condNoGoals
+& \RecordWritingFourFiveRateMean\ (\RecordWritingFourFiveRateSD)
+& \RecordHelloFourFiveRateMean\ (\RecordHelloFourFiveRateSD)
+& \RecordDoLoFourFiveRateMean\ (\RecordDoLoFourFiveRateSD)
+& \RecordPooledFourFiveRateMean\ (\RecordPooledFourFiveRateSD); \RecordPooledFourFiveInterval \\
+\condFull\ vs \condFixedOrder
+& \RecordWritingFourSixRateMean\ (\RecordWritingFourSixRateSD)
+& \RecordHelloFourSixRateMean\ (\RecordHelloFourSixRateSD)
+& \RecordDoLoFourSixRateMean\ (\RecordDoLoFourSixRateSD)
+& \RecordPooledFourSixRateMean\ (\RecordPooledFourSixRateSD); \RecordPooledFourSixInterval \\
+\condSingleWriter\ vs \condSinglePass
+& \RecordWritingSevenOneRateMean\ (\RecordWritingSevenOneRateSD)
+& \RecordHelloSevenOneRateMean\ (\RecordHelloSevenOneRateSD)
+& \RecordDoLoSevenOneRateMean\ (\RecordDoLoSevenOneRateSD)
+& \RecordPooledSevenOneRateMean\ (\RecordPooledSevenOneRateSD); \RecordPooledSevenOneInterval \\
+\condSingleWriter\ vs \condFull
+& \RecordWritingSevenFourRateMean\ (\RecordWritingSevenFourRateSD)
+& \RecordHelloSevenFourRateMean\ (\RecordHelloSevenFourRateSD)
+& \RecordDoLoSevenFourRateMean\ (\RecordDoLoSevenFourRateSD)
+& \RecordPooledSevenFourRateMean\ (\RecordPooledSevenFourRateSD); \RecordPooledSevenFourInterval \\
+\condSingleWriter\ vs \condNoGoals
+& \RecordWritingSevenFiveRateMean\ (\RecordWritingSevenFiveRateSD)
+& \RecordHelloSevenFiveRateMean\ (\RecordHelloSevenFiveRateSD)
+& \RecordDoLoSevenFiveRateMean\ (\RecordDoLoSevenFiveRateSD)
+& \RecordPooledSevenFiveRateMean\ (\RecordPooledSevenFiveRateSD); \RecordPooledSevenFiveInterval \\
+\bottomrule
+\end{tabular}
+\caption{Record-pooled sensitivity analysis. The earlier design treated the two presentation records for each prompt as independent observations. Each cell reports the first-listed condition's record-pooled mean win rate and sample SD across the three replications; the pooled column adds the Wilson interval from the first replication. These values are descriptive sensitivity results, not the confirmatory analysis.}
+\label{tab:appendix-record-pooled-pairwise}
+\end{table}

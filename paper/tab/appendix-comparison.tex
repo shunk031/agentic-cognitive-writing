@@ -1,0 +1,41 @@
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Method}
+& \shortstack{\textbf{Recursive}\\\textbf{Processes}}
+& \shortstack{\textbf{Dynamic Process}\\\textbf{Selection}}
+& \shortstack{\textbf{Explicit Writer}\\\textbf{Goal State}}
+& \shortstack{\textbf{Writing-induced}\\\textbf{Goal Revision}}
+& \shortstack{\textbf{Process-level}\\\textbf{Trace}} \\
+\midrule
+Re$^3$~\cite{yang2022re3}
+    & \partly & \no     & \no     & \no     & \no \\
+STORM~\cite{shao2024assisting}
+    & \no     & \no     & \no     & \no     & \no \\
+CogWriter~\cite{wan2025cognitive}
+    & \partly & \no     & \no     & \partly & \no \\
+WriteHERE~\cite{xiong2025beyond}
+    & \partly & \partly & \partly & \partly & \no \\ \midrule
+Agentic CogWriter \textbf{(Ours)}
+    & \yes    & \yes    & \yes    & \yes    & \yes \\
+\bottomrule
+\end{tabular}
+
+\caption{
+Comparison of computational mechanisms for controlling long-form writing.
+\checkmark{} denotes an explicitly modeled mechanism,
+\textit{Partial} denotes related functionality without an explicit
+representation of the corresponding writing-process construct,
+and -- indicates that the mechanism is not explicitly modeled. The
+writing-induced goal revision column records modeled capacity, not an
+observed run event: across the three replications, \condFull\ recorded
+\AfourGoalRegeneratedMean\ (SD \AfourGoalRegeneratedSD) accepted regenerations per
+run, and its ledger contained \AfourLedgerEntriesMean\ (SD
+\AfourLedgerEntriesSD) entries, including \AfourLedgerWithProposalMean\ (SD
+\AfourLedgerWithProposalSD) with proposals (Section~\ref{sec:results-dynamics}).
+}
+\label{tab:architecture-comparison}
+\end{table}

@@ -1,0 +1,130 @@
+\documentclass[11pt]{article}
+
+\usepackage{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit}
+\usepackage{array}
+\usepackage{float}
+\usepackage{stfloats}
+\usepackage{epigraph}
+\setlength{\epigraphwidth}{0.86\columnwidth}
+\setlength{\epigraphrule}{0pt}
+\renewcommand{\epigraphflush}{center}
+
+\input{numbers}
+
+% Shared multiline table-cell helpers.
+\newcommand{\lcell}[1]{%
+  \begin{tabular}[c]{@{}l@{}}#1\end{tabular}%
+}
+\newcommand{\ccell}[1]{%
+  \begin{tabular}[c]{@{}c@{}}#1\end{tabular}%
+}
+
+\newcommand{\yes}{\checkmark}
+\newcommand{\no}{--}
+\newcommand{\partly}{\textit{Partial}}
+\newcommand{\condSinglePass}{\texttt{Single-pass}}
+\newcommand{\condStaged}{\texttt{Staged}}
+\newcommand{\condTaskPlanning}{\texttt{Task-planning}}
+\newcommand{\condFull}{\texttt{Full}}
+\newcommand{\condNoGoals}{\texttt{No-goals}}
+\newcommand{\condFixedOrder}{\texttt{Fixed-order}}
+\newcommand{\condSingleWriter}{\texttt{Single-writer}}
+\newcommand{\condExploratoryOne}{\texttt{Exploratory-1}}
+\newcommand{\condExploratoryTwo}{\texttt{Exploratory-2}}
+\newcommand{\modelGen}{\texttt{gpt-5.6-luna medium}}
+\newcommand{\modelGenBare}{\texttt{gpt-5.6-luna}}
+\newcommand{\modelJudge}{\texttt{gpt-5.6-sol medium}}
+\newcommand{\modelCross}{\texttt{claude-sonnet-5 medium}}
+
+\title{Revisiting the Cognitive Process Theory of Writing with Language Agents}
+
+\author{Shunsuke Kitada \\
+  Graduate School of Informatics and Engineering, The University of Electro-Communication \\
+  \texttt{shunsuke.kitada@uec.ac.jp}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Language-model writing systems decide what to do next in terms of sections, subtasks, or plans. The cognitive process theory of writing~\cite{flower1981cognitive} instead has a monitor decide which writing process, planning, translating, or reviewing, runs next, and no autonomous writer has been built that way. We build Agentic CogWriter, a writing system made of skills and subagents that uses a coding agent as its harness: a \texttt{Monitor} skill chooses the next writing process and delegates \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} to \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} subagents over a shared draft and goal network. We compare it with single-pass, staged, and task-planning writers on the most demanding prompts of WritingBench, HelloBench, and DoLoMiTes, and we switch off each of the theory's three commitments in turn. The delegating writer wins \PooledFourOneRateMean\ of decided comparisons against single-pass writing and is also favored over the staged and task-planning writers. Of the three commitments, only the split into separate agents shows a clear loss when removed; removing the goal network or the dynamic process order shows no detectable loss, and the \texttt{Monitor} mostly follows the textbook order on its own. A judge from another model family agrees on direction but decides only a third of the pairs, and all confirmatory judgments come from the generator's own model family.
+\end{abstract}
+
+\section{Introduction}
+\input{sec/01_introduction}
+
+\section{Related work}
+\input{sec/02_related_work}
+
+\section{Agentic CogWriter}
+\input{sec/03_method}
+
+\section{Experiments}
+\input{sec/04_experiments}
+
+\section{Results}
+\input{sec/05_results}
+
+\section{Discussion}
+\input{sec/06_discussion}
+
+\section{Conclusion}
+\input{sec/08_conclusion}
+
+\input{sec/07_limitations}
+
+\bibliography{custom}
+\clearpage
+
+\appendix
+\onecolumn
+
+\section{Mechanism comparison}
+\label{app:mechanism-comparison}
+The mechanism-comparison table reports which computational mechanisms are explicit in the evaluated writing systems; it distinguishes modeled capacity from observed regeneration events.
+\input{tab/appendix-comparison}
+
+\section{Runtime configuration}
+\label{app:runtime}
+Runtime configuration records the execution settings needed to reproduce the runs without changing how the results are interpreted. The generator used \modelGen\ with a 64,000 output-token budget; temperature was not set. Each run used one Codex CLI session in a container.
+
+The pairwise judge used \modelJudge\ with seed 20260908 and two retries. The cross-family judge used \modelCross\ through Bedrock with seed \CrossFamilySeed. Every condition received the same task input, available information, model, tool availability, and final-output contract.
+
+\section{Record-pooled sensitivity analysis}
+\label{app:record-pooled}
+The record-pooled table reports a sensitivity analysis that treats the two presentation records for each prompt as independent observations; the retained disagreements show how much presentation order can affect the descriptive rates.
+The retained presentation disagreements were \WritingPresentationDisagreementRate\ on WritingBench, \HelloPresentationDisagreementRate\ on HelloBench, and \DoLoPresentationDisagreementRate\ on DoLoMiTes across the three replications.
+\input{tab/appendix-record-pooled-pairwise}
+
+\section{Output-length sensitivity}
+\label{app:length-control}
+The length-control table reports the longer-side preference by output-length ratio; the longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. Within 5 percent, the outcomes from the first replication are \LengthFullSinglePassFiveWLT\ for \condFull\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condFull\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condFull\ versus \condNoGoals. Within 10 percent, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$). The 5/10-percent rates for \condFull\ versus \condSinglePass\ are \LengthFullSinglePassFiveRateRunTwo/\LengthFullSinglePassTenRateRunTwo in the second replication and \LengthFullSinglePassFiveRateRunThree/\LengthFullSinglePassTenRateRunThree in the third replication; the corresponding \condFull\ versus \condTaskPlanning\ rates are \LengthFullTaskPlanningFiveRateRunTwo/\LengthFullTaskPlanningTenRateRunTwo and \LengthFullTaskPlanningFiveRateRunThree/\LengthFullTaskPlanningTenRateRunThree. The \condFull\ versus \condNoGoals\ replicate rates are \LengthFullNoGoalsFiveRateRunTwo/\LengthFullNoGoalsTenRateRunTwo and \LengthFullNoGoalsFiveRateRunThree/\LengthFullNoGoalsTenRateRunThree.
+\input{tab/appendix-length-control}
+
+\section{Cross-family judge robustness}
+\label{app:cross-family}
+The cross-family table reports pooled outcomes for the three robustness contrasts: \CrossFamilyFullSinglePassWLT\ for \condFull\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ for \condFull\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ for \condFull\ versus \condNoGoals. The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval. The judge commits on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ pairs, with \CrossFamilyPooledWLT\ overall W/L/T and \CrossFamilyPooledAgreement\ prompt-collapsed agreements.
+\input{tab/appendix-cross-family}
+
+\clearpage
+\section{Habermas Machine pilot}
+\label{app:habermas}
+The Habermas table reports trace totals from the 80-run pilot, which tests short consensus writing as a boundary condition rather than a fourth benchmark.
+\input{tab/appendix-habermas}
+
+\condExploratoryOne\ is the exploratory CogWriter-style baseline, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; \condExploratoryTwo\ is the exploratory STORM-style baseline, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval. The full system ranks fifth of eight on the pointwise composite, behind \condSinglePass\ and \condStaged\ writing. \condFull\ and \condFixedOrder\ record \HabAfourRegenerated\ and \HabAsixRegenerated\ regeneration events, respectively; their ledgers contain \HabAfourLedger\ and \HabAsixLedger\ no/proposal outcomes, respectively.
+
+\end{document}

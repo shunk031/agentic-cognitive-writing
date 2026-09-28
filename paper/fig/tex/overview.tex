@@ -1,0 +1,62 @@
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+    font=\fontsize{8}{9.5}\selectfont,
+    box/.style={
+        draw,
+        rounded corners=2pt,
+        align=center,
+        minimum height=8mm,
+        inner sep=3pt
+    },
+    monitor/.style={
+        box,
+        minimum width=25mm
+    },
+    process/.style={
+        box,
+        minimum width=31mm,
+        minimum height=9mm
+    },
+    state/.style={
+        box,
+        minimum width=31mm,
+        minimum height=19mm
+    },
+    arrow/.style={
+        -{Latex[length=1.5mm]},
+        semithick
+    },
+    regen/.style={
+        arrow,
+        dashed
+    }
+]
+\node[monitor] (monitor) at (0,4.8) {\textbf{\texttt{Monitor}}};
+
+\node[process] (planning) at (-22mm,3.0) {\texttt{Planner}};
+\node[process] (translating) at (0,3.0) {\texttt{Translator}};
+\node[process] (reviewing) at (22mm,3.0) {\texttt{Reviewer}};
+
+\node[state] (state) at (0,0.6) {
+    \textbf{Shared state}\\[-1pt]
+    \texttt{draft}\\
+    \texttt{goal network}\\
+    \texttt{history}
+};
+
+\draw[arrow] (monitor.south) -- (planning.north);
+\draw[arrow] (monitor.south) -- (translating.north);
+\draw[arrow] (monitor.south) -- (reviewing.north);
+
+\draw[arrow] (planning.south) to[out=-90,in=160] (state.north west);
+\draw[arrow] (translating.south) -- (state.north);
+\draw[arrow] (reviewing.south) to[out=-90,in=20] (state.north east);
+
+\coordinate (returnpath) at (-34mm,0.6);
+\draw[arrow] (state.west) -- (returnpath) |- (monitor.west);
+\draw[regen] (reviewing.east) -- (state.east);
+\end{tikzpicture}
+\caption{The control loop in Agentic CogWriter. The \texttt{Monitor} selects a process and delegates it to the corresponding agent. The agent updates the shared draft, goal network, and history before control returns; the \texttt{Reviewer} can trigger goal regeneration.}
+\label{fig:agentic-cogwriter}
+\end{figure}

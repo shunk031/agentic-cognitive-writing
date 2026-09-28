@@ -1,0 +1,53 @@
+\begin{table*}[!t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Contrast}
+& \textbf{WritingBench}
+& \textbf{HelloBench}
+& \textbf{DoLoMiTes}
+& \textbf{Pooled mean (SD)} \\
+\midrule
+\condFull\ vs \condSinglePass
+& \WritingFourOneRateMean\ (\WritingFourOneRateSD)
+& \HelloFourOneRateMean\ (\HelloFourOneRateSD)
+& \DoLoFourOneRateMean\ (\DoLoFourOneRateSD)
+& \PooledFourOneRateMean\ (\PooledFourOneRateSD) \\
+\condFull\ vs \condStaged
+& \WritingFourTwoRateMean\ (\WritingFourTwoRateSD)
+& \HelloFourTwoRateMean\ (\HelloFourTwoRateSD)
+& \DoLoFourTwoRateMean\ (\DoLoFourTwoRateSD)
+& \PooledFourTwoRateMean\ (\PooledFourTwoRateSD) \\
+\condFull\ vs \condTaskPlanning
+& \WritingFourThreeRateMean\ (\WritingFourThreeRateSD)
+& \HelloFourThreeRateMean\ (\HelloFourThreeRateSD)
+& \DoLoFourThreeRateMean\ (\DoLoFourThreeRateSD)
+& \PooledFourThreeRateMean\ (\PooledFourThreeRateSD) \\
+\midrule
+\condNoGoals\ vs \condFull
+& \WritingFiveFourRateMean\ (\WritingFiveFourRateSD)
+& \HelloFiveFourRateMean\ (\HelloFiveFourRateSD)
+& \DoLoFiveFourRateMean\ (\DoLoFiveFourRateSD)
+& \PooledFiveFourRateMean\ (\PooledFiveFourRateSD) \\
+\condFixedOrder\ vs \condFull
+& \WritingSixFourRateMean\ (\WritingSixFourRateSD)
+& \HelloSixFourRateMean\ (\HelloSixFourRateSD)
+& \DoLoSixFourRateMean\ (\DoLoSixFourRateSD)
+& \PooledSixFourRateMean\ (\PooledSixFourRateSD) \\
+\condSingleWriter\ vs \condFull
+& \WritingSevenFourRateMean\ (\WritingSevenFourRateSD)
+& \HelloSevenFourRateMean\ (\HelloSevenFourRateSD)
+& \DoLoSevenFourRateMean\ (\DoLoSevenFourRateSD)
+& \PooledSevenFourRateMean\ (\PooledSevenFourRateSD) \\
+\condSingleWriter\ vs \condSinglePass
+& \WritingSevenOneRateMean\ (\WritingSevenOneRateSD)
+& \HelloSevenOneRateMean\ (\HelloSevenOneRateSD)
+& \DoLoSevenOneRateMean\ (\DoLoSevenOneRateSD)
+& \PooledSevenOneRateMean\ (\PooledSevenOneRateSD) \\
+\bottomrule
+\end{tabular}
+\caption{Prompt-collapsed pairwise outcomes for the three primary contrasts and four ablation contrasts. Each cell reports the first-listed condition's mean win rate (sample SD in percentage points) across the three replications, with prompt-level ties removed within each replication; Holm significance is reported in the text for the per-benchmark confirmatory cells.}
+\label{tab:pairwise-results}
+\end{table*}

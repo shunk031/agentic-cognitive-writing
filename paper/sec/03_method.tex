@@ -1,0 +1,38 @@
+Agentic CogWriter is a language-agent architecture that runs the cognitive process theory of writing~\cite{flower1981cognitive}: at each step a \texttt{Monitor} chooses which writing process runs next, so the controller decides over writing processes rather than over sections or tasks (Table~\ref{tab:architecture-level-comparison}).
+
+We implement the architecture with a \texttt{Monitor} and three delegated agents: a \texttt{Planner}, a \texttt{Translator}, and a \texttt{Reviewer}. The \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} are subagents that run the \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} processes and return control to the \texttt{Monitor}. The agents share the document, writer-goal network, and process history. The \texttt{Monitor} selects a process, invokes its corresponding agent, and receives the updated state.
+
+\subsection{Control state and goal network}
+\label{sec:method-control-state}
+
+The control state at writing step $t$ is
+%
+\begin{equation}
+(D_t,G_t,H_t),
+\end{equation}
+%
+where $D_t$ is the text so far, $G_t$ is the writer-goal network, and $H_t$ records executed processes and goal events. The assignment and its constraints remain static task context.
+
+We model a hierarchy of content, process, and evaluation goals: a sub-goal stays active under its parent, and resolving it returns attention to the parent. Following \citet{flower1981cognitive}, process goals say how to proceed and content goals say what to say for an audience, and goals arise throughout composing, either as sub-goals of an existing purpose or by regenerating a top-level goal in light of what the draft reveals. The implementation records each goal and every creation, development, and regeneration event as state and trace entries.
+
+\subsection{Writing processes}
+\label{sec:method-writing-processes}
+
+The \texttt{Planner} runs \texttt{Planning} to generate or refine goals and organize their pursuit. The \texttt{Translator} runs \texttt{Translating} to realize active goals as prose and primarily updates $D_t$:
+%
+\begin{equation}
+D_t\rightarrow D_{t+1}.
+\end{equation}
+%
+Process execution can expose missing information, conflicting goals, or organizational problems. The \texttt{Reviewer} runs \texttt{Reviewing} to evaluate $D_t$ against active goals. Evaluation may lead to further \texttt{Planning} or \texttt{Translating}, and can culminate in goal revision when the draft reveals a changed purpose. Goal-network change is therefore not assigned to \texttt{Reviewing} alone.
+
+\subsection{Monitor-based process selection}
+\label{sec:method-monitor}
+
+The \texttt{Monitor}'s decision at step $t$ is
+%
+\begin{equation}
+a_t=\pi_{\mathrm{monitor}}(D_t,G_t,H_t),
+\end{equation}
+%
+where $a_t$ is one of the three writing processes. In the evaluated system, $\pi_{\mathrm{monitor}}$ is a prompted decision by the host agent over the current state and open uncertainty, not a separate learned classifier or a fixed rule. The selected process updates the state, and the process and goal events enter $H_t$. The loop permits transitions during composition: \texttt{Translating} can expose a problem that calls for \texttt{Planning}, \texttt{Reviewing} can call for \texttt{Planning} or \texttt{Translating}, and resolving a local goal can return attention to a parent goal. The loop ends when \texttt{Reviewing} returns no next process.

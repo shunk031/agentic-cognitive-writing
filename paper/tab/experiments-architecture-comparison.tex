@@ -1,0 +1,62 @@
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{1.5pt}
+\begin{tabular}{lllll}
+\toprule
+\lcell{\textbf{Condition}}
+& \lcell{\textbf{State}}
+& \lcell{\textbf{Unit}}
+& \ccell{\textbf{Choice}}
+& \lcell{\textbf{Structure}} \\
+\midrule
+\multicolumn{5}{l}{\textit{Baselines}} \\
+\midrule
+\condSinglePass
+& \lcell{Assignment $X$}
+& \lcell{Document}
+& \ccell{$D_t=\pi_{\mathrm{writer}}(X)$}
+& \lcell{None} \\
+\midrule
+\condStaged~\cite{yang2022re3,wan2025cognitive}
+& \lcell{$X$; stages}
+& \lcell{Stage}
+& \ccell{$a_t=\sigma_{\mathrm{stage}}(t)$}
+& \lcell{Stages; $D_t$} \\
+\midrule
+\condTaskPlanning~\cite{xiong2025beyond}
+& \lcell{$D_t$; graph $T_t$}
+& \lcell{Task node}
+& \ccell{$v_t=\pi_{\mathrm{task}}(T_t,D_t)$}
+& \lcell{$D_t$; $T_t$} \\
+\midrule
+\multicolumn{5}{l}{\textit{Agentic CogWriter variants}} \\
+\midrule
+\condFull
+& \lcell{$D_t$; $G_t$; $H_t$}
+& \lcell{Process}
+& \ccell{$a_t=\pi_{\mathrm{monitor}}(D_t,G_t,H_t)$}
+& \lcell{$D_t$; $G_t$; $H_t$} \\
+\midrule
+\condNoGoals
+& \lcell{$D_t$; $H_t$}
+& \lcell{Process}
+& \ccell{$a_t=\pi_{\mathrm{monitor}}(D_t,H_t)$}
+& \lcell{$D_t$; $H_t$} \\
+\midrule
+\condFixedOrder
+& \lcell{$D_t$; $G_t$; $H_t$}
+& \lcell{Process}
+& \ccell{$a_t=\sigma_{\mathrm{cycle}}(t)$}
+& \lcell{$D_t$; $G_t$; $H_t$} \\
+\midrule
+\condSingleWriter
+& \lcell{$D_t$; $G_t$}
+& \lcell{Paragraph}
+& \ccell{$\pi_{\mathrm{writer}}(D_t,G_t)$}
+& \lcell{$D_t$; $G_t$} \\
+\bottomrule
+\end{tabular}
+\caption{Experimental conditions. Here $X$ is the assignment, $t$ is a writing step, $D_t$ is the current document, $G_t$ is the current goal network, $H_t$ is the process history, $a_t$ is the selected process, and $v_t$ is the selected task node. The table records the control state, unit, decision rule, and evolving structure for the four primary conditions and three ablations. \condSingleWriter\ uses one writer context and no delegation.}
+\label{tab:experimental-conditions}
+\end{table*}

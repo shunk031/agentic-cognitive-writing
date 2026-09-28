@@ -1,0 +1,18 @@
+\section*{Limitations}
+\label{sec:limitations}
+
+Completion differs across replications. Missing completed runs removed \ReplicationRunOneMissingPairs, \ReplicationRunTwoMissingPairs, and \ReplicationRunThreeMissingPairs\ pairs in the three replications, because validation changes after the first replication raised completion; excluded pairs were dropped symmetrically, and every contrast kept its direction. The largest pooled between-replication SD is \PooledFourTwoRateSD, and Holm support varies by cell.
+
+The main judge shares the generator's model family, so same-family judging can favor shared preferences. The cross-family judge provides a partial check, but no human evaluation was performed, so agreement between the judge and human raters is unknown.
+
+All generation used a single generator family, \modelGenBare. The results therefore do not establish that the architecture's advantage transfers to other generator families; a second-generator replication was not run. The baselines are likewise re-implementations of the cited designs under that generator, so the comparison is controlled but says nothing about the published systems' own implementations or their reported results.
+
+The cross-family judge commits on \CrossFamilyPooledCommitRate\ of pairs, with \CrossFamilyPooledTies\ ties, \CrossFamilyPooledAgreement\ agreement, and \CrossFamilyPooledConflicts\ conflicts. Longer outputs win \LengthLongerRate\ of non-tied pairs. The cross-family judge's high tie rate and the same-family judge's length preference limit the checks.
+
+The ablations do not isolate every implementation detail. \condSingleWriter\ changes delegation, recursion granularity, and output length; \condTaskPlanning\ changes the control unit and delegated work. The comparisons support a mechanism-level interpretation but identify no necessary code path.
+
+The hard prompt set samples the longest prompts by Section~\ref{sec:benchmarks}'s rank key, so length proxies difficulty rather than a benchmark score. Results do not establish performance on routine prompts or other task families. The demanding slice trades external validity for sensitivity.
+
+The 80-run Habermas Machine pilot tests short consensus writing as a boundary condition, not a fourth benchmark; Appendix~\ref{app:habermas} reports its trace totals.
+
+Process traces record implemented agent state, not human goals, monitoring, or discovery; the source theory defines an executable control hypothesis, not cognitive equivalence.

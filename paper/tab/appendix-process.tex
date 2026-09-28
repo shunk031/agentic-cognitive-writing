@@ -1,0 +1,27 @@
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Condition}
+& \textbf{Completed}
+& \shortstack{\textbf{Median}\\\textbf{units}}
+& \shortstack{\textbf{Spawns}\\\textbf{/run}}
+& \shortstack{\textbf{Goals created}\\\textbf{developed/regenerated}}
+& \shortstack{\textbf{Output}\\\textbf{tokens}\\\textbf{/run}}
+& \shortstack{\textbf{Input}\\\textbf{tokens}\\\textbf{/run}}
+& \shortstack{\textbf{Mean sec.}\\\textbf{/completed run}} \\
+\midrule
+\condSinglePass & \AoneCompleted & \AoneMedianOutput & \AoneSpawns & \AoneGoals & \AoneOutputTokens & \AoneInputTokens & \AoneMeanSeconds \\
+\condStaged & \AtwoCompleted & \AtwoMedianOutput & \AtwoSpawns & \AtwoGoals & \AtwoOutputTokens & \AtwoInputTokens & \AtwoMeanSeconds \\
+\condTaskPlanning & \AthreeCompleted & \AthreeMedianOutput & \AthreeSpawns & \AthreeGoals & \AthreeOutputTokens & \AthreeInputTokens & \AthreeMeanSeconds \\
+\condFull & \AfourCompleted & \AfourMedianOutput & \AfourSpawns & \AfourGoals & \AfourOutputTokens & \AfourInputTokens & \AfourMeanSeconds \\
+\condNoGoals & \AfiveCompleted & \AfiveMedianOutput & \AfiveSpawns & \AfiveGoals & \AfiveOutputTokens & \AfiveInputTokens & \AfiveMeanSeconds \\
+\condFixedOrder & \AsixCompleted & \AsixMedianOutput & \AsixSpawns & \AsixGoals & \AsixOutputTokens & \AsixInputTokens & \AsixMeanSeconds \\
+\condSingleWriter & \AsevenCompleted & \AsevenMedianOutput & \AsevenSpawns & \AsevenGoals & \AsevenOutputTokens & \AsevenInputTokens & \AsevenMeanSeconds \\
+\bottomrule
+\end{tabular}
+\caption{Process summary from the first replication across the 300-prompt hard set. All cells are values from the first replication derived from the process-summary JSON source. Completed is the count of completed runs. Spawns are mean delegated invocations per attempted run. Output tokens are Codex-reported output plus reasoning tokens, and input tokens are uncached input tokens; both are means over attempted runs. Wall-clock time is the mean seconds for completed runs.}
+\label{tab:process-summary}
+\end{table*}
