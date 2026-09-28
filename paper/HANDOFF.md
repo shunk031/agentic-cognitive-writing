@@ -23,3 +23,4 @@ This note records the public-safe standing rules for the manuscript in this dire
 - Experimental conditions and analysis rules are recorded in [`protocol.md`](../docs/experiments/protocol.md).
 - Prompt materialization and the DoLoMiTes split are recorded in [`prompts/README.md`](../experiments/prompts/README.md).
 - The pilot and estimand decision are recorded in [issue 32](https://github.com/shunk031/agentic-cognitive-writing/issues/32).
+Operational notes that cannot be committed live in .local/paper-handoff-private.md (gitignored)
