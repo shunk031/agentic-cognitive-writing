@@ -407,6 +407,42 @@ refresh_interval_ms = 120000
     )
 
 
+def test_claude_code_environment_selects_bedrock_and_runtime_model(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("CLAUDE_CODE_USE_BEDROCK", "0")
+    monkeypatch.setenv("ANTHROPIC_MODEL", "stale-model")
+    monkeypatch.setenv("GEN_AI_GATEWAY_PAT", "test-only")
+    monkeypatch.delenv("AWS_SESSION_TOKEN", raising=False)
+    runner = _runner(tmp_path / "runs")
+
+    config_root, environment = runner._prepare_generator_environment(
+        "claude-code", run_id="bedrock"
+    )
+    try:
+        assert environment["CLAUDE_CODE_USE_BEDROCK"] == "1"
+        assert environment["ANTHROPIC_MODEL"] == "claude-test"
+        assert environment["AWS_SESSION_TOKEN"] == "test-only"
+    finally:
+        shutil.rmtree(config_root, ignore_errors=True)
+
+
+def test_claude_code_environment_preserves_explicit_session_token(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("GEN_AI_GATEWAY_PAT", "fallback")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "direct")
+    runner = _runner(tmp_path / "runs")
+
+    config_root, environment = runner._prepare_generator_environment(
+        "claude-code", run_id="bedrock"
+    )
+    try:
+        assert environment["AWS_SESSION_TOKEN"] == "direct"
+    finally:
+        shutil.rmtree(config_root, ignore_errors=True)
+
+
 @pytest.mark.parametrize(
     ("platform", "variable", "allowlist"),
     [
