@@ -3,7 +3,7 @@
 
 Completion differs across replications. Missing completed runs removed \ReplicationRunOneMissingPairs, \ReplicationRunTwoMissingPairs, and \ReplicationRunThreeMissingPairs\ pairs in the three replications, because validation changes after the first replication raised completion; excluded pairs were dropped symmetrically, and every contrast kept its direction. The largest pooled between-replication SD is \PooledFourTwoRateSD, and Holm support varies by cell.
 
-The main judge shares the generator's model family, so same-family judging can favor shared preferences. The cross-family judge provides a partial check, but no human evaluation was performed, so agreement between the judge and human raters is unknown.
+The main judge shares the generator's model family, so same-family judging can favor shared preferences. The experiment protocol planned confirmatory judging by a judge from a different model family than the generator. The confirmatory judgments reported here come from the same family, and the cross-family judge serves as a robustness check on three contrasts rather than as the confirmatory judge. The cross-family judge provides a partial check, but no human evaluation was performed, so agreement between the judge and human raters is unknown.
 
 All generation used a single generator family, \modelGenBare. The results therefore do not establish that the architecture's advantage transfers to other generator families; a second-generator replication was not run. The baselines are likewise re-implementations of the cited designs under that generator, so the comparison is controlled but says nothing about the published systems' own implementations or their reported results.
 
