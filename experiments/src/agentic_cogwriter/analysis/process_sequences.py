@@ -23,6 +23,7 @@ SINGLE_PASS = "A7"
 CONTRASTS = ((FULL, SINGLE_PASS), (FULL, FIXED_ORDER))
 PROCESS_SWITCH = "process_switch"
 REGENERATION = "goal_regenerated"
+DELEGATED_PROCESS = re.compile(r"\b(planning|translating|reviewing)\b", re.IGNORECASE)
 
 
 def _rate(count: int, total: int) -> dict[str, int | float | None]:
@@ -67,10 +68,61 @@ def _single_process_repetition(
     return False
 
 
+def _collapse_immediate_repeats(sequence: Sequence[str]) -> list[str]:
+    collapsed: list[str] = []
+    for process in sequence:
+        if not collapsed or process != collapsed[-1]:
+            collapsed.append(process)
+    return collapsed
+
+
+def _cycle_pass_count(
+    sequence: Sequence[str], fixed_order: Sequence[str]
+) -> int | None:
+    collapsed = _collapse_immediate_repeats(sequence)
+    if not collapsed or not fixed_order or len(collapsed) % len(fixed_order):
+        return None
+    passes = len(collapsed) // len(fixed_order)
+    return passes if tuple(collapsed) == tuple(fixed_order) * passes else None
+
+
+def _first_delegated_process(run_path: Path) -> str | None:
+    """Read the role named by the first native delegation event, when present."""
+
+    for event_path in sorted(run_path.glob("attempt-*.events.jsonl")):
+        try:
+            lines = event_path.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeError):
+            continue
+        for line in lines:
+            try:
+                value = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if value.get("type") != "item.started":
+                continue
+            item = value.get("item")
+            if not isinstance(item, Mapping):
+                continue
+            if (
+                item.get("type") != "collab_tool_call"
+                or item.get("tool") != "spawn_agent"
+            ):
+                continue
+            prompt = item.get("prompt")
+            if not isinstance(prompt, str):
+                continue
+            match = DELEGATED_PROCESS.search(prompt)
+            if match:
+                return match.group(1).casefold()
+    return None
+
+
 def analyze_trace_events(
     events: Sequence[Mapping[str, Any]],
     *,
     fixed_order: Sequence[str],
+    first_delegated_process: str | None = None,
 ) -> dict[str, Any]:
     """Extract one run's process sequence and trace-derived metrics."""
 
@@ -131,6 +183,18 @@ def analyze_trace_events(
             )
 
     regeneration_count = len(regeneration_locations)
+    reconstructed_leading = bool(
+        sequence
+        and first_delegated_process == fixed_order[0]
+        and sequence[0] != fixed_order[0]
+    )
+    sequence_for_cycle_compliance = (
+        [first_delegated_process, *sequence]
+        if reconstructed_leading
+        else list(sequence)
+    )
+    cycle_passes = _cycle_pass_count(sequence_for_cycle_compliance, fixed_order)
+    collapsed_sequence = _collapse_immediate_repeats(sequence_for_cycle_compliance)
     after_reviewing_result = {
         process: after_reviewing.get(process, 0)
         for process in ("planning", "translating", "termination")
@@ -142,14 +206,24 @@ def analyze_trace_events(
         )
     return {
         "sequence": sequence,
+        "sequence_for_cycle_compliance": sequence_for_cycle_compliance,
+        "collapsed_sequence": collapsed_sequence,
         "sequence_length": len(sequence),
-        "equals_fixed_order": sequence == list(fixed_order),
+        "single_cycle_exact": sequence == list(fixed_order),
         "matches_fixed_order_up_to_single_process_repetition": (
             _single_process_repetition(sequence, fixed_order)
         ),
+        "cycle_compliant": cycle_passes is not None,
+        "cycle_passes": cycle_passes,
+        "leading_process": {
+            "first_observed": sequence[0] if sequence else None,
+            "first_delegated": first_delegated_process,
+            "reconstructed": reconstructed_leading,
+        },
         "transitions": dict(sorted(transitions.items())),
         "after_reviewing": after_reviewing_result,
         "after_reviewing_total": sum(after_reviewing.values()),
+        "reviewing_to_translating": after_reviewing.get("translating", 0) > 0,
         "regeneration": {
             "count": regeneration_count,
             "locations": regeneration_locations,
@@ -216,6 +290,14 @@ def summarize_observations(
                     location.get("sequence_index"),
                 )
             ] += 1
+    compliant_runs = sum(
+        bool(observation.get("cycle_compliant")) for observation in observations
+    )
+    pass_counts = Counter(
+        int(observation["cycle_passes"])
+        for observation in observations
+        if observation.get("cycle_passes") is not None
+    )
 
     switch_processes = {process for sequence in sequence_counts for process in sequence}
     states = [START, *fixed_order]
@@ -242,13 +324,25 @@ def summarize_observations(
         "transitions": dict(sorted(transitions.items())),
         "transition_states": states,
         "transition_matrix": _matrix(transitions, states),
-        "exact_fixed_order": _rate(
-            sum(observation["equals_fixed_order"] for observation in observations),
+        "single_cycle_exact": _rate(
+            sum(observation["single_cycle_exact"] for observation in observations),
             total,
         ),
         "single_process_repetition": _rate(
             sum(
                 observation["matches_fixed_order_up_to_single_process_repetition"]
+                for observation in observations
+            ),
+            total,
+        ),
+        "cycle_compliance": _rate(compliant_runs, total),
+        "cycle_pass_distribution": [
+            {"passes": passes, **_rate(count, compliant_runs)}
+            for passes, count in sorted(pass_counts.items())
+        ],
+        "reviewing_to_translating_runs": _rate(
+            sum(
+                observation.get("reviewing_to_translating", False)
                 for observation in observations
             ),
             total,
@@ -376,7 +470,11 @@ def _run_detail(
     fixed_order: Sequence[str],
 ) -> dict[str, Any]:
     trace_path = run.path / ".writing" / "trace" / "process.jsonl"
-    observed = analyze_trace_events(_json_events(trace_path), fixed_order=fixed_order)
+    observed = analyze_trace_events(
+        _json_events(trace_path),
+        fixed_order=fixed_order,
+        first_delegated_process=_first_delegated_process(run.path),
+    )
     return {
         "run_set": run_set,
         "run_role": run_role,
@@ -416,8 +514,8 @@ def _association(
     contrast: tuple[str, str],
 ) -> dict[str, Any]:
     split_values: dict[str, list[str]] = {
-        "fixed_order_exact": [],
-        "not_fixed_order_exact": [],
+        "single_cycle_exact": [],
+        "not_single_cycle_exact": [],
     }
     label = f"{contrast[0]}:{contrast[1]}"
     for (benchmark, platform, observed_label, prompt), outcome in outcomes.items():
@@ -427,17 +525,17 @@ def _association(
         if detail is None:
             continue
         split = (
-            "fixed_order_exact"
-            if detail["equals_fixed_order"]
-            else "not_fixed_order_exact"
+            "single_cycle_exact"
+            if detail["single_cycle_exact"]
+            else "not_single_cycle_exact"
         )
         split_values[split].append(outcome)
     cells = {split: _association_cell(values) for split, values in split_values.items()}
     table = [
-        [cells["fixed_order_exact"]["wins"], cells["fixed_order_exact"]["losses"]],
+        [cells["single_cycle_exact"]["wins"], cells["single_cycle_exact"]["losses"]],
         [
-            cells["not_fixed_order_exact"]["wins"],
-            cells["not_fixed_order_exact"]["losses"],
+            cells["not_single_cycle_exact"]["wins"],
+            cells["not_single_cycle_exact"]["losses"],
         ],
     ]
     return {
@@ -448,6 +546,40 @@ def _association(
             "table": table,
             "p_value": fisher_exact_two_sided(table),
         },
+    }
+
+
+def _leading_process_summary(
+    observations: Sequence[Mapping[str, Any]], fixed_order: Sequence[str]
+) -> dict[str, Any]:
+    total = len(observations)
+    late_starts = [
+        observation
+        for observation in observations
+        if observation["leading_process"]["first_observed"] != fixed_order[0]
+    ]
+    reconstructed = [
+        observation
+        for observation in late_starts
+        if observation["leading_process"]["reconstructed"]
+    ]
+    real_deviations = [
+        observation
+        for observation in late_starts
+        if not observation["leading_process"]["reconstructed"]
+    ]
+    delegated = Counter(
+        observation["leading_process"]["first_delegated"] or "none"
+        for observation in observations
+    )
+    return {
+        "raw_non_planning_starts": _rate(len(late_starts), total),
+        "logging_artifact_reconstructions": _rate(len(reconstructed), total),
+        "logging_artifact_reconstructions_among_raw_non_planning_starts": _rate(
+            len(reconstructed), len(late_starts)
+        ),
+        "real_non_planning_deviations": _rate(len(real_deviations), total),
+        "first_delegated_process_counts": dict(sorted(delegated.items())),
     }
 
 
@@ -510,9 +642,11 @@ def analyze_run_roots(
     }
     fixed_comparison = {
         "fixed_order": fixed,
-        "full": condition_summaries[FULL]["summary"]["exact_fixed_order"],
-        "fixed_order_condition": condition_summaries[FIXED_ORDER]["summary"][
-            "exact_fixed_order"
+        "full_single_cycle_exact": condition_summaries[FULL]["summary"][
+            "single_cycle_exact"
+        ],
+        "fixed_order_single_cycle_exact": condition_summaries[FIXED_ORDER]["summary"][
+            "single_cycle_exact"
         ],
         "full_single_process_repetition": condition_summaries[FULL]["summary"][
             "single_process_repetition"
@@ -556,14 +690,17 @@ def analyze_run_roots(
         label = f"{left}_vs_{right}"
         values = {
             split: all_values[f"{label}:{split}"]
-            for split in ("fixed_order_exact", "not_fixed_order_exact")
+            for split in ("single_cycle_exact", "not_single_cycle_exact")
         }
         cells = {split: _association_cell(items) for split, items in values.items()}
         table = [
-            [cells["fixed_order_exact"]["wins"], cells["fixed_order_exact"]["losses"]],
             [
-                cells["not_fixed_order_exact"]["wins"],
-                cells["not_fixed_order_exact"]["losses"],
+                cells["single_cycle_exact"]["wins"],
+                cells["single_cycle_exact"]["losses"],
+            ],
+            [
+                cells["not_single_cycle_exact"]["wins"],
+                cells["not_single_cycle_exact"]["losses"],
             ],
         ]
         combined_outcomes[label] = {
@@ -604,6 +741,66 @@ def analyze_run_roots(
                 "process_switch.to_process in trace line order; termination is "
                 "excluded from the sequence and included as END."
             ),
+            "cycle_compliance_source": (
+                "Collapse immediate repeats in the observed sequence and compare "
+                "with one or more canonical passes. If the first delegated role "
+                "is Planning while the first process_switch target is later, "
+                "prepend that omitted Planning only for cycle-compliance metrics."
+            ),
+            "leading_process_analysis": {
+                "decision": "logging_artifact",
+                "description": (
+                    "The runner copies the plugin trace without synthesizing a "
+                    "first process_switch, and validation does not require the "
+                    "first switch to originate at null. The first delegated role "
+                    "is read from the collected spawn_agent event stream; a "
+                    "Planning delegation before a later first switch reconstructs "
+                    "the omitted leading Planning."
+                ),
+                "source_files": [
+                    {
+                        "file": "experiments/src/agentic_cogwriter/runner/trace.py",
+                        "lines": "218-240",
+                        "decides": (
+                            "Validation checks process_switch fields and endpoints "
+                            "but imposes no initial from_process requirement."
+                        ),
+                    },
+                    {
+                        "file": "experiments/src/agentic_cogwriter/runner/trace.py",
+                        "lines": "307-319",
+                        "decides": (
+                            "collect_plugin_trace copies process.jsonl verbatim "
+                            "and does not synthesize events."
+                        ),
+                    },
+                    {
+                        "file": "experiments/src/agentic_cogwriter/runner/execution.py",
+                        "lines": "233-270",
+                        "decides": (
+                            "The runner's collected event stream identifies "
+                            "spawn_agent delegation items."
+                        ),
+                    },
+                    {
+                        "file": (
+                            "experiments/plugin/skills/"
+                            "cognitive-writing-fixed-order/SKILL.md"
+                        ),
+                        "lines": "62-69,110-126",
+                        "decides": (
+                            "The fixed-order skill prescribes Planning first and "
+                            "documents the process-switch trace contract."
+                        ),
+                    },
+                ],
+                "conditions": {
+                    condition: _leading_process_summary(
+                        condition_summaries[condition]["runs"], fixed_order
+                    )
+                    for condition in (FULL, FIXED_ORDER)
+                },
+            },
             "goal_event_source": (
                 "goal_created, goal_developed, and goal_regenerated trace events; "
                 "goal_regenerated is treated as accepted regeneration."

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
+
 from agentic_cogwriter.analysis.process_sequences import (
+    _first_delegated_process,
     analyze_trace_events,
     fisher_exact_two_sided,
     read_fixed_order,
@@ -43,7 +46,7 @@ def test_trace_observation_keeps_process_switch_destinations_and_locations() -> 
 
     assert observed["sequence"] == ["planning", "translating", "reviewing"]
     assert observed["sequence_length"] == 3
-    assert observed["equals_fixed_order"] is True
+    assert observed["single_cycle_exact"] is True
     assert observed["matches_fixed_order_up_to_single_process_repetition"] is True
     assert observed["transitions"] == {
         "START->planning": 1,
@@ -83,7 +86,7 @@ def test_summary_distinguishes_non_linear_return_and_regeneration() -> None:
         "translating",
         "reviewing",
     ]
-    assert observed["equals_fixed_order"] is False
+    assert observed["single_cycle_exact"] is False
     assert observed["matches_fixed_order_up_to_single_process_repetition"] is False
     assert observed["after_reviewing"] == {
         "planning": 1,
@@ -99,8 +102,73 @@ def test_summary_distinguishes_non_linear_return_and_regeneration() -> None:
         }
     ]
     assert summary["run_count"] == 1
-    assert summary["exact_fixed_order"] == {"count": 0, "total": 1, "rate": 0.0}
+    assert summary["single_cycle_exact"] == {"count": 0, "total": 1, "rate": 0.0}
     assert summary["single_process_repetition"] == {"count": 0, "total": 1, "rate": 0.0}
+
+
+def test_cycle_compliance_collapses_repeats_and_reconstructs_leading_planning(
+    tmp_path,
+) -> None:
+    two_pass = [
+        _switch("planning", None, "planning"),
+        _switch("translating", "planning", "translating"),
+        _switch("reviewing", "translating", "reviewing"),
+        _switch("reviewing", "reviewing", "reviewing"),
+        _switch("planning", "reviewing", "planning"),
+        _switch("translating", "planning", "translating"),
+        _switch("reviewing", "translating", "reviewing"),
+        _switch("reviewing", "reviewing", None),
+    ]
+    observed = analyze_trace_events(
+        two_pass, fixed_order=("planning", "translating", "reviewing")
+    )
+    assert observed["cycle_compliant"] is True
+    assert observed["cycle_passes"] == 2
+    assert observed["collapsed_sequence"] == [
+        "planning",
+        "translating",
+        "reviewing",
+        "planning",
+        "translating",
+        "reviewing",
+    ]
+
+    missing_leading = [
+        _switch("planning", "planning", "translating"),
+        _switch("reviewing", "translating", "reviewing"),
+        _switch("reviewing", "reviewing", None),
+    ]
+    reconstructed = analyze_trace_events(
+        missing_leading,
+        fixed_order=("planning", "translating", "reviewing"),
+        first_delegated_process="planning",
+    )
+    assert reconstructed["sequence"] == ["translating", "reviewing"]
+    assert reconstructed["sequence_for_cycle_compliance"] == [
+        "planning",
+        "translating",
+        "reviewing",
+    ]
+    assert reconstructed["leading_process"]["reconstructed"] is True
+    assert reconstructed["cycle_compliant"] is True
+    assert reconstructed["cycle_passes"] == 1
+
+    events_path = tmp_path / "attempt-001.events.jsonl"
+    events_path.write_text(
+        json.dumps(
+            {
+                "type": "item.started",
+                "item": {
+                    "type": "collab_tool_call",
+                    "tool": "spawn_agent",
+                    "prompt": "You are the Planning role agent.",
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert _first_delegated_process(tmp_path) == "planning"
 
 
 def test_fixed_order_is_read_from_condition_and_skill() -> None:
