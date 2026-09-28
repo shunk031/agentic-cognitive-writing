@@ -197,13 +197,12 @@ def analyze_trace_events(
     collapsed_sequence = _collapse_immediate_repeats(sequence_for_cycle_compliance)
     after_reviewing_result = {
         process: after_reviewing.get(process, 0)
-        for process in ("planning", "translating", "termination")
+        for process in ("planning", "translating", "reviewing", "termination")
     }
     extra_reviewing_targets = sorted(set(after_reviewing) - set(after_reviewing_result))
-    if extra_reviewing_targets:
-        after_reviewing_result["other"] = sum(
-            after_reviewing[target] for target in extra_reviewing_targets
-        )
+    after_reviewing_result.update(
+        {target: after_reviewing[target] for target in extra_reviewing_targets}
+    )
     return {
         "sequence": sequence,
         "sequence_for_cycle_compliance": sequence_for_cycle_compliance,
@@ -271,6 +270,7 @@ def summarize_observations(
     process_event_counts: defaultdict[str, Counter[str]] = defaultdict(Counter)
     goal_events: Counter[str] = Counter()
     after_reviewing = Counter()
+    after_reviewing_runs = Counter()
     regeneration_events = 0
     regeneration_locations: Counter[tuple[Any, Any, Any]] = Counter()
     for observation in observations:
@@ -281,6 +281,9 @@ def summarize_observations(
             process_event_counts[event_type].update(counts)
         goal_events.update(observation["goal_events"])
         after_reviewing.update(observation["after_reviewing"])
+        after_reviewing_runs.update(
+            target for target, count in observation["after_reviewing"].items() if count
+        )
         regeneration_events += observation["regeneration"]["count"]
         for location in observation["regeneration"]["locations"]:
             regeneration_locations[
@@ -304,6 +307,11 @@ def summarize_observations(
     extras = sorted(switch_processes - set(states) - {END})
     states.extend(process for process in extras if process not in states)
     states.append(END)
+    after_reviewing_total = sum(after_reviewing.values())
+    after_reviewing_targets = ["planning", "translating", "reviewing", "termination"]
+    after_reviewing_targets.extend(
+        sorted(set(after_reviewing) - set(after_reviewing_targets))
+    )
     return {
         "run_count": total,
         "sequence_distribution": [
@@ -351,11 +359,19 @@ def summarize_observations(
             **{
                 target: _rate(
                     after_reviewing.get(target, 0),
-                    sum(after_reviewing.values()),
+                    after_reviewing_total,
                 )
-                for target in ("planning", "translating", "termination")
+                for target in after_reviewing_targets
             },
-            "total": sum(after_reviewing.values()),
+            "total": after_reviewing_total,
+            "per_run": {
+                **{
+                    target: _rate(after_reviewing_runs.get(target, 0), total)
+                    for target in after_reviewing_targets
+                },
+                "total": total,
+                "categories_overlap": True,
+            },
         },
         "regeneration": {
             "runs": _rate(

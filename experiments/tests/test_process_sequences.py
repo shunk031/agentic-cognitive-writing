@@ -57,6 +57,7 @@ def test_trace_observation_keeps_process_switch_destinations_and_locations() -> 
     assert observed["after_reviewing"] == {
         "planning": 0,
         "translating": 0,
+        "reviewing": 0,
         "termination": 1,
     }
     assert observed["regeneration"]["count"] == 0
@@ -91,6 +92,7 @@ def test_summary_distinguishes_non_linear_return_and_regeneration() -> None:
     assert observed["after_reviewing"] == {
         "planning": 1,
         "translating": 0,
+        "reviewing": 0,
         "termination": 1,
     }
     assert observed["regeneration"]["count"] == 1
@@ -104,6 +106,21 @@ def test_summary_distinguishes_non_linear_return_and_regeneration() -> None:
     assert summary["run_count"] == 1
     assert summary["single_cycle_exact"] == {"count": 0, "total": 1, "rate": 0.0}
     assert summary["single_process_repetition"] == {"count": 0, "total": 1, "rate": 0.0}
+    assert summary["after_reviewing"] == {
+        "planning": {"count": 1, "total": 2, "rate": 0.5},
+        "translating": {"count": 0, "total": 2, "rate": 0.0},
+        "reviewing": {"count": 0, "total": 2, "rate": 0.0},
+        "termination": {"count": 1, "total": 2, "rate": 0.5},
+        "total": 2,
+        "per_run": {
+            "planning": {"count": 1, "total": 1, "rate": 1.0},
+            "translating": {"count": 0, "total": 1, "rate": 0.0},
+            "reviewing": {"count": 0, "total": 1, "rate": 0.0},
+            "termination": {"count": 1, "total": 1, "rate": 1.0},
+            "total": 1,
+            "categories_overlap": True,
+        },
+    }
 
 
 def test_cycle_compliance_collapses_repeats_and_reconstructs_leading_planning(
@@ -169,6 +186,36 @@ def test_cycle_compliance_collapses_repeats_and_reconstructs_leading_planning(
         encoding="utf-8",
     )
     assert _first_delegated_process(tmp_path) == "planning"
+
+
+def test_cycle_compliance_rejects_reviewing_return_and_early_end() -> None:
+    reviewing_to_translating = [
+        _switch("planning", None, "planning"),
+        _switch("translating", "planning", "translating"),
+        _switch("reviewing", "translating", "reviewing"),
+        _switch("translating", "reviewing", "translating"),
+        _switch("reviewing", "translating", "reviewing"),
+        _switch("reviewing", "reviewing", None),
+    ]
+    returned = analyze_trace_events(
+        reviewing_to_translating,
+        fixed_order=("planning", "translating", "reviewing"),
+    )
+    assert returned["cycle_compliant"] is False
+    assert returned["cycle_passes"] is None
+    assert returned["reviewing_to_translating"] is True
+
+    ends_before_reviewing = [
+        _switch("planning", None, "planning"),
+        _switch("translating", "planning", "translating"),
+        _switch("translating", "translating", None),
+    ]
+    early_end = analyze_trace_events(
+        ends_before_reviewing,
+        fixed_order=("planning", "translating", "reviewing"),
+    )
+    assert early_end["cycle_compliant"] is False
+    assert early_end["cycle_passes"] is None
 
 
 def test_fixed_order_is_read_from_condition_and_skill() -> None:
