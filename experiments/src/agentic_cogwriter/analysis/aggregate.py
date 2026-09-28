@@ -453,6 +453,7 @@ def _pairwise(
     *,
     contrasts: tuple[tuple[str, str], ...] = CONTRASTS,
     holm_pvalues: Mapping[tuple[str, str, str, str], float] | None = None,
+    retain_prompt_outcomes: bool = False,
 ) -> dict[str, Any]:
     expected: dict[tuple[str, str], int] = defaultdict(int)
     completed_counts: dict[tuple[str, str], int] = defaultdict(int)
@@ -730,16 +731,52 @@ def _pairwise(
                     for label, pvalue in zip(labels, adjusted, strict=True):
                         data[method][label]["p_holm_report_local"] = pvalue
                         data[method][label].pop("p_holm", None)
-    for value in report.values():
-        for data in value["platforms"].values():
-            for judge in data["judges"].values():
-                judge.pop("_collapsed_prompt_outcomes", None)
-                judge.pop("_presentation_disagreement_prompts", None)
+    if not retain_prompt_outcomes:
+        for value in report.values():
+            for data in value["platforms"].values():
+                for judge in data["judges"].values():
+                    judge.pop("_collapsed_prompt_outcomes", None)
+                    judge.pop("_presentation_disagreement_prompts", None)
     return {
         "benchmarks": report,
         "missing_pairs": missing,
         "run_count": len(total_runs),
     }
+
+
+def prompt_collapsed_outcomes(
+    artifacts: Sequence[ScoreArtifact],
+    runs: Sequence[RunRecord],
+    *,
+    contrasts: tuple[tuple[str, str], ...] = CONTRASTS,
+) -> dict[tuple[str, str, str, str], str]:
+    """Return the confirmatory prompt-level verdict for each scored prompt.
+
+    The result uses the same two-presentation and across-judge collapse as the
+    aggregation report, but retains the prompt key for downstream trace joins.
+    """
+
+    report = _pairwise(
+        artifacts,
+        runs,
+        contrasts=contrasts,
+        retain_prompt_outcomes=True,
+    )
+    outcomes: dict[tuple[str, str, str, str], str] = {}
+    for benchmark, benchmark_data in report["benchmarks"].items():
+        for platform, data in benchmark_data["platforms"].items():
+            by_label: defaultdict[str, defaultdict[str, list[str]]] = defaultdict(
+                lambda: defaultdict(list)
+            )
+            for judge in data["judges"].values():
+                for label, prompts in judge["_collapsed_prompt_outcomes"].items():
+                    for prompt, outcome in prompts.items():
+                        by_label[label][prompt].append(outcome)
+            for label, prompts in by_label.items():
+                for prompt, values in prompts.items():
+                    result = values[0] if len(set(values)) == 1 else "tie"
+                    outcomes[(benchmark, platform, label, prompt)] = result
+    return outcomes
 
 
 def _integer(value: Mapping[str, Any], names: tuple[str, ...]) -> int:

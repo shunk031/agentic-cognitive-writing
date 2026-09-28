@@ -14,6 +14,7 @@ agentic-cogwriter-score = "agentic_cogwriter.judges.cli:main"
 agentic-cogwriter-score-batch = "agentic_cogwriter.analysis.batch:main"
 agentic-cogwriter-aggregate = "agentic_cogwriter.analysis.aggregate:main"
 agentic-cogwriter-cross-family = "agentic_cogwriter.analysis.cross_family:main"
+agentic-cogwriter-process-sequences = "agentic_cogwriter.analysis.process_sequences:main"
 
 [project.optional-dependencies]
 bedrock = [
