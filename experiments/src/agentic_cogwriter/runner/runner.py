@@ -314,9 +314,9 @@ def _validate_final_product(
                 f"{FINAL_OUTPUT_DRAFT_RATIO:.0%} of draft.md; "
                 f"final_chars={final_chars}, draft_chars={draft_chars}"
             )
-def _product_gate(
-    condition: ConditionSpec, config: RuntimeConfig
-) -> dict[str, Any]:
+
+
+def _product_gate(condition: ConditionSpec, config: RuntimeConfig) -> dict[str, Any]:
     """Describe the product completeness rule persisted in each run manifest."""
 
     if condition.product_requires_draft:
@@ -1682,6 +1682,9 @@ class ExperimentRunner:
             "delegation_check": {
                 "required": condition.require_delegation,
                 "spawn_count": subagent_spawn_count,
+                "execution_mode": (
+                    "delegated" if condition.require_delegation else "in_context"
+                ),
                 "passed": (
                     not condition.require_delegation
                     or platform != "codex"

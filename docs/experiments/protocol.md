@@ -51,9 +51,9 @@ The current estimand assignment was fixed before the statistical lock and every 
 
 The protocol also defines process and replication estimands. The primary process estimands are goal events, adaptive process switches, within-process operation counts, and pop-back events. Report rates and distributions for each. The replication estimand is the direction and size of the selected pairwise effects under the secondary platform. Report it separately from the primary platform.
 
-## Seven confirmatory conditions and two exploratory conditions
+## Seven confirmatory conditions and three exploratory conditions
 
-All enabled conditions share the same skill-and-subagent framework and the plugin-written `.writing/trace/process.jsonl` path. The runner invokes exactly one skill for each condition, including the two exploratory conditions when they are enabled. The equal-information policy gives every condition identical input context. The runner must expose the same local tools, context window policy, timeout, output budget, and number of allowed attempts to every condition. No condition may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
+All enabled conditions share the same skill-and-subagent framework and the plugin-written `.writing/trace/process.jsonl` path. The runner invokes exactly one skill for each condition, including the three exploratory conditions when they are enabled. The equal-information policy gives every condition identical input context. The runner must expose the same local tools, context window policy, timeout, output budget, and number of allowed attempts to every condition. No condition may use a source outside the supplied assignment and context. The no-retrieval policy forbids web search, network retrieval, external browsing, and any unprovided source.
 
 Delegating conditions record a `delegation_check` in the run manifest, and a Codex run without a spawned role agent is invalid.
 
@@ -65,7 +65,8 @@ Delegating conditions record a `delegation_check` in the run manifest, and a Cod
 | A4 Agentic CogWriter      | D_t, G_t, H_t                        | writing process a_t | a_t = pi_Monitor(D_t, G_t, H_t)                                   | D_t, G_t, H_t          |
 | A5 w/o Goal Network       | D_t, H_t                             | writing process a_t | a_t = pi_Monitor(D_t, H_t)                                        | D_t, H_t               |
 | A6 Fixed Process Order    | D_t, G_t, H_t                        | writing process a_t | fixed cyclic P -> T -> R                                          | D_t, G_t, H_t          |
-| A7 Single Writer          | D_t, G_t, H_t                        | writing process a_t | one Writer and Monitor coordinate P -> T -> R                    | D_t, G_t, H_t          |
+| A7 Single Writer          | D_t, G_t, H_t                        | writing process a_t | one Writer and Monitor coordinate P -> T -> R                     | D_t, G_t, H_t          |
+| A8 Single Context         | D_t, G_t, H_t                        | writing process a_t | a_t = pi_Monitor(D_t, G_t, H_t), performed in the host context    | D_t, G_t, H_t          |
 
 **Single-shot condition A1.** Condition A1 invokes `writing-single-shot` from the planned `experiments/baselines/` package. The skill makes one generation pass from the assignment and supplied context. The condition has no explicit planning or review stage. The skill writes the externally visible generation event to the shared trace path and does not infer hidden goals or stages.
 
@@ -81,13 +82,15 @@ Delegating conditions record a `delegation_check` in the run manifest, and a Cod
 
 **Single-writer condition A7.** Condition A7 invokes `cognitive-writing-single-writer` from the `cognitive-writing-experiments` plugin. One main Writer performs the planning, translating, and reviewing work while maintaining the goal network and process history. The runner records the same shared trace fields without delegating these roles to separate subagents.
 
+**Single-context exploratory condition A8 (addendum, 2026-09-29).** Condition A8 was added after the primary results were observed. A8 is outside the locked confirmatory family and does not change the prespecified confirmatory contrasts or correction. A8 retains A4's `Monitor` process selection, Planning/Translating/Reviewing instructions, shared draft, hierarchical goal network, process history, trace contract, termination rule, and output contract. The host agent performs each selected process in its own context instead of spawning a Planner, Translator, or Reviewer subagent. A8 records the same `process_switch`, `goal_created`, `goal_developed`, and `goal_regenerated` events as A4, and the runner records the execution as `in_context` without requiring a spawn.
+
 **CogWriter-style exploratory condition B1.** Condition B1 invokes `writing-cogwriter-style` as an adaptation of CogWriter [^18], not as a reproduction of that system. The skill uses a structured plan and plan revision, parallel segment generation, length review, a fixed top-level order, and no goal network. The skill writes its observable actions to the shared trace path.
 
 **STORM-style exploratory condition B2 without retrieval.** Condition B2 invokes `writing-storm-style` from the planned `experiments/baselines/` package. The skill uses only the supplied assignment and context for perspective discovery, simulated question answering (QA), outline, draft, and polish, following [STORM](https://github.com/stanford-oval/storm)[^2]. Citation generation is omitted under the equal-information policy. The skill separates planning from writing and omits retrieval and source gathering while writing its observable stage events to the shared trace path.
 
 **B2 trace and evidence handling.** The skill writes the five stage events to the shared trace path. Retrieval, evidence-gathering, and citation traces are not applicable (N/A) by design. The no-retrieval adaptation follows the benchmark evidence in [`docs/research/writing-eval-datasets.md`](../research/writing-eval-datasets.md) and the platform evidence in [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md).
 
-B1 and B2 are exploratory baselines used only in the Habermas pilot. A7 is a confirmatory condition. The current confirmatory family consists of the eight prompt-collapsed contrasts listed above, with exact sign tests and Holm correction over 24 run-by-contrast cells per benchmark. Other pairwise comparisons may be reported descriptively or as exploratory results without confirmatory claims.
+B1 and B2 are exploratory baselines used only in the Habermas pilot. A7 is a confirmatory condition, and A8 is an exploratory ablation added after the primary results were observed. The current confirmatory family consists of the eight prompt-collapsed contrasts listed above, with exact sign tests and Holm correction over 24 run-by-contrast cells per benchmark. Other pairwise comparisons, including A8 comparisons, may be reported descriptively or as exploratory results without confirmatory claims.
 
 All seven confirmatory conditions use the same assignment, starting draft, model settings, and user decisions. B1 and B2 use the same settings in the Habermas pilot.
 
@@ -154,9 +157,9 @@ The plugin ships its adapters through these repository files:
 
 ### Platform assignments
 
-The primary platform is OpenAI Codex headless, invoked with `codex exec`, with the seven confirmatory conditions and any enabled exploratory conditions invoking one skill per condition over one pinned generator model from the Generative Pre-trained Transformer (GPT) family. Conditions A1-A3 invoke `writing-single-shot`, `writing-linear`, and `writing-adaptive-task-planning` from the planned `experiments/baselines/` package. Condition A4 invokes `agentic-cog-writer`, and conditions A5-A7 invoke their named skills from the `cognitive-writing-experiments` plugin. The [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) describes the primary platform's skill and adapter design.
+The primary platform is OpenAI Codex headless, invoked with `codex exec`, with the seven confirmatory conditions and any enabled exploratory conditions invoking one skill per condition over one pinned generator model from the Generative Pre-trained Transformer (GPT) family. Conditions A1-A3 invoke `writing-single-shot`, `writing-linear`, and `writing-adaptive-task-planning` from the planned `experiments/baselines/` package. Condition A4 invokes `agentic-cog-writer`, conditions A5-A7 invoke their named skills from the `cognitive-writing-experiments` plugin, and A8 invokes its single-context skill from that plugin. The [`docs/research/skill-subagent-survey.md`](../research/skill-subagent-survey.md) describes the primary platform's skill and adapter design.
 
-The secondary replication runs the same condition specifications under Claude Code headless with one pinned Claude-family generator model. Conditions A1-A3 invoke the corresponding baseline skills, condition A4 invokes `agentic-cog-writer`, and conditions A5-A7 invoke the corresponding skills from the `cognitive-writing-experiments` plugin. The runner applies the same skill invocation to B1 and B2 when the Habermas pilot is enabled.
+The secondary replication runs the same condition specifications under Claude Code headless with one pinned Claude-family generator model. Conditions A1-A3 invoke the corresponding baseline skills, condition A4 invokes `agentic-cog-writer`, and conditions A5-A8 invoke the corresponding skills from the `cognitive-writing-experiments` plugin. The runner applies the same skill invocation to B1 and B2 when the Habermas pilot is enabled.
 
 The runner must record the installed Codex and Claude Code CLI versions and validate each exact headless invocation before a run. The [Codex non-interactive mode guide](https://developers.openai.com/codex/non-interactive-mode) and [Claude Code headless mode guide](https://docs.anthropic.com/en/docs/claude-code/headless) provide invocation references.
 
@@ -167,9 +170,9 @@ The runner uses these conceptual interfaces:
 
 The runner will version the command flags in experiments/conditions/ when the runner lands and record them in every run manifest. The run must not silently fall back to an interactive mode.
 
-Before running A1, A2, or A3, the runner loads the corresponding skill from the planned `experiments/baselines/` package. Before running A4-A7, the runner installs the main `agentic-cognitive-writing` plugin. Before running A5-A7, the runner also installs the `cognitive-writing-experiments` plugin. The main plugin provides the role skills and agents that the experiment plugin uses. The runner records both plugin commits in the run manifest.
+Before running A1, A2, or A3, the runner loads the corresponding skill from the planned `experiments/baselines/` package. Before running A4-A8, the runner installs the main `agentic-cognitive-writing` plugin. Before running A5-A8, the runner also installs the `cognitive-writing-experiments` plugin. The main plugin provides the role skills and agents that the experiment plugin uses. The runner records both plugin commits in the run manifest.
 
-The runner starts one top-level session per condition and prompt. In Codex A4 to A6 runs, the plugin may request native Codex subagents as documented. A7 keeps the Writer and Monitor in the top-level session. The plugin must not spawn nested `codex exec` children. If native delegation is unavailable and the `Monitor` performs a delegated role itself, the trace must record that fallback.
+The runner starts one top-level session per condition and prompt. In Codex A4 to A6 runs, the plugin may request native Codex subagents as documented. A7 keeps the Writer and Monitor in the top-level session, and A8 keeps every selected process in the host agent's context. The plugin must not spawn nested `codex exec` children. If native delegation is unavailable and the `Monitor` performs a delegated role itself, the trace must record that fallback.
 
 Prompt composition carries the assignment, supplied context, and requested output constraints exactly once. For a condition with path-bearing frozen stages, the runner renders those values into the first stage that carries the shared-input block and removes duplicate shared-input sections from later stages in memory. The runner verifies every stage hash before rendering, writes no rendered text back to the frozen files, and fails configuration before CLI probing when a stage contains an unsupported `{{name}}` token. Conditions without path-bearing stages carry the shared inputs in the generic prompt block.
 
@@ -181,31 +184,31 @@ The open evaluator must belong to a third model family, and the assignment is sy
 
 The runner must pin each value below. A placeholder blocks the run:
 
-| Value                                  | Required setting                                                                                                                        |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Codex generator model                  | `REQUIRED_AT_RUNTIME`: exact GPT-family model ID and release                                                                            |
-| Claude Code generator model            | `REQUIRED_AT_RUNTIME`: exact Claude-family model ID and release                                                                         |
-| Codex frontier judge                   | `REQUIRED_AT_RUNTIME`: exact Claude-family frontier model ID and release                                                                |
-| Claude Code frontier judge             | `REQUIRED_AT_RUNTIME`: exact GPT-family frontier model ID and release                                                                   |
-| Shared open evaluator                  | `REQUIRED_AT_RUNTIME`: exact third-family Prometheus 2 [^9] style evaluator checkpoint, revision, and serving configuration             |
-| Generator system and condition prompts | `REQUIRED_AT_RUNTIME`: frozen prompt files and hashes                                                                                   |
-| Judge prompts and JSON schemas         | `REQUIRED_AT_RUNTIME`: frozen prompt files, schema files, and hashes                                                                    |
-| Temperature                            | `REQUIRED_AT_RUNTIME`: temperature                                                                                                      |
-| Top-p or equivalent                    | `REQUIRED_AT_RUNTIME`: top-p or equivalent                                                                                              |
-| Maximum output tokens                  | `REQUIRED_AT_RUNTIME`: max output tokens                                                                                                |
-| Stop rules                             | `REQUIRED_AT_RUNTIME`: stop rules                                                                                                       |
-| Timeout                                | `REQUIRED_AT_RUNTIME`: timeout                                                                                                          |
-| Generation seed                        | `REQUIRED_AT_RUNTIME`: generation seed                                                                                                  |
-| Judge seed                             | `REQUIRED_AT_RUNTIME`: judge seed                                                                                                       |
-| Sampling seed                          | `REQUIRED_AT_RUNTIME`: sampling seed                                                                                                    |
+| Value                                  | Required setting                                                                                                                                                                                                                                           |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Codex generator model                  | `REQUIRED_AT_RUNTIME`: exact GPT-family model ID and release                                                                                                                                                                                               |
+| Claude Code generator model            | `REQUIRED_AT_RUNTIME`: exact Claude-family model ID and release                                                                                                                                                                                            |
+| Codex frontier judge                   | `REQUIRED_AT_RUNTIME`: exact Claude-family frontier model ID and release                                                                                                                                                                                   |
+| Claude Code frontier judge             | `REQUIRED_AT_RUNTIME`: exact GPT-family frontier model ID and release                                                                                                                                                                                      |
+| Shared open evaluator                  | `REQUIRED_AT_RUNTIME`: exact third-family Prometheus 2 [^9] style evaluator checkpoint, revision, and serving configuration                                                                                                                                |
+| Generator system and condition prompts | `REQUIRED_AT_RUNTIME`: frozen prompt files and hashes                                                                                                                                                                                                      |
+| Judge prompts and JSON schemas         | `REQUIRED_AT_RUNTIME`: frozen prompt files, schema files, and hashes                                                                                                                                                                                       |
+| Temperature                            | `REQUIRED_AT_RUNTIME`: temperature                                                                                                                                                                                                                         |
+| Top-p or equivalent                    | `REQUIRED_AT_RUNTIME`: top-p or equivalent                                                                                                                                                                                                                 |
+| Maximum output tokens                  | `REQUIRED_AT_RUNTIME`: max output tokens                                                                                                                                                                                                                   |
+| Stop rules                             | `REQUIRED_AT_RUNTIME`: stop rules                                                                                                                                                                                                                          |
+| Timeout                                | `REQUIRED_AT_RUNTIME`: timeout                                                                                                                                                                                                                             |
+| Generation seed                        | `REQUIRED_AT_RUNTIME`: generation seed                                                                                                                                                                                                                     |
+| Judge seed                             | `REQUIRED_AT_RUNTIME`: judge seed                                                                                                                                                                                                                          |
+| Sampling seed                          | `REQUIRED_AT_RUNTIME`: sampling seed                                                                                                                                                                                                                       |
 | Judge reasoning effort                 | `REQUIRED_AT_RUNTIME`: optional model-specific effort; valid values are `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`, but model acceptance differs; omission preserves the API default and the score manifest records `provider-default` |
-| Presentation seed                      | `REQUIRED_AT_RUNTIME`: presentation seed where the platform allows it                                                                   |
-| Codex version                          | `REQUIRED_AT_RUNTIME`: Codex version                                                                                                    |
-| Claude Code version                    | `REQUIRED_AT_RUNTIME`: Claude Code version                                                                                              |
-| Main plugin commit                     | `REQUIRED_AT_RUNTIME`: main plugin commit                                                                                               |
-| Experiments plugin commit              | `REQUIRED_AT_RUNTIME`: experiments plugin commit                                                                                        |
-| Runner commit                          | `REQUIRED_AT_RUNTIME`: runner commit                                                                                                    |
-| Generator and judge family audit       | `REQUIRED_AT_RUNTIME`: recorded base-model families and runtime verification that each selected judge differs from the generator family |
+| Presentation seed                      | `REQUIRED_AT_RUNTIME`: presentation seed where the platform allows it                                                                                                                                                                                      |
+| Codex version                          | `REQUIRED_AT_RUNTIME`: Codex version                                                                                                                                                                                                                       |
+| Claude Code version                    | `REQUIRED_AT_RUNTIME`: Claude Code version                                                                                                                                                                                                                 |
+| Main plugin commit                     | `REQUIRED_AT_RUNTIME`: main plugin commit                                                                                                                                                                                                                  |
+| Experiments plugin commit              | `REQUIRED_AT_RUNTIME`: experiments plugin commit                                                                                                                                                                                                           |
+| Runner commit                          | `REQUIRED_AT_RUNTIME`: runner commit                                                                                                                                                                                                                       |
+| Generator and judge family audit       | `REQUIRED_AT_RUNTIME`: recorded base-model families and runtime verification that each selected judge differs from the generator family                                                                                                                    |
 
 The runner records each judge's base-model family and the generator family for every scored output. The runner fails the run when a selected judge shares the generator family unless the judge configuration sets `allow_same_family_judge` to `true`. The audit verifies the family labels at runtime rather than trusting configuration names. The run manifest records `inputs.platform` and `models_and_execution.generator_model_family` for each run. The tracked `gpt-5.6-sol` judge example pins `medium` reasoning effort explicitly. Run 1 of the 300-prompt hard set omitted the field, so that run used the documented `medium` default; later runs pin `medium`. Replication judging remains a separate configuration decision.
 
@@ -376,7 +379,7 @@ The trace analysis measures observable process behavior and relates it to produc
 
 ### Trace sources and interpretation
 
-**Trace sources.** Every invoked skill writes observable events to the plugin's append-only `.writing/trace/process.jsonl` path. For A4, A5, and A6, the runner validates those events against [`plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md`](../../plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md). The runner uses `.writing/goals.md` for A4 and A6 and the final draft for all three core plugin conditions. A5 does not create or modify `.writing/goals.md`, so the analysis does not use that file for A5 goal measures. The runner applies the same trace contract to A1-A3 and to B1-B2 when exploratory runs are enabled.
+**Trace sources.** Every invoked skill writes observable events to the plugin's append-only `.writing/trace/process.jsonl` path. For A4, A5, A6, and A8, the runner validates those events against the selected skill's copy of the shared trace schema. The runner uses `.writing/goals.md` for A4, A6, and A8 and the final draft for all four core plugin conditions. A5 does not create or modify `.writing/goals.md`, so the analysis does not use that file for A5 goal measures. The runner applies the same trace contract to A1-A3 and to B1-B2 when exploratory runs are enabled.
 
 Each trace line is one JSON object. The documented event types are `process_switch`, `goal_created`, `goal_developed`, and `goal_regenerated`. Process-switch events include `from_process` and `to_process`. Goal events include `goal_id` and `parent_goal_id`. The plugin records responsible actor, decision, evidence, and uncertainty.
 
@@ -384,17 +387,17 @@ A3's trace events use the shared schema's `process` field with values `task-deco
 
 For A1 and A2, the baseline skills write only externally observed generation or stage events in the same per-run trace location. A3 writes the task-graph events described above. An adapter must not invent goals, hidden decisions, or internal reasoning. Plugin-specific fields that cannot be observed are `N/A` in the derived analysis. The baseline traces support structural comparisons.
 
-The goal-network estimands apply to A4 and A6. A6's process history still updates even though its selection is fixed. The recursive-monitor estimands apply to A4 to A6, with no goal events or goal fields for A5.
+The goal-network estimands apply to A4, A6, and A8. A6's process history still updates even though its selection is fixed. The recursive-monitor estimands apply to A4 to A6 and A8, with no goal events or goal fields for A5.
 
 The trace is an operational analogue of a thinking-aloud protocol, not a direct transcript of an agent's private state. The analysis therefore distinguishes logged actions from claims about cognition. An event that lacks enough evidence for a code is marked ambiguous and remains in the denominator for trace completeness.
 
 ### Process metrics from traces
 
-The analysis extracts these measures from the traces and uses goal files only for A4 and A6.
+The analysis extracts these measures from the traces and uses goal files only for A4, A6, and A8.
 
 The analysis orders events by line order and does not use timestamps; the run manifest records timestamp plausibility for reporting.
 
-**Goal count.** For A4 and A6, count all three goal event types and add the unique active goal IDs in `.writing/goals.md`. For A5, report zero because the variant records no goal events and does not create or modify `.writing/goals.md`. Report a total. When the kind is available, also report content, process, and criterion goals.
+**Goal count.** For A4, A6, and A8, count all three goal event types and add the unique active goal IDs in `.writing/goals.md`. For A5, report zero because the variant records no goal events and does not create or modify `.writing/goals.md`. Report a total. When the kind is available, also report content, process, and criterion goals.
 
 **Goal specificity.** Code whether each goal has these properties:
 
@@ -526,8 +529,8 @@ The runner enforces the equal-tool and no-retrieval policy. It logs network-poli
 The runner validates these conditions:
 
 - Every trace line is standalone JSON.
-- A4 to A6 contain the fields required by their selected plugin skill.
-- A5 and A6 manifests record the selected skill from the experiments plugin.
+- A4 to A8 contain the fields required by their selected plugin skill.
+- A5 through A8 manifests record the selected skill from the experiments plugin.
 - Blind labels are independent of condition IDs.
 - Every scored unordered pair has both presentation orders.
 
@@ -604,7 +607,7 @@ The owner must close every gate below before the first scored run. The runner re
    - Exact model IDs
    - CLI versions
    - Main plugin commit
-   - Experiments plugin commit when A5 or A6 runs
+   - Experiments plugin commit when A5 through A8 runs
    - Decoding parameters
    - Output budgets
    - Timeout

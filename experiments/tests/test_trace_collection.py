@@ -38,6 +38,7 @@ def _plugin_source(tmp_path):
         "cognitive-writing-no-goal-network",
         "cognitive-writing-fixed-order",
         "cognitive-writing-single-writer",
+        "cognitive-writing-single-context",
         "writing-cogwriter-style",
         "writing-adaptive-task-planning",
         "planning",
@@ -239,10 +240,21 @@ def _config():
 def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions():
     registry = load_condition_registry()
 
-    assert set(registry) == {*(f"A{index}" for index in range(1, 8)), "B1", "B2"}
+    assert set(registry) == {*(f"A{index}" for index in range(1, 9)), "B1", "B2"}
     assert [
         registry[condition].skill_name
-        for condition in ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "B1", "B2")
+        for condition in (
+            "A1",
+            "A2",
+            "A3",
+            "A4",
+            "A5",
+            "A6",
+            "A7",
+            "A8",
+            "B1",
+            "B2",
+        )
     ] == [
         "writing-single-shot",
         "writing-linear",
@@ -251,6 +263,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "cognitive-writing-no-goal-network",
         "cognitive-writing-fixed-order",
         "cognitive-writing-single-writer",
+        "cognitive-writing-single-context",
         "writing-cogwriter-style",
         "writing-storm-style",
     ]
@@ -281,6 +294,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert all(
         registry[f"A{index}"].analysis_family == "confirmatory" for index in range(1, 8)
     )
+    assert registry["A8"].analysis_family == "exploratory"
     assert all(
         registry[condition].analysis_family == "exploratory"
         for condition in ("B1", "B2")
@@ -309,8 +323,9 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "per-section-draft",
         "polish",
     )
-    assert [registry[f"A{index}"].product_requires_draft for index in range(1, 8)] == [
+    assert [registry[f"A{index}"].product_requires_draft for index in range(1, 9)] == [
         False,
+        True,
         True,
         True,
         True,
@@ -329,6 +344,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A7"].goal_events == "allowed"
     assert registry["A7"].require_goal_events is True
     assert registry["A7"].require_delegation is False
+    assert registry["A8"].require_delegation is False
     assert registry["A1"].event_types == ("process_switch",)
     assert registry["A4"].event_types == (
         "process_switch",
@@ -336,6 +352,10 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "goal_developed",
         "goal_regenerated",
     )
+    assert registry["A8"].event_types == registry["A4"].event_types
+    assert registry["A8"].trace_processes == registry["A4"].trace_processes
+    assert registry["A8"].goal_events == "allowed"
+    assert registry["A8"].require_goal_events is True
     assert registry["A2"].process_order == (
         "pre-write",
         "write",
@@ -456,6 +476,7 @@ def test_claude_code_delegating_condition_bypasses_codex_delegation_gate(
     assert manifest["delegation_check"] == {
         "required": True,
         "spawn_count": 0,
+        "execution_mode": "delegated",
         "passed": True,
     }
 

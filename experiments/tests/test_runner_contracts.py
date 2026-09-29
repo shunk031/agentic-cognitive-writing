@@ -196,6 +196,7 @@ def _plugin_source(tmp_path: Path) -> Path:
         "cognitive-writing-no-goal-network",
         "cognitive-writing-fixed-order",
         "cognitive-writing-single-writer",
+        "cognitive-writing-single-context",
         "writing-cogwriter-style",
         "writing-adaptive-task-planning",
         "planning",
@@ -1047,10 +1048,30 @@ def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
     ) in text
 
 
-def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
-    reviewing_text = (
-        REPO_ROOT / "plugin/skills/reviewing/SKILL.md"
+def test_a8_keeps_a4_trace_contract_and_removes_delegation() -> None:
+    a4_text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    a8_text = (
+        REPO_ROOT
+        / "experiments/plugin/skills/cognitive-writing-single-context/SKILL.md"
     ).read_text(encoding="utf-8")
+
+    def section(text: str, heading: str, next_heading: str) -> str:
+        return text.split(heading, 1)[1].split(next_heading, 1)[0]
+
+    assert section(a8_text, "## Trace contract", "## References") == section(
+        a4_text, "## Trace contract", "## References"
+    )
+    assert "## Delegation briefs" not in a8_text
+    assert "## In-context process execution" in a8_text
+    assert "spawn a native Codex subagent" not in a8_text
+
+
+def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
+    reviewing_text = (REPO_ROOT / "plugin/skills/reviewing/SKILL.md").read_text(
+        encoding="utf-8"
+    )
     for requirement in (
         "one verdict for each active goal",
         "identified by ID",
@@ -1099,8 +1120,7 @@ def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
 
     for path in (
         REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md",
-        REPO_ROOT
-        / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md",
+        REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md",
     ):
         text = path.read_text(encoding="utf-8")
         assert "every active goal with its ID" in text
@@ -1116,9 +1136,9 @@ def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
         REPO_ROOT
         / "experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md"
     ).read_text(encoding="utf-8")
-    a5_delegation = a5_text.split("## Delegation", 1)[1].split(
-        "## Trace contract", 1
-    )[0]
+    a5_delegation = a5_text.split("## Delegation", 1)[1].split("## Trace contract", 1)[
+        0
+    ]
     assert "- the assignment summary" in a5_delegation
     assert "goal network" not in a5_delegation.lower()
     assert "active goal" not in a5_delegation.lower()
@@ -1129,8 +1149,7 @@ def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
         "then begin the next pass with `Planning`."
     )
     fixed_order_text = (
-        REPO_ROOT
-        / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md"
+        REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md"
     ).read_text(encoding="utf-8")
     assert fixed_cycle_sentence in fixed_order_text
 
@@ -1172,7 +1191,8 @@ def test_composed_prompt_omits_the_stage_chain_header_without_frozen_paths() -> 
 
 
 @pytest.mark.parametrize(
-    "condition_id", ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "B1", "B2")
+    "condition_id",
+    ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "B1", "B2"),
 )
 @pytest.mark.parametrize("platform", PLATFORMS)
 def test_composed_prompt_has_one_rendered_shared_input_block(
@@ -1517,8 +1537,29 @@ def test_run_records_unique_codex_subagent_spawns(tmp_path: Path) -> None:
     assert manifest["delegation_check"] == {
         "required": False,
         "spawn_count": 2,
+        "execution_mode": "in_context",
         "passed": True,
     }
+
+
+def test_a8_accepts_in_context_execution_without_spawn_event(tmp_path: Path) -> None:
+    runner = _runner(tmp_path, executor=_RetryExecutor([_result()]))
+
+    result = runner.run_prompt(_prompt(), condition_id="A8", platform="codex")
+
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["status"] == "completed"
+    assert manifest["subagent_spawn_count"] == 0
+    assert manifest["delegation_check"] == {
+        "required": False,
+        "spawn_count": 0,
+        "execution_mode": "in_context",
+        "passed": True,
+    }
+    assert [
+        json.loads(line)["event_type"]
+        for line in result.trace_path.read_text().splitlines()
+    ] == ["process_switch", "goal_created"]
 
 
 def test_required_delegation_fails_closed_without_spawn_event(tmp_path: Path) -> None:
@@ -1551,6 +1592,7 @@ def test_required_delegation_fails_closed_without_spawn_event(tmp_path: Path) ->
     assert manifest["delegation_check"] == {
         "required": True,
         "spawn_count": 0,
+        "execution_mode": "delegated",
         "passed": False,
     }
 
@@ -1579,6 +1621,7 @@ def test_required_delegation_passes_with_spawn_events(tmp_path: Path) -> None:
     assert manifest["delegation_check"] == {
         "required": True,
         "spawn_count": 2,
+        "execution_mode": "delegated",
         "passed": True,
     }
 
@@ -1619,6 +1662,7 @@ def test_failed_spawn_event_fails_required_delegation(tmp_path: Path) -> None:
     assert manifest["delegation_check"] == {
         "required": True,
         "spawn_count": 0,
+        "execution_mode": "delegated",
         "passed": False,
     }
 
@@ -1845,18 +1889,19 @@ def test_trace_validation_skips_leading_blank_lines(tmp_path: Path) -> None:
 def test_trace_validation_skips_interior_blank_lines(tmp_path: Path) -> None:
     path = tmp_path / "process.jsonl"
     events = [_event(process="planning"), _event(process="generate")]
-    path.write_text(
-        json.dumps(events[0]) + "\n\n\t\n" + json.dumps(events[1]) + "\n"
-    )
+    path.write_text(json.dumps(events[0]) + "\n\n\t\n" + json.dumps(events[1]) + "\n")
 
-    assert validate_trace(
-        path,
-        condition_id="A1",
-        declared_processes=WRITING_TRACE_PROCESSES,
-        goal_events="forbidden",
-        allowed_event_types=("process_switch",),
-        min_events=2,
-    ) == events
+    assert (
+        validate_trace(
+            path,
+            condition_id="A1",
+            declared_processes=WRITING_TRACE_PROCESSES,
+            goal_events="forbidden",
+            allowed_event_types=("process_switch",),
+            min_events=2,
+        )
+        == events
+    )
 
 
 def test_trace_validation_rejects_trace_containing_only_blank_lines(
@@ -1939,9 +1984,7 @@ def test_trace_timestamp_plausibility_skips_blank_lines_from_path(
     events = [_event(), _event()]
     events[0]["timestamp"] = "2026-09-08T12:00:01+00:00"
     events[1]["timestamp"] = "2026-09-08T12:00:02+00:00"
-    path.write_text(
-        "\n" + "\n".join(json.dumps(event) for event in events) + "\n"
-    )
+    path.write_text("\n" + "\n".join(json.dumps(event) for event in events) + "\n")
 
     assert assess_trace_timestamps(
         path,
@@ -2303,9 +2346,18 @@ class _RetryExecutor:
         self.environments.append(env)
         trace_path = cwd / ".writing" / "trace" / "process.jsonl"
         trace_path.parent.mkdir(parents=True, exist_ok=True)
-        trace_path.write_text(
-            json.dumps(_event("process_switch", process="generate")) + "\n"
-        )
+        if any("cognitive-writing-single-context" in argument for argument in command):
+            trace_path.write_text(
+                json.dumps(_event("process_switch", process="planning"))
+                + "\n"
+                + json.dumps(_event("goal_created", process="goal-setting"))
+                + "\n"
+            )
+            (cwd / ".writing" / "draft.md").write_text("draft " * 10)
+        else:
+            trace_path.write_text(
+                json.dumps(_event("process_switch", process="generate")) + "\n"
+            )
         return self.results.pop(0)
 
 
@@ -2721,9 +2773,7 @@ def test_non_draft_condition_accepts_short_output(tmp_path: Path) -> None:
     )
     runner = _runner(
         tmp_path,
-        executor=_RetryExecutor(
-            [_result(output="short", usage={"output_tokens": 2})]
-        ),
+        executor=_RetryExecutor([_result(output="short", usage={"output_tokens": 2})]),
     )
 
     runner.run_prompt(prompt, condition_id="A1", platform="codex")
