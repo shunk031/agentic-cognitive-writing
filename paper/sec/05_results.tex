@@ -1,86 +1,20 @@
 \subsection{RQ1: Does process-level organization help?}
 \label{sec:results-effectiveness}
 
-\paragraph{Pairwise preference.}
-Table~\ref{tab:pairwise-results} and Figure~\ref{fig:confirmatory-forest} report the primary pairwise answer to RQ1. Under same-family pairwise judging on 300 hard prompts, the prompt-collapsed pooled win rates across the three replications for \condFull\ are \PooledFourOneRateMean\ (SD \PooledFourOneRateSD) against \condSinglePass, \PooledFourTwoRateMean\ (SD \PooledFourTwoRateSD) against \condStaged, and \PooledFourThreeRateMean\ (SD \PooledFourThreeRateSD) against \condTaskPlanning. \condFull\ is directionally favored in every benchmark cell against \condSinglePass\ and \condTaskPlanning\ across all three replications; \condFull\ versus \condStaged\ is directionally favored in every cell except DoLoMiTes in the third replication, where the rate is \DoLoFourTwoRateRunThree.
-
-Figure~\ref{fig:confirmatory-forest} plots the same prompt-collapsed rates and intervals by benchmark and replication. Across the nine benchmark-by-replication cells, Holm correction retains \PooledFourOneHolmCellsTotal\ for \condFull\ versus \condSinglePass, \PooledFourTwoHolmCellsTotal\ for \condFull\ versus \condStaged, and \PooledFourThreeHolmCellsTotal\ for \condFull\ versus \condTaskPlanning. The directional pattern is broader than the corrected evidence: \condFull\ remains above \condSinglePass\ and \condTaskPlanning\ in all nine cells, while \condFull\ versus \condStaged\ keeps the DoLoMiTes exception in the third replication.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
-\caption{The plot visualizes the same prompt-collapsed rates and intervals per benchmark and replication for the eight confirmatory contrasts. Rows compare \condFull\ with \condSinglePass, \condStaged, \condTaskPlanning, \condNoGoals, and \condFixedOrder, followed by \condSingleWriter\ contrasts. Points show the three replications with 95 percent Wilson intervals; diamonds show their mean, and filled or open circles mark cells that do or do not survive Holm correction.}
-\label{fig:confirmatory-forest}
-\end{figure*}
+Table~\ref{tab:pairwise-results} reports the primary pairwise outcomes. Under same-family judging, \condFull\ is preferred to all three baseline organizations: its pooled mean win rate across replications is \PooledFourOneRateMean\ against \condSinglePass, \PooledFourTwoRateMean\ against \condStaged, and \PooledFourThreeRateMean\ against \condTaskPlanning. The direction is stable across benchmarks and replications: \condFull\ is favored in every benchmark-by-replication cell against \condSinglePass\ and \condTaskPlanning, and in all but one cell against \condStaged. After Holm correction, \PooledFourOneHolmCellsTotal, \PooledFourTwoHolmCellsTotal, and \PooledFourThreeHolmCellsTotal\ of the nine cells survive for the three contrasts, respectively. Replicate-level intervals are shown in Appendix~\ref{app:pairwise-detail}.
 
 \input{tab/pairwise-results}
-
-\paragraph{Native and pointwise scores.}
-Table~\ref{tab:main-results} shows that the native and pointwise scores separate the four primary conditions far less than the pairwise preference does: \condFull\ leads both native scales, yet the whole WritingBench range from \condSinglePass\ to \condFull\ is \WritingAoneNative\ to \WritingAfourNative\ on a 1 to 10 scale, while the pointwise ordering varies by benchmark and places \condStaged\ above \condFull\ on DoLoMiTes.
-
-\input{tab/main-results}
-
-\paragraph{Robustness to output length.}
-Figure~\ref{fig:robustness} shows the two robustness checks: output-length control in panel (a) and cross-family judging in panel (b). Figure~\ref{fig:robustness}(a) reports the longer side's win rate across output-length ratio bins. The judge preferred the longer side in \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons from the first replication (95 percent Wilson interval \LengthLongerInterval). Matching preserves the \condFull\ advantage over \condSinglePass\ in all three replications, supports \condFull\ over \condTaskPlanning\ in only one of the three replications, and leaves \condFull\ versus \condNoGoals\ as a bounded null. At matched compute (ratio within 1.25), \condFull\ keeps its advantage over \condStaged\ (\ComputeFullStagedWithinOneTwentyFiveRate, $p=\ComputeFullStagedWithinOneTwentyFiveP$) and \condTaskPlanning\ (\ComputeFullTaskPlanningWithinOneTwentyFiveRate, $p=\ComputeFullTaskPlanningWithinOneTwentyFiveP$), while \condSingleWriter\ retains its deficit against \condFull\ (\ComputeSingleWriterFullWithinOneTwentyFiveRate, $p=\ComputeSingleWriterFullWithinOneTwentyFiveP$); \condFull\ versus \condSinglePass\ has no compute-matched pairs. Appendix~\ref{app:record-pooled} reports the record-pooled sensitivity estimates, Appendix~\ref{app:length-control} gives the bin-level W/L/T counts and rates, and Appendix~\ref{app:compute-control} reports the compute-matched bands and ratio bins.
-
-\begin{figure*}[t]
-\centering
-\begin{minipage}[t]{0.49\textwidth}
-\centering
-\includegraphics[width=\linewidth]{fig/length-control.pdf}\\
-(a)
-\end{minipage}\hfill
-\begin{minipage}[t]{0.49\textwidth}
-\centering
-\includegraphics[width=\linewidth]{fig/cross-family.pdf}\\
-(b)
-\end{minipage}
-\caption{Output-length control and cross-family judging. (a) Bars show the longer side's win rate among non-tied pairs across output-length ratio bins; bar annotations give total pair counts, including ties, and diamonds show \condFull\ versus \condSinglePass\ within 5 percent and 10 percent matching bands. (b) Bars compare same-family \modelJudge\ and \modelCross\ win rates among non-tied pairs for \condFull\ versus \condSinglePass, \condTaskPlanning, and \condNoGoals; right-side annotations report the \modelCross\ tie share over all pairs. On WritingBench, the \condFull\ versus \condSinglePass\ result reverses direction under \modelCross.}
-\label{fig:robustness}
-\end{figure*}
-
-\paragraph{Robustness to judge family.}
-Figure~\ref{fig:robustness}(b) reports the cross-family judge's pooled outcomes. Without multiplicity correction, cross-family judging preserves pooled direction for all three contrasts: \CrossFamilyFullSinglePassWinRate\ for \condFull\ versus \condSinglePass\ (\CrossFamilyWritingFullSinglePassWinRate\ on WritingBench), \CrossFamilyFullTaskPlanningWinRate\ for \condFull\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWinRate\ for \condFull\ versus \condNoGoals\ ($p=\CrossFamilyFullNoGoalsP$). The judge commits on \CrossFamilyPooledCommitRate\ of pairs and has \CrossFamilyPooledConflicts\ direction conflicts. Appendix~\ref{app:cross-family} lists the corresponding descriptive per-benchmark counts, commitments, and agreements.
 
 \subsection{RQ2: Which control mechanisms matter?}
 \label{sec:results-mechanism}
 
-Table~\ref{tab:pairwise-results} reports the four ablation rows; RQ2 yields bounded comparisons rather than equality tests. Under same-family judging across three replications, \condFull\ versus \condNoGoals\ is a bounded null: the pooled win rate is \PooledFourFiveRateMean\ (SD \PooledFourFiveRateSD) for \condFull. \condFull\ versus \condFixedOrder\ has no per-benchmark cell surviving Holm correction in any replication. The untested pairs are \condNoGoals\ and \condFixedOrder\ with \condSinglePass, \condStaged, or \condTaskPlanning, and \condSingleWriter\ with \condStaged, \condTaskPlanning, or \condFixedOrder. The intervals do not establish equality or exclude smaller effects.
+The ablations separate the full architecture from two of its dynamic control commitments. Removing the explicit goal network yields a bounded null: \condFull\ wins \PooledFourFiveRateMean\ of non-tied comparisons against \condNoGoals, and no benchmark cell survives Holm correction. Fixing the process order is similarly close to \condFull, with no surviving benchmark cell. These results do not establish equality, but they provide no evidence that either explicit goal bookkeeping or adaptive process ordering accounts for the main advantage.
 
-Table~\ref{tab:pairwise-results} shows the remaining ablation pattern: \condSingleWriter\ versus \condSinglePass\ is mixed across benchmarks, with \condSingleWriter\ winning on WritingBench, losing on HelloBench, and mixed on DoLoMiTes across all three replications. No HelloBench cell survives Holm correction after collapse. \condSingleWriter\ wins only \PooledSevenFourRateMean\ (SD \PooledSevenFourRateSD) of non-tied comparisons against \condFull\ and \PooledSevenFiveRateMean\ (SD \PooledSevenFiveRateSD) against \condNoGoals\ in the pooled summaries. These contrasts localize the unresolved difference to changes introduced by \condSingleWriter, but they do not identify which change is responsible: role separation, recursion granularity, and output length all differ from \condFull, while \condTaskPlanning\ also changes the delegated unit.
+The traces are consistent with this product-level result. The unrestricted \texttt{Monitor} follows the canonical \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle in \AfourCycleCompliantRate\ of completed runs, returns from \texttt{Reviewing} to \texttt{Planning} in only \AfourReviewingToPlanningRate, and accepts goal regeneration in only \AfourRegenerationRuns\ of \AfourRunCount\ runs. Collapsing the process roles into \condSingleWriter\ causes a much larger drop: \condSingleWriter\ wins only \PooledSevenFourRateMean\ of non-tied comparisons against \condFull. That contrast is not isolating, however, because it also changes recursion granularity and output length. Detailed process counts and sequence distributions appear in Appendix~\ref{app:process-behavior}.
 
-\subsection{Process behavior behind the ablations}
-\label{sec:results-dynamics}
+\subsection{Robustness}
+\label{sec:results-robustness}
 
-Table~\ref{tab:process-summary} shows what the delegating architecture costs and how much it delegates in the first replication: \condFull\ uses \AfourOutputTokens\ output-plus-reasoning tokens per attempted run and \AfourMeanSeconds\ seconds per completed run against \AoneOutputTokens\ tokens and \AoneMeanSeconds\ seconds for \condSinglePass, and it spawns \AfourSpawns\ delegated invocations per attempted run against \AthreeSpawns\ for \condTaskPlanning, which uses more tokens and loses the pairwise contrast. The table also reports completion, median output units, and input tokens for all seven conditions.
+The main pattern is not straightforwardly explained by output length or inference expenditure. The same-family judge prefers the longer output in \LengthLongerRate\ of non-tied pairs, but \condFull\ remains favored over \condSinglePass\ within the tested output-length matching bands. At a compute ratio within 1.25, \condFull\ remains preferred to \condStaged\ at \ComputeFullStagedWithinOneTwentyFiveRate\ and to \condTaskPlanning\ at \ComputeFullTaskPlanningWithinOneTwentyFiveRate; there are no \condFull--\condSinglePass\ pairs this closely matched in compute. These realized-compute analyses are descriptive rather than causal because compute is itself an outcome of execution.
 
-The process-trace analysis reports means across the three replications, with sample standard deviations (SD) in parentheses. A ledger entry is the enumeration recorded when \texttt{Reviewing} hands control back, listing every regeneration verdict or stating that none was proposed. Across the three replications, the \condFull\ traces contain \AfourGoalCreatedMean\ (SD \AfourGoalCreatedSD) goal-creation events and \AfourGoalDevelopedMean\ (SD \AfourGoalDevelopedSD) goal-development events per run. Its post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ (SD \AfourLedgerEntriesSD) entries per run, including \AfourLedgerWithProposalMean\ (SD \AfourLedgerWithProposalSD) explicit regeneration proposals; accepted regeneration occurs between \AfourGoalRegeneratedRunOne\ and \AfourGoalRegeneratedRunThree\ times across the three replications. The \condFixedOrder\ traces contain \AsixGoalCreatedMean\ (SD \AsixGoalCreatedSD) goal-creation events, \AsixGoalDevelopedMean\ (SD \AsixGoalDevelopedSD) goal-development events, and \AsixLedgerEntriesMean\ (SD \AsixLedgerEntriesSD) ledger entries per run, including \AsixLedgerWithProposalMean\ (SD \AsixLedgerWithProposalSD) explicit proposals. Under same-family judging, \condTaskPlanning\ delegates more often than \condFull, with \AthreeSpawnsMean\ (SD \AthreeSpawnsSD) versus \AfourSpawnsMean\ (SD \AfourSpawnsSD) mean spawns per attempted run, yet \condFull\ beats \condTaskPlanning.
-
-\input{tab/appendix-process}
-
-Figure~\ref{fig:process-sequences} shows that the traces mostly follow the planned \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle. The trace source contains \AfourRunCount\ completed \condFull\ runs and \AsixRunCount\ completed \condFixedOrder\ runs across the supplied replications. Exact single-cycle sequences account for \AfourSingleCycleRate\ of \condFull\ runs and \AsixSingleCycleRate\ of \condFixedOrder\ runs, while cycle compliance reaches \AfourCycleCompliantRate\ and \AsixCycleCompliantRate, respectively. Among compliant \condFull\ runs, \AfourCompliantOnePassRate\ made one pass; among compliant \condFixedOrder\ runs, \AsixCompliantTwoThreePassRate\ made two or three passes.
-
-The traces show how the \texttt{Monitor} returns from \texttt{Reviewing} and how often it regenerates goals. After \texttt{Reviewing}, control returned to \texttt{Translating} in \AfourReviewingToTranslatingRate\ of \condFull\ runs and to \texttt{Planning} in \AfourReviewingToPlanningRate. For \condFixedOrder, the corresponding rates were \AsixReviewingToTranslatingRate\ and \AsixReviewingToPlanningRate; a return to \texttt{Planning} starts the next pass by design. Regeneration occurred in \AfourRegenerationRuns\ \condFull\ runs and \AsixRegenerationRuns\ \condFixedOrder\ runs.
-
-The remaining trace comparisons do not explain why \condFull\ and \condFixedOrder\ reach similar product outcomes. Leading-process reconstruction accounted for \AfourLeadingReconstruction\ raw non-\texttt{Planning} starts in \condFull\ and \AsixLeadingReconstruction\ in \condFixedOrder. Exact-cycle status shows no association with wins under Fisher's exact test~\cite{fisher1922}: exact-cycle \condFull\ runs won \AfourExactCycleFixedOrderWinRate\ of comparisons against \condFixedOrder\ versus \AfourNonExactFixedOrderWinRate\ for other runs ($p=\AfourFixedOrderCycleSplitP$), and \AfourExactCycleSingleWriterWinRate\ versus \AfourNonExactSingleWriterWinRate\ against \condSingleWriter\ ($p=\AfourSingleWriterCycleSplitP$).
-
-\begin{figure*}[t]
-\centering
-\begin{minipage}[t]{\textwidth}
-\centering
-\includegraphics[width=\linewidth]{fig/process-sequences-a.pdf}\\
-(a)
-\end{minipage}\\[0.5em]
-\begin{minipage}[t]{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{fig/process-sequences-b.pdf}\\
-(b) \condFull\\
-\end{minipage}\hfill
-\begin{minipage}[t]{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{fig/process-sequences-c.pdf}\\
-(c) \condFixedOrder\\
-\end{minipage}
-\caption{\texttt{Monitor} process selection across \condFull\ and \condFixedOrder. (a) Horizontal bars show the five most frequent observed process sequences per condition; labels join process abbreviations with arrows, and annotations give counts and shares of completed runs across the three replications. The key is P for \texttt{Planning}, T for \texttt{Translating}, and R for \texttt{Reviewing}. (b) and (c) show transition counts for \condFull\ and \condFixedOrder\ using the same P, T, R, and E abbreviations on both axes, with E denoting termination. Cycle compliance collapses immediate repeats, requires one or more complete \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} passes, and ends at \texttt{Reviewing}.}
-\label{fig:process-sequences}
-\end{figure*}
+A cross-family judge preserves the pooled direction for the three checked contrasts, including \CrossFamilyFullSinglePassWinRate\ for \condFull\ versus \condSinglePass\ and \CrossFamilyFullTaskPlanningWinRate\ versus \condTaskPlanning, but commits on only \CrossFamilyPooledCommitRate\ of eligible pairs and reverses \condFull\ versus \condSinglePass\ on WritingBench. We therefore treat it as a robustness check rather than replacement confirmatory evidence. Native and pointwise scores, length matching, compute strata, and cross-family counts are reported in Appendix~\ref{app:secondary-scores}--\ref{app:cross-family}.
