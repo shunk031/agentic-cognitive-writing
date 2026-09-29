@@ -85,11 +85,11 @@
 \node[font=\bfseries,anchor=east] (abllabel) at (4.5,-2.25)
     {Tested interventions:};
 \node[ablation] (nogoals) at (6.2,-2.25)
-    {\textbf{No explicit goals}\\remove goal representation};
+    {\textbf{No explicit goals}};
 \node[ablation] (fixed) at (8.9,-2.25)
-    {\textbf{Fixed process order}\\remove adaptive scheduling};
+    {\textbf{Fixed process order}};
 \node[ablation] (single) at (11.6,-2.25)
-    {\textbf{One writer context}\\collapse process roles};
+    {\textbf{One writer context}};
 \end{tikzpicture}%
 }
 \caption{Two control abstractions for long-form writing. Representative structured writing systems choose a unit of work such as a section, passage, or task node (left). Agentic CogWriter instead chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} from the current draft, goal network, and process history (right). The tested interventions remove explicit goals, adaptive process ordering, or separate process-role execution. Collapsing the roles into one writer also changes control granularity, so that intervention does not cleanly isolate role or context separation.}
