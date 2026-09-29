@@ -29,7 +29,7 @@ using
 a_t=\pi_{\mathrm{monitor}}(S_t).
 \end{equation}
 %
-In the evaluated system, $\pi_{\mathrm{monitor}}$ is the prompted decision of the host agent over the current state and open uncertainty, not a separately trained policy.
+We refer to $\pi_{\mathrm{monitor}}$ as the \emph{process-selection policy}. In the evaluated system, this policy is the prompted decision of the host agent over the current state and open uncertainty, not a separately trained policy.
 
 Each action is executed by a corresponding role agent. The \texttt{Planner} runs \texttt{Planning} to create or refine goals and organize their pursuit. The \texttt{Translator} runs \texttt{Translating} to realize active goals as prose and primarily changes the document. The \texttt{Reviewer} runs \texttt{Reviewing} to evaluate the draft against active goals and can request further planning or translation. A process execution produces an updated state before returning control to the \texttt{Monitor}.
 
