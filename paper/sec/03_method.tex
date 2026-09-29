@@ -3,7 +3,7 @@ Agentic CogWriter repeats a simple control loop until the \texttt{Monitor} decid
 \subsection{External writing records}
 \label{sec:method-control-state}
 
-Agentic CogWriter maintains three records throughout a run. The \emph{draft} stores the text produced so far. The \emph{goal network}, introduced in Section~\ref{sec:method-control-state}, stores the current writing goals in a hierarchical form. The \emph{process history} records previous process choices and changes to those goals.
+Agentic CogWriter maintains three records throughout a run. The \emph{draft} stores the text produced so far. The \emph{goal network} stores the current writing goals in a hierarchical form. The \emph{process history} records previous process choices and changes to those goals.
 
 The goal network is our explicit representation of the writer-generated goals proposed by Flower and Hayes~\cite{flower1981cognitive}. It contains content, process, and evaluation goals, and it can change as writing proceeds. When a goal is created, developed, or replaced, the change is also recorded in the process history. This representation makes goal changes observable; it does not imply that the language model has a corresponding latent cognitive state.
 
@@ -18,7 +18,7 @@ as shorthand for these three external records. The index $t$ counts decisions by
 \subsection{Process action space}
 \label{sec:method-writing-processes}
 
-At decision $t$, the \texttt{Monitor} chooses one of the three writing processes introduced in Section~1:
+At decision $t$, the \texttt{Monitor} chooses one of Agentic CogWriter's three writing processes:
 %
 \begin{equation}
 a_t \in
