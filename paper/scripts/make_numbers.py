@@ -175,6 +175,46 @@ CROSS_FAMILY_SOURCE_FIELDS = {
     "provenance": "provenance",
     "note": "note",
 }
+COMPUTE_CONTRASTS = {
+    "A4:A2": "FullStaged",
+    "A4:A3": "FullTaskPlanning",
+    "A7:A4": "SingleWriterFull",
+    "A4:A1": "FullSinglePass",
+}
+COMPUTE_BANDS = {
+    "within_1.25": "OneTwentyFive",
+    "within_1.5": "OneFifty",
+}
+COMPUTE_REPLICATIONS = {
+    "run-1": "One",
+    "replication-2": "Two",
+    "replication-3": "Three",
+}
+COMPUTE_BIN_WORDS = {
+    "0.00-0.50": "ZeroToFifty",
+    "0.50-0.67": "FiftyToSixtySeven",
+    "0.67-0.80": "SixtySevenToEighty",
+    "0.80-0.91": "EightyToNinetyOne",
+    "0.91-0.95": "NinetyOneToNinetyFive",
+    "0.95-1.05": "NinetyFiveToOneZeroFive",
+    "1.05-1.10": "OneZeroFiveToOneTen",
+    "1.10-1.25": "OneTenToOneTwentyFive",
+    "1.25-1.50": "OneTwentyFiveToOneFifty",
+    "1.50-2.00": "OneFiftyToTwo",
+    "2.00+": "TwoPlus",
+}
+COMPUTE_RATIO_BIN_UPPER_BOUNDS = [
+    0.5,
+    2 / 3,
+    0.8,
+    10 / 11,
+    20 / 21,
+    1.05,
+    1.1,
+    1.25,
+    1.5,
+    2.0,
+]
 
 
 def _word(value: object) -> str:
@@ -814,6 +854,87 @@ def _validate_cross_result(data: dict[str, Any], source: str) -> None:
     _required_number(data, "sign_test_p", source)
 
 
+def _validate_compute_outcome(data: dict[str, Any], source: str) -> None:
+    for key in ("wins", "losses", "ties", "n_non_tie", "pairs"):
+        value = _required_int(data, key, source)
+        if value < 0:
+            raise ValueError(f"{source}.{key} must be non-negative")
+    if data["wins"] + data["losses"] != data["n_non_tie"]:
+        raise ValueError(f"{source} has inconsistent non-tie count")
+    if data["n_non_tie"] + data["ties"] != data["pairs"]:
+        raise ValueError(f"{source} has inconsistent pair count")
+    _required_number(data, "sign_test_p", source)
+    for key in ("win_rate", "wilson_low", "wilson_high"):
+        value = data.get(key)
+        if value is None:
+            if data["n_non_tie"] != 0:
+                raise ValueError(f"{source}.{key} is missing for a non-empty outcome")
+            continue
+        number = _float(value)
+        if number is None or not 0.0 <= number <= 1.0:
+            raise ValueError(f"{source}.{key} is not a rate")
+
+
+def _validate_compute_report(report: dict[str, Any]) -> dict[str, Any]:
+    source = "compute-stratified JSON"
+    matched_bands = _required_value(report, "matched_bands", source)
+    if matched_bands != [1.25, 1.5]:
+        raise ValueError(f"{source}.matched_bands must be [1.25, 1.5]")
+    upper_bounds = _required_value(report, "ratio_bin_upper_bounds", source)
+    if upper_bounds != COMPUTE_RATIO_BIN_UPPER_BOUNDS:
+        raise ValueError(f"{source}.ratio_bin_upper_bounds does not match the locked bins")
+
+    pooled = _required_mapping(report, "pooled", source)
+    _required_int(pooled, "pair_count", f"{source}.pooled")
+    pooled_contrasts = _required_mapping(pooled, "by_contrast", f"{source}.pooled")
+    for contrast in COMPUTE_CONTRASTS:
+        contrast_data = pooled_contrasts.get(contrast)
+        if not isinstance(contrast_data, dict):
+            raise ValueError(f"{source}.pooled.by_contrast is missing {contrast}")
+        matched = _required_mapping(contrast_data, "compute_matched", f"{source}.pooled.by_contrast.{contrast}")
+        for band in COMPUTE_BANDS:
+            stats = matched.get(band)
+            if not isinstance(stats, dict):
+                raise ValueError(f"{source}.pooled.{contrast}.compute_matched is missing {band}")
+            _validate_compute_outcome(stats, f"{source}.pooled.{contrast}.compute_matched.{band}")
+        bins = _required_mapping(contrast_data, "ratio_bins", f"{source}.pooled.by_contrast.{contrast}")
+        if set(bins) != set(COMPUTE_BIN_WORDS):
+            raise ValueError(f"{source}.pooled.{contrast}.ratio_bins must contain the locked bins")
+        for ratio_bin, stats in bins.items():
+            if not isinstance(stats, dict):
+                raise ValueError(f"{source}.pooled.{contrast}.ratio_bins.{ratio_bin} is not an object")
+            _validate_compute_outcome(stats, f"{source}.pooled.{contrast}.ratio_bins.{ratio_bin}")
+        spearman = _required_mapping(contrast_data, "spearman", f"{source}.pooled.by_contrast.{contrast}")
+        n = _required_int(spearman, "n", f"{source}.pooled.{contrast}.spearman")
+        if n < 0:
+            raise ValueError(f"{source}.pooled.{contrast}.spearman.n must be non-negative")
+        rho = _required_number(spearman, "rho", f"{source}.pooled.{contrast}.spearman")
+        if not -1.0 <= rho <= 1.0:
+            raise ValueError(f"{source}.pooled.{contrast}.spearman.rho is outside [-1, 1]")
+
+    replications = _required_mapping(report, "per_replication", source)
+    for replication, replication_word in COMPUTE_REPLICATIONS.items():
+        replication_data = replications.get(replication)
+        if not isinstance(replication_data, dict):
+            raise ValueError(f"{source}.per_replication is missing {replication}")
+        by_contrast = _required_mapping(replication_data, "by_contrast", f"{source}.per_replication.{replication}")
+        for contrast in COMPUTE_CONTRASTS:
+            contrast_data = by_contrast.get(contrast)
+            if not isinstance(contrast_data, dict):
+                raise ValueError(f"{source}.per_replication.{replication} is missing {contrast}")
+            matched = _required_mapping(contrast_data, "compute_matched", f"{source}.per_replication.{replication}.{contrast}")
+            for band in COMPUTE_BANDS:
+                stats = matched.get(band)
+                if not isinstance(stats, dict):
+                    raise ValueError(f"{source}.per_replication.{replication}.{contrast} is missing {band}")
+                _validate_compute_outcome(stats, f"{source}.per_replication.{replication}.{contrast}.{band}")
+    return report
+
+
+def _optional_percent(value: Any, decimals: int) -> str:
+    return r"\textemdash" if value is None else _percent_fixed(value, decimals)
+
+
 def _validate_process_sequence_rate(data: dict[str, Any], source: str) -> None:
     for key in ("count", "total"):
         _required_int(data, key, source)
@@ -1082,6 +1203,43 @@ def _emit_cross_family_macros(add: Any, report: dict[str, Any]) -> None:
             add(benchmark_prefix + "Agreement", f"{agreement['numerator']}/{agreement['denominator']}", f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.prompt_collapsed_agreement numerator/denominator")
 
 
+def _emit_compute_stratified_macros(add: Any, report: dict[str, Any]) -> None:
+    report = _validate_compute_report(report)
+    pooled = report["pooled"]
+    add("\\ComputePooledEligible", str(pooled["pair_count"]), "compute-stratified JSON pooled.pair_count")
+    pooled_contrasts = pooled["by_contrast"]
+    replications = report["per_replication"]
+    for contrast, contrast_word in COMPUTE_CONTRASTS.items():
+        pooled_data = pooled_contrasts[contrast]
+        for band, band_word in COMPUTE_BANDS.items():
+            stats = pooled_data["compute_matched"][band]
+            prefix = f"\\Compute{contrast_word}Within{band_word}"
+            source = f"compute-stratified JSON pooled.by_contrast.{contrast}.compute_matched.{band}"
+            add(prefix + "WLT", _wlt(stats), source + " W/L/T")
+            add(prefix + "Rate", _optional_percent(stats["win_rate"], 1), source + ".win_rate")
+            add(prefix + "P", _pvalue(stats["sign_test_p"]), source + ".sign_test_p")
+            for replication, replication_word in COMPUTE_REPLICATIONS.items():
+                replication_stats = replications[replication]["by_contrast"][contrast]["compute_matched"][band]
+                add(
+                    prefix + "RateReplication" + replication_word,
+                    _optional_percent(replication_stats["win_rate"], 1),
+                    f"compute-stratified JSON per_replication.{replication}.by_contrast.{contrast}.compute_matched.{band}.win_rate",
+                )
+        rho = pooled_data["spearman"]["rho"]
+        add(
+            f"\\Compute{contrast_word}SpearmanRho",
+            f"{rho:.4f}",
+            f"compute-stratified JSON pooled.by_contrast.{contrast}.spearman.rho",
+        )
+        for ratio_bin, stats in pooled_data["ratio_bins"].items():
+            bin_word = COMPUTE_BIN_WORDS[ratio_bin]
+            prefix = f"\\Compute{contrast_word}Bin{bin_word}"
+            source = f"compute-stratified JSON pooled.by_contrast.{contrast}.ratio_bins.{ratio_bin}"
+            add(prefix + "WLT", _wlt(stats), source + " W/L/T")
+            add(prefix + "Rate", _optional_percent(stats["win_rate"], 1), source + ".win_rate")
+            add(prefix + "P", _pvalue(stats["sign_test_p"]), source + ".sign_test_p")
+
+
 def _emit_process_sequence_macros(add: Any, report: dict[str, Any]) -> None:
     report = _validate_process_sequences(report)
     conditions = report["conditions"]
@@ -1123,6 +1281,7 @@ def emit_numbers(
     length_control_summaries: list[dict[str, Any]] | None = None,
     cross_family_summary: dict[str, Any] | None = None,
     process_sequences: dict[str, Any] | None = None,
+    compute_stratified_sensitivity: dict[str, Any] | None = None,
 ) -> str:
     """Build a deterministic numbers.tex body using the published macro schema."""
 
@@ -1489,6 +1648,8 @@ def emit_numbers(
         _emit_cross_family_macros(add, cross_family_summary)
     if process_sequences is not None:
         _emit_process_sequence_macros(add, process_sequences)
+    if compute_stratified_sensitivity is not None:
+        _emit_compute_stratified_macros(add, compute_stratified_sensitivity)
 
     # The power sentence uses the confirmed A4:A1 prompt-collapsed counts.
     # Keep raw counts for the power inversion and round only displayed counts.
@@ -1553,6 +1714,7 @@ def main() -> None:
     parser.add_argument("--length-control-summaries", nargs="+", type=Path, default=[])
     parser.add_argument("--cross-family-summary", type=Path)
     parser.add_argument("--process-sequences", type=Path)
+    parser.add_argument("--compute-stratified-sensitivity", type=Path)
     parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[1] / "numbers.tex")
     cost_group = parser.add_mutually_exclusive_group()
     cost_group.add_argument("--public-prices", type=Path)
@@ -1572,6 +1734,11 @@ def main() -> None:
         if args.process_sequences is not None
         else None
     )
+    compute_stratified_sensitivity = (
+        _read_json_object(args.compute_stratified_sensitivity, "compute-stratified sensitivity")
+        if args.compute_stratified_sensitivity is not None
+        else None
+    )
     public_prices = _public_prices(args.public_prices) if not args.no_cost else None
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
@@ -1584,6 +1751,7 @@ def main() -> None:
             length_control_summaries or None,
             cross_family_summary,
             process_sequences,
+            compute_stratified_sensitivity,
         ),
         encoding="utf-8",
     )

@@ -118,6 +118,64 @@ def _length_summary() -> dict:
     }
 
 
+def _compute_outcome() -> dict:
+    return {
+        "wins": 2,
+        "losses": 1,
+        "ties": 1,
+        "n_non_tie": 3,
+        "pairs": 4,
+        "win_rate": 2 / 3,
+        "wilson_low": 0.2,
+        "wilson_high": 0.9,
+        "sign_test_p": 0.25,
+    }
+
+
+def _compute_summary() -> dict:
+    contrasts = ("A4:A2", "A4:A3", "A7:A4", "A4:A1")
+    bands = ("within_1.25", "within_1.5")
+    ratio_bins = (
+        "0.00-0.50",
+        "0.50-0.67",
+        "0.67-0.80",
+        "0.80-0.91",
+        "0.91-0.95",
+        "0.95-1.05",
+        "1.05-1.10",
+        "1.10-1.25",
+        "1.25-1.50",
+        "1.50-2.00",
+        "2.00+",
+    )
+
+    def contrast_data() -> dict:
+        return {
+            "compute_matched": {band: _compute_outcome() for band in bands},
+            "ratio_bins": {ratio_bin: _compute_outcome() for ratio_bin in ratio_bins},
+            "spearman": {"n": 4, "rho": 0.125},
+        }
+
+    by_contrast = {contrast: contrast_data() for contrast in contrasts}
+    return {
+        "matched_bands": [1.25, 1.5],
+        "ratio_bin_upper_bounds": [0.5, 2 / 3, 0.8, 10 / 11, 20 / 21, 1.05, 1.1, 1.25, 1.5, 2.0],
+        "pooled": {"pair_count": 16, "by_contrast": by_contrast},
+        "per_replication": {
+            replication: {
+                "pair_count": 16,
+                "by_contrast": {
+                    contrast: {
+                        "compute_matched": {band: _compute_outcome() for band in bands}
+                    }
+                    for contrast in contrasts
+                },
+            }
+            for replication in ("run-1", "replication-2", "replication-3")
+        },
+    }
+
+
 def _cross_rate() -> dict:
     return {
         "numerator": 1,
@@ -332,6 +390,39 @@ class TokenMacroTests(unittest.TestCase):
                 [_aggregation()],
                 [("A4", "A1")],
                 length_control_summaries=[summary, _length_summary(), _length_summary()],
+            )
+
+    def test_compute_stratified_macros_are_source_backed(self):
+        output = emit_numbers(
+            [_aggregation()],
+            [("A4", "A1")],
+            compute_stratified_sensitivity=_compute_summary(),
+        )
+        self.assertIn(r"\newcommand{\ComputePooledEligible}{16}", output)
+        self.assertIn(r"\newcommand{\ComputeFullStagedWithinOneTwentyFiveWLT}{2/1/1}", output)
+        self.assertIn(r"\newcommand{\ComputeFullStagedWithinOneTwentyFiveRate}{66.7\%}", output)
+        self.assertIn(r"\newcommand{\ComputeFullStagedWithinOneTwentyFiveRateReplicationThree}{66.7\%}", output)
+        self.assertIn(r"\newcommand{\ComputeFullStagedSpearmanRho}{0.1250}", output)
+        self.assertIn(r"\newcommand{\ComputeFullSinglePassBinTwoPlusP}{0.25}", output)
+
+    def test_compute_stratified_macros_fail_closed_on_missing_fields(self):
+        summary = _compute_summary()
+        del summary["pooled"]["by_contrast"]["A4:A2"]["spearman"]["rho"]
+        with self.assertRaisesRegex(ValueError, r"pooled\.A4:A2\.spearman.*rho"):
+            emit_numbers(
+                [_aggregation()],
+                [("A4", "A1")],
+                compute_stratified_sensitivity=summary,
+            )
+
+    def test_compute_stratified_macros_fail_closed_on_missing_ratio_bin(self):
+        summary = _compute_summary()
+        del summary["pooled"]["by_contrast"]["A4:A2"]["ratio_bins"]["2.00+"]
+        with self.assertRaisesRegex(ValueError, r"ratio_bins must contain the locked bins"):
+            emit_numbers(
+                [_aggregation()],
+                [("A4", "A1")],
+                compute_stratified_sensitivity=summary,
             )
 
     def test_cross_family_macros_fail_closed_on_missing_fields(self):

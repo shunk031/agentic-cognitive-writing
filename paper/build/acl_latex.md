@@ -247,13 +247,13 @@ Table 4. Native and pointwise product scores from the first replication for the 
 
 ##### Robustness to output length.
 
-Figure 3 shows the two robustness checks: output-length control in panel (a) and cross-family judging in panel (b). Figure 3(a) reports the longer side’s win rate across output-length ratio bins. The judge preferred the longer side in 66.12% of 1647 non-tied comparisons from the first replication (95 percent Wilson interval 63.80%–68.37%). Matching preserves the `Full` advantage over `Single-pass` in all three replications, supports `Full` over `Task-planning` in only one of the three replications, and leaves `Full` versus `No-goals` as a bounded null. Appendix C reports the record-pooled sensitivity estimates, and Appendix D gives the bin-level W/L/T counts and rates.
+Figure 3 shows the two robustness checks: output-length control in panel (a) and cross-family judging in panel (b). Figure 3(a) reports the longer side’s win rate across output-length ratio bins. The judge preferred the longer side in 66.12% of 1647 non-tied comparisons from the first replication (95 percent Wilson interval 63.80%–68.37%). Matching preserves the `Full` advantage over `Single-pass` in all three replications, supports `Full` over `Task-planning` in only one of the three replications, and leaves `Full` versus `No-goals` as a bounded null. At matched compute (ratio within 1.25), `Full` keeps its advantage over `Staged` (74.9%, `p=2.55 x 10^-16`) and `Task-planning` (72.1%, `p=2.14 x 10^-11`), while `Single-writer` retains its deficit against `Full` (24.6%, `p=2.13 x 10^-22`); `Full` versus `Single-pass` has no compute-matched pairs. Appendix C reports the record-pooled sensitivity estimates, Appendix D gives the bin-level W/L/T counts and rates, and Appendix E reports the compute-matched bands and ratio bins.
 
 Figure 3. Output-length control and cross-family judging. (a) Bars show the longer side’s win rate among non-tied pairs across output-length ratio bins; bar annotations give total pair counts, including ties, and diamonds show `Full` versus `Single-pass` within 5 percent and 10 percent matching bands. (b) Bars compare same-family `gpt-5.6-sol medium` and `claude-sonnet-5 medium` win rates among non-tied pairs for `Full` versus `Single-pass`, `Task-planning`, and `No-goals`; right-side annotations report the `claude-sonnet-5 medium` tie share over all pairs. On WritingBench, the `Full` versus `Single-pass` result reverses direction under `claude-sonnet-5 medium`.
 
 ##### Robustness to judge family.
 
-Figure 3(b) reports the cross-family judge’s pooled outcomes. Without multiplicity correction, cross-family judging preserves pooled direction for all three contrasts: 60.4% for `Full` versus `Single-pass` (47.50% on WritingBench), 75.2% for `Full` versus `Task-planning`, and 59.1% for `Full` versus `No-goals` (`p=0.1753`). The judge commits on 32.6% of pairs and has 32 direction conflicts. Appendix E lists the corresponding descriptive per-benchmark counts, commitments, and agreements.
+Figure 3(b) reports the cross-family judge’s pooled outcomes. Without multiplicity correction, cross-family judging preserves pooled direction for all three contrasts: 60.4% for `Full` versus `Single-pass` (47.50% on WritingBench), 75.2% for `Full` versus `Task-planning`, and 59.1% for `Full` versus `No-goals` (`p=0.1753`). The judge commits on 32.6% of pairs and has 32 direction conflicts. Appendix F lists the corresponding descriptive per-benchmark counts, commitments, and agreements.
 
 ### RQ2: What carries the effect?
 
@@ -307,7 +307,7 @@ For the theory, the result compares what the account describes with which of its
 
 ##### Objections that remain.
 
-A skeptical reader will raise four objections, and the evidence answers each only in part. First, the primary judge shares the generator’s model family; the cross-family judge agrees on the direction of every contrast but narrows the `Single-pass` margin and reverses it on WritingBench, so a same-family component remains. Second, the judge prefers longer outputs; the `Single-pass` advantage survives the tested output-length matching bands in all three replications, while the `Task-planning` advantage does so only in the first of the three replications. Third, every baseline is our re-implementation of the cited design under one generator family; the comparison is controlled, but it says nothing about the published systems’ own implementations or about other models. Fourth, the prompts are the 300 that demand the most writing; the design buys sensitivity where an architecture can differ and gives up external validity on routine prompts, and the Habermas pilot shows `Full` not leading on the pointwise composite for short consensus writing. Native scales compress differences, but the z-scored composite has no ceiling, and `Staged` exceeds `Full` on DoLoMiTes on that composite. The evidence therefore supports only bounded directional differences in these tested comparisons, with Holm support varying by contrast and benchmark; it does not establish gains from the goal network or dynamic process selection, or delegation as necessary.
+A skeptical reader will raise four objections, and the evidence answers each only in part. First, the primary judge shares the generator’s model family; the cross-family judge agrees on the direction of every contrast but narrows the `Single-pass` margin and reverses it on WritingBench, so a same-family component remains. Second, the judge prefers longer outputs; the `Single-pass` advantage survives the tested output-length matching bands in all three replications, while the `Task-planning` advantage does so only in the first of the three replications; matched compute likewise preserves the `Full` advantage over `Staged` and `Task-planning` and the `Single-writer` deficit, but yields no `Full` versus `Single-pass` pairs. Third, every baseline is our re-implementation of the cited design under one generator family; the comparison is controlled, but it says nothing about the published systems’ own implementations or about other models. Fourth, the prompts are the 300 that demand the most writing; the design buys sensitivity where an architecture can differ and gives up external validity on routine prompts, and the Habermas pilot shows `Full` not leading on the pointwise composite for short consensus writing. Native scales compress differences, but the z-scored composite has no ceiling, and `Staged` exceeds `Full` on DoLoMiTes on that composite. The evidence therefore supports only bounded directional differences in these tested comparisons, with Holm support varying by contrast and benchmark; it does not establish gains from the goal network or dynamic process selection, or delegation as necessary.
 
 ## Conclusion
 
@@ -319,7 +319,7 @@ The plugin, the experiment runner, and the analysis scripts accompany the paper.
 
 Completion differs across replications. Missing completed runs removed 161, 33, and 36 pairs in the three replications, because validation changes after the first replication raised completion; excluded pairs were dropped symmetrically, and every contrast kept its direction. The largest pooled between-replication SD is 3.9%, and Holm support varies by cell.
 
-The main judge shares the generator’s model family, so same-family judging can favor shared preferences. The cross-family judge provides a partial check, but no human evaluation was performed, so agreement between the judge and human raters is unknown.
+The main judge shares the generator’s model family, so same-family judging can favor shared preferences. The experiment protocol planned confirmatory judging by a judge from a different model family than the generator. The confirmatory judgments reported here come from the same family, and the cross-family judge serves as a robustness check on three contrasts rather than as the confirmatory judge. The cross-family judge provides a partial check, but no human evaluation was performed, so agreement between the judge and human raters is unknown.
 
 All generation used a single generator family, `gpt-5.6-luna`. The results therefore do not establish that the architecture’s advantage transfers to other generator families; a second-generator replication was not run. The baselines are likewise re-implementations of the cited designs under that generator, so the comparison is controlled but says nothing about the published systems’ own implementations or their reported results.
 
@@ -329,7 +329,7 @@ The ablations do not isolate every implementation detail. `Single-writer` chang
 
 The hard prompt set samples the longest prompts by Section 4.3’s rank key, so length proxies difficulty rather than a benchmark score. Results do not establish performance on routine prompts or other task families. The demanding slice trades external validity for sensitivity.
 
-The 80-run Habermas Machine pilot tests short consensus writing as a boundary condition, not a fourth benchmark; Appendix F reports its trace totals.
+The 80-run Habermas Machine pilot tests short consensus writing as a boundary condition, not a fourth benchmark; Appendix G reports its trace totals.
 
 Process traces record implemented agent state, not human goals, monitoring, or discovery; the source theory defines an executable control hypothesis, not cognitive equivalence.
 
@@ -385,6 +385,57 @@ The length-control table reports the longer-side preference by output-length rat
 
 Table 8. Prompt-collapsed pairwise outcomes from the first replication by output-length ratio. The longer side is the first-listed outcome in each row; ties are excluded from the win-rate denominator. Output units come from the run manifests.
 
+## Compute-stratified sensitivity
+
+| Contrast                   | Band or bin | W/L/T       | Rate   | `p`             |
+|:---------------------------|:------------|:------------|:-------|:----------------|
+| `Full` vs. `Staged`        | within 1.25 | 197/66/98   | 74.9%  | `2.55 x 10^-16` |
+| `Full` vs. `Staged`        | within 1.50 | 281/114/168 | 71.1%  | `2.21 x 10^-17` |
+| `Full` vs. `Task-planning` | within 1.25 | 163/63/78   | 72.1%  | `2.14 x 10^-11` |
+| `Full` vs. `Task-planning` | within 1.50 | 276/128/140 | 68.3%  | `1.40 x 10^-13` |
+| `Single-writer` vs. `Full` | within 1.25 | 87/267/83   | 24.6%  | `2.13 x 10^-22` |
+| `Single-writer` vs. `Full` | within 1.50 | 140/404/140 | 25.7%  | `1.11 x 10^-30` |
+| `Full` vs. `Single-pass`   | within 1.25 | 0/0/0       |        | `1`             |
+| `Full` vs. `Single-pass`   | within 1.50 | 13/6/3      | 68.4%  | `0.1671`        |
+| `Full` vs. `Staged`        | 0.00–0.50   | 1/0/0       | 100.0% | `1`             |
+| `Full` vs. `Staged`        | 0.50–0.67   | 4/4/3       | 50.0%  | `1`             |
+| `Full` vs. `Staged`        | 0.67–0.80   | 13/12/12    | 52.0%  | `1`             |
+| `Full` vs. `Staged`        | 0.80–0.91   | 42/10/21    | 80.8%  | `9.06 x 10^-6`  |
+| `Full` vs. `Staged`        | 0.91–0.95   | 21/7/3      | 75.0%  | `0.0125`        |
+| `Full` vs. `Staged`        | 0.95–1.05   | 49/20/21    | 71.0%  | `6.36 x 10^-4`  |
+| `Full` vs. `Staged`        | 1.05–1.10   | 23/6/20     | 79.3%  | `0.0023`        |
+| `Full` vs. `Staged`        | 1.10–1.25   | 62/23/33    | 72.9%  | `2.77 x 10^-5`  |
+| `Full` vs. `Staged`        | 1.25–1.50   | 71/36/58    | 66.4%  | `9.23 x 10^-4`  |
+| `Full` vs. `Staged`        | 1.50–2.00   | 95/57/53    | 62.5%  | `0.0026`        |
+| `Full` vs. `Staged`        | 2.00+       | 38/29/39    | 56.7%  | `0.3284`        |
+| `Full` vs. `Task-planning` | 0.00–0.50   | 44/26/23    | 62.9%  | `0.0414`        |
+| `Full` vs. `Task-planning` | 0.50–0.67   | 119/48/55   | 71.3%  | `3.83 x 10^-8`  |
+| `Full` vs. `Task-planning` | 0.67–0.80   | 99/58/54    | 63.1%  | `0.0013`        |
+| `Full` vs. `Task-planning` | 0.80–0.91   | 69/25/34    | 73.4%  | `6.34 x 10^-6`  |
+| `Full` vs. `Task-planning` | 0.91–0.95   | 22/11/11    | 66.7%  | `0.0801`        |
+| `Full` vs. `Task-planning` | 0.95–1.05   | 33/16/16    | 67.3%  | `0.0213`        |
+| `Full` vs. `Task-planning` | 1.05–1.10   | 13/5/5      | 72.2%  | `0.0963`        |
+| `Full` vs. `Task-planning` | 1.10–1.25   | 26/6/12     | 81.2%  | `5.35 x 10^-4`  |
+| `Full` vs. `Task-planning` | 1.25–1.50   | 14/7/8      | 66.7%  | `0.1892`        |
+| `Full` vs. `Task-planning` | 1.50–2.00   | 7/3/5       | 70.0%  | `0.3438`        |
+| `Full` vs. `Task-planning` | 2.00+       | 1/1/2       | 50.0%  | `1`             |
+| `Single-writer` vs. `Full` | 0.00–0.50   | 1/5/0       | 16.7%  | `0.2188`        |
+| `Single-writer` vs. `Full` | 0.50–0.67   | 9/12/9      | 42.9%  | `0.6636`        |
+| `Single-writer` vs. `Full` | 0.67–0.80   | 15/43/20    | 25.9%  | `3.07 x 10^-4`  |
+| `Single-writer` vs. `Full` | 0.80–0.91   | 19/62/17    | 23.5%  | `1.77 x 10^-6`  |
+| `Single-writer` vs. `Full` | 0.91–0.95   | 12/20/8     | 37.5%  | `0.2153`        |
+| `Single-writer` vs. `Full` | 0.95–1.05   | 25/69/22    | 26.6%  | `6.34 x 10^-6`  |
+| `Single-writer` vs. `Full` | 1.05–1.10   | 8/39/9      | 17.0%  | `5.54 x 10^-6`  |
+| `Single-writer` vs. `Full` | 1.10–1.25   | 23/77/27    | 23.0%  | `5.51 x 10^-8`  |
+| `Single-writer` vs. `Full` | 1.25–1.50   | 38/94/37    | 28.8%  | `1.19 x 10^-6`  |
+| `Single-writer` vs. `Full` | 1.50–2.00   | 24/68/25    | 26.1%  | `4.94 x 10^-6`  |
+| `Single-writer` vs. `Full` | 2.00+       | 7/13/6      | 35.0%  | `0.2632`        |
+| `Full` vs. `Single-pass`   | 1.25–1.50   | 13/6/3      | 68.4%  | `0.1671`        |
+| `Full` vs. `Single-pass`   | 1.50–2.00   | 91/15/17    | 85.8%  | `1.90 x 10^-14` |
+| `Full` vs. `Single-pass`   | 2.00+       | 464/114/150 | 80.3%  | `4.90 x 10^-51` |
+
+Table 9. Compute-stratified prompt-collapsed outcomes. The compute ratio is the ratio of output-plus-reasoning tokens per completed run, with retries included; the Full versus Single-pass contrast has no pairs within 1.25 because Full always uses more.
+
 ## Cross-family judge robustness
 
 The cross-family table reports pooled outcomes for the three robustness contrasts: 67/44/171 for `Full` versus `Single-pass`, 76/25/184 for `Full` versus `Task-planning`, and 39/27/221 for `Full` versus `No-goals`. The corresponding Wilson intervals are 51.06%–68.97%, 66.01%–82.64%, and 47.05%–70.13%. The judge commits on 32.6% of 854 pairs, with 182/96/576 overall W/L/T and 395/854 prompt-collapsed agreements.
@@ -401,7 +452,7 @@ The cross-family table reports pooled outcomes for the three robustness contrast
 | `Full` vs `No-goals` | HelloBench | 96 | 4/5/87 | 9.38% | 44.44% | 43/96 |
 | `Full` vs `No-goals` | DoLoMiTes | 96 | 24/15/57 | 40.62% | 61.54% | 46/96 |
 
-Table 9. Cross-family judge robustness check using `claude-sonnet-5 medium`. Each row reports prompt-collapsed outcomes for the eligible pairs in that benchmark; `n` is the number of eligible pairs. Commit is the fraction of pairs with a non-tied cross-family outcome, and agreement is the fraction of prompts whose collapsed outcomes agree with the same-family judge. No multiplicity correction is applied.
+Table 10. Cross-family judge robustness check using `claude-sonnet-5 medium`. Each row reports prompt-collapsed outcomes for the eligible pairs in that benchmark; `n` is the number of eligible pairs. Commit is the fraction of pairs with a non-tied cross-family outcome, and agreement is the fraction of prompts whose collapsed outcomes agree with the same-family judge. No multiplicity correction is applied.
 
 ## Habermas Machine pilot
 
@@ -418,7 +469,7 @@ The Habermas table reports trace totals from the 80-run pilot, which tests short
 | `Exploratory-1` | 0 | 0 | 0 | 0/0 | -0.1605 |
 | `Exploratory-2` | 0 | 0 | 0 | 0/0 | -0.1023 |
 
-Table 10. The 80-run Habermas Machine pilot. The pilot completed 78 runs. Completed-run denominators in row order are 10/10, 10/10, 9/10, 10/10, 10/10, 10/10, 10/10, and 9/10. `Task-planning` and `Exploratory-2` each had one failed run; the table retains the trace totals reported in the pilot ledger.
+Table 11. The 80-run Habermas Machine pilot. The pilot completed 78 runs. Completed-run denominators in row order are 10/10, 10/10, 9/10, 10/10, 10/10, 10/10, 10/10, and 9/10. `Task-planning` and `Exploratory-2` each had one failed run; the table retains the trace totals reported in the pilot ledger.
 
 `Exploratory-1` is the exploratory CogWriter-style baseline, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; `Exploratory-2` is the exploratory STORM-style baseline, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval. The full system ranks fifth of eight on the pointwise composite, behind `Single-pass` and `Staged` writing. `Full` and `Fixed-order` record 0 and 0 regeneration events, respectively; their ledgers contain 15/0 and 11/0 no/proposal outcomes, respectively.
 
