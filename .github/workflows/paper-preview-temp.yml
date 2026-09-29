@@ -14,6 +14,9 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: false
       - name: Build PDF, Markdown, and checker
         working-directory: paper
         run: ./tools/build-markdown.sh
