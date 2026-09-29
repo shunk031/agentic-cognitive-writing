@@ -6,7 +6,7 @@ We ask two questions. \textbf{RQ1} asks whether process-level organization impro
 \subsection{Conditions}
 \label{sec:baselines}
 
-We compare seven organizations of long-form writing under the same generator and harness. Table~\ref{tab:experimental-conditions} summarizes their control state, unit, decision rule, and evolving structure.
+We compare seven organizations of long-form writing under the same generator and harness. Table~\ref{tab:experimental-conditions} summarizes the controller's unit of action and the intervention dimensions.
 \input{tab/experiments-architecture-comparison}
 
 The first three conditions provide increasingly structured baselines. \condSinglePass\ generates the document in one call. \condStaged\ executes a fixed \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write} sequence. \condTaskPlanning\ follows the adaptive task-planning pattern of WriteHERE~\cite{xiong2025beyond}, selecting dependency-satisfied nodes from an evolving task graph. These are controlled re-implementations on our generator and harness rather than executions of the published systems.
