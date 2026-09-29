@@ -1,7 +1,8 @@
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
+\resizebox{0.98\textwidth}{!}{%
 \begin{tikzpicture}[
-    font=\fontsize{8}{9.5}\selectfont,
+    font=\fontsize{8.3}{9.7}\selectfont,
     box/.style={
         draw,
         rounded corners=2pt,
@@ -9,54 +10,95 @@
         minimum height=8mm,
         inner sep=3pt
     },
-    monitor/.style={
+    state/.style={
         box,
-        minimum width=25mm
+        text width=27mm
+    },
+    controller/.style={
+        box,
+        text width=25mm
+    },
+    unit/.style={
+        box,
+        text width=30mm
     },
     process/.style={
         box,
-        minimum width=31mm,
-        minimum height=9mm
+        text width=22mm
     },
-    state/.style={
+    ablation/.style={
         box,
-        minimum width=31mm,
-        minimum height=19mm
+        text width=25mm,
+        minimum height=10mm
     },
     arrow/.style={
-        -{Latex[length=1.5mm]},
+        -{Latex[length=1.6mm]},
         semithick
     },
-    regen/.style={
-        arrow,
-        dashed
+    panel/.style={
+        draw,
+        rounded corners=3pt,
+        inner sep=5mm
     }
 ]
-\node[monitor] (monitor) at (0,4.8) {\textbf{\texttt{Monitor}}};
 
-\node[process] (planning) at (-22mm,3.0) {\texttt{Planner}};
-\node[process] (translating) at (0,3.0) {\texttt{Translator}};
-\node[process] (reviewing) at (22mm,3.0) {\texttt{Reviewer}};
+% Task-level control.
+\node[font=\bfseries] (tasktitle) at (0,3.2)
+    {(a) Task-level control};
+\node[state] (taskstate) at (0,2.1)
+    {\textbf{Evolving state}\\plan / task graph\\draft};
+\node[controller] (taskcontroller) at (0,0.8)
+    {\textbf{Controller}};
+\node[unit] (taskunit) at (0,-0.5)
+    {\textbf{Next unit of work}\\section / passage / task node};
 
-\node[state] (state) at (0,0.6) {
-    \textbf{Shared state}\\[-1pt]
-    \texttt{draft}\\
-    \texttt{goal network}\\
-    \texttt{history}
-};
+\draw[arrow] (taskstate) -- (taskcontroller);
+\draw[arrow] (taskcontroller) -- (taskunit);
+\draw[arrow] (taskunit.east) -- ++(9mm,0) |- (taskstate.east);
 
-\draw[arrow] (monitor.south) -- (planning.north);
+\node[panel,fit=(tasktitle)(taskstate)(taskunit)] (taskpanel) {};
+
+% Process-level control.
+\node[font=\bfseries] (processtitle) at (8.0,3.2)
+    {(b) Process-level control: Agentic CogWriter};
+
+\node[state] (state) at (5.1,2.0)
+    {\textbf{Writing state}\\$S_t=(D_t,G_t,H_t)$};
+\node[controller] (monitor) at (8.0,2.0)
+    {\textbf{\texttt{Monitor}}\\$a_t=\pi_{\mathrm{monitor}}(S_t)$};
+
+\node[process] (planning) at (5.3,0.45)
+    {\texttt{Planning}\\\texttt{Planner}};
+\node[process] (translating) at (8.0,0.45)
+    {\texttt{Translating}\\\texttt{Translator}};
+\node[process] (reviewing) at (10.7,0.45)
+    {\texttt{Reviewing}\\\texttt{Reviewer}};
+
+\node[state] (updated) at (8.0,-1.0)
+    {\textbf{Updated state}\\$S_{t+1}$};
+
+\draw[arrow] (state) -- (monitor);
+\draw[arrow] (monitor.south) to[out=-105,in=90] (planning.north);
 \draw[arrow] (monitor.south) -- (translating.north);
-\draw[arrow] (monitor.south) -- (reviewing.north);
+\draw[arrow] (monitor.south) to[out=-75,in=90] (reviewing.north);
 
-\draw[arrow] (planning.south) to[out=-90,in=160] (state.north west);
-\draw[arrow] (translating.south) -- (state.north);
-\draw[arrow] (reviewing.south) to[out=-90,in=20] (state.north east);
+\draw[arrow] (planning.south) to[out=-90,in=165] (updated.west);
+\draw[arrow] (translating.south) -- (updated.north);
+\draw[arrow] (reviewing.south) to[out=-90,in=15] (updated.east);
+\draw[arrow] (updated.east) -- ++(12mm,0) |- (monitor.east);
 
-\coordinate (returnpath) at (-34mm,0.6);
-\draw[arrow] (state.west) -- (returnpath) |- (monitor.west);
-\draw[regen] (reviewing.east) -- (state.east);
-\end{tikzpicture}
-\caption{The control loop in Agentic CogWriter. The \texttt{Monitor} selects a process and delegates it to the corresponding agent. The agent updates the shared draft, goal network, and history before control returns; the \texttt{Reviewer} can trigger goal regeneration.}
+\node[font=\bfseries,anchor=east] (abllabel) at (4.5,-2.25)
+    {Tested interventions:};
+\node[ablation] (nogoals) at (6.2,-2.25)
+    {\condNoGoals\\drop $G_t$};
+\node[ablation] (fixed) at (8.9,-2.25)
+    {\condFixedOrder\\fix process order};
+\node[ablation] (single) at (11.6,-2.25)
+    {\condSingleWriter\\fold roles together};
+
+\node[panel,fit=(processtitle)(state)(reviewing)(updated)(abllabel)(single)] (processpanel) {};
+\end{tikzpicture}%
+}
+\caption{Two control abstractions for long-form writing. Representative structured writing systems choose a unit of work such as a section, passage, or task node (left). Agentic CogWriter instead chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} from the current document $D_t$, goal network $G_t$, and process history $H_t$ (right). The tested interventions remove explicit goals, adaptive process ordering, or the separation of process roles. The \condSingleWriter\ intervention also changes control granularity, so it is not a clean isolation of delegation.}
 \label{fig:agentic-cogwriter}
-\end{figure}
+\end{figure*}
