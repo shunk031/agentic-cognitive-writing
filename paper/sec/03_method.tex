@@ -1,41 +1,47 @@
-Figure~\ref{fig:agentic-cogwriter} motivates a different answer to the question of what a writing controller should do next. Rather than choosing the next section, passage, or task, Agentic CogWriter maintains an explicit writing state and chooses which writing process to execute next. We now define that process action space and the state on which the choice is conditioned.
+We formalize Agentic CogWriter as a controller over writing processes. At each writing step, a \texttt{Monitor} observes an explicit writing state, selects one of three process actions, and hands that action to the corresponding role agent. The selected process updates the shared state before control returns to the \texttt{Monitor}.
 
 \subsection{Writing state}
 \label{sec:method-control-state}
 
-At writing step $t$, the control state is
+At writing step $t$, the state is
 %
 \begin{equation}
 S_t=(D_t,G_t,H_t),
 \end{equation}
 %
-where $D_t$ is the current document, $G_t$ is the writer-goal network, and $H_t$ is the history of process and goal events. The assignment and its constraints remain fixed task context rather than part of the evolving state.
+where $D_t$ is the current document, $G_t$ is the writer-goal network, and $H_t$ records prior process choices and goal events. The assignment and its constraints remain fixed task context rather than part of the evolving state.
 
-The goal network contains content, process, and evaluation goals organized hierarchically. A local goal can be developed under a parent goal, and resolving it returns attention to the parent. The implementation records goal creation, development, and regeneration so that changes to $G_t$ are observable in the trace. This representation operationalizes the writer-generated goals in the cognitive process theory~\cite{flower1981cognitive}; it is an external control state, not a claim about a model's latent cognition.
+The goal network is an explicit representation of writer-generated goals. It contains content, process, and evaluation goals organized hierarchically, and it can be updated as writing proceeds. Goal creation, development, and regeneration are recorded in $H_t$, making changes to the goal representation observable. This operationalizes the mutable writer-generated goals in the cognitive process theory~\cite{flower1981cognitive}; it does not imply that the model has a corresponding latent cognitive state.
 
 \subsection{Process action space}
 \label{sec:method-writing-processes}
 
-The controller chooses among three actions,
+The \texttt{Monitor} selects
 %
 \begin{equation}
 a_t \in
-\{\mathrm{Planning},\mathrm{Translating},\mathrm{Reviewing}\},
+\{\mathrm{Planning},\mathrm{Translating},\mathrm{Reviewing}\}
 \end{equation}
 %
-using
+according to
 %
 \begin{equation}
 a_t=\pi_{\mathrm{monitor}}(S_t).
 \end{equation}
 %
-We refer to $\pi_{\mathrm{monitor}}$ as the \emph{process-selection policy}. In the evaluated system, this policy is the prompted decision of the host agent over the current state and open uncertainty, not a separately trained policy.
+We refer to $\pi_{\mathrm{monitor}}$ as the \emph{process-selection policy}. In the evaluated system, it is implemented by the prompted host agent rather than a separately trained policy.
 
-Each action is executed by a corresponding role agent. The \texttt{Planner} runs \texttt{Planning} to create or refine goals and organize their pursuit. The \texttt{Translator} runs \texttt{Translating} to realize active goals as prose and primarily changes the document. The \texttt{Reviewer} runs \texttt{Reviewing} to evaluate the draft against active goals and can request further planning or translation. A process execution produces an updated state before returning control to the \texttt{Monitor}.
+The selected action determines which role agent executes next. The \texttt{Planner} develops or reorganizes goals; the \texttt{Translator} realizes active goals as prose; and the \texttt{Reviewer} evaluates the current draft against the active goals and can request further work. If $F_a$ denotes the state update produced by process $a$, one iteration can be written as
+%
+\begin{equation}
+S_{t+1}=F_{a_t}(S_t).
+\end{equation}
+%
+The key architectural choice is therefore not merely to include planning and review, but to make the process identity itself the \texttt{Monitor}'s next action.
 
 \subsection{Control loop}
 \label{sec:method-monitor}
 
-The loop permits any next process rather than imposing a stage sequence. For example, translation can expose a planning problem, and review can return control to planning or translation. Review can also trigger goal regeneration when the draft changes the writing problem. The executed process, its state changes, and any goal events are appended to $H_t$ before the next decision. Generation terminates when \texttt{Reviewing} returns no next process.
+After a process finishes, the updated state is returned to the \texttt{Monitor}, which makes a new process choice. No stage order is imposed: translation can expose a planning problem, and review can return control to planning or translation. Review can also trigger goal regeneration when the current draft changes the writing problem. Generation terminates when reviewing completes without requesting further work.
 
-This architecture separates three design commitments that can be tested independently: maintaining explicit evolving goals, selecting process order dynamically, and executing the writing processes as distinct roles. Section~\ref{sec:baselines} defines the interventions used to test those commitments.
+This formulation exposes three theory-derived commitments to intervention: maintaining an explicit evolving goal representation, choosing the process order adaptively, and executing the writing processes in separated role contexts. Section~\ref{sec:baselines} defines the conditions used to test them.
