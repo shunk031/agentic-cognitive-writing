@@ -97,11 +97,53 @@ Long-form writing systems structure generation through plans, sections, subtasks
 The mechanism-comparison table reports which computational mechanisms are explicit in the evaluated writing systems; it distinguishes modeled capacity from observed regeneration events.
 \input{tab/appendix-comparison}
 
+\section{Replicate-level pairwise outcomes}
+\label{app:pairwise-detail}
+Figure~\ref{fig:appendix-confirmatory-forest} shows the prompt-collapsed pairwise estimates for each benchmark and replication, including the ablation contrasts.
+\begin{figure*}[H]
+\centering
+\includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
+\caption{Prompt-collapsed pairwise win rates by benchmark and replication. Points show 95 percent Wilson intervals; diamonds show the mean across replications, and filled or open circles mark cells that do or do not survive Holm correction.}
+\label{fig:appendix-confirmatory-forest}
+\end{figure*}
+
+\section{Secondary product scores}
+\label{app:secondary-scores}
+Native and pointwise scores are secondary diagnostics rather than the confirmatory outcome.
+\input{tab/main-results}
+
 \section{Runtime configuration}
 \label{app:runtime}
 Runtime configuration records the execution settings needed to reproduce the runs without changing how the results are interpreted. The generator used \modelGen\ with a 64,000 output-token budget; temperature was not set. Each run used one Codex CLI session in a container.
 
 The pairwise judge used \modelJudge\ with seed 20260908 and two retries. The cross-family judge used \modelCross\ through Bedrock with seed \CrossFamilySeed. Every condition received the same task input, available information, model, tool availability, and final-output contract.
+
+\section{Process behavior and resource use}
+\label{app:process-behavior}
+Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first replication.
+\input{tab/appendix-process}
+
+Figure~\ref{fig:appendix-process-sequences} shows the process sequences and transition counts used to interpret the fixed-order ablation.
+\begin{figure*}[H]
+\centering
+\begin{minipage}[t]{\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig/process-sequences-a.pdf}\\
+(a)
+\end{minipage}\\[0.5em]
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig/process-sequences-b.pdf}\\
+(b) \condFull
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig/process-sequences-c.pdf}\\
+(c) \condFixedOrder
+\end{minipage}
+\caption{\texttt{Monitor} process selection across \condFull\ and \condFixedOrder. Panel (a) shows the most frequent process sequences; panels (b) and (c) show transition counts. P, T, R, and E denote \texttt{Planning}, \texttt{Translating}, \texttt{Reviewing}, and termination.}
+\label{fig:appendix-process-sequences}
+\end{figure*}
 
 \section{Record-pooled sensitivity analysis}
 \label{app:record-pooled}
