@@ -51,7 +51,7 @@
 \draw[arrow] (taskcontroller) -- (taskunit);
 \draw[arrow] (taskunit.east) -- ++(9mm,0) |- (taskstate.east);
 
-\node[panel,fit=(tasktitle)(taskstate)(taskunit)] (taskpanel) {};
+\draw[densely dotted] (2.9,3.0) -- (2.9,-1.35);
 
 % Process-level control.
 \node[font=\bfseries] (processtitle) at (8.0,3.2)
