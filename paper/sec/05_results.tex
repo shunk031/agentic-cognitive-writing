@@ -1,4 +1,4 @@
-\subsection{RQ1: Effectiveness}
+\subsection{RQ1: Does process-level organization help?}
 \label{sec:results-effectiveness}
 
 \paragraph{Pairwise preference.}
@@ -42,14 +42,14 @@ Figure~\ref{fig:robustness} shows the two robustness checks: output-length contr
 \paragraph{Robustness to judge family.}
 Figure~\ref{fig:robustness}(b) reports the cross-family judge's pooled outcomes. Without multiplicity correction, cross-family judging preserves pooled direction for all three contrasts: \CrossFamilyFullSinglePassWinRate\ for \condFull\ versus \condSinglePass\ (\CrossFamilyWritingFullSinglePassWinRate\ on WritingBench), \CrossFamilyFullTaskPlanningWinRate\ for \condFull\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWinRate\ for \condFull\ versus \condNoGoals\ ($p=\CrossFamilyFullNoGoalsP$). The judge commits on \CrossFamilyPooledCommitRate\ of pairs and has \CrossFamilyPooledConflicts\ direction conflicts. Appendix~\ref{app:cross-family} lists the corresponding descriptive per-benchmark counts, commitments, and agreements.
 
-\subsection{RQ2: What carries the effect?}
+\subsection{RQ2: Which control mechanisms matter?}
 \label{sec:results-mechanism}
 
 Table~\ref{tab:pairwise-results} reports the four ablation rows; RQ2 yields bounded comparisons rather than equality tests. Under same-family judging across three replications, \condFull\ versus \condNoGoals\ is a bounded null: the pooled win rate is \PooledFourFiveRateMean\ (SD \PooledFourFiveRateSD) for \condFull. \condFull\ versus \condFixedOrder\ has no per-benchmark cell surviving Holm correction in any replication. The untested pairs are \condNoGoals\ and \condFixedOrder\ with \condSinglePass, \condStaged, or \condTaskPlanning, and \condSingleWriter\ with \condStaged, \condTaskPlanning, or \condFixedOrder. The intervals do not establish equality or exclude smaller effects.
 
-Table~\ref{tab:pairwise-results} shows the remaining ablation pattern: \condSingleWriter\ versus \condSinglePass\ is mixed across benchmarks, with \condSingleWriter\ winning on WritingBench, losing on HelloBench, and mixed on DoLoMiTes across all three replications. No HelloBench cell survives Holm correction after collapse. \condSingleWriter\ wins only \PooledSevenFourRateMean\ (SD \PooledSevenFourRateSD) of non-tied comparisons against \condFull\ and \PooledSevenFiveRateMean\ (SD \PooledSevenFiveRateSD) against \condNoGoals\ in the pooled summaries. These contrasts are consistent with delegated process roles carrying the effect, but they do not isolate that interpretation because \condSingleWriter\ changes recursion granularity and output length and \condTaskPlanning\ changes the delegated unit.
+Table~\ref{tab:pairwise-results} shows the remaining ablation pattern: \condSingleWriter\ versus \condSinglePass\ is mixed across benchmarks, with \condSingleWriter\ winning on WritingBench, losing on HelloBench, and mixed on DoLoMiTes across all three replications. No HelloBench cell survives Holm correction after collapse. \condSingleWriter\ wins only \PooledSevenFourRateMean\ (SD \PooledSevenFourRateSD) of non-tied comparisons against \condFull\ and \PooledSevenFiveRateMean\ (SD \PooledSevenFiveRateSD) against \condNoGoals\ in the pooled summaries. These contrasts localize the unresolved difference to changes introduced by \condSingleWriter, but they do not identify which change is responsible: role separation, recursion granularity, and output length all differ from \condFull, while \condTaskPlanning\ also changes the delegated unit.
 
-\subsection{RQ3: Process dynamics}
+\subsection{Process behavior behind the ablations}
 \label{sec:results-dynamics}
 
 Table~\ref{tab:process-summary} shows what the delegating architecture costs and how much it delegates in the first replication: \condFull\ uses \AfourOutputTokens\ output-plus-reasoning tokens per attempted run and \AfourMeanSeconds\ seconds per completed run against \AoneOutputTokens\ tokens and \AoneMeanSeconds\ seconds for \condSinglePass, and it spawns \AfourSpawns\ delegated invocations per attempted run against \AthreeSpawns\ for \condTaskPlanning, which uses more tokens and loses the pairwise contrast. The table also reports completion, median output units, and input tokens for all seven conditions.
