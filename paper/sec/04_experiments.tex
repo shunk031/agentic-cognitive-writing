@@ -1,90 +1,42 @@
 \subsection{Research questions}
 \label{sec:research-questions}
 
-We define three research questions that separate product quality, mechanisms, and process behavior:
-
-\begin{itemize}
-    \item \textbf{RQ1: Effectiveness.}
-    Does the delegating writer produce better long-form writing than a single call, fixed stages, and adaptive task planning?
-
-    \item \textbf{RQ2: What carries the effect?}
-    Which of the theory's commitments, the goal network, dynamic process selection, or distinct delegated processes, carries any improvement?
-
-    \item \textbf{RQ3: Process dynamics.}
-    What do the process traces show about how the \texttt{Monitor} actually behaved and how that compares with the theory's account?
-\end{itemize}
+We ask two questions. \textbf{RQ1} asks whether process-level organization improves long-form writing relative to a single call, fixed writing stages, and adaptive task planning. \textbf{RQ2} asks which architectural commitments account for any improvement: explicit writer goals, adaptive process ordering, or separation of the writing processes. We use process traces to interpret RQ2 rather than treating trace behavior as a separate product claim.
 
 \subsection{Conditions}
 \label{sec:baselines}
 
-We compare seven organizations of long-form writing. Table~\ref{tab:experimental-conditions} gives their control states, units, decisions, and evolving structures.
+We compare seven organizations of long-form writing under the same generator and harness. Table~\ref{tab:experimental-conditions} summarizes their control state, unit, decision rule, and evolving structure.
 \input{tab/experiments-architecture-comparison}
 
-We re-implement the three baselines of the cited designs on the same generator and harness, so control alone varies across conditions; the published systems' own implementations were not run, and the Limitations section states what that trade-off leaves open.
+The first three conditions provide increasingly structured baselines. \condSinglePass\ generates the document in one call. \condStaged\ executes a fixed \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write} sequence. \condTaskPlanning\ follows the adaptive task-planning pattern of WriteHERE~\cite{xiong2025beyond}, selecting dependency-satisfied nodes from an evolving task graph. These are controlled re-implementations on our generator and harness rather than executions of the published systems.
 
-\paragraph{\condStaged: Staged writing.}
-\condStaged\ runs fixed \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write} stages.
+The remaining conditions intervene on the process-level architecture. \condFull\ maintains the goal network, lets the \texttt{Monitor} choose the next writing process, and delegates each process to its corresponding role agent. \condNoGoals\ removes the explicit goal network while retaining adaptive process choice and role delegation. \condFixedOrder\ retains the state and role agents but replaces the \texttt{Monitor}'s choice with a fixed \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle. \condSingleWriter\ removes the delegated role structure and writes recursively in one context at paragraph granularity. Because \condSingleWriter\ changes both role separation and control granularity, it is a diagnostic ablation rather than a clean estimate of delegation.
 
-\paragraph{\condTaskPlanning: Adaptive task planning.}
-\condTaskPlanning\ follows WriteHERE~\cite{xiong2025beyond} and operates on dependency-satisfied nodes.
-
-\paragraph{\condFixedOrder: Fixed process order.}
-\condFixedOrder\ repeats the three process roles in a fixed cycle.
-
-\paragraph{\condSingleWriter: Single-writer recursion.}
-\condSingleWriter\ uses a paragraph as the control unit, where one writer context chooses the next action without delegation.
-
-\subsection{Benchmarks and prompt selection}
+\subsection{Benchmarks and prompts}
 \label{sec:benchmarks}
 
-\paragraph{Benchmarks.}
-We use WritingBench~\cite{wu2026writingbench}, HelloBench~\cite{que2024hellobench}, and DoLoMiTes~\cite{malaviya2025dolomites}. WritingBench asks for general-purpose writing judged against task-specific criteria, HelloBench asks for long-text generation across question answering, summarization, chat, completion, and heuristic generation, and DoLoMiTes asks for structured expert writing such as research plans, reports, and design documents. The source pools contain 1,000 WritingBench, 647 HelloBench, and 820 DoLoMiTes prompts.
+We use WritingBench~\cite{wu2026writingbench}, HelloBench~\cite{que2024hellobench}, and DoLoMiTes~\cite{malaviya2025dolomites}. WritingBench covers general-purpose writing with task-specific criteria, HelloBench contains long-text generation tasks across several genres, and DoLoMiTes contains structured expert-writing tasks such as plans, reports, and design documents. Their source pools contain 1,000, 647, and 820 prompts, respectively.
 
-\paragraph{Prompt selection.}
-We take the 100 prompts per benchmark that call for the longest documents, 300 in all. We rank prompts by word count plus the largest explicitly requested output length, exclude pilot identifiers and prompts above 6,000 words in either component, and select the longest 100 per benchmark by this key. Length is a proxy for difficulty, not a benchmark-provided difficulty score. All conditions receive the same prompt and benchmark information; external retrieval is disabled.
+We select the 100 prompts per benchmark that request the longest outputs, for 300 prompts total. The ranking combines prompt word count with the largest explicitly requested output length; we exclude pilot identifiers and prompts requesting more than 6,000 words in either component. This hard slice is intended to expose architectural differences in demanding long-form settings. The conclusions therefore concern this slice rather than the full benchmark distributions. All conditions receive the same prompt and benchmark information, and external retrieval is disabled.
 
-\paragraph{Why the hard slice.}
-We focus on the hard slice because even the most demanding prompts leave the benchmarks' own scales little room to separate. On the benchmarks' own scales and the pairwise preference defined in Section~\ref{sec:evaluation}, WritingBench ranges from \WritingAoneNative\ for \condSinglePass\ to \WritingAfourNative\ for \condFull\ and HelloBench from \HelloAoneNative\ to \HelloAfourNative, while the pairwise preference separates \condFull\ from \condSinglePass, \condStaged, and \condTaskPlanning\ at \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean\ across the three replications (Tables~\ref{tab:pairwise-results} and \ref{tab:main-results}). The prompts not selected are shorter by the rank key; the study did not evaluate them.
-
-\subsection{Implementation}
+\subsection{Controlled implementation}
 \label{sec:implementation}
 
-\paragraph{Controlled comparison.}
-We hold the generator, task input, available information, tool availability, and final-output contract constant across conditions, so differences reflect control alone. We replicate every prompt-condition pair three times because generator sampling is not fixed. Runtime settings are listed in Appendix~\ref{app:runtime}.
+We hold the generator, task input, available information, tool availability, and final-output contract fixed across conditions. Every prompt--condition pair is generated in three independent replications. The generator is \modelGen; runtime details are reported in Appendix~\ref{app:runtime}.
 
-\paragraph{Harness.}
-We use the documented host platforms' skills and subagent invocation~\cite{anthropicAgentSkills,anthropicSubagents,openaiBuildSkills,openaiSubagents,googleAntigravitySkills,googleAntigravitySubagents}. The host coding agent runs the Agentic CogWriter skill as the \texttt{Monitor}, while the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} are subagents over a shared working directory holding the draft, goal network, and history. This mapping makes the ablations instruction changes rather than code changes, and it makes the process invocations and traces recordable. The same plugin runs unchanged on two host platforms.
+The implementation uses the host platforms' documented skills and subagent mechanisms~\cite{anthropicAgentSkills,anthropicSubagents,openaiBuildSkills,openaiSubagents,googleAntigravitySkills,googleAntigravitySubagents}. For \condFull, the host agent acts as the \texttt{Monitor}, while \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} subagents operate over a shared working directory containing the draft, goal network, and process history. The same harness records process switches, goal events, completed outputs, delegated invocations, token accounting, and timing. All conditions return the complete document through the same output channel.
 
-\paragraph{Conditions on the harness.}
-\condFull\ delegates \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} to the corresponding role subagents under the host agent's \texttt{Monitor}. \condTaskPlanning\ uses the same host agent to delegate one node at a time from a task graph, a dependency-linked graph of reasoning and composition tasks. \condSingleWriter\ uses one agent that writes and revises paragraph by paragraph without delegation, so it has no \texttt{Planner}, \texttt{Translator}, or \texttt{Reviewer} subagents.
-
-\paragraph{Traces.}
-An attempted run is every generation launched for a prompt-condition pair, and a completed run is an attempted run with the required final output and process trace; only completed runs enter completion denominators. The run manifests call the word-count unit used for generated text an output unit, and one delegated invocation a spawn. The traces record goal events for goal creation, development, and regeneration, and process events for switches among writing processes.
-
-\paragraph{Termination.}
-\condFull\ stops when \texttt{Reviewing} returns no next process, as defined in Section~\ref{sec:method-monitor}, recorded in the trace as \texttt{to\_process=null}. \condTaskPlanning\ stops when its root composition task becomes silent after completion or failure. \condSingleWriter\ ends its paragraph-scale recursion by returning the complete final document. All conditions return the complete final document through the same output channel.
-
-\subsection{Evaluation protocol}
+\subsection{Evaluation}
 \label{sec:evaluation}
 
-\paragraph{Judges.}
-We use one judge, \modelJudge, for three judgment types: a pairwise preference between two conditions' outputs for the same prompt, judged for every run, plus a native score on the benchmark's own scale and a pointwise composite, judged for the first replication. The judge shares the generator's model family, so confirmatory claims are conditional on same-family judging.
+\paragraph{Primary outcome.}
+Our confirmatory outcome is pairwise preference between two outputs for the same prompt. The judge is \modelJudge, which shares the generator's model family; primary claims are therefore conditional on same-family judging. Each pair is judged in both presentation orders. If both orders select the same winner, that winner is retained; any disagreement becomes a tie. Prompts lacking a completed output from either side are excluded.
 
-\paragraph{Native and pointwise scores.}
-Native scores use each benchmark's own scale. WritingBench uses a 1 to 10 scale, HelloBench uses the mean of its yes-or-no checklist on a 0 to 1 scale under its upstream contract, and DoLoMiTes has no native score in this protocol. Pointwise scores use the judge's z-scored composite across rubric dimensions, comparable across benchmarks but not a benchmark scale.
+The locked confirmatory family contains eight contrasts: \condFull\ versus \condSinglePass, \condStaged, \condTaskPlanning, \condNoGoals, and \condFixedOrder; and \condSingleWriter\ versus \condSinglePass, \condFull, and \condNoGoals. Across three benchmarks this yields 24 benchmark-by-contrast cells. We use exact two-sided sign tests on wins and losses and control family-wise error with Holm's procedure~\cite{dixonmood1946,holm1979}. We report pooled prompt-collapsed win rates across the three replications with 95\% Wilson intervals~\cite{wilson1927}; replicate-specific cells show stability across generation runs.
 
-\paragraph{Replication.}
-We judge pairwise preference for every run because it is the confirmatory estimand and measures between-replication variability. Native and pointwise scores, the process summary, and the output-length bins come from the first replication. We report pooled pairwise rates as the mean and sample standard deviation (SD) across the three replications after collapsing the two presentation-order judgments into one prompt outcome, and we count Holm-surviving cells per replication.
+\paragraph{Secondary outcomes and robustness.}
+Benchmark-native and pointwise scores are secondary diagnostics from the first replication. We test output-length sensitivity using 5\% and 10\% matching bands. We test inference-compute sensitivity using cumulative output-plus-reasoning tokens and symmetric compute-ratio bands; because realized compute is an outcome of execution, these analyses are descriptive robustness checks rather than causal adjustment. Finally, \modelCross\ provides a cross-family pairwise check on selected contrasts. Its results are descriptive rather than a second confirmatory family.
 
-\paragraph{Confirmatory design.}
-We judge each pair in both presentation orders and collapse the two judgments into one prompt outcome. Agreement keeps the shared winner, whereas any disagreement, including a winner-versus-tie result, becomes a tie. We drop a prompt when either condition lacks a completed run, so one collapsed outcome per prompt is the estimand.
-
-The confirmatory family contains eight contrasts: \condFull\ versus \condSinglePass, \condStaged, \condTaskPlanning, \condNoGoals, and \condFixedOrder; and \condSingleWriter\ versus \condSinglePass, \condFull, and \condNoGoals. These contrasts span three benchmarks, yielding 24 cells, and use the exact two-sided sign test on wins and losses after ties are excluded~\cite{dixonmood1946}. Holm's step-down procedure orders the 24 $p$ values and tests each against a threshold that loosens from 0.05/24 upward, stopping at the first failure, so that the family-wise probability of one or more false positives across the family is at most 5 percent~\cite{holm1979}.
-
-We size this design for its estimand: the 300 pooled prompts leave about \PowerPooledEligible\ eligible pairs and \PowerPooledDecided\ decided comparisons per contrast, enough for the exact sign test to detect a true preference of about \PowerPooledDetectablePreference\ with 80 percent power at the first Holm threshold, whereas a 100-prompt benchmark cell, with about \PowerCellDecided\ decided comparisons, detects only preferences near \PowerCellDetectablePreference. We report pooled rates and their 95 percent Wilson intervals~\cite{wilson1927} as descriptive summaries.
-
-\paragraph{Robustness checks.}
-We test judge-family robustness with \modelCross\ through Bedrock, both presentation orders, and prompt-collapsed outcomes for the same \CrossFamilyPooledN\ eligible pairs. The descriptive check pools each contrast without multiplicity correction, and its per-benchmark counts are descriptive. The check is not a second confirmatory family because each cell contains about 100 prompts and the judge commits on \CrossFamilyPooledCommitRate\ of pairs. We report win/loss/tie (W/L/T) counts for the robustness check. We test output-length sensitivity with output units in the run manifests, 5 percent and 10 percent matching bands, and exact two-sided sign tests; the output-length bins come from the first replication.
-
-\paragraph{Process-level analysis.}
-We compare observable traces at each condition's control unit by analyzing \condTaskPlanning\ through \condSingleWriter and counting process transitions, goal events, regeneration, returns to higher-level goals, task decomposition, and execution events. We do not combine task and writing-process events because the conditions use different control units.
+\paragraph{Process traces.}
+To interpret RQ2, we analyze observable process and goal events rather than latent reasoning. We count process transitions, goal creation, development and regeneration, returns after \texttt{Reviewing}, and delegated invocations. Task-graph events from \condTaskPlanning\ are kept separate from writing-process events because the conditions operate at different control units.
