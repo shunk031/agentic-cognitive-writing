@@ -1,41 +1,42 @@
 \begin{table}[H]
 \centering
 \small
-\setlength{\tabcolsep}{3.2pt}
-\begin{tabular}{lccccc}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llll}
 \toprule
 \textbf{Method}
-& \shortstack{\textbf{Recursive}\\\textbf{Processes}}
-& \shortstack{\textbf{Dynamic Process}\\\textbf{Selection}}
-& \shortstack{\textbf{Explicit Writer}\\\textbf{Goal State}}
-& \shortstack{\textbf{Writing-induced}\\\textbf{Goal Revision}}
-& \shortstack{\textbf{Process-level}\\\textbf{Trace}} \\
+& \textbf{Organization}
+& \textbf{What advances next?}
+& \textbf{How it is selected} \\
 \midrule
 Re$^3$~\cite{yang2022re3}
-    & \partly & \no     & \no     & \no     & \no \\
+& Plan-guided drafting and revision
+& Passage / revision step
+& Prescribed workflow \\
 STORM~\cite{shao2024assisting}
-    & \no     & \no     & \no     & \no     & \no \\
+& Outline-driven article drafting
+& Section / section content
+& Outline-guided workflow \\
 CogWriter~\cite{wan2025cognitive}
-    & \partly & \no     & \no     & \partly & \no \\
+& Hierarchical planning and parallel generation
+& Planned generation / revision
+& Plan execution; monitoring can trigger revision \\
 WriteHERE~\cite{xiong2025beyond}
-    & \partly & \partly & \partly & \partly & \no \\ \midrule
+& Recursive heterogeneous task graph
+& Task node
+& Adaptive task scheduling \\
+IS-CoT~\cite{sun2026cot}
+& Interleaved Plan--Write--Reflect
+& Process stage
+& Embedded recurring cycle \\
+\midrule
 Agentic CogWriter \textbf{(Ours)}
-    & \yes    & \yes    & \yes    & \yes    & \yes \\
+& Writing-process controller
+& \texttt{Planning} / \texttt{Translating} / \texttt{Reviewing}
+& Adaptive process selection \\
 \bottomrule
 \end{tabular}
 
-\caption{
-Comparison of computational mechanisms for controlling long-form writing.
-\checkmark{} denotes an explicitly modeled mechanism,
-\textit{Partial} denotes related functionality without an explicit
-representation of the corresponding writing-process construct,
-and -- indicates that the mechanism is not explicitly modeled. The
-writing-induced goal revision column records modeled capacity, not an
-observed run event: across the three replications, \condFull\ recorded
-\AfourGoalRegeneratedMean\ (SD \AfourGoalRegeneratedSD) accepted regenerations per
-run, and its ledger contained \AfourLedgerEntriesMean\ (SD
-\AfourLedgerEntriesSD) entries, including \AfourLedgerWithProposalMean\ (SD
-\AfourLedgerWithProposalSD) with proposals (Appendix~\ref{app:process-behavior}).
-}
+\caption{Descriptive comparison of how representative long-form writing systems advance generation. The third column identifies the object or stage advanced at a decision point; the fourth describes how that next step is determined. These descriptions provide a common comparison vocabulary rather than reproducing the original authors' terminology.}
 \label{tab:architecture-comparison}
 \end{table}
