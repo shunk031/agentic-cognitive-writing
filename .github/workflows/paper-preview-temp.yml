@@ -1,0 +1,32 @@
+name: Paper preview
+
+on:
+  push:
+    branches:
+      - paper-manuscript
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build PDF, Markdown, and checker
+        working-directory: paper
+        run: ./tools/build-markdown.sh
+      - name: Render introduction pages
+        working-directory: paper
+        run: ./tools/render-pages.sh 1 2 3
+      - name: Upload manuscript preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-intro-preview
+          path: |
+            paper/build/acl_latex.pdf
+            paper/build/acl_latex.md
+            paper/build/acl_latex.md.check.txt
+            paper/build/render/
+          if-no-files-found: error
