@@ -65,6 +65,20 @@ def _score(root: Path, runs: list[Path], winners: tuple[str, str]) -> None:
                 "task": "pairwise",
                 "judge": {"judge_id": "judge"},
                 "source_runs": [{"run_manifest_sha256": digest(run)} for run in runs],
+                "tournament": {
+                    "order_mapping": [
+                        {
+                            "presentation": "A|B",
+                            "first_output": "first_run",
+                            "second_output": "compare_run",
+                        },
+                        {
+                            "presentation": "B|A",
+                            "first_output": "compare_run",
+                            "second_output": "first_run",
+                        },
+                    ]
+                },
             }
         ),
         encoding="utf-8",
@@ -129,3 +143,15 @@ def test_replication_analysis_pools_rows_without_deduplicating_replicates() -> N
     assert (
         report["per_replication"]["two"]["by_contrast"]["A4:A1"]["focal"]["losses"] == 1
     )
+
+
+def test_analysis_keeps_requested_contrasts_when_no_pairs_are_eligible() -> None:
+    report = analyze_replicates({"one": []})["pooled"]
+
+    assert set(report["by_contrast"]) == {
+        "A4:A1",
+        "A4:A2",
+        "A4:A3",
+        "A7:A4",
+    }
+    assert report["by_contrast"]["A7:A4"]["focal"]["pairs"] == 0

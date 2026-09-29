@@ -170,6 +170,8 @@ def _mapping(manifest: Mapping[str, Any]) -> dict[str, tuple[int, int]] | None:
     items = tournament.get("order_mapping") if isinstance(tournament, Mapping) else None
     if not isinstance(items, list):
         return {"A|B": (0, 1), "B|A": (1, 0)}
+    if len(items) != 2:
+        return None
     result: dict[str, tuple[int, int]] = {}
     for item in items:
         if not isinstance(item, Mapping):
@@ -179,15 +181,19 @@ def _mapping(manifest: Mapping[str, Any]) -> dict[str, tuple[int, int]] | None:
         second = item.get("second_output")
         if presentation not in {"A|B", "B|A"}:
             return None
-        if first not in {"first_run", "second_run"}:
+        if first not in {"first_run", "compare_run"}:
             return None
-        if second not in {"first_run", "second_run"}:
+        if second not in {"first_run", "compare_run"}:
+            return None
+        if first == second:
             return None
         result[presentation] = (
             0 if first == "first_run" else 1,
             0 if second == "first_run" else 1,
         )
-    return result if set(result) == {"A|B", "B|A"} else None
+    if set(result) != {"A|B", "B|A"}:
+        return None
+    return result if set(result.values()) == {(0, 1), (1, 0)} else None
 
 
 def _outcome_condition(
@@ -326,7 +332,11 @@ def load_judged_pairs(
     )
 
 
-def analyze_pairs(rows: Sequence[PairObservation]) -> dict[str, Any]:
+def analyze_pairs(
+    rows: Sequence[PairObservation],
+    *,
+    contrasts: tuple[tuple[str, str], ...] = COMPUTE_CONTRASTS,
+) -> dict[str, Any]:
     result: dict[str, Any] = {
         "pair_count": len(rows),
         "by_contrast": {},
@@ -343,14 +353,17 @@ def analyze_pairs(rows: Sequence[PairObservation]) -> dict[str, Any]:
         )
         result["pairs"].append(item)
 
-    labels = sorted({f"{row.left_condition}:{row.right_condition}" for row in rows})
+    labels = sorted(
+        {f"{left}:{right}" for left, right in contrasts}
+        | {f"{row.left_condition}:{row.right_condition}" for row in rows}
+    )
     for label in labels:
         contrast_rows = [
             row
             for row in rows
             if f"{row.left_condition}:{row.right_condition}" == label
         ]
-        focal = contrast_rows[0].left_condition
+        focal = label.split(":", maxsplit=1)[0]
         result["by_contrast"][label] = {
             "focal_condition": focal,
             "focal": summarize_outcomes(contrast_rows, focal_condition=focal),
@@ -380,12 +393,15 @@ def analyze_pairs(rows: Sequence[PairObservation]) -> dict[str, Any]:
 
 def analyze_replicates(
     replications: Mapping[str, Sequence[PairObservation]],
+    *,
+    contrasts: tuple[tuple[str, str], ...] = COMPUTE_CONTRASTS,
 ) -> dict[str, Any]:
     pooled = [row for rows in replications.values() for row in rows]
     return {
-        "pooled": analyze_pairs(pooled),
+        "pooled": analyze_pairs(pooled, contrasts=contrasts),
         "per_replication": {
-            label: analyze_pairs(rows) for label, rows in replications.items()
+            label: analyze_pairs(rows, contrasts=contrasts)
+            for label, rows in replications.items()
         },
     }
 
@@ -425,7 +441,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         for label, root in zip(labels, args.runs_root, strict=True)
     }
-    report = analyze_replicates(replications)
+    report = analyze_replicates(replications, contrasts=args.contrasts)
     report.update(
         {
             "judge_id": args.judge_id,
