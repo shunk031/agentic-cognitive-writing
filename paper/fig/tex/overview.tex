@@ -41,7 +41,7 @@
 \node[font=\bfseries] (tasktitle) at (0,3.2)
     {(a) Task/content choice};
 \node[state] (taskstate) at (0,2.1)
-    {\textbf{Evolving state}\\plan / task graph\\draft};
+    {\textbf{Working records}\\plan / task graph\\draft};
 \node[controller] (taskcontroller) at (0,0.8)
     {\textbf{Controller}};
 \node[unit] (taskunit) at (0,-0.5)
@@ -58,7 +58,7 @@
     {(b) Process choice: Agentic CogWriter};
 
 \node[state] (state) at (5.1,2.0)
-    {\textbf{Writing state}\\draft / goals / history};
+    {\textbf{External records}\\draft / goals / history};
 \node[controller] (monitor) at (8.0,2.0)
     {\textbf{\texttt{Monitor}}\\choose next process};
 
@@ -70,7 +70,7 @@
     {\texttt{Reviewing}\\\texttt{Reviewer}};
 
 \node[state] (updated) at (8.0,-1.0)
-    {\textbf{Updated state}\\draft / goals / history};
+    {\textbf{Updated records}\\draft / goals / history};
 
 \draw[arrow] (state) -- (monitor);
 \draw[arrow] (monitor.south) to[out=-105,in=90] (planning.north);
@@ -85,13 +85,13 @@
 \node[font=\bfseries,anchor=east] (abllabel) at (4.5,-2.25)
     {Tested interventions:};
 \node[ablation] (nogoals) at (6.2,-2.25)
-    {\textbf{No explicit goals}};
+    {\textbf{No goal network}};
 \node[ablation] (fixed) at (8.9,-2.25)
     {\textbf{Fixed process order}};
 \node[ablation] (single) at (11.6,-2.25)
     {\textbf{One writer context}};
 \end{tikzpicture}%
 }
-\caption{Two answers to the question of what a writing controller should choose next. Representative structured writing systems choose a section, passage, or task node to work on (left). Agentic CogWriter instead chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} from the current draft, goal network, and process history (right). The tested interventions remove explicit goals, adaptive process ordering, or separate process-role execution. Collapsing the roles into one writer also changes recursion granularity, so that intervention does not cleanly isolate role or context separation.}
+\caption{Two answers to the question of what a writing controller should choose next. Representative structured writing systems choose a section, passage, or task node to work on (left). Agentic CogWriter instead chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} from the current draft, goal network, and process history (right). The tested interventions remove the goal network, adaptive process ordering, or separated role contexts. Executing all three processes in one writer context also changes recursion granularity, so that intervention does not cleanly isolate context or role separation.}
 \label{fig:agentic-cogwriter}
 \end{figure*}
