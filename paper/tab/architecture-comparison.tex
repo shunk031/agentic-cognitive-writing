@@ -8,13 +8,13 @@
 
 \lcell{\textbf{Method}}
 &
-\lcell{\textbf{Control State}}
+\lcell{\textbf{State available}\\\textbf{to controller}}
 &
-\lcell{\textbf{Control Unit}}
+\lcell{\textbf{What is chosen}\\\textbf{next?}}
 &
 \ccell{\textbf{Decision}}
 &
-\lcell{\textbf{Evolving Structure}}
+\lcell{\textbf{Evolving structure}}
 \\
 
 \midrule
@@ -89,8 +89,8 @@
 }
 &
 \lcell{
-  Plan \\
-  output
+  Plan output \\
+  or revision
 }
 &
 \ccell{
@@ -150,8 +150,8 @@
 }
 &
 \lcell{
-  \textbf{Writing} \\
-  \textbf{process $a_t$}
+  \textbf{Writing process} \\
+  \textbf{$a_t$}
 }
 &
 \ccell{
@@ -165,7 +165,7 @@
 \lcell{
   \textbf{Text $D_t$} \\
   \textbf{Goal network $G_t$} \\
-  \textbf{Process state}
+  \textbf{Process history $H_t$}
 }
 \\
 
@@ -173,15 +173,14 @@
 \end{tabular}
 
 \caption{
-Architecture-level comparison of long-form writing systems.
+Architecture-level comparison of long-form writing systems through the decision made at each step.
 Here, $\pi$ denotes a decision policy, with its lowercase word subscript
 indicating the type of decision made. $t$ is a writing step; $P$ is a plan,
 $O_t$ an outline, $E_t$ evidence, and $C$ constraints. $D_t$ denotes the text
 at step $t$, $G_t$ the evolving writer-goal network, $H_t$ the process history,
 $T_t$ the dynamic task graph, $v_t$ the selected task node, and $a_t$ the
-selected writing process.
-The equations provide a common abstraction of the architectures
-rather than reproducing their original formulations.
+selected writing process. The equations provide a common abstraction of the
+architectures rather than reproducing their original formulations.
 }
 \label{tab:architecture-level-comparison}
 \end{table*}
