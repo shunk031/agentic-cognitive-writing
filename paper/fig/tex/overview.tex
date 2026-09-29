@@ -58,9 +58,9 @@
     {(b) Process-level control: Agentic CogWriter};
 
 \node[state] (state) at (5.1,2.0)
-    {\textbf{Writing state}\\$S_t=(D_t,G_t,H_t)$};
+    {\textbf{Writing state}\\draft / goals / history};
 \node[controller] (monitor) at (8.0,2.0)
-    {\textbf{\texttt{Monitor}}\\$a_t=\pi_{\mathrm{monitor}}(S_t)$};
+    {\textbf{\texttt{Monitor}}\\choose next process};
 
 \node[process] (planning) at (5.3,0.45)
     {\texttt{Planning}\\\texttt{Planner}};
@@ -70,7 +70,7 @@
     {\texttt{Reviewing}\\\texttt{Reviewer}};
 
 \node[state] (updated) at (8.0,-1.0)
-    {\textbf{Updated state}\\$S_{t+1}$};
+    {\textbf{Updated state}\\draft / goals / history};
 
 \draw[arrow] (state) -- (monitor);
 \draw[arrow] (monitor.south) to[out=-105,in=90] (planning.north);
@@ -85,13 +85,13 @@
 \node[font=\bfseries,anchor=east] (abllabel) at (4.5,-2.25)
     {Tested interventions:};
 \node[ablation] (nogoals) at (6.2,-2.25)
-    {\condNoGoals\\drop $G_t$};
+    {\condNoGoals\\drop explicit goals};
 \node[ablation] (fixed) at (8.9,-2.25)
     {\condFixedOrder\\fix process order};
 \node[ablation] (single) at (11.6,-2.25)
     {\condSingleWriter\\fold roles together};
 \end{tikzpicture}%
 }
-\caption{Two control abstractions for long-form writing. Representative structured writing systems choose a unit of work such as a section, passage, or task node (left). Agentic CogWriter instead chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} from the current document $D_t$, goal network $G_t$, and process history $H_t$ (right). The tested interventions remove explicit goals, adaptive process ordering, or the separation of process roles. The \condSingleWriter\ intervention also changes control granularity, so it is not a clean isolation of delegation.}
+\caption{Two control abstractions for long-form writing. Representative structured writing systems choose a unit of work such as a section, passage, or task node (left). Agentic CogWriter instead chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} from the current draft, goal network, and process history (right). The tested interventions remove explicit goals, adaptive process ordering, or the separation of process roles. The \condSingleWriter\ intervention also changes control granularity, so it is not a clean isolation of delegation.}
 \label{fig:agentic-cogwriter}
 \end{figure*}
