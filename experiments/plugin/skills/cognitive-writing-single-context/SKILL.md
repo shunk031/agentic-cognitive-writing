@@ -18,7 +18,7 @@ The `Monitor` is the main agent running this skill. The `Monitor` chooses the ne
   - publication decision
 - Coordinate process switches as the main agent. Record the evidence for each switch and ask the user when a choice materially changes the rhetorical problem or a claim.
 - Perform the selected process in the host agent's own context. Do not delegate it to a role agent or subagent.
-- Re-read the changed state and reconcile the selected process with the active goal. Let the user override any decision that affects intent, factual claims, or a major goal.
+- Re-read the changed state and reconcile the selected process with the active goal. Tell the user about proposals that affect intent, factual claims, or a major goal. Let the user override any agent decision.
 
 ## Start by establishing the writing state
 
@@ -79,7 +79,7 @@ At each turn, the `Monitor` should:
    - revising
 
 3. Before every process switch, append a `process_switch` event naming the responsible process or agent and recording the decision, evidence, and open uncertainty. Record a separate goal event whenever a goal is created, developed, or regenerated. Use the exact fields in the trace reference.
-4. Perform the selected process in the host agent's own context. Do not spawn a role agent or subagent.
+4. Perform the selected process in the host agent's own context, following the role-skill instructions and brief described in In-context process execution. Do not spawn a role agent or subagent.
 5. Re-read the changed state and reconcile the selected process with the active goal. Treat `Reviewing` verdicts as proposals. Record `goal_developed` only when the Monitor updates that goal and adds its `goals.md` history row; otherwise record an unacted-on `develop` verdict as a disposition without a goal event. For every `regenerate` verdict, either accept it or reject it. On acceptance, update `goals.md` with a history row that keeps the original goal ID marked `superseded` and gives the replacement a new goal ID, and emit `goal_regenerated` with the replacement's `goal_id` and the original goal's `parent_goal_id`; on rejection, write `rejected regeneration of <goal id>: <reason>` in the next `process_switch` decision. The next `process_switch` decision after a `Reviewing` pass must enumerate every received `regenerate` verdict as `regeneration proposals: G2 accepted (<reason>); G4 rejected (<reason>)`, substituting the actual goal IDs and reasons, or `regeneration proposals: none` when no `regenerate` verdict was received. Append that post-`Reviewing` `process_switch` carrying the enumeration before either continuing or completing the run. If the run continues, set its `to_process` to the next process. If the run ends after `Reviewing`, set its `process` and `from_process` to `reviewing` and its `to_process` to `null` before completing the run. After every Translating pass, compare the new draft with every active goal in goals.md, then record a goal_developed or goal_regenerated event for each goal the draft changed, or state in the next process_switch decision that the goal network needed no change and why. Update the appropriate project state:
 
    - `goals.md`
@@ -115,7 +115,7 @@ When new writing changes what the author understands, use Goal-setting to develo
 
 ## In-context process execution
 
-Perform every selected process in the host agent's own context. Preserve the project root, active goal context, relevant uncertainty, and requested output while working. Do not spawn a role agent, subagent, or child `codex exec` process.
+Perform every selected process in the host agent's own context. Before working, read and apply the selected role's skill instructions from `plugin/skills/planning/SKILL.md`, `plugin/skills/translating/SKILL.md`, or `plugin/skills/reviewing/SKILL.md` exactly as a delegated role agent would. Preserve the project root, active goal context, relevant uncertainty, and requested output while working. Use the same process brief as A4: provide the project root, the current goal context (for `Reviewing`, every active goal with its ID plus the parent goal ID; otherwise the active and parent goal IDs), relevant uncertainty, and requested output. Cite the files or draft passages that support decisions. Do not spawn a role agent, subagent, or child `codex exec` process.
 
 ## Trace contract
 

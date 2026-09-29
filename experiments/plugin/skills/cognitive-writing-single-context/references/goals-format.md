@@ -18,10 +18,10 @@ Use stable goal identifiers, one goal per line, and indentation for parent-child
 
 ## Goal history
 
-| Timestamp                 | Event       | Goal | Parent | Rationale                                                                | Evidence                |
-| ------------------------- | ----------- | ---- | ------ | ------------------------------------------------------------------------ | ----------------------- |
-| 2026-01-15T09:04:00+09:00 | created     | G1   | G0     | Make the audience impact explicit.                                       | assignment.md           |
-| 2026-01-15T09:18:00+09:00 | regenerated | G0   | none   | The opening revealed that the real purpose is adoption, not explanation. | draft.md, reviewer note |
+| Timestamp | Event | Goal | Parent | Rationale | Evidence |
+| --- | --- | --- | --- | --- | --- |
+| 2026-01-15T09:04:00+09:00 | created | G1 | G0 | Make the audience impact explicit. | assignment.md |
+| 2026-01-15T09:18:00+09:00 | regenerated | G0 | none | The opening revealed that the real purpose is adoption, not explanation. | draft.md, reviewer note |
 ```
 
 Set the history table's timestamp column to the current wall-clock time obtained from the shell at write time, for example `date -Is`; never copy timestamps from examples.

@@ -1063,9 +1063,31 @@ def test_a8_keeps_a4_trace_contract_and_removes_delegation() -> None:
     assert section(a8_text, "## Trace contract", "## References") == section(
         a4_text, "## Trace contract", "## References"
     )
+    a8_schema = (
+        REPO_ROOT
+        / "experiments"
+        / "plugin"
+        / "skills"
+        / "cognitive-writing-single-context"
+        / "references"
+        / "trace-jsonl-schema.md"
+    )
+    a4_schema = (
+        REPO_ROOT
+        / "plugin"
+        / "skills"
+        / "agentic-cog-writer"
+        / "references"
+        / "trace-jsonl-schema.md"
+    )
+    assert a8_schema.read_bytes() == a4_schema.read_bytes()
     assert "## Delegation briefs" not in a8_text
     assert "## In-context process execution" in a8_text
     assert "spawn a native Codex subagent" not in a8_text
+    assert "Tell the user about proposals that affect intent" in a8_text
+    assert "Let the user override any agent decision." in a8_text
+    assert "every active goal with its ID plus the parent goal ID" in a8_text
+    assert "Cite the files or draft passages that support decisions." in a8_text
 
 
 def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
@@ -1414,9 +1436,10 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
     (
         ("A5", "cognitive-writing-no-goal-network"),
         ("A6", "cognitive-writing-fixed-order"),
+        ("A8", "cognitive-writing-single-context"),
     ),
 )
-def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6(
+def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6_a8(
     tmp_path: Path, condition_id: str, skill_name: str
 ) -> None:
     source_root = tmp_path / "plugin-source"
@@ -1528,17 +1551,56 @@ def test_run_records_unique_codex_subagent_spawns(tmp_path: Path) -> None:
             return result
 
     executor = SpawnRolloutExecutor([_result(subagent_spawns=2)])
-    runner = _runner(tmp_path, executor=executor)
+    condition = replace(load_condition_registry()["A1"], require_delegation=True)
+    runner = _runner(
+        tmp_path,
+        condition_registry={"A1": condition},
+        executor=executor,
+    )
 
     result = runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
 
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["subagent_spawn_count"] == 2
     assert manifest["delegation_check"] == {
-        "required": False,
+        "required": True,
         "spawn_count": 2,
-        "execution_mode": "in_context",
+        "execution_mode": "delegated",
         "passed": True,
+    }
+
+
+def test_a8_rejects_in_context_execution_with_spawn_event(tmp_path: Path) -> None:
+    class SpawnRolloutExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+            rollout = Path(env["CODEX_HOME"]) / "sessions" / "attempt.jsonl"
+            rollout.parent.mkdir(parents=True, exist_ok=True)
+            rollout.write_bytes(result.stdout)
+            return result
+
+    runner = _runner(
+        tmp_path,
+        executor=SpawnRolloutExecutor([_result(subagent_spawns=1)]),
+    )
+
+    with pytest.raises(
+        ExecutionError,
+        match="Condition A8 requires in-context execution; 1 spawn_agent event",
+    ):
+        runner.run_prompt(_prompt(), condition_id="A8", platform="codex")
+
+    run_dir = tmp_path / "WritingBench" / "A8" / "codex"
+    manifest = json.loads(
+        next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
+    )
+    assert manifest["delegation_check"] == {
+        "required": False,
+        "spawn_count": 1,
+        "execution_mode": "in_context",
+        "passed": False,
     }
 
 
