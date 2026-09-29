@@ -5,7 +5,7 @@
 \begin{tabular}{lllll}
 \toprule
 \textbf{Condition}
-& \textbf{Control unit}
+& \textbf{What is selected next?}
 & \textbf{Goal network}
 & \textbf{Scheduling}
 & \textbf{Execution} \\
@@ -13,12 +13,12 @@
 \multicolumn{5}{l}{\textit{Baselines}} \\
 \midrule
 \condSinglePass
-& Document
+& Nothing (one call)
 & \no
 & \no
 & One context \\
 \condStaged~\cite{yang2022re3,wan2025cognitive}
-& Stage
+& Stage (fixed)
 & \no
 & Fixed stages
 & One context \\
@@ -41,7 +41,7 @@
 & Adaptive processes
 & Delegated roles \\
 \condFixedOrder
-& Writing process
+& Writing process (fixed)
 & \yes
 & Fixed cycle
 & Delegated roles \\
@@ -49,12 +49,12 @@
 \multicolumn{5}{l}{\textit{Diagnostic ablation}} \\
 \midrule
 \condSingleWriter
-& Paragraph
+& Paragraph-level step
 & \yes
 & Writer-decided
 & One context \\
 \bottomrule
 \end{tabular}
-\caption{Experimental conditions. The primary distinction is the controller's unit of action. The process-level interventions remove the explicit goal network or adaptive process scheduling while keeping delegated role execution. \condSingleWriter\ removes delegation but also changes the control unit, so it does not isolate process separation.}
+\caption{Experimental conditions. The second column states what, if anything, is selected next during generation. The process-level interventions remove the explicit goal network or adaptive process scheduling while keeping delegated role execution. \condSingleWriter\ removes delegation but also changes how writing is recursively advanced, so it does not isolate process separation.}
 \label{tab:experimental-conditions}
 \end{table*}
