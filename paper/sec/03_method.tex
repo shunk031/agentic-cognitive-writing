@@ -1,41 +1,43 @@
-We formalize Agentic CogWriter as a controller over writing processes. At each writing step, a \texttt{Monitor} observes an explicit writing state, selects one of three process actions, and dispatches the corresponding role. After that process finishes, the \texttt{Monitor} reconciles its output with the shared state and decides what to do next.
+Agentic CogWriter repeats a simple control loop until the \texttt{Monitor} decides that no further writing process is needed. At the start of each iteration, the \texttt{Monitor} reads the external records maintained by the agent, chooses one writing process, and dispatches the corresponding role agent. When that role finishes, its output is written back to the shared records and control returns to the \texttt{Monitor}.
 
-\subsection{Writing state}
+\subsection{External writing records}
 \label{sec:method-control-state}
 
-At writing step $t$, the state is
+Agentic CogWriter maintains three records throughout a run. The \emph{draft} stores the text produced so far. The \emph{goal network}, introduced in Section~\ref{sec:method-control-state}, stores the current writing goals in a hierarchical form. The \emph{process history} records previous process choices and changes to those goals.
+
+The goal network is our explicit representation of the writer-generated goals proposed by Flower and Hayes~\cite{flower1981cognitive}. It contains content, process, and evaluation goals, and it can change as writing proceeds. When a goal is created, developed, or replaced, the change is also recorded in the process history. This representation makes goal changes observable; it does not imply that the language model has a corresponding latent cognitive state.
+
+For compact notation, let $D_t$ denote the draft, $G_t$ the goal network, and $H_t$ the process history immediately before the \texttt{Monitor}'s $t$-th decision. We use
 %
 \begin{equation}
-S_t=(D_t,G_t,H_t),
+S_t=(D_t,G_t,H_t)
 \end{equation}
 %
-where $D_t$ is the current document, $G_t$ is the writer-goal network, and $H_t$ records prior process choices and goal events. The assignment and its constraints remain fixed task context rather than part of the evolving state.
-
-The goal network is an explicit representation of writer-generated goals. It contains content, process, and evaluation goals organized hierarchically, and it can change as writing proceeds. Goal creation, development, and regeneration are recorded in $H_t$, making changes to the representation observable. This operationalizes the mutable writer-generated goals in the cognitive process theory~\cite{flower1981cognitive}; it does not imply that the model has a corresponding latent cognitive state.
+as shorthand for these three external records. The index $t$ counts decisions by the \texttt{Monitor}; it advances after the selected process finishes and the shared records have been updated. The assignment and its constraints remain fixed task context and are not included in $S_t$.
 
 \subsection{Process action space}
 \label{sec:method-writing-processes}
 
-The \texttt{Monitor} selects
+At decision $t$, the \texttt{Monitor} chooses one of the three writing processes introduced in Section~1:
 %
 \begin{equation}
 a_t \in
-\{\mathrm{Planning},\mathrm{Translating},\mathrm{Reviewing}\}
+\{\mathrm{Planning},\mathrm{Translating},\mathrm{Reviewing}\}.
 \end{equation}
 %
-according to
+We write this choice as
 %
 \begin{equation}
-a_t=\pi_{\mathrm{monitor}}(S_t).
+a_t=\pi_{\mathrm{monitor}}(S_t),
 \end{equation}
 %
-We refer to $\pi_{\mathrm{monitor}}$ as the \emph{process-selection policy}. In the evaluated system, it is implemented by the prompted host agent rather than a separately trained policy.
+where $\pi_{\mathrm{monitor}}$ denotes the \emph{process-selection policy}. In our implementation, this policy is the prompted decision made by the host agent; it is not a separately trained model.
 
-In \condFull, the selected action is executed in the corresponding role context. The \texttt{Planner} develops or reorganizes goals, the \texttt{Translator} realizes active goals as prose in the shared draft, and the \texttt{Reviewer} evaluates the draft against the active goals and returns verdicts and proposals. Role outputs do not independently determine the next process: the \texttt{Monitor} re-reads the changed state, reconciles any proposals, and then makes the next selection. The architectural choice is therefore not merely to include planning and review, but to make the process identity itself the \texttt{Monitor}'s action.
+The chosen process determines which role agent runs next. The \texttt{Planner} develops or reorganizes goals, the \texttt{Translator} realizes active goals as prose in the shared draft, and the \texttt{Reviewer} evaluates the draft against the active goals and returns verdicts and proposals. These role outputs do not choose the next process themselves. After a role finishes, the \texttt{Monitor} reads the updated records, reconciles any proposals, and makes the next process choice.
 
 \subsection{Control loop}
 \label{sec:method-monitor}
 
-No stage order is imposed. After each process execution, the \texttt{Monitor} observes the updated state and can select any of the three processes again. For example, translating can expose a planning problem, while a reviewing pass can lead the \texttt{Monitor} back to planning or translating. Reviewing can also propose changes to the goal network; the \texttt{Monitor} explicitly accepts or rejects those proposals and records the disposition in $H_t$. A run terminates after reviewing when the \texttt{Monitor} selects no further process.
+Agentic CogWriter imposes no fixed order on the three processes. A translating pass can expose a planning problem, and a reviewing pass can lead back to planning or translating. Reviewing can also propose a change to the goal network. The \texttt{Monitor} accepts or rejects each such proposal and records the disposition in the process history. A run ends after reviewing when the \texttt{Monitor} chooses no further process.
 
-This formulation exposes three theory-derived commitments to intervention: maintaining an explicit evolving goal representation, choosing the process order adaptively, and executing the writing processes in separated role contexts. Section~\ref{sec:baselines} defines the conditions used to test them.
+This implementation makes three commitments independently testable: whether to maintain an explicit evolving goal representation, whether to choose the process order adaptively, and whether to execute the writing processes in separated role contexts. Section~\ref{sec:baselines} defines the experimental conditions used to test these commitments.
