@@ -1,38 +1,41 @@
-Agentic CogWriter is a language-agent architecture that runs the cognitive process theory of writing~\cite{flower1981cognitive}: at each step a \texttt{Monitor} chooses which writing process runs next, so the controller decides over writing processes rather than over sections or tasks (Table~\ref{tab:architecture-level-comparison}).
+Figure~\ref{fig:agentic-cogwriter} motivates the distinction between task-level and process-level control. We now make that distinction precise. Agentic CogWriter maintains an explicit writing state and repeatedly chooses which writing process to execute next; the action is a process rather than a section, passage, or task node.
 
-We implement the architecture with a \texttt{Monitor} and three delegated agents: a \texttt{Planner}, a \texttt{Translator}, and a \texttt{Reviewer}. The \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} are subagents that run the \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} processes and return control to the \texttt{Monitor}. The agents share the document, writer-goal network, and process history. The \texttt{Monitor} selects a process, invokes its corresponding agent, and receives the updated state.
-
-\subsection{Control state and goal network}
+\subsection{Writing state}
 \label{sec:method-control-state}
 
-The control state at writing step $t$ is
+At writing step $t$, the control state is
 %
 \begin{equation}
-(D_t,G_t,H_t),
+S_t=(D_t,G_t,H_t),
 \end{equation}
 %
-where $D_t$ is the text so far, $G_t$ is the writer-goal network, and $H_t$ records executed processes and goal events. The assignment and its constraints remain static task context.
+where $D_t$ is the current document, $G_t$ is the writer-goal network, and $H_t$ is the history of process and goal events. The assignment and its constraints remain fixed task context rather than part of the evolving state.
 
-We model a hierarchy of content, process, and evaluation goals: a sub-goal stays active under its parent, and resolving it returns attention to the parent. Following \citet{flower1981cognitive}, process goals say how to proceed and content goals say what to say for an audience, and goals arise throughout composing, either as sub-goals of an existing purpose or by regenerating a top-level goal in light of what the draft reveals. The implementation records each goal and every creation, development, and regeneration event as state and trace entries.
+The goal network contains content, process, and evaluation goals organized hierarchically. A local goal can be developed under a parent goal, and resolving it returns attention to the parent. The implementation records goal creation, development, and regeneration so that changes to $G_t$ are observable in the trace. This representation operationalizes the writer-generated goals in the cognitive process theory~\cite{flower1981cognitive}; it is an external control state, not a claim about a model's latent cognition.
 
-\subsection{Writing processes}
+\subsection{Process action space}
 \label{sec:method-writing-processes}
 
-The \texttt{Planner} runs \texttt{Planning} to generate or refine goals and organize their pursuit. The \texttt{Translator} runs \texttt{Translating} to realize active goals as prose and primarily updates $D_t$:
+The controller chooses among three actions,
 %
 \begin{equation}
-D_t\rightarrow D_{t+1}.
+a_t \in
+\{\texttt{Planning},\texttt{Translating},\texttt{Reviewing}\},
 \end{equation}
 %
-Process execution can expose missing information, conflicting goals, or organizational problems. The \texttt{Reviewer} runs \texttt{Reviewing} to evaluate $D_t$ against active goals. Evaluation may lead to further \texttt{Planning} or \texttt{Translating}, and can culminate in goal revision when the draft reveals a changed purpose. Goal-network change is therefore not assigned to \texttt{Reviewing} alone.
+using
+%
+\begin{equation}
+a_t=\pi_{\mathrm{monitor}}(S_t).
+\end{equation}
+%
+In the evaluated system, $\pi_{\mathrm{monitor}}$ is the prompted decision of the host agent over the current state and open uncertainty, not a separately trained policy.
 
-\subsection{Monitor-based process selection}
+Each action is executed by a corresponding role agent. The \texttt{Planner} runs \texttt{Planning} to create or refine goals and organize their pursuit. The \texttt{Translator} runs \texttt{Translating} to realize active goals as prose and primarily changes the document. The \texttt{Reviewer} runs \texttt{Reviewing} to evaluate the draft against active goals and can request further planning or translation. A process execution produces an updated state before returning control to the \texttt{Monitor}.
+
+\subsection{Control loop}
 \label{sec:method-monitor}
 
-The \texttt{Monitor}'s decision at step $t$ is
-%
-\begin{equation}
-a_t=\pi_{\mathrm{monitor}}(D_t,G_t,H_t),
-\end{equation}
-%
-where $a_t$ is one of the three writing processes. In the evaluated system, $\pi_{\mathrm{monitor}}$ is a prompted decision by the host agent over the current state and open uncertainty, not a separate learned classifier or a fixed rule. The selected process updates the state, and the process and goal events enter $H_t$. The loop permits transitions during composition: \texttt{Translating} can expose a problem that calls for \texttt{Planning}, \texttt{Reviewing} can call for \texttt{Planning} or \texttt{Translating}, and resolving a local goal can return attention to a parent goal. The loop ends when \texttt{Reviewing} returns no next process.
+The loop permits any next process rather than imposing a stage sequence. For example, translation can expose a planning problem, and review can return control to planning or translation. Review can also trigger goal regeneration when the draft changes the writing problem. The executed process, its state changes, and any goal events are appended to $H_t$ before the next decision. Generation terminates when \texttt{Reviewing} returns no next process.
+
+This architecture separates three design commitments that can be tested independently: maintaining explicit evolving goals, selecting process order dynamically, and executing the writing processes as distinct roles. Section~\ref{sec:baselines} defines the interventions used to test those commitments.
