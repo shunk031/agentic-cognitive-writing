@@ -120,7 +120,7 @@ The pairwise judge used \modelJudge\ with seed 20260908 and two retries. The cro
 
 \section{Process behavior and resource use}
 \label{app:process-behavior}
-Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first replication.
+Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first replication. For \condFull, the first replication uses \AfourOutputTokens\ output-plus-reasoning tokens and \AfourInputTokens\ uncached input tokens per attempted run and records \AfourGoalRegenerated\ accepted goal regeneration. Across replications, the trace summaries contain mean totals of \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while the post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
 \input{tab/appendix-process}
 
 The following figure shows the process sequences and transition counts used to interpret the fixed-order ablation.
