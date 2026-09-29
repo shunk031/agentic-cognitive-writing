@@ -9,7 +9,7 @@ All generation used a single generator family, \modelGenBare. The results theref
 
 The cross-family judge commits on \CrossFamilyPooledCommitRate\ of pairs, with \CrossFamilyPooledTies\ ties, \CrossFamilyPooledAgreement\ agreement, and \CrossFamilyPooledConflicts\ conflicts. Longer outputs win \LengthLongerRate\ of non-tied pairs. The cross-family judge's high tie rate and the same-family judge's length preference limit the checks.
 
-The ablations do not isolate every implementation detail. \condSingleWriter\ changes delegation, recursion granularity, and output length; \condTaskPlanning\ changes the control unit and delegated work. The comparisons narrow the mechanism space but do not identify whether role separation, context separation, recursion granularity, or output length causes the remaining difference.
+The ablations do not isolate every implementation detail. \condSingleWriter\ changes delegation, recursion granularity, and output length; \condTaskPlanning\ changes what is selected next and the delegated work. The comparisons narrow the mechanism space but do not identify whether role separation, context separation, recursion granularity, or output length causes the remaining difference.
 
 The hard prompt set samples the longest prompts by Section~\ref{sec:benchmarks}'s rank key, so length proxies difficulty rather than a benchmark score. Results do not establish performance on routine prompts or other task families. The demanding slice trades external validity for sensitivity.
 
