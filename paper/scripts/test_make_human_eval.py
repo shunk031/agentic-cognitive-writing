@@ -1,22 +1,32 @@
 import random
 import unittest
 
-from make_human_eval import _select_candidates
+from make_human_eval import BENCHMARKS, CONTRASTS, PROMPT_LENGTHS, _select_candidates
 
 
 class MakeHumanEvalTests(unittest.TestCase):
-    def test_contrast_sets_do_not_reuse_prompt_ids(self):
+    def test_three_contrasts_are_balanced_and_do_not_reuse_prompts(self):
         candidates = []
-        for benchmark in ("DoLoMiTes", "HelloBench", "WritingBench"):
-            for index in range(20):
-                for contrast in ("A4:A5", "A4:A1"):
-                    candidates.append({"benchmark": benchmark, "prompt_id": f"{benchmark}-{index}", "contrast": contrast})
-        selected = _select_candidates(candidates, random.Random(20260908))
-        first = {(row["benchmark"], row["prompt_id"]) for row in selected["A4:A5"]}
-        second = {(row["benchmark"], row["prompt_id"]) for row in selected["A4:A1"]}
-        self.assertEqual(len(selected["A4:A5"]), 30)
-        self.assertEqual(len(selected["A4:A1"]), 30)
-        self.assertTrue(first.isdisjoint(second))
+        for contrast_index, (left, right) in enumerate(CONTRASTS):
+            for benchmark in BENCHMARKS:
+                for index in range(80):
+                    candidates.append(
+                        {
+                            "benchmark": benchmark,
+                            "prompt_id": f"{benchmark}-{index}",
+                            "contrast": f"{left}:{right}",
+                            "prompt_length": PROMPT_LENGTHS[index // 27],
+                            "output_length_gap": f"gap-{index % 3}",
+                            "automatic_decision_margin": str(index % 2),
+                        }
+                    )
+        selected = _select_candidates(candidates, random.Random(20260929))
+        self.assertEqual(set(selected), {f"{left}:{right}" for left, right in CONTRASTS})
+        self.assertTrue(all(len(rows) == 72 for rows in selected.values()))
+        for contrast, rows in selected.items():
+            self.assertEqual({benchmark: sum(row["benchmark"] == benchmark for row in rows) for benchmark in BENCHMARKS}, {benchmark: 24 for benchmark in BENCHMARKS})
+        seen = [(row["benchmark"], row["prompt_id"]) for rows in selected.values() for row in rows]
+        self.assertEqual(len(seen), len(set(seen)))
 
 
 if __name__ == "__main__":
