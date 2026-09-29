@@ -14,6 +14,20 @@ from agentic_cogwriter.analysis.compute_control import (
     ratio_bin,
 )
 
+_MISSING = object()
+_VALID_ORDER_MAPPING = [
+    {
+        "presentation": "A|B",
+        "first_output": "first_run",
+        "second_output": "compare_run",
+    },
+    {
+        "presentation": "B|A",
+        "first_output": "compare_run",
+        "second_output": "first_run",
+    },
+]
+
 
 def _run(
     root: Path, condition: str, prompt: str, total: int, attempts: int = 1
@@ -42,7 +56,13 @@ def _run(
     return path
 
 
-def _score(root: Path, runs: list[Path], winners: tuple[str, str]) -> None:
+def _score(
+    root: Path,
+    runs: list[Path],
+    winners: tuple[str, str],
+    *,
+    order_mapping: object = _VALID_ORDER_MAPPING,
+) -> None:
     score_dir = root / "scores" / "pairwise" / "judge"
     score_dir.mkdir(parents=True)
 
@@ -59,29 +79,16 @@ def _score(root: Path, runs: list[Path], winners: tuple[str, str]) -> None:
         ),
         encoding="utf-8",
     )
+    manifest = {
+        "task": "pairwise",
+        "judge": {"judge_id": "judge"},
+        "source_runs": [{"run_manifest_sha256": digest(run)} for run in runs],
+    }
+    manifest["tournament"] = {}
+    if order_mapping is not _MISSING:
+        manifest["tournament"]["order_mapping"] = order_mapping
     (score_dir / "scores-manifest.json").write_text(
-        json.dumps(
-            {
-                "task": "pairwise",
-                "judge": {"judge_id": "judge"},
-                "source_runs": [{"run_manifest_sha256": digest(run)} for run in runs],
-                "tournament": {
-                    "order_mapping": [
-                        {
-                            "presentation": "A|B",
-                            "first_output": "first_run",
-                            "second_output": "compare_run",
-                        },
-                        {
-                            "presentation": "B|A",
-                            "first_output": "compare_run",
-                            "second_output": "first_run",
-                        },
-                    ]
-                },
-            }
-        ),
-        encoding="utf-8",
+        json.dumps(manifest), encoding="utf-8"
     )
 
 
@@ -110,9 +117,31 @@ def test_load_judged_pairs_reads_real_manifest_and_score_fixture(
 
     assert len(rows) == 1
     assert rows[0].left_compute_tokens == 200
-    assert rows[0].right_compute_tokens == 50
-    assert rows[0].compute_ratio == 4
+    assert rows[0].right_compute_tokens == 100
+    assert rows[0].compute_ratio == 2
     assert rows[0].verdict == "left"
+
+
+@pytest.mark.parametrize(
+    ("order_mapping", "reason"),
+    [
+        (_MISSING, "missing"),
+        ({"not": "a list"}, "non-list"),
+        (_VALID_ORDER_MAPPING[:1], "partial"),
+    ],
+    ids=["missing", "non-list", "partial"],
+)
+def test_invalid_order_mapping_is_excluded_and_counted(
+    tmp_path: Path, order_mapping: object, reason: str
+) -> None:
+    root = tmp_path / reason
+    left = _run(root, "A4", "p1", 200)
+    right = _run(root, "A1", "p1", 100)
+    _score(root, [left, right], ("A", "B"), order_mapping=order_mapping)
+    exclusions: dict[str, int] = {}
+
+    assert load_judged_pairs(root, judge_id="judge", exclusions=exclusions) == []
+    assert exclusions == {"invalid_order_mapping": 1}
 
 
 def test_hand_computed_spearman_and_matched_band_summary() -> None:

@@ -167,9 +167,11 @@ def _spearman(rows: Sequence[PairObservation], focal_condition: str) -> dict[str
 
 def _mapping(manifest: Mapping[str, Any]) -> dict[str, tuple[int, int]] | None:
     tournament = manifest.get("tournament")
-    items = tournament.get("order_mapping") if isinstance(tournament, Mapping) else None
+    if not isinstance(tournament, Mapping):
+        return None
+    items = tournament.get("order_mapping")
     if not isinstance(items, list):
-        return {"A|B": (0, 1), "B|A": (1, 0)}
+        return None
     if len(items) != 2:
         return None
     result: dict[str, tuple[int, int]] = {}
@@ -209,6 +211,8 @@ def _outcome_condition(
 
 
 def _compute_tokens(run: RunRecord) -> float | None:
+    """Return cumulative output-plus-reasoning tokens for one completed run."""
+
     attempts = run.manifest.get("attempts")
     accounting = run.manifest.get("token_accounting")
     if (
@@ -232,7 +236,7 @@ def _compute_tokens(run: RunRecord) -> float | None:
     budget_used = run.manifest.get("budget_used_tokens")
     if budget_used != total_tokens:
         return None
-    return total_tokens / attempts
+    return float(total_tokens)
 
 
 def load_judged_pairs(
@@ -240,7 +244,12 @@ def load_judged_pairs(
     *,
     judge_id: str,
     contrasts: tuple[tuple[str, str], ...] = COMPUTE_CONTRASTS,
+    exclusions: dict[str, int] | None = None,
 ) -> list[PairObservation]:
+    def exclude(reason: str) -> None:
+        if exclusions is not None:
+            exclusions[reason] = exclusions.get(reason, 0) + 1
+
     source_index = _run_index([runs_root])
     observations: dict[tuple[str, str, str, str, str], PairObservation] = {}
     for manifest_path in sorted(runs_root.resolve().rglob("scores-manifest.json")):
@@ -286,7 +295,10 @@ def load_judged_pairs(
             continue
         records = _records(manifest_path.parent / "scores.jsonl")
         mapping = _mapping(manifest)
-        if not records or mapping is None:
+        if mapping is None:
+            exclude("invalid_order_mapping")
+            continue
+        if not records:
             continue
         outcomes = tuple(
             _outcome_condition(
@@ -433,21 +445,36 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("each --runs-root needs one --replication-label")
     if len(set(labels)) != len(labels):
         parser.error("replication labels must be unique")
-    replications = {
-        label: load_judged_pairs(
+    replications = {}
+    exclusions = {}
+    for label, root in zip(labels, args.runs_root, strict=True):
+        counts: dict[str, int] = {}
+        replications[label] = load_judged_pairs(
             root,
             judge_id=args.judge_id,
             contrasts=args.contrasts,
+            exclusions=counts,
         )
-        for label, root in zip(labels, args.runs_root, strict=True)
-    }
+        exclusions[label] = counts
     report = analyze_replicates(replications, contrasts=args.contrasts)
+    pooled_exclusions: dict[str, int] = {}
+    for counts in exclusions.values():
+        for reason, count in counts.items():
+            pooled_exclusions[reason] = pooled_exclusions.get(reason, 0) + count
     report.update(
         {
             "judge_id": args.judge_id,
+            "exclusions": {
+                "pooled": dict(sorted(pooled_exclusions.items())),
+                "per_replication": {
+                    label: dict(sorted(counts.items()))
+                    for label, counts in exclusions.items()
+                },
+            },
             "compute_unit": (
-                "Codex output-plus-reasoning tokens per attempted run from "
-                "run-manifest.json token_accounting.total_tokens / attempts"
+                "Cumulative Codex output-plus-reasoning tokens per completed run "
+                "from run-manifest.json token_accounting.total_tokens; retries "
+                "are included in the cumulative total"
             ),
             "ratio_bin_upper_bounds": RATIO_BIN_UPPER_BOUNDS,
             "matched_bands": MATCHED_BANDS,
