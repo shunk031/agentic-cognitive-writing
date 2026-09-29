@@ -1048,7 +1048,10 @@ def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
     ) in text
 
 
-def test_a8_keeps_a4_trace_contract_and_removes_delegation() -> None:
+@pytest.mark.parametrize("reference_name", ("goals-format.md", "trace-jsonl-schema.md"))
+def test_a8_keeps_a4_trace_contract_and_removes_delegation(
+    reference_name: str,
+) -> None:
     a4_text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
         encoding="utf-8"
     )
@@ -1063,24 +1066,24 @@ def test_a8_keeps_a4_trace_contract_and_removes_delegation() -> None:
     assert section(a8_text, "## Trace contract", "## References") == section(
         a4_text, "## Trace contract", "## References"
     )
-    a8_schema = (
+    a8_reference = (
         REPO_ROOT
         / "experiments"
         / "plugin"
         / "skills"
         / "cognitive-writing-single-context"
         / "references"
-        / "trace-jsonl-schema.md"
+        / reference_name
     )
-    a4_schema = (
+    a4_reference = (
         REPO_ROOT
         / "plugin"
         / "skills"
         / "agentic-cog-writer"
         / "references"
-        / "trace-jsonl-schema.md"
+        / reference_name
     )
-    assert a8_schema.read_bytes() == a4_schema.read_bytes()
+    assert a8_reference.read_bytes() == a4_reference.read_bytes()
     assert "## Delegation briefs" not in a8_text
     assert "## In-context process execution" in a8_text
     assert "spawn a native Codex subagent" not in a8_text
