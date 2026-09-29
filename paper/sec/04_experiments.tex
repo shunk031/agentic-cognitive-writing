@@ -1,7 +1,7 @@
 \subsection{Research questions}
 \label{sec:research-questions}
 
-We ask two questions. \textbf{RQ1} asks whether process-level organization improves long-form writing relative to a single call, fixed writing stages, and adaptive task planning. \textbf{RQ2} asks which architectural commitments account for any improvement: explicit writer goals, adaptive process ordering, or separation of the writing processes. We use process traces to interpret RQ2 rather than treating trace behavior as a separate product claim.
+We ask two questions. \textbf{RQ1} asks whether choosing among writing processes improves long-form writing relative to a single call, fixed writing stages, and adaptive task planning. \textbf{RQ2} asks which architectural commitments account for any improvement: explicit writer goals, adaptive process ordering, or separation of the writing processes. We use process traces to interpret RQ2 rather than treating trace behavior as a separate product claim.
 
 \subsection{Conditions}
 \label{sec:baselines}
@@ -11,7 +11,7 @@ We compare seven organizations of long-form writing under the same generator and
 
 The first three conditions provide increasingly structured baselines. \condSinglePass\ generates the document in one call. \condStaged\ executes a fixed \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write} sequence. \condTaskPlanning\ follows the adaptive task-planning pattern of WriteHERE~\cite{xiong2025beyond}, selecting dependency-satisfied nodes from an evolving task graph. These are controlled re-implementations on our generator and harness rather than executions of the published systems.
 
-The remaining conditions intervene on the process-level architecture. \condFull\ maintains the goal network, lets the \texttt{Monitor} choose the next writing process, and delegates each process to its corresponding role agent. \condNoGoals\ removes the explicit goal network while retaining adaptive process choice and role delegation. \condFixedOrder\ retains the state and role agents but replaces the \texttt{Monitor}'s choice with a fixed \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle. \condSingleWriter\ removes the delegated role structure and writes recursively in one context at paragraph granularity. Because \condSingleWriter\ changes both role separation and control granularity, it is a diagnostic ablation rather than a clean estimate of delegation.
+The remaining conditions intervene on the process-level architecture. \condFull\ maintains the goal network, lets the \texttt{Monitor} choose the next writing process, and delegates each process to its corresponding role agent. \condNoGoals\ removes the explicit goal network while retaining adaptive process choice and role delegation. \condFixedOrder\ retains the state and role agents but replaces the \texttt{Monitor}'s choice with a fixed \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle. \condSingleWriter\ removes the delegated role structure and writes recursively in one context at paragraph granularity. Because \condSingleWriter\ changes both role separation and recursion granularity, it is a diagnostic ablation rather than a clean estimate of delegation.
 
 \subsection{Benchmarks and prompts}
 \label{sec:benchmarks}
