@@ -1,4 +1,4 @@
-\begin{table*}[!t]
+\begin{table*}[t]
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
@@ -8,46 +8,41 @@
 & \textbf{WritingBench}
 & \textbf{HelloBench}
 & \textbf{DoLoMiTes}
-& \textbf{Pooled mean (SD)} \\
+& \textbf{Pooled mean} \\
 \midrule
 \condFull\ vs \condSinglePass
-& \WritingFourOneRateMean\ (\WritingFourOneRateSD)
-& \HelloFourOneRateMean\ (\HelloFourOneRateSD)
-& \DoLoFourOneRateMean\ (\DoLoFourOneRateSD)
-& \PooledFourOneRateMean\ (\PooledFourOneRateSD) \\
+& \WritingFourOneRateMean
+& \HelloFourOneRateMean
+& \DoLoFourOneRateMean
+& \PooledFourOneRateMean \\
 \condFull\ vs \condStaged
-& \WritingFourTwoRateMean\ (\WritingFourTwoRateSD)
-& \HelloFourTwoRateMean\ (\HelloFourTwoRateSD)
-& \DoLoFourTwoRateMean\ (\DoLoFourTwoRateSD)
-& \PooledFourTwoRateMean\ (\PooledFourTwoRateSD) \\
+& \WritingFourTwoRateMean
+& \HelloFourTwoRateMean
+& \DoLoFourTwoRateMean
+& \PooledFourTwoRateMean \\
 \condFull\ vs \condTaskPlanning
-& \WritingFourThreeRateMean\ (\WritingFourThreeRateSD)
-& \HelloFourThreeRateMean\ (\HelloFourThreeRateSD)
-& \DoLoFourThreeRateMean\ (\DoLoFourThreeRateSD)
-& \PooledFourThreeRateMean\ (\PooledFourThreeRateSD) \\
+& \WritingFourThreeRateMean
+& \HelloFourThreeRateMean
+& \DoLoFourThreeRateMean
+& \PooledFourThreeRateMean \\
 \midrule
-\condNoGoals\ vs \condFull
-& \WritingFiveFourRateMean\ (\WritingFiveFourRateSD)
-& \HelloFiveFourRateMean\ (\HelloFiveFourRateSD)
-& \DoLoFiveFourRateMean\ (\DoLoFiveFourRateSD)
-& \PooledFiveFourRateMean\ (\PooledFiveFourRateSD) \\
-\condFixedOrder\ vs \condFull
-& \WritingSixFourRateMean\ (\WritingSixFourRateSD)
-& \HelloSixFourRateMean\ (\HelloSixFourRateSD)
-& \DoLoSixFourRateMean\ (\DoLoSixFourRateSD)
-& \PooledSixFourRateMean\ (\PooledSixFourRateSD) \\
-\condSingleWriter\ vs \condFull
-& \WritingSevenFourRateMean\ (\WritingSevenFourRateSD)
-& \HelloSevenFourRateMean\ (\HelloSevenFourRateSD)
-& \DoLoSevenFourRateMean\ (\DoLoSevenFourRateSD)
-& \PooledSevenFourRateMean\ (\PooledSevenFourRateSD) \\
-\condSingleWriter\ vs \condSinglePass
-& \WritingSevenOneRateMean\ (\WritingSevenOneRateSD)
-& \HelloSevenOneRateMean\ (\HelloSevenOneRateSD)
-& \DoLoSevenOneRateMean\ (\DoLoSevenOneRateSD)
-& \PooledSevenOneRateMean\ (\PooledSevenOneRateSD) \\
+\condFull\ vs \condNoGoals
+& \WritingFourFiveRateMean
+& \HelloFourFiveRateMean
+& \DoLoFourFiveRateMean
+& \PooledFourFiveRateMean \\
+\condFull\ vs \condFixedOrder
+& \WritingFourSixRateMean
+& \HelloFourSixRateMean
+& \DoLoFourSixRateMean
+& \PooledFourSixRateMean \\
+\condFull\ vs \condSingleWriter
+& \WritingFourSevenRateMean
+& \HelloFourSevenRateMean
+& \DoLoFourSevenRateMean
+& \PooledFourSevenRateMean \\
 \bottomrule
 \end{tabular}
-\caption{Prompt-collapsed pairwise outcomes for the three primary contrasts and four ablation contrasts. Each cell reports the first-listed condition's mean win rate (sample SD in percentage points) across the three replications, with prompt-level ties removed within each replication; Holm significance is reported in the text for the per-benchmark confirmatory cells.}
+\caption{Prompt-collapsed pairwise outcomes. Each cell reports \condFull's mean win rate among non-tied comparisons across three replications. Replication variability, Wilson intervals, and Holm-corrected cells are reported in Appendix~\ref{app:pairwise-detail}.}
 \label{tab:pairwise-results}
 \end{table*}
