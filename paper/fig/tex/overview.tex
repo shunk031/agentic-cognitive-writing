@@ -35,11 +35,6 @@
         -{Latex[length=1.6mm]},
         semithick
     },
-    panel/.style={
-        draw,
-        rounded corners=3pt,
-        inner sep=5mm
-    }
 ]
 
 % Task-level control.
@@ -95,8 +90,6 @@
     {\condFixedOrder\\fix process order};
 \node[ablation] (single) at (11.6,-2.25)
     {\condSingleWriter\\fold roles together};
-
-\node[panel,fit=(processtitle)(state)(reviewing)(updated)(abllabel)(single)] (processpanel) {};
 \end{tikzpicture}%
 }
 \caption{Two control abstractions for long-form writing. Representative structured writing systems choose a unit of work such as a section, passage, or task node (left). Agentic CogWriter instead chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} from the current document $D_t$, goal network $G_t$, and process history $H_t$ (right). The tested interventions remove explicit goals, adaptive process ordering, or the separation of process roles. The \condSingleWriter\ intervention also changes control granularity, so it is not a clean isolation of delegation.}
