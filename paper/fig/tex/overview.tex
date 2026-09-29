@@ -37,15 +37,15 @@
     },
 ]
 
-% Task-level control.
+% Task/content-level decision.
 \node[font=\bfseries] (tasktitle) at (0,3.2)
-    {(a) Task-level control};
+    {(a) Choose the next task or content item};
 \node[state] (taskstate) at (0,2.1)
     {\textbf{Evolving state}\\plan / task graph\\draft};
 \node[controller] (taskcontroller) at (0,0.8)
     {\textbf{Controller}};
 \node[unit] (taskunit) at (0,-0.5)
-    {\textbf{Next unit of work}\\section / passage / task node};
+    {\textbf{Choose next}\\section / passage / task node};
 
 \draw[arrow] (taskstate) -- (taskcontroller);
 \draw[arrow] (taskcontroller) -- (taskunit);
@@ -53,9 +53,9 @@
 
 \draw[densely dotted] (2.9,3.0) -- (2.9,-1.35);
 
-% Process-level control.
+% Process-level decision.
 \node[font=\bfseries] (processtitle) at (8.0,3.2)
-    {(b) Process-level control: Agentic CogWriter};
+    {(b) Choose the next writing process: Agentic CogWriter};
 
 \node[state] (state) at (5.1,2.0)
     {\textbf{Writing state}\\draft / goals / history};
@@ -92,6 +92,6 @@
     {\textbf{One writer context}};
 \end{tikzpicture}%
 }
-\caption{Two control abstractions for long-form writing. Representative structured writing systems choose a unit of work such as a section, passage, or task node (left). Agentic CogWriter instead chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} from the current draft, goal network, and process history (right). The tested interventions remove explicit goals, adaptive process ordering, or separate process-role execution. Collapsing the roles into one writer also changes control granularity, so that intervention does not cleanly isolate role or context separation.}
+\caption{Two answers to the question of what a writing controller should choose next. Representative structured writing systems choose a section, passage, or task node to work on (left). Agentic CogWriter instead chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} from the current draft, goal network, and process history (right). The tested interventions remove explicit goals, adaptive process ordering, or separate process-role execution. Collapsing the roles into one writer also changes recursion granularity, so that intervention does not cleanly isolate role or context separation.}
 \label{fig:agentic-cogwriter}
 \end{figure*}
