@@ -5,7 +5,7 @@ Agentic CogWriter repeats a simple control loop until the \texttt{Monitor} decid
 
 Agentic CogWriter maintains three records throughout a run. The \emph{draft} stores the text produced so far. The \emph{goal network} stores the current writing goals in a hierarchical form. The \emph{process history} records previous process choices and changes to those goals.
 
-The goal network is our explicit representation of the writer-generated goals proposed by Flower and Hayes~\cite{flower1981cognitive}. It contains content, process, and evaluation goals, and it can change as writing proceeds. When a goal is created, developed, or replaced, the change is also recorded in the process history. This representation makes goal changes observable; it does not imply that the language model has a corresponding latent cognitive state.
+The goal network is our explicit representation of the writer-generated goals proposed by Flower and Hayes~\cite{flower1981cognitive}. Content goals describe what the document should communicate, process goals describe how the writing should proceed, and evaluation goals describe criteria for judging the draft. These goals can change as writing proceeds. A goal may be created, made more specific, or replaced when writing changes its purpose or level of abstraction. We call this last operation \emph{goal regeneration}. Goal creation, development, and regeneration are all recorded in the process history. This representation makes goal changes observable; it does not imply that the language model has a corresponding latent cognitive state.
 
 For compact notation, let $D_t$ denote the draft, $G_t$ the goal network, and $H_t$ the process history immediately before the \texttt{Monitor}'s $t$-th decision. We use
 %
