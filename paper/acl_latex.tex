@@ -60,7 +60,7 @@
 \maketitle
 
 \begin{abstract}
-Language-model writing systems decide what to do next in terms of sections, subtasks, or plans. The cognitive process theory of writing~\cite{flower1981cognitive} instead has a monitor decide which writing process, planning, translating, or reviewing, runs next, and no autonomous writer has been built that way. We build Agentic CogWriter, a writing system made of skills and subagents that uses a coding agent as its harness: a \texttt{Monitor} skill chooses the next writing process and delegates \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} to \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} subagents over a shared draft and goal network. We compare it with single-pass, staged, and task-planning writers on the most demanding prompts of WritingBench, HelloBench, and DoLoMiTes, and we switch off each of the theory's three commitments in turn. The delegating writer wins \PooledFourOneRateMean\ of decided comparisons against single-pass writing and is also favored over the staged and task-planning writers. Of the three commitments, only the split into separate agents shows a clear loss when removed; removing the goal network or the dynamic process order shows no detectable loss, and the \texttt{Monitor} mostly follows the textbook order on its own. A judge from another model family agrees on direction but decides only a third of the pairs, and all confirmatory judgments come from the generator's own model family.
+Long-form writing systems structure generation through plans, sections, subtasks, and revision rounds, but this leaves open what a writing controller should choose next. We test a different abstraction drawn from the cognitive process theory of writing~\cite{flower1981cognitive}: a \texttt{Monitor} chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} over a shared draft, goal representation, and process history. On 300 demanding prompts from WritingBench, HelloBench, and DoLoMiTes with three independent replications, this process-level writer is preferred to single-pass, staged, and adaptive task-planning writers. The mechanism results are less supportive of elaborate control: removing the explicit goal network or fixing the process order produces no detectable loss under our confirmatory test, and the unrestricted \texttt{Monitor} usually follows the canonical process cycle while rarely regenerating goals. Folding the process roles into one writer produces a large loss, but that intervention also changes recursion granularity and output length, so it does not isolate delegation. Compute-matched analyses preserve the advantage over staged and task-planning writers, while a cross-family judge preserves pooled directions but commits on only a minority of pairs. These results suggest that cognitive writing theory may be more useful as a decomposition of writing computation than as a literal dynamic scheduling policy for current language agents.
 \end{abstract}
 
 \section{Introduction}
@@ -69,7 +69,7 @@ Language-model writing systems decide what to do next in terms of sections, subt
 \section{Related work}
 \input{sec/02_related_work}
 
-\section{Agentic CogWriter}
+\section{Process-level writing control}
 \input{sec/03_method}
 
 \section{Experiments}
