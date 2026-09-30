@@ -2,6 +2,7 @@
 \centering
 \small
 \setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lllll}
 \toprule
 \textbf{Condition}
@@ -54,7 +55,8 @@
 & Adaptive processes
 & One context (paragraph-scale) \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Experimental conditions. The second column states what, if anything, is selected next during generation. The process-level interventions remove the explicit goal representation or adaptive process ordering while keeping separated role contexts. \condSingleWriter\ retains adaptive process choice but collapses execution into one writer context and fixes paragraph-scale recursion, so it does not cleanly isolate the effect of separated role contexts.}
 \label{tab:experimental-conditions}
 \end{table*}
