@@ -1,0 +1,19 @@
+\paragraph{Common generation contract.}
+All seven conditions receive the same assignment, supplied context, requested output constraints, generator model, attempt budget, and information policy. External retrieval is disabled: the coding-agent sandbox denies network access and web search, and conditions are instructed not to introduce facts unsupported by the assignment or supplied context. The Codex wrapper invokes the condition-specific skill and requires the final response to contain the complete generated document rather than a summary or a link to a workspace artifact.
+
+\paragraph{Baseline prompts.}
+The single-pass condition receives the instruction: ``Write the final response in one generation pass. Do not make a plan for the reader, describe a review, or expose hidden reasoning.'' It then receives the assignment, supplied context, and requested output constraints.
+
+The staged condition uses three fixed prompts. \texttt{Pre-Write} asks for a concise working plan covering purpose, audience, required content, order, and constraints, without drafting the final response. \texttt{Write} asks for a complete draft using the \texttt{Pre-Write} output as working guidance. \texttt{Re-Write} asks for revision with respect to instruction fulfillment, organization, depth, audience fit, and factual fidelity. Each stage is restricted to the same assignment and supplied context, and the aggregate output-token budget is fixed across the three stages.
+
+The adaptive task-planning condition uses a persistent directed acyclic task graph containing only \texttt{reasoning} and \texttt{composition} nodes. The coordinator recursively decomposes or executes the next dependency-satisfied task and may revise active graph structure after observing composed text. The prompt explicitly forbids adapting by selecting named writing processes; adaptation is restricted to task structure.
+
+\paragraph{Agentic CogWriter and intervention prompts.}
+Agentic CogWriter is invoked through the \texttt{agentic-cog-writer} skill. The host agent acts as the \texttt{Monitor}, reads the draft, goal network, and process history, and chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing}. The selected role is delegated to the corresponding role agent. The skill requires process switches and goal changes to be written to an append-only trace.
+
+The three interventions modify this prompt contract directly. \condNoGoals\ forbids the explicit goal network while retaining adaptive process choice and delegated roles. \condFixedOrder\ preserves the goal network and delegated roles but replaces adaptive selection with the fixed \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle. \condSingleWriter\ keeps adaptive process choice and the goal network but forbids subagent delegation and composes recursively in one writer context at paragraph scale. Condition configuration files record the skill or stage prompt used for each condition and the SHA-256 hash of fixed stage prompts.
+
+\paragraph{Pairwise judge prompt.}
+The primary judge is instructed to act as an impartial judge comparing two responses to the same assignment. Its rubric covers instruction fulfillment, organization and global coherence, content adequacy and depth, style, voice and audience fit, factuality, and constraint fidelity. The prompt explicitly instructs the judge to avoid position bias and length bias, to use only the assignment and supplied context, and to choose \texttt{A}, \texttt{B}, or \texttt{tie}. Each pair is shown in both presentation orders; disagreement across the two orders becomes a tie. The judge returns a JSON record containing the winner, short exact evidence quotes from each response, and a brief rubric-grounded comparison.
+
+\input{tab/appendix-runtime-settings}
