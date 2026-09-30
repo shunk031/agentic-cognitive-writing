@@ -1,0 +1,28 @@
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{ll}
+\toprule
+\textbf{Setting} & \textbf{Value} \\
+\midrule
+Generator & \modelGen \\
+Primary pairwise judge & \modelJudge \\
+Cross-family judge & \modelCross \\
+Generation replications & 3 per prompt--condition pair \\
+Generator output-token budget & 64,000 \\
+Generator temperature & unset \\
+Generator sandbox & workspace-write \\
+Network access & denied \\
+Web search & disabled \\
+Approval policy & never \\
+External retrieval & disabled for all conditions \\
+Primary judge seed & 20260908 \\
+Primary judge retries & 2 \\
+Pairwise presentation & both orders \\
+Presentation disagreement & counted as tie \\
+\bottomrule
+\end{tabular}
+\caption{Runtime and evaluation settings used for the reported experiments. Model names include the configured reasoning-effort label where applicable.}
+\label{tab:runtime-settings}
+\end{table}
