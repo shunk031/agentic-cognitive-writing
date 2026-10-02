@@ -7,11 +7,11 @@ The main judge shares the generator's model family, so same-family judging can f
 
 All generation used a single generator family, \modelGenBare. The results therefore do not establish that Agentic CogWriter's advantage transfers to other generator families; a second-generator replication was not run. The baselines are likewise re-implementations of the cited designs under that generator, so the comparison is controlled but says nothing about the published systems' own implementations or their reported results.
 
-The cross-family judge commits on \CrossFamilyPooledCommitRate\ of pairs, with \CrossFamilyPooledTies\ ties, \CrossFamilyPooledAgreement\ agreement, and \CrossFamilyPooledConflicts\ conflicts. Longer outputs win \LengthLongerRate\ of non-tied pairs. The cross-family judge's high tie rate and the same-family judge's length preference limit the checks.
+The cross-family judge yields a non-tied prompt-collapsed judgment on \CrossFamilyPooledCommitRate\ of pairs, with \CrossFamilyPooledTies\ ties, \CrossFamilyPooledAgreement\ agreement, and \CrossFamilyPooledConflicts\ conflicts. Longer outputs win \LengthLongerRate\ of non-tied pairs. The cross-family judge's high tie rate and the same-family judge's length preference limit the checks.
 
 The ablations do not isolate every implementation detail. \condSingleWriter\ removes separated role contexts and delegation while also changing recursion granularity and output length; \condTaskPlanning\ changes both what is selected next and the delegated work. The comparisons narrow the mechanism space but do not identify whether separated role contexts, delegation, recursion granularity, or output length causes the remaining difference.
 
-The hard prompt set samples the longest prompts by Section~\ref{sec:benchmarks}'s rank key, so length proxies difficulty rather than a benchmark score. Results do not establish performance on routine prompts or other task families. The demanding slice trades external validity for sensitivity.
+The evaluation slice is selected by Section~\ref{sec:benchmarks}'s longest-output rank key, so requested length is a selection criterion rather than a benchmark measure of difficulty. Results therefore do not establish performance on shorter prompts, the full benchmark distributions, or other task families.
 
 The 80-run Habermas Machine pilot tests short consensus writing as a boundary condition, not a fourth benchmark; Appendix~\ref{app:habermas} reports its trace totals.
 
