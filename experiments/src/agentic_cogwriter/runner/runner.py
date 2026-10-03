@@ -314,9 +314,28 @@ def _validate_final_product(
                 f"{FINAL_OUTPUT_DRAFT_RATIO:.0%} of draft.md; "
                 f"final_chars={final_chars}, draft_chars={draft_chars}"
             )
-def _product_gate(
-    condition: ConditionSpec, config: RuntimeConfig
+
+
+def _delegation_check(
+    condition: ConditionSpec, platform: str, spawn_count: int
 ) -> dict[str, Any]:
+    """Return the platform-specific spawn contract for a condition run."""
+
+    execution_mode = "delegated" if condition.require_delegation else "in_context"
+    passed = (
+        platform != "codex"
+        or (execution_mode == "delegated" and spawn_count >= 1)
+        or (execution_mode == "in_context" and spawn_count == 0)
+    )
+    return {
+        "required": condition.require_delegation,
+        "spawn_count": spawn_count,
+        "execution_mode": execution_mode,
+        "passed": passed,
+    }
+
+
+def _product_gate(condition: ConditionSpec, config: RuntimeConfig) -> dict[str, Any]:
     """Describe the product completeness rule persisted in each run manifest."""
 
     if condition.product_requires_draft:
@@ -983,14 +1002,19 @@ class ExperimentRunner:
                 process_order=condition.process_order,
                 require_goal_events=condition.require_goal_events,
             )
-            if (
-                condition.require_delegation
-                and platform == "codex"
-                and len(subagent_spawn_ids) < 1
-            ):
+            delegation_check = _delegation_check(
+                condition, platform, len(subagent_spawn_ids)
+            )
+            if not delegation_check["passed"]:
+                if delegation_check["execution_mode"] == "delegated":
+                    raise ExecutionError(
+                        f"Condition {condition.condition_id} requires native role "
+                        "delegation; no spawn_agent event was observed"
+                    )
                 raise ExecutionError(
-                    f"Condition {condition.condition_id} requires native role "
-                    "delegation; no spawn_agent event was observed"
+                    f"Condition {condition.condition_id} requires in-context "
+                    f"execution; {len(subagent_spawn_ids)} spawn_agent event(s) "
+                    "were observed"
                 )
             output_path.write_bytes(output.encode("utf-8"))
             normalized_path.write_text(output, encoding="utf-8")
@@ -1450,6 +1474,7 @@ class ExperimentRunner:
         "agentic-cog-writer": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-no-goal-network": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
+        "cognitive-writing-single-context": _CODEX_ROLE_SKILL_DIRECTORIES,
     }
 
     def _stage_codex_plugin(
@@ -1679,15 +1704,9 @@ class ExperimentRunner:
             ),
             "output_units_used": budget.used if budget else 0,
             "subagent_spawn_count": subagent_spawn_count,
-            "delegation_check": {
-                "required": condition.require_delegation,
-                "spawn_count": subagent_spawn_count,
-                "passed": (
-                    not condition.require_delegation
-                    or platform != "codex"
-                    or subagent_spawn_count >= 1
-                ),
-            },
+            "delegation_check": _delegation_check(
+                condition, platform, subagent_spawn_count
+            ),
             "token_accounting": {
                 "status": token_accounting_status,
                 "source": "Codex turn.completed usage",

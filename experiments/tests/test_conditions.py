@@ -48,7 +48,7 @@ def test_registry_parses_stages_from_condition_wrappers() -> None:
         stage.path is not None and stage.sha256 is not None
         for stage in registry["B2"].stages
     )
-    for condition_id in ("A4", "A5", "A6", "A7", "B1"):
+    for condition_id in ("A4", "A5", "A6", "A7", "A8", "B1"):
         stages = registry[condition_id].stages
         assert [stage.stage_id for stage in stages] == ["plugin_session"]
         assert stages[0].path is None
@@ -70,6 +70,7 @@ def test_registry_keeps_wrapper_paths_and_families() -> None:
         "A5": "confirmatory",
         "A6": "confirmatory",
         "A7": "confirmatory",
+        "A8": "exploratory",
         "B1": "exploratory",
         "B2": "exploratory",
     }
@@ -84,6 +85,7 @@ def test_registry_parses_delegation_requirement_with_false_default() -> None:
         for condition_id, condition in registry.items()
         if condition.require_delegation
     } == {"A3", "A4", "A5", "A6", "B1"}
+    assert registry["A8"].require_delegation is False
 
 
 def test_registry_rejects_non_boolean_delegation_requirement(tmp_path: Path) -> None:
@@ -107,7 +109,7 @@ def test_missing_condition_wrapper_is_an_error(tmp_path: Path) -> None:
     conditions_dir = _copy_conditions(tmp_path)
     (conditions_dir / "a4_plugin.toml").unlink()
 
-    with pytest.raises(ConfigurationError, match="exactly A1 through A7"):
+    with pytest.raises(ConfigurationError, match="exactly A1 through A8"):
         load_condition_registry(conditions_dir)
 
 
@@ -119,7 +121,7 @@ def test_stray_condition_wrapper_is_an_error(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    with pytest.raises(ConfigurationError, match="exactly A1 through A7"):
+    with pytest.raises(ConfigurationError, match="exactly A1 through A8"):
         load_condition_registry(conditions_dir)
 
 

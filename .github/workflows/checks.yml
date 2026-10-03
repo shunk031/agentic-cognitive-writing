@@ -2,9 +2,15 @@ name: Checks
 
 on:
   pull_request:
+    paths-ignore:
+      - paper/**
+      - .github/workflows/paper.yml
   push:
     branches:
       - main
+    paths-ignore:
+      - paper/**
+      - .github/workflows/paper.yml
 
 permissions:
   contents: read
