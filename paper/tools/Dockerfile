@@ -8,4 +8,4 @@ ENV HTTP_PROXY=${HTTP_PROXY}
 ENV HTTPS_PROXY=${HTTPS_PROXY}
 ENV NO_PROXY=${NO_PROXY}
 
-RUN tlmgr install inconsolata dblfloatfix sttools epigraph nextpage
+RUN tlmgr install inconsolata dblfloatfix sttools epigraph nextpage helvetic
