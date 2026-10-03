@@ -1,4 +1,4 @@
-Agentic CogWriter repeats a simple control loop until the \texttt{Monitor} decides that no further writing process is needed. At the start of each iteration, the \texttt{Monitor} reads the external records maintained by the agent, chooses one writing process, and dispatches the corresponding subagent. When that subagent finishes, its output is written back to the shared records and control returns to the \texttt{Monitor}.
+Agentic CogWriter repeats a simple control loop until the \texttt{Monitor} decides that no further writing process is needed. At the start of each iteration, the \texttt{Monitor} reads the external records maintained by the agent, chooses one writing process, and dispatches the corresponding role agent. When that role agent finishes, its output is written back to the shared records and control returns to the \texttt{Monitor}.
 
 \subsection{External writing records}
 \label{sec:method-control-state}
@@ -13,7 +13,7 @@ For compact notation, let $D_t$ denote the draft, $G_t$ the goal network, and $H
 S_t=(D_t,G_t,H_t)
 \end{equation}
 %
-as shorthand for these three external records. The index $t$ counts decisions by the \texttt{Monitor}; it advances after the selected process finishes and the shared records have been updated. The assignment and its constraints remain fixed task context and are not included in $S_t$.
+as shorthand for these three external records. The index $t$ counts decisions by the \texttt{Monitor}; it advances after the chosen process finishes and the shared records have been updated. The assignment and its constraints remain fixed task context and are not included in $S_t$.
 
 \subsection{Process action space}
 \label{sec:method-writing-processes}
@@ -33,7 +33,7 @@ a_t=\pi_{\mathrm{monitor}}(S_t),
 %
 where $\pi_{\mathrm{monitor}}$ denotes the \emph{process-selection policy}. In our implementation, this policy is the prompted decision made by the host agent; it is not a separately trained model.
 
-The chosen process determines which subagent runs next. The \texttt{Planner} develops or reorganizes goals, the \texttt{Translator} realizes active goals as prose in the shared draft, and the \texttt{Reviewer} evaluates the draft against the active goals and returns verdicts and proposals. These subagents do not choose the next process themselves. After a subagent finishes, the \texttt{Monitor} reads the updated records, reconciles any proposals, and makes the next process choice.
+The chosen process determines which role agent runs next. The \texttt{Planner} develops or reorganizes goals, the \texttt{Translator} realizes active goals as prose in the shared draft, and the \texttt{Reviewer} evaluates the draft against the active goals and returns verdicts and proposals. These role agents do not choose the next process themselves. Each process executes in its own role-agent context; we refer to this design choice as \emph{separated role contexts}. After a role agent finishes, the \texttt{Monitor} reads the updated records, reconciles any proposals, and makes the next process choice.
 
 \subsection{Control loop}
 \label{sec:method-monitor}
@@ -43,4 +43,4 @@ Agentic CogWriter imposes no fixed order on the three processes. A translating p
 \subsection{Testable design commitments}
 \label{sec:method-commitments}
 
-The architecture makes three commitments that can be examined experimentally. First, it maintains an explicit evolving goal representation rather than relying only on the model's working context. Second, it lets the \texttt{Monitor} choose the process order adaptively rather than enforcing a fixed cycle. Third, it executes \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} in separate \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} contexts. The first two commitments admit single-factor interventions in our design. The third is probed diagnostically rather than isolated cleanly because the single-writer condition also changes delegation and how much text is produced between process decisions. Section~\ref{sec:baselines} defines these conditions.
+This formulation exposes three commitments that can be examined experimentally. First, Agentic CogWriter maintains an explicit evolving goal representation rather than relying only on the model's working context. Second, the \texttt{Monitor} chooses the process order adaptively rather than following a fixed cycle. Third, \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} execute in separated role contexts. The first two commitments admit single-factor interventions in our design. The third is probed diagnostically rather than isolated cleanly because the single-writer condition also changes delegation and how much text is produced between process decisions. Section~\ref{sec:baselines} defines these conditions.
