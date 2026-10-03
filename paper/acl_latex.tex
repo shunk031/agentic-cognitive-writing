@@ -117,9 +117,8 @@ Native and pointwise scores are secondary diagnostics rather than the confirmato
 
 \section{Runtime configuration}
 \label{app:runtime}
-Runtime configuration records the execution settings needed to reproduce the runs without changing how the results are interpreted. The generator used \modelGen\ with a 64,000 output-token budget; temperature was not set. Each run used one Codex CLI session in a container.
-
-The pairwise judge used \modelJudge\ with seed 20260908 and two retries. The cross-family judge used \modelCross\ through Bedrock with seed \CrossFamilySeed. Every condition received the same task input, available information, model, tool availability, and final-output contract.
+Table~\ref{tab:runtime-settings} summarizes the runtime and evaluation settings used for the reported runs. Every condition received the same task input, available information, generator, tool policy, attempt budget, and final-output contract.
+\input{tab/appendix-runtime-settings}
 
 \section{Process behavior and resource use}
 \label{app:process-behavior}
