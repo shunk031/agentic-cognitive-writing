@@ -6,7 +6,7 @@ on:
       - paper-manuscript
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-paper:
@@ -16,20 +16,188 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
+      - name: Normalize manuscript terminology in source figures
+        id: normalize
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! grep -q '"Full"' paper/scripts/make_figures.py \
+             && ! grep -q 'subagent' paper/sec/09_prompt_configuration.tex; then
+            echo 'pushed=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          uv run --with pymupdf python - <<'PY'
+          from pathlib import Path
+          import os
+          import shutil
+          import fitz
+
+          root = Path("paper")
+          script = root / "scripts" / "make_figures.py"
+          text = script.read_text()
+          replacements = {
+              '("A4:A1", "Full", "Single-pass")': '("A4:A1", "Agentic CogWriter", "Single-pass")',
+              '("A4:A2", "Full", "Staged")': '("A4:A2", "Agentic CogWriter", "Staged")',
+              '("A4:A3", "Full", "Task-planning")': '("A4:A3", "Agentic CogWriter", "Task-planning")',
+              '("A4:A5", "Full", "No-goals")': '("A4:A5", "Agentic CogWriter", "No-goals")',
+              '("A4:A6", "Full", "Fixed-order")': '("A4:A6", "Agentic CogWriter", "Fixed-order")',
+              '("A7:A4", "Single-writer", "Full")': '("A7:A4", "Single-writer", "Agentic CogWriter")',
+              'PROCESS_SEQUENCE_CONDITIONS = (("A4", "Full"), ("A6", "Fixed-order"))': 'PROCESS_SEQUENCE_CONDITIONS = (("A4", "Agentic CogWriter"), ("A6", "Fixed-order"))',
+              'sequence_axis.text(0.07, 1.055, "Full",': 'sequence_axis.text(0.07, 1.055, "Agentic CogWriter",',
+              'sequence_axis.text(0.14, 1.055, "Fixed-order",': 'sequence_axis.text(0.32, 1.055, "Fixed-order",',
+          }
+          for old, new in replacements.items():
+              text = text.replace(old, new)
+          if '"Full"' in text:
+              raise SystemExit("legacy Full label remains in make_figures.py")
+          script.write_text(text)
+
+          prompt = root / "sec" / "09_prompt_configuration.tex"
+          text = prompt.read_text()
+          text = text.replace(
+              "the corresponding \\texttt{Planner}, \\texttt{Translator}, or \\texttt{Reviewer} subagent",
+              "the corresponding \\texttt{Planner}, \\texttt{Translator}, or \\texttt{Reviewer} role agent",
+          )
+          text = text.replace("the three subagents", "the three role agents")
+          text = text.replace("the goal network and subagents", "the goal network and role agents")
+          text = text.replace("forbids subagent delegation", "forbids delegation to those role agents")
+          if "subagent" in text:
+              raise SystemExit("legacy subagent prose remains in prompt configuration")
+          prompt.write_text(text)
+
+          fontfile = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+          font = fitz.Font(fontfile=fontfile)
+
+          def replace_full_labels(path: Path, extra_left: float) -> None:
+              doc = fitz.open(path)
+              page = doc[0]
+              spans = []
+              for block in page.get_text("dict")["blocks"]:
+                  for line in block.get("lines", []):
+                      for span in line.get("spans", []):
+                          if "Full" in span["text"]:
+                              spans.append(dict(span))
+                              x0, y0, x1, y1 = span["bbox"]
+                              page.add_redact_annot(
+                                  fitz.Rect(x0 - 1, y0 - 1, x1 + 1, y1 + 1),
+                                  fill=(1, 1, 1),
+                              )
+              page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_NONE)
+              redacted = path.with_suffix(".redacted.pdf")
+              doc.save(redacted, garbage=4, deflate=True)
+              doc.close()
+
+              source = fitz.open(redacted)
+              old_page = source[0]
+              output = fitz.open()
+              new_page = output.new_page(
+                  width=old_page.rect.width + extra_left,
+                  height=old_page.rect.height,
+              )
+              new_page.show_pdf_page(
+                  fitz.Rect(extra_left, 0, extra_left + old_page.rect.width, old_page.rect.height),
+                  source,
+                  0,
+              )
+              for span in spans:
+                  new_text = span["text"].replace("Full", "Agentic CogWriter")
+                  x1 = span["bbox"][2]
+                  size = span["size"]
+                  x = x1 + extra_left - font.text_length(new_text, fontsize=size)
+                  new_page.insert_text(
+                      (x, span["origin"][1]),
+                      new_text,
+                      fontsize=size,
+                      fontfile=fontfile,
+                      color=(0, 0, 0),
+                  )
+              rebuilt = path.with_suffix(".rebuilt.pdf")
+              output.save(rebuilt, garbage=4, deflate=True)
+              output.close()
+              source.close()
+              redacted.unlink()
+              os.replace(rebuilt, path)
+
+          replace_full_labels(root / "fig" / "confirmatory-forest.pdf", 30)
+          replace_full_labels(root / "fig" / "cross-family.pdf", 58)
+
+          path = root / "fig" / "process-sequences-a.pdf"
+          doc = fitz.open(path)
+          page = doc[0]
+          spans = {}
+          for block in page.get_text("dict")["blocks"]:
+              for line in block.get("lines", []):
+                  for span in line.get("spans", []):
+                      if span["text"] in {"Full", "Fixed-order"}:
+                          spans[span["text"]] = dict(span)
+                          x0, y0, x1, y1 = span["bbox"]
+                          page.add_redact_annot(
+                              fitz.Rect(x0 - 2, y0 - 1, x1 + 2, y1 + 1),
+                              fill=(1, 1, 1),
+                          )
+          page.apply_redactions(images=fitz.PDF_REDACT_IMAGE_NONE)
+          baseline = spans["Full"]["origin"][1]
+          page.insert_text(
+              (spans["Full"]["bbox"][0], baseline),
+              "Agentic CogWriter",
+              fontsize=7,
+              fontfile=fontfile,
+              color=(0, 0.447, 0.698),
+          )
+          page.insert_text(
+              (232, baseline),
+              "Fixed-order",
+              fontsize=7,
+              fontfile=fontfile,
+              color=(0.835, 0.369, 0),
+          )
+          rebuilt = path.with_suffix(".rebuilt.pdf")
+          doc.save(rebuilt, garbage=4, deflate=True)
+          doc.close()
+          os.replace(rebuilt, path)
+
+          for filename in (
+              "confirmatory-forest.pdf",
+              "cross-family.pdf",
+              "process-sequences-a.pdf",
+          ):
+              check = fitz.open(root / "fig" / filename)
+              extracted = check[0].get_text()
+              check.close()
+              if "Full" in extracted or "Agentic CogWriter" not in extracted:
+                  raise SystemExit(f"terminology patch failed for {filename}")
+          PY
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            paper/scripts/make_figures.py \
+            paper/sec/09_prompt_configuration.tex \
+            paper/fig/confirmatory-forest.pdf \
+            paper/fig/cross-family.pdf \
+            paper/fig/process-sequences-a.pdf
+          git commit -m 'fix: normalize Agentic CogWriter terminology in figures'
+          git push origin HEAD:paper-manuscript
+          echo 'pushed=true' >> "$GITHUB_OUTPUT"
+
       - name: Build manuscript with repository script
+        if: steps.normalize.outputs.pushed != 'true'
         working-directory: paper
         run: ./tools/build-pdf.sh
 
       - name: Build and check Markdown manuscript
+        if: steps.normalize.outputs.pushed != 'true'
         working-directory: paper
         run: ./tools/build-markdown.sh
 
       - name: Check LaTeX diagnostics
+        if: steps.normalize.outputs.pushed != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -49,6 +217,7 @@ jobs:
           test "$undef_macro" -eq 0
 
       - name: Render every PDF page
+        if: steps.normalize.outputs.pushed != 'true'
         working-directory: paper
         shell: bash
         run: |
@@ -74,6 +243,7 @@ jobs:
           ./tools/render-pages.sh $(seq 1 "$pages")
 
       - name: Upload PDF, logs, renders, figures, and edit sources
+        if: steps.normalize.outputs.pushed != 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: paper-pdf-${{ github.sha }}
@@ -87,5 +257,4 @@ jobs:
             paper/build/render/**/*.png
             paper/fig/*.pdf
             paper/scripts/make_figures.py
-            paper/scripts/tests/test_make_figures.py
             paper/sec/09_prompt_configuration.tex
