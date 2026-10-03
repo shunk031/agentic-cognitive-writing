@@ -8,4 +8,5 @@ ENV HTTP_PROXY=${HTTP_PROXY}
 ENV HTTPS_PROXY=${HTTPS_PROXY}
 ENV NO_PROXY=${NO_PROXY}
 
-RUN tlmgr install inconsolata dblfloatfix sttools epigraph nextpage helvetic
+RUN tlmgr option repository https://mirror.ctan.org/systems/texlive/tlnet \
+    && tlmgr install inconsolata dblfloatfix sttools epigraph nextpage helvetic
