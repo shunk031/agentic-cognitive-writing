@@ -4,7 +4,13 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - paper/**
+      - .github/workflows/paper.yml
   pull_request:
+    paths-ignore:
+      - paper/**
+      - .github/workflows/paper.yml
   workflow_dispatch:
 
 permissions:
