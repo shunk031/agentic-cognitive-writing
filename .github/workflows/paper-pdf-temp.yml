@@ -56,8 +56,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          pages=$(pdfinfo build/acl_latex.pdf | awk '$1 == "Pages:" {print $2; exit}')
-          test -n "$pages"
+          pages=$(python -c 'import pathlib,re; data=pathlib.Path("build/acl_latex.pdf").read_bytes(); print(len(re.findall(rb"/Type\s*/Page\b", data)))')
+          test "$pages" -gt 0
           ./tools/render-pages.sh $(seq 1 "$pages")
 
       - name: Upload PDF, logs, and page renders
