@@ -64,24 +64,31 @@ Long-form writing agents often organize generation through plans, sections, subt
 \end{abstract}
 
 \section{Introduction}
+\label{sec:introduction}
 \input{sec/01_introduction}
 
-\section{Related work}
+\section{Background and Related Work}
+\label{sec:related-work}
 \input{sec/02_related_work}
 
-\section{Process-level writing control}
+\section{Agentic CogWriter: Process-Level Writing Control}
+\label{sec:method}
 \input{sec/03_method}
 
-\section{Experiments}
+\section{Experimental Design}
+\label{sec:experimental-design}
 \input{sec/04_experiments}
 
 \section{Results}
+\label{sec:results}
 \input{sec/05_results}
 
 \section{Discussion}
+\label{sec:discussion}
 \input{sec/06_discussion}
 
 \section{Conclusion}
+\label{sec:conclusion}
 \input{sec/08_conclusion}
 
 \input{sec/07_limitations}
@@ -96,6 +103,15 @@ Long-form writing agents often organize generation through plans, sections, subt
 Table~\ref{tab:architecture-comparison} summarizes how representative long-form writing systems advance generation under a common descriptive vocabulary.
 \input{tab/appendix-comparison}
 
+\section{Prompt and experiment configuration}
+\label{app:prompts}
+\input{sec/09_prompt_configuration}
+
+\section{Runtime configuration}
+\label{app:runtime}
+Table~\ref{tab:runtime-settings} summarizes the runtime and evaluation settings used for the reported runs. Every condition received the same task input, available information, generator, tool policy, attempt budget, and final-output contract.
+\input{tab/appendix-runtime-settings}
+
 \section{Replicate-level pairwise outcomes}
 \label{app:pairwise-detail}
 The following figure shows the prompt-collapsed pairwise estimates for each benchmark and replication, including the ablation contrasts.
@@ -105,20 +121,6 @@ The following figure shows the prompt-collapsed pairwise estimates for each benc
 \caption{Prompt-collapsed pairwise win rates by benchmark and replication. Points show 95 percent Wilson intervals; diamonds show the mean across replications, and filled or open circles mark cells that do or do not survive Holm correction.}
 \label{fig:appendix-confirmatory-forest}
 \end{figure*}
-
-\section{Secondary product scores}
-\label{app:secondary-scores}
-Native and pointwise scores are secondary diagnostics rather than the confirmatory outcome.
-\input{tab/main-results}
-
-\section{Prompt and experiment configuration}
-\label{app:prompts}
-\input{sec/09_prompt_configuration}
-
-\section{Runtime configuration}
-\label{app:runtime}
-Table~\ref{tab:runtime-settings} summarizes the runtime and evaluation settings used for the reported runs. Every condition received the same task input, available information, generator, tool policy, attempt budget, and final-output contract.
-\input{tab/appendix-runtime-settings}
 
 \section{Process behavior and resource use}
 \label{app:process-behavior}
@@ -147,22 +149,30 @@ The following figure shows the process sequences and transition counts used to i
 \label{fig:appendix-process-sequences}
 \end{figure*}
 
-\section{Record-pooled sensitivity analysis}
+\section{Secondary product scores}
+\label{app:secondary-scores}
+Native and pointwise scores are secondary diagnostics rather than the confirmatory outcome.
+\input{tab/main-results}
+
+\section{Sensitivity analyses}
+\label{app:sensitivity-analyses}
+
+\subsection{Record-pooled sensitivity}
 \label{app:record-pooled}
 The record-pooled table reports a sensitivity analysis that treats the two presentation records for each prompt as independent observations; the retained disagreements show how much presentation order can affect the descriptive rates.
 The retained presentation disagreements were \WritingPresentationDisagreementRate\ on WritingBench, \HelloPresentationDisagreementRate\ on HelloBench, and \DoLoPresentationDisagreementRate\ on DoLoMiTes across the three replications.
 \input{tab/appendix-record-pooled-pairwise}
 
-\section{Output-length sensitivity}
+\subsection{Output-length sensitivity}
 \label{app:length-control}
 The length-control table reports the longer-side preference by output-length ratio; the longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. Within 5 percent, the outcomes from the first replication are \LengthFullSinglePassFiveWLT\ for \condAgenticCogWriter\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condAgenticCogWriter\ versus \condNoGoals. Within 10 percent, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$). The 5/10-percent rates for \condAgenticCogWriter\ versus \condSinglePass\ are \LengthFullSinglePassFiveRateRunTwo/\LengthFullSinglePassTenRateRunTwo in the second replication and \LengthFullSinglePassFiveRateRunThree/\LengthFullSinglePassTenRateRunThree in the third replication; the corresponding \condAgenticCogWriter\ versus \condTaskPlanning\ rates are \LengthFullTaskPlanningFiveRateRunTwo/\LengthFullTaskPlanningTenRateRunTwo and \LengthFullTaskPlanningFiveRateRunThree/\LengthFullTaskPlanningTenRateRunThree. The \condAgenticCogWriter\ versus \condNoGoals\ replicate rates are \LengthFullNoGoalsFiveRateRunTwo/\LengthFullNoGoalsTenRateRunTwo and \LengthFullNoGoalsFiveRateRunThree/\LengthFullNoGoalsTenRateRunThree.
 \input{tab/appendix-length-control}
 
-\section{Compute-stratified sensitivity}
+\subsection{Compute-stratified sensitivity}
 \label{app:compute-control}
 \input{tab/appendix-compute-control}
 
-\section{Cross-family judge robustness}
+\subsection{Cross-family judge robustness}
 \label{app:cross-family}
 The cross-family table reports pooled outcomes for the three robustness contrasts: \CrossFamilyFullSinglePassWLT\ for \condAgenticCogWriter\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ for \condAgenticCogWriter\ versus \condNoGoals. The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval. The judge yields a non-tied prompt-collapsed judgment on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ pairs, with \CrossFamilyPooledWLT\ overall W/L/T and \CrossFamilyPooledAgreement\ prompt-collapsed agreements.
 \input{tab/appendix-cross-family}
