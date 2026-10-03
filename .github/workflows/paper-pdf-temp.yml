@@ -56,7 +56,23 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          pages=$(python -c 'import pathlib,re; data=pathlib.Path("build/acl_latex.pdf").read_bytes(); print(len(re.findall(rb"/Type\s*/Page\b", data)))')
+          pages=$(python3 - build/acl_latex.pdf build/acl_latex.log <<'PY'
+          import re
+          import sys
+
+          pdf_data = open(sys.argv[1], "rb").read()
+          counts = [int(value) for value in re.findall(rb"/Type\s*/Pages\b.*?/Count\s+(\d+)", pdf_data, re.S)]
+          if counts:
+              print(max(counts))
+              raise SystemExit
+
+          log_data = open(sys.argv[2], encoding="utf-8", errors="replace").read()
+          matches = re.findall(r"Output written on .* \((\d+) pages?,", log_data)
+          if not matches:
+              raise SystemExit("could not determine PDF page count")
+          print(matches[-1])
+          PY
+          )
           test "$pages" -gt 0
           ./tools/render-pages.sh $(seq 1 "$pages")
 
