@@ -11,3 +11,6 @@ dev = [
   "ty>=0.0.75",
   "vulture>=2.16",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["experiments/tests", "tools"]
