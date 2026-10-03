@@ -1,0 +1,41 @@
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{@{}p{0.20\textwidth}p{0.12\textwidth}rrrrp{0.27\textwidth}@{}}
+\toprule
+Contrast & Scope & $n$ & Dropped & W/L/T & Rate & Wilson 95\% / $p$ \\
+\midrule
+\condSingleContext\\vs.~\condAgenticCogWriter & WritingBench & \SingleContextWritingFullN & \SingleContextWritingFullDropped & \SingleContextWritingFullWLT & \SingleContextWritingFullRate & \SingleContextWritingFullInterval; $\SingleContextWritingFullP$ \\
+\condSingleContext\\vs.~\condAgenticCogWriter & HelloBench & \SingleContextHelloFullN & \SingleContextHelloFullDropped & \SingleContextHelloFullWLT & \SingleContextHelloFullRate & \SingleContextHelloFullInterval; $\SingleContextHelloFullP$ \\
+\condSingleContext\\vs.~\condAgenticCogWriter & DoLoMiTes & \SingleContextDoLoFullN & \SingleContextDoLoFullDropped & \SingleContextDoLoFullWLT & \SingleContextDoLoFullRate & \SingleContextDoLoFullInterval; $\SingleContextDoLoFullP$ \\
+\condSingleContext\\vs.~\condAgenticCogWriter & Pooled & \SingleContextFullN & \SingleContextFullDropped & \SingleContextFullWLT & \SingleContextFullRate & \SingleContextFullInterval; $\SingleContextFullP$ \\
+\midrule
+\condSingleContext\\vs.~\condSinglePass & WritingBench & \SingleContextWritingSinglePassN & \SingleContextWritingSinglePassDropped & \SingleContextWritingSinglePassWLT & \SingleContextWritingSinglePassRate & \SingleContextWritingSinglePassInterval; $\SingleContextWritingSinglePassP$ \\
+\condSingleContext\\vs.~\condSinglePass & HelloBench & \SingleContextHelloSinglePassN & \SingleContextHelloSinglePassDropped & \SingleContextHelloSinglePassWLT & \SingleContextHelloSinglePassRate & \SingleContextHelloSinglePassInterval; $\SingleContextHelloSinglePassP$ \\
+\condSingleContext\\vs.~\condSinglePass & DoLoMiTes & \SingleContextDoLoSinglePassN & \SingleContextDoLoSinglePassDropped & \SingleContextDoLoSinglePassWLT & \SingleContextDoLoSinglePassRate & \SingleContextDoLoSinglePassInterval; $\SingleContextDoLoSinglePassP$ \\
+\condSingleContext\\vs.~\condSinglePass & Pooled & \SingleContextSinglePassN & \SingleContextSinglePassDropped & \SingleContextSinglePassWLT & \SingleContextSinglePassRate & \SingleContextSinglePassInterval; $\SingleContextSinglePassP$ \\
+\bottomrule
+\end{tabular}
+\caption{Exploratory single-context results added after the primary results. The one-replication outcomes were judged by \modelJudge\ against replication-1 outputs without multiplicity adjustment. The runtime used a different gateway entry point and plain HTTP transport, with the generator model unchanged.}
+\label{tab:appendix-single-context-pairwise}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+Metric & \condSinglePass & \condAgenticCogWriter & \condSingleContext \\
+\midrule
+Completed & \AoneCompleted & \AfourCompleted & \SingleContextCompleted \\
+Output-plus-reasoning tokens per run & \AoneOutputTokens & \AfourOutputTokens & \SingleContextOutputTokens \\
+Wall-clock seconds per completed run & \AoneMeanSeconds & \AfourMeanSeconds & \SingleContextMeanSeconds \\
+Goals created/developed/regenerated & \AoneGoals & \AfourGoals & \SingleContextGoals \\
+Ledger entries & \SingleContextAoneLedgerEntries & \SingleContextAfourLedgerEntries & \SingleContextLedgerEntries \\
+Ledger entries with proposal & \SingleContextAoneLedgerWithProposal & \SingleContextAfourLedgerWithProposal & \SingleContextLedgerWithProposal \\
+Spawns per attempted run & \AoneSpawns & \AfourSpawns & \SingleContextSpawns \\
+\bottomrule
+\end{tabular}
+\caption{Process summaries are from the first replication for the primary conditions and the single exploratory replication for \condSingleContext. Structural auditing found \SingleContextAEightMissingPlanning\ A8 prompts missing \texttt{Planning}, \SingleContextAEightMissingTranslating\ missing \texttt{Translating}, and \SingleContextAEightMissingBoth\ missing both, out of \SingleContextAEightAuditN; the A4 replication-1 audit found \SingleContextAFourMissingPlanning\ prompts missing \texttt{Planning} and \SingleContextAFourMissingTranslating\ missing \texttt{Translating}, out of \SingleContextAFourAuditN.}
+\label{tab:appendix-single-context-process}
+\end{table*}

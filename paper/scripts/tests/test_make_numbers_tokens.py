@@ -176,6 +176,76 @@ def _compute_summary() -> dict:
     }
 
 
+def _single_context_stage1() -> tuple[dict, dict, dict]:
+    def result(wins: int, losses: int, ties: int, dropped: int) -> dict:
+        scored = wins + losses + ties
+        non_tie = wins + losses
+        return {
+            "eligible_prompts": scored + dropped,
+            "scored_prompts": scored,
+            "dropped_prompts": dropped,
+            "wins": wins,
+            "losses": losses,
+            "ties": ties,
+            "non_ties": non_tie,
+            "win_rate": wins / non_tie if non_tie else 0.0,
+            "wilson_95_low": 0.2,
+            "wilson_95_high": 0.8,
+            "sign_test_p_exact_two_sided": 0.5,
+        }
+
+    benchmark_results = {
+        "WritingBench": {"A8:A4": result(2, 1, 1, 0), "A8:A1": result(3, 1, 0, 0)},
+        "HelloBench": {"A8:A4": result(1, 2, 1, 0), "A8:A1": result(2, 1, 1, 0)},
+        "DoLoMiTes": {"A8:A4": result(1, 1, 2, 0), "A8:A1": result(2, 1, 1, 0)},
+    }
+    pooled = {}
+    for contrast in ("A8:A4", "A8:A1"):
+        rows = [benchmark_results[benchmark][contrast] for benchmark in benchmark_results]
+        pooled[contrast] = result(
+            sum(row["wins"] for row in rows),
+            sum(row["losses"] for row in rows),
+            sum(row["ties"] for row in rows),
+            0,
+        )
+    aggregation = {
+        "analysis_family": "exploratory",
+        "contrasts": ["A8:A4", "A8:A1"],
+        "benchmarks": benchmark_results,
+        "pooled": pooled,
+    }
+
+    def process(completed: int, tokens: float, seconds: float) -> dict:
+        return {
+            "attempted": 300,
+            "completed": completed,
+            "mean_output_plus_reasoning_tokens": tokens,
+            "mean_wall_clock_seconds_completed": seconds,
+            "goal_created": 1,
+            "goal_developed": 2,
+            "goal_regenerated": 0,
+            "ledger_entries_contract": 3,
+            "ledger_entries_with_proposal": 0,
+            "mean_spawns_per_attempted_run": 0,
+            "replication": 1,
+        }
+
+    process_summary = {
+        "conditions": {
+            "A1": process(289, 4000, 50),
+            "A4": process(293, 10000, 350),
+            "A8": process(300, 12000, 100),
+        }
+    }
+    audit = {
+        "source_note": "fixture",
+        "total_prompts": 300,
+        "A8": {"missing_planning": 7, "missing_translating": 6, "missing_both": 3},
+        "A4_replication_1": {"missing_planning": 6, "missing_translating": 7},
+    }
+    return aggregation, process_summary, audit
+
+
 def _cross_rate() -> dict:
     return {
         "numerator": 1,
@@ -423,6 +493,27 @@ class TokenMacroTests(unittest.TestCase):
                 [_aggregation()],
                 [("A4", "A1")],
                 compute_stratified_sensitivity=summary,
+            )
+
+    def test_single_context_macros_are_source_backed(self):
+        output = emit_numbers(
+            [_aggregation()],
+            [("A4", "A1")],
+            single_context_stage1=_single_context_stage1(),
+        )
+        self.assertIn(r"\newcommand{\SingleContextWritingFullWLT}{2/1/1}", output)
+        self.assertIn(r"\newcommand{\SingleContextSinglePassRate}{70.0\%}", output)
+        self.assertIn(r"\newcommand{\SingleContextAEightMissingBoth}{3}", output)
+        self.assertIn(r"\newcommand{\SingleContextSpeedup}{3.5~×}", output)
+
+    def test_single_context_macros_fail_closed_on_missing_fields(self):
+        source = list(_single_context_stage1())
+        del source[0]["pooled"]["A8:A4"]["sign_test_p_exact_two_sided"]
+        with self.assertRaisesRegex(ValueError, r"pooled\.A8:A4.*sign_test_p_exact_two_sided"):
+            emit_numbers(
+                [_aggregation()],
+                [("A4", "A1")],
+                single_context_stage1=tuple(source),
             )
 
     def test_cross_family_macros_fail_closed_on_missing_fields(self):

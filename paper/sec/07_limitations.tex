@@ -11,6 +11,8 @@ The cross-family judge yields a non-tied prompt-collapsed judgment on \CrossFami
 
 The ablations do not isolate every implementation detail. \condSingleWriter\ retains adaptive process choice and the goal network while removing the three delegated subagents, limiting each \texttt{Translating} step to one paragraph before the next process decision, and producing a different output-length distribution. \condTaskPlanning\ changes both what is selected next and the delegated work. The comparisons narrow the mechanism space but do not identify whether separate process contexts, delegation, how much text is produced between process decisions, or output length causes the remaining difference.
 
+The \condSingleContext\ condition is a single post-hoc exploratory replication outside the confirmatory family.
+
 The evaluation slice is selected by Section~\ref{sec:benchmarks}'s longest-output rank key, so requested length is a selection criterion rather than a benchmark measure of difficulty. Results therefore do not establish performance on shorter prompts, the full benchmark distributions, or other task families.
 
 Process traces record implemented agent state, not human goals, monitoring, or discovery; the source theory defines an executable control hypothesis, not cognitive equivalence.

@@ -216,6 +216,25 @@ COMPUTE_RATIO_BIN_UPPER_BOUNDS = [
     2.0,
 ]
 
+SINGLE_CONTEXT_CONTRASTS = {
+    "A8:A4": "Full",
+    "A8:A1": "SinglePass",
+}
+SINGLE_CONTEXT_BENCHMARKS = {
+    "WritingBench": "Writing",
+    "HelloBench": "Hello",
+    "DoLoMiTes": "DoLo",
+}
+SINGLE_CONTEXT_PAIR_FIELDS = (
+    "eligible_prompts",
+    "scored_prompts",
+    "dropped_prompts",
+    "wins",
+    "losses",
+    "ties",
+    "non_ties",
+)
+
 
 def _word(value: object) -> str:
     text = str(value)
@@ -1240,6 +1259,170 @@ def _emit_compute_stratified_macros(add: Any, report: dict[str, Any]) -> None:
             add(prefix + "P", _pvalue(stats["sign_test_p"]), source + ".sign_test_p")
 
 
+def _validate_single_context_pair(data: dict[str, Any], source: str) -> None:
+    for key in SINGLE_CONTEXT_PAIR_FIELDS:
+        value = _required_int(data, key, source)
+        if value < 0:
+            raise ValueError(f"{source}.{key} must be non-negative")
+    if data["wins"] + data["losses"] + data["ties"] != data["scored_prompts"]:
+        raise ValueError(f"{source} has inconsistent W/L/T counts")
+    if data["wins"] + data["losses"] != data["non_ties"]:
+        raise ValueError(f"{source} has inconsistent non-tie count")
+    if data["dropped_prompts"] + data["scored_prompts"] != data["eligible_prompts"]:
+        raise ValueError(f"{source} has inconsistent dropped/scored count")
+    for key in ("win_rate", "wilson_95_low", "wilson_95_high"):
+        value = _required_number(data, key, source)
+        if not 0.0 <= value <= 1.0:
+            raise ValueError(f"{source}.{key} is outside [0, 1]")
+    p_value = _required_number(data, "sign_test_p_exact_two_sided", source)
+    if not 0.0 <= p_value <= 1.0:
+        raise ValueError(f"{source}.sign_test_p_exact_two_sided is outside [0, 1]")
+
+
+def _validate_single_context_stage1(
+    aggregation: dict[str, Any], process_summary: dict[str, Any], audit: dict[str, Any]
+) -> None:
+    source = "A8 stage-1 aggregation JSON"
+    if aggregation.get("analysis_family") != "exploratory":
+        raise ValueError(f"{source}.analysis_family must be exploratory")
+    if set(aggregation.get("contrasts", [])) != set(SINGLE_CONTEXT_CONTRASTS):
+        raise ValueError(f"{source}.contrasts must contain the two A8 contrasts")
+    benchmarks = _required_mapping(aggregation, "benchmarks", source)
+    pooled = _required_mapping(aggregation, "pooled", source)
+    for contrast in SINGLE_CONTEXT_CONTRASTS:
+        for benchmark in SINGLE_CONTEXT_BENCHMARKS:
+            result = _required_mapping(
+                _required_mapping(benchmarks, benchmark, f"{source}.benchmarks"),
+                contrast,
+                f"{source}.benchmarks.{benchmark}",
+            )
+            _validate_single_context_pair(result, f"{source}.benchmarks.{benchmark}.{contrast}")
+        result = _required_mapping(pooled, contrast, f"{source}.pooled")
+        _validate_single_context_pair(result, f"{source}.pooled.{contrast}")
+
+    process_source = "A8 stage-1 process-summary JSON"
+    conditions = _required_mapping(process_summary, "conditions", process_source)
+    for condition in ("A1", "A4", "A8"):
+        values = _required_mapping(conditions, condition, f"{process_source}.conditions")
+        for field in (
+            "attempted",
+            "completed",
+            "mean_output_plus_reasoning_tokens",
+            "mean_wall_clock_seconds_completed",
+            "goal_created",
+            "goal_developed",
+            "goal_regenerated",
+            "ledger_entries_contract",
+            "ledger_entries_with_proposal",
+            "mean_spawns_per_attempted_run",
+        ):
+            value = _required_value(values, field, f"{process_source}.conditions.{condition}")
+            if _float(value) is None or _float(value) < 0:
+                raise ValueError(f"{process_source}.conditions.{condition}.{field} is invalid")
+    if _required_int(conditions["A8"], "replication", f"{process_source}.conditions.A8") != 1:
+        raise ValueError(f"{process_source}.conditions.A8.replication must be 1")
+
+    audit_source = "A8 stage-1 structural-audit JSON"
+    total = _required_int(audit, "total_prompts", audit_source)
+    if total != 300:
+        raise ValueError(f"{audit_source}.total_prompts must be 300")
+    a8 = _required_mapping(audit, "A8", audit_source)
+    a4 = _required_mapping(audit, "A4_replication_1", audit_source)
+    for field in ("missing_planning", "missing_translating", "missing_both"):
+        _required_int(a8, field, f"{audit_source}.A8")
+    for field in ("missing_planning", "missing_translating"):
+        _required_int(a4, field, f"{audit_source}.A4_replication_1")
+
+
+def _single_context_stage1_entries(
+    aggregation: dict[str, Any], process_summary: dict[str, Any], audit: dict[str, Any]
+) -> list[tuple[str, str, str]]:
+    _validate_single_context_stage1(aggregation, process_summary, audit)
+    entries: list[tuple[str, str, str]] = []
+    for contrast, contrast_word in SINGLE_CONTEXT_CONTRASTS.items():
+        for benchmark, benchmark_word in SINGLE_CONTEXT_BENCHMARKS.items():
+            result = aggregation["benchmarks"][benchmark][contrast]
+            prefix = f"\\SingleContext{benchmark_word}{contrast_word}"
+            source = f"A8 stage-1 aggregation JSON benchmarks.{benchmark}.{contrast}"
+            entries.extend(
+                (
+                    (prefix + "N", str(result["scored_prompts"]), source + ".scored_prompts"),
+                    (prefix + "WLT", _wlt(result), source + " W/L/T"),
+                    (prefix + "Rate", _percent_fixed(result["win_rate"], 1), source + ".win_rate"),
+                    (
+                        prefix + "Interval",
+                        f"{_percent_fixed(result['wilson_95_low'], 1)}--{_percent_fixed(result['wilson_95_high'], 1)}",
+                        source + " Wilson 95 percent interval",
+                    ),
+                    (prefix + "P", _pvalue(result["sign_test_p_exact_two_sided"]), source + ".sign_test_p_exact_two_sided"),
+                    (prefix + "Dropped", str(result["dropped_prompts"]), source + ".dropped_prompts"),
+                )
+            )
+        pooled = aggregation["pooled"][contrast]
+        prefix = f"\\SingleContext{contrast_word}"
+        source = f"A8 stage-1 aggregation JSON pooled.{contrast}"
+        entries.extend(
+            (
+                (prefix + "N", str(pooled["scored_prompts"]), source + ".scored_prompts"),
+                (prefix + "WLT", _wlt(pooled), source + " W/L/T"),
+                (prefix + "Rate", _percent_fixed(pooled["win_rate"], 1), source + ".win_rate"),
+                (
+                    prefix + "Interval",
+                    f"{_percent_fixed(pooled['wilson_95_low'], 1)}--{_percent_fixed(pooled['wilson_95_high'], 1)}",
+                    source + " Wilson 95 percent interval",
+                ),
+                (prefix + "P", _pvalue(pooled["sign_test_p_exact_two_sided"]), source + ".sign_test_p_exact_two_sided"),
+                (prefix + "Dropped", str(pooled["dropped_prompts"]), source + ".dropped_prompts"),
+            )
+        )
+
+    a8 = process_summary["conditions"]["A8"]
+    process_source = "A8 stage-1 process-summary JSON conditions.A8"
+    entries.extend(
+        (
+            ("\\SingleContextCompleted", f"{a8['completed']}/{a8['attempted']}", process_source + ".completed/attempted"),
+            ("\\SingleContextOutputTokens", _format_process(a8["mean_output_plus_reasoning_tokens"], 0), process_source + ".mean_output_plus_reasoning_tokens"),
+            ("\\SingleContextMeanSeconds", _format_process(a8["mean_wall_clock_seconds_completed"], 0), process_source + ".mean_wall_clock_seconds_completed"),
+            ("\\SingleContextGoals", "/".join(str(a8[field]) for field in PROCESS_GOAL_FIELDS), process_source + ".goal_created/goal_developed/goal_regenerated"),
+            ("\\SingleContextLedgerEntries", str(a8["ledger_entries_contract"]), process_source + ".ledger_entries_contract"),
+            ("\\SingleContextLedgerWithProposal", str(a8["ledger_entries_with_proposal"]), process_source + ".ledger_entries_with_proposal"),
+            ("\\SingleContextSpawns", _format_process(a8["mean_spawns_per_attempted_run"], 2), process_source + ".mean_spawns_per_attempted_run"),
+        )
+    )
+    for condition, condition_word in (("A1", "Aone"), ("A4", "Afour")):
+        values = process_summary["conditions"][condition]
+        process_source = f"A8 stage-1 process-summary JSON conditions.{condition}"
+        entries.extend(
+            (
+                (f"\\SingleContext{condition_word}LedgerEntries", str(values["ledger_entries_contract"]), process_source + ".ledger_entries_contract"),
+                (f"\\SingleContext{condition_word}LedgerWithProposal", str(values["ledger_entries_with_proposal"]), process_source + ".ledger_entries_with_proposal"),
+            )
+        )
+    a4 = process_summary["conditions"]["A4"]
+    speedup = _float(a4["mean_wall_clock_seconds_completed"]) / _float(a8["mean_wall_clock_seconds_completed"])
+    entries.append(("\\SingleContextSpeedup", f"{speedup:.1f}~×", "A8 stage-1 process-summary JSON A4/A8 mean_wall_clock_seconds_completed"))
+
+    audit_source = "A8 stage-1 structural-audit JSON"
+    for name, value, path in (
+        ("SingleContextAEightAuditN", audit["total_prompts"], "total_prompts"),
+        ("SingleContextAEightMissingPlanning", audit["A8"]["missing_planning"], "A8.missing_planning"),
+        ("SingleContextAEightMissingTranslating", audit["A8"]["missing_translating"], "A8.missing_translating"),
+        ("SingleContextAEightMissingBoth", audit["A8"]["missing_both"], "A8.missing_both"),
+        ("SingleContextAFourAuditN", audit["total_prompts"], "total_prompts"),
+        ("SingleContextAFourMissingPlanning", audit["A4_replication_1"]["missing_planning"], "A4_replication_1.missing_planning"),
+        ("SingleContextAFourMissingTranslating", audit["A4_replication_1"]["missing_translating"], "A4_replication_1.missing_translating"),
+    ):
+        entries.append(("\\" + name, str(value), audit_source + "." + path))
+    return entries
+
+
+def _emit_single_context_stage1_macros(
+    add: Any, aggregation: dict[str, Any], process_summary: dict[str, Any], audit: dict[str, Any]
+) -> None:
+    for name, value, source in _single_context_stage1_entries(aggregation, process_summary, audit):
+        add(name, value, source)
+
+
 def _emit_process_sequence_macros(add: Any, report: dict[str, Any]) -> None:
     report = _validate_process_sequences(report)
     conditions = report["conditions"]
@@ -1282,6 +1465,7 @@ def emit_numbers(
     cross_family_summary: dict[str, Any] | None = None,
     process_sequences: dict[str, Any] | None = None,
     compute_stratified_sensitivity: dict[str, Any] | None = None,
+    single_context_stage1: tuple[dict[str, Any], dict[str, Any], dict[str, Any]] | None = None,
 ) -> str:
     """Build a deterministic numbers.tex body using the published macro schema."""
 
@@ -1650,6 +1834,8 @@ def emit_numbers(
         _emit_process_sequence_macros(add, process_sequences)
     if compute_stratified_sensitivity is not None:
         _emit_compute_stratified_macros(add, compute_stratified_sensitivity)
+    if single_context_stage1 is not None:
+        _emit_single_context_stage1_macros(add, *single_context_stage1)
 
     # The power sentence uses the confirmed A4:A1 prompt-collapsed counts.
     # Keep raw counts for the power inversion and round only displayed counts.
@@ -1706,20 +1892,55 @@ def _read_json_object(path: Path, label: str) -> dict[str, Any]:
     return value
 
 
+def _render_single_context_stage1_block(
+    aggregation: dict[str, Any], process_summary: dict[str, Any], audit: dict[str, Any]
+) -> str:
+    lines = ["% A8 stage-1 exploratory macros."]
+    for name, value, source in _single_context_stage1_entries(aggregation, process_summary, audit):
+        lines.extend([_source_comment(source), f"\\newcommand{{{name}}}{{{value}}}"])
+    return "\n".join(lines) + "\n"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("aggregations", nargs="+", type=Path)
-    parser.add_argument("--contrasts", required=True, type=parse_contrasts)
+    parser.add_argument("aggregations", nargs="*", type=Path)
+    parser.add_argument("--contrasts", type=parse_contrasts)
     parser.add_argument("--process-summaries", nargs="+", type=Path, default=[])
     parser.add_argument("--length-control-summaries", nargs="+", type=Path, default=[])
     parser.add_argument("--cross-family-summary", type=Path)
     parser.add_argument("--process-sequences", type=Path)
     parser.add_argument("--compute-stratified-sensitivity", type=Path)
+    parser.add_argument(
+        "--a8-stage1",
+        nargs=3,
+        type=Path,
+        metavar=("AGGREGATION", "PROCESS_SUMMARY", "STRUCTURAL_AUDIT"),
+    )
     parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[1] / "numbers.tex")
     cost_group = parser.add_mutually_exclusive_group()
     cost_group.add_argument("--public-prices", type=Path)
     cost_group.add_argument("--no-cost", action="store_true")
     args = parser.parse_args()
+    if not args.aggregations and args.a8_stage1 is None:
+        parser.error("at least one aggregation or --a8-stage1 is required")
+    if args.aggregations and args.contrasts is None:
+        parser.error("--contrasts is required with aggregation inputs")
+    if not args.aggregations:
+        aggregation, process_summary, audit = (
+            _read_json_object(path, label)
+            for path, label in zip(args.a8_stage1, ("A8 aggregation", "A8 process summary", "A8 structural audit"))
+        )
+        existing_text = args.output.read_text(encoding="utf-8") if args.output.is_file() else ""
+        marker = "% A8 stage-1 exploratory macros."
+        if marker in existing_text:
+            existing_text = existing_text.split(marker, 1)[0].rstrip() + "\n"
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(
+            existing_text.rstrip() + "\n\n" + _render_single_context_stage1_block(aggregation, process_summary, audit),
+            encoding="utf-8",
+        )
+        print(f"wrote {args.output}")
+        return
     aggregations = [_read_json_object(path, "aggregation") for path in args.aggregations]
     existing = _existing_definitions(args.output)
     process_summaries = [_read_json_object(path, "process summary") for path in args.process_summaries]
@@ -1739,6 +1960,14 @@ def main() -> None:
         if args.compute_stratified_sensitivity is not None
         else None
     )
+    single_context_stage1 = (
+        tuple(
+            _read_json_object(path, label)
+            for path, label in zip(args.a8_stage1, ("A8 aggregation", "A8 process summary", "A8 structural audit"))
+        )
+        if args.a8_stage1 is not None
+        else None
+    )
     public_prices = _public_prices(args.public_prices) if not args.no_cost else None
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
@@ -1752,6 +1981,7 @@ def main() -> None:
             cross_family_summary,
             process_sequences,
             compute_stratified_sensitivity,
+            single_context_stage1,
         ),
         encoding="utf-8",
     )
