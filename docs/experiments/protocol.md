@@ -214,6 +214,10 @@ The runner records each judge's base-model family and the generator family for e
 
 Exploratory scoring may record a same-family judge under an explicit flag, and such scores never enter confirmatory analysis.
 
+### Same-family confirmatory judging (2026-09-29)
+
+The confirmatory pairwise scoring reported in the paper used `gpt-5.6-sol` on outputs from `gpt-5.6-luna`; both models share a model family, and the run used `allow_same_family_judge=true`. This departs from the rule above that same-family scores never enter confirmatory analysis. The `claude-sonnet-5` judge was run afterwards as a robustness check on three contrasts, not averaged into the estimand. The paper discloses this deviation in its Limitations section.
+
 The no-retrieval rule applies to generators and judges. Judges receive only the assignment, the permitted supplied context, and the blinded output or output pair. Judges do not receive agent traces, internal role names, or condition labels.
 
 ## Product quality and length outcomes
