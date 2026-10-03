@@ -53,10 +53,10 @@
 & Writing process
 & \yes
 & Adaptive processes
-& One context (paragraph-scale) \\
+& One context; one paragraph per \texttt{Translating} step \\
 \bottomrule
 \end{tabular}%
 }
-\caption{Experimental conditions. The second column states what, if anything, is selected next during generation. The process-level interventions remove the explicit goal representation or adaptive process ordering while keeping separated role contexts. \condSingleWriter\ retains adaptive process choice and the goal network but removes subagent delegation and fixes paragraph-scale recursion, so it changes several execution factors together.}
+\caption{Experimental conditions. The second column states what, if anything, is selected next during generation. The process-level interventions remove the explicit goal representation or adaptive process ordering while keeping separate \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} contexts. \condSingleWriter\ retains adaptive process choice and the goal network but removes subagent delegation and restricts each \texttt{Translating} step to one paragraph before the next process decision, so it changes several execution factors together.}
 \label{tab:experimental-conditions}
 \end{table*}
