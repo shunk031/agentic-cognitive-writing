@@ -73,7 +73,7 @@ jobs:
           test "$pages" -gt 0
           ./tools/render-pages.sh $(seq 1 "$pages")
 
-      - name: Upload PDF, logs, Markdown build, and page renders
+      - name: Upload PDF, logs, Markdown build, page renders, and source figures
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: paper-pdf-${{ github.sha }}
@@ -85,3 +85,4 @@ jobs:
             paper/build/acl_latex.log
             paper/build/acl_latex.md
             paper/build/render/**/*.png
+            paper/fig/*.pdf
