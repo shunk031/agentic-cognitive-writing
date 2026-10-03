@@ -15,5 +15,3 @@ The three interventions modify this prompt contract directly. \condNoGoals\ forb
 
 \paragraph{Pairwise judge prompt.}
 The primary judge is instructed to act as an impartial judge comparing two responses to the same assignment. Its rubric covers instruction fulfillment, organization and global coherence, content adequacy and depth, style, voice and audience fit, factuality, and constraint fidelity. The prompt explicitly instructs the judge to avoid position bias and length bias, to use only the assignment and supplied context, and to choose \texttt{A}, \texttt{B}, or \texttt{tie}. Each pair is shown in both presentation orders; disagreement across the two orders becomes a tie. The judge returns a JSON record containing the winner, short exact evidence quotes from each response, and a brief rubric-grounded comparison.
-
-\input{tab/appendix-runtime-settings}
