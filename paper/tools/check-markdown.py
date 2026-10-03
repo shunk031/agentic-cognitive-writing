@@ -46,7 +46,7 @@ def check():
     )
     assert text.index("## Abstract") < text.index("## Introduction")
     assert "N annotators" not in text
-    assert "human raters is unknown" in text
+    assert "human preference is unknown" in text
     assert "(Flower and Hayes, 1981)" in text
     assert "Table 3" in text
     assert "process-selection policy" in text
@@ -85,7 +85,7 @@ def check():
             f"Tables in Markdown: {', '.join(md_tables)}",
             f"Table-count diff: 0; {len(pipe_tables)} Markdown pipe tables",
             f"Word count (whitespace-delimited Markdown tokens): {len(text.split())}",
-            "Human-evaluation wording: no human evaluation; agreement with human raters is unknown",
+            "Human-evaluation wording: no human evaluation; relationship between model-judge preference and human preference is unknown",
             "",
         ]
     )
