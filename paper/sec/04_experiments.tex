@@ -1,12 +1,7 @@
-\subsection{Research questions}
-\label{sec:research-questions}
-
-We ask two questions. \textbf{RQ1} asks whether organizing generation around writing processes improves long-form writing relative to generation with no intermediate choice, a fixed stage sequence, and adaptive choice over task nodes. \textbf{RQ2} asks which theory-derived commitments account for any improvement: an explicit goal representation, adaptive process ordering, or separate \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} contexts. We use process traces to interpret RQ2 rather than treating trace behavior as a separate product claim.
-
 \subsection{Conditions}
 \label{sec:baselines}
 
-We compare seven experimental conditions under the same generator and coding-agent harness.
+We answer RQ1 and RQ2 with seven experimental conditions under the same generator and coding-agent harness.
 
 The first three conditions separate the presence of structure from the object of adaptive choice. \condSinglePass\ generates the document in one call and therefore makes no intermediate control decision. \condStaged\ executes a fixed \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write} sequence: it introduces process-like stages but does not choose among them. \condTaskPlanning\ follows the adaptive task-planning pattern of WriteHERE~\cite{xiong2025beyond}, selecting dependency-satisfied nodes from an evolving task graph. It therefore provides adaptive control, but the choice is over task nodes rather than writing processes. These are controlled re-implementations on our generator and coding-agent harness rather than executions of the published systems.
 
@@ -22,7 +17,7 @@ We use WritingBench~\cite{wu2026writingbench}, HelloBench~\cite{que2024hellobenc
 
 We select the 100 prompts per benchmark that request the longest outputs, for 300 prompts total. The ranking combines prompt word count with the largest explicitly requested output length; we exclude pilot identifiers and prompts requesting more than 6,000 words in either component. This longest-output slice is intended to make differences between control strategies easier to observe in long-form settings. The conclusions therefore concern this slice rather than the full benchmark distributions. All conditions receive the same prompt and benchmark information, and external retrieval is disabled.
 
-\subsection{Controlled implementation}
+\subsection{Implementation and replications}
 \label{sec:implementation}
 
 We hold the generator, task input, available information, tool availability, and final-output contract fixed across conditions. Every prompt--condition pair is generated in three independent replications. The generator is \modelGen; runtime details are reported in Appendix~\ref{app:runtime}.
