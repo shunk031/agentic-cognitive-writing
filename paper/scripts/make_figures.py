@@ -18,19 +18,19 @@ from matplotlib.ticker import PercentFormatter
 
 
 CONTRASTS = (
-    ("A4:A1", "Full", "Single-pass"),
-    ("A4:A2", "Full", "Staged"),
-    ("A4:A3", "Full", "Task-planning"),
-    ("A4:A5", "Full", "No-goals"),
-    ("A4:A6", "Full", "Fixed-order"),
+    ("A4:A1", "Agentic CogWriter", "Single-pass"),
+    ("A4:A2", "Agentic CogWriter", "Staged"),
+    ("A4:A3", "Agentic CogWriter", "Task-planning"),
+    ("A4:A5", "Agentic CogWriter", "No-goals"),
+    ("A4:A6", "Agentic CogWriter", "Fixed-order"),
     ("A7:A1", "Single-writer", "Single-pass"),
-    ("A7:A4", "Single-writer", "Full"),
+    ("A7:A4", "Single-writer", "Agentic CogWriter"),
     ("A7:A5", "Single-writer", "No-goals"),
 )
 ROBUSTNESS_CONTRASTS = (
-    ("A4:A1", "Full", "Single-pass"),
-    ("A4:A3", "Full", "Task-planning"),
-    ("A4:A5", "Full", "No-goals"),
+    ("A4:A1", "Agentic CogWriter", "Single-pass"),
+    ("A4:A3", "Agentic CogWriter", "Task-planning"),
+    ("A4:A5", "Agentic CogWriter", "No-goals"),
 )
 BENCHMARKS = ("WritingBench", "HelloBench", "DoLoMiTes")
 REFERENCE_RATE = 0.5
@@ -349,7 +349,7 @@ PROCESS_LABELS = {
     "translating": "T",
     "reviewing": "R",
 }
-PROCESS_SEQUENCE_CONDITIONS = (("A4", "Full"), ("A6", "Fixed-order"))
+PROCESS_SEQUENCE_CONDITIONS = (("A4", "Agentic CogWriter"), ("A6", "Fixed-order"))
 PROCESS_STATES = ("planning", "translating", "reviewing", "END")
 PROCESS_AXIS_LABELS = ("P", "T", "R", "E")
 
@@ -422,8 +422,8 @@ def save_process_sequences_a(report: dict[str, Any], output: Path) -> None:
     sequence_axis.set_axisbelow(True)
     sequence_axis.tick_params(axis="x", labelsize=7)
     sequence_axis.axhline(4.5, color="#888888", linewidth=0.7)
-    sequence_axis.text(0.07, 1.055, "Full", transform=sequence_axis.transAxes, ha="left", va="bottom", fontsize=7, color=colors[0])
-    sequence_axis.text(0.14, 1.055, "Fixed-order", transform=sequence_axis.transAxes, ha="left", va="bottom", fontsize=7, color=colors[1])
+    sequence_axis.text(0.07, 1.055, "Agentic CogWriter", transform=sequence_axis.transAxes, ha="left", va="bottom", fontsize=7, color=colors[0])
+    sequence_axis.text(0.32, 1.055, "Fixed-order", transform=sequence_axis.transAxes, ha="left", va="bottom", fontsize=7, color=colors[1])
     figure.subplots_adjust(left=0.20, right=0.99, top=0.90, bottom=0.20)
     figure.savefig(output, format="pdf", bbox_inches="tight")
     plt.close(figure)
