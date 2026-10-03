@@ -40,4 +40,7 @@ The chosen process determines which subagent runs next. The \texttt{Planner} dev
 
 Agentic CogWriter imposes no fixed order on the three processes. A translating pass can expose a planning problem, and a reviewing pass can lead back to planning or translating. Reviewing can also propose a change to the goal network. The \texttt{Monitor} accepts or rejects each such proposal and records the disposition in the process history. A run ends after reviewing when the \texttt{Monitor} chooses no further process.
 
-This implementation makes three commitments independently testable: whether to maintain an explicit evolving goal representation, whether to choose the process order adaptively, and whether to execute the writing processes in separate \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} contexts. Section~\ref{sec:baselines} defines the experimental conditions used to test these commitments.
+\subsection{Testable design commitments}
+\label{sec:method-commitments}
+
+The architecture makes three commitments that can be examined experimentally. First, it maintains an explicit evolving goal representation rather than relying only on the model's working context. Second, it lets the \texttt{Monitor} choose the process order adaptively rather than enforcing a fixed cycle. Third, it executes \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} in separate \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} contexts. The first two commitments admit single-factor interventions in our design. The third is probed diagnostically rather than isolated cleanly because the single-writer condition also changes delegation and how much text is produced between process decisions. Section~\ref{sec:baselines} defines these conditions.
