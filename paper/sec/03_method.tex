@@ -1,4 +1,4 @@
-Agentic CogWriter repeats a simple control loop until the \texttt{Monitor} decides that no further writing process is needed. At the start of each iteration, the \texttt{Monitor} reads the external records maintained by the agent, chooses one writing process, and dispatches the corresponding role agent. When that role finishes, its output is written back to the shared records and control returns to the \texttt{Monitor}.
+Agentic CogWriter repeats a simple control loop until the \texttt{Monitor} decides that no further writing process is needed. At the start of each iteration, the \texttt{Monitor} reads the external records maintained by the agent, chooses one writing process, and dispatches the corresponding subagent. When that subagent finishes, its output is written back to the shared records and control returns to the \texttt{Monitor}.
 
 \subsection{External writing records}
 \label{sec:method-control-state}
@@ -33,11 +33,11 @@ a_t=\pi_{\mathrm{monitor}}(S_t),
 %
 where $\pi_{\mathrm{monitor}}$ denotes the \emph{process-selection policy}. In our implementation, this policy is the prompted decision made by the host agent; it is not a separately trained model.
 
-The chosen process determines which role agent runs next. The \texttt{Planner} develops or reorganizes goals, the \texttt{Translator} realizes active goals as prose in the shared draft, and the \texttt{Reviewer} evaluates the draft against the active goals and returns verdicts and proposals. These role outputs do not choose the next process themselves. After a role finishes, the \texttt{Monitor} reads the updated records, reconciles any proposals, and makes the next process choice.
+The chosen process determines which subagent runs next. The \texttt{Planner} develops or reorganizes goals, the \texttt{Translator} realizes active goals as prose in the shared draft, and the \texttt{Reviewer} evaluates the draft against the active goals and returns verdicts and proposals. These subagents do not choose the next process themselves. After a subagent finishes, the \texttt{Monitor} reads the updated records, reconciles any proposals, and makes the next process choice.
 
 \subsection{Control loop}
 \label{sec:method-monitor}
 
 Agentic CogWriter imposes no fixed order on the three processes. A translating pass can expose a planning problem, and a reviewing pass can lead back to planning or translating. Reviewing can also propose a change to the goal network. The \texttt{Monitor} accepts or rejects each such proposal and records the disposition in the process history. A run ends after reviewing when the \texttt{Monitor} chooses no further process.
 
-This implementation makes three commitments independently testable: whether to maintain an explicit evolving goal representation, whether to choose the process order adaptively, and whether to execute the writing processes in separated role contexts. Section~\ref{sec:baselines} defines the experimental conditions used to test these commitments.
+This implementation makes three commitments independently testable: whether to maintain an explicit evolving goal representation, whether to choose the process order adaptively, and whether to execute the writing processes in separate \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} contexts. Section~\ref{sec:baselines} defines the experimental conditions used to test these commitments.
