@@ -25,13 +25,9 @@ jobs:
         working-directory: paper
         run: ./tools/build-pdf.sh
 
-      - name: Build Markdown manuscript
+      - name: Build and check Markdown manuscript
         working-directory: paper
         run: ./tools/build-markdown.sh
-
-      - name: Check generated Markdown
-        working-directory: paper
-        run: ./tools/check-markdown.sh
 
       - name: Check LaTeX diagnostics
         shell: bash
