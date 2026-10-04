@@ -6,12 +6,12 @@
 \begin{tabular}{llllccc}
 \toprule
 \textbf{Method}
-& \textbf{Persistent control state}
+& \textbf{State carried across steps}
 & \textbf{Unit advanced}
 & \textbf{Next-step rule}
-& \textbf{Adaptive}
-& \textbf{Process selectable}
-& \textbf{Evolving structure} \\
+& \textbf{Adaptive?}
+& \textbf{Writing process selectable?}
+& \textbf{Structure can change?} \\
 \midrule
 Re$^3$~\cite{yang2022re3}
 & Plan + draft
@@ -47,6 +47,6 @@ IS-CoT~\cite{sun2026cot}
 \bottomrule
 \end{tabular}%
 }
-\caption{Control organization in representative long-form writing systems. ``Adaptive'' indicates that the next control unit is chosen online rather than advanced by a prescribed order. ``Process selectable'' is stricter: a writing process itself is the unit that can be selected next. ``Evolving structure'' indicates an explicit plan, task, or goal structure that can change during generation. \partly\ denotes a restricted form of the property.}
+\caption{How representative long-form writing systems organize generation. ``Adaptive'' means that the next unit is chosen online rather than advanced by a prescribed order. ``Writing process selectable'' is stricter: a writing process itself can be chosen as the next operation. ``Structure can change'' refers to an explicit plan, task, or goal structure that can be revised during generation. \partly\ denotes a restricted form of the property.}
 \label{tab:architecture-comparison}
 \end{table*}
