@@ -1,22 +1,20 @@
 \begin{table}[t]
 \centering
 \small
-\setlength{\tabcolsep}{5pt}
-\resizebox{\columnwidth}{!}{%
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{lr}
 \toprule
-\textbf{Observed Agentic CogWriter behavior}
+\textbf{Observed writing-loop behavior}
 & \textbf{Value} \\
 \midrule
-Completed runs following the canonical process cycle
+One Planning$\rightarrow$Translating$\rightarrow$Reviewing cycle
 & \AfourCycleCompliantRate \\
-\texttt{Reviewing}$\rightarrow$\texttt{Planning} returns
+Review followed by renewed Planning
 & \AfourReviewingToPlanningRate \\
-Runs accepting goal regeneration
+Runs accepting replacement of an existing goal
 & \AfourRegenerationRuns/\AfourRunCount \\
 \bottomrule
-\end{tabular}%
-}
-\caption{Observed writing-loop behavior. The trace records show how often \condAgenticCogWriter\ follows the canonical process cycle, returns from review to planning, and accepts replacement of an existing goal. Resource-use statistics are reported in Appendix~\ref{app:process-behavior}.}
+\end{tabular}
+\caption{Observed behavior of \condAgenticCogWriter\ across completed runs. The first row measures the canonical single-cycle path; the second measures explicit returns from review to planning; the third counts accepted goal regeneration.}
 \label{tab:process-dynamics}
 \end{table}
