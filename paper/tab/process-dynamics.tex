@@ -2,6 +2,7 @@
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{lr}
 \toprule
 \textbf{Observed Agentic CogWriter behavior}
@@ -14,7 +15,8 @@ Completed runs following the canonical process cycle
 Runs accepting goal regeneration
 & \AfourRegenerationRuns/\AfourRunCount \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Observable controller behavior. The trace data show how the \texttt{Monitor} uses process-order flexibility and goal regeneration rather than inferring latent reasoning. Resource-use statistics are reported in Appendix~\ref{app:process-behavior}.}
 \label{tab:process-dynamics}
 \end{table}
