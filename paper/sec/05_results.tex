@@ -1,36 +1,38 @@
-\subsection{Pointwise and benchmark-native scores}
+\subsection{Product-level quality}
 \label{sec:results-pointwise}
 
-We first situate the controlled conditions using benchmark-native scores and a standardized pointwise composite over product metrics. Table~\ref{tab:main-results} reports these secondary diagnostics from the initial replication. \condAgenticCogWriter\ has the strongest native and pointwise scores among the controlled conditions on WritingBench and HelloBench, while \condStaged\ has the strongest DoLoMiTes pointwise score. Thus, the product-level metrics show a competitive process-organized condition rather than uniform dominance across every benchmark and metric.
+We begin with the benchmark-native scores and standardized pointwise composite, which evaluate each output in isolation. Table~\ref{tab:main-results} reports these diagnostics for the initial replication. \condAgenticCogWriter\ obtains the strongest native and pointwise scores among the controlled systems on WritingBench and HelloBench. On DoLoMiTes, however, \condStaged\ has the strongest pointwise score. The pointwise results therefore show a competitive process-organized system, not one that dominates every benchmark and metric.
 
 \input{tab/main-results}
 
-All rows use our common generator, coding-agent harness, selected prompt slice, and output contract. The structured baselines instantiate organizations used in prior work, but the values are not directly comparable to published full-benchmark leaderboard scores. We therefore use matched-prompt pairwise preference as the primary outcome.
+All rows use the same generator, coding-agent harness, selected prompt slice, and output contract. Because the structured baselines are controlled re-implementations rather than the published systems themselves, these values should not be read as leaderboard comparisons with prior papers.
 
-\subsection{Pairwise preference (RQ1)}
+\subsection{Matched-prompt pairwise comparison}
 \label{sec:results-effectiveness}
 
-Under same-family judging, \condAgenticCogWriter\ is preferred to all tested baseline organizations. Table~\ref{tab:pairwise-results} reports descriptive across-replication summaries of the prompt-collapsed outcome. Its across-benchmark mean win rate is \PooledFourOneRateMean\ against \condSinglePass, \PooledFourTwoRateMean\ against \condStaged, and \PooledFourThreeRateMean\ against \condTaskPlanning. The direction is stable across benchmarks and replications: \condAgenticCogWriter\ is favored in every benchmark-by-replication cell against \condSinglePass\ and \condTaskPlanning, with only one exception against \condStaged. Replicate-specific sign tests with within-benchmark Holm correction support this pattern; the full intervals and cell-level decisions are reported in Appendix~\ref{app:pairwise-detail}. Together, these results provide evidence of a performance difference between the tested organizations without isolating which shared feature of \condAgenticCogWriter\ produces it.
+Direct comparison of outputs for the same prompt gives a clearer separation between control organizations. Table~\ref{tab:pairwise-results} reports descriptive mean win rates across replications after collapsing the two presentation orders for each prompt. \condAgenticCogWriter\ is preferred to \condSinglePass, \condStaged, and \condTaskPlanning, with across-benchmark mean win rates of \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean, respectively. The direction holds in every benchmark--replication cell against \condSinglePass\ and \condTaskPlanning, and in all but one cell against \condStaged. Replicate-specific sign tests with within-benchmark Holm correction support this pattern; Appendix~\ref{app:pairwise-detail} reports the intervals and cell-level decisions.
 
 \input{tab/pairwise-results}
 
-\subsection{Ablations (RQ2)}
+These comparisons show that the proposed process-organized system is preferred to the three tested alternatives under the primary pairwise evaluation. Because several architectural features change together across these systems, this comparison alone does not identify which feature produces the difference.
+
+\subsection{Ablations and execution diagnostics}
 \label{sec:results-mechanism}
 
-Table~\ref{tab:ablation-results} reports descriptive across-replication summaries for the two confirmatory single-factor interventions and the bundled diagnostic intervention. Removing the explicit goal representation leaves the pairwise result close to even, and no benchmark-by-replication cell survives Holm correction. Replacing adaptive process choice with the fixed process cycle yields the same inferential pattern. These contrasts do not establish equivalence; under the confirmatory design, neither intervention produces a detectable loss.
+Table~\ref{tab:ablation-results} tests two components of the full system. Removing the explicit goal network (\condNoGoals) leaves pairwise preference close to even, and no benchmark--replication cell is significant after Holm correction. Replacing runtime process choice with the fixed \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle (\condFixedOrder) gives the same inferential pattern. In other words, under these tests, neither intervention makes the modified system significantly worse than \condAgenticCogWriter. This is a failure to detect a degradation, not evidence that the systems are equivalent.
 
 \input{tab/ablation-results}
 
-The diagnostic \condSingleWriter\ condition performs substantially worse, but it is not a clean delegation or role-context ablation: it also changes control granularity and output length. The narrower post-hoc \condSingleContext\ check retains the process loop and shows no detectable difference from \condAgenticCogWriter\ after pooling benchmark outcomes within that exploratory replication (\SingleContextFullRate\ win rate for \condSingleContext, $p=\SingleContextFullP$, unadjusted). Because this run also differs in gateway entry point and transport, it only constrains a simple attribution to separated role contexts; it does not identify an alternative mechanism. Appendix~\ref{app:single-context} reports the benchmark-level results and implementation details.
+The bundled \condSingleWriter\ diagnostic is different: \condAgenticCogWriter\ is strongly preferred. That contrast cannot be attributed to role separation alone because \condSingleWriter\ simultaneously removes delegation, changes the amount of text produced between decisions, and changes output length. The narrower post-hoc \condSingleContext\ check keeps the process loop and does not show a significant pooled difference from \condAgenticCogWriter\ in its single exploratory replication (\SingleContextFullRate\ win rate for \condSingleContext, $p=\SingleContextFullP$, unadjusted). Because that run also changes gateway entry point and transport, it narrows but does not eliminate the execution confounds. Benchmark-level results appear in Appendix~\ref{app:single-context}.
 
-\subsection{Agent behavior (RQ3)}
+\subsection{How the monitor behaves}
 \label{sec:results-process-dynamics}
 
-The traces show how the available control flexibility is actually used. Table~\ref{tab:process-dynamics} summarizes observable controller behavior: the \texttt{Monitor} usually follows the \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle, rarely returns from \texttt{Reviewing} to \texttt{Planning}, and rarely accepts goal regeneration.
+The execution traces show that the \texttt{Monitor} uses less process-order flexibility than the architecture permits. Table~\ref{tab:process-dynamics} summarizes three observable behaviors. Most completed runs follow the canonical \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle; returns from \texttt{Reviewing} to \texttt{Planning} are rare; and accepted goal regeneration is also rare.
 
 \input{tab/process-dynamics}
 
-Figure~\ref{fig:process-sequences} shows the most frequent complete process sequences and transition counts for \condAgenticCogWriter\ and \condFixedOrder.
+Figure~\ref{fig:process-sequences} shows the most frequent complete sequences and transition counts for \condAgenticCogWriter\ and \condFixedOrder.
 
 \begin{figure*}[t]
 \centering
@@ -53,15 +55,17 @@ Figure~\ref{fig:process-sequences} shows the most frequent complete process sequ
 \label{fig:process-sequences}
 \end{figure*}
 
-The prevalence of the canonical cycle directly contextualizes the \condFixedOrder\ result: unrestricted scheduling often realizes an order close to the imposed cycle. Rare goal regeneration means only that accepted replacement of existing goals is uncommon; goals can still be created, developed, and consulted during later decisions and drafting.
+The frequent canonical cycle helps explain why forcing that order does not significantly worsen the pairwise result: the unrestricted system often chooses a similar order on its own. Rare goal regeneration has a narrower interpretation. It means that accepted replacement of an existing goal is uncommon; goals are still created, refined, and available to later planning, drafting, and review decisions.
 
-Table~\ref{tab:trace-outcome} connects realized process sequences to pairwise outcomes descriptively. The preference rate is similar whether \condAgenticCogWriter\ follows exactly one \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle or another sequence, both against \condFixedOrder\ and against \condSingleWriter. Thus, departures from the canonical cycle are not associated with a larger pairwise advantage in these comparisons.
+Table~\ref{tab:trace-outcome} asks whether the less common process sequences are associated with better outcomes. They are not. Pairwise preference is similar when \condAgenticCogWriter\ follows exactly one canonical cycle and when it realizes another sequence, both against \condFixedOrder\ and against \condSingleWriter. These splits are observational and do not establish a causal effect of any realized sequence.
 
 \input{tab/trace-outcome}
 
-These trace analyses characterize realized controller behavior; they do not identify the causal effect of removing the goal representation or adaptive scheduling. Detailed process counts and resource use appear in Appendix~\ref{app:process-behavior}.
+Additional process counts and resource-use statistics are reported in Appendix~\ref{app:process-behavior}.
 
-\subsection{Robustness}
+\subsection{Robustness checks}
 \label{sec:results-robustness}
 
-The RQ1 direction survives the tested output-length and compute restrictions where eligible comparisons are available. The same-family judge favors longer outputs overall, but \condAgenticCogWriter\ remains favored over \condSinglePass\ within the pre-specified length-matching bands and over \condStaged\ and \condTaskPlanning\ under the tightest available compute matching. No \condAgenticCogWriter--\condSinglePass\ pairs fall in that compute band. The cross-family judge preserves the pooled direction for the checked contrasts but returns ties frequently and reverses the WritingBench \condAgenticCogWriter--\condSinglePass\ direction. We therefore treat these analyses as descriptive robustness checks; full results appear in Appendix~\ref{app:sensitivity-analyses}.
+The main pairwise direction generally survives the tested output-length and compute restrictions where eligible comparisons are available. The same-family judge favors longer outputs overall, but \condAgenticCogWriter\ remains favored over \condSinglePass\ within the pre-specified length-matching bands. Under the tightest available compute matching, the direction also remains favorable against \condStaged\ and \condTaskPlanning; no \condAgenticCogWriter--\condSinglePass\ pairs fall in that compute band. These checks are descriptive because output length and realized compute are consequences of execution rather than randomized treatments.
+
+A cross-family judge preserves the pooled direction for the checked contrasts but produces many ties and reverses the WritingBench direction for \condAgenticCogWriter\ versus \condSinglePass. We therefore use it as a robustness check rather than replacement confirmatory evidence. Appendix~\ref{app:sensitivity-analyses} gives the full length, compute, and cross-family results.
