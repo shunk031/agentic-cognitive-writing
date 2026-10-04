@@ -4,7 +4,7 @@
 \setlength{\tabcolsep}{3.2pt}
 \begin{tabular}{lcc cc cc}
 \toprule
-\textbf{Condition}
+\textbf{System}
 & \multicolumn{2}{c}{\textbf{WritingBench}}
 & \multicolumn{2}{c}{\textbf{HelloBench}}
 & \multicolumn{2}{c}{\textbf{DoLoMiTes}} \\
@@ -13,27 +13,27 @@
 & \textbf{Native} & \textbf{Pointwise}
 & \textbf{Native} & \textbf{Pointwise} \\
 \midrule
-\multicolumn{7}{l}{\textit{Controlled baselines}} \\
+\multicolumn{7}{l}{\textit{Alternative writing architectures}} \\
 \condSinglePass
 & \WritingAoneNative & \WritingAonePoint
 & \HelloAoneNative & \HelloAonePoint
 & -- & \DoLoAonePoint \\
-\condStaged~\cite{yang2022re3,wan2025cognitive}
+\condStaged~\citep{yang2022re3,wan2025cognitive}
 & \WritingAtwoNative & \WritingAtwoPoint
 & \HelloAtwoNative & \HelloAtwoPoint
 & -- & \textbf{\DoLoAtwoPoint} \\
-\condTaskPlanning~\cite{xiong2025beyond}
+\condTaskPlanning~\citep{xiong2025beyond}
 & \WritingAthreeNative & \WritingAthreePoint
 & \HelloAthreeNative & \HelloAthreePoint
 & -- & \DoLoAthreePoint \\
 \midrule
-\multicolumn{7}{l}{\textit{Process-level control}} \\
-\condAgenticCogWriter
+\textbf{\condAgenticCogWriter}
 & \textbf{\WritingAfourNative} & \textbf{\WritingAfourPoint}
 & \textbf{\HelloAfourNative} & \textbf{\HelloAfourPoint}
 & -- & \DoLoAfourPoint \\
 \bottomrule
 \end{tabular}
-\caption{Product-level scores on the selected longest-output slice from the initial replication. Native scales are benchmark-specific; pointwise values are standardized composites, and higher is better within each benchmark. All conditions are controlled re-implementations under the same generator and harness, not published system scores. Bold marks the best value in each column.}
+\caption{Independent document-quality scores on the pre-committed \texttt{hard100} slice from the initial replication. Native scores remain on each benchmark's own scale; pointwise scores are standardized composites for which higher is better within a benchmark. Best scores in each column are in bold.}
 \label{tab:main-results}
 \end{table*}
+\footnotetext{All rows use our implementations with the same generator, harness, prompt slice, and output contract. They are not published leaderboard scores for the cited systems.}
