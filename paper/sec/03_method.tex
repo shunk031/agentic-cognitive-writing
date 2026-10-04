@@ -1,5 +1,7 @@
 Figure~\ref{fig:agentic-cogwriter} shows the architecture of \condAgenticCogWriter. The input is a writing task together with any task-specific context and output constraints; the output is a completed document. The system runs inside a coding-agent harness and uses a shared workspace to persist the document and intermediate writing state across agent calls. A host agent acts as the \texttt{Monitor}. Rather than following a pre-written sequence of writing stages, the \texttt{Monitor} repeatedly inspects the current workspace, decides what kind of writing work is needed next, and delegates that work to a specialized agent.
 
+\input{fig/tex/overview}
+
 \subsection{Persistent writing state}
 \label{sec:method-control-state}
 
