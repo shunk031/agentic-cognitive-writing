@@ -2,23 +2,23 @@
 \centering
 \begin{tikzpicture}[
   >=Latex,
-  node distance=4.5mm and 4mm,
-  box/.style={draw, rounded corners=1.5pt, align=center, inner sep=3.5pt, font=\small},
-  agent/.style={box, minimum width=0.28\columnwidth},
+  node distance=4.5mm and 3mm,
+  box/.style={draw, rounded corners=1.5pt, align=center, inner sep=3.2pt, font=\small},
+  agent/.style={box, minimum width=0.25\columnwidth},
   state/.style={box, minimum width=0.82\columnwidth},
   io/.style={box, minimum width=0.82\columnwidth},
   flow/.style={->, line width=0.55pt},
-  loop/.style={->, line width=0.55pt, rounded corners=5pt}
+  loop/.style={->, line width=0.55pt, rounded corners=4pt}
 ]
 
 \node[io] (task) {\textbf{Writing task}\\instruction $I$ \; + \; context $C$ \; + \; output contract $O$};
-\node[agent, below=of task] (monitor) {\textbf{Monitor}\\select next writing process};
+\node[agent, below=of task] (monitor) {\textbf{Monitor}\\select next process};
 
-\node[agent, below left=7mm and -1mm of monitor] (planner) {\textbf{Planner}\\\texttt{Planning}};
 \node[agent, below=7mm of monitor] (translator) {\textbf{Translator}\\\texttt{Translating}};
-\node[agent, below right=7mm and -1mm of monitor] (reviewer) {\textbf{Reviewer}\\\texttt{Reviewing}};
+\node[agent, left=2.5mm of translator] (planner) {\textbf{Planner}\\\texttt{Planning}};
+\node[agent, right=2.5mm of translator] (reviewer) {\textbf{Reviewer}\\\texttt{Reviewing}};
 
-\node[state, below=8mm of translator] (state) {\textbf{Persistent writing state}\\draft $D_t$ \; | \; goals $G_t$ \; | \; history $H_t$};
+\node[state, below=7mm of translator] (state) {\textbf{Persistent writing state}\\draft $D_t$ \; | \; goals $G_t$ \; | \; history $H_t$};
 \node[io, below=of state] (output) {\textbf{Completed document} $D_T$};
 
 \draw[flow] (task) -- (monitor);
@@ -28,7 +28,7 @@
 \draw[flow] (planner) -- (state);
 \draw[flow] (translator) -- (state);
 \draw[flow] (reviewer) -- (state);
-\draw[loop] (state.west) -| ([xshift=-3mm]monitor.west) -- (monitor.west);
+\draw[loop] (state.west) -- ++(-7mm,0) |- (monitor.west);
 \draw[flow, dashed] (state) -- node[right, font=\scriptsize]{terminate after review} (output);
 
 \end{tikzpicture}
