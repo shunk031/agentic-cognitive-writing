@@ -58,7 +58,7 @@
 \maketitle
 
 \begin{abstract}
-Long-form writing agents often organize generation around plans, sections, or tasks. We ask whether a controller should instead choose among writing processes. \condAgenticCogWriter\ operationalizes \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} as actions selected by a \texttt{Monitor} over a draft, goal network, and process history. Across multiple long-form benchmarks, same-family pairwise judging prefers it to \condSinglePass, \condStaged, and \condTaskPlanning. Yet removing explicit goals or fixing process order yields no detectable loss, and the \texttt{Monitor} usually follows the fixed process cycle. A post-hoc \condSingleContext\ check likewise finds no detectable pooled loss when separate role contexts are removed while the process loop is retained. The results support process-organized generation while leaving its causal mechanism unresolved, illustrating how cognitive theory can be turned into falsifiable agent-design hypotheses.
+Long-form writing agents typically organize generation around plans, sections, or tasks. We ask whether a controller should instead choose among writing processes. \condAgenticCogWriter\ makes \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} selectable actions coordinated by a \texttt{Monitor}. Across multiple long-form benchmarks, same-family pairwise judging prefers it to \condSinglePass, \condStaged, and \condTaskPlanning. However, removing explicit goals or fixing process order causes no detectable loss, and the \texttt{Monitor} usually follows the fixed process cycle. A post-hoc \condSingleContext\ check also shows no detectable pooled loss when role separation is removed while the process loop remains. These results support process-organized generation without identifying a single causal mechanism, and show how cognitive theory can be turned into falsifiable agent-design hypotheses.
 \end{abstract}
 
 \section{Introduction}
@@ -124,28 +124,6 @@ The following figure shows the prompt-collapsed pairwise estimates for each benc
 \label{app:process-behavior}
 Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first replication. For \condAgenticCogWriter, the first replication uses \AfourOutputTokens\ output-plus-reasoning tokens and \AfourInputTokens\ uncached input tokens per attempted run and records \AfourGoalRegenerated\ accepted goal regeneration. Across replications, the trace summaries contain mean totals of \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while the post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
 \input{tab/appendix-process}
-
-The following figure shows the process sequences and transition counts used to interpret the fixed-order ablation.
-\begin{figure*}[t]
-\centering
-\begin{minipage}[t]{\textwidth}
-\centering
-\includegraphics[width=\linewidth]{fig/process-sequences-a.pdf}\\
-(a)
-\end{minipage}\\[0.5em]
-\begin{minipage}[t]{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{fig/process-sequences-b.pdf}\\
-(b) \condAgenticCogWriter
-\end{minipage}\hfill
-\begin{minipage}[t]{0.48\textwidth}
-\centering
-\includegraphics[width=\linewidth]{fig/process-sequences-c.pdf}\\
-(c) \condFixedOrder
-\end{minipage}
-\caption{\texttt{Monitor} process selection across \condAgenticCogWriter\ and \condFixedOrder. Panel (a) shows the most frequent process sequences; panels (b) and (c) show transition counts. P, T, R, and E denote \texttt{Planning}, \texttt{Translating}, \texttt{Reviewing}, and termination.}
-\label{fig:appendix-process-sequences}
-\end{figure*}
 
 \section{Sensitivity analyses}
 \label{app:sensitivity-analyses}
