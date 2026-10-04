@@ -15,9 +15,9 @@ After observing the primary results, we added \condSingleContext\ as a post-hoc 
 \subsection{Benchmarks and prompts}
 \label{sec:benchmarks}
 
-We use WritingBench~\cite{wu2026writingbench}, HelloBench~\cite{que2024hellobench}, and DoLoMiTes~\cite{malaviya2025dolomites}. WritingBench covers general-purpose writing with task-specific criteria, HelloBench contains long-text generation tasks across several genres, and DoLoMiTes contains structured expert-writing tasks such as plans, reports, and design documents. Their source pools contain 1,000, 647, and 820 prompts, respectively.
+We use WritingBench~\cite{wu2026writingbench}, HelloBench~\cite{que2024hellobench}, and DoLoMiTes~\cite{malaviya2025dolomites}. WritingBench covers general-purpose writing with task-specific criteria, HelloBench contains long-text generation tasks across several genres, and DoLoMiTes contains structured expert-writing tasks such as plans, reports, and design documents.
 
-We select the 100 prompts per benchmark that request the longest outputs, for 300 prompts total. The ranking combines prompt word count with the largest explicitly requested output length; we exclude pilot identifiers and prompts requesting more than 6,000 words in either component. This longest-output slice is intended to make differences between control strategies easier to observe in long-form settings. The conclusions therefore concern this slice rather than the full benchmark distributions. All conditions receive the same prompt and benchmark information, and external retrieval is disabled.
+We evaluate a committed longest-output slice containing 100 prompts per benchmark, for 300 prompts total. Prompt selection is deterministic and fixed before generation: pilot prompts are excluded, and the remaining prompts are ranked using prompt length together with requested output length. This slice is intended to make differences between control strategies easier to observe in long-form settings, so our conclusions concern the selected slice rather than the full benchmark distributions. Appendix~\ref{app:prompts} gives the complete selection rule, prompt provenance, and generation contracts. All conditions receive the same prompt and benchmark information, and external retrieval is disabled.
 
 \subsection{Implementation and replications}
 \label{sec:implementation}
