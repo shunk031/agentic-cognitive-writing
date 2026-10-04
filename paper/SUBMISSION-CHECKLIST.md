@@ -18,5 +18,6 @@ The current sweep found no `TODO` or `provisional` token in `acl_latex.tex`, `se
 - Re-run the placeholder and anonymity-sensitive string/link sweep over `acl_latex.tex`, `sec/`, `tab/`, the rendered PDF, and any supplementary material.
 - Preserve citation coverage, with manuscript numbers sourced through `numbers.tex` and `scripts/make_numbers.py`.
 - Rebuild with `paper/tools/build-pdf.sh`, require zero overfull boxes and undefined references/citations/macros, inspect the `latexmk` log, and render all PDF pages before submission.
+- Regenerate and verify `paper/build/acl_latex.md` with `paper/tools/build-markdown.sh` so the reader entry point matches the TeX manuscript.
 - Confirm that the content page limit, required Limitations section, reference placement, appendix placement, anonymization, and supplementary-material rules still match the current ARR and target-venue call.
 - Preserve the benchmark order WritingBench, HelloBench, DoLoMiTes and the established section/appendix ownership unless the manuscript itself is intentionally revised.
