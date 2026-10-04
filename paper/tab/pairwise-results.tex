@@ -8,7 +8,7 @@
 & \textbf{WritingBench}
 & \textbf{HelloBench}
 & \textbf{DoLoMiTes}
-& \textbf{Pooled mean} \\
+& \textbf{Across benchmarks} \\
 \midrule
 \condAgenticCogWriter\ vs \condSinglePass
 & \WritingFourOneRateMean
@@ -27,6 +27,6 @@
 & \PooledFourThreeRateMean \\
 \bottomrule
 \end{tabular}
-\caption{Primary prompt-collapsed pairwise outcomes against the controlled baseline organizations. Prior-work citations indicate the organizational precedent represented by each structured baseline; all conditions are our controlled re-implementations. Each cell reports Agentic CogWriter's mean win rate among non-tied comparisons across independent replications. Replication variability, Wilson intervals, and Holm-corrected cells are reported in Appendix~\ref{app:pairwise-detail}.}
+\caption{Primary prompt-collapsed pairwise outcomes against the controlled baseline organizations. Prior-work citations indicate the organizational precedent represented by each structured baseline; all conditions are our controlled re-implementations. Benchmark columns report Agentic CogWriter's arithmetic mean of replicate-specific win rates among non-tied comparisons. For the final column, wins, losses, and ties are first pooled across benchmarks within each replication, and the resulting replicate-level win rates are then averaged. These means are descriptive summaries; confirmatory sign tests, replicate-specific Wilson intervals, and Holm decisions are reported in Appendix~\ref{app:pairwise-detail}.}
 \label{tab:pairwise-results}
 \end{table*}
