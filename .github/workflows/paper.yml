@@ -2,6 +2,11 @@ name: Paper build (manual)
 
 on:
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build; defaults to the dispatching ref
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -14,8 +19,17 @@ jobs:
       - name: Check out dispatched ref
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Record exact HEAD
+        id: checked_out
+        shell: bash
+        run: |
+          exact_head=$(git rev-parse HEAD)
+          echo "Checked out $exact_head"
+          echo "sha=$exact_head" >> "$GITHUB_OUTPUT"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -82,7 +96,7 @@ jobs:
       - name: Upload PDF, logs, Markdown build, and page renders
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: paper-pdf-${{ github.sha }}
+          name: paper-pdf-${{ steps.checked_out.outputs.sha }}
           if-no-files-found: error
           retention-days: 1
           path: |

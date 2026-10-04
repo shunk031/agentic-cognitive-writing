@@ -2,6 +2,11 @@ name: Paper TeX image (manual)
 
 on:
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build; defaults to the dispatching ref
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -14,6 +19,7 @@ jobs:
       - name: Check out dispatched ref
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 0
           persist-credentials: false
 
