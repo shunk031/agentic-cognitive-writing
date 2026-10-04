@@ -1,67 +1,58 @@
 \begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{3pt}
-\resizebox{\textwidth}{!}{%
+\setlength{\tabcolsep}{4.5pt}
 \begin{tabular}{lllll}
 \toprule
 \textbf{System}
-& \textbf{What happens next?}
-& \textbf{Explicit goals}
-& \textbf{Writing-process order}
+& \textbf{State used at step $t$}
+& \textbf{Unit advanced}
+& \textbf{Next-step rule}
 & \textbf{Execution} \\
 \midrule
-\multicolumn{5}{l}{\textit{Alternative writing architectures}} \\
-\midrule
 \condSinglePass
-& Full document in one call
-& \no
-& --
-& One context \\
-\condStaged~\cite{yang2022re3,wan2025cognitive}
-& Next fixed stage
-& \no
-& Fixed stages
-& One context \\
-\condTaskPlanning~\cite{xiong2025beyond}
-& Next task node
-& \no
-& Adaptive task scheduling
-& Delegated task contexts \\
+& $X$
+& whole document
+& one generation
+& one context \\
+\condStaged~\citep{yang2022re3,wan2025cognitive}
+& $X$, prior stage output
+& fixed stage
+& Pre-Write$\rightarrow$Write$\rightarrow$Re-Write
+& one context \\
+\condTaskPlanning~\citep{xiong2025beyond}
+& $(D_t,T_t)$
+& task node $v_t$
+& $v_t=\pi_{\mathrm{task}}(D_t,T_t)$
+& task graph \\
 \midrule
-\multicolumn{5}{l}{\textit{Proposed architecture and component variants}} \\
-\midrule
-\condAgenticCogWriter
-& Next writing process
-& \yes
-& Selected online
-& Specialized role agents \\
+\textbf{\condAgenticCogWriter}
+& $\mathbf{(D_t,G_t,H_t)}$
+& \textbf{writing process $a_t$}
+& $\mathbf{a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)}$
+& \textbf{role subagent} \\
 \condNoGoals
-& Next writing process
-& \no
-& Selected online
-& Specialized role agents \\
+& $(D_t,H_t)$
+& writing process $a_t$
+& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,H_t)$
+& role subagent \\
 \condFixedOrder
-& Next writing process
-& \yes
-& Fixed P$\rightarrow$T$\rightarrow$R cycle
-& Specialized role agents \\
-\midrule
-\multicolumn{5}{l}{\textit{Execution variants}} \\
-\midrule
+& $(D_t,G_t,H_t)$
+& writing process $a_t$
+& fixed Planning$\rightarrow$Translating$\rightarrow$Reviewing
+& role subagent \\
 \condSingleWriter
-& Next writing process
-& \yes
-& Selected online
-& One writer context; one paragraph per drafting step \\
+& $(D_t,G_t,H_t)$
+& writing process $a_t$
+& adaptive process selection
+& one writer \\
 \condSingleContext
-& Next writing process
-& \yes
-& Selected online
-& One host-agent context \\
+& $(D_t,G_t,H_t)$
+& writing process $a_t$
+& adaptive process selection
+& Monitor context \\
 \bottomrule
-\end{tabular}%
-}
-\caption{Systems compared in the experiments. \condNoGoals\ removes the explicit goal record, while \condFixedOrder\ removes online choice of writing-process order. \condSingleWriter\ changes several execution properties together; \condSingleContext\ is a narrower post-hoc execution check. P, T, and R denote planning, translating (drafting), and reviewing.}
+\end{tabular}
+\caption{Systems compared under the shared generation contract. $X$ is the task input, $D_t$ the current draft, $G_t$ the goal network, $H_t$ the process history, and $T_t$ an adaptive task graph. \condSingleContext\ is post-hoc; all other rows were pre-specified. The equations are a common abstraction for comparison rather than the original notation of prior systems.}
 \label{tab:experimental-conditions}
 \end{table*}
