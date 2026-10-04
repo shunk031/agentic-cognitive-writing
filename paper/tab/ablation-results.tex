@@ -10,7 +10,7 @@
 & \textbf{DoLoMiTes}
 & \textbf{Across benchmarks} \\
 \midrule
-\multicolumn{5}{l}{\textit{Single-component variants}} \\
+\multicolumn{5}{l}{\textit{Ablations}} \\
 \condNoGoals
 & \WritingFourFiveRateMean
 & \HelloFourFiveRateMean
@@ -22,7 +22,7 @@
 & \DoLoFourSixRateMean
 & \PooledFourSixRateMean \\
 \midrule
-\multicolumn{5}{l}{\textit{Bundled execution variant}} \\
+\multicolumn{5}{l}{\textit{Bundled execution diagnostic}} \\
 \condSingleWriter
 & \WritingFourSevenRateMean
 & \HelloFourSevenRateMean
@@ -30,6 +30,6 @@
 & \PooledFourSevenRateMean \\
 \bottomrule
 \end{tabular}
-\caption{Pairwise results for variants of \condAgenticCogWriter. Entries are \condAgenticCogWriter{}'s mean win rates among non-tied comparisons across independent replications; the final column pools benchmarks within each replication before averaging. \condNoGoals\ and \condFixedOrder\ each change one component, whereas \condSingleWriter\ changes several execution properties together.}
+\caption{Ablations and execution diagnostic. Entries are \condAgenticCogWriter{}'s mean win rates among non-tied prompt-level comparisons across independent replications; the final column pools benchmarks within each replication before averaging. \condNoGoals\ and \condFixedOrder\ each modify one architectural component, whereas \condSingleWriter\ changes several execution properties together.}
 \label{tab:ablation-results}
 \end{table*}
