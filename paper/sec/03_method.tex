@@ -1,29 +1,19 @@
-Figure~\ref{fig:agentic-cogwriter} shows the architecture of \condAgenticCogWriter. The input is a writing task together with any task-specific context and output constraints; the output is a completed document. The system runs inside a coding-agent harness and uses a shared workspace to persist the document and intermediate writing state across agent calls. A host agent acts as the \texttt{Monitor}. Rather than following a pre-written sequence of writing stages, the \texttt{Monitor} repeatedly inspects the current workspace, decides what kind of writing work is needed next, and delegates that work to a specialized agent.
+Figure~\ref{fig:agentic-cogwriter} gives an overview of \condAgenticCogWriter. The input is a writing task together with any task-specific context and output constraints; the output is a completed document. The system runs on a coding-agent-style harness with a persistent workspace and subagent delegation. A host agent reads the current writing state, decides what kind of writing work should happen next, invokes the corresponding specialist, and repeats until the document is complete.
 
 \input{fig/tex/overview}
 
 \subsection{Persistent writing state}
 \label{sec:method-control-state}
 
-At each decision point, the shared workspace contains three records. The \emph{draft} is the document produced so far. The \emph{goal network} is an explicit hierarchical record of current writing goals. The \emph{process history} records previous writing-process choices and changes to those goals. We denote these records immediately before decision $t$ as
-\begin{equation}
-S_t=(D_t,G_t,H_t),
-\end{equation}
-where $D_t$, $G_t$, and $H_t$ are the draft, goal network, and process history, respectively. The original writing instruction and its constraints remain fixed task context available to the agents throughout the run.
+The shared workspace contains three records. The \emph{draft} stores the document produced so far. The \emph{goal network} stores an explicit hierarchy of current writing goals. The \emph{process history} records which writing activities have been executed and how the explicit goals have changed. The original user instruction and task constraints remain available throughout the run and are not rewritten into this state.
 
-The goal network operationalizes one idea from Flower and Hayes~\cite{flower1981cognitive}: writing is guided by goals that can develop as composition proceeds. In our implementation, goals can be created, made more specific, or replaced. We call replacement of an existing goal \emph{goal regeneration}. These events are logged so that changes to the explicit goal representation can be analyzed later. The goal network is therefore an observable system record, not a claim about latent cognitive state.
+The goal network is inspired by Flower and Hayes' account of writer-generated goals~\cite{flower1981cognitive}. In our implementation, goals may be created, refined, or replaced as writing proceeds; we call replacement of an existing goal \emph{goal regeneration}. These events are logged because they make one theory-derived design choice observable and testable. The goal network is an engineering representation used by the agent, not a claim about an underlying human-like cognitive state.
 
-\subsection{Agentic writing loop}
+\subsection{Online process selection and delegation}
 \label{sec:method-writing-processes}
 
-The \texttt{Monitor} can choose among three writing activities. \texttt{Planning} develops or reorganizes writing goals and structure; \texttt{Translating} turns the current goals into prose in the shared draft; and \texttt{Reviewing} evaluates the draft against the task and current goals and proposes revisions when needed. We write the runtime choice as
-\begin{equation}
-a_t \in \{\mathrm{Planning},\mathrm{Translating},\mathrm{Reviewing}\},
-\qquad
-a_t=\pi_{\mathrm{monitor}}(S_t),
-\end{equation}
-where $\pi_{\mathrm{monitor}}$ is the prompted decision made by the host agent rather than a separately trained policy.
+At each iteration, the host agent acts as the \texttt{Monitor}. It inspects the shared workspace and chooses one of three writing activities: planning, drafting, or reviewing. We retain Flower and Hayes' term \texttt{Translating} for the drafting activity in the implementation. Accordingly, the available process actions are \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing}.
 
-Once an activity is selected, the corresponding role agent executes it: the \texttt{Planner} performs \texttt{Planning}, the \texttt{Translator} performs \texttt{Translating}, and the \texttt{Reviewer} performs \texttt{Reviewing}. Each role agent reads the shared workspace and writes its updates back before returning control to the \texttt{Monitor}. Review may also produce a proposal to change the goal network; the \texttt{Monitor} accepts or rejects that proposal and records the decision. The loop continues from the updated state until the \texttt{Monitor} decides after review that no further writing action is needed.
+The selected activity is delegated to the corresponding role agent. The \texttt{Planner} develops goals and document structure. The \texttt{Translator} turns the current goals into prose in the shared draft. The \texttt{Reviewer} evaluates the draft against the task and active goals and can propose revisions or changes to the goal network. Each role agent writes its updates back to the shared workspace before returning control to the \texttt{Monitor}. A proposed goal replacement is accepted or rejected by the \texttt{Monitor} and recorded in the process history.
 
-This runtime choice is the main organizational difference from a fixed writing pipeline. The system may plan again after drafting, draft again after review, or revisit planning when review reveals a structural problem. The specialized role contexts are an implementation choice of the full system; the experiments vary both the process-order policy and several execution details to determine which parts of the architecture are associated with the observed performance.
+The process order is not fixed. Drafting can expose a structural problem that sends the system back to planning, and review can trigger either another drafting pass or renewed planning. A run terminates after review when the \texttt{Monitor} decides that no further writing activity is needed. This repeated state inspection and online process choice is the defining control loop of \condAgenticCogWriter; the experiments separately test whether the explicit goal record and flexible process order are necessary for its observed performance.
