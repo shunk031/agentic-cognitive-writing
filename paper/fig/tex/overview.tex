@@ -55,7 +55,7 @@
 
 % Process-level decision.
 \node[font=\bfseries] (processtitle) at (8.0,3.2)
-    {(b) Process-level control: Agentic CogWriter};
+    {(b) Process-level control: \condAgenticCogWriter};
 
 \node[state] (state) at (5.1,2.0)
     {\textbf{External records}\\draft / goal network\\process history};
@@ -92,6 +92,6 @@
     {\condSingleWriter\\\textit{diagnostic}};
 \end{tikzpicture}%
 }
-\caption{Two answers to the question of what a writing controller should choose next. Representative structured writing systems use task/content-level control, choosing a section, passage, or task node to work on (left). Agentic CogWriter uses process-level control, choosing among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} from the current draft, goal network, and process history (right). The confirmatory interventions remove the explicit goal representation or adaptive process ordering. \condSingleWriter\ is diagnostic because it also removes delegation and restricts each \texttt{Translating} step to one paragraph before the next process decision; a post-hoc \condSingleContext\ check varies role-context separation more narrowly and is reported separately.}
+\caption{Two answers to the question of what a writing controller should choose next. Representative structured writing systems either advance a content or task unit or follow a prescribed process sequence. \condAgenticCogWriter\ instead uses process-level control, repeatedly choosing among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} from the current draft, goal network, and process history. The confirmatory interventions remove the explicit goal representation or adaptive process ordering. \condSingleWriter\ is diagnostic because it also removes delegation and restricts each \texttt{Translating} step to one paragraph before the next process decision; a post-hoc \condSingleContext\ check varies role-context separation more narrowly and is reported separately.}
 \label{fig:agentic-cogwriter}
 \end{figure*}
