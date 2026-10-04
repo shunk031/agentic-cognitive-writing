@@ -3,7 +3,7 @@
 \small
 \begin{tabular}{@{}p{0.20\textwidth}p{0.12\textwidth}rrrrp{0.27\textwidth}@{}}
 \toprule
-Contrast & Scope & $n$ & Dropped & W/L/T & Rate & Wilson 95\% / $p$ \\
+Contrast & Scope & $n$ & Dropped & W/L/T & Rate & Wilson interval / $p$ \\
 \midrule
 \condSingleContext\\vs.~\condAgenticCogWriter & WritingBench & \SingleContextWritingFullN & \SingleContextWritingFullDropped & \SingleContextWritingFullWLT & \SingleContextWritingFullRate & \SingleContextWritingFullInterval; $\SingleContextWritingFullP$ \\
 \condSingleContext\\vs.~\condAgenticCogWriter & HelloBench & \SingleContextHelloFullN & \SingleContextHelloFullDropped & \SingleContextHelloFullWLT & \SingleContextHelloFullRate & \SingleContextHelloFullInterval; $\SingleContextHelloFullP$ \\
@@ -16,7 +16,7 @@ Contrast & Scope & $n$ & Dropped & W/L/T & Rate & Wilson 95\% / $p$ \\
 \condSingleContext\\vs.~\condSinglePass & Pooled & \SingleContextSinglePassN & \SingleContextSinglePassDropped & \SingleContextSinglePassWLT & \SingleContextSinglePassRate & \SingleContextSinglePassInterval; $\SingleContextSinglePassP$ \\
 \bottomrule
 \end{tabular}
-\caption{Exploratory single-context results added after the primary results. The one-replication outcomes were judged by \modelJudge\ against replication-1 outputs without multiplicity adjustment. The runtime used a different gateway entry point and plain HTTP transport, with the generator model unchanged.}
+\caption{Exploratory single-context results added after the primary results. The outcomes were judged by \modelJudge\ against the matched primary-condition outputs without multiplicity adjustment. The runtime used a different gateway entry point and plain HTTP transport, with the generator model unchanged.}
 \label{tab:appendix-single-context-pairwise}
 \end{table*}
 
@@ -36,6 +36,6 @@ Ledger entries with proposal & \SingleContextAoneLedgerWithProposal & \SingleCon
 Spawns per attempted run & \AoneSpawns & \AfourSpawns & \SingleContextSpawns \\
 \bottomrule
 \end{tabular}
-\caption{Process summaries are from the first replication for the primary conditions and the single exploratory replication for \condSingleContext. Structural auditing found \SingleContextAEightMissingPlanning\ A8 prompts missing \texttt{Planning}, \SingleContextAEightMissingTranslating\ missing \texttt{Translating}, and \SingleContextAEightMissingBoth\ missing both, out of \SingleContextAEightAuditN; the A4 replication-1 audit found \SingleContextAFourMissingPlanning\ prompts missing \texttt{Planning} and \SingleContextAFourMissingTranslating\ missing \texttt{Translating}, out of \SingleContextAFourAuditN.}
+\caption{Process summaries use the matched primary-condition replication and the exploratory \condSingleContext\ run. Structural auditing found \SingleContextAEightMissingPlanning\ \condSingleContext\ prompts missing \texttt{Planning}, \SingleContextAEightMissingTranslating\ missing \texttt{Translating}, and \SingleContextAEightMissingBoth\ missing both, out of \SingleContextAEightAuditN; the matched \condAgenticCogWriter\ audit found \SingleContextAFourMissingPlanning\ prompts missing \texttt{Planning} and \SingleContextAFourMissingTranslating\ missing \texttt{Translating}, out of \SingleContextAFourAuditN.}
 \label{tab:appendix-single-context-process}
 \end{table*}
