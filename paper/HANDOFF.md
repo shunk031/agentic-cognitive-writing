@@ -4,8 +4,8 @@ This note records the public-safe standing rules for the manuscript in this dire
 
 ## Manuscript decisions
 
-- The study compares seven writers on the most demanding prompts from WritingBench, HelloBench, and DoLoMiTes.
-- The study uses three independent replications. The confirmatory outcome collapses the two presentation orders to one prompt-level outcome, excludes ties from the exact sign test, and applies Holm correction to the locked benchmark-by-contrast family.
+- The pre-specified study compares seven writers on the most demanding prompts from WritingBench, HelloBench, and DoLoMiTes; the manuscript also reports a post-hoc exploratory `Single-context` condition used only to test the attribution of the `Single-writer` gap.
+- The study uses three independent replications. The confirmatory outcome collapses the two presentation orders to one prompt-level outcome, excludes ties from the exact sign test, and applies Holm correction to the locked benchmark-by-contrast family. The `Single-context` check sits outside that confirmatory family.
 - The manuscript distinguishes the `Monitor`, `Planner`, `Translator`, and `Reviewer` agents from the `Planning`, `Translating`, and `Reviewing` processes.
 - The coding-agent harness, the instruction-based ablations, and the three benchmark sources are documented in the manuscript and in the repository's experiment protocol.
 
