@@ -58,14 +58,14 @@
 \maketitle
 
 \begin{abstract}
-Long-form writing agents typically organize generation around plans, sections, or tasks. We ask whether writing processes should instead form the controller's action space. \condAgenticCogWriter\ makes \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} selectable actions coordinated by a \texttt{Monitor}. Across multiple long-form benchmarks, same-family pairwise judging prefers this process-organized design to \condSinglePass, \condStaged, and \condTaskPlanning. Yet removing the explicit goal representation or fixing process order produces no detectable loss, and the \texttt{Monitor} usually follows the fixed process cycle. Thus, the tested organization is preferred under the primary pairwise evaluation without identifying a single mechanism for the difference, illustrating how cognitive theory can yield falsifiable agent-design hypotheses.
+Long-form writing is increasingly handled by language-model-based agents, but producing a coherent document requires more than extending text token by token: a system must decide when to plan, draft, inspect, and revise as the document evolves. Existing writing systems typically organize this work around outlines, task graphs, or prescribed stage sequences. Inspired by Flower and Hayes' cognitive process theory of writing, we propose \condAgenticCogWriter, a coding-agent-based system in which a \texttt{Monitor} repeatedly chooses the next writing activity and delegates planning, drafting, or reviewing to specialized agents that share persistent writing state. We evaluate \condAgenticCogWriter\ on three long-form writing benchmarks. On benchmark-native and pointwise metrics, it is strongest among our controlled systems on WritingBench and HelloBench but not on DoLoMiTes. In matched-prompt pairwise comparisons, it is preferred to one-shot generation, a fixed staged workflow, and adaptive task planning. Further interventions show that removing the explicit goal record or forcing a fixed planning--drafting--reviewing cycle does not significantly worsen pairwise preference, and the \texttt{Monitor} often chooses that cycle on its own. These results support process-organized writing as a promising agent architecture while showing that its advantage is not explained by goal bookkeeping or adaptive process ordering alone.
 \end{abstract}
 
 \section{Introduction}
 \label{sec:introduction}
 \input{sec/01_introduction}
 
-\section{Background and Related Work}
+\section{Related Work}
 \label{sec:related-work}
 \input{sec/02_related_work}
 
@@ -95,11 +95,6 @@ Long-form writing agents typically organize generation around plans, sections, o
 \clearpage
 
 \appendix
-
-\section{Decision comparison}
-\label{app:decision-comparison}
-Table~\ref{tab:architecture-comparison} summarizes how representative long-form writing systems advance generation under a common descriptive vocabulary.
-\input{tab/appendix-comparison}
 
 \section{Prompt and experiment configuration}
 \label{app:prompts}
