@@ -1,38 +1,38 @@
-\subsection{Product-level quality}
+\subsection{Pointwise and benchmark-native quality}
 \label{sec:results-pointwise}
 
-We begin with the benchmark-native scores and standardized pointwise composite, which evaluate each output in isolation. Table~\ref{tab:main-results} reports these diagnostics for the initial replication. \condAgenticCogWriter\ obtains the strongest native and pointwise scores among the controlled systems on WritingBench and HelloBench. On DoLoMiTes, however, \condStaged\ has the strongest pointwise score. The pointwise results therefore show a competitive process-organized system, not one that dominates every benchmark and metric.
+We begin by evaluating each generated document independently. Table~\ref{tab:main-results} reports benchmark-native scores and the standardized pointwise composite for the initial replication. \condAgenticCogWriter\ obtains the strongest native and pointwise scores among the controlled systems on WritingBench and HelloBench. On DoLoMiTes, however, \condStaged\ has the strongest pointwise score. The product-level metrics therefore show that \condAgenticCogWriter\ is competitive across the three benchmarks, but not uniformly best.
 
 \input{tab/main-results}
 
-All rows use the same generator, coding-agent harness, selected prompt slice, and output contract. Because the structured baselines are controlled re-implementations rather than the published systems themselves, these values should not be read as leaderboard comparisons with prior papers.
+All rows use the same generator, coding-agent harness, selected prompt slice, and output contract. Because the structured baselines are controlled re-implementations, these values are not direct comparisons with the published systems' leaderboard results.
 
-\subsection{Matched-prompt pairwise comparison}
+\subsection{Direct comparison of writing architectures}
 \label{sec:results-effectiveness}
 
-Direct comparison of outputs for the same prompt gives a clearer separation between control organizations. Table~\ref{tab:pairwise-results} reports descriptive mean win rates across replications after collapsing the two presentation orders for each prompt. \condAgenticCogWriter\ is preferred to \condSinglePass, \condStaged, and \condTaskPlanning, with across-benchmark mean win rates of \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean, respectively. The direction holds in every benchmark--replication cell against \condSinglePass\ and \condTaskPlanning, and in all but one cell against \condStaged. Replicate-specific sign tests with within-benchmark Holm correction support this pattern; Appendix~\ref{app:pairwise-detail} reports the intervals and cell-level decisions.
+We next compare outputs written for the same prompt. Table~\ref{tab:pairwise-results} reports descriptive mean win rates across replications after collapsing the two presentation orders for each prompt. \condAgenticCogWriter\ is preferred to the one-shot, fixed-stage, and adaptive task-planning baselines, with across-benchmark mean win rates of \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean, respectively. The direction holds in every benchmark--replication cell against \condSinglePass\ and \condTaskPlanning, and in all but one cell against \condStaged. Replicate-specific sign tests with within-benchmark Holm correction support this pattern; Appendix~\ref{app:pairwise-detail} reports the intervals and cell-level decisions.
 
 \input{tab/pairwise-results}
 
-These comparisons show that the proposed process-organized system is preferred to the three tested alternatives under the primary pairwise evaluation. Because several architectural features change together across these systems, this comparison alone does not identify which feature produces the difference.
+This comparison supports the process-organized architecture as a whole relative to the three tested alternatives. It does not yet identify which part of that architecture accounts for the difference, because the systems differ along several dimensions at once.
 
-\subsection{Ablations and execution diagnostics}
+\subsection{Which components account for the difference?}
 \label{sec:results-mechanism}
 
-Table~\ref{tab:ablation-results} tests two components of the full system. Removing the explicit goal network (\condNoGoals) leaves pairwise preference close to even, and no benchmark--replication cell is significant after Holm correction. Replacing runtime process choice with the fixed \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle (\condFixedOrder) gives the same inferential pattern. In other words, under these tests, neither intervention makes the modified system significantly worse than \condAgenticCogWriter. This is a failure to detect a degradation, not evidence that the systems are equivalent.
+Table~\ref{tab:ablation-results} reports the two single-component interventions and the bundled execution diagnostic. Removing the explicit goal network (\condNoGoals) leaves the pairwise comparison close to even, and no benchmark--replication cell remains significant after Holm correction. Fixing the process order to \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} (\condFixedOrder) yields the same inferential pattern. We therefore do not find evidence that either explicit goal bookkeeping or online process ordering is individually necessary for the observed advantage. These tests also do not establish that the modified systems are equivalent to the full system.
 
 \input{tab/ablation-results}
 
-The bundled \condSingleWriter\ diagnostic is different: \condAgenticCogWriter\ is strongly preferred. That contrast cannot be attributed to role separation alone because \condSingleWriter\ simultaneously removes delegation, changes the amount of text produced between decisions, and changes output length. The narrower post-hoc \condSingleContext\ check keeps the process loop and does not show a significant pooled difference from \condAgenticCogWriter\ in its single exploratory replication (\SingleContextFullRate\ win rate for \condSingleContext, $p=\SingleContextFullP$, unadjusted). Because that run also changes gateway entry point and transport, it narrows but does not eliminate the execution confounds. Benchmark-level results appear in Appendix~\ref{app:single-context}.
+The \condSingleWriter\ diagnostic produces a much larger difference in favor of \condAgenticCogWriter. That result is not attributable to role separation alone because \condSingleWriter\ simultaneously removes subagent delegation, changes how much text is produced between decisions, and changes output length. The narrower post-hoc \condSingleContext\ run preserves the process loop and shows no significant pooled difference from \condAgenticCogWriter\ in its single exploratory replication (\SingleContextFullRate\ win rate for \condSingleContext, $p=\SingleContextFullP$, unadjusted). Because that run also differs in gateway entry point and transport, it reduces but does not remove the execution confounds. Appendix~\ref{app:single-context} reports the benchmark-level results.
 
-\subsection{How the monitor behaves}
+\subsection{How does the writing loop behave in practice?}
 \label{sec:results-process-dynamics}
 
-The execution traces show that the \texttt{Monitor} uses less process-order flexibility than the architecture permits. Table~\ref{tab:process-dynamics} summarizes three observable behaviors. Most completed runs follow the canonical \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle; returns from \texttt{Reviewing} to \texttt{Planning} are rare; and accepted goal regeneration is also rare.
+Although \condAgenticCogWriter\ can choose the next writing process freely, its realized behavior is usually simple. Table~\ref{tab:process-dynamics} shows that most completed runs follow the canonical \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle. Returns from \texttt{Reviewing} to \texttt{Planning} are rare, and accepted goal regeneration is also rare.
 
 \input{tab/process-dynamics}
 
-Figure~\ref{fig:process-sequences} shows the most frequent complete sequences and transition counts for \condAgenticCogWriter\ and \condFixedOrder.
+Figure~\ref{fig:process-sequences} shows the most frequent complete process sequences and transition counts for \condAgenticCogWriter\ and \condFixedOrder.
 
 \begin{figure*}[t]
 \centering
@@ -51,13 +51,13 @@ Figure~\ref{fig:process-sequences} shows the most frequent complete sequences an
 \includegraphics[width=\linewidth]{fig/process-sequences-c.pdf}\\
 (c) \condFixedOrder
 \end{minipage}
-\caption{Observed \texttt{Monitor} process selection. Panel (a) shows the most frequent process sequences; panels (b) and (c) show transition counts for \condAgenticCogWriter\ and \condFixedOrder. P, T, R, and E denote \texttt{Planning}, \texttt{Translating}, \texttt{Reviewing}, and termination.}
+\caption{Observed writing-process selection. Panel (a) shows the most frequent complete sequences; panels (b) and (c) show transition counts for \condAgenticCogWriter\ and \condFixedOrder. P, T, R, and E denote \texttt{Planning}, \texttt{Translating} (drafting), \texttt{Reviewing}, and termination.}
 \label{fig:process-sequences}
 \end{figure*}
 
-The frequent canonical cycle helps explain why forcing that order does not significantly worsen the pairwise result: the unrestricted system often chooses a similar order on its own. Rare goal regeneration has a narrower interpretation. It means that accepted replacement of an existing goal is uncommon; goals are still created, refined, and available to later planning, drafting, and review decisions.
+The prevalence of the canonical cycle is consistent with the \condFixedOrder\ result: the unrestricted host agent often chooses an order close to the imposed cycle on its own. Rare goal regeneration has a narrower meaning. It indicates that replacement of an existing goal is uncommon; goals can still be created, refined, and consulted during later writing decisions.
 
-Table~\ref{tab:trace-outcome} asks whether the less common process sequences are associated with better outcomes. They are not. Pairwise preference is similar when \condAgenticCogWriter\ follows exactly one canonical cycle and when it realizes another sequence, both against \condFixedOrder\ and against \condSingleWriter. These splits are observational and do not establish a causal effect of any realized sequence.
+Table~\ref{tab:trace-outcome} tests whether the less common process sequences are associated with better outcomes. They are not. Pairwise preference is similar when \condAgenticCogWriter\ follows exactly one canonical cycle and when it realizes another sequence, both against \condFixedOrder\ and against \condSingleWriter. Because this split conditions on realized behavior rather than a randomized intervention, it is descriptive rather than causal.
 
 \input{tab/trace-outcome}
 
@@ -66,6 +66,6 @@ Additional process counts and resource-use statistics are reported in Appendix~\
 \subsection{Robustness checks}
 \label{sec:results-robustness}
 
-The main pairwise direction generally survives the tested output-length and compute restrictions where eligible comparisons are available. The same-family judge favors longer outputs overall, but \condAgenticCogWriter\ remains favored over \condSinglePass\ within the pre-specified length-matching bands. Under the tightest available compute matching, the direction also remains favorable against \condStaged\ and \condTaskPlanning; no \condAgenticCogWriter--\condSinglePass\ pairs fall in that compute band. These checks are descriptive because output length and realized compute are consequences of execution rather than randomized treatments.
+The main pairwise direction generally survives the tested output-length and compute restrictions where eligible comparisons are available. The primary judge favors longer outputs overall, but \condAgenticCogWriter\ remains favored over \condSinglePass\ within the pre-specified length-matching bands. Under the tightest available compute matching, the direction also remains favorable against \condStaged\ and \condTaskPlanning; no \condAgenticCogWriter--\condSinglePass\ pairs fall in that compute band. These analyses are descriptive because output length and realized compute are consequences of execution.
 
-A cross-family judge preserves the pooled direction for the checked contrasts but produces many ties and reverses the WritingBench direction for \condAgenticCogWriter\ versus \condSinglePass. We therefore use it as a robustness check rather than replacement confirmatory evidence. Appendix~\ref{app:sensitivity-analyses} gives the full length, compute, and cross-family results.
+A cross-family judge preserves the pooled direction for the checked contrasts but produces many ties and reverses the WritingBench direction for \condAgenticCogWriter\ versus \condSinglePass. We therefore treat it as a partial robustness check rather than a replacement for the primary evaluation. Appendix~\ref{app:sensitivity-analyses} gives the full length, compute, and cross-family results.
