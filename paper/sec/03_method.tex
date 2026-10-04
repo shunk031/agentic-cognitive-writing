@@ -38,7 +38,7 @@ The selected process determines what happens next. Under the full \condAgenticCo
 \subsection{Control loop}
 \label{sec:method-monitor}
 
-\condAgenticCogWriter\ imposes no fixed order on the three processes. A translating pass can expose a planning problem, and a reviewing pass can lead back to planning or translating. Reviewing can also propose a change to the goal network. The \texttt{Monitor} accepts or rejects each such proposal and records the disposition in the process history. A run ends after reviewing when the \texttt{Monitor} chooses no further process.
+\condAgenticCogWriter\ imposes no fixed order on the three processes. A \texttt{Translating} pass can expose a planning problem, and after \texttt{Reviewing} the \texttt{Monitor} can return to \texttt{Planning} or \texttt{Translating}. During \texttt{Reviewing}, the \texttt{Reviewer} may also propose a change to the goal network. The \texttt{Monitor} accepts or rejects each such proposal and records the disposition in the process history. A run ends after \texttt{Reviewing} when the \texttt{Monitor} chooses no further process.
 
 \subsection{Testable design commitments}
 \label{sec:method-commitments}
