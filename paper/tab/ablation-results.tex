@@ -4,13 +4,13 @@
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{lrrrr}
 \toprule
-\textbf{Intervention}
+\textbf{Variant}
 & \textbf{WritingBench}
 & \textbf{HelloBench}
 & \textbf{DoLoMiTes}
 & \textbf{Across benchmarks} \\
 \midrule
-\multicolumn{5}{l}{\textit{Confirmatory single-factor interventions}} \\
+\multicolumn{5}{l}{\textit{Single-component variants}} \\
 \condNoGoals
 & \WritingFourFiveRateMean
 & \HelloFourFiveRateMean
@@ -22,7 +22,7 @@
 & \DoLoFourSixRateMean
 & \PooledFourSixRateMean \\
 \midrule
-\multicolumn{5}{l}{\textit{Diagnostic bundled intervention}} \\
+\multicolumn{5}{l}{\textit{Bundled execution variant}} \\
 \condSingleWriter
 & \WritingFourSevenRateMean
 & \HelloFourSevenRateMean
@@ -30,6 +30,6 @@
 & \PooledFourSevenRateMean \\
 \bottomrule
 \end{tabular}
-\caption{Pairwise intervention outcomes against \condAgenticCogWriter. Entries are \condAgenticCogWriter{}'s mean win rates among non-tied comparisons across independent replications; the final column pools benchmarks within each replication before averaging. The first two rows are confirmatory single-factor interventions, whereas \condSingleWriter\ changes multiple execution factors and is interpreted diagnostically.}
+\caption{Pairwise results for variants of \condAgenticCogWriter. Entries are \condAgenticCogWriter{}'s mean win rates among non-tied comparisons across independent replications; the final column pools benchmarks within each replication before averaging. \condNoGoals\ and \condFixedOrder\ each change one component, whereas \condSingleWriter\ changes several execution properties together.}
 \label{tab:ablation-results}
 \end{table*}
