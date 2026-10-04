@@ -1,45 +1,52 @@
 \begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{>{\raggedright\arraybackslash}p{0.20\textwidth}
-                >{\raggedright\arraybackslash}p{0.24\textwidth}
-                >{\raggedright\arraybackslash}p{0.23\textwidth}
-                >{\raggedright\arraybackslash}p{0.22\textwidth}}
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llllccc}
 \toprule
 \textbf{Method}
-& \textbf{Writing structure}
-& \textbf{What advances next?}
-& \textbf{How it is selected} \\
+& \textbf{Persistent control state}
+& \textbf{Unit advanced}
+& \textbf{Next-step rule}
+& \textbf{Adaptive}
+& \textbf{Process selectable}
+& \textbf{Evolving structure} \\
 \midrule
 Re$^3$~\cite{yang2022re3}
-& Plan-guided drafting and revision
-& Passage / revision step
-& Prescribed workflow \\
+& Plan + draft
+& Passage / revision stage
+& Prescribed workflow
+& \no & \no & \no \\
 STORM~\cite{shao2024assisting}
-& Outline-driven article drafting
-& Section / section content
-& Outline-guided workflow \\
+& Outline + sources
+& Outline section
+& Outline order
+& \no & \no & \no \\
 CogWriter~\cite{wan2025cognitive}
-& Hierarchical planning and parallel generation
-& Planned generation / revision
-& Plan execution; monitoring can trigger revision \\
+& Hierarchical plan + draft
+& Planned segment / revision
+& Monitoring-triggered revision
+& \partly & \no & \yes \\
 WriteHERE~\cite{xiong2025beyond}
-& Recursive heterogeneous task graph
+& Task graph
 & Task node
-& Adaptive task scheduling \\
+& Adaptive task scheduling
+& \yes & \no & \yes \\
 IS-CoT~\cite{sun2026cot}
-& Interleaved Plan--Write--Reflect
-& Process stage
-& Embedded recurring cycle \\
+& Plan + draft
+& Plan / Write / Reflect stage
+& Recurring cycle
+& \no & \no & \partly \\
 \midrule
 \condAgenticCogWriter\ \textbf{(Ours)}
-& Process-level control
-& \texttt{Planning} / \texttt{Translating} / \texttt{Reviewing}
-& Adaptive process selection \\
+& Draft + goals + history
+& Writing process
+& Monitor selects online
+& \yes & \yes & \yes \\
 \bottomrule
-\end{tabular}
-
-\caption{Descriptive comparison of how representative long-form writing systems advance generation. The third column identifies the object or stage advanced at a decision point; the fourth describes how that next step is determined. These descriptions provide a common comparison vocabulary rather than reproducing the original authors' terminology.}
+\end{tabular}%
+}
+\caption{Control organization in representative long-form writing systems. ``Adaptive'' indicates that the next control unit is chosen online rather than advanced by a prescribed order. ``Process selectable'' is stricter: a writing process itself is the unit that can be selected next. ``Evolving structure'' indicates an explicit plan, task, or goal structure that can change during generation. \partly\ denotes a restricted form of the property.}
 \label{tab:architecture-comparison}
 \end{table*}
