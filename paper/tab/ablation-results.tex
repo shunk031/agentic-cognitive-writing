@@ -8,7 +8,7 @@
 & \textbf{WritingBench}
 & \textbf{HelloBench}
 & \textbf{DoLoMiTes}
-& \textbf{Pooled mean} \\
+& \textbf{Across benchmarks} \\
 \midrule
 \multicolumn{5}{l}{\textit{Confirmatory single-factor interventions}} \\
 \condNoGoals
@@ -30,6 +30,6 @@
 & \PooledFourSevenRateMean \\
 \bottomrule
 \end{tabular}
-\caption{Pairwise intervention outcomes against \condAgenticCogWriter. Each cell reports \condAgenticCogWriter{}'s mean win rate among non-tied comparisons across independent replications. The first two rows are confirmatory single-factor interventions; \condSingleWriter\ changes several execution factors together and is diagnostic. The post-hoc \condSingleContext\ check is reported separately in the text and Appendix~\ref{app:single-context}.}
+\caption{Pairwise intervention outcomes against \condAgenticCogWriter. Benchmark columns report \condAgenticCogWriter{}'s arithmetic mean of replicate-specific win rates among non-tied comparisons. For the final column, wins, losses, and ties are first pooled across benchmarks within each replication, and the resulting replicate-level win rates are then averaged. These means are descriptive summaries. The first two rows are confirmatory single-factor interventions; \condSingleWriter\ is pre-specified but changes several execution factors together and is interpreted diagnostically. The post-hoc \condSingleContext\ check is reported separately in the text and Appendix~\ref{app:single-context}.}
 \label{tab:ablation-results}
 \end{table*}
