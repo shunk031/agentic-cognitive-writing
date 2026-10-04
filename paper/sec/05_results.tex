@@ -26,7 +26,7 @@ The diagnostic \condSingleWriter\ condition performs substantially worse, but it
 \subsection{Agent behavior (RQ3)}
 \label{sec:results-process-dynamics}
 
-The agent traces reveal a second part of the story that product scores alone cannot show. Table~\ref{tab:process-dynamics} summarizes observable controller behavior. The \texttt{Monitor} usually follows the \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle, rarely returns from \texttt{Reviewing} to \texttt{Planning}, and rarely accepts goal regeneration. Thus, the architecture exposes adaptive process scheduling and mutable goals, but the realized policy is usually close to a regular process cycle with a largely stable goal network.
+The agent traces reveal a second part of the story that product scores alone cannot show. Table~\ref{tab:process-dynamics} summarizes observable controller behavior. The \texttt{Monitor} usually follows the \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle, rarely returns from \texttt{Reviewing} to \texttt{Planning}, and rarely accepts goal regeneration. Thus, the realized schedule is usually close to a regular process cycle, while accepted replacement of existing goals through regeneration is rare.
 
 \input{tab/process-dynamics}
 
@@ -53,7 +53,7 @@ Figure~\ref{fig:process-sequences} complements these aggregate rates with the mo
 \label{fig:process-sequences}
 \end{figure*}
 
-The traces help interpret the interventions but do not map onto them one-to-one. The prevalence of the canonical process cycle directly contextualizes the \condFixedOrder\ result: unrestricted scheduling often realizes an order close to the imposed cycle. Rare goal regeneration shows that the goal network usually remains stable, but it does not show that the explicit goal representation is unused; stable goals can still guide later process decisions and drafting.
+The traces help interpret the interventions but do not map onto them one-to-one. The prevalence of the canonical process cycle directly contextualizes the \condFixedOrder\ result: unrestricted scheduling often realizes an order close to the imposed cycle. Rare goal regeneration shows only that accepted replacement of existing goals is uncommon. It does not show that the explicit goal representation is unused: goals can still be created, developed, and consulted during later process decisions and drafting.
 
 We also connect realized process sequences to pairwise outcomes descriptively. Splitting \condAgenticCogWriter\ runs by whether the trace follows exactly one \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle yields similar preference rates against \condFixedOrder: \AfourExactCycleFixedOrderWinRate\ for exact-cycle runs and \AfourNonExactFixedOrderWinRate\ for other sequences ($p=\AfourFixedOrderCycleSplitP$, Fisher's exact test). The analogous split against \condSingleWriter\ is \AfourExactCycleSingleWriterWinRate\ versus \AfourNonExactSingleWriterWinRate\ ($p=\AfourSingleWriterCycleSplitP$). Thus, in these comparisons, departures from the canonical cycle are not associated with a larger pairwise advantage. This analysis conditions on realized agent behavior and is descriptive rather than a causal estimate of scheduling flexibility.
 
