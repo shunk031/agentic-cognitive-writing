@@ -11,6 +11,7 @@ jobs:
   build-paper:
     if: github.event.pull_request.number == 77
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out exact PR head
         uses: actions/checkout@v4
