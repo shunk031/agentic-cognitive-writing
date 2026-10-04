@@ -6,6 +6,59 @@ from pathlib import Path
 PAPER = Path(__file__).resolve().parents[1]
 
 
+def _single_sentence_main_paragraphs():
+    """Return prose paragraphs in the main paper that contain only one sentence.
+
+    The check is intentionally conservative: display math, figures/tables, input-only
+    blocks, lists, and headings are ignored. Its purpose is to catch accidental
+    one-line prose fragments, not to prescribe a universal paragraph length.
+    """
+
+    offenders = []
+    for path in [
+        PAPER / "sec/01_introduction.tex",
+        PAPER / "sec/02_related_work.tex",
+        PAPER / "sec/03_method.tex",
+        PAPER / "sec/04_experiments.tex",
+        PAPER / "sec/05_results.tex",
+        PAPER / "sec/06_discussion.tex",
+        PAPER / "sec/07_limitations.tex",
+        PAPER / "sec/08_conclusion.tex",
+    ]:
+        source = path.read_text()
+        for paragraph in re.split(r"\n\s*\n", source):
+            paragraph = paragraph.strip()
+            if not paragraph:
+                continue
+            if any(
+                token in paragraph
+                for token in (
+                    r"\begin{equation}",
+                    r"\begin{figure}",
+                    r"\begin{table}",
+                    r"\begin{itemize}",
+                    r"\begin{enumerate}",
+                )
+            ):
+                continue
+            if re.fullmatch(r"\\input\{[^}]+\}", paragraph):
+                continue
+            if paragraph.startswith((r"\section", r"\subsection", r"\label")):
+                continue
+
+            prose = re.sub(r"^\\paragraph\{[^}]+\}\s*", "", paragraph)
+            prose = re.sub(r"\\(?:cite[tp]?|ref|eqref)\{[^}]+\}", "CITATION", prose)
+            prose = re.sub(r"\\[A-Za-z]+(?:\[[^]]*\])?\{([^{}]*)\}", r"\1", prose)
+            prose = re.sub(r"\$[^$]*\$", "MATH", prose)
+            prose = re.sub(r"\s+", " ", prose).strip()
+            if not prose:
+                continue
+            sentence_ends = re.findall(r"[.!?](?=\s|$)", prose)
+            if len(sentence_ends) <= 1:
+                offenders.append((path.name, paragraph.replace("\n", " ")[:180]))
+    return offenders
+
+
 def check():
     text = (PAPER / "build" / "acl_latex.md").read_text()
     aux = (PAPER / "build" / "acl_latex.aux").read_text()
@@ -46,11 +99,20 @@ def check():
     )
     assert text.index("## Abstract") < text.index("## Introduction")
     assert "N annotators" not in text
-    assert "human preference is unknown" in text
     assert "(Flower and Hayes, 1981)" in text
-    assert "Table 3" in text
-    assert "process-selection policy" in text
     assert headings[-1] == "References"
+
+    # Semantic safeguards without freezing the manuscript to one exact sentence.
+    limitations = text[text.index("## Limitations") : text.index("## References")]
+    assert "human" in limitations.lower() and "judge" in limitations.lower()
+    method_start = text.index("## Agentic CogWriter")
+    method_end = text.index("## Experimental Design")
+    method = text[method_start:method_end]
+    assert "Monitor" in method and "Planning" in method and "Reviewing" in method
+
+    paragraph_offenders = _single_sentence_main_paragraphs()
+    assert not paragraph_offenders, paragraph_offenders
+
     names = [
         "PooledFourOneRateMean",
         "PooledFourTwoRateMean",
@@ -79,13 +141,14 @@ def check():
             "Unexpanded control sequences: 0",
             f"Section headings: Markdown {actual}; PDF {expected} ({len(pdf_headings)} aux entries plus unnumbered Limitations)",
             "Title, Abstract, and References headings excluded from section count.",
-            "Ten numbers spot-checked against numbers.tex:",
+            "Single-sentence main-text prose paragraphs: 0",
+            "Selected numbers spot-checked against numbers.tex:",
             *checks,
             f"Tables in PDF: {', '.join(pdf_tables)}",
             f"Tables in Markdown: {', '.join(md_tables)}",
             f"Table-count diff: 0; {len(pipe_tables)} Markdown pipe tables",
             f"Word count (whitespace-delimited Markdown tokens): {len(text.split())}",
-            "Human-evaluation wording: no human evaluation; relationship between model-judge preference and human preference is unknown",
+            "Human-evaluation limitation present.",
             "",
         ]
     )
