@@ -6,7 +6,7 @@ on:
       - paper-manuscript
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-paper:
@@ -16,7 +16,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          persist-credentials: false
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -24,6 +23,20 @@ jobs:
       - name: Build Markdown manuscript with repository script
         working-directory: paper
         run: ./tools/build-markdown.sh
+
+      - name: Commit synchronized Markdown
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add paper/build/acl_latex.md
+          if git diff --cached --quiet; then
+            echo "Generated Markdown is already synchronized."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "paper: sync generated Markdown"
+          git push origin HEAD:paper-manuscript
 
       - name: Render every PDF page
         working-directory: paper
