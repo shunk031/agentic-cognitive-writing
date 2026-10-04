@@ -12,7 +12,7 @@ The goal network is inspired by Flower and Hayes' account of writer-generated go
 \subsection{Online process selection and delegation}
 \label{sec:method-writing-processes}
 
-At each iteration, the host agent acts as the \texttt{Monitor}. It inspects the shared workspace and chooses one of three writing activities: planning, drafting, or reviewing. We retain Flower and Hayes' term \texttt{Translating} for the drafting activity in the implementation. Accordingly, the available process actions are \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing}.
+At each iteration, the host agent acts as the \texttt{Monitor}. It inspects the shared workspace and chooses one of three writing activities: planning, drafting, or reviewing. We retain Flower and Hayes' term \texttt{Translating} for the drafting activity in the implementation. Accordingly, the available process actions are \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing}. We refer to the host agent's prompted next-activity decision as the \emph{process-selection policy}; it is not a separately trained policy model.
 
 The selected activity is delegated to the corresponding role agent. The \texttt{Planner} develops goals and document structure. The \texttt{Translator} turns the current goals into prose in the shared draft. The \texttt{Reviewer} evaluates the draft against the task and active goals and can propose revisions or changes to the goal network. Each role agent writes its updates back to the shared workspace before returning control to the \texttt{Monitor}. A proposed goal replacement is accepted or rejected by the \texttt{Monitor} and recorded in the process history.
 
