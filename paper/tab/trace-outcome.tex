@@ -1,0 +1,25 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Realized \condAgenticCogWriter{} sequence}
+& \textbf{vs. \condFixedOrder}
+& \textbf{vs. \condSingleWriter} \\
+\midrule
+Exact \texttt{P}$\rightarrow$\texttt{T}$\rightarrow$\texttt{R}
+& \AfourExactCycleFixedOrderWinRate
+& \AfourExactCycleSingleWriterWinRate \\
+Other sequence
+& \AfourNonExactFixedOrderWinRate
+& \AfourNonExactSingleWriterWinRate \\
+\midrule
+Fisher $p$
+& \AfourFixedOrderCycleSplitP
+& \AfourSingleWriterCycleSplitP \\
+\bottomrule
+\end{tabular}
+\caption{Descriptive association between realized \condAgenticCogWriter\ process sequences and pairwise outcomes. Win-rate columns report \condAgenticCogWriter{}'s rate among non-tied comparisons after splitting its realized traces into an exact single \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle versus all other sequences. Fisher tests compare the two trace-defined groups. Because the split conditions on realized behavior, these comparisons are not causal estimates of scheduling flexibility.}
+\label{tab:trace-outcome}
+\end{table}
