@@ -50,7 +50,7 @@
 \newcommand{\modelJudge}{\texttt{gpt-5.6-sol medium}}
 \newcommand{\modelCross}{\texttt{claude-sonnet-5 medium}}
 
-\title{What Makes a Writing Agent Work? Revisiting the Cognitive Process Theory of Writing with Language Agents}
+\title{How Should an AI Agent Write? Process-Level Control for Long-Form Writing}
 
 \author{Anonymous ACL submission}
 
@@ -58,7 +58,7 @@
 \maketitle
 
 \begin{abstract}
-Long-form writing is increasingly handled by language-model-based agents, but producing a coherent document requires more than extending text token by token: a system must decide when to plan, draft, inspect, and revise as the document evolves. Existing writing systems typically organize this work around outlines, task graphs, or prescribed stage sequences. Inspired by Flower and Hayes' cognitive process theory of writing, we propose \condAgenticCogWriter, a coding-agent-based system in which a \texttt{Monitor} repeatedly chooses the next writing activity and delegates planning, drafting, or reviewing to specialized agents that share persistent writing state. We evaluate \condAgenticCogWriter\ on three long-form writing benchmarks. On benchmark-native and pointwise metrics, it is strongest among our controlled systems on WritingBench and HelloBench but not on DoLoMiTes. In matched-prompt pairwise comparisons, it is preferred to one-shot generation, a fixed staged workflow, and adaptive task planning. Further interventions show that removing the explicit goal record or forcing a fixed planning--drafting--reviewing cycle does not significantly worsen pairwise preference, and the \texttt{Monitor} often chooses that cycle on its own. These results support process-organized writing as a promising agent architecture while showing that its advantage is not explained by goal bookkeeping or adaptive process ordering alone.
+AI agents increasingly perform multi-step work that culminates in long-form documents, yet it remains unclear how the act of writing itself should be organized. Existing long-form systems usually advance outlines, tasks, or fixed stages. We propose \condAgenticCogWriter, a writing architecture for coding-agent-style harnesses inspired by cognitive process theory. A host agent maintains persistent writing state and repeatedly decides whether to plan, draft, or review, delegating each activity to a specialized agent. We evaluate the architecture on three long-form writing benchmarks. On benchmark-native and pointwise metrics, it is strongest among our controlled systems on WritingBench and HelloBench but not on DoLoMiTes. In matched-output comparisons, it is preferred to one-shot generation, a fixed staged workflow, and adaptive task planning. Component interventions show that removing the explicit goal record or fixing process order does not significantly worsen pairwise preference, and the host agent usually chooses the fixed cycle on its own. These results support process-organized writing as a promising architecture for general-purpose agents while showing that the observed advantage is not explained by explicit goal bookkeeping or flexible process ordering alone.
 \end{abstract}
 
 \section{Introduction}
@@ -91,7 +91,7 @@ Long-form writing is increasingly handled by language-model-based agents, but pr
 
 \input{sec/07_limitations}
 
-\bibliography{custom}
+\bibliography{custom,agentic}
 \clearpage
 
 \appendix
