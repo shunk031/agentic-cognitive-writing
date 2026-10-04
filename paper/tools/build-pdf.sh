@@ -15,6 +15,7 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 paper_dir=$(cd -- "$script_dir/.." && pwd)
 build_dir="$paper_dir/build"
 image_tag="agentic-cognitive-writing/texlive:latest-small-inconsolata-epigraph-nextpage"
+prebuilt_image="ghcr.io/shunk031/agentic-cognitive-writing/texlive:small-inconsolata-epigraph-nextpage"
 pdf_path="$build_dir/acl_latex.pdf"
 log_path="$build_dir/latexmk.log"
 
@@ -38,10 +39,19 @@ case "${1-}" in
         ;;
 esac
 
-mkdir -p -- "$build_dir"
-mkdir -p -- "$build_dir/.home"
+# @description Use the local TeX image, pulling the prebuilt GHCR image first and building it if needed.
+ensure_image() {
+    if docker image inspect "$image_tag" >/dev/null 2>&1; then
+        return 0
+    fi
 
-if ! docker image inspect "$image_tag" >/dev/null 2>&1; then
+    printf 'Local TeX image is absent; trying prebuilt image %s.\n' "$prebuilt_image"
+    if docker pull "$prebuilt_image" && docker tag "$prebuilt_image" "$image_tag"; then
+        printf 'Tagged prebuilt TeX image as %s.\n' "$image_tag"
+        return 0
+    fi
+
+    printf 'Could not pull the prebuilt TeX image; falling back to a local Docker build.\n' >&2
     docker build \
         --build-arg "HTTP_PROXY=${HTTP_PROXY-}" \
         --build-arg "HTTPS_PROXY=${HTTPS_PROXY-}" \
@@ -49,7 +59,11 @@ if ! docker image inspect "$image_tag" >/dev/null 2>&1; then
         --file "$script_dir/Dockerfile" \
         --tag "$image_tag" \
         "$script_dir"
-fi
+}
+
+mkdir -p -- "$build_dir"
+mkdir -p -- "$build_dir/.home"
+ensure_image
 
 set +e
 docker run --rm \
