@@ -1,67 +1,44 @@
 \begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{3pt}
-\resizebox{\textwidth}{!}{%
+\setlength{\tabcolsep}{5pt}
 \begin{tabular}{llllccc}
 \toprule
 \textbf{Method}
-& \textbf{State carried across steps}
+& \textbf{Persistent state}
 & \textbf{Unit advanced}
 & \textbf{Next-step rule}
-& \textbf{Adaptive?}
-& \textbf{Process can be chosen?}
-& \textbf{Structure can change?} \\
+& \textbf{Adaptive}
+& \textbf{Evolving structure}
+& \textbf{Process choice} \\
 \midrule
-Plan-and-Write~\cite{yao2019plan}
-& Plan + draft
-& Plan item / text
-& Plan then generate
+Re$^3$~\citep{yang2022re3}
+& plan, text
+& passage
+& fixed workflow
 & \no & \no & \no \\
-Re$^3$~\cite{yang2022re3}
-& Plan + draft
-& Passage / revision stage
-& Prescribed workflow
+STORM~\citep{shao2024assisting}
+& outline, evidence
+& section
+& fixed workflow
 & \no & \no & \no \\
-STORM~\cite{shao2024assisting}
-& Outline + sources
-& Outline section
-& Outline order
-& \no & \no & \no \\
-LongWriter~\cite{bai2025longwriter}
-& Writing plan + draft
-& Writing subtask
-& Plan order
-& \no & \no & \no \\
-Self-Refine~\cite{madaan2023self}
-& Draft + feedback
-& Output revision
-& Feedback--refine loop
-& \no & \no & \no \\
-CogWriter~\cite{wan2025cognitive}
-& Hierarchical plan + draft
-& Planned segment / revision
-& Monitoring-triggered revision
-& \partly & \no & \yes \\
-WriteHERE~\cite{xiong2025beyond}
-& Task graph
-& Task node
-& Adaptive task scheduling
-& \yes & \no & \yes \\
-IS-CoT~\cite{sun2026cot}
-& Plan + draft
-& Plan / Write / Reflect stage
-& Recurring cycle
-& \no & \no & \partly \\
-\midrule
-\condAgenticCogWriter\ \textbf{(Ours)}
-& Draft + goals + history
-& Writing process
-& Host agent selects online
+CogWriter~\citep{wan2025cognitive}
+& plan, constraints, text
+& plan / revision
+& validate or revise
+& \yes & \yes & \no \\
+WriteHERE~\citep{xiong2025beyond}
+& task graph, text
+& task node
+& task selection
+& \yes & \yes & \no \\
+\textbf{Agentic CogWriter}
+& \textbf{draft, goals, history}
+& \textbf{writing process}
+& \textbf{process selection}
 & \yes & \yes & \yes \\
 \bottomrule
-\end{tabular}%
-}
-\caption{Comparison of representative long-form and iterative writing architectures. ``Adaptive'' means that the next unit is chosen online rather than advanced by a prescribed order. ``Process can be chosen'' asks whether planning, drafting, or reviewing itself can be selected as the next operation. ``Structure can change'' refers to an explicit plan, task, or goal structure that can be revised during generation. \partly\ denotes a restricted form of the property.}
+\end{tabular}
+\caption{Architectural comparison focused on the decision made during long-form generation. \textbf{Adaptive} indicates that the next unit is selected from the current state rather than prescribed by a fixed workflow; \textbf{Process choice} indicates that the selectable unit is an explicit writing process such as planning, drafting, or reviewing. The table abstracts each system only along dimensions relevant to our architecture question.}
 \label{tab:architecture-comparison}
 \end{table*}
