@@ -58,7 +58,7 @@
 \maketitle
 
 \begin{abstract}
-AI agents increasingly perform multi-step work that culminates in long-form documents, yet it remains unclear how the act of writing itself should be organized. Existing long-form systems usually advance outlines, tasks, or fixed stages. We propose \condAgenticCogWriter, a writing architecture for coding-agent-style harnesses inspired by cognitive process theory. A host agent maintains persistent writing state and repeatedly decides whether to plan, draft, or review, delegating each activity to a specialized agent. We evaluate the architecture on three long-form writing benchmarks. On benchmark-native and pointwise metrics, it is strongest among our controlled systems on WritingBench and HelloBench but not on DoLoMiTes. In matched-output comparisons, it is preferred to one-shot generation, a fixed staged workflow, and adaptive task planning. Component interventions show that removing the explicit goal record or fixing process order does not significantly worsen pairwise preference, and the host agent usually chooses the fixed cycle on its own. These results support process-organized writing as a promising architecture for general-purpose agents while showing that the observed advantage is not explained by explicit goal bookkeeping or flexible process ordering alone.
+AI agents increasingly produce long-form documents as part of multi-step knowledge work, but it remains unclear how the writing process itself should be organized. Existing systems typically advance an outline, a task graph, or a fixed sequence of stages. Drawing on cognitive process theory, we propose \condAgenticCogWriter, an architecture that maintains an evolving draft and writing state while a \texttt{Monitor} repeatedly chooses whether to plan, draft, or review and delegates that activity to a specialist. We evaluate the architecture on 300 demanding prompts from three complementary benchmarks spanning general-purpose writing, long-text generation, and structured expert documents. Independent rubric-based scoring ranks \condAgenticCogWriter\ highest on two of the three benchmarks. When a judge directly compares two responses to the same prompt, \condAgenticCogWriter\ is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning. Ablations show no significant degradation from removing the explicit goal network or fixing the process order. Trace analysis further shows that most runs follow a single planning--drafting--reviewing cycle. Together, the results support process-organized writing as a promising agent architecture while leaving its causal mechanism open.
 \end{abstract}
 
 \section{Introduction}
@@ -69,7 +69,7 @@ AI agents increasingly perform multi-step work that culminates in long-form docu
 \label{sec:related-work}
 \input{sec/02_related_work}
 
-\section{Agentic CogWriter: Process-Level Writing Control}
+\section{Agentic CogWriter}
 \label{sec:method}
 \input{sec/03_method}
 
@@ -107,11 +107,11 @@ Table~\ref{tab:runtime-settings} summarizes the runtime and evaluation settings 
 
 \section{Replicate-level pairwise outcomes}
 \label{app:pairwise-detail}
-The following figure shows the prompt-collapsed pairwise estimates for each benchmark and replication, including the ablation contrasts.
+The following figure shows the prompt-level pairwise estimates for each benchmark and replication, including the ablation contrasts.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
-\caption{Prompt-collapsed pairwise win rates by benchmark and replication. Replication points show 95\% Wilson intervals. Filled or open circles mark cells that do or do not survive the within-benchmark Holm correction; diamonds are descriptive means across replications and are not separate inferential tests.}
+\caption{Prompt-level pairwise win rates by benchmark and replication. Replication points show 95\% Wilson intervals. Filled or open circles mark cells that do or do not survive the within-benchmark Holm correction; diamonds are descriptive means across replications and are not separate inferential tests.}
 \label{fig:appendix-confirmatory-forest}
 \end{figure*}
 
@@ -122,7 +122,6 @@ Table~\ref{tab:process-summary} reports completion, output size, delegated invoc
 
 \section{Sensitivity analyses}
 \label{app:sensitivity-analyses}
-
 \subsection{Record-pooled sensitivity}
 \label{app:record-pooled}
 The record-pooled table reports a sensitivity analysis that treats the two presentation records for each prompt as independent observations; the retained disagreements show how much presentation order can affect the descriptive rates.
@@ -140,18 +139,18 @@ The length-control table reports the longer-side preference by output-length rat
 
 \subsection{Single-context exploratory check}
 \label{app:single-context}
-The \condSingleContext\ condition was added after the primary results had been observed, to test whether the \condSingleWriter\ loss reflects delegation to separate agents or the absence of process decomposition under a \texttt{Monitor}. We registered it as an exploratory condition outside the Holm family before judging and ran one replication, the same evidence tier as the cross-family check: the question it answers is whether an attribution survives, not whether a new contrast is confirmed. We therefore report the pooled estimate with its interval and the benchmark-level results without adjustment.
+The \condSingleContext\ condition was added after the main results had been observed, to test whether the \condSingleWriter\ loss reflects delegation to separate agents or the absence of process decomposition under a \texttt{Monitor}. We registered it as an exploratory condition outside the Holm family before judging and ran one replication, the same evidence tier as the cross-family check: the question it answers is whether an attribution survives, not whether a new contrast is confirmed. We therefore report the pooled estimate with its interval and the benchmark-level results without adjustment.
 \input{tab/appendix-single-context}
 
 \subsection{Cross-family judge robustness}
 \label{app:cross-family}
-The cross-family table reports pooled outcomes for the three robustness contrasts: \CrossFamilyFullSinglePassWLT\ for \condAgenticCogWriter\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ for \condAgenticCogWriter\ versus \condNoGoals. The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval. The judge yields a non-tied prompt-collapsed judgment on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ pairs, with \CrossFamilyPooledWLT\ overall W/L/T and \CrossFamilyPooledAgreement\ prompt-collapsed agreements.
+The cross-family table reports pooled outcomes for the three robustness contrasts: \CrossFamilyFullSinglePassWLT\ for \condAgenticCogWriter\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ for \condAgenticCogWriter\ versus \condNoGoals. The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval. The judge yields a non-tied prompt-level judgment on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ pairs, with \CrossFamilyPooledWLT\ overall W/L/T and \CrossFamilyPooledAgreement\ agreements across the two presentation orders.
 \input{tab/appendix-cross-family}
 
 \clearpage
 \section{Habermas Machine pilot}
 \label{app:habermas}
-The Habermas table reports trace totals from the pilot, which tests short consensus writing as a boundary condition rather than as another primary benchmark.
+The Habermas table reports trace totals from the pilot, which tests short consensus writing as a boundary condition rather than as another main benchmark.
 \input{tab/appendix-habermas}
 
 \condExploratoryOne\ is the exploratory CogWriter-style baseline, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; \condExploratoryTwo\ is the exploratory STORM-style baseline, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval. \condAgenticCogWriter\ does not lead the pointwise composite in this boundary-condition pilot; in particular, it scores below \condSinglePass\ and \condStaged. \condAgenticCogWriter\ and \condFixedOrder\ record \HabAfourRegenerated\ and \HabAsixRegenerated\ regeneration events, respectively; their ledgers contain \HabAfourLedger\ and \HabAsixLedger\ no/proposal outcomes, respectively.
