@@ -110,6 +110,11 @@ Table~\ref{tab:architecture-comparison} summarizes how representative long-form 
 Table~\ref{tab:runtime-settings} summarizes the runtime and evaluation settings used for the reported runs. Every condition received the same task input, available information, generator, tool policy, attempt budget, and final-output contract.
 \input{tab/appendix-runtime-settings}
 
+\section{Product-level diagnostics}
+\label{app:product-scores}
+Table~\ref{tab:main-results} reports the benchmark-native and standardized pointwise diagnostics from the initial replication.
+\input{tab/main-results}
+
 \section{Replicate-level pairwise outcomes}
 \label{app:pairwise-detail}
 The following figure shows the prompt-collapsed pairwise estimates for each benchmark and replication, including the ablation contrasts.
@@ -120,8 +125,36 @@ The following figure shows the prompt-collapsed pairwise estimates for each benc
 \label{fig:appendix-confirmatory-forest}
 \end{figure*}
 
+Table~\ref{tab:ablation-results} gives the descriptive across-replication summaries for the confirmatory single-factor interventions and the bundled diagnostic intervention.
+\input{tab/ablation-results}
+
 \section{Process behavior and resource use}
 \label{app:process-behavior}
+\input{tab/process-dynamics}
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}[t]{\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig/process-sequences-a.pdf}\\
+(a)
+\end{minipage}\\[0.5em]
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig/process-sequences-b.pdf}\\
+(b) \condAgenticCogWriter
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig/process-sequences-c.pdf}\\
+(c) \condFixedOrder
+\end{minipage}
+\caption{Observed \texttt{Monitor} process selection. Panel (a) shows the most frequent process sequences; panels (b) and (c) show transition counts for \condAgenticCogWriter\ and \condFixedOrder. P, T, R, and E denote \texttt{Planning}, \texttt{Translating}, \texttt{Reviewing}, and termination.}
+\label{fig:process-sequences}
+\end{figure*}
+
+\input{tab/trace-outcome}
+
 Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first replication. For \condAgenticCogWriter, the first replication uses \AfourOutputTokens\ output-plus-reasoning tokens and \AfourInputTokens\ uncached input tokens per attempted run and records \AfourGoalRegenerated\ accepted goal regeneration. Across replications, the trace summaries contain mean totals of \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while the post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
 \input{tab/appendix-process}
 
