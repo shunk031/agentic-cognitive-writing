@@ -2,6 +2,7 @@
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lrrrr}
 \toprule
 \textbf{Contrast}
@@ -26,7 +27,8 @@
 & \DoLoFourThreeRateMean
 & \PooledFourThreeRateMean \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Primary prompt-collapsed pairwise outcomes. Entries are \condAgenticCogWriter{}'s mean win rates among non-tied comparisons across independent replications. The final column pools benchmark outcomes within each replication before averaging across replications. Confirmatory tests and replicate-specific intervals are in Appendix~\ref{app:pairwise-detail}.}
 \label{tab:pairwise-results}
 \end{table*}
