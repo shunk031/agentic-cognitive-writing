@@ -1,48 +1,27 @@
-\condAgenticCogWriter\ consists of a host agent that implements the \texttt{Monitor}, three role agents that implement \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing}, and shared external records that persist across process executions. The host agent repeats a control loop until no further writing process is needed. At the start of each iteration, the \texttt{Monitor} reads the shared records, chooses one writing process, and invokes the corresponding role agent. When that role agent finishes, its output is written back to the records and control returns to the \texttt{Monitor}.
+Figure~\ref{fig:agentic-cogwriter} shows the architecture of \condAgenticCogWriter. The input is a writing task together with any task-specific context and output constraints; the output is a completed document. The system runs inside a coding-agent harness and uses a shared workspace to persist the document and intermediate writing state across agent calls. A host agent acts as the \texttt{Monitor}. Rather than following a pre-written sequence of writing stages, the \texttt{Monitor} repeatedly inspects the current workspace, decides what kind of writing work is needed next, and delegates that work to a specialized agent.
 
-\subsection{External writing records}
+\subsection{Persistent writing state}
 \label{sec:method-control-state}
 
-\condAgenticCogWriter\ maintains three records throughout a run. The \emph{draft} stores the text produced so far. The \emph{goal network} stores the current writing goals in a hierarchical form. The \emph{process history} records previous process choices and changes to those goals.
-
-The goal network is our explicit representation of the writer-generated goals proposed by Flower and Hayes~\cite{flower1981cognitive}. Content goals describe what the document should communicate, process goals describe how the writing should proceed, and evaluation goals describe criteria for judging the draft. These goals can change as writing proceeds. A goal may be created, made more specific, or replaced when writing changes its purpose or level of abstraction. We call this last operation \emph{goal regeneration}. Goal creation, development, and regeneration are all recorded in the process history. This representation makes goal changes observable; it does not imply that the language model has a corresponding latent cognitive state.
-
-For compact notation, let $D_t$ denote the draft, $G_t$ the goal network, and $H_t$ the process history immediately before the \texttt{Monitor}'s $t$-th decision. We use
-%
+At each decision point, the shared workspace contains three records. The \emph{draft} is the document produced so far. The \emph{goal network} is an explicit hierarchical record of current writing goals. The \emph{process history} records previous writing-process choices and changes to those goals. We denote these records immediately before decision $t$ as
 \begin{equation}
-S_t=(D_t,G_t,H_t)
+S_t=(D_t,G_t,H_t),
 \end{equation}
-%
-as shorthand for these three external records. The index $t$ counts decisions by the \texttt{Monitor}; it advances after the chosen process finishes and the shared records have been updated. The assignment and its constraints remain fixed task context and are not included in $S_t$.
+where $D_t$, $G_t$, and $H_t$ are the draft, goal network, and process history, respectively. The original writing instruction and its constraints remain fixed task context available to the agents throughout the run.
 
-\subsection{Process action space}
+The goal network operationalizes one idea from Flower and Hayes~\cite{flower1981cognitive}: writing is guided by goals that can develop as composition proceeds. In our implementation, goals can be created, made more specific, or replaced. We call replacement of an existing goal \emph{goal regeneration}. These events are logged so that changes to the explicit goal representation can be analyzed later. The goal network is therefore an observable system record, not a claim about latent cognitive state.
+
+\subsection{Agentic writing loop}
 \label{sec:method-writing-processes}
 
-At decision $t$, the \texttt{Monitor} chooses one of three writing processes:
-%
+The \texttt{Monitor} can choose among three writing activities. \texttt{Planning} develops or reorganizes writing goals and structure; \texttt{Translating} turns the current goals into prose in the shared draft; and \texttt{Reviewing} evaluates the draft against the task and current goals and proposes revisions when needed. We write the runtime choice as
 \begin{equation}
-a_t \in
-\{\mathrm{Planning},\mathrm{Translating},\mathrm{Reviewing}\}.
-\end{equation}
-%
-We write this choice as
-%
-\begin{equation}
+a_t \in \{\mathrm{Planning},\mathrm{Translating},\mathrm{Reviewing}\},
+\qquad
 a_t=\pi_{\mathrm{monitor}}(S_t),
 \end{equation}
-%
-where $\pi_{\mathrm{monitor}}$ denotes the \emph{process-selection policy}. In our implementation, this policy is the prompted decision made by the host agent; it is not a separately trained model.
+where $\pi_{\mathrm{monitor}}$ is the prompted decision made by the host agent rather than a separately trained policy.
 
-The selected process determines what happens next. Under the full \condAgenticCogWriter\ design, the corresponding role agent executes it: the \texttt{Planner} develops or reorganizes goals, the \texttt{Translator} realizes active goals as prose in the shared draft, and the \texttt{Reviewer} evaluates the draft against the active goals and returns verdicts and proposals. These role agents do not choose the next process themselves. Each process executes in its own role-agent context; we refer to this implementation choice as \emph{separated role contexts}. After the selected process finishes, the \texttt{Monitor} reads the updated records, reconciles any proposals, and makes the next process choice.
+Once an activity is selected, the corresponding role agent executes it: the \texttt{Planner} performs \texttt{Planning}, the \texttt{Translator} performs \texttt{Translating}, and the \texttt{Reviewer} performs \texttt{Reviewing}. Each role agent reads the shared workspace and writes its updates back before returning control to the \texttt{Monitor}. Review may also produce a proposal to change the goal network; the \texttt{Monitor} accepts or rejects that proposal and records the decision. The loop continues from the updated state until the \texttt{Monitor} decides after review that no further writing action is needed.
 
-\subsection{Control loop}
-\label{sec:method-monitor}
-
-\condAgenticCogWriter\ imposes no fixed order on the three processes. A \texttt{Translating} pass can expose a planning problem, and after \texttt{Reviewing} the \texttt{Monitor} can return to \texttt{Planning} or \texttt{Translating}. During \texttt{Reviewing}, the \texttt{Reviewer} may also propose a change to the goal network. The \texttt{Monitor} accepts or rejects each such proposal and records the disposition in the process history. A run ends after \texttt{Reviewing} when the \texttt{Monitor} chooses no further process.
-
-\subsection{Testable design commitments}
-\label{sec:method-commitments}
-
-The architecture exposes one organizing choice and two theory-derived commitments. The organizing choice is the \emph{process-level action space} itself: the controller advances writing by selecting among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing}. RQ1 evaluates this organization against alternatives that make no intermediate choice, follow fixed stages, or choose among task nodes. Within the process-level design, two commitments admit confirmatory single-factor interventions. First, \condAgenticCogWriter\ maintains an explicit evolving goal representation rather than relying only on the model's working context. Second, the \texttt{Monitor} chooses the process order adaptively rather than following a fixed cycle.
-
-Separated role contexts are not treated as a third cognitive-theory commitment. They are an implementation choice in the full system. The pre-specified \condSingleWriter\ comparison does not isolate this choice because it also changes delegation and how much text is produced between process decisions. We therefore use that comparison diagnostically and add a post-hoc exploratory comparison that changes role-context separation while retaining the process loop. Section~\ref{sec:baselines} defines these conditions and their evidence tiers.
+This runtime choice is the main organizational difference from a fixed writing pipeline. The system may plan again after drafting, draft again after review, or revisit planning when review reveals a structural problem. The specialized role contexts are an implementation choice of the full system; the experiments vary both the process-order policy and several execution details to determine which parts of the architecture are associated with the observed performance.
