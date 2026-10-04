@@ -1,28 +1,42 @@
 \begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{6pt}
-\begin{tabular}{lll}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrrr}
 \toprule
 \textbf{Contrast}
-& \textbf{Win rate}
-& \textbf{Evidence tier} \\
+& \textbf{WritingBench}
+& \textbf{HelloBench}
+& \textbf{DoLoMiTes}
+& \textbf{Pooled} \\
 \midrule
+\multicolumn{5}{l}{\textit{Confirmatory single-factor interventions}} \\
 \condAgenticCogWriter\ vs \condNoGoals
-& \PooledFourFiveRateMean
-& Confirmatory single-factor intervention \\
+& \WritingFourFiveRateMean
+& \HelloFourFiveRateMean
+& \DoLoFourFiveRateMean
+& \PooledFourFiveRateMean \\
 \condAgenticCogWriter\ vs \condFixedOrder
-& \PooledFourSixRateMean
-& Confirmatory single-factor intervention \\
-\condAgenticCogWriter\ vs \condSingleWriter
-& \PooledFourSevenRateMean
-& Diagnostic bundled intervention \\
+& \WritingFourSixRateMean
+& \HelloFourSixRateMean
+& \DoLoFourSixRateMean
+& \PooledFourSixRateMean \\
 \midrule
+\multicolumn{5}{l}{\textit{Diagnostic bundled intervention}} \\
+\condAgenticCogWriter\ vs \condSingleWriter
+& \WritingFourSevenRateMean
+& \HelloFourSevenRateMean
+& \DoLoFourSevenRateMean
+& \PooledFourSevenRateMean \\
+\midrule
+\multicolumn{5}{l}{\textit{Post-hoc exploratory check}} \\
 \condSingleContext\ vs \condAgenticCogWriter
-& \SingleContextFullRate
-& Post-hoc exploratory check \\
+& \SingleContextWritingFullRate
+& \SingleContextHelloFullRate
+& \SingleContextDoLoFullRate
+& \SingleContextFullRate \\
 \bottomrule
 \end{tabular}
-\caption{Ablation and diagnostic outcomes. The win-rate direction is given explicitly by each contrast. Confirmatory and diagnostic rows report means across their independent replications; \condSingleContext\ is reported separately because it was added after the primary results and is not part of the confirmatory family.}
+\caption{Ablation and diagnostic pairwise outcomes. Each cell gives the left-hand condition's win rate among non-tied comparisons. Confirmatory and diagnostic rows report means across independent replications; \condSingleContext\ is a separate post-hoc exploratory replication outside the confirmatory family.}
 \label{tab:ablation-results}
 \end{table*}
