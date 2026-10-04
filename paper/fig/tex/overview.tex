@@ -1,83 +1,60 @@
 \begin{figure*}[t]
 \centering
-\resizebox{0.98\textwidth}{!}{%
+\resizebox{0.95\textwidth}{!}{%
 \begin{tikzpicture}[
-    font=\fontsize{8.3}{9.7}\selectfont,
+    font=\fontsize{8.5}{10}\selectfont,
     box/.style={
         draw,
         rounded corners=2pt,
         align=center,
-        minimum height=8mm,
-        inner sep=3pt
+        minimum height=9mm,
+        inner sep=4pt
     },
-    state/.style={
-        box,
-        text width=27mm
-    },
-    controller/.style={
-        box,
-        text width=25mm
-    },
-    unit/.style={
-        box,
-        text width=30mm
-    },
-    process/.style={
-        box,
-        text width=22mm
-    },
-    arrow/.style={
-        -{Latex[length=1.6mm]},
-        semithick
-    },
+    input/.style={box,text width=27mm},
+    state/.style={box,text width=33mm},
+    monitor/.style={box,text width=31mm},
+    role/.style={box,text width=25mm},
+    output/.style={box,text width=27mm},
+    arrow/.style={-{Latex[length=1.7mm]},semithick},
+    biarrow/.style={<{Latex[length=1.7mm]}-{Latex[length=1.7mm]},semithick}
 ]
 
-% Task/content-level decision.
-\node[font=\bfseries] (tasktitle) at (0,3.2)
-    {(a) Task/content-level control};
-\node[state] (taskstate) at (0,2.1)
-    {\textbf{Working records}\\plan / task graph\\draft};
-\node[controller] (taskcontroller) at (0,0.8)
-    {\textbf{Controller}};
-\node[unit] (taskunit) at (0,-0.5)
-    {\textbf{Choose next}\\section / passage / task node};
+\node[input] (task) at (0,1.6)
+    {\textbf{Writing task}\\context + constraints};
 
-\draw[arrow] (taskstate) -- (taskcontroller);
-\draw[arrow] (taskcontroller) -- (taskunit);
-\draw[arrow] (taskunit.east) -- ++(9mm,0) |- (taskstate.east);
+\node[state] (workspace) at (3.8,1.6)
+    {\textbf{Shared workspace}\\draft\\goal network\\process history};
 
-\draw[densely dotted] (2.9,3.0) -- (2.9,-1.35);
+\node[monitor] (monitor) at (7.6,1.6)
+    {\textbf{Host agent: \texttt{Monitor}}\\inspect state\\choose next writing activity};
 
-% Process-level decision.
-\node[font=\bfseries] (processtitle) at (8.0,3.2)
-    {(b) Process-level control: \condAgenticCogWriter};
+\node[role] (planner) at (5.1,-0.5)
+    {\textbf{\texttt{Planner}}\\planning};
+\node[role] (translator) at (7.6,-0.5)
+    {\textbf{\texttt{Translator}}\\drafting / translating};
+\node[role] (reviewer) at (10.1,-0.5)
+    {\textbf{\texttt{Reviewer}}\\reviewing};
 
-\node[state] (state) at (5.1,2.0)
-    {\textbf{External records}\\draft / goal network\\process history};
-\node[controller] (monitor) at (8.0,2.0)
-    {\textbf{\texttt{Monitor}}\\choose next process};
+\node[output] (output) at (12.1,1.6)
+    {\textbf{Completed document}};
 
-\node[process] (planning) at (5.3,0.45)
-    {\texttt{Planning}\\\texttt{Planner}};
-\node[process] (translating) at (8.0,0.45)
-    {\texttt{Translating}\\\texttt{Translator}};
-\node[process] (reviewing) at (10.7,0.45)
-    {\texttt{Reviewing}\\\texttt{Reviewer}};
+\draw[arrow] (task) -- (workspace);
+\draw[biarrow] (workspace) -- (monitor);
+\draw[arrow] (monitor.south) to[out=-120,in=90] (planner.north);
+\draw[arrow] (monitor.south) -- (translator.north);
+\draw[arrow] (monitor.south) to[out=-60,in=90] (reviewer.north);
 
-\node[state] (updated) at (8.0,-1.0)
-    {\textbf{Updated records}\\draft / goal network\\process history};
+\draw[arrow] (planner.west) -| (workspace.south);
+\draw[arrow] (translator.west) to[out=180,in=-55] (workspace.south);
+\draw[arrow] (reviewer.west) to[out=180,in=-30] (workspace.south);
 
-\draw[arrow] (state) -- (monitor);
-\draw[arrow] (monitor.south) to[out=-105,in=90] (planning.north);
-\draw[arrow] (monitor.south) -- (translating.north);
-\draw[arrow] (monitor.south) to[out=-75,in=90] (reviewing.north);
+\draw[arrow] (monitor) -- node[above]{finish} (output);
 
-\draw[arrow] (planning.south) to[out=-90,in=165] (updated.west);
-\draw[arrow] (translating.south) -- (updated.north);
-\draw[arrow] (reviewing.south) to[out=-90,in=15] (updated.east);
-\draw[arrow] (updated.east) -- ++(12mm,0) |- (monitor.east);
+\node[align=center,font=\itshape] at (7.6,-1.55)
+    {Each delegated activity updates the workspace before control returns to the \texttt{Monitor}.};
+
 \end{tikzpicture}%
 }
-\caption{Two ways to organize long-form writing. Panel (a) represents systems that advance a content or task unit such as a section, passage, or task node. Panel (b) shows \condAgenticCogWriter: the \texttt{Monitor} reads persistent writing state, chooses \texttt{Planning}, \texttt{Translating}, or \texttt{Reviewing}, delegates the selected process to the corresponding role agent, and then makes another decision from the updated state.}
+\caption{Overview of \condAgenticCogWriter. A writing task is carried through a persistent shared workspace. At each iteration, the host-agent \texttt{Monitor} inspects the current draft, goal network, and process history, chooses whether the document next needs planning, drafting, or reviewing, and delegates that activity to the corresponding role agent. The updated state is reconsidered until the \texttt{Monitor} terminates with a completed document.}
 \label{fig:agentic-cogwriter}
 \end{figure*}
