@@ -1,19 +1,39 @@
-Figure~\ref{fig:agentic-cogwriter} gives an overview of \condAgenticCogWriter. The input is a writing task together with any task-specific context and output constraints; the output is a completed document. The system runs on a coding-agent-style harness with a persistent workspace and subagent delegation. A host agent reads the current writing state, decides what kind of writing work should happen next, invokes the corresponding specialist, and repeats until the document is complete.
-
-\input{fig/tex/overview}
+We introduce \condAgenticCogWriter, a long-form writing architecture that turns document production into a stateful loop over explicit writing processes. Figure~\ref{fig:agentic-cogwriter} gives the system overview. Given a writing task
+\begin{equation}
+X=(I,C,O),
+\end{equation}
+where $I$ is the instruction, $C$ is any supplied context, and $O$ is the requested output contract, the system returns a completed document $D_T$. The architecture has four agent roles: a top-level \texttt{Monitor} and three specialists, \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer}.
 
 \subsection{Persistent writing state}
 \label{sec:method-control-state}
 
-The shared workspace contains three records. The \emph{draft} stores the document produced so far. The \emph{goal network} stores an explicit hierarchy of current writing goals. The \emph{process history} records which writing activities have been executed and how the explicit goals have changed. The original user instruction and task constraints remain available throughout the run and are not rewritten into this state.
+At writing step $t$, the shared workspace exposes the state
+\begin{equation}
+S_t=(D_t,G_t,H_t),
+\end{equation}
+where $D_t$ is the current draft, $G_t$ is an explicit hierarchy of writing goals, and $H_t$ is the observable process history. The original task $X$ remains available throughout the run and is not rewritten into this state. Keeping these records outside any single agent context allows successive writing processes to inspect and modify the same document-level state.
 
-The goal network is inspired by Flower and Hayes' account of writer-generated goals~\cite{flower1981cognitive}. In our implementation, goals may be created, refined, or replaced as writing proceeds; we call replacement of an existing goal \emph{goal regeneration}. These events are logged because they make one theory-derived design choice observable and testable. The goal network is an engineering representation used by the agent, not a claim about an underlying human-like cognitive state.
+The goal network is motivated by \citet{flower1981cognitive}, who describe writers as creating and developing goals during composition. In our implementation, goals can be created, refined, or replaced; we call replacement of an existing goal \emph{goal regeneration}. These records are an engineering representation that makes one theory-derived design choice observable. They are not intended as a claim that the language agent has a human-like cognitive state.
 
-\subsection{Online process selection and delegation}
+\subsection{Process-level control}
 \label{sec:method-writing-processes}
 
-At each iteration, the host agent acts as the \texttt{Monitor}. It inspects the shared workspace and chooses one of three writing activities: planning, drafting, or reviewing. We retain Flower and Hayes' term \texttt{Translating} for the drafting activity in the implementation. Accordingly, the available process actions are \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing}. We refer to the host agent's prompted next-activity decision as the \emph{process-selection policy}; it is not a separately trained policy model.
+The key architectural choice is what the \texttt{Monitor} selects next. Its action space is
+\begin{equation}
+\mathcal{A}=\{\texttt{Planning},\texttt{Translating},\texttt{Reviewing}\},
+\end{equation}
+and its decision at step $t$ is
+\begin{equation}
+a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t), \qquad a_t\in\mathcal{A}.
+\label{eq:monitor-policy}
+\end{equation}
+We use \emph{process-selection policy} as shorthand for this runtime decision; $\pi_{\mathrm{Monitor}}$ is not a separately trained policy model. We retain \citet{flower1981cognitive}'s term \texttt{Translating} for the drafting activity. Unlike a section scheduler or task-graph controller, Equation~\ref{eq:monitor-policy} selects the \emph{kind of writing work} to perform next.
 
-The selected activity is delegated to the corresponding role agent. The \texttt{Planner} develops goals and document structure. The \texttt{Translator} turns the current goals into prose in the shared draft. The \texttt{Reviewer} evaluates the draft against the task and active goals and can propose revisions or changes to the goal network. Each role agent writes its updates back to the shared workspace before returning control to the \texttt{Monitor}. A proposed goal replacement is accepted or rejected by the \texttt{Monitor} and recorded in the process history.
+The process order is therefore not fixed. Drafting can expose a structural problem that motivates renewed planning, and reviewing can trigger either another drafting pass or another planning pass. After a review, the \texttt{Monitor} may instead terminate the loop; the current draft $D_T$ is then returned as the final document.
 
-The process order is not fixed. Drafting can expose a structural problem that sends the system back to planning, and review can trigger either another drafting pass or renewed planning. A run terminates after review when the \texttt{Monitor} decides that no further writing activity is needed. This repeated state inspection and online process choice is the defining control loop of \condAgenticCogWriter; the experiments separately test whether the explicit goal record and flexible process order are necessary for its observed performance.
+\subsection{Agent roles and state updates}
+\label{sec:method-agents}
+
+After choosing $a_t$, the \texttt{Monitor} delegates the selected process to its corresponding specialist. The \texttt{Planner} develops document structure and goals, the \texttt{Translator} turns the current plan and goals into prose, and the \texttt{Reviewer} evaluates the draft against the task and active goals. Each specialist writes its result back to the shared workspace before returning control to the \texttt{Monitor}, yielding the next observable state $S_{t+1}$.
+
+This division separates \emph{coordination} from \emph{execution}. The \texttt{Monitor} decides what kind of writing work is needed; the specialist performs that work with role-specific instructions; and the persistent state carries the result into the next decision. A proposed replacement of an existing goal is accepted or rejected by the \texttt{Monitor} and recorded in $H_t$. The experiments below test the architecture as a whole and then ablate the explicit goal representation and adaptive process ordering separately.
