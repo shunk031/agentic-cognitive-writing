@@ -51,7 +51,7 @@ The agent traces reveal a second part of the story that product scores alone can
 \label{fig:process-sequences}
 \end{figure*}
 
-These traces align with the ablations: the flexibility removed by \condFixedOrder\ and \condNoGoals\ is only weakly exercised by the unrestricted system under the tested prompts. They do not show that the unused flexibility is unnecessary in general; they characterize how the controller behaves in these runs. Detailed process counts and resource use appear in Appendix~\ref{app:process-behavior}.
+The traces help interpret the interventions but do not map onto them one-to-one. The prevalence of the canonical process cycle directly contextualizes the \condFixedOrder\ result: unrestricted scheduling often realizes an order close to the imposed cycle. Rare goal regeneration shows that the goal network usually remains stable, but it does not show that the explicit goal representation is unused; stable goals can still guide later process decisions and drafting. The traces therefore characterize observed controller behavior without explaining the causal effect of removing the goal network. Detailed process counts and resource use appear in Appendix~\ref{app:process-behavior}.
 
 \subsection{Robustness}
 \label{sec:results-robustness}
