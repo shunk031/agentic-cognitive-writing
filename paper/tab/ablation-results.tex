@@ -4,39 +4,32 @@
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{lrrrr}
 \toprule
-\textbf{Contrast}
+\textbf{Intervention}
 & \textbf{WritingBench}
 & \textbf{HelloBench}
 & \textbf{DoLoMiTes}
-& \textbf{Pooled} \\
+& \textbf{Pooled mean} \\
 \midrule
 \multicolumn{5}{l}{\textit{Confirmatory single-factor interventions}} \\
-\condAgenticCogWriter\ vs \condNoGoals
+\condNoGoals
 & \WritingFourFiveRateMean
 & \HelloFourFiveRateMean
 & \DoLoFourFiveRateMean
 & \PooledFourFiveRateMean \\
-\condAgenticCogWriter\ vs \condFixedOrder
+\condFixedOrder
 & \WritingFourSixRateMean
 & \HelloFourSixRateMean
 & \DoLoFourSixRateMean
 & \PooledFourSixRateMean \\
 \midrule
 \multicolumn{5}{l}{\textit{Diagnostic bundled intervention}} \\
-\condAgenticCogWriter\ vs \condSingleWriter
+\condSingleWriter
 & \WritingFourSevenRateMean
 & \HelloFourSevenRateMean
 & \DoLoFourSevenRateMean
 & \PooledFourSevenRateMean \\
-\midrule
-\multicolumn{5}{l}{\textit{Post-hoc exploratory check}} \\
-\condSingleContext\ vs \condAgenticCogWriter
-& \SingleContextWritingFullRate
-& \SingleContextHelloFullRate
-& \SingleContextDoLoFullRate
-& \SingleContextFullRate \\
 \bottomrule
 \end{tabular}
-\caption{Ablation and diagnostic pairwise outcomes. Each cell gives the left-hand condition's win rate among non-tied comparisons. Confirmatory and diagnostic rows report means across independent replications; \condSingleContext\ is a separate post-hoc exploratory replication outside the confirmatory family.}
+\caption{Pairwise intervention outcomes against \condAgenticCogWriter. Each cell reports \condAgenticCogWriter{}'s mean win rate among non-tied comparisons across independent replications. The first two rows are confirmatory single-factor interventions; \condSingleWriter\ changes several execution factors together and is diagnostic. The post-hoc \condSingleContext\ check is reported separately in the text and Appendix~\ref{app:single-context}.}
 \label{tab:ablation-results}
 \end{table*}
