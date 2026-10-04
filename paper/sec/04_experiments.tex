@@ -30,7 +30,7 @@ The coding-agent harness uses the host platforms' documented skills and subagent
 \label{sec:evaluation}
 
 \paragraph{Product-level diagnostics.}
-We report the benchmark-native score where defined and a standardized pointwise product score for the initial replication. These scores situate the controlled conditions on conventional benchmark-level quality measures, so we present them first in Section~\ref{sec:results}. They are secondary diagnostics rather than the confirmatory outcome: they come from the selected longest-output slice and from our controlled re-implementations, so we do not compare them numerically with published full-benchmark leaderboard values.
+We report the benchmark-native score where defined and a standardized pointwise product score for the initial replication. For the pointwise composite, each criterion score is standardized within benchmark and judge, then averaged across criteria and judges. These scores situate the controlled conditions on conventional benchmark-level quality measures, so we present them first in Section~\ref{sec:results}. They are secondary diagnostics rather than the confirmatory outcome: they come from the selected longest-output slice and from our controlled re-implementations, so we do not compare them numerically with published full-benchmark leaderboard values.
 
 \paragraph{Primary pairwise outcome.}
 Our primary outcome is pairwise preference between two outputs for the same prompt. Each pair is judged in both presentation orders. If both orders select the same winner, that winner is retained; any disagreement becomes a tie. We call this single retained winner or tie the \emph{prompt-collapsed outcome}. Prompts lacking a completed output from either side are excluded.
