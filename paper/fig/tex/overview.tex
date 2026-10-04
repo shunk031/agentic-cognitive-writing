@@ -1,60 +1,37 @@
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\resizebox{0.95\textwidth}{!}{%
 \begin{tikzpicture}[
-    font=\fontsize{8.5}{10}\selectfont,
-    box/.style={
-        draw,
-        rounded corners=2pt,
-        align=center,
-        minimum height=9mm,
-        inner sep=4pt
-    },
-    input/.style={box,text width=27mm},
-    state/.style={box,text width=33mm},
-    monitor/.style={box,text width=31mm},
-    role/.style={box,text width=25mm},
-    output/.style={box,text width=27mm},
-    arrow/.style={-{Latex[length=1.7mm]},semithick},
-    biarrow/.style={{Latex[length=1.7mm]}-{Latex[length=1.7mm]},semithick}
+  >=Latex,
+  node distance=4.5mm and 4mm,
+  box/.style={draw, rounded corners=1.5pt, align=center, inner sep=3.5pt, font=\small},
+  agent/.style={box, minimum width=0.28\columnwidth},
+  state/.style={box, minimum width=0.82\columnwidth},
+  io/.style={box, minimum width=0.82\columnwidth},
+  flow/.style={->, line width=0.55pt},
+  loop/.style={->, line width=0.55pt, rounded corners=5pt}
 ]
 
-\node[input] (task) at (0,1.6)
-    {\textbf{Writing task}\\context + constraints};
+\node[io] (task) {\textbf{Writing task}\\instruction $I$ \; + \; context $C$ \; + \; output contract $O$};
+\node[agent, below=of task] (monitor) {\textbf{Monitor}\\select next writing process};
 
-\node[state] (workspace) at (3.8,1.6)
-    {\textbf{Shared workspace}\\draft\\goal network\\process history};
+\node[agent, below left=7mm and -1mm of monitor] (planner) {\textbf{Planner}\\\texttt{Planning}};
+\node[agent, below=7mm of monitor] (translator) {\textbf{Translator}\\\texttt{Translating}};
+\node[agent, below right=7mm and -1mm of monitor] (reviewer) {\textbf{Reviewer}\\\texttt{Reviewing}};
 
-\node[monitor] (monitor) at (7.6,1.6)
-    {\textbf{Host agent: \texttt{Monitor}}\\inspect state\\choose next writing activity};
+\node[state, below=8mm of translator] (state) {\textbf{Persistent writing state}\\draft $D_t$ \; | \; goals $G_t$ \; | \; history $H_t$};
+\node[io, below=of state] (output) {\textbf{Completed document} $D_T$};
 
-\node[role] (planner) at (5.1,-0.5)
-    {\textbf{\texttt{Planner}}\\planning};
-\node[role] (translator) at (7.6,-0.5)
-    {\textbf{\texttt{Translator}}\\drafting / translating};
-\node[role] (reviewer) at (10.1,-0.5)
-    {\textbf{\texttt{Reviewer}}\\reviewing};
+\draw[flow] (task) -- (monitor);
+\draw[flow] (monitor) -- (planner);
+\draw[flow] (monitor) -- (translator);
+\draw[flow] (monitor) -- (reviewer);
+\draw[flow] (planner) -- (state);
+\draw[flow] (translator) -- (state);
+\draw[flow] (reviewer) -- (state);
+\draw[loop] (state.west) -| ([xshift=-3mm]monitor.west) -- (monitor.west);
+\draw[flow, dashed] (state) -- node[right, font=\scriptsize]{terminate after review} (output);
 
-\node[output] (output) at (12.1,1.6)
-    {\textbf{Completed document}};
-
-\draw[arrow] (task) -- (workspace);
-\draw[biarrow] (workspace) -- (monitor);
-\draw[arrow] (monitor.south) to[out=-120,in=90] (planner.north);
-\draw[arrow] (monitor.south) -- (translator.north);
-\draw[arrow] (monitor.south) to[out=-60,in=90] (reviewer.north);
-
-\draw[arrow] (planner.west) -| (workspace.south);
-\draw[arrow] (translator.west) to[out=180,in=-55] (workspace.south);
-\draw[arrow] (reviewer.west) to[out=180,in=-30] (workspace.south);
-
-\draw[arrow] (monitor) -- node[above]{finish} (output);
-
-\node[align=center,font=\itshape] at (7.6,-1.55)
-    {Each delegated activity updates the workspace before control returns to the \texttt{Monitor}.};
-
-\end{tikzpicture}%
-}
-\caption{Overview of \condAgenticCogWriter. A writing task is carried through a persistent shared workspace. At each iteration, the host-agent \texttt{Monitor} inspects the current draft, goal network, and process history, chooses whether the document next needs planning, drafting, or reviewing, and delegates that activity to the corresponding role agent. The updated state is reconsidered until the \texttt{Monitor} terminates with a completed document.}
+\end{tikzpicture}
+\caption{Overview of \condAgenticCogWriter. The \texttt{Monitor} reads the persistent writing state, selects one writing process, delegates it to the corresponding specialist, and then observes the updated state. When the \texttt{Monitor} terminates after review, the current draft is returned as the completed document.}
 \label{fig:agentic-cogwriter}
-\end{figure*}
+\end{figure}
