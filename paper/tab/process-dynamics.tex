@@ -1,0 +1,22 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lr}
+\toprule
+\textbf{Observed Agentic CogWriter behavior}
+& \textbf{Value} \\
+\midrule
+Completed runs following the canonical process cycle
+& \AfourCycleCompliantRate \\
+\texttt{Reviewing}$\rightarrow$\texttt{Planning} returns
+& \AfourReviewingToPlanningRate \\
+Runs accepting goal regeneration
+& \AfourRegenerationRuns/\AfourRunCount \\
+Delegated invocations per attempted run
+& \AfourSpawns \\
+\bottomrule
+\end{tabular}
+\caption{Observable controller behavior. The trace data show how the \texttt{Monitor} uses the flexibility available to it rather than inferring latent reasoning.}
+\label{tab:process-dynamics}
+\end{table}
