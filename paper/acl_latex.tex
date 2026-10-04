@@ -116,7 +116,7 @@ The following figure shows the prompt-collapsed pairwise estimates for each benc
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
-\caption{Prompt-collapsed pairwise win rates by benchmark and replication. Points show 95 percent Wilson intervals; diamonds show the mean across replications, and filled or open circles mark cells that do or do not survive Holm correction.}
+\caption{Prompt-collapsed pairwise win rates by benchmark and replication. Points show Wilson intervals; diamonds show the mean across replications, and filled or open circles mark cells that do or do not survive Holm correction.}
 \label{fig:appendix-confirmatory-forest}
 \end{figure*}
 
@@ -131,19 +131,19 @@ Table~\ref{tab:process-summary} reports completion, output size, delegated invoc
 \subsection{Record-pooled sensitivity}
 \label{app:record-pooled}
 The record-pooled table reports a sensitivity analysis that treats the two presentation records for each prompt as independent observations; the retained disagreements show how much presentation order can affect the descriptive rates.
-The retained presentation disagreements were \WritingPresentationDisagreementRate\ on WritingBench, \HelloPresentationDisagreementRate\ on HelloBench, and \DoLoPresentationDisagreementRate\ on DoLoMiTes across the three replications.
+The retained presentation disagreements were \WritingPresentationDisagreementRate\ on WritingBench, \HelloPresentationDisagreementRate\ on HelloBench, and \DoLoPresentationDisagreementRate\ on DoLoMiTes across the independent replications.
 \input{tab/appendix-record-pooled-pairwise}
 
 \subsection{Output-length sensitivity}
 \label{app:length-control}
-The length-control table reports the longer-side preference by output-length ratio; the longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. Within 5 percent, the outcomes from the first replication are \LengthFullSinglePassFiveWLT\ for \condAgenticCogWriter\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condAgenticCogWriter\ versus \condNoGoals. Within 10 percent, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$). The 5/10-percent rates for \condAgenticCogWriter\ versus \condSinglePass\ are \LengthFullSinglePassFiveRateRunTwo/\LengthFullSinglePassTenRateRunTwo in the second replication and \LengthFullSinglePassFiveRateRunThree/\LengthFullSinglePassTenRateRunThree in the third replication; the corresponding \condAgenticCogWriter\ versus \condTaskPlanning\ rates are \LengthFullTaskPlanningFiveRateRunTwo/\LengthFullTaskPlanningTenRateRunTwo and \LengthFullTaskPlanningFiveRateRunThree/\LengthFullTaskPlanningTenRateRunThree. The \condAgenticCogWriter\ versus \condNoGoals\ replicate rates are \LengthFullNoGoalsFiveRateRunTwo/\LengthFullNoGoalsTenRateRunTwo and \LengthFullNoGoalsFiveRateRunThree/\LengthFullNoGoalsTenRateRunThree.
+The length-control table reports the longer-side preference by output-length ratio; the longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. In the tighter pre-specified matching band, the outcomes from the first replication are \LengthFullSinglePassFiveWLT\ for \condAgenticCogWriter\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condAgenticCogWriter\ versus \condNoGoals. In the wider pre-specified band, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$). The remaining replication-specific rates are reported in Table~\ref{tab:appendix-length-control}.
 \input{tab/appendix-length-control}
 
 \subsection{Compute-stratified sensitivity}
 \label{app:compute-control}
 \input{tab/appendix-compute-control}
 
-\subsection{Single-context ablation}
+\subsection{Single-context exploratory check}
 \label{app:single-context}
 The \condSingleContext\ condition was added after the primary results had been observed, to test whether the \condSingleWriter\ loss reflects delegation to separate agents or the absence of process decomposition under a \texttt{Monitor}. We registered it as an exploratory condition outside the Holm family before judging and ran one replication, the same evidence tier as the cross-family check: the question it answers is whether an attribution survives, not whether a new contrast is confirmed. We therefore report the pooled estimate with its interval and the benchmark-level results without adjustment.
 \input{tab/appendix-single-context}
@@ -156,9 +156,9 @@ The cross-family table reports pooled outcomes for the three robustness contrast
 \clearpage
 \section{Habermas Machine pilot}
 \label{app:habermas}
-The Habermas table reports trace totals from the 80-run pilot, which tests short consensus writing as a boundary condition rather than a fourth benchmark.
+The Habermas table reports trace totals from the pilot, which tests short consensus writing as a boundary condition rather than as another primary benchmark.
 \input{tab/appendix-habermas}
 
-\condExploratoryOne\ is the exploratory CogWriter-style baseline, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; \condExploratoryTwo\ is the exploratory STORM-style baseline, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval. The \condAgenticCogWriter\ condition ranks fifth of eight on the pointwise composite, behind \condSinglePass\ and \condStaged. \condAgenticCogWriter\ and \condFixedOrder\ record \HabAfourRegenerated\ and \HabAsixRegenerated\ regeneration events, respectively; their ledgers contain \HabAfourLedger\ and \HabAsixLedger\ no/proposal outcomes, respectively.
+\condExploratoryOne\ is the exploratory CogWriter-style baseline, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; \condExploratoryTwo\ is the exploratory STORM-style baseline, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval. \condAgenticCogWriter\ does not lead the pointwise composite in this boundary-condition pilot; in particular, it scores below \condSinglePass\ and \condStaged. \condAgenticCogWriter\ and \condFixedOrder\ record \HabAfourRegenerated\ and \HabAsixRegenerated\ regeneration events, respectively; their ledgers contain \HabAfourLedger\ and \HabAsixLedger\ no/proposal outcomes, respectively.
 
 \end{document}
