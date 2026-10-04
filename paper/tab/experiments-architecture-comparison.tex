@@ -7,11 +7,11 @@
 \toprule
 \textbf{System}
 & \textbf{What happens next?}
-& \textbf{Goal network}
-& \textbf{Process order}
+& \textbf{Explicit goals}
+& \textbf{Writing-process order}
 & \textbf{Execution} \\
 \midrule
-\multicolumn{5}{l}{\textit{Alternative writing organizations}} \\
+\multicolumn{5}{l}{\textit{Alternative writing architectures}} \\
 \midrule
 \condSinglePass
 & Full document in one call
@@ -26,42 +26,42 @@
 \condTaskPlanning~\cite{xiong2025beyond}
 & Next task node
 & \no
-& Adaptive tasks
+& Adaptive task scheduling
 & Delegated task contexts \\
 \midrule
-\multicolumn{5}{l}{\textit{Proposed system and component interventions}} \\
+\multicolumn{5}{l}{\textit{Proposed architecture and component variants}} \\
 \midrule
 \condAgenticCogWriter
 & Next writing process
 & \yes
-& Adaptive
-& Separated role contexts \\
+& Selected online
+& Specialized role agents \\
 \condNoGoals
 & Next writing process
 & \no
-& Adaptive
-& Separated role contexts \\
+& Selected online
+& Specialized role agents \\
 \condFixedOrder
 & Next writing process
 & \yes
-& Fixed cycle
-& Separated role contexts \\
+& Fixed P$\rightarrow$T$\rightarrow$R cycle
+& Specialized role agents \\
 \midrule
 \multicolumn{5}{l}{\textit{Execution variants}} \\
 \midrule
 \condSingleWriter
 & Next writing process
 & \yes
-& Adaptive
-& One writer context; one paragraph per \texttt{Translating} step \\
+& Selected online
+& One writer context; one paragraph per drafting step \\
 \condSingleContext
 & Next writing process
 & \yes
-& Adaptive
+& Selected online
 & One host-agent context \\
 \bottomrule
 \end{tabular}%
 }
-\caption{Systems compared in the experiments. \condNoGoals\ removes the explicit goal record, and \condFixedOrder\ removes runtime choice of process order. \condSingleWriter\ changes several execution properties together; \condSingleContext\ is a narrower post-hoc execution check.}
+\caption{Systems compared in the experiments. \condNoGoals\ removes the explicit goal record, while \condFixedOrder\ removes online choice of writing-process order. \condSingleWriter\ changes several execution properties together; \condSingleContext\ is a narrower post-hoc execution check. P, T, and R denote planning, translating (drafting), and reviewing.}
 \label{tab:experimental-conditions}
 \end{table*}
