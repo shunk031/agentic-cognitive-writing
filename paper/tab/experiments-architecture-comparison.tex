@@ -11,7 +11,7 @@
 & \textbf{Scheduling}
 & \textbf{Execution} \\
 \midrule
-\multicolumn{5}{l}{\textit{Baselines}} \\
+\multicolumn{5}{l}{\textit{Baseline organizations}} \\
 \midrule
 \condSinglePass
 & Nothing (one call)
@@ -29,7 +29,7 @@
 & Adaptive tasks
 & Delegated task contexts \\
 \midrule
-\multicolumn{5}{l}{\textit{Process-level conditions}} \\
+\multicolumn{5}{l}{\textit{Process-level design and confirmatory interventions}} \\
 \midrule
 \condAgenticCogWriter
 & Writing process
@@ -47,16 +47,24 @@
 & Fixed cycle
 & Separated role contexts \\
 \midrule
-\multicolumn{5}{l}{\textit{Diagnostic ablation}} \\
+\multicolumn{5}{l}{\textit{Diagnostic bundled intervention}} \\
 \midrule
 \condSingleWriter
 & Writing process
 & \yes
 & Adaptive processes
 & One writer context; one paragraph per \texttt{Translating} step \\
+\midrule
+\multicolumn{5}{l}{\textit{Post-hoc exploratory check}} \\
+\midrule
+\condSingleContext
+& Writing process
+& \yes
+& Adaptive processes
+& One host-agent context \\
 \bottomrule
 \end{tabular}%
 }
-\caption{Experimental conditions. The second column states what, if anything, is selected next during generation. The process-level interventions remove the explicit goal representation or adaptive process ordering while retaining separated role contexts. \condSingleWriter\ retains adaptive process choice and the goal network but removes subagent delegation and restricts each \texttt{Translating} step to one paragraph before the next process decision, so it changes several execution factors together.}
+\caption{Experimental conditions. The second column states what, if anything, is selected next during generation. \condNoGoals\ and \condFixedOrder\ are confirmatory single-factor interventions within the process-level design. \condSingleWriter\ changes several execution factors together and is diagnostic. \condSingleContext\ was added after the primary results as a narrower exploratory check on separated role contexts and remains outside the confirmatory family.}
 \label{tab:experimental-conditions}
 \end{table*}
