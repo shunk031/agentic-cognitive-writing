@@ -2,7 +2,7 @@
 \centering
 \small
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{p{0.18\textwidth}*{5}{>{\centering\arraybackslash}p{0.14\textwidth}}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.18\textwidth}*{5}{>{\centering\arraybackslash}p{0.14\textwidth}}}
 \toprule
 \textbf{Method}
 & \textbf{Explicit planning structure}
@@ -23,6 +23,6 @@ WriteHERE~\citep{xiong2025beyond}
 & \yes & \yes & \yes & \yes & \yes \\
 \bottomrule
 \end{tabular}
-\caption{Architectural capabilities of representative long-form writing systems. \textbf{Adaptive next-step selection} means that the next action is chosen from the current state rather than prescribed entirely by a fixed workflow. \textbf{Evolving control structure} means that the structure used to guide subsequent generation is itself updated during writing, rather than only the document text changing. \textbf{Online writing-operation selection} means that the controller can choose among qualitatively different writing operations such as planning, drafting, and reviewing. The comparison concerns explicit architectural mechanisms, not whether a model may implicitly perform the same activity inside a generation call.}
+\caption{Architectural capabilities of representative long-form writing systems. \textbf{Adaptive next-step selection} means that the next action is chosen from the current state rather than prescribed entirely by a fixed workflow. \textbf{Evolving control structure} means that the structure used to guide subsequent generation is itself updated during writing, rather than only the document text changing. \textbf{Online writing-operation selection} means that the same document-level controller can choose planning, drafting, or reviewing as the next operation. The comparison concerns explicit architectural mechanisms, not whether a model may implicitly perform the same activity inside a generation call.}
 \label{tab:architecture-comparison}
 \end{table*}
