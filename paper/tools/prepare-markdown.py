@@ -73,6 +73,9 @@ def math_ascii(text):
         "checkmark": "yes",
         "quad": " ",
         "qquad": " ",
+        "ldots": "...",
+        "cdots": "...",
+        "dots": "...",
     }
     # Resolve semantic and spacing control words while their TeX boundaries are intact.
     # Formatting wrappers remain untouched until the next pass, preventing constructs
