@@ -58,7 +58,7 @@
 \maketitle
 
 \begin{abstract}
-AI agents increasingly produce long-form documents as part of multi-step knowledge work, but it remains unclear how the writing process itself should be organized. Existing systems typically advance an outline, a task graph, or a fixed sequence of stages. Drawing on cognitive process theory, we propose \condAgenticCogWriter, an architecture that maintains an evolving draft and writing state while a \texttt{Monitor} repeatedly chooses whether to plan, draft, or review and delegates that activity to a specialist. We evaluate the architecture on deliberately demanding subsets of established long-form writing benchmarks spanning general-purpose writing, long-context generation, and structured expert documents. Independent rubric-based scoring ranks \condAgenticCogWriter\ highest on two of the three benchmark types. When a judge directly compares two responses to the same prompt, \condAgenticCogWriter\ is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning. Ablations show no significant degradation from removing the explicit goal network or fixing the process order. Trace analysis further shows that most runs follow a single planning--drafting--reviewing cycle. Together, the results support process-organized writing as a promising agent architecture while leaving its causal mechanism open.
+AI agents increasingly produce long-form documents as part of multi-step knowledge work, but it remains unclear how the writing process itself should be organized. Existing systems typically advance an outline, a task graph, or a fixed sequence of stages. Drawing on cognitive process theory, we propose \condAgenticCogWriter, an architecture that maintains an evolving draft and writing state while a \texttt{Monitor} repeatedly chooses whether to plan, draft, or review and delegates that activity to a specialist. We evaluate the architecture on deliberately demanding subsets of established long-form writing benchmarks spanning general-purpose writing, long-context generation, and structured expert documents. Independent rubric-based scoring ranks \condAgenticCogWriter\ highest on two of the three benchmark types. When a judge directly compares two responses to the same prompt, \condAgenticCogWriter\ is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning. Pre-specified cellwise tests yield no Holm-surviving difference after removing the explicit goal network or fixing process order, while a post-hoc prompt-clustered analysis finds a small preference for adaptive ordering and no significant pooled goal-network effect. Trace analysis further shows that most runs follow a single planning--drafting--reviewing cycle, consistent with adaptive ordering making only a modest contribution. Together, the results support process-organized writing as a promising agent architecture while leaving the main source of its advantage open.
 \end{abstract}
 
 \section{Introduction}
@@ -105,19 +105,19 @@ AI agents increasingly produce long-form documents as part of multi-step knowled
 Table~\ref{tab:runtime-settings} summarizes the runtime and evaluation settings used for the reported runs. Every condition received the same task input, available information, generator, tool policy, attempt budget, and final-output contract.
 \input{tab/appendix-runtime-settings}
 
-\section{Replicate-level pairwise outcomes}
+\section{Generation-run-level pairwise outcomes}
 \label{app:pairwise-detail}
-The following figure shows the prompt-level pairwise estimates for each benchmark and replication, including the ablation contrasts.
+The following figure shows the prompt-level pairwise estimates for each benchmark and generation run, including the ablation contrasts.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
-\caption{Prompt-level pairwise win rates by benchmark and replication. Replication points show 95\% Wilson intervals. Filled or open circles mark cells that do or do not survive the within-benchmark Holm correction; diamonds are descriptive means across replications and are not separate inferential tests.}
+\caption{Prompt-level pairwise win rates by benchmark and generation run. Generation-run points show 95\% Wilson intervals. Filled or open circles mark cells that do or do not survive the within-benchmark Holm correction; diamonds are descriptive means across generation runs and are not separate inferential tests.}
 \label{fig:appendix-confirmatory-forest}
 \end{figure*}
 
 \section{Additional process and resource statistics}
 \label{app:process-behavior}
-Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first replication. For \condAgenticCogWriter, the first replication uses \AfourOutputTokens\ output-plus-reasoning tokens and \AfourInputTokens\ uncached input tokens per attempted run and records \AfourGoalRegenerated\ accepted goal regeneration. Across replications, the trace summaries contain mean totals of \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while the post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
+Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first generation run. For \condAgenticCogWriter, that run uses \AfourOutputTokens\ output-plus-reasoning tokens and \AfourInputTokens\ uncached input tokens per attempted run and records \AfourGoalRegenerated\ accepted goal regeneration. Across the three generation runs, the trace summaries contain mean totals of \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while the post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
 \input{tab/appendix-process}
 
 \section{Sensitivity analyses}
@@ -125,12 +125,12 @@ Table~\ref{tab:process-summary} reports completion, output size, delegated invoc
 \subsection{Record-pooled sensitivity}
 \label{app:record-pooled}
 The record-pooled table reports a sensitivity analysis that treats the two presentation records for each prompt as independent observations; the retained disagreements show how much presentation order can affect the descriptive rates.
-The retained presentation disagreements were \WritingPresentationDisagreementRate\ on WritingBench, \HelloPresentationDisagreementRate\ on HelloBench, and \DoLoPresentationDisagreementRate\ on DoLoMiTes across the independent replications.
+The retained presentation disagreements were \WritingPresentationDisagreementRate\ on WritingBench, \HelloPresentationDisagreementRate\ on HelloBench, and \DoLoPresentationDisagreementRate\ on DoLoMiTes across the three generation runs.
 \input{tab/appendix-record-pooled-pairwise}
 
 \subsection{Output-length sensitivity}
 \label{app:length-control}
-The length-control table reports the longer-side preference by output-length ratio; the longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. In the tighter pre-specified matching band, the outcomes from the first replication are \LengthFullSinglePassFiveWLT\ for \condAgenticCogWriter\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condAgenticCogWriter\ versus \condNoGoals. In the wider pre-specified band, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$). These matching-band $p$-values are unadjusted descriptive sign-test results. The remaining replication-specific rates are reported in Table~\ref{tab:appendix-length-control}.
+The length-control table reports the longer-side preference by output-length ratio; the longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. In the tighter pre-specified matching band, the outcomes from the first generation run are \LengthFullSinglePassFiveWLT\ for \condAgenticCogWriter\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condAgenticCogWriter\ versus \condNoGoals. In the wider pre-specified band, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$). These matching-band $p$-values are unadjusted descriptive sign-test results. The remaining generation-run-specific rates are reported in Table~\ref{tab:appendix-length-control}.
 \input{tab/appendix-length-control}
 
 \subsection{Compute-stratified sensitivity}
@@ -139,7 +139,7 @@ The length-control table reports the longer-side preference by output-length rat
 
 \subsection{Single-context exploratory check}
 \label{app:single-context}
-The \condSingleContext\ condition was added after the main results had been observed, to test whether the \condSingleWriter\ loss reflects delegation to separate agents or the absence of process decomposition under a \texttt{Monitor}. We registered it as an exploratory condition outside the Holm family before judging and ran one replication, the same evidence tier as the cross-family check: the question it answers is whether an attribution survives, not whether a new contrast is confirmed. We therefore report the pooled estimate with its interval and the benchmark-level results without adjustment.
+The \condSingleContext\ condition was added after the main results had been observed, to test whether the \condSingleWriter\ loss reflects delegation to separate agents or the absence of process decomposition under a \texttt{Monitor}. We registered it as an exploratory condition outside the Holm family before judging and ran one generation run, the same evidence tier as the cross-family check: the question it answers is whether an attribution survives, not whether a new contrast is confirmed. We therefore report the pooled estimate with its interval and the benchmark-level results without adjustment.
 \input{tab/appendix-single-context}
 
 \subsection{Cross-family judge robustness}
