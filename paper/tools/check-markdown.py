@@ -113,6 +113,11 @@ def check():
     for sample_phrase in ("hard100", "100-prompt", "100 prompts", "300 prompts"):
         assert sample_phrase not in main_text, sample_phrase
 
+    # Guard reviewer-facing wording that previously misstated the design or result.
+    lowered = text.lower()
+    for stale_phrase in ("no detectable loss", "longest-output", "independent replications"):
+        assert stale_phrase not in lowered, stale_phrase
+
     # Semantic safeguards without freezing the manuscript to one exact sentence.
     limitations = text[text.index("## Limitations") : text.index("## References")]
     assert "human" in limitations.lower() and "judge" in limitations.lower()
@@ -123,6 +128,38 @@ def check():
 
     paragraph_offenders = _single_sentence_main_paragraphs()
     assert not paragraph_offenders, paragraph_offenders
+
+    main_sources = "\n".join(
+        (PAPER / path).read_text()
+        for path in (
+            "acl_latex.tex",
+            "sec/01_introduction.tex",
+            "sec/04_experiments.tex",
+            "sec/05_results.tex",
+            "sec/06_discussion.tex",
+            "sec/07_limitations.tex",
+            "sec/08_conclusion.tex",
+        )
+    )
+    for required_macro in (
+        "ClusteredFullFixedOrderRate",
+        "ClusteredFullFixedOrderInterval",
+        "ClusteredFullFixedOrderP",
+        "ClusteredFullNoGoalsRate",
+        "ClusteredFullNoGoalsInterval",
+        "ClusteredFullNoGoalsP",
+        "UncondFullSinglePassWinShare",
+        "UncondFullStagedWinShare",
+        "UncondFullTaskPlanningWinShare",
+        "WorstCaseFullSinglePassRate",
+        "WorstCaseFullStagedRate",
+        "WorstCaseFullTaskPlanningRate",
+        "SingleWriterLengthFiveRate",
+        "SingleWriterLengthFiveP",
+        "SingleWriterLengthTenRate",
+        "SingleWriterLengthTenP",
+    ):
+        assert "\\" + required_macro in main_sources, required_macro
 
     names = [
         "PooledFourOneRateMean",
@@ -154,6 +191,8 @@ def check():
             "Title, Abstract, and References headings excluded from section count.",
             "Single-sentence main-text prose paragraphs: 0",
             "Explicit sample counts/internal hard100 label in main text: 0",
+            "Stale review wording: 0",
+            "Required adversarial-review macros referenced in source: 16/16",
             "Selected numbers spot-checked against numbers.tex:",
             *checks,
             f"Tables in PDF: {', '.join(pdf_tables)}",
