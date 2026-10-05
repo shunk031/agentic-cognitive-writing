@@ -1,44 +1,28 @@
 \begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{2.2pt}
-\begin{tabular}{p{0.18\textwidth}p{0.18\textwidth}p{0.12\textwidth}p{0.14\textwidth}p{0.08\textwidth}p{0.11\textwidth}p{0.09\textwidth}}
+\setlength{\tabcolsep}{5.2pt}
+\begin{tabular}{lccccc}
 \toprule
 \textbf{Method}
-& \textbf{Persistent state}
-& \textbf{Unit advanced}
-& \textbf{Next-step rule}
-& \textbf{Adaptive}
-& \textbf{Evolving structure}
-& \textbf{Process choice} \\
+& \ccell{\textbf{Explicit planning}\\\textbf{structure}}
+& \ccell{\textbf{Persistent}\\\textbf{writing state}}
+& \ccell{\textbf{Adaptive next-step}\\\textbf{selection}}
+& \ccell{\textbf{Evolving control}\\\textbf{structure}}
+& \ccell{\textbf{Online writing-}\\\textbf{operation selection}} \\
 \midrule
 Re$^3$~\citep{yang2022re3}
-& plan, text
-& passage
-& fixed workflow
-& \no & \no & \no \\
+& \yes & \yes & \no & \no & \no \\
 STORM~\citep{shao2024assisting}
-& outline, evidence
-& section
-& fixed workflow
-& \no & \no & \no \\
+& \yes & \yes & \no & \no & \no \\
 CogWriter~\citep{wan2025cognitive}
-& plan, constraints, text
-& plan / revision
-& validate or revise
-& \yes & \yes & \no \\
+& \yes & \yes & \yes & \yes & \no \\
 WriteHERE~\citep{xiong2025beyond}
-& task graph, text
-& task node
-& task selection
-& \yes & \yes & \no \\
+& \yes & \yes & \yes & \yes & \no \\
 \textbf{Agentic CogWriter}
-& \textbf{draft, goals, history}
-& \textbf{writing process}
-& \textbf{process selection}
-& \yes & \yes & \yes \\
+& \yes & \yes & \yes & \yes & \yes \\
 \bottomrule
 \end{tabular}
-\caption{Architectural comparison focused on the decision made during long-form generation. \textbf{Adaptive} indicates that the next unit is selected from the current state rather than prescribed by a fixed workflow; \textbf{Process choice} indicates that the selectable unit is an explicit writing process such as planning, drafting, or reviewing. The table abstracts each system only along dimensions relevant to our architecture question.}
+\caption{Architectural capabilities of representative long-form writing systems. \textbf{Adaptive next-step selection} means that the next action is chosen from the current state rather than prescribed entirely by a fixed workflow. \textbf{Evolving control structure} means that the structure used to guide subsequent generation is itself updated during writing, rather than only the document text changing. \textbf{Online writing-operation selection} means that the controller can choose among qualitatively different writing operations such as planning, drafting, and reviewing. The comparison concerns explicit architectural mechanisms, not whether a model may implicitly perform the same activity inside a generation call.}
 \label{tab:architecture-comparison}
 \end{table*}
