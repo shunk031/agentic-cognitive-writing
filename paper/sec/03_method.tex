@@ -1,37 +1,37 @@
-We introduce \condAgenticCogWriter, a long-form writing architecture that turns document production into a stateful loop over explicit writing processes. Figure~\ref{fig:agentic-cogwriter} gives the system overview. Given a writing task
+We introduce \condAgenticCogWriter, a long-form writing architecture that turns document production into a stateful loop over explicit writing processes. Figure~\ref{fig:agentic-cogwriter} gives the system overview. To make the information available throughout that loop explicit, we denote the original writing task by
 \begin{equation}
 X=(I,C,O),
 \end{equation}
-where $I$ is the instruction, $C$ is any supplied context, and $O$ is the requested output contract, the system returns a completed document $D_T$. The architecture has four agent roles: a top-level \texttt{Monitor} and three specialists, \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer}.
+where $I$ is the instruction, $C$ is any supplied context, and $O$ is the requested output contract. The task $X$ remains available throughout composition. When the \texttt{Monitor} terminates the loop, the current draft is returned as the completed document $D_{\mathrm{final}}$. The architecture has four agent roles: a top-level \texttt{Monitor} and three specialists, \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer}.
 
-\subsection{Persistent writing state}
+\subsection{Persistent Writing State}
 \label{sec:method-control-state}
 
-At writing step $t$, the shared workspace exposes the state
+Composition produces a sequence of evolving drafts $D_0,D_1,\ldots,D_t,\ldots$ rather than a fixed number of predetermined stages. After the $t$-th process invocation, the shared workspace exposes
 \begin{equation}
 S_t=(D_t,G_t,H_t),
 \end{equation}
-where $D_t$ is the current draft, $G_t$ is an explicit hierarchy of writing goals, and $H_t$ is the observable process history. The original task $X$ remains available throughout the run and is not rewritten into this state. Keeping these records outside any single agent context allows successive writing processes to inspect and modify the same document-level state.
+where $D_t$ is the current draft, $G_t$ is an explicit hierarchy of writing goals, and $H_t$ is the observable process history. The architecture does not prescribe a fixed terminal index in advance: the \texttt{Monitor} decides when to stop after review, subject to the common runtime budget used in our experiments. Keeping these records outside any single agent context allows successive writing processes to inspect and modify the same document-level state.
 
 The goal network is motivated by \citet{flower1981cognitive}, who describe writers as creating and developing goals during composition. In our implementation, goals can be created, refined, or replaced; we call replacement of an existing goal \emph{goal regeneration}. These records are an engineering representation that makes one theory-derived design choice observable. They are not intended as a claim that the language agent has a human-like cognitive state.
 
-\subsection{Process-level control}
+\subsection{Process-Level Control}
 \label{sec:method-writing-processes}
 
 The key architectural choice is what the \texttt{Monitor} selects next. Its action space is
 \begin{equation}
 \mathcal{A}=\{\texttt{Planning},\texttt{Translating},\texttt{Reviewing}\},
 \end{equation}
-and its decision at step $t$ is
+and its decision after state $S_t$ is
 \begin{equation}
 a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t), \qquad a_t\in\mathcal{A}.
 \label{eq:monitor-policy}
 \end{equation}
-We use \emph{process-selection policy} as shorthand for this runtime decision; $\pi_{\mathrm{Monitor}}$ is not a separately trained policy model. We retain \citet{flower1981cognitive}'s term \texttt{Translating} for the drafting activity. Unlike a section scheduler or task-graph controller, Equation~\ref{eq:monitor-policy} selects the \emph{kind of writing work} to perform next.
+We use \emph{process-selection policy} as shorthand for this runtime decision; $\pi_{\mathrm{Monitor}}$ is not a separately trained policy model. We retain \citet{flower1981cognitive}'s term \texttt{Translating} for the drafting activity. Unlike a section scheduler or task-graph controller, Eq.~\eqref{eq:monitor-policy} selects the \emph{kind of writing work} to perform next.
 
-The process order is therefore not fixed. Drafting can expose a structural problem that motivates renewed planning, and reviewing can trigger either another drafting pass or another planning pass. After a review, the \texttt{Monitor} may instead terminate the loop; the current draft $D_T$ is then returned as the final document.
+The process order is therefore not fixed. Drafting can expose a structural problem that motivates renewed planning, and reviewing can trigger either another drafting pass or another planning pass. After a review, the \texttt{Monitor} may instead terminate the loop and return the current draft as $D_{\mathrm{final}}$.
 
-\subsection{Agent roles and state updates}
+\subsection{Agent Roles and State Updates}
 \label{sec:method-agents}
 
 After choosing $a_t$, the \texttt{Monitor} delegates the selected process to its corresponding specialist. The \texttt{Planner} develops document structure and goals, the \texttt{Translator} turns the current plan and goals into prose, and the \texttt{Reviewer} evaluates the draft against the task and active goals. Each specialist writes its result back to the shared workspace before returning control to the \texttt{Monitor}, yielding the next observable state $S_{t+1}$.
