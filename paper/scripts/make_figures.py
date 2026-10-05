@@ -354,8 +354,10 @@ PROCESS_SEQUENCE_CONDITIONS = (("A4", "Agentic CogWriter"), ("A6", "Fixed-order"
 PROCESS_STATES = ("planning", "translating", "reviewing", "END")
 PROCESS_AXIS_LABELS = ("P", "T", "R", "E")
 ACL_TEXTWIDTH_IN = 16 / 2.54
-PROCESS_SEQUENCE_A_WIDTH_IN = 0.76 * ACL_TEXTWIDTH_IN
-PROCESS_SEQUENCE_MATRIX_WIDTH_IN = 0.29 * ACL_TEXTWIDTH_IN
+PROCESS_SEQUENCE_A_WIDTH_IN = 0.60 * ACL_TEXTWIDTH_IN
+PROCESS_SEQUENCE_A_HEIGHT_IN = 3.25
+PROCESS_SEQUENCE_MATRIX_WIDTH_IN = 0.37 * ACL_TEXTWIDTH_IN
+PROCESS_SEQUENCE_MATRIX_HEIGHT_IN = 1.45
 
 
 def process_sequence_values(report: dict[str, Any]) -> dict[str, Any]:
@@ -402,8 +404,9 @@ def process_sequence_values(report: dict[str, Any]) -> dict[str, Any]:
 
 def save_process_sequences_a(report: dict[str, Any], output: Path) -> None:
     values = process_sequence_values(report)
+    # Saved at exactly the placed size so 8 pt text prints at 8 pt.
     figure, sequence_axis = plt.subplots(
-        figsize=(PROCESS_SEQUENCE_A_WIDTH_IN, 3.1 * PROCESS_SEQUENCE_A_WIDTH_IN / 7.0)
+        figsize=(PROCESS_SEQUENCE_A_WIDTH_IN, PROCESS_SEQUENCE_A_HEIGHT_IN), layout="constrained"
     )
     row_positions = []
     labels = []
@@ -422,7 +425,7 @@ def save_process_sequences_a(report: dict[str, Any], output: Path) -> None:
         sequence_axis.text(count + max_count * 0.012, position, f"{count} ({share:.1%})", va="center", ha="left", fontsize=8)
     sequence_axis.set_yticks(row_positions)
     sequence_axis.set_yticklabels(labels, fontsize=8)
-    sequence_axis.set_xlim(0, max_count * 1.28)
+    sequence_axis.set_xlim(0, max_count * 1.42)
     sequence_axis.set_xlabel("Observed runs", fontsize=8)
     sequence_axis.grid(axis="x", color="#dddddd", linewidth=0.5)
     sequence_axis.set_axisbelow(True)
@@ -444,26 +447,25 @@ def save_process_sequences_a(report: dict[str, Any], output: Path) -> None:
         borderaxespad=0.0,
     )
     sequence_axis.text(
-        0.99,
-        0.06,
-        "P = Planning, T = Translating, R = Reviewing",
+        0.98,
+        0.04,
+        "P = Planning\nT = Translating\nR = Reviewing",
         transform=sequence_axis.transAxes,
         ha="right",
         va="bottom",
         fontsize=8,
         bbox={"facecolor": "white", "edgecolor": "none", "pad": 1.5},
     )
-    figure.subplots_adjust(left=0.20, right=0.99, top=0.90, bottom=0.20)
-    figure.savefig(output, format="pdf", bbox_inches="tight")
+    figure.savefig(output, format="pdf")
     plt.close(figure)
 
 
 def save_process_sequence_matrix(values: dict[str, Any], condition: str, output: Path, matrix_max: int) -> None:
     matrix = values[condition]["matrix"]
     figure, axis = plt.subplots(
-        figsize=(PROCESS_SEQUENCE_MATRIX_WIDTH_IN, 3.1 * PROCESS_SEQUENCE_MATRIX_WIDTH_IN / 3.35)
+        figsize=(PROCESS_SEQUENCE_MATRIX_WIDTH_IN, PROCESS_SEQUENCE_MATRIX_HEIGHT_IN), layout="constrained"
     )
-    axis.imshow(matrix, cmap="Blues", aspect="equal", vmin=0, vmax=matrix_max)
+    axis.imshow(matrix, cmap="Blues", aspect="auto", vmin=0, vmax=matrix_max)
     for row_index, row in enumerate(matrix):
         for column_index, count in enumerate(row):
             axis.text(column_index, row_index, str(count), ha="center", va="center", fontsize=8, color="white" if count > matrix_max * 0.52 else "#222222")
@@ -474,8 +476,7 @@ def save_process_sequence_matrix(values: dict[str, Any], condition: str, output:
     axis.tick_params(axis="both", labelsize=8, length=0)
     for spine in axis.spines.values():
         spine.set_visible(False)
-    figure.subplots_adjust(left=0.18, right=0.98, top=0.98, bottom=0.24)
-    figure.savefig(output, format="pdf", bbox_inches="tight")
+    figure.savefig(output, format="pdf")
     plt.close(figure)
 
 
