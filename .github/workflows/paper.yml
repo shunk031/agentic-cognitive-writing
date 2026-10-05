@@ -105,3 +105,8 @@ jobs:
             paper/build/acl_latex.log
             paper/build/acl_latex.md
             paper/build/render/**/*.png
+
+      # Runs after the upload so a failing check still leaves the PDF to inspect.
+      - name: Check manuscript structure and wording
+        working-directory: paper
+        run: python3 tools/check-markdown.py
