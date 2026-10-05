@@ -35,7 +35,6 @@ def _main_prose_paragraphs():
             if any(
                 token in paragraph
                 for token in (
-                    r"\begin{equation}",
                     r"\begin{itemize}",
                     r"\begin{enumerate}",
                 )
@@ -53,7 +52,13 @@ def _main_prose_paragraphs():
             if paragraph.startswith(r"\label"):
                 continue
 
-            prose = re.sub(r"^\\paragraph\{[^}]+\}\s*", "", paragraph)
+            prose = re.sub(
+                r"\\begin\{equation\}.*?\\end\{equation\}",
+                " MATH ",
+                paragraph,
+                flags=re.DOTALL,
+            )
+            prose = re.sub(r"^\\paragraph\{[^}]+\}\s*", "", prose)
             prose = re.sub(r"\\(?:cite[tp]?|ref|eqref)\{[^}]+\}", "CITATION", prose)
             prose = re.sub(r"\\[A-Za-z]+(?:\[[^]]*\])?\{([^{}]*)\}", r"\1", prose)
             prose = re.sub(r"\$[^$]*\$", "MATH", prose)
@@ -181,8 +186,7 @@ def check():
     assert "Flower and Hayes (1981)" in structural_text
     assert headings[-1] == "References"
 
-    appendix_start = structural_text.index("## Prompt and experiment configuration")
-    main_text = structural_text[:appendix_start]
+    main_text = structural_text[: structural_text.index("## References")]
     for sample_phrase in ("hard100", "100-prompt", "100 prompts", "300 prompts"):
         assert sample_phrase not in main_text, sample_phrase
 
@@ -190,6 +194,7 @@ def check():
         r"\bit is\b",
         r"\bcell(?:s|wise)?\b",
         r"\bspecialists?\b",
+        r"\bbookkeeping\b",
         r"\bLuna(?:--|-|–)Sol\b",
     ):
         match = re.search(banned, main_text, flags=re.IGNORECASE)
