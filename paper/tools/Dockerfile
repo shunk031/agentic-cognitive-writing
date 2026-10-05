@@ -8,14 +8,18 @@ ENV HTTP_PROXY=${HTTP_PROXY}
 ENV HTTPS_PROXY=${HTTPS_PROXY}
 ENV NO_PROXY=${NO_PROXY}
 
-RUN for attempt in 1 2 3; do \
-        if tlmgr option repository https://mirror.ctan.org/systems/texlive/tlnet \
+RUN set -eu; \
+    for repository in \
+        https://mirrors.mit.edu/CTAN/systems/texlive/tlnet \
+        https://mirrors.ibiblio.org/pub/mirrors/CTAN/systems/texlive/tlnet \
+        https://mirror.math.princeton.edu/pub/CTAN/systems/texlive/tlnet; do \
+        echo "Trying TeX Live repository: ${repository}" >&2; \
+        if tlmgr option repository "${repository}" \
             && tlmgr update --self \
             && tlmgr install inconsolata dblfloatfix sttools epigraph nextpage helvetic fvextra; then \
             exit 0; \
         fi; \
-        echo "tlmgr attempt ${attempt}/3 failed" >&2; \
-        if [ "${attempt}" -lt 3 ]; then sleep 5; fi; \
+        echo "TeX Live repository failed: ${repository}" >&2; \
     done; \
-    echo "tlmgr failed after 3 attempts" >&2; \
+    echo "tlmgr failed for all pinned repositories" >&2; \
     exit 1
