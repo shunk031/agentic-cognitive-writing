@@ -30,6 +30,6 @@
 & \PooledFourSevenRateMean \\
 \bottomrule
 \end{tabular}
-\caption{Ablations and execution diagnostic. Entries are \condAgenticCogWriter{}'s mean win rates among decided prompt comparisons across three generation runs; ties and pairs with a failed output are excluded. The final column pools benchmarks within each generation run before averaging across runs. \condNoGoals\ and \condFixedOrder\ each modify one architectural component, whereas \condSingleWriter\ changes several execution properties together.}
+\caption{Ablations and execution diagnostic. Entries are \condAgenticCogWriter{}'s mean win rates across three generation runs, restricted to prompt comparisons for which both presentation orders agree on the same winner; ties and pairs with a failed output are excluded. The final column combines prompt-level outcomes from the three benchmarks within each generation run and then averages the resulting rates across runs. \condNoGoals\ and \condFixedOrder\ each modify one control mechanism, whereas \condSingleWriter\ changes several execution properties together.}
 \label{tab:ablation-results}
 \end{table*}
