@@ -2,7 +2,7 @@
 \centering
 \small
 \setlength{\tabcolsep}{2.8pt}
-\begin{tabular}{p{0.17\textwidth}p{0.16\textwidth}p{0.15\textwidth}p{0.30\textwidth}p{0.12\textwidth}}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}}
 \toprule
 \textbf{System}
 & \textbf{Information available}
@@ -18,7 +18,7 @@
 \condStaged
 & $X$, prior stage output
 & next fixed stage
-& \shortstack{Pre-Write$\rightarrow$Write\\$\rightarrow$Re-Write}
+& \parbox[c]{\linewidth}{\centering Pre-Write$\rightarrow$Write\\$\rightarrow$Re-Write}
 & one context \\
 \condTaskPlanning
 & $X,D_t,T_t$
@@ -29,27 +29,27 @@
 \textbf{\condAgenticCogWriter}
 & $\mathbf{X,D_t,G_t,H_t}$
 & \textbf{writing process $a_t$}
-& \shortstack{$\mathbf{a_t=\pi_{\mathrm{Monitor}}}$\\$\mathbf{(X,D_t,G_t,H_t)}$}
+& \parbox[c]{\linewidth}{\centering $\mathbf{a_t=\pi_{\mathrm{Monitor}}}$\\$\mathbf{(X,D_t,G_t,H_t)}$}
 & \textbf{role subagent} \\
 \condNoGoals
 & $X,D_t,H_t$
 & writing process $a_t$
-& \shortstack{$a_t=\pi_{\mathrm{Monitor}}$\\$(X,D_t,H_t)$}
+& \parbox[c]{\linewidth}{\centering $a_t=\pi_{\mathrm{Monitor}}$\\$(X,D_t,H_t)$}
 & role subagent \\
 \condFixedOrder
 & $X,D_t,G_t,H_t$
 & next fixed process
-& \shortstack{Planning$\rightarrow$Translating\\$\rightarrow$Reviewing, repeated}
+& \parbox[c]{\linewidth}{\centering Planning$\rightarrow$Translating\\$\rightarrow$Reviewing, repeated}
 & role subagent \\
 \condSingleWriter
 & $X,D_t,G_t,H_t$
 & writing process $a_t$
-& \shortstack{$a_t=\pi_{\mathrm{Monitor}}$\\$(X,D_t,G_t,H_t)$}
+& \parbox[c]{\linewidth}{\centering $a_t=\pi_{\mathrm{Monitor}}$\\$(X,D_t,G_t,H_t)$}
 & one writer; paragraph-scale Translating \\
 \condSingleContext
 & $X,D_t,G_t,H_t$
 & writing process $a_t$
-& \shortstack{$a_t=\pi_{\mathrm{Monitor}}$\\$(X,D_t,G_t,H_t)$}
+& \parbox[c]{\linewidth}{\centering $a_t=\pi_{\mathrm{Monitor}}$\\$(X,D_t,G_t,H_t)$}
 & Monitor context \\
 \bottomrule
 \end{tabular}
