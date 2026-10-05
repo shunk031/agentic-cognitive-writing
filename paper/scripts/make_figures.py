@@ -13,6 +13,16 @@ import matplotlib
 
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
+
+plt.style.use("ggplot")
+# Match the manuscript's Times body text; STIX is matplotlib's bundled Times-compatible face.
+matplotlib.rcParams.update(
+    {
+        "font.family": "serif",
+        "font.serif": ["Times New Roman", "Times", "STIXGeneral"],
+        "mathtext.fontset": "stix",
+    }
+)
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.ticker import PercentFormatter
@@ -126,12 +136,12 @@ def forest_rows(aggregations: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def save_forest(rows: list[dict[str, Any]], output: Path) -> None:
-    figure, axis = plt.subplots(figsize=(6.6, 6.0))
+    figure, axis = plt.subplots(figsize=(0.96 * ACL_TEXTWIDTH_IN, 6.0), layout="constrained")
     group_size = len(BENCHMARKS)
     group_gap = 0.45
     positions = [index + group_gap * (index // group_size) for index in range(len(rows))]
     axis.set_yticks(positions)
-    axis.set_yticklabels([row["label"] for row in rows], fontsize=7)
+    axis.set_yticklabels([row["label"] for row in rows], fontsize=8)
     axis.invert_yaxis()
     offsets = (-0.13, 0.0, 0.13)
     for run_index, (offset, color) in enumerate(zip(offsets, RUN_COLORS), 1):
@@ -167,32 +177,29 @@ def save_forest(rows: list[dict[str, Any]], output: Path) -> None:
         marker="D",
         s=22,
         color="black",
-        label="Mean across three replications",
+        label="Mean across generation runs",
         zorder=4,
     )
     axis.axvline(REFERENCE_RATE, color="#555555", linewidth=0.8, linestyle="--")
     axis.set_xlim(0.0, 1.0)
     axis.xaxis.set_major_formatter(PercentFormatter(xmax=1.0, decimals=0))
-    axis.set_xlabel("Prompt-collapsed win rate")
+    axis.set_xlabel("Win rate among decided prompts", fontsize=9)
     axis.grid(axis="x", color="#dddddd", linewidth=0.5)
     axis.set_axisbelow(True)
     for boundary_index in range(group_size, len(rows), group_size):
         boundary = (positions[boundary_index - 1] + positions[boundary_index]) / 2
         axis.axhline(boundary, color="#cccccc", linewidth=0.5, zorder=1)
     run_handles = [
-        Line2D([0], [0], marker="o", color=color, linestyle="none", label=f"Replication {run}")
+        Line2D([0], [0], marker="o", color=color, linestyle="none", label=f"Generation run {run}")
         for run, color in enumerate(RUN_COLORS, 1)
     ]
     mark_handles = [
         Line2D([0], [0], marker="o", color="#333333", markerfacecolor="#333333", linestyle="none", label="Holm survives"),
         Line2D([0], [0], marker="o", color="#333333", markerfacecolor="white", linestyle="none", label="Holm does not survive"),
-        Line2D([0], [0], marker="D", color="black", linestyle="none", label="Mean across three replications"),
+        Line2D([0], [0], marker="D", color="black", linestyle="none", label="Mean across generation runs"),
     ]
-    first_legend = axis.legend(handles=run_handles, loc="upper center", bbox_to_anchor=(0.5, 1.10), ncol=3, frameon=False, fontsize=7)
-    axis.add_artist(first_legend)
-    axis.legend(handles=mark_handles, loc="upper center", bbox_to_anchor=(0.5, 1.045), ncol=3, frameon=False, fontsize=7)
-    figure.subplots_adjust(left=0.38, right=0.99, top=0.90, bottom=0.08)
-    figure.savefig(output, format="pdf", bbox_inches="tight")
+    axis.legend(handles=run_handles + mark_handles, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=3, frameon=False, fontsize=8)
+    figure.savefig(output, format="pdf")
     plt.close(figure)
 
 
@@ -466,6 +473,7 @@ def save_process_sequence_matrix(values: dict[str, Any], condition: str, output:
         figsize=(PROCESS_SEQUENCE_MATRIX_WIDTH_IN, PROCESS_SEQUENCE_MATRIX_HEIGHT_IN), layout="constrained"
     )
     axis.imshow(matrix, cmap="Blues", aspect="auto", vmin=0, vmax=matrix_max)
+    axis.grid(False)
     for row_index, row in enumerate(matrix):
         for column_index, count in enumerate(row):
             axis.text(column_index, row_index, str(count), ha="center", va="center", fontsize=8, color="white" if count > matrix_max * 0.52 else "#222222")
