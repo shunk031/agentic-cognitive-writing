@@ -14,6 +14,7 @@ import matplotlib
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 from matplotlib.ticker import PercentFormatter
 
 
@@ -427,11 +428,24 @@ def save_process_sequences_a(report: dict[str, Any], output: Path) -> None:
     sequence_axis.set_axisbelow(True)
     sequence_axis.tick_params(axis="both", labelsize=8)
     sequence_axis.axhline(4.5, color="#888888", linewidth=0.7)
-    sequence_axis.text(0.07, 1.055, "Agentic CogWriter", transform=sequence_axis.transAxes, ha="left", va="bottom", fontsize=8, color=colors[0])
-    sequence_axis.text(0.32, 1.055, "Fixed-order", transform=sequence_axis.transAxes, ha="left", va="bottom", fontsize=8, color=colors[1])
+    sequence_axis.legend(
+        handles=[
+            Patch(facecolor=colors[0], label="Agentic CogWriter"),
+            Patch(facecolor=colors[1], label="Fixed-order"),
+        ],
+        loc="lower left",
+        bbox_to_anchor=(0.0, 1.02),
+        ncol=2,
+        frameon=False,
+        fontsize=8,
+        handlelength=1.1,
+        handletextpad=0.4,
+        columnspacing=1.0,
+        borderaxespad=0.0,
+    )
     sequence_axis.text(
         0.99,
-        1.055,
+        0.06,
         "P = Planning, T = Translating, R = Reviewing",
         transform=sequence_axis.transAxes,
         ha="right",
