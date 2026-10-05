@@ -63,10 +63,7 @@ def math_ascii(text):
             notes.append(math_ascii(note))
             end = stop
         text = text[: match.start()] + value + text[end:]
-    for name in ("mathrm", "text", "texttt", "mathclap", "mathbf", "mathcal"):
-        text = commands(text, name, lambda value: value)
-    # TeX spacing commands carry no mathematical meaning in the Markdown rendering.
-    text = re.sub(r"\\(?:quad|qquad)\b", " ", text)
+
     replacements = {
         "pi": "pi",
         "sigma": "sigma",
@@ -74,8 +71,25 @@ def math_ascii(text):
         "in": " in ",
         "times": " x ",
         "checkmark": "yes",
+        "quad": " ",
+        "qquad": " ",
     }
-    text = re.sub(r"\\([A-Za-z]+)", lambda m: replacements[m[1]], text)
+    # Resolve semantic and spacing control words while their TeX boundaries are intact.
+    # Formatting wrappers remain untouched until the next pass, preventing constructs
+    # such as ``\\in\\mathcal{A}`` from collapsing into a spurious ``\\inA`` token.
+    text = re.sub(
+        r"\\([A-Za-z]+)",
+        lambda m: replacements.get(m[1], m[0]),
+        text,
+    )
+    for name in ("mathrm", "text", "texttt", "mathclap", "mathbf", "mathcal"):
+        text = commands(text, name, lambda value: value)
+
+    # Unsupported control words should fail loudly rather than disappear silently.
+    unknown = re.search(r"\\([A-Za-z]+)", text)
+    if unknown:
+        raise KeyError(unknown[1])
+
     text = text.replace(r"\{", "(").replace(r"\}", ")")
     text = re.sub(
         r"([_^])\{([^{}]+)\}",
