@@ -1,8 +1,8 @@
 \begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{4.5pt}
-\begin{tabular}{lllll}
+\setlength{\tabcolsep}{2.4pt}
+\begin{tabular}{p{0.14\textwidth}p{0.17\textwidth}p{0.14\textwidth}p{0.31\textwidth}p{0.13\textwidth}}
 \toprule
 \textbf{System}
 & \textbf{State used at step $t$}
@@ -18,7 +18,7 @@
 \condStaged~\citep{yang2022re3,wan2025cognitive}
 & $X$, prior stage output
 & fixed stage
-& Pre-Write$\rightarrow$Write$\rightarrow$Re-Write
+& \shortstack{Pre-Write$\rightarrow$Write\\$\rightarrow$Re-Write}
 & one context \\
 \condTaskPlanning~\citep{xiong2025beyond}
 & $(D_t,T_t)$
@@ -29,17 +29,17 @@
 \textbf{\condAgenticCogWriter}
 & $\mathbf{(D_t,G_t,H_t)}$
 & \textbf{writing process $a_t$}
-& $\mathbf{a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)}$
+& \shortstack{$\mathbf{a_t=\pi_{\mathrm{Monitor}}}$\\$\mathbf{(X,D_t,G_t,H_t)}$}
 & \textbf{role subagent} \\
 \condNoGoals
 & $(D_t,H_t)$
 & writing process $a_t$
-& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,H_t)$
+& \shortstack{$a_t=\pi_{\mathrm{Monitor}}$\\$(X,D_t,H_t)$}
 & role subagent \\
 \condFixedOrder
 & $(D_t,G_t,H_t)$
 & writing process $a_t$
-& fixed Planning$\rightarrow$Translating$\rightarrow$Reviewing
+& \shortstack{fixed Planning$\rightarrow$Translating\\$\rightarrow$Reviewing}
 & role subagent \\
 \condSingleWriter
 & $(D_t,G_t,H_t)$
