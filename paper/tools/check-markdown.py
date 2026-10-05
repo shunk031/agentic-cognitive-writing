@@ -195,7 +195,8 @@ def check():
     assert "Flower and Hayes (1981)" in structural_text
     assert headings[-1] == "References"
 
-    main_text = structural_text[: structural_text.index("## References")]
+    appendix_start = structural_text.index("## Prompt and experiment configuration")
+    main_text = structural_text[:appendix_start]
     for sample_phrase in ("hard100", "100-prompt", "100 prompts", "300 prompts"):
         assert sample_phrase not in main_text, sample_phrase
 
