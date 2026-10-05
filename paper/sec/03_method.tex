@@ -7,11 +7,11 @@ where $I$ is the instruction, $C$ is any supplied context, and $O$ is the reques
 \subsection{Persistent Writing State}
 \label{sec:method-control-state}
 
-Composition produces a sequence of evolving drafts $D_0,D_1,\ldots,D_t,\ldots$ rather than a fixed number of predetermined stages. After the $t$-th process invocation, the shared workspace exposes
+We index the evolving draft by the number of completed process invocations: $D_t$ is the current draft after $t$ invocations, and $D_0$ is the initial draft state before the first invocation. The number of invocations is not fixed in advance. After the $t$-th process invocation, the shared workspace exposes
 \begin{equation}
 S_t=(D_t,G_t,H_t),
 \end{equation}
-where $D_t$ is the current draft, $G_t$ is an explicit hierarchy of writing goals, and $H_t$ is the observable process history. The architecture does not prescribe a fixed terminal index in advance: the \texttt{Monitor} decides when to stop after review, subject to the common runtime budget used in our experiments. Keeping these records outside any single agent context allows successive writing processes to inspect and modify the same document-level state.
+where $D_t$ is the current draft, $G_t$ is an explicit hierarchy of writing goals, and $H_t$ is the observable process history. The \texttt{Monitor} decides when to stop after review, subject to the common runtime budget used in our experiments. Keeping these records outside any single agent context allows successive writing processes to inspect and modify the same document-level state.
 
 The goal network is motivated by \citet{flower1981cognitive}, who describe writers as creating and developing goals during composition. In our implementation, goals can be created, refined, or replaced; we call replacement of an existing goal \emph{goal regeneration}. These records are an engineering representation that makes one theory-derived design choice observable. They are not intended as a claim that the language agent has a human-like cognitive state.
 
