@@ -107,6 +107,12 @@ def check():
     assert "Flower and Hayes (1981)" in text
     assert headings[-1] == "References"
 
+    # Keep explicit evaluation-set counts and the internal hard100 name in the appendix.
+    appendix_start = text.index("## Prompt and experiment configuration")
+    main_text = text[:appendix_start]
+    for sample_phrase in ("hard100", "100-prompt", "100 prompts", "300 prompts"):
+        assert sample_phrase not in main_text, sample_phrase
+
     # Semantic safeguards without freezing the manuscript to one exact sentence.
     limitations = text[text.index("## Limitations") : text.index("## References")]
     assert "human" in limitations.lower() and "judge" in limitations.lower()
@@ -147,6 +153,7 @@ def check():
             f"Section headings: Markdown {actual}; PDF {expected} ({len(pdf_headings)} aux entries plus unnumbered Limitations)",
             "Title, Abstract, and References headings excluded from section count.",
             "Single-sentence main-text prose paragraphs: 0",
+            "Explicit sample counts/internal hard100 label in main text: 0",
             "Selected numbers spot-checked against numbers.tex:",
             *checks,
             f"Tables in PDF: {', '.join(pdf_tables)}",
