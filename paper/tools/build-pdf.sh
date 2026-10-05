@@ -4,7 +4,8 @@
 # @brief Build the ACL manuscript PDF in a container.
 # @description
 #   The first build creates a local TeX Live image from the official small
-#   image and adds the manuscript's inconsolata and epigraph packages.
+#   image and adds the manuscript's required TeX packages. The repository root
+#   is mounted so appendix prompt listings can read experiment and plugin files.
 # @option --clean Remove generated files under build/ and exit.
 # @example
 #   ./tools/build-pdf.sh
@@ -13,6 +14,7 @@ set -Eeuo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 paper_dir=$(cd -- "$script_dir/.." && pwd)
+repo_dir=$(cd -- "$paper_dir/.." && pwd)
 build_dir="$paper_dir/build"
 image_tag="agentic-cognitive-writing/texlive:latest-small-inconsolata-epigraph-nextpage"
 prebuilt_image="ghcr.io/shunk031/agentic-cognitive-writing/texlive:small-inconsolata-epigraph-nextpage"
@@ -71,11 +73,11 @@ docker run --rm \
     --env "HTTP_PROXY=${HTTP_PROXY-}" \
     --env "HTTPS_PROXY=${HTTPS_PROXY-}" \
     --env "NO_PROXY=${NO_PROXY-}" \
-    --env HOME=/workspace/build/.home \
-    --volume "$paper_dir:/workspace" \
-    --workdir /workspace \
+    --env HOME=/workspace/paper/build/.home \
+    --volume "$repo_dir:/workspace" \
+    --workdir /workspace/paper \
     "$image_tag" \
-    latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=/workspace/build acl_latex.tex \
+    latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=/workspace/paper/build acl_latex.tex \
     2>&1 | tee "$log_path"
 build_status=${PIPESTATUS[0]}
 set -e
