@@ -210,8 +210,9 @@ def check():
         r"\bComputational work\b",
         r"\bIndependent rubric-based scoring\b",
         r"\bHolm-surviving\b",
-        r"\bdecided comparisons?\b",
-        r"\bpooled over\b",
+        r"\bdecided(?:\s+prompt)?\s+comparisons?\b",
+        r"\bpool(?:ed|s|ing)?\b",
+        r"\bwriting architectures?\b",
     ):
         match = re.search(banned, main_text, flags=re.IGNORECASE)
         assert not match, (banned, match.group(0) if match else None)
