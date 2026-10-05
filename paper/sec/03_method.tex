@@ -7,18 +7,18 @@ where $I$ is the instruction, $C$ is the supplied context, and $O$ is the reques
 \subsection{Persistent Writing State}
 \label{sec:method-control-state}
 
-All four agents read and update a shared writing state. After $t$ completed process invocations, we denote that state by
+All four agents operate over a shared writing state. After $t$ completed process invocations, we denote the state by
 \begin{equation}
 S_t=(D_t,G_t,H_t),
 \end{equation}
-where $D_t$ is the current draft, $G_t$ is the current hierarchy of writing goals, and $H_t$ is the observable process history. The initial state contains the empty or task-provided draft and the goals derived from the assignment. Externalizing these records gives successive subagents the same document-level context even when their role-specific contexts are separate.
+where $D_t$ is the current draft, $G_t$ is the current hierarchy of writing goals, and $H_t$ is the observable process history. The initial state contains the empty or task-provided draft and goals derived from the assignment. Storing these records in the shared workspace lets each subagent recover the same document-level context before performing its role.
 
-The explicit goal representation serves two purposes in the system. First, it operationalizes the writer-generated goals described by \citet{flower1981cognitive}: goals can be created, developed, or replaced as the draft changes. Second, it makes that design choice observable enough to ablate and analyze. We refer to this replacement operation as goal regeneration. The representation is an engineering mechanism rather than a claim that the language agent has a human-like cognitive state.
+The explicit goal representation makes one theory-derived design choice observable and testable. Following the writer-generated goals in \citet{flower1981cognitive}, goals can be created, developed, or replaced as the draft changes; we call replacement of the active goal hierarchy goal regeneration. We use the representation as an engineering mechanism that can be ablated and analyzed, not as a claim that the language agent has a human-like cognitive state.
 
 \subsection{Process-Level Control}
 \label{sec:method-writing-processes}
 
-The \texttt{Monitor} agent decides which writing process should run next from the fixed task and current writing state. Its action space $\mathcal{A}$ is
+The \texttt{Monitor} agent decides which writing process should run next from the fixed task and current writing state. The available actions are
 \begin{equation}
 \mathcal{A}=\{\texttt{Planning},\texttt{Translating},\texttt{Reviewing}\},
 \end{equation}
@@ -36,4 +36,4 @@ Adaptive process selection allows the writing order to change as the document de
 
 Role-specific subagents execute the process selected by the \texttt{Monitor}. The \texttt{Planner} develops document structure and goals, the \texttt{Translator} turns the current plan and goals into prose, and the \texttt{Reviewer} evaluates the draft against the task and active goals. Each subagent writes its changes to the shared workspace before control returns to the \texttt{Monitor}, yielding the next state $S_{t+1}$.
 
-The \texttt{Monitor} remains responsible for coordination across those role-specific updates. A review may recommend changing a goal, but the \texttt{Monitor} decides whether to accept that change and records the decision in $H_t$. The experiments below test the complete system first, then separately remove the explicit goal representation and adaptive process ordering to measure how much each contributes.
+The \texttt{Monitor} remains responsible for coordination across role-specific updates. Review feedback can recommend changing a goal, but the \texttt{Monitor} decides whether to accept the change and records the decision in $H_t$. The experiments below evaluate the complete system first and then remove the explicit goal representation or adaptive process ordering to test how much each design choice contributes.
