@@ -198,7 +198,7 @@ def save_forest(rows: list[dict[str, Any]], output: Path) -> None:
         Line2D([0], [0], marker="o", color="#333333", markerfacecolor="white", linestyle="none", label="Holm does not survive"),
         Line2D([0], [0], marker="D", color="black", linestyle="none", label="Mean across generation runs"),
     ]
-    axis.legend(handles=run_handles + mark_handles, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=3, frameon=False, fontsize=8)
+    figure.legend(handles=run_handles + mark_handles, loc="outside upper left", ncol=3, frameon=False, fontsize=8)
     figure.savefig(output, format="pdf")
     plt.close(figure)
 
