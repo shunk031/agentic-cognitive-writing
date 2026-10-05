@@ -83,9 +83,11 @@ def check():
     )
     pipe_tables = re.findall(r"^\|(?=[ :\-|]*-)[ :\-|]+\|$", text, re.MULTILINE)
     html_tables = re.findall(r"^<table(?:\s[^>]*)?>$", text, re.MULTILINE)
-    assert len(pipe_tables) + len(html_tables) == len(pdf_tables), (
+    raw_tabulars = re.findall(r'^<div class="tabular">$', text, re.MULTILINE)
+    assert len(pipe_tables) + len(html_tables) + len(raw_tabulars) == len(pdf_tables), (
         len(pipe_tables),
         len(html_tables),
+        len(raw_tabulars),
         len(pdf_tables),
     )
     pdf_headings = re.findall(
@@ -202,7 +204,7 @@ def check():
             *checks,
             f"Tables in PDF: {', '.join(pdf_tables)}",
             f"Tables in Markdown: {', '.join(md_tables)}",
-            f"Table-count diff: 0; {len(pipe_tables)} Markdown pipe tables; {len(html_tables)} HTML tables",
+            f"Table-count diff: 0; {len(pipe_tables)} Markdown pipe tables; {len(html_tables)} HTML tables; {len(raw_tabulars)} raw tabular blocks",
             f"Word count (whitespace-delimited Markdown tokens): {len(text.split())}",
             "Human-evaluation limitation present.",
             "",
