@@ -3,6 +3,7 @@ import re
 import sys
 import tempfile
 import unittest
+from copy import deepcopy
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -115,6 +116,76 @@ def _length_summary() -> dict:
         "length_matched": bands,
         "ratio_bins": ratio_bins,
         "single_writer_at_least_10_percent_shorter": _length_stats(),
+    }
+
+
+def _review_analysis() -> dict:
+    clustered = {
+        "prompt_mean_wins": 130,
+        "prompt_mean_losses": 87,
+        "prompt_mean_ties": 82,
+        "prompts": 299,
+        "mean_over_prompt_replication_means": 0.537,
+        "bootstrap_95_percent_interval": {"low": 0.510, "high": 0.564},
+        "sign_test_p": 0.004249,
+    }
+    replications = {
+        "replication-1": {
+            "attempted_prompts": 300,
+            "failure_as_loss": {"win_share_over_attempted": 0.640},
+            "unconditional_over_attempted": {"win_share": 0.620},
+            "missing_pair_bounds": {"worst_case": {"focal_non_tie_win_rate": 0.749}},
+        },
+        "replication-2": {
+            "attempted_prompts": 300,
+            "failure_as_loss": {"win_share_over_attempted": 0.650},
+            "unconditional_over_attempted": {"win_share": 0.630},
+            "missing_pair_bounds": {"worst_case": {"focal_non_tie_win_rate": 0.800}},
+        },
+        "replication-3": {
+            "attempted_prompts": 300,
+            "failure_as_loss": {"win_share_over_attempted": 0.640},
+            "unconditional_over_attempted": {"win_share": 0.640},
+            "missing_pair_bounds": {"worst_case": {"focal_non_tie_win_rate": 0.800}},
+        },
+    }
+    length_result = {
+        "focal_condition": "A7",
+        "pairs": 101,
+        "selected_pairs": 101,
+        "equal_length_pairs": 1,
+        "wins": 26,
+        "losses": 48,
+        "ties": 27,
+        "n_non_tie": 74,
+        "win_rate": 26 / 74,
+        "wilson_low": 0.25,
+        "wilson_high": 0.46,
+        "sign_test_p": 0.0140799814,
+    }
+    return {
+        "pooling_and_equivalence": {
+            "A4:A6": {"prompt_clustered": clustered},
+            "A4:A5": {"prompt_clustered": {**clustered, "mean_over_prompt_replication_means": 0.523}},
+        },
+        "unconditional_outcomes_and_missing_output_bounds": {
+            contrast: {"pooled_over_benchmarks": deepcopy(replications)}
+            for contrast in ("A4:A1", "A4:A2", "A4:A3")
+        },
+        "single_writer_length_control_A7_vs_A4": {
+            "pooled_over_replications": {
+                "five_percent": length_result,
+                "ten_percent": {
+                    **length_result,
+                    "wins": 37,
+                    "losses": 84,
+                    "ties": 48,
+                    "n_non_tie": 121,
+                    "win_rate": 37 / 121,
+                    "sign_test_p": 0.0000231643033,
+                },
+            }
+        },
     }
 
 
@@ -494,6 +565,42 @@ class TokenMacroTests(unittest.TestCase):
                 [("A4", "A1")],
                 compute_stratified_sensitivity=summary,
             )
+
+    def test_adversarial_review_macros_are_source_backed(self):
+        output = emit_numbers(
+            [_aggregation()],
+            [("A4", "A1")],
+            adversarial_review_analysis=_review_analysis(),
+        )
+        self.assertIn(r"\newcommand{\ClusteredFullFixedOrderRate}{53.7\%}", output)
+        self.assertIn(r"\newcommand{\ClusteredFullFixedOrderInterval}{51.0\%--56.4\%}", output)
+        self.assertIn(r"\newcommand{\ClusteredFullFixedOrderP}{0.004}", output)
+        self.assertIn(r"\newcommand{\UncondFullSinglePassWinShare}{64.3\%}", output)
+        self.assertIn(r"\newcommand{\WorstCaseFullSinglePassRate}{74.9\%}", output)
+        self.assertIn(r"\newcommand{\SingleWriterLengthFiveRate}{35.1\%}", output)
+        self.assertIn(r"\newcommand{\SingleWriterLengthFiveP}{0.0141}", output)
+        self.assertIn(r"\newcommand{\SingleWriterLengthTenRate}{30.6\%}", output)
+        self.assertIn(r"\newcommand{\SingleWriterLengthTenP}{2.32\times 10^{-5}}", output)
+
+    def test_adversarial_review_macros_fail_closed_on_missing_fields(self):
+        summary = _review_analysis()
+        del summary["pooling_and_equivalence"]["A4:A6"]["prompt_clustered"]["sign_test_p"]
+        with self.assertRaisesRegex(ValueError, r"A4:A6\.prompt_clustered.*sign_test_p"):
+            emit_numbers(
+                [_aggregation()],
+                [("A4", "A1")],
+                adversarial_review_analysis=summary,
+            )
+
+    def test_adversarial_review_macros_do_not_use_existing_fallback_values(self):
+        output = emit_numbers(
+            [_aggregation()],
+            [("A4", "A1")],
+            existing={r"\ClusteredFullFixedOrderRate": r"99\%"},
+            adversarial_review_analysis=_review_analysis(),
+        )
+        self.assertIn(r"\newcommand{\ClusteredFullFixedOrderRate}{53.7\%}", output)
+        self.assertNotIn(r"\newcommand{\ClusteredFullFixedOrderRate}{99\%}", output)
 
     def test_single_context_macros_are_source_backed(self):
         output = emit_numbers(

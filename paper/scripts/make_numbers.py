@@ -235,6 +235,18 @@ SINGLE_CONTEXT_PAIR_FIELDS = (
     "non_ties",
 )
 
+REVIEW_CLUSTERED_CONTRASTS = {
+    "A4:A6": "FullFixedOrder",
+    "A4:A5": "FullNoGoals",
+}
+REVIEW_UNCONDITIONAL_CONTRASTS = {
+    "A4:A1": "FullSinglePass",
+    "A4:A2": "FullStaged",
+    "A4:A3": "FullTaskPlanning",
+}
+REVIEW_REPLICATIONS = ("replication-1", "replication-2", "replication-3")
+REVIEW_LENGTH_BANDS = {"five_percent": "Five", "ten_percent": "Ten"}
+
 
 def _word(value: object) -> str:
     text = str(value)
@@ -749,6 +761,14 @@ def _pvalue(value: Any) -> str:
     return f"{float(mantissa):.2f}\\times 10^{{{int(exponent)}}}"
 
 
+def _pvalue_three_decimal_places(value: Any) -> str:
+    number = _float(value)
+    if number is None or number < 0:
+        raise ValueError(f"p-value is not a non-negative number: {value!r}")
+    rounded = Decimal(str(number)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+    return f"{rounded:.3f}".rstrip("0").rstrip(".")
+
+
 def _pvalue_two_decimals(value: Any) -> str:
     number = _float(value)
     if number is None or number < 0:
@@ -948,6 +968,141 @@ def _validate_compute_report(report: dict[str, Any]) -> dict[str, Any]:
                     raise ValueError(f"{source}.per_replication.{replication}.{contrast} is missing {band}")
                 _validate_compute_outcome(stats, f"{source}.per_replication.{replication}.{contrast}.{band}")
     return report
+
+
+def _validate_review_clustered_result(data: dict[str, Any], source: str) -> None:
+    for key in ("prompt_mean_wins", "prompt_mean_losses", "prompt_mean_ties", "prompts"):
+        value = _required_int(data, key, source)
+        if value < 0:
+            raise ValueError(f"{source}.{key} must be non-negative")
+    rate = _required_number(data, "mean_over_prompt_replication_means", source)
+    if not 0.0 <= rate <= 1.0:
+        raise ValueError(f"{source}.mean_over_prompt_replication_means is outside [0, 1]")
+    interval = _required_mapping(data, "bootstrap_95_percent_interval", source)
+    low = _required_number(interval, "low", f"{source}.bootstrap_95_percent_interval")
+    high = _required_number(interval, "high", f"{source}.bootstrap_95_percent_interval")
+    if not 0.0 <= low <= high <= 1.0:
+        raise ValueError(f"{source}.bootstrap_95_percent_interval is invalid")
+    p_value = _required_number(data, "sign_test_p", source)
+    if not 0.0 <= p_value <= 1.0:
+        raise ValueError(f"{source}.sign_test_p is outside [0, 1]")
+
+
+def _validate_review_replication(data: dict[str, Any], source: str) -> None:
+    attempted = _required_int(data, "attempted_prompts", source)
+    if attempted != 300:
+        raise ValueError(f"{source}.attempted_prompts must be 300")
+    failure_as_loss = _required_mapping(data, "failure_as_loss", source)
+    unconditional = _required_mapping(data, "unconditional_over_attempted", source)
+    unconditional_win_share = _required_number(unconditional, "win_share", f"{source}.unconditional_over_attempted")
+    if not 0.0 <= unconditional_win_share <= 1.0:
+        raise ValueError(f"{source}.unconditional_over_attempted.win_share is outside [0, 1]")
+    failure_win_share = _required_number(failure_as_loss, "win_share_over_attempted", f"{source}.failure_as_loss")
+    if not 0.0 <= failure_win_share <= 1.0:
+        raise ValueError(f"{source}.failure_as_loss.win_share_over_attempted is outside [0, 1]")
+    bounds = _required_mapping(data, "missing_pair_bounds", source)
+    worst_case = _required_mapping(bounds, "worst_case", f"{source}.missing_pair_bounds")
+    worst_rate = _required_number(worst_case, "focal_non_tie_win_rate", f"{source}.missing_pair_bounds.worst_case")
+    if not 0.0 <= worst_rate <= 1.0:
+        raise ValueError(f"{source}.missing_pair_bounds.worst_case.focal_non_tie_win_rate is outside [0, 1]")
+
+
+def _validate_review_length_result(data: dict[str, Any], source: str) -> None:
+    _validate_outcome(data, source)
+    if data.get("focal_condition") != "A7":
+        raise ValueError(f"{source}.focal_condition must be A7")
+
+
+def _validate_review_analysis(report: dict[str, Any]) -> dict[str, Any]:
+    source = "adversarial review-analysis JSON"
+    pooling = _required_mapping(report, "pooling_and_equivalence", source)
+    for contrast in REVIEW_CLUSTERED_CONTRASTS:
+        block = _required_mapping(pooling, contrast, f"{source}.pooling_and_equivalence")
+        clustered = _required_mapping(block, "prompt_clustered", f"{source}.pooling_and_equivalence.{contrast}")
+        _validate_review_clustered_result(clustered, f"{source}.pooling_and_equivalence.{contrast}.prompt_clustered")
+
+    outcomes = _required_mapping(report, "unconditional_outcomes_and_missing_output_bounds", source)
+    for contrast in REVIEW_UNCONDITIONAL_CONTRASTS:
+        block = _required_mapping(outcomes, contrast, f"{source}.unconditional_outcomes_and_missing_output_bounds")
+        pooled = _required_mapping(block, "pooled_over_benchmarks", f"{source}.unconditional_outcomes_and_missing_output_bounds.{contrast}")
+        for replication in REVIEW_REPLICATIONS:
+            data = _required_mapping(pooled, replication, f"{source}.unconditional_outcomes_and_missing_output_bounds.{contrast}.pooled_over_benchmarks")
+            _validate_review_replication(data, f"{source}.unconditional_outcomes_and_missing_output_bounds.{contrast}.pooled_over_benchmarks.{replication}")
+
+    length = _required_mapping(report, "single_writer_length_control_A7_vs_A4", source)
+    pooled_length = _required_mapping(length, "pooled_over_replications", f"{source}.single_writer_length_control_A7_vs_A4")
+    for band in REVIEW_LENGTH_BANDS:
+        result = _required_mapping(pooled_length, band, f"{source}.single_writer_length_control_A7_vs_A4.pooled_over_replications")
+        _validate_review_length_result(result, f"{source}.single_writer_length_control_A7_vs_A4.pooled_over_replications.{band}")
+    return report
+
+
+def _review_analysis_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    report = _validate_review_analysis(report)
+    entries = []
+    pooling = report["pooling_and_equivalence"]
+    for contrast, contrast_word in REVIEW_CLUSTERED_CONTRASTS.items():
+        source = f"adversarial review-analysis JSON pooling_and_equivalence.{contrast}.prompt_clustered"
+        clustered = pooling[contrast]["prompt_clustered"]
+        entries.extend([
+            (
+                f"\\Clustered{contrast_word}Rate",
+                _percent_fixed(clustered["mean_over_prompt_replication_means"], 1),
+                source + ".mean_over_prompt_replication_means",
+            ),
+            (
+                f"\\Clustered{contrast_word}Interval",
+                f"{_percent_fixed(clustered['bootstrap_95_percent_interval']['low'], 1)}--{_percent_fixed(clustered['bootstrap_95_percent_interval']['high'], 1)}",
+                source + ".bootstrap_95_percent_interval",
+            ),
+            (
+                f"\\Clustered{contrast_word}P",
+                _pvalue_three_decimal_places(clustered["sign_test_p"]),
+                source + ".sign_test_p",
+            ),
+        ])
+
+    outcomes = report["unconditional_outcomes_and_missing_output_bounds"]
+    for contrast, contrast_word in REVIEW_UNCONDITIONAL_CONTRASTS.items():
+        pooled = outcomes[contrast]["pooled_over_benchmarks"]
+        failure_rates = [pooled[replication]["failure_as_loss"]["win_share_over_attempted"] for replication in REVIEW_REPLICATIONS]
+        worst_rates = [pooled[replication]["missing_pair_bounds"]["worst_case"]["focal_non_tie_win_rate"] for replication in REVIEW_REPLICATIONS]
+        source = f"adversarial review-analysis JSON unconditional_outcomes_and_missing_output_bounds.{contrast}.pooled_over_benchmarks"
+        entries.extend([
+            (
+                f"\\Uncond{contrast_word}WinShare",
+                _percent_fixed(statistics.mean(failure_rates), 1),
+                source + ".*.failure_as_loss.win_share_over_attempted mean",
+            ),
+            (
+                f"\\WorstCase{contrast_word}Rate",
+                _percent_fixed(min(worst_rates), 1),
+                source + ".*.missing_pair_bounds.worst_case.focal_non_tie_win_rate minimum",
+            ),
+        ])
+
+    pooled_length = report["single_writer_length_control_A7_vs_A4"]["pooled_over_replications"]
+    for band, band_word in REVIEW_LENGTH_BANDS.items():
+        result = pooled_length[band]
+        source = f"adversarial review-analysis JSON single_writer_length_control_A7_vs_A4.pooled_over_replications.{band}"
+        entries.extend([
+            (
+                f"\\SingleWriterLength{band_word}Rate",
+                _percent_fixed(result["win_rate"], 1),
+                source + ".win_rate",
+            ),
+            (
+                f"\\SingleWriterLength{band_word}P",
+                _pvalue(result["sign_test_p"]),
+                source + ".sign_test_p",
+            ),
+        ])
+    return entries
+
+
+def _emit_review_analysis_macros(add: Any, report: dict[str, Any]) -> None:
+    for name, value, source in _review_analysis_entries(report):
+        add(name, value, source)
 
 
 def _optional_percent(value: Any, decimals: int) -> str:
@@ -1466,6 +1621,7 @@ def emit_numbers(
     process_sequences: dict[str, Any] | None = None,
     compute_stratified_sensitivity: dict[str, Any] | None = None,
     single_context_stage1: tuple[dict[str, Any], dict[str, Any], dict[str, Any]] | None = None,
+    adversarial_review_analysis: dict[str, Any] | None = None,
 ) -> str:
     """Build a deterministic numbers.tex body using the published macro schema."""
 
@@ -1836,6 +1992,9 @@ def emit_numbers(
         _emit_compute_stratified_macros(add, compute_stratified_sensitivity)
     if single_context_stage1 is not None:
         _emit_single_context_stage1_macros(add, *single_context_stage1)
+    if adversarial_review_analysis is not None:
+        lines.append("% Adversarial review-analysis macros.")
+        _emit_review_analysis_macros(add, adversarial_review_analysis)
 
     # The power sentence uses the confirmed A4:A1 prompt-collapsed counts.
     # Keep raw counts for the power inversion and round only displayed counts.
@@ -1901,6 +2060,13 @@ def _render_single_context_stage1_block(
     return "\n".join(lines) + "\n"
 
 
+def _render_adversarial_review_block(report: dict[str, Any]) -> str:
+    lines = ["% Adversarial review-analysis macros."]
+    for name, value, source in _review_analysis_entries(report):
+        lines.extend([_source_comment(source), f"\\newcommand{{{name}}}{{{value}}}"])
+    return "\n".join(lines) + "\n"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("aggregations", nargs="*", type=Path)
@@ -1910,6 +2076,7 @@ def main() -> None:
     parser.add_argument("--cross-family-summary", type=Path)
     parser.add_argument("--process-sequences", type=Path)
     parser.add_argument("--compute-stratified-sensitivity", type=Path)
+    parser.add_argument("--adversarial-review-analysis", type=Path)
     parser.add_argument(
         "--a8-stage1",
         nargs=3,
@@ -1921,11 +2088,26 @@ def main() -> None:
     cost_group.add_argument("--public-prices", type=Path)
     cost_group.add_argument("--no-cost", action="store_true")
     args = parser.parse_args()
-    if not args.aggregations and args.a8_stage1 is None:
-        parser.error("at least one aggregation or --a8-stage1 is required")
+    if not args.aggregations and args.a8_stage1 is None and args.adversarial_review_analysis is None:
+        parser.error("at least one aggregation, --a8-stage1, or --adversarial-review-analysis is required")
     if args.aggregations and args.contrasts is None:
         parser.error("--contrasts is required with aggregation inputs")
     if not args.aggregations:
+        if args.adversarial_review_analysis is not None:
+            if args.a8_stage1 is not None:
+                parser.error("--a8-stage1 and --adversarial-review-analysis cannot be combined without aggregation inputs")
+            report = _read_json_object(args.adversarial_review_analysis, "adversarial review-analysis")
+            existing_text = args.output.read_text(encoding="utf-8") if args.output.is_file() else ""
+            marker = "% Adversarial review-analysis macros."
+            if marker in existing_text:
+                existing_text = existing_text.split(marker, 1)[0].rstrip() + "\n"
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(
+                existing_text.rstrip() + "\n\n" + _render_adversarial_review_block(report),
+                encoding="utf-8",
+            )
+            print(f"wrote {args.output}")
+            return
         aggregation, process_summary, audit = (
             _read_json_object(path, label)
             for path, label in zip(args.a8_stage1, ("A8 aggregation", "A8 process summary", "A8 structural audit"))
@@ -1968,6 +2150,11 @@ def main() -> None:
         if args.a8_stage1 is not None
         else None
     )
+    adversarial_review_analysis = (
+        _read_json_object(args.adversarial_review_analysis, "adversarial review-analysis")
+        if args.adversarial_review_analysis is not None
+        else None
+    )
     public_prices = _public_prices(args.public_prices) if not args.no_cost else None
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
@@ -1982,6 +2169,7 @@ def main() -> None:
             process_sequences,
             compute_stratified_sensitivity,
             single_context_stage1,
+            adversarial_review_analysis,
         ),
         encoding="utf-8",
     )
