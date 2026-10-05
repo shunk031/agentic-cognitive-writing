@@ -36,6 +36,6 @@
 \draw[flow, dashed] (state) -- node[right, font=\scriptsize]{terminate after review} (output);
 
 \end{tikzpicture}
-\caption{Overview of \condAgenticCogWriter. The input and completed document are distinguished from the agent roles and shared writing state. The \texttt{Monitor} reads the persistent state, selects one writing process, delegates it to the corresponding specialist, and observes the updated state before either continuing or terminating after review.}
+\caption{Overview of \condAgenticCogWriter. The input and completed document are distinguished from the agent roles and shared writing state. The \texttt{Monitor} reads the persistent state, selects one writing process, delegates it to the corresponding subagent, and observes the updated state before either continuing or terminating after review.}
 \label{fig:agentic-cogwriter}
 \end{figure}
