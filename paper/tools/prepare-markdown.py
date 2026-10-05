@@ -63,7 +63,7 @@ def math_ascii(text):
             notes.append(math_ascii(note))
             end = stop
         text = text[: match.start()] + value + text[end:]
-    for name in ("mathrm", "text", "mathclap", "mathbf", "mathcal"):
+    for name in ("mathrm", "text", "texttt", "mathclap", "mathbf", "mathcal"):
         text = commands(text, name, lambda value: value)
     replacements = {
         "pi": "pi",
