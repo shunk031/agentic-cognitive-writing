@@ -2,7 +2,7 @@
 \centering
 \small
 \setlength{\tabcolsep}{2.8pt}
-\begin{tabular}{p{0.18\textwidth}p{0.18\textwidth}p{0.16\textwidth}p{0.30\textwidth}p{0.10\textwidth}}
+\begin{tabular}{p{0.17\textwidth}p{0.16\textwidth}p{0.15\textwidth}p{0.30\textwidth}p{0.12\textwidth}}
 \toprule
 \textbf{System}
 & \textbf{Information available}
@@ -15,12 +15,12 @@
 & completed document $D_{\mathrm{final}}$
 & $D_{\mathrm{final}}=\pi_{\mathrm{gen}}(X)$
 & one context \\
-\condStaged~\citep{yang2022re3,wan2025cognitive}
+\condStaged
 & $X$, prior stage output
 & next fixed stage
 & \shortstack{Pre-Write$\rightarrow$Write\\$\rightarrow$Re-Write}
 & one context \\
-\condTaskPlanning~\citep{xiong2025beyond}
+\condTaskPlanning
 & $X,D_t,T_t$
 & task node $v_t$
 & $v_t=\pi_{\mathrm{task}}(D_t,T_t)$
@@ -29,12 +29,12 @@
 \textbf{\condAgenticCogWriter}
 & $\mathbf{X,D_t,G_t,H_t}$
 & \textbf{writing process $a_t$}
-& $\mathbf{a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)}$
+& \shortstack{$\mathbf{a_t=\pi_{\mathrm{Monitor}}}$\\$\mathbf{(X,D_t,G_t,H_t)}$}
 & \textbf{role subagent} \\
 \condNoGoals
 & $X,D_t,H_t$
 & writing process $a_t$
-& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,H_t)$
+& \shortstack{$a_t=\pi_{\mathrm{Monitor}}$\\$(X,D_t,H_t)$}
 & role subagent \\
 \condFixedOrder
 & $X,D_t,G_t,H_t$
@@ -44,12 +44,12 @@
 \condSingleWriter
 & $X,D_t,G_t,H_t$
 & writing process $a_t$
-& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)$
-& \shortstack{one writer;\\paragraph-scale Translating} \\
+& \shortstack{$a_t=\pi_{\mathrm{Monitor}}$\\$(X,D_t,G_t,H_t)$}
+& \shortstack{one writer;\\paragraph-scale\\Translating} \\
 \condSingleContext
 & $X,D_t,G_t,H_t$
 & writing process $a_t$
-& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)$
+& \shortstack{$a_t=\pi_{\mathrm{Monitor}}$\\$(X,D_t,G_t,H_t)$}
 & Monitor context \\
 \bottomrule
 \end{tabular}
