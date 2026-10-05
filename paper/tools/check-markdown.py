@@ -99,7 +99,7 @@ def check():
     )
     assert text.index("## Abstract") < text.index("## Introduction")
     assert "N annotators" not in text
-    assert "(Flower and Hayes, 1981)" in text
+    assert "Flower and Hayes (1981)" in text
     assert headings[-1] == "References"
 
     # Semantic safeguards without freezing the manuscript to one exact sentence.
