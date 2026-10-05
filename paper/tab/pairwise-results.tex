@@ -1,33 +1,33 @@
 \begin{table}[t]
 \centering
 \small
-\setlength{\tabcolsep}{3.2pt}
-\begin{tabular}{lrrrr}
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{lcccc}
 \toprule
-\multicolumn{5}{l}{\textbf{\condAgenticCogWriter\ win rate vs.}} \\
-\textbf{Baseline}
+\multicolumn{5}{l}{\textbf{\condAgenticCogWriter\ win rate (\%)}} \\
+\textbf{Comparison}
 & \textbf{Writing}
 & \textbf{Hello}
 & \textbf{DoLo}
 & \textbf{Mean} \\
 \midrule
-\condSinglePass
+vs. \condSinglePass
 & \textbf{\WritingFourOneRateMean}
 & \textbf{\HelloFourOneRateMean}
 & \textbf{\DoLoFourOneRateMean}
 & \textbf{\PooledFourOneRateMean} \\
-\condStaged~\citep{yang2022re3,wan2025cognitive}
+vs. \condStaged
 & \textbf{\WritingFourTwoRateMean}
 & \textbf{\HelloFourTwoRateMean}
 & \textbf{\DoLoFourTwoRateMean}
 & \textbf{\PooledFourTwoRateMean} \\
-\condTaskPlanning~\citep{xiong2025beyond}
+vs. \condTaskPlanning
 & \textbf{\WritingFourThreeRateMean}
 & \textbf{\HelloFourThreeRateMean}
 & \textbf{\DoLoFourThreeRateMean}
 & \textbf{\PooledFourThreeRateMean} \\
 \bottomrule
 \end{tabular}
-\caption{Direct same-prompt comparison of writing architectures. Entries are \condAgenticCogWriter{}'s mean win rates among non-tied prompt-level comparisons across independent replications. Values above 50\% favor \condAgenticCogWriter; winning rates are in bold. ``Mean'' pools benchmark outcomes within each replication before averaging across replications.}
+\caption{Direct same-prompt comparison of writing architectures. Entries are \condAgenticCogWriter{}'s mean win rates among non-tied prompt-level comparisons across independent replications. Values above 50\% favor \condAgenticCogWriter; winning rates are in bold. ``Mean'' pools benchmark outcomes within each replication before averaging across replications. Baseline definitions and citations appear in Section~\ref{sec:baselines}.}
 \label{tab:pairwise-results}
 \end{table}
