@@ -64,6 +64,35 @@ def _single_sentence_main_paragraphs():
     return offenders
 
 
+def _appendix_float_refs_in_main_text():
+    """Return main-text references to tables or figures that live in the appendix.
+
+    The main text cites an appendix section ("Appendix E"), never an appendix float.
+    """
+
+    def expand(text):
+        def include(match):
+            path = PAPER / (match[1] if match[1].endswith(".tex") else match[1] + ".tex")
+            return expand(path.read_text()) if path.exists() else ""
+
+        return re.sub(r"\\input\{([^}]+)\}", include, text)
+
+    source = (PAPER / "acl_latex.tex").read_text()
+    body = source[source.index(r"\begin{document}") :]
+    main, appendix = (re.sub(r"(?<!\\)%.*", "", expand(part)) for part in body.split(r"\appendix", 1))
+    appendix_floats = {
+        label
+        for label in re.findall(r"\\label\{([^}]+)\}", appendix)
+        if label.split(":")[0] in ("tab", "fig")
+    }
+    return [
+        label.strip()
+        for match in re.finditer(r"\\(?:ref|cref|Cref|autoref|subref)\{([^}]+)\}", main)
+        for label in match[1].split(",")
+        if label.strip() in appendix_floats
+    ]
+
+
 def check():
     text = (PAPER / "build" / "acl_latex.md").read_text()
     aux = (PAPER / "build" / "acl_latex.aux").read_text()
@@ -136,6 +165,12 @@ def check():
     paragraph_offenders = _single_sentence_main_paragraphs()
     assert not paragraph_offenders, paragraph_offenders
 
+    appendix_float_refs = _appendix_float_refs_in_main_text()
+    assert not appendix_float_refs, (
+        "main text cites appendix floats; cite the appendix section instead",
+        appendix_float_refs,
+    )
+
     main_sources = "\n".join(
         (PAPER / path).read_text()
         for path in (
@@ -197,6 +232,7 @@ def check():
             f"Section headings: Markdown {actual}; PDF {expected} ({len(pdf_headings)} aux entries plus unnumbered Limitations)",
             "Title, Abstract, and References headings excluded from section count.",
             "Single-sentence main-text prose paragraphs: 0",
+            "Main-text references to appendix tables or figures: 0",
             "Explicit sample counts/internal hard100 label in main text: 0",
             "Stale review wording: 0",
             "Required adversarial-review macros referenced in source: 16/16",
