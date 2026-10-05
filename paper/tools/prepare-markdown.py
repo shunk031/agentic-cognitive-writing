@@ -65,6 +65,8 @@ def math_ascii(text):
         text = text[: match.start()] + value + text[end:]
     for name in ("mathrm", "text", "texttt", "mathclap", "mathbf", "mathcal"):
         text = commands(text, name, lambda value: value)
+    # TeX spacing commands carry no mathematical meaning in the Markdown rendering.
+    text = re.sub(r"\\(?:quad|qquad)\b", " ", text)
     replacements = {
         "pi": "pi",
         "sigma": "sigma",
