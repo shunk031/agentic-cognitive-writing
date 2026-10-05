@@ -1,11 +1,11 @@
-\subsection{Pointwise and benchmark-native quality}
+\subsection{Pointwise and Benchmark-Native Quality}
 \label{sec:results-pointwise}
 
 Table~\ref{tab:main-results} shows that \condAgenticCogWriter\ obtains the strongest native and pointwise scores on WritingBench and HelloBench, whereas \condStaged\ has the strongest DoLoMiTes pointwise score. The table displays the four architecture-level systems, but each pointwise dimension is standardized against outputs from all seven pre-specified conditions before the five z-scores are averaged. The pointwise values are therefore relative: zero is the across-condition mean for that benchmark, and negative entries such as the \condSinglePass\ WritingBench score indicate below-reference performance rather than negative absolute document quality. Taken together, the independent metrics show that \condAgenticCogWriter\ is competitive across all three benchmark types but is not uniformly best.
 
 \input{tab/main-results}
 
-\subsection{Direct comparison of writing architectures}
+\subsection{Direct Comparison of Writing Architectures}
 \label{sec:results-effectiveness}
 
 Table~\ref{tab:pairwise-results} shows a clearer separation among writing architectures when the judge directly compares responses to the same prompt. After requiring the two presentation orders to agree on the semantic winner, \condAgenticCogWriter\ is preferred to one-shot generation, the fixed-stage workflow, and adaptive task planning, with across-benchmark mean win rates of \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean, respectively. The direction holds in every benchmark--replication cell against \condSinglePass\ and \condTaskPlanning, and in all but one cell against \condStaged. Replication-level exact tests with within-benchmark Holm correction support this pattern; Appendix~\ref{app:pairwise-detail} reports the confidence intervals and cell-level decisions.
@@ -14,7 +14,7 @@ Table~\ref{tab:pairwise-results} shows a clearer separation among writing archit
 
 Table~\ref{tab:pairwise-results} establishes an architecture-level difference but does not isolate a mechanism. \condAgenticCogWriter\ differs from the three alternatives in several coupled choices, including its persistent state, process-level action space, and repeated return to the \texttt{Monitor}. We therefore interpret the direct-comparison result as evidence for the tested organization as a whole rather than for any one of those features.
 
-\subsection{Ablations and execution diagnostics}
+\subsection{Ablations and Execution Diagnostics}
 \label{sec:results-mechanism}
 
 Table~\ref{tab:ablation-results} rules out two intuitive single-component explanations for the architecture-level advantage. Removing the explicit goal network (\condNoGoals) leaves the direct comparison close to even, with no benchmark--replication cell surviving Holm correction, and fixing the process order to planning, drafting, and reviewing (\condFixedOrder) yields the same inferential pattern. We therefore do not find evidence that either explicit goal bookkeeping or adaptive process ordering is individually necessary for the observed advantage. These non-significant differences do not establish equivalence between the ablations and the full system.
@@ -23,29 +23,33 @@ Table~\ref{tab:ablation-results} rules out two intuitive single-component explan
 
 Table~\ref{tab:ablation-results} also shows a much larger loss for \condSingleWriter, but that comparison changes several execution properties at once. It removes subagent delegation, changes role context, changes how much text can be produced between decisions, and changes output length. The narrower post-hoc \condSingleContext\ check retains the process loop and shows no significant pooled difference from \condAgenticCogWriter\ in its exploratory replication (\SingleContextFullRate\ win rate for \condSingleContext, $p=\SingleContextFullP$, unadjusted). Because that run also differs in gateway entry point and transport, these results weaken a simple role-context explanation without isolating an alternative mechanism; Appendix~\ref{app:single-context} gives the benchmark-level results.
 
-\subsection{How does the writing loop behave in practice?}
+\subsection{How Does the Writing Loop Behave in Practice?}
 \label{sec:results-process-dynamics}
 
 Table~\ref{tab:process-dynamics} shows that the supposedly flexible writing loop is behaviorally conservative. The dominant behavior is one \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle; a new planning step after review is rare, and replacement of an existing goal is also rare. Thus, although \condAgenticCogWriter\ can revisit earlier processes, most runs use that freedom very little. This pattern helps explain why imposing the same three-process order in \condFixedOrder\ produces little measurable degradation.
 
 \input{tab/process-dynamics}
 
-Figure~\ref{fig:process-sequences} shows the same concentration at the sequence and transition levels. The most frequent complete process path is the forward planning--drafting--reviewing progression, and the unrestricted system is visually close to \condFixedOrder\ because much of its observed behavior follows that path. This result comes from the pre-committed \texttt{hard100} slice rather than a random set of routine prompts: the selector emphasizes long inputs and any explicitly requested long outputs, with the exact source of difficulty differing across benchmarks. However, that length-based criterion does not guarantee that a task intrinsically requires replanning or repeated revision, so the result shows that adaptive control is rarely exercised on this slice rather than that it is unnecessary for all difficult writing tasks.
+Figure~\ref{fig:process-sequences} shows the same concentration at the sequence and transition levels. The most frequent complete process path is the forward planning--drafting--reviewing progression, and the unrestricted system is visually close to \condFixedOrder\ because much of its observed behavior follows that path. This result comes from the deliberately demanding benchmark subsets rather than a random collection of routine prompts, but the length-and-demand selector does not guarantee that every task intrinsically requires replanning or repeated revision. The trace evidence therefore shows that adaptive control is rarely exercised on the evaluated subsets rather than that it is unnecessary for all difficult writing tasks.
 
 \begin{figure*}[t]
 \centering
-\begin{minipage}[t]{0.68\textwidth}
+\begin{minipage}[t]{0.76\textwidth}
 \centering
-\includegraphics[width=\linewidth]{fig/process-sequences-a.pdf}\\[-0.3em]
+\includegraphics[width=\linewidth]{fig/process-sequences-a.pdf}\\[-0.35em]
 \small (a) Most frequent complete process paths
-\end{minipage}\hfill
+\end{minipage}
+
+\vspace{0.25em}
 \begin{minipage}[t]{0.29\textwidth}
 \centering
-\includegraphics[width=\linewidth]{fig/process-sequences-b.pdf}\\[-0.3em]
+\includegraphics[width=\linewidth]{fig/process-sequences-b.pdf}\\[-0.35em]
 \small (b) \condAgenticCogWriter
-
-\vspace{0.6em}
-\includegraphics[width=\linewidth]{fig/process-sequences-c.pdf}\\[-0.3em]
+\end{minipage}
+\hspace{0.05\textwidth}
+\begin{minipage}[t]{0.29\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig/process-sequences-c.pdf}\\[-0.35em]
 \small (c) \condFixedOrder
 \end{minipage}
 \caption{Observed writing-process behavior. Panel (a) shows the most frequent complete process paths; panels (b) and (c) show transition counts for \condAgenticCogWriter\ and \condFixedOrder. P, T, R, and E denote \texttt{Planning}, \texttt{Translating} (drafting), \texttt{Reviewing}, and termination.}
@@ -56,7 +60,7 @@ Table~\ref{tab:trace-outcome} shows no larger advantage for the less common proc
 
 \input{tab/trace-outcome}
 
-\subsection{Robustness checks}
+\subsection{Robustness Checks}
 \label{sec:results-robustness}
 
 Table~\ref{tab:appendix-length-control} and Table~\ref{tab:appendix-compute-control} show that the architecture-level direction survives the tested output-length and compute restrictions where eligible pairs exist. The main judge favors longer outputs overall, but \condAgenticCogWriter\ remains favored over \condSinglePass\ within the pre-specified length-matching bands. Under the tightest available compute match, the direction also remains favorable against \condStaged\ and \condTaskPlanning; no \condAgenticCogWriter--\condSinglePass\ pairs satisfy that compute band. Because output length and realized compute are consequences of execution, these checks are descriptive rather than causal adjustments.
