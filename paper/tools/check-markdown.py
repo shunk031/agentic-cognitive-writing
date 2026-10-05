@@ -16,6 +16,13 @@ MAIN_SECTIONS = [
 ]
 
 
+def _without_code_blocks(text):
+    """Remove fenced/indented code so literal Appendix prompts are not manuscript syntax."""
+    text = re.sub(r"(?ms)^```[^\n]*\n.*?^```\s*$", "", text)
+    text = re.sub(r"(?ms)^~~~[^\n]*\n.*?^~~~\s*$", "", text)
+    return re.sub(r"(?m)^(?: {4}|\t).*$", "", text)
+
+
 def _main_prose_paragraphs():
     """Yield normalized prose paragraphs from the main paper."""
     for relative in MAIN_SECTIONS:
@@ -117,27 +124,33 @@ def _appendix_float_refs_in_main_text():
 def check():
     text = (PAPER / "build" / "acl_latex.md").read_text()
     aux = (PAPER / "build" / "acl_latex.aux").read_text()
+    structural_text = _without_code_blocks(text)
 
-    rendered_prose = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
-    controls = re.findall(r"\\[A-Za-z]+", rendered_prose)
+    controls = re.findall(r"\\[A-Za-z]+", structural_text)
     assert not controls, controls
     for residue in ("~", r"\%", r"\$", "--", r"\ref", r"\label"):
         prose = "\n".join(
             line
-            for line in rendered_prose.splitlines()
+            for line in structural_text.splitlines()
             if not re.fullmatch(r"[| :\-]+", line)
         )
         assert residue not in prose, residue
 
     pdf_tables = re.findall(r"\\contentsline \{table\}\{\\numberline \{(\d+)\}", aux)
-    md_tables = re.findall(r"^Table (\d+)\.", text, re.MULTILINE)
+    md_tables = re.findall(r"^Table (\d+)\.", structural_text, re.MULTILINE)
     assert pdf_tables == md_tables == list(map(str, range(1, len(pdf_tables) + 1))), (
         pdf_tables,
         md_tables,
     )
-    pipe_tables = re.findall(r"^\|(?=[ :\-|]*-)[ :\-|]+\|$", text, re.MULTILINE)
-    html_tables = re.findall(r"^<table(?:\s[^>]*)?>$", text, re.MULTILINE)
-    raw_tabulars = re.findall(r'^<div class="tabular">$', text, re.MULTILINE)
+    pipe_tables = re.findall(
+        r"^\|(?=[ :\-|]*-)[ :\-|]+\|$", structural_text, re.MULTILINE
+    )
+    html_tables = re.findall(
+        r"^<table(?:\s[^>]*)?>$", structural_text, re.MULTILINE
+    )
+    raw_tabulars = re.findall(
+        r'^<div class="tabular">$', structural_text, re.MULTILINE
+    )
     assert len(pipe_tables) + len(html_tables) + len(raw_tabulars) == len(pdf_tables), (
         len(pipe_tables),
         len(html_tables),
@@ -148,7 +161,7 @@ def check():
     pdf_headings = re.findall(
         r"\\contentsline \{(section|subsection|subsubsection|paragraph)\}", aux
     )
-    headings = re.findall(r"^#{1,6} (.+)$", text, re.MULTILINE)
+    headings = re.findall(r"^#{1,6} (.+)$", structural_text, re.MULTILINE)
     expected = len(pdf_headings) + 1
     actual = len(headings) - 3
     assert actual == expected, (actual, expected, headings)
@@ -163,13 +176,13 @@ def check():
         normalized_headings[2:-1],
         pdf_titles,
     )
-    assert text.index("## Abstract") < text.index("## Introduction")
-    assert "N annotators" not in rendered_prose
-    assert "Flower and Hayes (1981)" in rendered_prose
+    assert structural_text.index("## Abstract") < structural_text.index("## Introduction")
+    assert "N annotators" not in structural_text
+    assert "Flower and Hayes (1981)" in structural_text
     assert headings[-1] == "References"
 
-    appendix_start = text.index("## Prompt and experiment configuration")
-    main_text = rendered_prose[:appendix_start]
+    appendix_start = structural_text.index("## Prompt and experiment configuration")
+    main_text = structural_text[:appendix_start]
     for sample_phrase in ("hard100", "100-prompt", "100 prompts", "300 prompts"):
         assert sample_phrase not in main_text, sample_phrase
 
@@ -190,11 +203,13 @@ def check():
     ):
         assert stale_phrase not in lowered, stale_phrase
 
-    limitations = text[text.index("## Limitations") : text.index("## References")]
+    limitations = structural_text[
+        structural_text.index("## Limitations") : structural_text.index("## References")
+    ]
     assert "human" in limitations.lower() and "judge" in limitations.lower()
-    method_start = text.index("## Agentic CogWriter")
-    method_end = text.index("## Experimental Design")
-    method = text[method_start:method_end]
+    method_start = structural_text.index("## Agentic CogWriter")
+    method_end = structural_text.index("## Experimental Design")
+    method = structural_text[method_start:method_end]
     assert "Monitor" in method and "Planning" in method and "Reviewing" in method
 
     paragraph_offenders = _paragraph_style_offenders()
@@ -259,7 +274,7 @@ def check():
     for name in names:
         value = re.search(r"\\newcommand\{\\" + name + r"\}\{([^{}]*)\}", numbers)[1]
         value = value.replace(r"\%", "%").replace(r"\$", "$").replace("--", "–")
-        assert value in text, (name, value)
+        assert value in structural_text, (name, value)
         checks.append(f"{name}: {value} (present in Markdown)")
 
     report = "\n".join(
@@ -279,7 +294,7 @@ def check():
             f"Tables in PDF: {', '.join(pdf_tables)}",
             f"Tables in Markdown: {', '.join(md_tables)}",
             f"Table-count diff: 0; {len(pipe_tables)} Markdown pipe tables; {len(html_tables)} HTML tables; {len(raw_tabulars)} raw tabular blocks",
-            f"Word count (whitespace-delimited Markdown tokens): {len(text.split())}",
+            f"Word count (manuscript Markdown, excluding literal prompt blocks): {len(structural_text.split())}",
             "Human-evaluation limitation present.",
             "",
         ]
