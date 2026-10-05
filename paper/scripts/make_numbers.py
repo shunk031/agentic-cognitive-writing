@@ -1065,14 +1065,14 @@ def _review_analysis_entries(report: dict[str, Any]) -> list[tuple[str, str, str
     outcomes = report["unconditional_outcomes_and_missing_output_bounds"]
     for contrast, contrast_word in REVIEW_UNCONDITIONAL_CONTRASTS.items():
         pooled = outcomes[contrast]["pooled_over_benchmarks"]
-        failure_rates = [pooled[replication]["failure_as_loss"]["win_share_over_attempted"] for replication in REVIEW_REPLICATIONS]
+        unconditional_rates = [pooled[replication]["unconditional_over_attempted"]["win_share"] for replication in REVIEW_REPLICATIONS]
         worst_rates = [pooled[replication]["missing_pair_bounds"]["worst_case"]["focal_non_tie_win_rate"] for replication in REVIEW_REPLICATIONS]
         source = f"adversarial review-analysis JSON unconditional_outcomes_and_missing_output_bounds.{contrast}.pooled_over_benchmarks"
         entries.extend([
             (
                 f"\\Uncond{contrast_word}WinShare",
-                _percent_fixed(statistics.mean(failure_rates), 1),
-                source + ".*.failure_as_loss.win_share_over_attempted mean",
+                _percent_fixed(statistics.mean(unconditional_rates), 1),
+                source + ".*.unconditional_over_attempted.win_share mean",
             ),
             (
                 f"\\WorstCase{contrast_word}Rate",

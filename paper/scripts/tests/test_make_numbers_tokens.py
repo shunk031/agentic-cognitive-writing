@@ -133,13 +133,13 @@ def _review_analysis() -> dict:
         "replication-1": {
             "attempted_prompts": 300,
             "failure_as_loss": {"win_share_over_attempted": 0.640},
-            "unconditional_over_attempted": {"win_share": 0.620},
+            "unconditional_over_attempted": {"win_share": 0.6066666667},
             "missing_pair_bounds": {"worst_case": {"focal_non_tie_win_rate": 0.749}},
         },
         "replication-2": {
             "attempted_prompts": 300,
             "failure_as_loss": {"win_share_over_attempted": 0.650},
-            "unconditional_over_attempted": {"win_share": 0.630},
+            "unconditional_over_attempted": {"win_share": 0.6466666667},
             "missing_pair_bounds": {"worst_case": {"focal_non_tie_win_rate": 0.800}},
         },
         "replication-3": {
@@ -575,7 +575,8 @@ class TokenMacroTests(unittest.TestCase):
         self.assertIn(r"\newcommand{\ClusteredFullFixedOrderRate}{53.7\%}", output)
         self.assertIn(r"\newcommand{\ClusteredFullFixedOrderInterval}{51.0\%--56.4\%}", output)
         self.assertIn(r"\newcommand{\ClusteredFullFixedOrderP}{0.004}", output)
-        self.assertIn(r"\newcommand{\UncondFullSinglePassWinShare}{64.3\%}", output)
+        self.assertIn(r"\newcommand{\UncondFullSinglePassWinShare}{63.1\%}", output)
+        self.assertNotIn(r"\newcommand{\UncondFullSinglePassWinShare}{64.3\%}", output)
         self.assertIn(r"\newcommand{\WorstCaseFullSinglePassRate}{74.9\%}", output)
         self.assertIn(r"\newcommand{\SingleWriterLengthFiveRate}{35.1\%}", output)
         self.assertIn(r"\newcommand{\SingleWriterLengthFiveP}{0.0141}", output)
