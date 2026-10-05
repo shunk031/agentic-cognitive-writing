@@ -352,6 +352,9 @@ PROCESS_LABELS = {
 PROCESS_SEQUENCE_CONDITIONS = (("A4", "Agentic CogWriter"), ("A6", "Fixed-order"))
 PROCESS_STATES = ("planning", "translating", "reviewing", "END")
 PROCESS_AXIS_LABELS = ("P", "T", "R", "E")
+ACL_TEXTWIDTH_IN = 16 / 2.54
+PROCESS_SEQUENCE_A_WIDTH_IN = 0.76 * ACL_TEXTWIDTH_IN
+PROCESS_SEQUENCE_MATRIX_WIDTH_IN = 0.29 * ACL_TEXTWIDTH_IN
 
 
 def process_sequence_values(report: dict[str, Any]) -> dict[str, Any]:
@@ -398,7 +401,9 @@ def process_sequence_values(report: dict[str, Any]) -> dict[str, Any]:
 
 def save_process_sequences_a(report: dict[str, Any], output: Path) -> None:
     values = process_sequence_values(report)
-    figure, sequence_axis = plt.subplots(figsize=(7.0, 3.1))
+    figure, sequence_axis = plt.subplots(
+        figsize=(PROCESS_SEQUENCE_A_WIDTH_IN, 3.1 * PROCESS_SEQUENCE_A_WIDTH_IN / 7.0)
+    )
     row_positions = []
     labels = []
     counts = []
@@ -413,17 +418,27 @@ def save_process_sequences_a(report: dict[str, Any], output: Path) -> None:
     sequence_axis.barh(row_positions, counts, color=[colors[index // 5] for index in range(10)], height=0.72, alpha=0.86)
     max_count = max(counts)
     for position, count, share in zip(row_positions, counts, shares):
-        sequence_axis.text(count + max_count * 0.012, position, f"{count} ({share:.1%})", va="center", ha="left", fontsize=7)
+        sequence_axis.text(count + max_count * 0.012, position, f"{count} ({share:.1%})", va="center", ha="left", fontsize=8)
     sequence_axis.set_yticks(row_positions)
     sequence_axis.set_yticklabels(labels, fontsize=8)
     sequence_axis.set_xlim(0, max_count * 1.28)
     sequence_axis.set_xlabel("Observed runs", fontsize=8)
     sequence_axis.grid(axis="x", color="#dddddd", linewidth=0.5)
     sequence_axis.set_axisbelow(True)
-    sequence_axis.tick_params(axis="x", labelsize=7)
+    sequence_axis.tick_params(axis="both", labelsize=8)
     sequence_axis.axhline(4.5, color="#888888", linewidth=0.7)
-    sequence_axis.text(0.07, 1.055, "Agentic CogWriter", transform=sequence_axis.transAxes, ha="left", va="bottom", fontsize=7, color=colors[0])
-    sequence_axis.text(0.32, 1.055, "Fixed-order", transform=sequence_axis.transAxes, ha="left", va="bottom", fontsize=7, color=colors[1])
+    sequence_axis.text(0.07, 1.055, "Agentic CogWriter", transform=sequence_axis.transAxes, ha="left", va="bottom", fontsize=8, color=colors[0])
+    sequence_axis.text(0.32, 1.055, "Fixed-order", transform=sequence_axis.transAxes, ha="left", va="bottom", fontsize=8, color=colors[1])
+    sequence_axis.text(
+        0.99,
+        1.055,
+        "P = Planning, T = Translating, R = Reviewing",
+        transform=sequence_axis.transAxes,
+        ha="right",
+        va="bottom",
+        fontsize=8,
+        bbox={"facecolor": "white", "edgecolor": "none", "pad": 1.5},
+    )
     figure.subplots_adjust(left=0.20, right=0.99, top=0.90, bottom=0.20)
     figure.savefig(output, format="pdf", bbox_inches="tight")
     plt.close(figure)
@@ -431,7 +446,9 @@ def save_process_sequences_a(report: dict[str, Any], output: Path) -> None:
 
 def save_process_sequence_matrix(values: dict[str, Any], condition: str, output: Path, matrix_max: int) -> None:
     matrix = values[condition]["matrix"]
-    figure, axis = plt.subplots(figsize=(3.35, 3.1))
+    figure, axis = plt.subplots(
+        figsize=(PROCESS_SEQUENCE_MATRIX_WIDTH_IN, 3.1 * PROCESS_SEQUENCE_MATRIX_WIDTH_IN / 3.35)
+    )
     axis.imshow(matrix, cmap="Blues", aspect="equal", vmin=0, vmax=matrix_max)
     for row_index, row in enumerate(matrix):
         for column_index, count in enumerate(row):
@@ -440,7 +457,7 @@ def save_process_sequence_matrix(values: dict[str, Any], condition: str, output:
     axis.set_yticks(range(3), PROCESS_AXIS_LABELS[:3], fontsize=8)
     axis.set_xlabel("To", fontsize=8)
     axis.set_ylabel("From", fontsize=8)
-    axis.tick_params(length=0)
+    axis.tick_params(axis="both", labelsize=8, length=0)
     for spine in axis.spines.values():
         spine.set_visible(False)
     figure.subplots_adjust(left=0.18, right=0.98, top=0.98, bottom=0.24)
