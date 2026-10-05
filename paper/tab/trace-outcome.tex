@@ -1,17 +1,17 @@
 \begin{table}[t]
 \centering
 \small
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lcc}
 \toprule
-\textbf{Observed process path}
-& \textbf{vs. \condFixedOrder}
-& \textbf{vs. \condSingleWriter} \\
+\textbf{Process path}
+& \textbf{\condFixedOrder}
+& \textbf{\condSingleWriter} \\
 \midrule
-One plan$\rightarrow$draft$\rightarrow$review cycle
+Plan$\rightarrow$draft$\rightarrow$review
 & \AfourExactCycleFixedOrderWinRate
 & \AfourExactCycleSingleWriterWinRate \\
-Any other path
+Other path
 & \AfourNonExactFixedOrderWinRate
 & \AfourNonExactSingleWriterWinRate \\
 \midrule
@@ -20,6 +20,6 @@ Fisher $p$
 & \AfourSingleWriterCycleSplitP \\
 \bottomrule
 \end{tabular}
-\caption{Descriptive association between \condAgenticCogWriter{}'s observed process path and pairwise outcome. Win rates are for \condAgenticCogWriter\ among non-tied comparisons. Two-sided Fisher tests are unadjusted; the trace-defined split is observational rather than causal.}
+\caption{Descriptive association between \condAgenticCogWriter{}'s observed process path and pairwise outcome. The first row contains runs with exactly one planning--drafting--reviewing cycle; entries are \condAgenticCogWriter\ win rates among non-tied comparisons against the column system. Two-sided Fisher tests are unadjusted, and the trace-defined split is observational rather than causal.}
 \label{tab:trace-outcome}
 \end{table}
