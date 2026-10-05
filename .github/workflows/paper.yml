@@ -2,6 +2,12 @@ name: Paper build (manual)
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - paper-manuscript
+    paths:
+      - "paper/**"
+      - ".github/workflows/paper.yml"
 
 permissions:
   contents: read
