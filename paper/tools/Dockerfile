@@ -11,7 +11,7 @@ ENV NO_PROXY=${NO_PROXY}
 RUN for attempt in 1 2 3; do \
         if tlmgr option repository https://mirror.ctan.org/systems/texlive/tlnet \
             && tlmgr update --self \
-            && tlmgr install inconsolata dblfloatfix sttools epigraph nextpage helvetic; then \
+            && tlmgr install inconsolata dblfloatfix sttools epigraph nextpage helvetic fvextra; then \
             exit 0; \
         fi; \
         echo "tlmgr attempt ${attempt}/3 failed" >&2; \
