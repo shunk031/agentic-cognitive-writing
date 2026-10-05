@@ -18,6 +18,7 @@
 \usepackage{float}
 \usepackage{stfloats}
 \usepackage{epigraph}
+\usepackage{fvextra}
 \setlength{\epigraphwidth}{0.86\columnwidth}
 \setlength{\epigraphrule}{0pt}
 \renewcommand{\epigraphflush}{center}
@@ -48,6 +49,7 @@
 \newcommand{\modelGen}{\texttt{gpt-5.6-luna medium}}
 \newcommand{\modelGenBare}{\texttt{gpt-5.6-luna}}
 \newcommand{\modelJudge}{\texttt{gpt-5.6-sol medium}}
+\newcommand{\modelJudgeBare}{\texttt{gpt-5.6-sol}}
 \newcommand{\modelCross}{\texttt{claude-sonnet-5 medium}}
 
 \title{Revisiting the Cognitive Process Theory of Writing for AI Agents: Process-Level Control for Long-Form Writing}
@@ -58,7 +60,7 @@
 \maketitle
 
 \begin{abstract}
-AI agents increasingly produce long-form documents as part of multi-step knowledge work, but it remains unclear how the writing process itself should be organized. Existing systems typically advance an outline, a task graph, or a fixed sequence of stages. Drawing on cognitive process theory, we propose \condAgenticCogWriter, an architecture that maintains an evolving draft and writing state while a \texttt{Monitor} repeatedly chooses whether to plan, draft, or review and delegates that activity to a specialist. We evaluate the architecture on deliberately demanding subsets of established long-form writing benchmarks spanning general-purpose writing, long-context generation, and structured expert documents. Independent rubric-based scoring ranks \condAgenticCogWriter\ highest on two of the three benchmark types. When a judge directly compares two responses to the same prompt, \condAgenticCogWriter\ is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning. Pre-specified cellwise tests yield no Holm-surviving difference after removing the explicit goal network or fixing process order, while a post-hoc prompt-clustered analysis finds a small preference for adaptive ordering and no significant pooled goal-network effect. Trace analysis further shows that most runs follow a single planning--drafting--reviewing cycle, consistent with adaptive ordering making only a modest contribution. Together, the results support process-organized writing as a promising agent architecture while leaving the main source of its advantage open.
+AI agents increasingly produce long-form documents as part of multi-step knowledge work, but the writing process inside those agents remains under-specified. Existing writing systems typically advance an outline, a task graph, or a fixed sequence of stages. We ask whether an agent can instead choose what kind of writing work to perform next. We propose \condAgenticCogWriter, a long-form writing system inspired by cognitive process theory that maintains a shared draft, goals, and process history while a top-level agent chooses among planning, drafting, and reviewing and delegates the selected process to a subagent. We evaluate the system on demanding subsets of three long-form writing benchmarks. Pointwise rubric scoring ranks \condAgenticCogWriter\ highest on two benchmark types, and pairwise comparisons prefer it to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning. Pre-specified tests with multiple-comparison correction find no reliable difference when we remove the explicit goal representation or fix process order; exploratory analysis suggests only a small benefit from adaptive ordering. Execution traces show that most runs follow a single planning--drafting--reviewing cycle. The results support process-organized writing while leaving the main source of its advantage unresolved.
 \end{abstract}
 
 \section{Introduction}
@@ -111,7 +113,7 @@ The following figure shows the prompt-level pairwise estimates for each benchmar
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
-\caption{Prompt-level pairwise win rates by benchmark and generation run. Generation-run points show 95\% Wilson intervals. Filled or open circles mark cells that do or do not survive the within-benchmark Holm correction; diamonds are descriptive means across generation runs and are not separate inferential tests.}
+\caption{Prompt-level pairwise win rates by benchmark and generation run. Generation-run points show 95\% Wilson intervals. Filled or open circles mark tests that do or do not survive the within-benchmark Holm correction; diamonds are descriptive means across generation runs and are not separate inferential tests.}
 \label{fig:appendix-confirmatory-forest}
 \end{figure*}
 
@@ -139,12 +141,12 @@ The length-control table reports the longer-side preference by output-length rat
 
 \subsection{Single-context exploratory check}
 \label{app:single-context}
-The \condSingleContext\ condition was added after the main results had been observed, to test whether the \condSingleWriter\ loss reflects delegation to separate agents or the absence of process decomposition under a \texttt{Monitor}. We registered it as an exploratory condition outside the Holm family before judging and ran one generation run, the same evidence tier as the cross-family check: the question it answers is whether an attribution survives, not whether a new contrast is confirmed. We therefore report the pooled estimate with its interval and the benchmark-level results without adjustment.
+The \condSingleContext\ condition was added after the main results had been observed, to test whether the \condSingleWriter\ loss reflects delegation to separate agents or the absence of process decomposition under a \texttt{Monitor}. We registered it as an exploratory condition outside the Holm family before judging and ran one generation run, the same evidence tier as the cross-family check: the question it answers is whether an attribution survives, not whether a new contrast is confirmed. We therefore report the combined estimate with its interval and the benchmark-level results without adjustment.
 \input{tab/appendix-single-context}
 
 \subsection{Cross-family judge robustness}
 \label{app:cross-family}
-The cross-family table reports pooled outcomes for the three robustness contrasts: \CrossFamilyFullSinglePassWLT\ for \condAgenticCogWriter\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ for \condAgenticCogWriter\ versus \condNoGoals. The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval. The judge yields a non-tied combined outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ overall W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
+The cross-family table reports combined outcomes for the three robustness contrasts: \CrossFamilyFullSinglePassWLT\ for \condAgenticCogWriter\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ for \condAgenticCogWriter\ versus \condNoGoals. The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval. The judge yields a non-tied combined outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ overall W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
 \input{tab/appendix-cross-family}
 
 \clearpage

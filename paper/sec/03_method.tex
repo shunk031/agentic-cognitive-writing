@@ -1,39 +1,39 @@
-We introduce \condAgenticCogWriter, a long-form writing architecture that turns document production into a stateful loop over explicit writing processes. Figure~\ref{fig:agentic-cogwriter} gives the system overview. To make the information available throughout that loop explicit, we denote the original writing task by
+We introduce \condAgenticCogWriter, a long-form writing system that turns document production into a stateful loop over explicit writing processes. Each run begins with a fixed writing task
 \begin{equation}
 X=(I,C,O),
 \end{equation}
-where $I$ is the instruction, $C$ is any supplied context, and $O$ is the requested output contract. The task $X$ remains available throughout composition. When the \texttt{Monitor} terminates the loop, the current draft is returned as the completed document $D_{\mathrm{final}}$. The architecture has four agent roles: a top-level \texttt{Monitor} and three specialists, \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer}.
+where $I$ is the instruction, $C$ is the supplied context, and $O$ is the requested output contract. Every writing process can read $X$, but only the document state changes during composition. Figure~\ref{fig:agentic-cogwriter} gives the system overview. One top-level \texttt{Monitor} agent coordinates three subagents: \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer}.
 
 \subsection{Persistent Writing State}
 \label{sec:method-control-state}
 
-We index the evolving draft by the number of completed process invocations: $D_t$ is the current draft after $t$ invocations, and $D_0$ is the initial draft state before the first invocation. The number of invocations is not fixed in advance. After the $t$-th process invocation, the shared workspace exposes
+All four agents read and update a shared writing state. After $t$ completed process invocations, we denote that state by
 \begin{equation}
 S_t=(D_t,G_t,H_t),
 \end{equation}
-where $D_t$ is the current draft, $G_t$ is an explicit hierarchy of writing goals, and $H_t$ is the observable process history. The \texttt{Monitor} decides when to stop after review, subject to the common runtime budget used in our experiments. Keeping these records outside any single agent context allows successive writing processes to inspect and modify the same document-level state.
+where $D_t$ is the current draft, $G_t$ is the current hierarchy of writing goals, and $H_t$ is the observable process history. The initial state contains the empty or task-provided draft and the goals derived from the assignment. Externalizing these records gives successive subagents the same document-level context even when their role-specific contexts are separate.
 
-The goal network is motivated by \citet{flower1981cognitive}, who describe writers as creating and developing goals during composition. In our implementation, goals can be created, refined, or replaced; we call replacement of an existing goal \emph{goal regeneration}. These records are an engineering representation that makes one theory-derived design choice observable. They are not intended as a claim that the language agent has a human-like cognitive state.
+The explicit goal representation serves two purposes in the system. First, it operationalizes the writer-generated goals described by \citet{flower1981cognitive}: goals can be created, developed, or replaced as the draft changes. Second, it makes that design choice observable enough to ablate and analyze. We refer to this replacement operation as goal regeneration. The representation is an engineering mechanism rather than a claim that the language agent has a human-like cognitive state.
 
 \subsection{Process-Level Control}
 \label{sec:method-writing-processes}
 
-The key architectural choice is what the \texttt{Monitor} selects next. Its action space is
+The \texttt{Monitor} agent decides which writing process should run next from the fixed task and current writing state. Its action space $\mathcal{A}$ is
 \begin{equation}
 \mathcal{A}=\{\texttt{Planning},\texttt{Translating},\texttt{Reviewing}\},
 \end{equation}
-and its decision after state $S_t$ is
+and the decision after state $S_t$ is
 \begin{equation}
 a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t), \qquad a_t\in\mathcal{A}.
 \label{eq:monitor-policy}
 \end{equation}
-We use \emph{process-selection policy} as shorthand for this runtime decision; $\pi_{\mathrm{Monitor}}$ is not a separately trained policy model. We retain \citet{flower1981cognitive}'s term \texttt{Translating} for the drafting activity. Unlike a section scheduler or task-graph controller, Eq.~\eqref{eq:monitor-policy} selects the \emph{kind of writing work} to perform next.
+The notation $\pi_{\mathrm{Monitor}}$ denotes the runtime decision rule, not a separately trained policy model. We retain \citet{flower1981cognitive}'s term \texttt{Translating} for the drafting activity. Unlike a section scheduler or task-graph controller, Eq.~\eqref{eq:monitor-policy} chooses the kind of writing work to perform next.
 
-The process order is therefore not fixed. Drafting can expose a structural problem that motivates renewed planning, and reviewing can trigger either another drafting pass or another planning pass. After a review, the \texttt{Monitor} may instead terminate the loop and return the current draft as $D_{\mathrm{final}}$.
+Adaptive process selection allows the writing order to change as the document develops. Drafting can expose a structural problem that sends control back to planning, and reviewing can trigger either another drafting pass or another planning pass. After reviewing, the \texttt{Monitor} may instead terminate the loop and return the current draft as the completed document $D_{\mathrm{final}}$.
 
 \subsection{Agent Roles and State Updates}
 \label{sec:method-agents}
 
-After choosing $a_t$, the \texttt{Monitor} delegates the selected process to its corresponding specialist. The \texttt{Planner} develops document structure and goals, the \texttt{Translator} turns the current plan and goals into prose, and the \texttt{Reviewer} evaluates the draft against the task and active goals. Each specialist writes its result back to the shared workspace before returning control to the \texttt{Monitor}, yielding the next observable state $S_{t+1}$.
+Role-specific subagents execute the process selected by the \texttt{Monitor}. The \texttt{Planner} develops document structure and goals, the \texttt{Translator} turns the current plan and goals into prose, and the \texttt{Reviewer} evaluates the draft against the task and active goals. Each subagent writes its changes to the shared workspace before control returns to the \texttt{Monitor}, yielding the next state $S_{t+1}$.
 
-This division separates \emph{coordination} from \emph{execution}. The \texttt{Monitor} decides what kind of writing work is needed; the specialist performs that work with role-specific instructions; and the persistent state carries the result into the next decision. A proposed replacement of an existing goal is accepted or rejected by the \texttt{Monitor} and recorded in $H_t$. The experiments below test the architecture as a whole and then ablate the explicit goal representation and adaptive process ordering separately.
+The \texttt{Monitor} remains responsible for coordination across those role-specific updates. A review may recommend changing a goal, but the \texttt{Monitor} decides whether to accept that change and records the decision in $H_t$. The experiments below test the complete system first, then separately remove the explicit goal representation and adaptive process ordering to measure how much each contributes.

@@ -45,9 +45,20 @@ def epigraph_blocks(text):
 
 def source(path):
     text = re.sub(r"(?<!\\)%[^\n]*", "", path.read_text())
-    return re.sub(
+    text = re.sub(
         r"\\input\{([^}]+)\}",
         lambda m: source(PAPER.joinpath(*m[1].split("/")).with_suffix(".tex")),
+        text,
+    )
+
+    def verbatim_input(match):
+        prompt_path = (PAPER / match[1]).resolve()
+        prompt = prompt_path.read_text()
+        return "\n\\begin{verbatim}\n" + prompt + "\n\\end{verbatim}\n"
+
+    return re.sub(
+        r"\\VerbatimInput(?:\[[^\]]*\])?\{([^}]+)\}",
+        verbatim_input,
         text,
     )
 
@@ -77,9 +88,6 @@ def math_ascii(text):
         "cdots": "...",
         "dots": "...",
     }
-    # Resolve semantic and spacing control words while their TeX boundaries are intact.
-    # Formatting wrappers remain untouched until the next pass, preventing constructs
-    # such as ``\\in\\mathcal{A}`` from collapsing into a spurious ``\\inA`` token.
     text = re.sub(
         r"\\([A-Za-z]+)",
         lambda m: replacements.get(m[1], m[0]),
@@ -88,7 +96,6 @@ def math_ascii(text):
     for name in ("mathrm", "text", "texttt", "mathclap", "mathbf", "mathcal"):
         text = commands(text, name, lambda value: value)
 
-    # Unsupported control words should fail loudly rather than disappear silently.
     unknown = re.search(r"\\([A-Za-z]+)", text)
     if unknown:
         raise KeyError(unknown[1])
@@ -100,7 +107,9 @@ def math_ascii(text):
         text,
     )
     text = text.replace("{", "").replace("}", "")
-    return re.sub(r"\s+", " ", text).strip() + "".join(f" [{note}]" for note in notes)
+    return re.sub(r"\s+", " ", text).strip() + "".join(
+        f" [{note}]" for note in notes
+    )
 
 
 def main():
@@ -117,9 +126,25 @@ def main():
         preamble,
     ):
         definitions[match[1]] = group(preamble, match.end())[0]
+
     text = text.split(r"\begin{document}", 1)[1].split(r"\end{document}", 1)[0]
     text = "\\section*{" + title + "}\n" + author + "\n" + text
     text = epigraph_blocks(text)
+
+    verbatim_blocks = []
+
+    def stash_verbatim(match):
+        token = f"VERBATIMBLOCKTOKEN{len(verbatim_blocks)}ENDTOKEN"
+        verbatim_blocks.append(match[0])
+        return token
+
+    text = re.sub(
+        r"\\begin\{verbatim\}.*?\\end\{verbatim\}",
+        stash_verbatim,
+        text,
+        flags=re.DOTALL,
+    )
+
     text = re.sub(r"\\([A-Za-z]+)", lambda m: definitions.get(m[1], m[0]), text)
     aux = (PAPER / "build" / "acl_latex.aux").read_text()
     labels = dict(re.findall(r"\\newlabel\{([^}]+)\}\{\{([^}]+)\}", aux))
@@ -143,9 +168,7 @@ def main():
     def float_body(match):
         kind, body = match[1], match[2]
         captions = []
-        for caption_match in re.finditer(
-            r"\\caption(?:of\{figure\})?\s*(?=\{)", body
-        ):
+        for caption_match in re.finditer(r"\\caption(?:of\{figure\})?\s*(?=\{)", body):
             caption, _ = group(body, caption_match.end())
             captions.append(caption)
         figure_labels = re.findall(r"\\label\{([^}]+)\}", body)
@@ -164,13 +187,10 @@ def main():
         table = re.sub(r"\\cmidrule(?:\([^)]*\))?\{[^}]*\}", "", table)
         for name in ("lcell", "ccell", "shortstack"):
             table = commands(table, name, lambda value: value.replace(r"\\", "; "))
-        # Pipe tables cannot span columns. Repeat each spanning heading per column.
         pattern = re.compile(r"\\multicolumn\{(\d+)\}\{[^}]*\}")
         while span := pattern.search(table):
             value, end = group(table, span.end())
-            table = (
-                table[: span.start()] + " & ".join([value] * int(span[1])) + table[end:]
-            )
+            table = table[: span.start()] + " & ".join([value] * int(span[1])) + table[end:]
         return "\n\n" + table + "\n\n" + prefix + caption + "\n\n"
 
     text = re.sub(
@@ -181,17 +201,11 @@ def main():
     )
     text = re.sub(r"\\label\{[^}]+\}", "", text)
     text = text.replace(r"\maketitle", "").replace(r"\appendix", "")
-    text = text.replace(r"\begin{abstract}", r"\section*{Abstract}").replace(
-        r"\end{abstract}", ""
-    )
+    text = text.replace(r"\begin{abstract}", r"\section*{Abstract}").replace(r"\end{abstract}", "")
     text = re.sub(r"\\bibliography\{[^}]+\}", "", text)
     bbl = (PAPER / "build" / "acl_latex.bbl").read_text()
     entries = re.split(r"\\bibitem\[.*?\]\{[^}]+\}", bbl, flags=re.DOTALL)[1:]
-    bibliography = (
-        "\n\n".join(entries)
-        .replace(r"\end{thebibliography}", "")
-        .replace(r"\newblock", "")
-    )
+    bibliography = "\n\n".join(entries).replace(r"\end{thebibliography}", "").replace(r"\newblock", "")
     text += "\n\\section*{References}\n" + bibliography
     for name, value in {
         "yes": "yes",
@@ -203,7 +217,6 @@ def main():
 
     text = commands(text, "textsuperscript", lambda value: r"\texttt{" + value + "}")
 
-    # All math uses ASCII in code spans; no TeX control sequences reach Markdown.
     def math_code(value):
         value = math_ascii(value).replace("_", r"\_").replace("%", r"\%")
         return r"\texttt{" + value + "}"
@@ -215,9 +228,16 @@ def main():
         flags=re.DOTALL,
     )
     text = re.sub(
-        r"(?<!\\)\$([^$]*?)(?<!\\)\$", lambda m: math_code(m[1]), text, flags=re.DOTALL
+        r"(?<!\\)\$([^$]*?)(?<!\\)\$",
+        lambda m: math_code(m[1]),
+        text,
+        flags=re.DOTALL,
     )
     text = text.replace("~", " ").replace("---", "—").replace("--", "–")
+
+    for index, block in enumerate(verbatim_blocks):
+        text = text.replace(f"VERBATIMBLOCKTOKEN{index}ENDTOKEN", block)
+
     (PAPER / "build" / "markdown-source.tex").write_text(text)
 
 

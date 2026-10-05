@@ -1,32 +1,70 @@
 \paragraph{Prompt selection and provenance.}
-The scored study uses the committed \texttt{hard100} subset generated from the pinned WritingBench, HelloBench, and DoLoMiTes prompt manifests before generation. The selector first removes pilot prompts, then scores each remaining prompt by its prompt word count plus the largest requested output length found in the prompt text or structured output constraints, when such a length is stated. Candidates above the selector's fixed maximum prompt-length or requested-length gate are excluded. The remaining candidates are ordered by this score, then prompt word count, requested length, and prompt identifier, all in descending order; the top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts in total. The committed prompt-set artifact stores the resulting identifiers. Generation reads only these committed manifests and prompt-set identifiers, so output quality does not enter prompt selection.
+The scored study uses the committed \texttt{hard100} subset generated from the pinned WritingBench, HelloBench, and DoLoMiTes manifests before generation. Prompts used while developing the protocol are removed first. Each remaining prompt is ranked by prompt word count plus the largest requested output length stated in the prompt or structured output constraints, subject to fixed maximum-length gates; ties are resolved by prompt word count, requested length, and prompt identifier. The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts. Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.
 
-The selected prompts stress different aspects of long-form writing across the three benchmarks. WritingBench contributes prompts with both long inputs and explicit long-output requirements; HelloBench contributes primarily very long-input summarization and continuation tasks, with explicit output lengths uncommon; and DoLoMiTes contributes methodical expert tasks with more moderate prompt lengths and structured procedural constraints. The \texttt{hard100} label therefore denotes the deterministic length-and-demand selector rather than a claim that every selected prompt has the same source of semantic difficulty.
+The three selected subsets stress different properties of long-form writing. WritingBench combines long inputs with explicit long-output requirements, HelloBench contributes primarily very long-input summarization and continuation tasks, and DoLoMiTes contributes methodical expert tasks with structured procedural constraints. The \texttt{hard100} name identifies the deterministic length-and-demand rule rather than a claim that every prompt has the same source of semantic difficulty.
 
 \paragraph{Sample size and inferential sensitivity.}
-The 100-prompt count per benchmark was fixed before scoring rather than selected from the observed results. Under the realized missing and tie rates, a benchmark--contrast--generation-run cell contains about \PowerCellDecided\ decided comparisons; at the strictest first-step Holm threshold, an exact sign test has 80\% power for a true preference of about \PowerCellDetectablePreference. Pooling benchmarks only to describe scale yields about \PowerPooledDecided\ decided comparisons and a corresponding detectable preference of about \PowerPooledDetectablePreference. These calculations characterize the sensitivity of the committed sample and do not make it representative of each full benchmark; the remaining benchmark pools were not judged.
+The 100-prompt count per benchmark was fixed before scoring. Under the realized missing and tie rates, a benchmark--contrast--generation-run test contains about \PowerCellDecided\ decided comparisons; at the strictest first-step Holm threshold, an exact sign test has 80\% power for a true preference of about \PowerCellDetectablePreference. Combining benchmarks only for a descriptive sensitivity calculation gives about \PowerPooledDecided\ decided comparisons and a detectable preference of about \PowerPooledDetectablePreference. The calculation describes the sensitivity of the committed sample and does not make the subset representative of each full benchmark.
 
-\paragraph{Common generation contract.}
-All pre-specified systems receive the same assignment, supplied context, requested output constraints, generator model, attempt budget, and information policy. The later \condSingleContext\ check uses the same task-level contract. External retrieval is disabled: the coding-agent sandbox denies network access and web search, and systems are instructed not to introduce facts unsupported by the assignment or supplied context. The Codex wrapper invokes the system-specific skill and requires the final response to contain the complete generated document rather than a summary or a link to a workspace artifact.
+\paragraph{Common generation contract and implementation.}
+Every pre-specified system receives the same assignment, supplied context, requested output constraints, generator, attempt budget, and information policy. External retrieval is disabled by the coding-agent sandbox and by the experiment prompts. \condAgenticCogWriter\ runs as an agent skill under a top-level \texttt{Monitor}; the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} subagents execute the role skills reproduced below. The platform-specific subagent wrapper only dispatches the corresponding role skill and adds no separate writing policy. Configuration files pin the skill or stage prompt for every system and record hashes for fixed stage prompts.
 
-\paragraph{Alternative architecture prompts.}
-The one-shot condition begins: ``Write the final response in one generation pass. Do not make a plan for the reader, describe a review, or expose hidden reasoning.'' It then receives the assignment, supplied context, and requested output constraints.
+All experiment-authored generation and evaluation prompts are reproduced verbatim below. Provider-level defaults that are not authored by the experiment are controlled through the runtime configuration in Appendix~\ref{app:runtime}. The presentation follows common ACL/EMNLP practice of placing complete prompt templates in the appendix while keeping the main experimental narrative focused on the evaluation design.
 
-The fixed-stage condition uses three prompts. \texttt{Pre-Write} begins: ``Prepare a concise working plan for the next writer. Identify the response's purpose, audience, required content, order, and constraints.'' It explicitly says not to write the final response yet. \texttt{Write} begins: ``Write a complete draft that answers the assignment,'' using the complete \texttt{Pre-Write} output as working guidance. \texttt{Re-Write} begins: ``Revise the draft for instruction fulfillment, organization, depth, audience fit, and factual fidelity.'' Each stage is restricted to the same assignment and supplied context, and the aggregate output-token budget is fixed across the three stages.
+\paragraph{Full baseline prompts.}
+\noindent\textbf{\condSinglePass.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/conditions/prompts/a1_single_shot.md}
 
-The adaptive task-planning condition uses a persistent directed acyclic task graph containing only \texttt{reasoning} and \texttt{composition} nodes. The coordinator recursively decomposes or executes the next dependency-satisfied task and may revise active graph structure after observing composed text. The prompt explicitly forbids adapting by selecting named writing processes; adaptation is restricted to task structure.
+\noindent\textbf{\condStaged: Pre-Write.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/conditions/prompts/a2_pre_write.md}
 
-\paragraph{Agentic CogWriter and ablation prompts.}
-\condAgenticCogWriter\ is invoked through the \texttt{agentic-cog-writer} skill. The top-level agent acts as the \texttt{Monitor}, reads the draft, goal network, and process history, and chooses among \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing}. The selected process is delegated through the subagent mechanism to the corresponding \texttt{Planner}, \texttt{Translator}, or \texttt{Reviewer}. The skill requires process switches and goal changes to be written to an append-only trace.
+\noindent\textbf{\condStaged: Write.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/conditions/prompts/a2_write.md}
 
-The pre-specified ablations modify this contract directly. \condNoGoals\ forbids the explicit goal network while retaining adaptive process choice and the three role agents. \condFixedOrder\ preserves the goal network and role agents but replaces adaptive selection with the fixed \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle. The \condSingleWriter\ execution diagnostic retains adaptive process choice and the goal network but forbids delegation to those role agents; it also requires each \texttt{Translating} step to append one paragraph before the writer makes the next process decision. Configuration files record the skill or stage prompt used for each system and the SHA-256 hash of fixed stage prompts.
+\noindent\textbf{\condStaged: Re-Write.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/conditions/prompts/a2_re_write.md}
 
-The post-hoc \condSingleContext\ check keeps the same \texttt{Monitor}, process instructions, shared draft, goal network, process history, termination rule, and final-output contract as \condAgenticCogWriter, but executes the selected \texttt{Planning}, \texttt{Translating}, or \texttt{Reviewing} instruction in the \texttt{Monitor}'s context instead of delegating to a role agent. It does not impose the one-paragraph \texttt{Translating} restriction used by \condSingleWriter.
+\noindent\textbf{\condTaskPlanning.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md}
 
-\paragraph{Pointwise evaluator prompts.}
-All reported pointwise judgments use \modelJudge. The generic evaluator reads one completed document together with its original assignment and supplied context and assigns an integer score from 1 to 5 for instruction fulfillment, organization and global coherence, content adequacy and depth, style/voice/audience fit, and factuality/constraint fidelity. A ten-prompt pilot showed these raw scores clustering near the upper end of the scale, motivating the standardized presentation used in the paper. For each benchmark, each dimension is z-standardized across outputs from all seven pre-specified conditions and the five z-scores are averaged. Thus, the reported composite is relative to the condition pool for that benchmark rather than an absolute 1-to-5 rating.
+\paragraph{Full \condAgenticCogWriter\ prompts.}
+\noindent\textbf{Top-level agent skill.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../plugin/skills/agentic-cog-writer/SKILL.md}
 
-Benchmark-native evaluation preserves each dataset's own evaluation structure and prompt template while replacing the original judge model with \modelJudge. WritingBench carries five query-specific criteria for each prompt; the evaluator scores each criterion from 1 to 10 and the native score is their unweighted mean. HelloBench carries 5--7 checklist items per prompt; the evaluator assigns each item one of $\{0,0.25,0.5,0.75,1\}$ and the native score is their mean. We do not report a corresponding native score for DoLoMiTes because the committed prompts do not carry an analogous per-prompt native rubric.
+\noindent\textbf{\texttt{Planner} role skill.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../plugin/skills/planning/SKILL.md}
 
-\paragraph{Pairwise judge prompt.}
-The pairwise judge reads the assignment, supplied context, and two complete candidate responses. It is instructed to compare the candidates on instruction fulfillment, organization and global coherence, content adequacy and depth, style/voice/audience fit, factuality, and constraint fidelity and to return \texttt{A}, \texttt{B}, or \texttt{tie}. The prompt explicitly warns against position and length bias. To reduce residual position effects documented for LLM evaluators~\citep{zheng2023judging,wang2024fair}, every semantic pair is evaluated in both A/B and B/A order; we retain a winner only when both orders agree on the same semantic response, and otherwise record a tie. The judge returns a JSON record containing the winner, short evidence quotes from each response, and a brief rubric-grounded comparison.
+\noindent\textbf{\texttt{Translator} role skill.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../plugin/skills/translating/SKILL.md}
+
+\noindent\textbf{\texttt{Reviewer} role skill.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../plugin/skills/reviewing/SKILL.md}
+
+\paragraph{Full ablation and execution-variant prompts.}
+\noindent\textbf{\condNoGoals.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md}
+
+\noindent\textbf{\condFixedOrder.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md}
+
+\noindent\textbf{\condSingleWriter.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md}
+
+\noindent\textbf{\condSingleContext.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/plugin/skills/cognitive-writing-single-context/SKILL.md}
+
+\paragraph{Benchmark-native evaluation.}
+WritingBench retains five query-specific criteria for each prompt; the evaluator scores each criterion from 1 to 10 and the native score is their unweighted mean. HelloBench retains 5--7 checklist items per prompt; the evaluator scores each item on its five-level scale and the native score is the item mean. DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark. Published leaderboard values should not be compared directly with these scores because we use a shared evaluator and our own generated outputs.
+
+\paragraph{Full evaluator prompts.}
+\noindent\textbf{Common pointwise rubric.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/prompts/judges/pointwise-v1.md}
+
+\noindent\textbf{Pairwise comparison.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/prompts/judges/pairwise-v1.md}
+
+\noindent\textbf{WritingBench-native evaluation.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/prompts/judges/writingbench-native-v1.md}
+
+\noindent\textbf{HelloBench-native evaluation.}
+\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/prompts/judges/hellobench-native-v1.md}

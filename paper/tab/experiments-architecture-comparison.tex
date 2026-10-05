@@ -1,24 +1,25 @@
 \begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{2.8pt}
-\begin{tabular}{>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}}
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllll}
 \toprule
 \textbf{System}
 & \textbf{Information available}
-& \textbf{What is chosen next?}
+& \textbf{What advances next?}
 & \textbf{Decision rule}
 & \textbf{Execution} \\
 \midrule
 \condSinglePass
 & $X$
-& completed document $D_{\mathrm{final}}$
-& $D_{\mathrm{final}}=\pi_{\mathrm{gen}}(X)$
+& whole document
+& one generation
 & one context \\
 \condStaged
 & $X$, prior stage output
-& next fixed stage
-& \parbox[c]{\linewidth}{\centering Pre-Write$\rightarrow$Write\\ $\rightarrow$Re-Write}
+& fixed stage
+& Pre-Write$\rightarrow$Write$\rightarrow$Re-Write
 & one context \\
 \condTaskPlanning
 & $X,D_t,T_t$
@@ -29,30 +30,31 @@
 \textbf{\condAgenticCogWriter}
 & $\mathbf{X,D_t,G_t,H_t}$
 & \textbf{writing process $a_t$}
-& \parbox[c]{\linewidth}{\centering $\mathbf{a_t=\pi_{\mathrm{Monitor}}}$\\ $\mathbf{(X,D_t,G_t,H_t)}$}
-& \textbf{role subagent} \\
+& $\mathbf{a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)}$
+& \textbf{subagent} \\
 \condNoGoals
 & $X,D_t,H_t$
 & writing process $a_t$
-& \parbox[c]{\linewidth}{\centering $a_t=\pi_{\mathrm{Monitor}}$\\ $(X,D_t,H_t)$}
-& role subagent \\
+& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,H_t)$
+& subagent \\
 \condFixedOrder
 & $X,D_t,G_t,H_t$
-& next fixed process
-& \parbox[c]{\linewidth}{\centering Planning$\rightarrow$Translating\\ $\rightarrow$Reviewing, repeated}
-& role subagent \\
+& fixed process
+& Planning$\rightarrow$Translating$\rightarrow$Reviewing
+& subagent \\
 \condSingleWriter
 & $X,D_t,G_t,H_t$
 & writing process $a_t$
-& \parbox[c]{\linewidth}{\centering $a_t=\pi_{\mathrm{Monitor}}$\\ $(X,D_t,G_t,H_t)$}
-& one writer; paragraph-scale Translating \\
+& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)$
+& one writer \\
 \condSingleContext
 & $X,D_t,G_t,H_t$
 & writing process $a_t$
-& \parbox[c]{\linewidth}{\centering $a_t=\pi_{\mathrm{Monitor}}$\\ $(X,D_t,G_t,H_t)$}
+& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)$
 & Monitor context \\
 \bottomrule
-\end{tabular}
-\caption{Formal comparison of the systems evaluated under the shared generation contract. $X$ is the fixed task input, $D_t$ the current draft, $G_t$ the goal network, $H_t$ the process history, and $T_t$ an adaptive task graph. The first four rows compare alternative choices of what advances next during writing; the remaining rows change one or more parts of \condAgenticCogWriter. \condSingleContext\ is post-hoc; all other rows were pre-specified. The equations give a common decision-level abstraction rather than the original notation of prior systems.}
+\end{tabular}%
+}
+\caption{Systems evaluated under the shared generation contract. $X$ is the fixed task input, $D_t$ the current draft, $G_t$ the goal representation, $H_t$ the process history, and $T_t$ an adaptive task graph. The first four rows compare different units of progress during writing; the remaining rows modify \condAgenticCogWriter. \condSingleContext\ is post-hoc; all other rows were specified before scoring. The equations use a common decision-level notation rather than the original notation of prior systems.}
 \label{tab:experimental-conditions}
 \end{table*}
