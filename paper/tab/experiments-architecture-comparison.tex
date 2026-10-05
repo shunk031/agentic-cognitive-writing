@@ -1,58 +1,58 @@
 \begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{2.4pt}
-\begin{tabular}{p{0.19\textwidth}p{0.16\textwidth}p{0.13\textwidth}p{0.28\textwidth}p{0.13\textwidth}}
+\setlength{\tabcolsep}{2.8pt}
+\begin{tabular}{p{0.18\textwidth}p{0.18\textwidth}p{0.16\textwidth}p{0.30\textwidth}p{0.10\textwidth}}
 \toprule
 \textbf{System}
-& \textbf{State used at step $t$}
-& \textbf{Unit advanced}
-& \textbf{Next-step rule}
+& \textbf{Information available}
+& \textbf{What is chosen next?}
+& \textbf{Decision rule}
 & \textbf{Execution} \\
 \midrule
 \condSinglePass
 & $X$
-& whole document
-& one generation
+& completed document $D_{\mathrm{final}}$
+& $D_{\mathrm{final}}=\pi_{\mathrm{gen}}(X)$
 & one context \\
 \condStaged~\citep{yang2022re3,wan2025cognitive}
 & $X$, prior stage output
-& fixed stage
+& next fixed stage
 & \shortstack{Pre-Write$\rightarrow$Write\\$\rightarrow$Re-Write}
 & one context \\
 \condTaskPlanning~\citep{xiong2025beyond}
-& $(D_t,T_t)$
+& $X,D_t,T_t$
 & task node $v_t$
 & $v_t=\pi_{\mathrm{task}}(D_t,T_t)$
 & task graph \\
 \midrule
 \textbf{\condAgenticCogWriter}
-& $\mathbf{(D_t,G_t,H_t)}$
+& $\mathbf{X,D_t,G_t,H_t}$
 & \textbf{writing process $a_t$}
-& \shortstack{$\mathbf{a_t=\pi_{\mathrm{Monitor}}}$\\$\mathbf{(X,D_t,G_t,H_t)}$}
+& $\mathbf{a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)}$
 & \textbf{role subagent} \\
 \condNoGoals
-& $(D_t,H_t)$
+& $X,D_t,H_t$
 & writing process $a_t$
-& \shortstack{$a_t=\pi_{\mathrm{Monitor}}$\\$(X,D_t,H_t)$}
+& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,H_t)$
 & role subagent \\
 \condFixedOrder
-& $(D_t,G_t,H_t)$
-& writing process $a_t$
-& \shortstack{fixed Planning$\rightarrow$Translating\\$\rightarrow$Reviewing}
+& $X,D_t,G_t,H_t$
+& next fixed process
+& \shortstack{Planning$\rightarrow$Translating\\$\rightarrow$Reviewing, repeated}
 & role subagent \\
 \condSingleWriter
-& $(D_t,G_t,H_t)$
+& $X,D_t,G_t,H_t$
 & writing process $a_t$
-& adaptive process selection
-& one writer \\
+& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)$
+& \shortstack{one writer;\\paragraph-scale Translating} \\
 \condSingleContext
-& $(D_t,G_t,H_t)$
+& $X,D_t,G_t,H_t$
 & writing process $a_t$
-& adaptive process selection
+& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)$
 & Monitor context \\
 \bottomrule
 \end{tabular}
-\caption{Systems compared under the shared generation contract. $X$ is the task input, $D_t$ the current draft, $G_t$ the goal network, $H_t$ the process history, and $T_t$ an adaptive task graph. \condSingleContext\ is post-hoc; all other rows were pre-specified. The equations are a common abstraction for comparison rather than the original notation of prior systems.}
+\caption{Formal comparison of the systems evaluated under the shared generation contract. $X$ is the fixed task input, $D_t$ the current draft, $G_t$ the goal network, $H_t$ the process history, and $T_t$ an adaptive task graph. The first four rows compare alternative choices of what advances next during writing; the remaining rows change one or more parts of \condAgenticCogWriter. \condSingleContext\ is post-hoc; all other rows were pre-specified. The equations give a common decision-level abstraction rather than the original notation of prior systems.}
 \label{tab:experimental-conditions}
 \end{table*}
