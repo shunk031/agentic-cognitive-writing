@@ -34,16 +34,21 @@ def _single_sentence_main_paragraphs():
                 token in paragraph
                 for token in (
                     r"\begin{equation}",
-                    r"\begin{figure}",
-                    r"\begin{table}",
                     r"\begin{itemize}",
                     r"\begin{enumerate}",
                 )
             ):
                 continue
+            if re.search(r"\\begin\{(?:figure|table)\*?\}", paragraph):
+                continue
             if re.fullmatch(r"\\input\{[^}]+\}", paragraph):
                 continue
-            if paragraph.startswith((r"\section", r"\subsection", r"\label")):
+            if re.match(
+                r"^(?:\\clearpage\s*)?\\(?:section|subsection|subsubsection)\*?\{",
+                paragraph,
+            ):
+                continue
+            if paragraph.startswith(r"\label"):
                 continue
 
             prose = re.sub(r"^\\paragraph\{[^}]+\}\s*", "", paragraph)
