@@ -131,6 +131,15 @@ def check():
     aux = (PAPER / "build" / "acl_latex.aux").read_text()
     structural_text = _without_code_blocks(text)
 
+    source = (PAPER / "acl_latex.tex").read_text()
+    abstract = re.search(
+        r"\\begin\{abstract\}\s*(.*?)\s*\\end\{abstract\}", source, re.DOTALL
+    )[1]
+    abstract_words = re.findall(r"\b[\w'-]+\b", abstract)
+    abstract_commands = re.findall(r"\\[A-Za-z]+", abstract)
+    assert len(abstract_words) <= 200, len(abstract_words)
+    assert not abstract_commands, ("LaTeX command in abstract", abstract_commands)
+
     controls = re.findall(r"\\[A-Za-z]+", structural_text)
     assert not controls, controls
     for residue in ("~", r"\%", r"\$", "--", r"\ref", r"\label"):
@@ -196,9 +205,25 @@ def check():
         r"\bspecialists?\b",
         r"\bbookkeeping\b",
         r"\bLuna(?:--|-|–)Sol\b",
+        r"\bThese approaches\b",
+        r"\bComputational work\b",
+        r"\bIndependent rubric-based scoring\b",
+        r"\bHolm-surviving\b",
+        r"\bdecided comparisons?\b",
+        r"\bpooled over\b",
     ):
         match = re.search(banned, main_text, flags=re.IGNORECASE)
         assert not match, (banned, match.group(0) if match else None)
+
+    proposal_architecture = re.search(
+        r"\bAgentic CogWriter\b[^\n.]{0,60}\barchitecture\b",
+        main_text,
+        flags=re.IGNORECASE,
+    )
+    assert not proposal_architecture, (
+        "call Agentic CogWriter a system; reserve architecture for generic structure",
+        proposal_architecture.group(0) if proposal_architecture else None,
+    )
 
     lowered = main_text.lower()
     for stale_phrase in (
@@ -285,6 +310,7 @@ def check():
     report = "\n".join(
         [
             "Unexpanded control sequences in manuscript prose: 0",
+            f"Abstract words: {len(abstract_words)}/200; LaTeX commands: 0",
             f"Section headings: Markdown {actual}; PDF {expected} ({len(pdf_headings)} aux entries plus unnumbered Limitations)",
             "Title, Abstract, and References headings excluded from section count.",
             "Paragraph-style violations: 0",
