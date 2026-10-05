@@ -23,6 +23,29 @@
 \setlength{\epigraphrule}{0pt}
 \renewcommand{\epigraphflush}{center}
 
+% Keep externally authored prompt files printable under pdfLaTeX without
+% changing their source. These mappings affect only Unicode characters that
+% pdfLaTeX cannot represent directly and preserve their plain-text meaning.
+\DeclareUnicodeCharacter{2500}{-}
+\DeclareUnicodeCharacter{2502}{|}
+\DeclareUnicodeCharacter{2514}{+}
+\DeclareUnicodeCharacter{251C}{+}
+\DeclareUnicodeCharacter{2013}{--}
+\DeclareUnicodeCharacter{2014}{---}
+\DeclareUnicodeCharacter{2018}{'}
+\DeclareUnicodeCharacter{2019}{'}
+\DeclareUnicodeCharacter{201C}{"}
+\DeclareUnicodeCharacter{201D}{"}
+\DeclareUnicodeCharacter{2022}{*}
+\DeclareUnicodeCharacter{2026}{...}
+\DeclareUnicodeCharacter{2192}{->}
+\DeclareUnicodeCharacter{2194}{<->}
+\DeclareUnicodeCharacter{21D2}{=>}
+\DeclareUnicodeCharacter{2260}{!=}
+\DeclareUnicodeCharacter{2264}{<=}
+\DeclareUnicodeCharacter{2265}{>=}
+\DeclareUnicodeCharacter{2713}{[x]}
+
 \input{numbers}
 
 % Shared multiline table-cell helpers.
