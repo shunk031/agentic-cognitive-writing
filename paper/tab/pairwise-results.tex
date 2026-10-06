@@ -2,9 +2,10 @@
 \centering
 \small
 \setlength{\tabcolsep}{2pt}
-\begin{tabular}{lcccc}
+\begin{tabular}{lrrrr}
 \toprule
-\multicolumn{5}{l}{\textbf{\condAgenticCogWriter\ win rate (\%)}} \\
+& \multicolumn{4}{c}{\textbf{\condAgenticCogWriter\ win rate (\%)}} \\
+\cmidrule(lr){2-5}
 \textbf{Comparison}
 & \textbf{Writing}
 & \textbf{Hello}
@@ -12,22 +13,22 @@
 & \textbf{Mean} \\
 \midrule
 vs. \condSinglePass
-& \textbf{\WritingFourOneRateMean}
-& \textbf{\HelloFourOneRateMean}
-& \textbf{\DoLoFourOneRateMean}
-& \textbf{\PooledFourOneRateMean} \\
+& 84.3\%
+& 85.7\%
+& 72.0\%
+& 80.9\% \\
 vs. \condStaged
-& \textbf{\WritingFourTwoRateMean}
-& \textbf{\HelloFourTwoRateMean}
-& \textbf{\DoLoFourTwoRateMean}
-& \textbf{\PooledFourTwoRateMean} \\
+& 80.9\%
+& 62.8\%
+& 55.9\%
+& 67.3\% \\
 vs. \condTaskPlanning
-& \textbf{\WritingFourThreeRateMean}
-& \textbf{\HelloFourThreeRateMean}
-& \textbf{\DoLoFourThreeRateMean}
-& \textbf{\PooledFourThreeRateMean} \\
+& 65.5\%
+& 63.0\%
+& 75.7\%
+& 68.5\% \\
 \bottomrule
 \end{tabular}
-\caption{Direct same-prompt comparison of writing systems. Entries are \condAgenticCogWriter{}'s mean win rates across three generation runs, restricted to prompt comparisons for which both presentation orders agree on the same winner. Ties and pairs with a failed output are excluded. Values above 50\% favor \condAgenticCogWriter; winning rates are in bold. ``Mean'' combines prompt-level outcomes from the three benchmarks within each generation run and then averages the resulting rates across runs. Baseline definitions and citations appear in Section~\ref{sec:baselines}.}
+\caption{Direct same-prompt comparison of writing systems. Entries are \condAgenticCogWriter{}'s mean win rates across three generation runs, restricted to prompt comparisons for which both presentation orders agree on the same winner. Ties and pairs with a failed output are excluded. Values above 50\% favor \condAgenticCogWriter. ``Mean'' combines prompt-level outcomes from the three benchmarks within each generation run and then averages the resulting rates across runs. Baseline definitions and citations appear in Section~\ref{sec:baselines}.}
 \label{tab:pairwise-results}
 \end{table}
