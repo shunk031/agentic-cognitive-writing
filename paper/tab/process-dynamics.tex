@@ -5,16 +5,16 @@
 \begin{tabular}{lr}
 \toprule
 \textbf{Observed writing-loop behavior}
-& \textbf{Value} \\
+& \textbf{Rate} \\
 \midrule
 One Planning$\rightarrow$Translating$\rightarrow$Reviewing cycle
-& \AfourCycleCompliantRate \\
+& 74.6\% \\
 Review followed by renewed Planning
-& \AfourReviewingToPlanningRate \\
-Runs accepting replacement of an existing goal
-& \AfourRegenerationRuns/\AfourRunCount \\
+& 0.3\% \\
+Runs with an accepted goal replacement
+& 0.5\% \\
 \bottomrule
 \end{tabular}
-\caption{Observed behavior of \condAgenticCogWriter\ across completed runs. The first row measures the canonical single-cycle path; the second measures explicit returns from review to planning; the third counts accepted goal regeneration.}
+\caption{Observed behavior of \condAgenticCogWriter\ across completed runs. The first row measures the canonical single-cycle path; the second measures explicit returns from review to planning; the third reports the share of completed runs with an accepted goal replacement.}
 \label{tab:process-dynamics}
 \end{table}
