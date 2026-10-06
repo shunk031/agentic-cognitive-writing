@@ -16,11 +16,40 @@ MAIN_SECTIONS = [
 ]
 
 
+def read(path: str) -> str:
+    return (PAPER / path).read_text(encoding="utf-8")
+
+
+def check_appendix_sections(acl: str) -> None:
+    appendix = acl.split(r"\appendix", 1)[1]
+    headings = list(re.finditer(r"\\(?:section|subsection)\{([^}]*)\}", appendix))
+    assert headings, "appendix must contain sections"
+    for index, match in enumerate(headings):
+        title = match.group(1)
+        start = match.end()
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(appendix)
+        body = appendix[start:end]
+        if title == "Prompt and Experiment Configuration":
+            body += "\n" + read("sec/09_prompt_configuration.tex")
+        prose = re.sub(r"%.*", "", body)
+        prose = re.sub(r"\\(?:label|input)\{[^}]*\}", "", prose)
+        prose = re.sub(r"\\[A-Za-z@]+\*?(?:\[[^]]*\])?", "", prose)
+        prose = re.sub(r"[{}$~\\]", " ", prose)
+        words = re.findall(r"\b[A-Za-z][A-Za-z'-]*\b", prose)
+        assert len(words) >= 8, (
+            "appendix sections/subsections must contain explanatory prose, not only a table/figure input",
+            title,
+            len(words),
+        )
+
+
 def check():
-    method = (PAPER / "sec/03_method.tex").read_text()
-    experiments = (PAPER / "sec/04_experiments.tex").read_text()
-    results = (PAPER / "sec/05_results.tex").read_text()
-    main_sources = "\n".join((PAPER / path).read_text() for path in MAIN_SECTIONS)
+    method = read("sec/03_method.tex")
+    experiments = read("sec/04_experiments.tex")
+    results = read("sec/05_results.tex")
+    conclusion = read("sec/08_conclusion.tex")
+    acl = read("acl_latex.tex")
+    main_sources = "\n".join(read(path) for path in MAIN_SECTIONS)
 
     match = re.search(r"\bwe ask\b", main_sources, flags=re.IGNORECASE)
     assert not match, (
@@ -111,6 +140,15 @@ def check():
         experiments.count(r"\modelCross"),
     )
 
+    # Preserve the model-choice rationale when generator/evaluator wording is consolidated.
+    implementation = experiments.split(r"\subsection{Implementation}", 1)[1].split(r"\subsection{Evaluation}", 1)[0]
+    assert r"\footnote{" in implementation, "Implementation must retain the generator/evaluator selection rationale footnote"
+    assert "cost-sensitive, high-volume workloads" in implementation, "explain why Luna is used for high-volume generation"
+    assert "flagship for complex professional work" in implementation, "explain why Sol is used for primary evaluation"
+    assert "shared model family motivates the cross-family check" in implementation, (
+        "connect the model-choice rationale to the cross-family robustness check"
+    )
+
     pointwise = (
         results.split(r"\label{sec:results-pointwise}", 1)[1]
         .strip()
@@ -118,6 +156,47 @@ def check():
     )
     assert pointwise.startswith(r"Table~\ref{tab:main-results}"), (
         "start the pointwise Results subsection from the table the reader is about to interpret"
+    )
+    assert "shows that no" not in results, "avoid awkward 'Table X shows that no ...' constructions"
+    for label in (
+        "app:record-pooled",
+        "app:length-control",
+        "app:compute-control",
+        "app:single-context",
+        "app:cross-family",
+    ):
+        assert f"Appendix~\\ref{{{label}}}" not in main_sources, (
+            "main text should point readers to the containing sensitivity appendix rather than Appendix E.x",
+            label,
+        )
+    assert r"Appendix~\ref{app:sensitivity-analyses}" in results, (
+        "refer to the sensitivity analyses collectively as Appendix E"
+    )
+
+    assert conclusion.startswith(r"\condAgenticCogWriter\ reframes long-form writing for AI agents"), (
+        "keep the conclusion contribution-first rather than opening with 'We use'"
+    )
+
+    # Appendix organization and terminology are reader-facing contracts.
+    assert r"\section{Prompt and Experiment Configuration}" in acl, (
+        "Appendix A must be titled exactly 'Prompt and Experiment Configuration'"
+    )
+    assert r"\section{Prompt and experiment configuration}" not in acl
+    prompt_pos = acl.index(r"\section{Prompt and Experiment Configuration}")
+    runtime_pos = acl.index(r"\section{Runtime Configuration}")
+    assert r"\onecolumn" in acl[:prompt_pos][-100:], "render the full prompt appendix in one-column mode"
+    assert r"\twocolumn" in acl[prompt_pos:runtime_pos], "return to two-column layout after the prompt appendix"
+    assert "The Habermas table" not in acl, "describe the Habermas pilot directly rather than referring to 'the Habermas table'"
+    check_appendix_sections(acl)
+
+    runtime_table = read("tab/appendix-runtime-settings.tex")
+    assert "Generator sandbox" not in runtime_table and "workspace-write" not in runtime_table, (
+        "omit the redundant generator sandbox row from the runtime table"
+    )
+
+    single_context = read("tab/appendix-single-context.tex")
+    assert r"\condSingleContext\\vs.~\condAgenticCogWriter" in single_context, (
+        "break Single-context / vs. Agentic CogWriter across two lines in the appendix table"
     )
 
     print("Reader-facing source guards: passed")
