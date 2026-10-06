@@ -2,22 +2,24 @@
 \centering
 \small
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{lcc}
+\begin{tabular}{lrr}
 \toprule
+& \multicolumn{2}{c}{\textbf{\condAgenticCogWriter\ win rate (\%)}} \\
+\cmidrule(lr){2-3}
 \textbf{Process path}
 & \textbf{\condFixedOrder}
 & \textbf{\condSingleWriter} \\
 \midrule
 Plan$\rightarrow$draft$\rightarrow$review
-& \AfourExactCycleFixedOrderWinRate
-& \AfourExactCycleSingleWriterWinRate \\
+& 57.4\%
+& 72.2\% \\
 Other path
-& \AfourNonExactFixedOrderWinRate
-& \AfourNonExactSingleWriterWinRate \\
+& 54.9\%
+& 75.2\% \\
 \midrule
 Fisher $p$
-& \AfourFixedOrderCycleSplitP
-& \AfourSingleWriterCycleSplitP \\
+& 0.60
+& 0.43 \\
 \bottomrule
 \end{tabular}
 \caption{Descriptive association between \condAgenticCogWriter{}'s observed process path and pairwise outcome. The first row contains runs with exactly one planning--drafting--reviewing cycle; entries are \condAgenticCogWriter\ win rates among non-tied comparisons against the column system. Two-sided Fisher tests are unadjusted, and the trace-defined split is observational rather than causal.}
