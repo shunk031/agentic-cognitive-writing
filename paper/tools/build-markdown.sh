@@ -17,6 +17,7 @@ fi
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 paper_dir=$(cd -- "$script_dir/.." && pwd)
 
+uv run --no-project "$script_dir/check-reader-guards.py"
 "$script_dir/build-pdf.sh"
 uv run --no-project "$script_dir/prepare-markdown.py"
 docker run --rm \

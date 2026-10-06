@@ -7,33 +7,28 @@ where $I$ is the instruction, $C$ is the supplied context, and $O$ is the reques
 \subsection{Persistent Writing State}
 \label{sec:method-control-state}
 
-All four agents operate over a shared writing state. After $t$ completed process invocations, we denote the state by
+Composition produces a sequence of evolving drafts $D_0,D_1,\ldots,D_t,\ldots$ rather than a fixed number of predetermined stages. At writing step $t$, the shared workspace exposes
 \begin{equation}
 S_t=(D_t,G_t,H_t),
 \end{equation}
-where $D_t$ is the current draft, $G_t$ is the current hierarchy of writing goals, and $H_t$ is the observable process history. The initial state contains the empty or task-provided draft and goals derived from the assignment. Storing these records in the shared workspace lets each subagent recover the same document-level context before performing its role.
+where $D_t$ is the current draft, $G_t$ is the current hierarchy of writing goals, and $H_t$ is the observable process history. We use $D_0$ for the initial draft, which is empty unless the task provides one, and initialize $G_0$ from the assignment. Keeping these records outside any single agent context lets successive writing processes inspect and modify the same document-level state.
 
-The explicit goal representation makes one theory-derived design choice observable and testable. Following the writer-generated goals in \citet{flower1981cognitive}, goals can be created, developed, or replaced as the draft changes; we call replacement of the active goal hierarchy goal regeneration. We use the representation as an engineering mechanism that can be ablated and analyzed, not as a claim that the language agent has a human-like cognitive state.
+We represent writing goals explicitly as a hierarchy $G_t$. This goal network is motivated by \citet{flower1981cognitive}, who describe writers as creating and developing goals during composition. In our implementation, goals can be created, developed, or replaced as the draft changes; we call replacement of an existing goal \emph{goal regeneration}. The representation makes this theory-derived design choice observable and testable without claiming that the language agent has a human-like cognitive state.
 
-\subsection{Process-Level Control}
+\subsection{Process-Level Control and Execution}
 \label{sec:method-writing-processes}
 
-The \texttt{Monitor} agent decides which writing process should run next from the fixed task and current writing state. The available actions are
+The key architectural choice is what the \texttt{Monitor} selects next. Its action space $\mathcal{A}$ is
 \begin{equation}
 \mathcal{A}=\{\texttt{Planning},\texttt{Translating},\texttt{Reviewing}\},
 \end{equation}
-and the decision after state $S_t$ is
+and we write the decision at writing step $t$ as
 \begin{equation}
 a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t), \qquad a_t\in\mathcal{A}.
 \label{eq:monitor-policy}
 \end{equation}
-The notation $\pi_{\mathrm{Monitor}}$ denotes the runtime decision rule, not a separately trained policy model. We retain \citet{flower1981cognitive}'s term \texttt{Translating} for the drafting activity. Unlike a section scheduler or task-graph controller, Eq.~\eqref{eq:monitor-policy} chooses the kind of writing work to perform next.
+We retain \citet{flower1981cognitive}'s term \texttt{Translating} for the drafting activity. Unlike a section scheduler or task-graph controller, Eq.~\eqref{eq:monitor-policy} selects the kind of writing work to perform next.
 
-Adaptive process selection allows the writing order to change as the document develops. Drafting can expose a structural problem that sends control back to planning, and reviewing can trigger either another drafting pass or another planning pass. After reviewing, the \texttt{Monitor} may instead terminate the loop and return the current draft as the completed document $D_{\mathrm{final}}$.
+If \texttt{Planning} is selected, the \texttt{Planner} gathers relevant material from the current task and draft, organizes it for the intended audience, and creates or develops writing goals. If \texttt{Translating} is selected, the \texttt{Translator} turns the current plan and active goals into prose within the delegated draft scope. If \texttt{Reviewing} is selected, the \texttt{Reviewer} evaluates the current draft against the task and active goals, revises within the delegated scope, and reports whether further planning, drafting, or review is needed.
 
-\subsection{Agent Roles and State Updates}
-\label{sec:method-agents}
-
-Role-specific subagents execute the process selected by the \texttt{Monitor}. The \texttt{Planner} develops document structure and goals, the \texttt{Translator} turns the current plan and goals into prose, and the \texttt{Reviewer} evaluates the draft against the task and active goals. Each subagent writes its changes to the shared workspace before control returns to the \texttt{Monitor}, yielding the next state $S_{t+1}$.
-
-The \texttt{Monitor} remains responsible for coordination across role-specific updates. Review feedback can recommend changing a goal, but the \texttt{Monitor} decides whether to accept the change and records the decision in $H_t$. The experiments below evaluate the complete system first and then remove the explicit goal representation or adaptive process ordering to test how much each design choice contributes.
+Each subagent writes its changes to the shared workspace before control returns to the \texttt{Monitor}, yielding the next state $S_{t+1}$. Review feedback can recommend replacing a goal, but the \texttt{Monitor} decides whether to accept that change and records the decision in $H_t$. Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass. After reviewing, the \texttt{Monitor} may instead terminate the loop and return the current draft as the completed document $D_{\mathrm{final}}$.
