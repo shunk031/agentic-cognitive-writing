@@ -13,7 +13,7 @@ S_t=(D_t,G_t,H_t),
 \end{equation}
 where $D_t$ is the current draft, $G_t$ is the current hierarchy of writing goals, and $H_t$ is the observable process history. We use $D_0$ for the initial draft, which is empty unless the task provides one, and initialize $G_0$ from the assignment. Keeping these records outside any single agent context lets successive writing processes inspect and modify the same document-level state.
 
-We represent writing goals explicitly as a hierarchy $G_t$. This goal network is motivated by \citet{flower1981cognitive}, who describe writers as creating and developing goals during composition. In our implementation, goals can be created, developed, or replaced as the draft changes; we call replacement of an existing goal \emph{goal regeneration}. The representation makes this theory-derived design choice observable and testable without claiming that the language agent has a human-like cognitive state.
+We represent writing goals explicitly as a hierarchy $G_t$, following \citet{flower1981cognitive}'s account of writers creating and developing goals during composition. In our implementation, entries in this hierarchy can be created, developed, or replaced as the draft changes; we call replacement of an existing entry \emph{goal regeneration}. This representation makes the theory-derived design choice observable and testable without claiming that the language agent has a human-like cognitive state.
 
 \subsection{Process-Level Control and Execution}
 \label{sec:method-writing-processes}
