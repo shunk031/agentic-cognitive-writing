@@ -2,7 +2,7 @@
 \centering
 \small
 \setlength{\tabcolsep}{3.2pt}
-\begin{tabular}{lcc cc cc}
+\begin{tabular}{lrr rr rr}
 \toprule
 \textbf{System}
 & \multicolumn{2}{c}{\textbf{WritingBench}}
@@ -15,24 +15,24 @@
 \midrule
 \multicolumn{7}{l}{\textit{Alternative writing systems}} \\
 \condSinglePass
-& \WritingAoneNative & \WritingAonePoint
-& \HelloAoneNative & \HelloAonePoint
-& -- & \DoLoAonePoint \\
+& 0.704 & -0.093
+& 0.769 & -0.119
+& -- & -0.019 \\
 \condStaged~\citep{yang2022re3,wan2025cognitive}
-& \WritingAtwoNative & \WritingAtwoPoint
-& \HelloAtwoNative & \HelloAtwoPoint
-& -- & \textbf{\DoLoAtwoPoint} \\
+& 0.708 & -0.054
+& 0.780 & -0.007
+& -- & \textbf{0.103} \\
 \condTaskPlanning~\citep{xiong2025beyond}
-& \WritingAthreeNative & \WritingAthreePoint
-& \HelloAthreeNative & \HelloAthreePoint
-& -- & \DoLoAthreePoint \\
+& 0.726 & -0.062
+& 0.781 & 0.040
+& -- & -0.166 \\
 \midrule
 \textbf{\condAgenticCogWriter}
-& \textbf{\WritingAfourNative} & \textbf{\WritingAfourPoint}
-& \textbf{\HelloAfourNative} & \textbf{\HelloAfourPoint}
-& -- & \DoLoAfourPoint \\
+& \textbf{0.754} & \textbf{0.115}
+& \textbf{0.795} & \textbf{0.058}
+& -- & 0.005 \\
 \bottomrule
 \end{tabular}
-\caption{Independent document-quality scores on the selected demanding benchmark subsets from the initial generation run. Native scores remain on each benchmark's own scale. Pointwise scores are z-standardized against outputs from all seven pre-specified systems within each benchmark, so zero is the corresponding across-system mean. Best scores in each column are in bold.}
+\caption{Independent document-quality scores on the selected demanding benchmark subsets from the initial generation run. WritingBench native scores are divided by 10 for display so that the WritingBench and HelloBench native columns both use a 0--1 scale. Pointwise scores are z-standardized against outputs from all seven pre-specified systems within each benchmark, so zero is the corresponding across-system mean. Best scores in each column are in \textbf{bold}.}
 \label{tab:main-results}
 \end{table*}
