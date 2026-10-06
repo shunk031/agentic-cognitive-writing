@@ -23,19 +23,19 @@
 & one context \\
 \condTaskPlanning
 & $X,D_t,T_t$
-& task node $v_t$
-& $v_t=\pi_{\mathrm{task}}(D_t,T_t)$
+& task node
+& select a ready task node
 & task graph \\
 \midrule
 \textbf{\condAgenticCogWriter}
 & $\mathbf{X,D_t,G_t,H_t}$
 & \textbf{writing process $a_t$}
-& $\mathbf{a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)}$
+& $\mathbf{a_t=\mathrm{Monitor}(X,D_t,G_t,H_t)}$
 & \textbf{subagent} \\
 \condNoGoals
 & $X,D_t,H_t$
 & writing process $a_t$
-& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,H_t)$
+& $a_t=\mathrm{Monitor}(X,D_t,H_t)$
 & subagent \\
 \condFixedOrder
 & $X,D_t,G_t,H_t$
@@ -45,16 +45,16 @@
 \condSingleWriter
 & $X,D_t,G_t,H_t$
 & writing process $a_t$
-& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)$
+& $a_t=\mathrm{Monitor}(X,D_t,G_t,H_t)$
 & one writer \\
 \condSingleContext
 & $X,D_t,G_t,H_t$
 & writing process $a_t$
-& $a_t=\pi_{\mathrm{Monitor}}(X,D_t,G_t,H_t)$
+& $a_t=\mathrm{Monitor}(X,D_t,G_t,H_t)$
 & Monitor context \\
 \bottomrule
 \end{tabular}%
 }
-\caption{Systems evaluated under the shared generation contract. $X$ is the fixed task input, $D_t$ the current draft, $G_t$ the goal representation, $H_t$ the process history, and $T_t$ an adaptive task graph. The first four rows compare different units of progress during writing; the remaining rows modify \condAgenticCogWriter. \condSingleContext\ is post-hoc; all other rows were specified before scoring. The equations use a common decision-level notation rather than the original notation of prior systems.}
+\caption{Systems evaluated under the shared generation contract. $X$ is the fixed task input, $D_t$ the current draft, $G_t$ the goal representation, $H_t$ the process history, and $T_t$ an adaptive task graph. The first four rows compare different units of progress during writing; the remaining rows modify \condAgenticCogWriter. \condSingleContext\ is post-hoc; all other rows were specified before scoring.}
 \label{tab:experimental-conditions}
 \end{table*}
