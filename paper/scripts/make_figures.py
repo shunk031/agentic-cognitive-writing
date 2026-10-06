@@ -438,13 +438,12 @@ def save_process_sequences_a(report: dict[str, Any], output: Path) -> None:
     sequence_axis.set_axisbelow(True)
     sequence_axis.tick_params(axis="both", labelsize=8)
     sequence_axis.axhline(4.5, color="#888888", linewidth=0.7)
-    sequence_axis.legend(
+    figure.legend(
         handles=[
             Patch(facecolor=colors[0], label="Agentic CogWriter"),
             Patch(facecolor=colors[1], label="Fixed-order"),
         ],
-        loc="lower left",
-        bbox_to_anchor=(0.0, 1.02),
+        loc="outside upper center",
         ncol=2,
         frameon=False,
         fontsize=8,
@@ -459,6 +458,7 @@ def save_process_sequences_a(report: dict[str, Any], output: Path) -> None:
         "P = Planning\nT = Translating\nR = Reviewing",
         transform=sequence_axis.transAxes,
         ha="right",
+        multialignment="left",
         va="bottom",
         fontsize=8,
         bbox={"facecolor": "white", "edgecolor": "none", "pad": 1.5},
