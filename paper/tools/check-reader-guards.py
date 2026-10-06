@@ -89,9 +89,9 @@ def check():
         "keep infrastructure-specific launch details out of the main experimental narrative"
     )
     assert (
-        "Prompts used while developing the protocol are removed before subset selection"
+        "Prompts used to design or debug the evaluation procedure are removed before subset selection"
         in experiments
-    ), "explain protocol-development prompt exclusion in reader-facing language"
+    ), "explain evaluation-development prompt exclusion in reader-facing language"
     assert "we report that rubric as the benchmark-native score" in experiments, (
         "define benchmark-native scoring when the term is introduced"
     )
