@@ -254,7 +254,10 @@ def check():
     assert "Flower and Hayes (1981)" in structural_text
     assert headings[-1] == "References"
 
-    appendix_start = structural_text.index("## Prompt and experiment configuration")
+    appendix_heading = "## Prompt and Experiment Configuration"
+    assert appendix_heading in structural_text, "exact Prompt and Experiment Configuration heading required"
+    assert "## Prompt and experiment configuration" not in structural_text, "wrong appendix-title capitalization"
+    appendix_start = structural_text.index(appendix_heading)
     main_text = structural_text[:appendix_start]
     for sample_phrase in ("hard100", "100-prompt", "100 prompts", "300 prompts"):
         assert sample_phrase not in main_text, sample_phrase
