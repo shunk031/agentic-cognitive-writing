@@ -162,7 +162,8 @@ def check() -> None:
         f"{numeric_macro(numbers, 'AfourFixedOrderCycleSplitP'):.2f}",
         f"{numeric_macro(numbers, 'AfourSingleWriterCycleSplitP'):.2f}",
     ]
-    displayed_p = re.findall(r"&\s*(\d+\.\d+)\s*(?=\\\\)", tabular_body(trace).split("Fisher $p$", 1)[1])
+    fisher_row = tabular_body(trace).split("Fisher $p$", 1)[1].split(r"\\", 1)[0]
+    displayed_p = re.findall(r"&\s*(\d+\.\d+)", fisher_row)
     assert displayed_p == expected_p, ("tab/trace-outcome.tex: Fisher p-values are stale relative to numbers.tex", displayed_p, expected_p)
 
     # Table 4 has no informative best-cell distinction because every displayed rate favors the focal system.
