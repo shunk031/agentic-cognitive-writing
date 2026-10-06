@@ -4,6 +4,8 @@
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{lrrrr}
 \toprule
+& \multicolumn{4}{c}{\textbf{\condAgenticCogWriter\ win rate (\%)}} \\
+\cmidrule(lr){2-5}
 \textbf{Variant}
 & \textbf{WritingBench}
 & \textbf{HelloBench}
@@ -12,22 +14,22 @@
 \midrule
 \multicolumn{5}{l}{\textit{Ablations}} \\
 \condNoGoals
-& \WritingFourFiveRateMean
-& \HelloFourFiveRateMean
-& \DoLoFourFiveRateMean
-& \PooledFourFiveRateMean \\
+& 52.1\%
+& 52.4\%
+& 56.0\%
+& 53.4\% \\
 \condFixedOrder
-& \WritingFourSixRateMean
-& \HelloFourSixRateMean
-& \DoLoFourSixRateMean
-& \PooledFourSixRateMean \\
+& 56.8\%
+& 57.4\%
+& 54.7\%
+& 56.3\% \\
 \midrule
 \multicolumn{5}{l}{\textit{Bundled execution diagnostic}} \\
 \condSingleWriter
-& \WritingFourSevenRateMean
-& \HelloFourSevenRateMean
-& \DoLoFourSevenRateMean
-& \PooledFourSevenRateMean \\
+& 68.5\%
+& 83.4\%
+& 67.8\%
+& 73.5\% \\
 \bottomrule
 \end{tabular}
 \caption{Ablations and execution diagnostic. Entries are \condAgenticCogWriter{}'s mean win rates across three generation runs, restricted to prompt comparisons for which both presentation orders agree on the same winner; ties and pairs with a failed output are excluded. The final column combines prompt-level outcomes from the three benchmarks within each generation run and then averages the resulting rates across runs. \condNoGoals\ and \condFixedOrder\ each modify one control mechanism, whereas \condSingleWriter\ changes several execution properties together.}
