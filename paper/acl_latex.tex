@@ -121,16 +121,19 @@ AI agents increasingly produce long-form documents as part of multi-step knowled
 
 \appendix
 
-\section{Prompt and experiment configuration}
+\onecolumn
+\section{Prompt and Experiment Configuration}
 \label{app:prompts}
 \input{sec/09_prompt_configuration}
+\clearpage
+\twocolumn
 
-\section{Runtime configuration}
+\section{Runtime Configuration}
 \label{app:runtime}
 Table~\ref{tab:runtime-settings} summarizes the runtime and evaluation settings used for the reported runs. Every condition received the same task input, available information, generator, tool policy, attempt budget, and final-output contract.
 \input{tab/appendix-runtime-settings}
 
-\section{Generation-run-level pairwise outcomes}
+\section{Generation-Run-Level Pairwise Outcomes}
 \label{app:pairwise-detail}
 The following figure shows the prompt-level pairwise estimates for each benchmark and generation run, including the ablation contrasts.
 \begin{figure*}[t]
@@ -140,42 +143,42 @@ The following figure shows the prompt-level pairwise estimates for each benchmar
 \label{fig:appendix-confirmatory-forest}
 \end{figure*}
 
-\section{Additional process and resource statistics}
+\section{Additional Process and Resource Statistics}
 \label{app:process-behavior}
 Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first generation run. For \condAgenticCogWriter, that run uses \AfourOutputTokens\ output-plus-reasoning tokens and \AfourInputTokens\ uncached input tokens per attempted run and records \AfourGoalRegenerated\ accepted goal regeneration. Across the three generation runs, the trace summaries contain mean totals of \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while the post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
 \input{tab/appendix-process}
 
-\section{Sensitivity analyses}
+\section{Sensitivity Analyses}
 \label{app:sensitivity-analyses}
-\subsection{Record-pooled sensitivity}
+\subsection{Record-Pooled Sensitivity}
 \label{app:record-pooled}
-The record-pooled table reports a sensitivity analysis that treats the two presentation records for each prompt as independent observations; the retained disagreements show how much presentation order can affect the descriptive rates.
-The retained presentation disagreements were \WritingPresentationDisagreementRate\ on WritingBench, \HelloPresentationDisagreementRate\ on HelloBench, and \DoLoPresentationDisagreementRate\ on DoLoMiTes across the three generation runs.
+Table~\ref{tab:appendix-record-pooled-pairwise} reports a sensitivity analysis that treats the two presentation records for each prompt as independent observations; the retained disagreements show how much presentation order can affect the descriptive rates. The retained presentation disagreements were \WritingPresentationDisagreementRate\ on WritingBench, \HelloPresentationDisagreementRate\ on HelloBench, and \DoLoPresentationDisagreementRate\ on DoLoMiTes across the three generation runs.
 \input{tab/appendix-record-pooled-pairwise}
 
-\subsection{Output-length sensitivity}
+\subsection{Output-Length Sensitivity}
 \label{app:length-control}
-The length-control table reports the longer-side preference by output-length ratio; the longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. In the tighter pre-specified matching band, the outcomes from the first generation run are \LengthFullSinglePassFiveWLT\ for \condAgenticCogWriter\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condAgenticCogWriter\ versus \condNoGoals. In the wider pre-specified band, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$). These matching-band $p$-values are unadjusted descriptive sign-test results. The remaining generation-run-specific rates are reported in Table~\ref{tab:appendix-length-control}.
+Table~\ref{tab:appendix-length-control} reports pairwise outcomes by output-length ratio. The longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. In the tighter pre-specified matching band, the outcomes from the first generation run are \LengthFullSinglePassFiveWLT\ for \condAgenticCogWriter\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condAgenticCogWriter\ versus \condNoGoals. In the wider pre-specified band, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$). These matching-band $p$-values are unadjusted descriptive sign-test results.
 \input{tab/appendix-length-control}
 
-\subsection{Compute-stratified sensitivity}
+\subsection{Compute-Stratified Sensitivity}
 \label{app:compute-control}
+Compute matching asks whether the pairwise direction persists when the compared systems use similar realized output-plus-reasoning token budgets. Table~\ref{tab:appendix-compute-control} reports outcomes within the pre-specified 1.25$\times$ and 1.50$\times$ matching bands and across descriptive ratio bins. Because realized compute is determined by execution, this analysis is a sensitivity check rather than a causal adjustment.
 \input{tab/appendix-compute-control}
 
-\subsection{Single-context exploratory check}
+\subsection{Single-Context Exploratory Check}
 \label{app:single-context}
 The \condSingleContext\ condition was added after the main results had been observed, to test whether the \condSingleWriter\ loss reflects delegation to separate agents or the absence of process decomposition under a \texttt{Monitor}. We registered it as an exploratory condition outside the Holm family before judging and ran one generation run, the same evidence tier as the cross-family check: the question it answers is whether an attribution survives, not whether a new contrast is confirmed. We therefore report the combined estimate with its interval and the benchmark-level results without adjustment.
 \input{tab/appendix-single-context}
 
-\subsection{Cross-family judge robustness}
+\subsection{Cross-Family Judge Robustness}
 \label{app:cross-family}
-The cross-family table reports combined outcomes for the three robustness contrasts: \CrossFamilyFullSinglePassWLT\ for \condAgenticCogWriter\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ for \condAgenticCogWriter\ versus \condNoGoals. The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval. The judge yields a non-tied combined outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ overall W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
+Table~\ref{tab:appendix-cross-family} reports combined outcomes for the three cross-family robustness contrasts: \CrossFamilyFullSinglePassWLT\ for \condAgenticCogWriter\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ for \condAgenticCogWriter\ versus \condNoGoals. The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval. The judge yields a non-tied combined outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ overall W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
 \input{tab/appendix-cross-family}
 
 \clearpage
-\section{Habermas Machine pilot}
+\section{Habermas Machine Pilot}
 \label{app:habermas}
-The Habermas table reports trace totals from the pilot, which tests short consensus writing as a boundary condition rather than as another main benchmark.
+The Habermas Machine pilot tests short consensus writing as a boundary condition rather than as another main benchmark. Table~\ref{tab:appendix-habermas} summarizes pointwise quality and the available process statistics across the pilot conditions.
 \input{tab/appendix-habermas}
 
 \condExploratoryOne\ is the exploratory CogWriter-style baseline, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; \condExploratoryTwo\ is the exploratory STORM-style baseline, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval. \condAgenticCogWriter\ does not lead the pointwise composite in this boundary-condition pilot; in particular, it scores below \condSinglePass\ and \condStaged. \condAgenticCogWriter\ and \condFixedOrder\ record \HabAfourRegenerated\ and \HabAsixRegenerated\ regeneration events, respectively; their ledgers contain \HabAfourLedger\ and \HabAsixLedger\ no/proposal outcomes, respectively.
