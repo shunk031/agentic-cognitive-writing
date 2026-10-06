@@ -139,6 +139,65 @@ def check():
     abstract_commands = re.findall(r"\\[A-Za-z]+", abstract)
     assert len(abstract_words) <= 200, len(abstract_words)
     assert not abstract_commands, ("LaTeX command in abstract", abstract_commands)
+    assert not re.search(r"\bWe ask\b", abstract, flags=re.IGNORECASE), (
+        "avoid rhetorical 'We ask' in the abstract"
+    )
+
+    intro_source = (PAPER / "sec/01_introduction.tex").read_text()
+    intro_paragraphs = [
+        paragraph.strip()
+        for paragraph in re.split(r"\n\s*\n", intro_source)
+        if paragraph.strip()
+        and not re.fullmatch(r"\\input\{[^}]+\}", paragraph.strip())
+    ]
+    assert len(intro_paragraphs) <= 6, (
+        "Introduction exceeds six prose paragraphs",
+        len(intro_paragraphs),
+    )
+
+    agent_citation = re.match(
+        r"^Large language model agents~\\citep\{([^}]+)\}", intro_paragraphs[0]
+    )
+    assert agent_citation, (
+        "open the Introduction with cited prior work on large language model agents"
+    )
+    assert len([key for key in agent_citation[1].split(",") if key.strip()]) >= 2, (
+        "cite multiple representative agent references in the opening sentence"
+    )
+
+    cognitive_citation = re.search(
+        r"The cognitive process theory of writing~\\citep\{([^}]+)\}", intro_source
+    )
+    assert cognitive_citation, (
+        "introduce the cognitive process theory of writing with citations"
+    )
+    cognitive_keys = {key.strip() for key in cognitive_citation[1].split(",")}
+    for required in ("flower1981cognitive", "hayes1996new", "hayes2012modeling"):
+        assert required in cognitive_keys, ("missing cognitive-writing citation", required)
+
+    for role in ("Planning", "Translating", "Reviewing", "Monitor"):
+        assert rf"\texttt{{{role}}}" not in intro_source, (
+            "do not introduce writing-process concepts in typewriter font",
+            role,
+        )
+
+    assert re.search(
+        r"Building on \\citet\{flower1981cognitive\}, we propose \\condAgenticCogWriter",
+        intro_source,
+    ), "preserve the proposal sentence: Building on ..., we propose Agentic CogWriter"
+
+    evaluation_paragraphs = [
+        paragraph
+        for paragraph in intro_paragraphs
+        if r"We evaluate our \condAgenticCogWriter" in paragraph
+    ]
+    assert len(evaluation_paragraphs) == 1, (
+        "Introduction must contain one 'We evaluate our Agentic CogWriter' paragraph",
+        len(evaluation_paragraphs),
+    )
+    assert "component analyses" in evaluation_paragraphs[0], (
+        "keep evaluation and component analysis in the same Introduction paragraph"
+    )
 
     controls = re.findall(r"\\[A-Za-z]+", structural_text)
     assert not controls, controls
@@ -213,6 +272,9 @@ def check():
         r"\bdecided(?:\s+prompt)?\s+comparisons?\b",
         r"\bpool(?:ed|s|ing)?\b",
         r"\bwriting architectures?\b",
+        r"\bWe ask whether\b",
+        r"\bAblations do not show\b",
+        r"\bExecution traces\b",
     ):
         match = re.search(banned, main_text, flags=re.IGNORECASE)
         assert not match, (banned, match.group(0) if match else None)
@@ -313,6 +375,8 @@ def check():
         [
             "Unexpanded control sequences in manuscript prose: 0",
             f"Abstract words: {len(abstract_words)}/200; LaTeX commands: 0",
+            f"Introduction prose paragraphs: {len(intro_paragraphs)}/6 max",
+            "Introduction citation and proposal-structure guards: passed",
             f"Section headings: Markdown {actual}; PDF {expected} ({len(pdf_headings)} aux entries plus unnumbered Limitations)",
             "Title, Abstract, and References headings excluded from section count.",
             "Paragraph-style violations: 0",
