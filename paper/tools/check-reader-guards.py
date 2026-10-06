@@ -28,17 +28,28 @@ def check():
         match.group(0) if match else None,
     )
 
-    assert r"Its action space $\mathcal{A}$ is" in method, (
-        "name the Monitor action space before defining it"
+    assert r"action space $A$" in method, (
+        "name the Monitor action space A before defining it"
     )
-    assert r"$D_0,D_1,\ldots,D_t,\ldots$" in method, (
-        "preserve the evolving-draft sequence beginning at D_0"
+    assert r"A=\{\texttt{Planning},\texttt{Translating},\texttt{Reviewing}\}" in method, (
+        "define action space A explicitly"
+    )
+    assert r"a_t\in A" in method, "keep the selected action tied to action space A"
+    assert r"$D_0$" in method and r"$G_0$" in method, (
+        "preserve the initial draft and initial goal state"
     )
     assert "After $t$ completed process invocations" not in method, (
         "do not define t using the opaque 'completed process invocations' wording"
     )
     assert "The notation" not in method, (
         "introduce mathematical notation where it is used instead of explaining it afterward"
+    )
+    assert r"\pi_{\mathrm{Monitor}}" not in method, (
+        "do not describe the runtime Monitor as a learned-policy notation"
+    )
+    assert method.count(r"\subsection{") == 2, (
+        "keep Method to Persistent Writing State and Process-Level Control and Execution",
+        method.count(r"\subsection{"),
     )
     assert r"\subsection{Agent Roles and State Updates}" not in method, (
         "keep role execution with process-level control rather than a detached subsection"
@@ -89,14 +100,14 @@ def check():
         "keep infrastructure-specific launch details out of the main experimental narrative"
     )
     assert (
-        "Prompts used to design or debug the evaluation procedure are removed before subset selection"
+        "We first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts."
         in experiments
-    ), "explain evaluation-development prompt exclusion in reader-facing language"
-    assert "we report that rubric as the benchmark-native score" in experiments, (
-        "define benchmark-native scoring when the term is introduced"
+    ), "explain development-prompt exclusion before describing subset selection"
+    assert "benchmark authors' original criteria rather than our shared rubric" in experiments, (
+        "define benchmark-native scoring in plain language when the term is introduced"
     )
     assert experiments.count(r"\modelCross") == 1, (
-        "explain the cross-family evaluator once in Experimental Design",
+        "name the cross-family evaluator once in Experimental Design",
         experiments.count(r"\modelCross"),
     )
 
