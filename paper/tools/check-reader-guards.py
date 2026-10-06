@@ -147,12 +147,29 @@ def check():
         experiments.count(r"\modelCross"),
     )
 
-    # Preserve the model-choice rationale when generator/evaluator wording is consolidated.
+    # Preserve the substance of the model-choice rationale without freezing its prose.
     implementation = experiments.split(r"\subsection{Implementation}", 1)[1].split(r"\subsection{Evaluation}", 1)[0]
-    assert r"\footnote{" in implementation, "Implementation must retain the generator/evaluator selection rationale footnote"
-    assert "cost-sensitive, high-volume workloads" in implementation, "explain why Luna is used for high-volume generation"
-    assert "flagship for complex professional work" in implementation, "explain why Sol is used for primary evaluation"
-    assert "shared model family motivates the cross-family check" in implementation, (
+    assert r"\modelGenBare\ as the generator" in implementation, (
+        "identify the generator model in Implementation"
+    )
+    assert r"\modelJudgeBare\ as the primary evaluator" in implementation, (
+        "identify the primary evaluator model in Implementation"
+    )
+    assert r"\footnote{" in implementation, (
+        "Implementation must retain the generator/evaluator selection rationale footnote"
+    )
+    for citation in ("openai2026luna", "openai2026sol", "openai2026gpt56"):
+        assert citation in implementation, (
+            "model-selection rationale must retain its supporting citations",
+            citation,
+        )
+    assert "high-volume long-form generation" in implementation, (
+        "explain why Luna is used for high-volume generation"
+    )
+    assert "higher-capability tier" in implementation and "evaluation" in implementation, (
+        "explain why the higher-capability model tier is assigned to evaluation"
+    )
+    assert "shared model family" in implementation and "cross-family check" in implementation, (
         "connect the model-choice rationale to the cross-family robustness check"
     )
 
