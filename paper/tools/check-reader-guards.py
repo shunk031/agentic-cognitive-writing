@@ -22,10 +22,17 @@ def read(path: str) -> str:
 
 def check_appendix_sections(acl: str) -> None:
     appendix = acl.split(r"\appendix", 1)[1]
-    headings = list(re.finditer(r"\\(?:section|subsection)\{([^}]*)\}", appendix))
+    headings = list(re.finditer(r"\\(section|subsection)\{([^}]*)\}", appendix))
     assert headings, "appendix must contain sections"
     for index, match in enumerate(headings):
-        title = match.group(1)
+        level, title = match.group(1), match.group(2)
+        # A top-level section may act as a container for substantive subsections.
+        if (
+            level == "section"
+            and index + 1 < len(headings)
+            and headings[index + 1].group(1) == "subsection"
+        ):
+            continue
         start = match.end()
         end = headings[index + 1].start() if index + 1 < len(headings) else len(appendix)
         body = appendix[start:end]
