@@ -25,6 +25,10 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
+      - name: Check caption length
+        working-directory: paper
+        run: python3 tools/check-caption-length.py
+
       - name: Build manuscript with repository script
         working-directory: paper
         run: ./tools/build-pdf.sh
