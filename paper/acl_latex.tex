@@ -164,7 +164,6 @@ AI agents increasingly produce long-form documents as part of multi-step knowled
 \section{Prompt and Experiment Configuration}
 \label{app:prompts}
 \input{sec/09_prompt_configuration}
-\clearpage
 
 \section{Runtime Configuration}
 \label{app:runtime}
@@ -195,7 +194,7 @@ Table~\ref{tab:appendix-record-pooled-pairwise} reports a sensitivity analysis t
 
 \subsection{Output-Length Sensitivity}
 \label{app:length-control}
-Table~\ref{tab:appendix-length-control} reports pairwise outcomes by output-length ratio. The longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. In the tighter pre-specified matching band, the outcomes from the first generation run are \LengthFullSinglePassFiveWLT\ for \condAgenticCogWriter\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condAgenticCogWriter\ versus \condNoGoals. In the wider pre-specified band, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$). These matching-band $p$-values are unadjusted descriptive sign-test results.
+Table~\ref{tab:appendix-length-control} reports pairwise outcomes by output-length ratio. The longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. In the tighter pre-specified matching band, the outcomes from the first generation run are \LengthFullSinglePassFiveWLT\ for \condAgenticCogWriter\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condAgenticCogWriter\ versus \condNoGoals. In the wider pre-specified band, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ for \condAgenticCogWriter\ versus \condNoGoals. These matching-band $p$-values are unadjusted descriptive sign-test results.
 \input{tab/appendix-length-control}
 
 \subsection{Compute-Stratified Sensitivity}
@@ -214,7 +213,6 @@ The \condSingleContext\ condition was added after the main results had been obse
 Table~\ref{tab:appendix-cross-family} reports combined outcomes for the three cross-family robustness contrasts: \CrossFamilyFullSinglePassWLT\ for \condAgenticCogWriter\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ for \condAgenticCogWriter\ versus \condNoGoals. The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval. The judge yields a non-tied combined outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ overall W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
 \input{tab/appendix-cross-family}
 
-\clearpage
 \section{Habermas Machine Pilot}
 \label{app:habermas}
 The Habermas Machine pilot tests short consensus writing as a boundary condition rather than as another main benchmark. Table~\ref{tab:appendix-habermas} summarizes pointwise quality and the available process statistics across the pilot conditions.
