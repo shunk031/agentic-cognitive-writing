@@ -206,10 +206,15 @@ def check():
         "Appendix A must be titled exactly 'Prompt and Experiment Configuration'"
     )
     assert r"\section{Prompt and experiment configuration}" not in acl
-    prompt_pos = acl.index(r"\section{Prompt and Experiment Configuration}")
-    runtime_pos = acl.index(r"\section{Runtime Configuration}")
-    assert r"\onecolumn" in acl[:prompt_pos][-100:], "render the full prompt appendix in one-column mode"
-    assert r"\twocolumn" in acl[prompt_pos:runtime_pos], "return to two-column layout after the prompt appendix"
+    appendix = acl.split(r"\appendix", 1)[1]
+    prompt_pos = appendix.index(r"\section{Prompt and Experiment Configuration}")
+    onecolumn_pos = appendix.index(r"\onecolumn")
+    assert onecolumn_pos < prompt_pos, (
+        "switch to one-column layout before the first appendix section"
+    )
+    assert r"\twocolumn" not in appendix, (
+        "keep the entire appendix in the intentional one-column layout"
+    )
     assert "The Habermas table" not in acl, "describe the Habermas pilot directly rather than referring to 'the Habermas table'"
     check_appendix_sections(acl)
 
