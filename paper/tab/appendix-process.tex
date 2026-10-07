@@ -22,6 +22,6 @@
 \condSingleWriter & \AsevenCompleted & \AsevenMedianOutput & \AsevenSpawns & \AsevenGoals & \AsevenOutputTokens & \AsevenInputTokens & \AsevenMeanSeconds \\
 \bottomrule
 \end{tabular}
-\caption{Process summary from the first generation run across the selected demanding benchmark subsets, which prioritize the longest inputs and, where stated, the longest requested outputs. Completed is the count of completed runs. Spawns are mean delegated invocations per attempted run. Output tokens are Codex-reported output plus reasoning tokens, and input tokens are uncached input tokens; both are means over attempted runs. Wall-clock time is the mean seconds for completed runs.}
+\caption{Realized process and resource use in the first generation run. The systems differ substantially in delegated invocations and token use in addition to their control logic, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses rather than treating raw resource use as a controlled mechanism.}
 \label{tab:process-summary}
 \end{table}
