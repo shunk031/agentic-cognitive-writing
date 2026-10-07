@@ -2,7 +2,7 @@ We introduce \condAgenticCogWriter, a long-form writing system that turns docume
 \begin{equation}
 X=(I,C,O),
 \end{equation}
-where $I$ is the instruction, $C$ is the supplied context, and $O$ is the requested output requirements. Every writing process can read $X$, but only the document state changes during composition. Figure~\ref{fig:agentic-cogwriter} gives the system overview. One top-level \texttt{Monitor} agent coordinates three subagents: \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer}.
+where $I$ is the instruction, $C$ is the supplied context, and $O$ specifies the requested output requirements. Every writing process can read $X$, but only the document state changes during composition. Figure~\ref{fig:agentic-cogwriter} gives the system overview. One top-level \texttt{Monitor} agent coordinates three subagents: \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer}.
 
 \subsection{Persistent Writing State}
 \label{sec:method-control-state}
