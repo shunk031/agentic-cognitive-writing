@@ -52,6 +52,6 @@ Contrast & Band or bin & W/L/T & Rate & $p$ \\
 \condAgenticCogWriter\ vs. \condSinglePass & 2.00+ & \ComputeFullSinglePassBinTwoPlusWLT & \ComputeFullSinglePassBinTwoPlusRate & $\ComputeFullSinglePassBinTwoPlusP$ \\
 \bottomrule
 \end{tabular}
-\caption{Compute-stratified pairwise outcomes after combining the two presentation orders for each prompt. The compute ratio is the ratio of output-plus-reasoning tokens per completed run, with retries included; the Agentic CogWriter versus Single-pass contrast has no pairs in the tighter matching band because Agentic CogWriter always uses more compute. The reported sign-test $p$-values are unadjusted descriptive sensitivity statistics and do not enter the confirmatory Holm family.}
+\caption{Compute-matched pairwise outcomes. Within the tightest available 1.25$\times$ band, \condAgenticCogWriter\ remains favored over \condStaged\ and \condTaskPlanning; no \condAgenticCogWriter--\condSinglePass\ pairs fall in that band, so the same comparison cannot be made there. The remaining rows show descriptive compute-ratio bins; sign-test $p$-values are unadjusted and do not enter the confirmatory analysis.}
 \label{tab:appendix-compute-control}
 \end{table*}
