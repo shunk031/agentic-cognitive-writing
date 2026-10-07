@@ -32,6 +32,6 @@
 & 73.5\% \\
 \bottomrule
 \end{tabular}
-\caption{Ablations and execution diagnostic. Entries are \condAgenticCogWriter{}'s mean win rates across three generation runs, restricted to prompt comparisons for which both presentation orders agree on the same winner; ties and pairs with a failed output are excluded. The final column combines prompt-level outcomes from the three benchmarks within each generation run and then averages the resulting rates across runs. \condNoGoals\ and \condFixedOrder\ each modify one control mechanism, whereas \condSingleWriter\ changes several execution properties together.}
+\caption{Ablations and execution diagnostic, reported as \condAgenticCogWriter\ win rates averaged across three generation runs; values above 50\% favor \condAgenticCogWriter. \condNoGoals\ and \condFixedOrder\ remain close to the full system, whereas \condSingleWriter\ shows a substantially larger gap. Thus neither removing explicit goals nor fixing process order alone reproduces the larger separation associated with the bundled execution change.}
 \label{tab:ablation-results}
 \end{table*}
