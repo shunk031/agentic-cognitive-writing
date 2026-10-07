@@ -12,68 +12,48 @@ Every pre-specified system receives the same assignment, supplied context, reque
 All experiment-authored generation and evaluation prompts are reproduced verbatim below. Provider-level defaults that are not authored by the experiment are controlled through the runtime configuration in Appendix~\ref{app:runtime}.
 
 \paragraph{Full baseline prompts.}
-\noindent\textbf{\condSinglePass.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/conditions/prompts/a1_single_shot.md}
+\promptinput{PromptBaseline}{\condSinglePass}{../experiments/conditions/prompts/a1_single_shot.md}
 
-\noindent\textbf{\condStaged: Pre-Write.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/conditions/prompts/a2_pre_write.md}
+\promptinput{PromptBaseline}{\condStaged: Pre-Write}{../experiments/conditions/prompts/a2_pre_write.md}
 
-\noindent\textbf{\condStaged: Write.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/conditions/prompts/a2_write.md}
+\promptinput{PromptBaseline}{\condStaged: Write}{../experiments/conditions/prompts/a2_write.md}
 
-\noindent\textbf{\condStaged: Re-Write.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/conditions/prompts/a2_re_write.md}
+\promptinput{PromptBaseline}{\condStaged: Re-Write}{../experiments/conditions/prompts/a2_re_write.md}
 
-\noindent\textbf{\condTaskPlanning.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md}
+\promptinput{PromptBaseline}{\condTaskPlanning}{../experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md}
 
 \paragraph{Full Agentic CogWriter prompts.}
-\noindent\textbf{Top-level agent skill.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../plugin/skills/agentic-cog-writer/SKILL.md}
+\promptinput{PromptMonitor}{Top-level Agent Skill}{../plugin/skills/agentic-cog-writer/SKILL.md}
 
-\noindent\textbf{\texttt{Planner} subagent wrapper.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../plugin/agents/planner.md}
+\promptinput{PromptPlanner}{\texttt{Planner} Subagent Wrapper}{../plugin/agents/planner.md}
 
-\noindent\textbf{\texttt{Planner} role skill.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../plugin/skills/planning/SKILL.md}
+\promptinput{PromptPlanner}{\texttt{Planner} Role Skill}{../plugin/skills/planning/SKILL.md}
 
-\noindent\textbf{\texttt{Translator} subagent wrapper.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../plugin/agents/translator.md}
+\promptinput{PromptTranslator}{\texttt{Translator} Subagent Wrapper}{../plugin/agents/translator.md}
 
-\noindent\textbf{\texttt{Translator} role skill.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../plugin/skills/translating/SKILL.md}
+\promptinput{PromptTranslator}{\texttt{Translator} Role Skill}{../plugin/skills/translating/SKILL.md}
 
-\noindent\textbf{\texttt{Reviewer} subagent wrapper.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../plugin/agents/reviewer.md}
+\promptinput{PromptReviewer}{\texttt{Reviewer} Subagent Wrapper}{../plugin/agents/reviewer.md}
 
-\noindent\textbf{\texttt{Reviewer} role skill.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../plugin/skills/reviewing/SKILL.md}
+\promptinput{PromptReviewer}{\texttt{Reviewer} Role Skill}{../plugin/skills/reviewing/SKILL.md}
 
 \paragraph{Full ablation and execution-variant prompts.}
-\noindent\textbf{\condNoGoals.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md}
+\promptinput{PromptAblation}{\condNoGoals}{../experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md}
 
-\noindent\textbf{\condFixedOrder.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md}
+\promptinput{PromptAblation}{\condFixedOrder}{../experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md}
 
-\noindent\textbf{\condSingleWriter.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md}
+\promptinput{PromptAblation}{\condSingleWriter}{../experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md}
 
-\noindent\textbf{\condSingleContext.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/plugin/skills/cognitive-writing-single-context/SKILL.md}
+\promptinput{PromptAblation}{\condSingleContext}{../experiments/plugin/skills/cognitive-writing-single-context/SKILL.md}
 
 \paragraph{Benchmark-native evaluation.}
 WritingBench retains five query-specific criteria for each prompt; the evaluator scores each criterion from 1 to 10 and the native score is their unweighted mean. HelloBench retains 5--7 checklist items per prompt; the evaluator scores each item on its five-level scale and the native score is the item mean. DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark. Published leaderboard values should not be compared directly with these scores because we use a shared evaluator and our own generated outputs.
 
 \paragraph{Full evaluator prompts.}
-\noindent\textbf{Common pointwise rubric.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/prompts/judges/pointwise-v1.md}
+\promptinput{PromptEvaluator}{Common Pointwise Rubric}{../experiments/prompts/judges/pointwise-v1.md}
 
-\noindent\textbf{Pairwise comparison.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/prompts/judges/pairwise-v1.md}
+\promptinput{PromptEvaluator}{Pairwise Comparison}{../experiments/prompts/judges/pairwise-v1.md}
 
-\noindent\textbf{WritingBench-native evaluation.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/prompts/judges/writingbench-native-v1.md}
+\promptinput{PromptEvaluator}{WritingBench-Native Evaluation}{../experiments/prompts/judges/writingbench-native-v1.md}
 
-\noindent\textbf{HelloBench-native evaluation.}
-\VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true]{../experiments/prompts/judges/hellobench-native-v1.md}
+\promptinput{PromptEvaluator}{HelloBench-Native Evaluation}{../experiments/prompts/judges/hellobench-native-v1.md}
