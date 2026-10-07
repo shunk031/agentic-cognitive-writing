@@ -11,7 +11,9 @@ Every pre-specified system receives the same assignment, supplied context, reque
 
 All experiment-authored generation and evaluation prompts are reproduced verbatim below. Provider-level defaults that are not authored by the experiment are controlled through the runtime configuration in Appendix~\ref{app:runtime}.
 
-\paragraph{Full baseline prompts.}
+\subsection{Generation Prompts}
+
+\subsubsection{Baselines}
 \promptinput{PromptBaseline}{\condSinglePass}{../experiments/conditions/prompts/a1_single_shot.md}
 
 \promptinput{PromptBaseline}{\condStaged: Pre-Write}{../experiments/conditions/prompts/a2_pre_write.md}
@@ -22,7 +24,7 @@ All experiment-authored generation and evaluation prompts are reproduced verbati
 
 \promptinput{PromptBaseline}{\condTaskPlanning}{../experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md}
 
-\paragraph{Full Agentic CogWriter prompts.}
+\subsubsection{Agentic CogWriter}
 \promptinput{PromptMonitor}{Top-level Agent Skill}{../plugin/skills/agentic-cog-writer/SKILL.md}
 
 \promptinput{PromptPlanner}{\texttt{Planner} Subagent Wrapper}{../plugin/agents/planner.md}
@@ -37,7 +39,7 @@ All experiment-authored generation and evaluation prompts are reproduced verbati
 
 \promptinput{PromptReviewer}{\texttt{Reviewer} Role Skill}{../plugin/skills/reviewing/SKILL.md}
 
-\paragraph{Full ablation and execution-variant prompts.}
+\subsubsection{Ablations and Execution Variants}
 \promptinput{PromptAblation}{\condNoGoals}{../experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md}
 
 \promptinput{PromptAblation}{\condFixedOrder}{../experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md}
@@ -46,10 +48,11 @@ All experiment-authored generation and evaluation prompts are reproduced verbati
 
 \promptinput{PromptAblation}{\condSingleContext}{../experiments/plugin/skills/cognitive-writing-single-context/SKILL.md}
 
+\subsection{Evaluation Prompts}
+
 \paragraph{Benchmark-native evaluation.}
 WritingBench retains five query-specific criteria for each prompt; the evaluator scores each criterion from 1 to 10 and the native score is their unweighted mean. HelloBench retains 5--7 checklist items per prompt; the evaluator scores each item on its five-level scale and the native score is the item mean. DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark. Published leaderboard values should not be compared directly with these scores because we use a shared evaluator and our own generated outputs.
 
-\paragraph{Full evaluator prompts.}
 \promptinput{PromptEvaluator}{Common Pointwise Rubric}{../experiments/prompts/judges/pointwise-v1.md}
 
 \promptinput{PromptEvaluator}{Pairwise Comparison}{../experiments/prompts/judges/pairwise-v1.md}
