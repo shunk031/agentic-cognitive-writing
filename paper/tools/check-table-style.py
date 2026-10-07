@@ -61,6 +61,22 @@ def check() -> None:
     process = read("tab/process-dynamics.tex")
     trace = read("tab/trace-outcome.tex")
 
+    # Every manuscript tabular uses a partial rule below its header. This keeps
+    # single-row and grouped headers visually consistent and prevents new tables
+    # from silently falling back to a heavy full-width header separator.
+    for path in sorted((PAPER / "tab").glob("*.tex")):
+        text = path.read_text(encoding="utf-8")
+        tabulars = re.findall(
+            r"\\begin\{tabular\}\{.*?\}(.*?)\\end\{tabular\}",
+            text,
+            flags=re.DOTALL,
+        )
+        assert tabulars, f"{path.relative_to(PAPER)}: expected at least one tabular"
+        for index, tabular in enumerate(tabulars, start=1):
+            assert r"\cmidrule" in tabular, (
+                f"{path.relative_to(PAPER)} tabular {index}: header requires \\cmidrule"
+            )
+
     # Numeric columns are right-aligned. Text columns remain left-aligned.
     expected_specs = {
         "tab/main-results.tex": "lrrrrrr",
