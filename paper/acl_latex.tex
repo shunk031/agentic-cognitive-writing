@@ -19,7 +19,8 @@
 \usepackage{stfloats}
 \usepackage{epigraph}
 \usepackage{fvextra}
-\usepackage[most]{tcolorbox}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
 \setlength{\epigraphwidth}{0.86\columnwidth}
 \setlength{\epigraphrule}{0pt}
 \renewcommand{\epigraphflush}{center}
@@ -57,7 +58,6 @@
 \definecolor{PromptAblation}{RGB}{164,106,36}
 \definecolor{PromptEvaluator}{RGB}{102,76,142}
 \newtcolorbox{promptbox}[2]{
-  enhanced,
   breakable,
   colback=#1!4!white,
   colframe=#1!72!black,
