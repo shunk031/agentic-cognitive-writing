@@ -50,6 +50,56 @@ def check_appendix_sections(acl: str) -> None:
         )
 
 
+def check_caption_takeaways() -> None:
+    required = {
+        "fig/tex/overview.tex": (
+            "cognitive process theory of writing",
+            "coding-agent-style control loop",
+            "selected online from the evolving document state",
+        ),
+        "tab/appendix-comparison.tex": (
+            "only compared system",
+            "online selection among heterogeneous writing operations",
+        ),
+        "tab/experiments-architecture-comparison.tex": (
+            "central difference in what advances next",
+            "whole document, a fixed stage, a task node, or a writing process",
+        ),
+        "tab/main-results.tex": (
+            "higher is better",
+            "scores highest on both measures for WritingBench and HelloBench",
+        ),
+        "tab/pairwise-results.tex": (
+            "preferred on every benchmark against every alternative",
+            "largest overall margin over \\condSinglePass",
+        ),
+        "tab/ablation-results.tex": (
+            "remain close to the full system",
+            "shows a substantially larger gap",
+        ),
+        "tab/process-dynamics.tex": (
+            "accounts for 74.6\\% of runs",
+            "only rarely exercises its ability",
+        ),
+        "sec/05_results.tex": (
+            "mostly follows the same forward",
+            "consistent with the small exploratory advantage of adaptive ordering",
+        ),
+        "tab/trace-outcome.tex": (
+            "Win rates are similar",
+            "describes association rather than a causal effect",
+        ),
+    }
+    for path, phrases in required.items():
+        text = read(path)
+        for phrase in phrases:
+            assert phrase in text, (
+                "main figure/table captions must state the intended reader takeaway",
+                path,
+                phrase,
+            )
+
+
 def check():
     method = read("sec/03_method.tex")
     experiments = read("sec/04_experiments.tex")
@@ -71,6 +121,7 @@ def check():
     for pattern, label in (
         (r"\bpilot\b", "pilot"),
         (r"\bboundary[ -]condition\b", "boundary condition"),
+        (r"\bcontract\b", "contract"),
     ):
         match = re.search(pattern, reader_tex_sources, flags=re.IGNORECASE)
         assert not match, (
@@ -211,11 +262,13 @@ def check():
         "refer to the sensitivity analyses collectively as Appendix E"
     )
 
+    check_caption_takeaways()
+
     assert conclusion.startswith(r"\condAgenticCogWriter\ reframes long-form writing for AI agents"), (
         "keep the conclusion contribution-first rather than opening with 'We use'"
     )
 
-    # Appendix organization and terminology are reader-facing contracts.
+    # Appendix organization and terminology are reader-facing constraints.
     assert r"\section{Prompt and Experiment Configuration}" in acl, (
         "Appendix A must be titled exactly 'Prompt and Experiment Configuration'"
     )
