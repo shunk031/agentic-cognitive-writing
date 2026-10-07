@@ -96,6 +96,8 @@ def check() -> None:
         )
     assert main_values == expected_main, ("tab/main-results.tex: displayed scores are stale relative to numbers.tex", main_values, expected_main)
     assert "Best scores in each column are in \\textbf{bold}." in main
+    assert main.count(r"\uparrow") == 6, "tab/main-results.tex: mark every score column as higher-is-better"
+    assert "divided by 10" not in main, "tab/main-results.tex: keep display-rescaling detail out of the caption"
 
     # Win-rate tables use one decimal place, including values that round to an integer.
     for path, text, count in (
@@ -157,13 +159,7 @@ def check() -> None:
     assert percentages(tabular_body(trace)) == expected_trace, (
         "tab/trace-outcome.tex: displayed rates are stale relative to numbers.tex"
     )
-    expected_p = [
-        f"{numeric_macro(numbers, 'AfourFixedOrderCycleSplitP'):.2f}",
-        f"{numeric_macro(numbers, 'AfourSingleWriterCycleSplitP'):.2f}",
-    ]
-    fisher_row = tabular_body(trace).split("Fisher $p$", 1)[1].split(r"\\", 1)[0]
-    displayed_p = re.findall(r"&\s*(\d+\.\d+)", fisher_row)
-    assert displayed_p == expected_p, ("tab/trace-outcome.tex: Fisher p-values are stale relative to numbers.tex", displayed_p, expected_p)
+    assert "Fisher $p$" not in trace, "tab/trace-outcome.tex: keep the observational path comparison descriptive"
 
     # Table 4 has no informative best-cell distinction because every displayed rate favors the focal system.
     pairwise_data = tabular_body(pairwise).split(r"\midrule", 1)[1]
