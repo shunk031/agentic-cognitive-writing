@@ -3,7 +3,7 @@ In this experimental design, we consider the seven pre-specified systems describ
 \subsection{Systems Compared}
 \label{sec:baselines}
 
-We consider seven pre-specified systems under the shared generation contract. The systems are numbered below so that the alternatives, ablations, execution variant, and full system can be distinguished throughout the analysis.
+We consider seven pre-specified systems under the same generation setup. The systems are numbered below so that the alternatives, ablations, execution variant, and full system can be distinguished throughout the analysis.
 
 \paragraph{Alternative writing systems.}
 We compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ produces the complete document in one generation call; (2) \condStaged\ executes \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write}, following the common separation of planning, drafting, and revision~\citep{yang2022re3,wan2025cognitive}; and (3) \condTaskPlanning\ follows a WriteHERE-style adaptive task graph~\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes. The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas \condAgenticCogWriter\ advances a writing process.
