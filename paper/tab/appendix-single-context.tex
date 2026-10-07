@@ -16,7 +16,7 @@ Contrast & Scope & $n$ & Dropped & W/L/T & Rate & 95\% Wilson / exact $p$ \\
 \condSingleContext\\vs.~\condSinglePass & Pooled & \SingleContextSinglePassN & \SingleContextSinglePassDropped & \SingleContextSinglePassWLT & \SingleContextSinglePassRate & \SingleContextSinglePassInterval; $\SingleContextSinglePassP$ \\
 \bottomrule
 \end{tabular}
-\caption{Exploratory single-context results added after the primary results. The outcomes were judged by \modelJudge\ against the matched primary-condition outputs. Wilson intervals are descriptive; exact sign-test $p$-values exclude ties and are unadjusted for multiplicity.}
+\caption{Exploratory comparison of \condSingleContext\ with matched primary-condition outputs. In its single generation run, \condSingleContext\ does not show a reliable difference from \condAgenticCogWriter, so separate subagent contexts alone are not isolated as the source of the full system's advantage. Wilson intervals are descriptive and sign-test $p$-values are unadjusted.}
 \label{tab:appendix-single-context-pairwise}
 \end{table}
 
@@ -36,6 +36,6 @@ Ledger entries with proposal & \SingleContextAoneLedgerWithProposal & \SingleCon
 Spawns per attempted run & \AoneSpawns & \AfourSpawns & \SingleContextSpawns \\
 \bottomrule
 \end{tabular}
-\caption{Process summaries use the matched primary-condition replication and the exploratory \condSingleContext\ run. Structural auditing found \SingleContextAEightMissingPlanning\ \condSingleContext\ prompts missing \texttt{Planning}, \SingleContextAEightMissingTranslating\ missing \texttt{Translating}, and \SingleContextAEightMissingBoth\ missing both, out of \SingleContextAEightAuditN; the matched \condAgenticCogWriter\ audit found \SingleContextAFourMissingPlanning\ prompts missing \texttt{Planning} and \SingleContextAFourMissingTranslating\ missing \texttt{Translating}, out of \SingleContextAFourAuditN.}
+\caption{Process and resource profiles for the matched \condSinglePass, \condAgenticCogWriter, and \condSingleContext\ runs. \condSingleContext\ preserves the process loop and shared state without separate subagent contexts, making it a narrower execution check than \condSingleWriter.}
 \label{tab:appendix-single-context-process}
 \end{table}
