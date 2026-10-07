@@ -15,7 +15,7 @@
   loop/.style={->, line width=0.55pt, rounded corners=4pt}
 ]
 
-\node[input] (task) {\textbf{Input: writing task}\\instruction $I$ \; + \; context $C$ \; + \; output contract $O$};
+\node[input] (task) {\textbf{Input: writing task}\\instruction $I$ \; + \; context $C$ \; + \; output requirements $O$};
 \node[mainagent, below=of task] (monitor) {\textbf{Monitor}\\select next process};
 
 \node[subagent, below=7mm of monitor] (translator) {\textbf{Translator}\\\texttt{Translating}};
@@ -36,6 +36,6 @@
 \draw[flow, dashed] (state) -- node[right, font=\scriptsize]{terminate after review} (output);
 
 \end{tikzpicture}
-\caption{Overview of \condAgenticCogWriter. The input and completed document are distinguished from the agent roles and shared writing state. The \texttt{Monitor} reads the persistent state, selects one writing process, delegates it to the corresponding subagent, and observes the updated state before either continuing or terminating after review.}
+\caption{Inspired by the cognitive process theory of writing~\citep{flower1981cognitive}, \condAgenticCogWriter\ implements long-form generation as a coding-agent-style control loop. Given an instruction, supplied context, and output requirements, a \texttt{Monitor} repeatedly reads the persistent draft, goals, and process history, chooses \texttt{Planning}, \texttt{Translating}, or \texttt{Reviewing}, and delegates the selected process to a role-specific subagent. The updated state drives the next decision until review terminates the loop and returns the completed document. Unlike a fixed writing pipeline, the next writing operation is selected online from the evolving document state.}
 \label{fig:agentic-cogwriter}
 \end{figure}
