@@ -79,6 +79,7 @@ def math_ascii(text):
         "pi": "pi",
         "sigma": "sigma",
         "rightarrow": " -> ",
+        "uparrow": "↑",
         "in": " in ",
         "times": " x ",
         "checkmark": "yes",
