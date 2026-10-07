@@ -167,7 +167,7 @@ AI agents increasingly produce long-form documents as part of multi-step knowled
 
 \section{Runtime Configuration}
 \label{app:runtime}
-Table~\ref{tab:runtime-settings} summarizes the runtime and evaluation settings used for the reported runs. Every condition received the same task input, available information, generator, tool policy, attempt budget, and final-output contract.
+Table~\ref{tab:runtime-settings} summarizes the runtime and evaluation settings used for the reported runs. Every condition received the same task input, available information, generator, tool policy, attempt budget, and final-output requirements.
 \input{tab/appendix-runtime-settings}
 
 \section{Generation-Run-Level Pairwise Outcomes}
@@ -176,7 +176,7 @@ The following figure shows the prompt-level pairwise estimates for each benchmar
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
-\caption{Prompt-level pairwise win rates by benchmark and generation run. Generation-run points show 95\% Wilson intervals. Filled or open circles mark tests that do or do not survive the within-benchmark Holm correction; diamonds are descriptive means across generation runs and are not separate inferential tests.}
+\caption{Run-level pairwise estimates separate the large system comparisons from the ablations. \condAgenticCogWriter\ is consistently favored over \condSinglePass\ and \condTaskPlanning\ and usually over \condStaged, whereas \condNoGoals\ and \condFixedOrder\ remain near parity and do not survive the within-benchmark Holm correction. Points show 95\% Wilson intervals; filled circles survive correction, open circles do not, and diamonds are descriptive means across generation runs.}
 \label{fig:appendix-confirmatory-forest}
 \end{figure}
 
