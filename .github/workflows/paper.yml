@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - paper-manuscript
+      - prompt-card-final-render
     paths:
       - "paper/**"
       - ".github/workflows/paper.yml"
