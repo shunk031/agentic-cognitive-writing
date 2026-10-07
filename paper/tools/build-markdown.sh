@@ -20,7 +20,7 @@ paper_dir=$(cd -- "$script_dir/.." && pwd)
 uv run --no-project "$script_dir/check-reader-guards.py"
 uv run --no-project "$script_dir/check-table-style.py"
 "$script_dir/build-pdf.sh"
-uv run --no-project "$script_dir/prepare-markdown.py"
+uv run --no-project "$script_dir/prepare-markdown-prompt-cards.py"
 docker run --rm \
     --user "$(id -u):$(id -g)" \
     --volume "$paper_dir:/workspace" \
