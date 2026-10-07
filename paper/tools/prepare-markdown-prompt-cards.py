@@ -43,7 +43,10 @@ def source(path: Path) -> str:
         assert gap
         name, stop = base.group(text, end + gap.end())
         prompt = (PAPER / name).resolve().read_text(encoding="utf-8")
-        replacement = f"\n\\paragraph{{{title}}}\n\\begin{{verbatim}}\n{prompt}\n\\end{{verbatim}}\n"
+        replacement = (
+            f"\n\\noindent\\textbf{{{title}}}\n"
+            f"\\begin{{verbatim}}\n{prompt}\n\\end{{verbatim}}\n"
+        )
         text = text[:match.start()] + replacement + text[stop:]
     return text
 
