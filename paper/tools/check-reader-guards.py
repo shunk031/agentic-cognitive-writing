@@ -57,12 +57,26 @@ def check():
     conclusion = read("sec/08_conclusion.tex")
     acl = read("acl_latex.tex")
     main_sources = "\n".join(read(path) for path in MAIN_SECTIONS)
+    reader_tex_sources = "\n".join(
+        path.read_text(encoding="utf-8") for path in sorted(PAPER.rglob("*.tex"))
+    )
+    reader_tex_sources = re.sub(r"(?m)%.*$", "", reader_tex_sources)
 
     match = re.search(r"\bwe ask\b", main_sources, flags=re.IGNORECASE)
     assert not match, (
         "reader-facing 'we ask' is banned in main text",
         match.group(0) if match else None,
     )
+
+    for pattern, label in (
+        (r"\bpilot\b", "pilot"),
+        (r"\bboundary[ -]condition\b", "boundary condition"),
+    ):
+        match = re.search(pattern, reader_tex_sources, flags=re.IGNORECASE)
+        assert not match, (
+            f"reader-facing '{label}' wording is banned in manuscript TeX",
+            match.group(0) if match else None,
+        )
 
     assert r"action space $A$" in method, (
         "name the Monitor action space A before defining it"
@@ -206,6 +220,10 @@ def check():
         "Appendix A must be titled exactly 'Prompt and Experiment Configuration'"
     )
     assert r"\section{Prompt and experiment configuration}" not in acl
+    assert r"\section{Consensus-Writing Evaluation on Habermas Machine Data}" in acl, (
+        "name the Habermas-derived appendix by the evaluation task itself"
+    )
+    assert r"\section{Habermas Machine Pilot}" not in acl
     appendix = acl.split(r"\appendix", 1)[1]
     prompt_pos = appendix.index(r"\section{Prompt and Experiment Configuration}")
     onecolumn_pos = appendix.index(r"\onecolumn")
@@ -215,7 +233,7 @@ def check():
     assert r"\twocolumn" not in appendix, (
         "keep the entire appendix in the intentional one-column layout"
     )
-    assert "The Habermas table" not in acl, "describe the Habermas pilot directly rather than referring to 'the Habermas table'"
+    assert "The Habermas table" not in acl, "describe the Habermas evaluation directly rather than referring to 'the Habermas table'"
     check_appendix_sections(acl)
 
     runtime_table = read("tab/appendix-runtime-settings.tex")
