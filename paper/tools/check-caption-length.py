@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail CI when a manuscript caption exceeds the reader-facing length cap."""
+"""Fail CI when a compiled-manuscript caption exceeds the reader-facing length cap."""
 
 from __future__ import annotations
 
@@ -41,6 +41,33 @@ def captions(text: str):
         yield payload, line, end
 
 
+def manuscript_sources() -> list[Path]:
+    """Return TeX sources reachable from the manuscript entry point."""
+    pending = [PAPER / "acl_latex.tex"]
+    seen: set[Path] = set()
+    sources: list[Path] = []
+    include_pattern = re.compile(r"\\(?:input|include)\{([^}]+)\}")
+
+    while pending:
+        path = pending.pop()
+        path = path.resolve()
+        if path in seen or not path.exists():
+            continue
+        seen.add(path)
+        sources.append(path)
+        text = strip_comments(path.read_text(encoding="utf-8"))
+        for target in include_pattern.findall(text):
+            relative = Path(target)
+            if relative.suffix != ".tex":
+                relative = relative.with_suffix(".tex")
+            candidates = [PAPER / relative, path.parent / relative]
+            child = next((candidate for candidate in candidates if candidate.exists()), None)
+            if child is not None:
+                pending.append(child)
+
+    return sorted(sources)
+
+
 def visible_word_count(caption: str) -> int:
     """Approximate rendered prose length while ignoring citation keys and math syntax."""
     text = re.sub(r"\\cite[tp]?\*?(?:\[[^\]]*\])?\{[^{}]*\}", " ", caption)
@@ -54,7 +81,7 @@ def visible_word_count(caption: str) -> int:
 def main() -> None:
     offenders = []
     checked = 0
-    for path in sorted(PAPER.rglob("*.tex")):
+    for path in manuscript_sources():
         text = path.read_text(encoding="utf-8")
         for caption, line, _ in captions(text):
             checked += 1
@@ -63,12 +90,12 @@ def main() -> None:
                 preview = re.sub(r"\s+", " ", caption).strip()[:120]
                 offenders.append((path.relative_to(PAPER), line, words, preview))
 
-    assert checked > 0, "no manuscript captions found"
+    assert checked > 0, "no compiled-manuscript captions found"
     assert not offenders, (
         f"captions must be <= {MAX_CAPTION_WORDS} words",
         offenders,
     )
-    print(f"Caption length guard: {checked} captions <= {MAX_CAPTION_WORDS} words")
+    print(f"Caption length guard: {checked} compiled captions <= {MAX_CAPTION_WORDS} words")
 
 
 if __name__ == "__main__":
