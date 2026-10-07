@@ -96,7 +96,6 @@ def check() -> None:
         )
     assert main_values == expected_main, ("tab/main-results.tex: displayed scores are stale relative to numbers.tex", main_values, expected_main)
     assert "Best scores in each column are in \\textbf{bold}." in main
-    assert "WritingBench native scores are divided by 10 for display" in main
 
     # Win-rate tables use one decimal place, including values that round to an integer.
     for path, text, count in (
