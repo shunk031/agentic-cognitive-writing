@@ -32,11 +32,13 @@ def extract_braced(text: str, start: int) -> tuple[str, int]:
 
 def captions(text: str):
     """Yield caption payloads, including optional short-caption syntax."""
+    cleaned = strip_comments(text)
     pattern = re.compile(r"\\caption(?:\[[^\]]*\])?\s*\{")
-    for match in pattern.finditer(strip_comments(text)):
+    for match in pattern.finditer(cleaned):
         brace = match.end() - 1
-        payload, end = extract_braced(text, brace)
-        yield payload, match.start(), end
+        payload, end = extract_braced(cleaned, brace)
+        line = cleaned.count("\n", 0, match.start()) + 1
+        yield payload, line, end
 
 
 def visible_word_count(caption: str) -> int:
@@ -54,11 +56,10 @@ def main() -> None:
     checked = 0
     for path in sorted(PAPER.rglob("*.tex")):
         text = path.read_text(encoding="utf-8")
-        for caption, start, _ in captions(text):
+        for caption, line, _ in captions(text):
             checked += 1
             words = visible_word_count(caption)
             if words > MAX_CAPTION_WORDS:
-                line = text.count("\n", 0, start) + 1
                 preview = re.sub(r"\s+", " ", caption).strip()[:120]
                 offenders.append((path.relative_to(PAPER), line, words, preview))
 
