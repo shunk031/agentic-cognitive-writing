@@ -1,5 +1,5 @@
 \paragraph{Prompt selection and provenance.}
-The scored study uses the committed \texttt{hard100} subset generated from the pinned WritingBench, HelloBench, and DoLoMiTes manifests before generation. Prompts used while developing the protocol are removed first. Each remaining prompt is ranked by prompt word count plus the largest requested output length stated in the prompt or structured output constraints, subject to fixed maximum-length gates; ties are resolved by prompt word count, requested length, and prompt identifier. The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts. Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.
+The scored study uses the committed \texttt{hard100} subset generated from the pinned WritingBench~\citep{wu2026writingbench}, HelloBench~\citep{que2024hellobench}, and DoLoMiTes~\citep{malaviya2025dolomites} manifests before generation. Prompts used while developing the protocol are removed first. Each remaining prompt is ranked by prompt word count plus the largest requested output length stated in the prompt or structured output constraints, subject to fixed maximum-length gates; ties are resolved by prompt word count, requested length, and prompt identifier. The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts. Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.
 
 The three selected subsets stress different properties of long-form writing. WritingBench combines long inputs with explicit long-output requirements, HelloBench contributes primarily very long-input summarization and continuation tasks, and DoLoMiTes contributes methodical expert tasks with structured procedural constraints. The \texttt{hard100} name identifies the deterministic length-and-demand rule rather than a claim that every prompt has the same source of semantic difficulty.
 
@@ -14,6 +14,8 @@ All experiment-authored generation and evaluation prompts are reproduced verbati
 \subsection{Generation Prompts}
 
 \subsubsection{Baselines}
+The \condStaged\ prompts follow the planning--drafting--revision decomposition used by prior long-form writing systems~\citep{yang2022re3,wan2025cognitive}, while \condTaskPlanning\ follows the adaptive task-planning formulation of WriteHERE~\citep{xiong2025beyond}.
+
 \promptinput{PromptBaseline}{\condSinglePass}{../experiments/conditions/prompts/a1_single_shot.md}
 
 \promptinput{PromptBaseline}{\condStaged: Pre-Write}{../experiments/conditions/prompts/a2_pre_write.md}
