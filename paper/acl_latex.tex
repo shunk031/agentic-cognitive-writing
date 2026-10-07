@@ -19,6 +19,7 @@
 \usepackage{stfloats}
 \usepackage{epigraph}
 \usepackage{fvextra}
+\usepackage[most]{tcolorbox}
 \setlength{\epigraphwidth}{0.86\columnwidth}
 \setlength{\epigraphrule}{0pt}
 \renewcommand{\epigraphflush}{center}
@@ -45,6 +46,41 @@
 \DeclareUnicodeCharacter{2264}{<=}
 \DeclareUnicodeCharacter{2265}{>=}
 \DeclareUnicodeCharacter{2713}{[x]}
+
+% WriteHERE-style prompt cards. Color identifies the role of each prompt while
+% keeping the prompt text itself neutral and printable.
+\definecolor{PromptBaseline}{RGB}{52,91,140}
+\definecolor{PromptMonitor}{RGB}{42,109,78}
+\definecolor{PromptPlanner}{RGB}{35,112,126}
+\definecolor{PromptTranslator}{RGB}{77,88,148}
+\definecolor{PromptReviewer}{RGB}{132,72,91}
+\definecolor{PromptAblation}{RGB}{164,106,36}
+\definecolor{PromptEvaluator}{RGB}{102,76,142}
+\newtcolorbox{promptbox}[2]{
+  enhanced,
+  breakable,
+  colback=#1!4!white,
+  colframe=#1!72!black,
+  colbacktitle=#1!82!black,
+  coltitle=white,
+  title={#2},
+  fonttitle=\bfseries\small,
+  boxrule=0.6pt,
+  arc=1.5mm,
+  outer arc=1.5mm,
+  left=2mm,
+  right=2mm,
+  top=1.2mm,
+  bottom=1.2mm,
+  before skip=5pt,
+  after skip=9pt,
+  pad at break*=1mm
+}
+\newcommand{\promptinput}[3]{%
+  \begin{promptbox}{#1}{#2}%
+  \VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true,breaksymbolleft={},breaksymbolright={}]{#3}%
+  \end{promptbox}%
+}
 
 \input{numbers}
 
