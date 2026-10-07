@@ -4,12 +4,12 @@
 \begin{tabular}{@{}p{0.20\textwidth}p{0.12\textwidth}rrrrp{0.27\textwidth}@{}}
 \toprule
 Contrast & Scope & $n$ & Dropped & W/L/T & Rate & 95\% Wilson / exact $p$ \\
-\midrule
+\cmidrule(lr){1-7}
 \condSingleContext\\vs.~\condAgenticCogWriter & WritingBench & \SingleContextWritingFullN & \SingleContextWritingFullDropped & \SingleContextWritingFullWLT & \SingleContextWritingFullRate & \SingleContextWritingFullInterval; $\SingleContextWritingFullP$ \\
 \condSingleContext\\vs.~\condAgenticCogWriter & HelloBench & \SingleContextHelloFullN & \SingleContextHelloFullDropped & \SingleContextHelloFullWLT & \SingleContextHelloFullRate & \SingleContextHelloFullInterval; $\SingleContextHelloFullP$ \\
 \condSingleContext\\vs.~\condAgenticCogWriter & DoLoMiTes & \SingleContextDoLoFullN & \SingleContextDoLoFullDropped & \SingleContextDoLoFullWLT & \SingleContextDoLoFullRate & \SingleContextDoLoFullInterval; $\SingleContextDoLoFullP$ \\
 \condSingleContext\\vs.~\condAgenticCogWriter & Pooled & \SingleContextFullN & \SingleContextFullDropped & \SingleContextFullWLT & \SingleContextFullRate & \SingleContextFullInterval; $\SingleContextFullP$ \\
-\midrule
+\cmidrule(lr){1-7}
 \condSingleContext\\vs.~\condSinglePass & WritingBench & \SingleContextWritingSinglePassN & \SingleContextWritingSinglePassDropped & \SingleContextWritingSinglePassWLT & \SingleContextWritingSinglePassRate & \SingleContextWritingSinglePassInterval; $\SingleContextWritingSinglePassP$ \\
 \condSingleContext\\vs.~\condSinglePass & HelloBench & \SingleContextHelloSinglePassN & \SingleContextHelloSinglePassDropped & \SingleContextHelloSinglePassWLT & \SingleContextHelloSinglePassRate & \SingleContextHelloSinglePassInterval; $\SingleContextHelloSinglePassP$ \\
 \condSingleContext\\vs.~\condSinglePass & DoLoMiTes & \SingleContextDoLoSinglePassN & \SingleContextDoLoSinglePassDropped & \SingleContextDoLoSinglePassWLT & \SingleContextDoLoSinglePassRate & \SingleContextDoLoSinglePassInterval; $\SingleContextDoLoSinglePassP$ \\
@@ -26,7 +26,7 @@ Contrast & Scope & $n$ & Dropped & W/L/T & Rate & 95\% Wilson / exact $p$ \\
 \begin{tabular}{lrrr}
 \toprule
 Metric & \condSinglePass & \condAgenticCogWriter & \condSingleContext \\
-\midrule
+\cmidrule(lr){1-4}
 Completed & \AoneCompleted & \AfourCompleted & \SingleContextCompleted \\
 Output-plus-reasoning tokens per run & \AoneOutputTokens & \AfourOutputTokens & \SingleContextOutputTokens \\
 Wall-clock seconds per completed run & \AoneMeanSeconds & \AfourMeanSeconds & \SingleContextMeanSeconds \\
