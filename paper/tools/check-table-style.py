@@ -61,9 +61,9 @@ def check() -> None:
     process = read("tab/process-dynamics.tex")
     trace = read("tab/trace-outcome.tex")
 
-    # Every manuscript tabular uses a partial rule below its header. This keeps
-    # single-row and grouped headers visually consistent and prevents new tables
-    # from silently falling back to a heavy full-width header separator.
+    # Every manuscript tabular uses \cmidrule for header and row-group separators.
+    # Full-width \midrule is intentionally disallowed so new tables cannot drift
+    # away from the paper-wide visual convention.
     for path in sorted((PAPER / "tab").glob("*.tex")):
         text = path.read_text(encoding="utf-8")
         tabulars = re.findall(
@@ -74,7 +74,10 @@ def check() -> None:
         assert tabulars, f"{path.relative_to(PAPER)}: expected at least one tabular"
         for index, tabular in enumerate(tabulars, start=1):
             assert r"\cmidrule" in tabular, (
-                f"{path.relative_to(PAPER)} tabular {index}: header requires \\cmidrule"
+                f"{path.relative_to(PAPER)} tabular {index}: requires \\cmidrule"
+            )
+            assert r"\midrule" not in tabular, (
+                f"{path.relative_to(PAPER)} tabular {index}: use \\cmidrule for header and row-group separators"
             )
 
     # Numeric columns are right-aligned. Text columns remain left-aligned.
@@ -178,7 +181,7 @@ def check() -> None:
     assert "Fisher $p$" not in trace, "tab/trace-outcome.tex: keep the observational path comparison descriptive"
 
     # Table 4 has no informative best-cell distinction because every displayed rate favors the focal system.
-    pairwise_data = tabular_body(pairwise).split(r"\midrule", 1)[1]
+    pairwise_data = pairwise.split(r"\cmidrule(lr){1-5}", 1)[1]
     assert r"\textbf{" not in pairwise_data, "tab/pairwise-results.tex: do not bold every winning rate"
 
     # Grouped numeric headers use partial rules instead of visually heavy full-width rules.
