@@ -1,29 +1,11 @@
 {
-  "baseline_sha": "9405fc3e96e6ffdf3617ecf7f97fd8bde3324af0",
+  "baseline_sha": "112200d4045d23fdbfd673719b7c1a808a76572c",
   "replacements": [
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Rendered-PDF runt check で Experimental Design 冒頭の最終行に 'check.' だけが落ちているため、意味を変えずに局所的に短縮する。",
-      "before": "We include a post-hoc execution variant as an exploratory check.",
-      "after": "We include a post-hoc exploratory execution variant."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Rendered-PDF runt check で Execution variant paragraph の最終行に 'comparisons below.' だけが落ちているため、意味を変えずに局所的に短縮する。",
-      "before": "We use it as the focal system for the comparisons below.",
-      "after": "We use it as the focal system below."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Rendered-PDF runt check で system-level interpretation paragraph の最終行に 'differences.' だけが落ちているため、直前の文脈を受ける代名詞で局所的に短縮する。",
-      "before": "The ablations below test whether explicit goals or adaptive process order explain the larger system-level differences.",
-      "after": "The ablations below test whether explicit goals or adaptive process order explain these differences."
-    },
-    {
-      "path": "paper/sec/06_discussion.tex",
-      "instruction": "Rendered-PDF runt check で Discussion 最終段落の最終行に 'and falsify.' だけが落ちているため、認知理論を人間認知の再現主張と区別する意味を保ったまま局所的に短縮する。",
-      "before": "More broadly, cognitive writing theory is useful here as a source of executable control abstractions rather than as a claim that language agents reproduce human cognition: it makes alternative writing processes explicit enough to implement, compare, and falsify.",
-      "after": "More broadly, cognitive writing theory provides executable control abstractions rather than claiming that language agents reproduce human cognition: it makes alternative writing processes explicit enough to implement, compare, and falsify."
+      "path": "paper/tab/experiments-architecture-comparison.tex",
+      "instruction": "Table 2 の caption で、Staged と Task-planning がどの先行研究を operationalize しているかを本文の Systems Compared と同じ citation で明示する。その他の表内容は変えない。",
+      "before": "\\caption{Operational comparison of the evaluated writing systems. $X$ is the fixed task input; $D_t$, $G_t$, and $H_t$ are the current draft, goals, and process history; $T_t$ is an adaptive task graph. The first four rows expose the central difference in what advances next: a whole document, a fixed stage, a task node, or a writing process. The remaining rows modify \\condAgenticCogWriter; \\condSingleContext\\ was added post-hoc.}",
+      "after": "\\caption{Operational comparison of the evaluated writing systems. \\condStaged\\ operationalizes fixed planning--drafting--revision stages following prior staged writing systems~\\citep{yang2022re3,wan2025cognitive}; \\condTaskPlanning\\ operationalizes a WriteHERE-style adaptive task graph~\\citep{xiong2025beyond}. $X$ is the fixed task input; $D_t$, $G_t$, and $H_t$ are the current draft, goals, and process history; $T_t$ is the task graph. The remaining rows modify \\condAgenticCogWriter; \\condSingleContext\\ was added post-hoc.}"
     }
   ]
 }
