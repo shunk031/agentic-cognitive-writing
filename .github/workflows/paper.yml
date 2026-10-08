@@ -33,6 +33,10 @@ jobs:
         working-directory: paper
         run: ./tools/build-pdf.sh
 
+      - name: Check rendered caption lines
+        working-directory: paper
+        run: python3 tools/check-caption-lines.py build/acl_latex.pdf
+
       - name: Build Markdown manuscript
         working-directory: paper
         run: ./tools/build-markdown.sh
