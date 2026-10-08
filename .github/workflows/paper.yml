@@ -25,13 +25,15 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
-      - name: Ban em dashes
+      - name: Ban em-dash source forms
         working-directory: paper
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --include='*.tex' --exclude-dir=build '(—|---|\\textemdash|\\emdash)' .; then
-            echo '::error::Em dashes are forbidden in manuscript TeX. Use punctuation such as a colon, semicolon, comma, or parentheses instead.'
+          # numbers.tex is generated and still contains legacy missing-value
+          # commands; acl_latex.tex remaps those commands before rendering.
+          if grep -RInE --include='*.tex' --exclude='numbers.tex' --exclude-dir=build '(—|---|\\textemdash|\\emdash)' .; then
+            echo '::error::Em-dash source forms are forbidden in manuscript TeX. Use a colon, semicolon, comma, parentheses, or another construction.'
             exit 1
           fi
 
@@ -47,6 +49,17 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends poppler-utils
+
+      - name: Ban rendered em dashes
+        working-directory: paper
+        shell: bash
+        run: |
+          set -euo pipefail
+          pdftotext -layout build/acl_latex.pdf build/acl_latex.txt
+          if grep -n '—' build/acl_latex.txt; then
+            echo '::error::Rendered manuscript contains an em dash.'
+            exit 1
+          fi
 
       - name: Check rendered caption lines
         working-directory: paper
