@@ -1,11 +1,53 @@
 {
-  "baseline_sha": "3c9c9fc793e9fe5b179abe8f32eaa25a7bdd28fc",
+  "baseline_sha": "054b7316addd56163f7e5d3296b45b971b7bd4fa",
   "replacements": [
     {
-      "path": "paper/tab/ablation-results.tex",
-      "instruction": "Table 5 は WritingBench とか HelloBench を Table 4 に合わせて Writing / Hello / DoLo にし、single-column に収める。",
-      "before": "\\begin{table*}[t]\n\\centering\n\\small\n\\setlength{\\tabcolsep}{5pt}\n\\begin{tabular}{lrrrr}\n\\toprule\n& \\multicolumn{4}{c}{\\textbf{\\condAgenticCogWriter\\ win rate (\\%)}} \\\\\n\\cmidrule(lr){2-5}\n\\textbf{Variant}\n& \\textbf{WritingBench}\n& \\textbf{HelloBench}\n& \\textbf{DoLoMiTes}\n& \\textbf{Across benchmarks} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\\cmidrule(lr){3-3}\\cmidrule(lr){4-4}\\cmidrule(lr){5-5}\n\\multicolumn{5}{l}{\\textit{Ablations}} \\\\\n\\condNoGoals\n& 52.1\\%\n& 52.4\\%\n& 56.0\\%\n& 53.4\\% \\\\\n\\condFixedOrder\n& 56.8\\%\n& 57.4\\%\n& 54.7\\%\n& 56.3\\% \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\\cmidrule(lr){3-3}\\cmidrule(lr){4-4}\\cmidrule(lr){5-5}\n\\multicolumn{5}{l}{\\textit{Bundled execution diagnostic}} \\\\\n\\condSingleWriter\n& 68.5\\%\n& 83.4\\%\n& 67.8\\%\n& 73.5\\% \\\\\n\\bottomrule\n\\end{tabular}\n\\caption{Ablations and execution diagnostic, reported as \\condAgenticCogWriter\\ win rates averaged across three generation runs; values above 50\\% favor \\condAgenticCogWriter. \\condNoGoals\\ and \\condFixedOrder\\ remain close to the full system, whereas \\condSingleWriter\\ shows a substantially larger gap. Thus neither removing explicit goals nor fixing process order alone reproduces the larger separation associated with the bundled execution change.}\n\\label{tab:ablation-results}\n\\end{table*}\n",
-      "after": "\\begin{table}[t]\n\\centering\n\\small\n\\setlength{\\tabcolsep}{2pt}\n\\begin{tabular}{lrrrr}\n\\toprule\n& \\multicolumn{4}{c}{\\textbf{\\condAgenticCogWriter\\ win rate (\\%)}} \\\\\n\\cmidrule(lr){2-5}\n\\textbf{Variant}\n& \\textbf{Writing}\n& \\textbf{Hello}\n& \\textbf{DoLo}\n& \\textbf{Mean} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\\cmidrule(lr){3-3}\\cmidrule(lr){4-4}\\cmidrule(lr){5-5}\n\\multicolumn{5}{l}{\\textit{Ablations}} \\\\\n\\condNoGoals\n& 52.1\\%\n& 52.4\\%\n& 56.0\\%\n& 53.4\\% \\\\\n\\condFixedOrder\n& 56.8\\%\n& 57.4\\%\n& 54.7\\%\n& 56.3\\% \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\\cmidrule(lr){3-3}\\cmidrule(lr){4-4}\\cmidrule(lr){5-5}\n\\multicolumn{5}{l}{\\textit{Bundled execution diagnostic}} \\\\\n\\condSingleWriter\n& 68.5\\%\n& 83.4\\%\n& 67.8\\%\n& 73.5\\% \\\\\n\\bottomrule\n\\end{tabular}\n\\caption{Ablations and execution diagnostic, reported as \\condAgenticCogWriter\\ win rates averaged across three generation runs; values above 50\\% favor \\condAgenticCogWriter. \\condNoGoals\\ and \\condFixedOrder\\ remain close to the full system, whereas \\condSingleWriter\\ shows a substantially larger gap. Thus neither removing explicit goals nor fixing process order alone reproduces the larger separation associated with the bundled execution change.}\n\\label{tab:ablation-results}\n\\end{table}\n"
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "本文から詳細を Appendix に送る参照は、親 Appendix を指して 'See Appendix X for ...' と読者向けに書く。",
+      "before": "Appendix~\\ref{app:prompts} gives the exact selection rule, sample sizes, and sensitivity analysis.",
+      "after": "See Appendix~\\ref{app:prompts} for the exact selection rule, sample sizes, and sensitivity analysis."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "本文から詳細を Appendix に送る参照は、親 Appendix を指して 'See Appendix X for ...' と読者向けに書く。",
+      "before": "; Appendix~\\ref{app:prompts} reproduces the complete prompts, and Appendix~\\ref{app:runtime} reports the runtime settings.",
+      "after": ". See Appendix~\\ref{app:prompts} for the complete prompts and Appendix~\\ref{app:runtime} for the runtime settings."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "本文から詳細を Appendix に送る参照は、親 Appendix を指して 'See Appendix X for ...' と読者向けに書く。",
+      "before": "; Appendix~\\ref{app:prompts} gives the full procedures and evaluator prompts.",
+      "after": ". See Appendix~\\ref{app:prompts} for the full procedures and evaluator prompts."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "本文から詳細を Appendix に送る参照は、親 Appendix を指して 'See Appendix X for ...' と読者向けに書く。",
+      "before": "Appendix~\\ref{app:pairwise-detail} reports the generation-run estimates, Wilson intervals~\\citep{wilson1927}, and corrected test decisions.",
+      "after": "See Appendix~\\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\\citep{wilson1927}, and corrected test decisions."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "本文から詳細を Appendix に送る参照は、親 Appendix を指して 'See Appendix X for ...' と読者向けに書く。",
+      "before": "; Appendix~\\ref{app:pairwise-detail} reports the run-level intervals and corrected test decisions.",
+      "after": ". See Appendix~\\ref{app:pairwise-detail} for the run-level intervals and corrected test decisions."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "本文から詳細を Appendix に送る参照は、親 Appendix を指して 'See Appendix X for ...' と読者向けに書く。",
+      "before": "The benchmark-level diagnostic and the remaining execution differences are reported with the other sensitivity analyses in Appendix~\\ref{app:sensitivity-analyses}.",
+      "after": "See Appendix~\\ref{app:sensitivity-analyses} for the benchmark-level diagnostic and the remaining execution differences."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "本文から詳細を Appendix に送る参照は、親 Appendix を指して 'See Appendix X for ...' と読者向けに書く。",
+      "before": "Appendix~\\ref{app:process-behavior} reports additional process counts, goal events, and resource-use statistics.",
+      "after": "See Appendix~\\ref{app:process-behavior} for additional process counts, goal events, and resource-use statistics."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "本文から詳細を Appendix に送る参照は、親 Appendix を指して 'See Appendix X for ...' と読者向けに書く。",
+      "before": "Appendix~\\ref{app:sensitivity-analyses} collects the output-length, compute-matched, single-context, and cross-family sensitivity analyses.",
+      "after": "See Appendix~\\ref{app:sensitivity-analyses} for the full output-length, compute-matched, single-context, and cross-family sensitivity analyses."
     }
   ]
 }
