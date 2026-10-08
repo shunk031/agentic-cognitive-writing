@@ -61,24 +61,62 @@ def check() -> None:
     process = read("tab/process-dynamics.tex")
     trace = read("tab/trace-outcome.tex")
 
-    # Every manuscript tabular uses \cmidrule for header and row-group separators.
-    # Full-width \midrule is intentionally disallowed so new tables cannot drift
-    # away from the paper-wide visual convention.
-    for path in sorted((PAPER / "tab").glob("*.tex")):
-        text = path.read_text(encoding="utf-8")
+    # Header and row-group separators are split column by column. Multi-column
+    # cmidrules are reserved for genuine grouped headers created with
+    # \multicolumn; broad 1--N rules are intentionally disallowed.
+    expected_columns = {
+        "tab/ablation-results.tex": [5],
+        "tab/appendix-comparison.tex": [6],
+        "tab/appendix-compute-control.tex": [5],
+        "tab/appendix-cross-family.tex": [7],
+        "tab/appendix-habermas.tex": [6],
+        "tab/appendix-length-control.tex": [3],
+        "tab/appendix-process.tex": [8],
+        "tab/appendix-record-pooled-pairwise.tex": [5],
+        "tab/appendix-runtime-settings.tex": [2],
+        "tab/appendix-single-context.tex": [7, 4],
+        "tab/architecture-comparison.tex": [5],
+        "tab/experiments-architecture-comparison.tex": [5],
+        "tab/main-results.tex": [7],
+        "tab/pairwise-results.tex": [5],
+        "tab/process-dynamics.tex": [2],
+        "tab/trace-outcome.tex": [3],
+    }
+    allowed_group_spans = {
+        "tab/main-results.tex": {(2, 3), (4, 5), (6, 7)},
+        "tab/pairwise-results.tex": {(2, 5)},
+        "tab/ablation-results.tex": {(2, 5)},
+        "tab/trace-outcome.tex": {(2, 3)},
+    }
+    rule_pattern = re.compile(r"\\cmidrule\(lr\)\{(\d+)-(\d+)\}")
+
+    for relative_path, column_counts in expected_columns.items():
+        text = read(relative_path)
         tabulars = re.findall(
             r"\\begin\{tabular\}\{.*?\}(.*?)\\end\{tabular\}",
             text,
             flags=re.DOTALL,
         )
-        assert tabulars, f"{path.relative_to(PAPER)}: expected at least one tabular"
-        for index, tabular in enumerate(tabulars, start=1):
-            assert r"\cmidrule" in tabular, (
-                f"{path.relative_to(PAPER)} tabular {index}: requires \\cmidrule"
-            )
+        assert len(tabulars) == len(column_counts), (
+            f"{relative_path}: expected {len(column_counts)} tabular(s), got {len(tabulars)}"
+        )
+        for index, (tabular, column_count) in enumerate(zip(tabulars, column_counts), start=1):
             assert r"\midrule" not in tabular, (
-                f"{path.relative_to(PAPER)} tabular {index}: use \\cmidrule for header and row-group separators"
+                f"{relative_path} tabular {index}: use \\cmidrule for header and row-group separators"
             )
+            for column in range(1, column_count + 1):
+                rule = rf"\cmidrule(lr){{{column}-{column}}}"
+                assert rule in tabular, (
+                    f"{relative_path} tabular {index}: missing column-wise {rule}"
+                )
+            for match in rule_pattern.finditer(tabular):
+                start, end = map(int, match.groups())
+                if start == end:
+                    continue
+                assert (start, end) in allowed_group_spans.get(relative_path, set()), (
+                    f"{relative_path} tabular {index}: broad \\cmidrule(lr){{{start}-{end}}} is not a grouped header; "
+                    "split separators column by column"
+                )
 
     # Numeric columns are right-aligned. Text columns remain left-aligned.
     expected_specs = {
@@ -181,17 +219,8 @@ def check() -> None:
     assert "Fisher $p$" not in trace, "tab/trace-outcome.tex: keep the observational path comparison descriptive"
 
     # Table 4 has no informative best-cell distinction because every displayed rate favors the focal system.
-    pairwise_data = pairwise.split(r"\cmidrule(lr){1-5}", 1)[1]
+    pairwise_data = pairwise.split(r"\cmidrule(lr){5-5}", 1)[1]
     assert r"\textbf{" not in pairwise_data, "tab/pairwise-results.tex: do not bold every winning rate"
-
-    # Grouped numeric headers use partial rules instead of visually heavy full-width rules.
-    for path, text in (
-        ("tab/main-results.tex", main),
-        ("tab/pairwise-results.tex", pairwise),
-        ("tab/ablation-results.tex", ablation),
-        ("tab/trace-outcome.tex", trace),
-    ):
-        assert r"\cmidrule" in text, f"{path}: grouped columns require \\cmidrule"
 
     # A rate column must not mix percentages with count fractions such as 4/886.
     assert not re.search(r"\b\d+\s*/\s*\d+\b", tabular_body(process)), (
