@@ -63,7 +63,6 @@ def check_caption_takeaways() -> None:
         ),
         "tab/experiments-architecture-comparison.tex": (
             "central difference in what advances next",
-            "whole document, a fixed stage, a task node, or a writing process",
         ),
         "tab/main-results.tex": (
             "higher is better",
@@ -97,6 +96,13 @@ def check_caption_takeaways() -> None:
                 path,
                 phrase,
             )
+
+    architecture_caption = read("tab/experiments-architecture-comparison.tex").lower()
+    for concept in ("document", "stage", "task node", "writing process"):
+        assert concept in architecture_caption, (
+            "experimental-system caption must preserve all four next-step control categories",
+            concept,
+        )
 
     process_caption = read("tab/process-dynamics.tex").lower()
     assert (
