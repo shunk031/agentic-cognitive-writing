@@ -39,3 +39,9 @@
 \caption{Overview of \condAgenticCogWriter. Inspired by the cognitive process theory of writing, a coding-agent-style control loop turns the task into a document via Planning, Translating, or Reviewing, selected online from the evolving document state.}
 \label{fig:agentic-cogwriter}
 \end{figure}
+
+% Mild main-text line-breaking tuning. A finite \parfillskip discourages
+% one- or two-word final lines, while the modest \linepenalty prefers an
+% equally acceptable solution with fewer lines. Restored before Limitations.
+\linepenalty=20
+\parfillskip=0pt plus .8\linewidth
