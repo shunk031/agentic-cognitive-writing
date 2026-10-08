@@ -70,12 +70,12 @@ def check_caption_takeaways() -> None:
             "scores highest on both measures for WritingBench and HelloBench",
         ),
         "tab/pairwise-results.tex": (
-            "preferred on every benchmark against every alternative",
-            "largest overall margin over \\condSinglePass",
+            "Win rates exceed 50\\% on every benchmark against every alternative",
+            "largest mean margin over \\condSinglePass",
         ),
         "tab/ablation-results.tex": (
-            "remain close to the full system",
-            "shows a substantially larger gap",
+            "remain near parity",
+            "larger \\condSingleWriter\\ gap",
         ),
         "tab/process-dynamics.tex": (
             "accounts for 74.6\\% of runs",
@@ -174,8 +174,11 @@ def check():
             required,
         )
 
-    assert experiments.startswith("In this experimental design, we consider"), (
-        "open Experimental Design with an author-led description of what we consider"
+    assert experiments.startswith(
+        "We compare the writing systems under the same task inputs and information policy"
+    ), "open Experimental Design directly with the comparison setup and study questions"
+    assert "In this experimental design" not in experiments, (
+        "avoid redundant Experimental Design framing"
     )
     assert "Seven systems were" not in experiments, (
         "use active author-led prose for the compared systems"
