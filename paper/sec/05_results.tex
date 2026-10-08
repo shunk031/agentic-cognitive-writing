@@ -12,7 +12,7 @@ Table~\ref{tab:pairwise-results} reports a clear system-level separation in dire
 
 \input{tab/pairwise-results}
 
-The direct-comparison result supports the tested system as a whole rather than a single mechanism. \condAgenticCogWriter\ differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \texttt{Monitor}. The ablations below test whether explicit goals or adaptive process order can account for the larger system-level differences.
+The direct-comparison result supports the tested system as a whole rather than a single mechanism. \condAgenticCogWriter\ differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \texttt{Monitor}. The ablations below test whether explicit goals or adaptive process order explain the larger system-level differences.
 
 \subsection{Ablations and Execution Diagnostics}
 \label{sec:results-mechanism}
@@ -59,4 +59,4 @@ Observed departures from the common process path do not show a larger quality ad
 
 Appendix~\ref{app:sensitivity-analyses} collects the output-length, compute-matched, single-context, and cross-family sensitivity analyses. Within the pre-specified output-length bands, \condAgenticCogWriter\ remains favored over \condSinglePass\ despite an overall tendency for the primary evaluator to prefer longer outputs. Under the tightest available compute match, the same favorable direction holds against \condStaged\ and \condTaskPlanning; no \condAgenticCogWriter--\condSinglePass\ pairs satisfy that band. Because output length and realized compute are consequences of execution, these analyses are descriptive sensitivity checks.
 
-Judge identity produces more variation than the resource-matched checks. Cross-family rescoring preserves the overall direction for the selected contrasts but yields many ties and reverses the WritingBench direction for \condAgenticCogWriter\ versus \condSinglePass. We therefore treat the cross-family result as partial robustness evidence rather than proof that the exact win rates are evaluator-invariant.
+Judge identity produces more variation than the resource-matched checks. Cross-family rescoring preserves the overall direction for the selected contrasts but yields many ties and reverses the WritingBench direction for \condAgenticCogWriter\ versus \condSinglePass. We therefore treat the cross-family result as partial robustness evidence, not proof that the exact win rates are evaluator-invariant.
