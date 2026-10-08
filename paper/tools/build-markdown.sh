@@ -32,4 +32,5 @@ docker run --rm \
     pandoc/core:3.6.4 \
     build/markdown-source.tex --from=latex --to=gfm-tex_math_dollars --wrap=none \
     --shift-heading-level-by=1 --output=build/acl_latex.md
+uv run --no-project "$script_dir/normalize-markdown-headings.py"
 uv run --no-project "$script_dir/check-markdown.py"
