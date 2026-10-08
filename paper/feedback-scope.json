@@ -1,11 +1,47 @@
 {
-  "baseline_sha": "ab395d53281352f2fd52b9a0784b28c712b6e978",
+  "baseline_sha": "c0596f9b8c501af22bc789e4173e3a16cc344657",
   "replacements": [
     {
+      "path": "paper/acl_latex.tex",
+      "instruction": "Rendered PDF で Abstract の末尾に 1 語だけ落ちる runt line があるため、意味を変えずに 1 語だけ削る。",
+      "before": "We evaluate our Agentic CogWriter across three long-form writing benchmarks using both pointwise rubric scoring and pairwise same-prompt preference judgments.",
+      "after": "We evaluate our Agentic CogWriter across three long-form writing benchmarks using pointwise rubric scoring and pairwise same-prompt preference judgments."
+    },
+    {
+      "path": "paper/sec/01_introduction.tex",
+      "instruction": "Rendered PDF で contributions paragraph の末尾に 1 語だけ落ちるため、末尾表現だけを短縮する。",
+      "before": "and characterize how the writing loop behaves in practice.",
+      "after": "and characterize the writing loop in practice."
+    },
+    {
       "path": "paper/sec/04_experiments.tex",
-      "instruction": "CI を通すため、Pointwise evaluation の内容を変えずに段落のみ分割する。",
-      "before": "\\paragraph{Pointwise evaluation.}\nWe score each completed document independently. When a benchmark defines its own rubric, we report that score as the \\emph{benchmark-native} score, meaning the benchmark authors' original criteria rather than our shared rubric. WritingBench uses five prompt-specific criteria, HelloBench uses checklist items, and DoLoMiTes has no comparable native score in our setup. We also apply a common five-dimension rubric across all three benchmarks: instruction fulfillment, organization and coherence, content adequacy and depth, style and audience fit, and factual or constraint fidelity, each scored from 1 to 5. Because these ratings concentrate near the upper end, each dimension is standardized within a benchmark across outputs from all seven pre-specified systems before averaging. The resulting composite is relative within a benchmark rather than an absolute quality scale. See Appendix~\\ref{app:prompts} for the full procedures and evaluator prompts.",
-      "after": "\\paragraph{Pointwise evaluation.}\nWe score each completed document independently. When a benchmark defines its own rubric, we report that score as the \\emph{benchmark-native} score, meaning the benchmark authors' original criteria rather than our shared rubric. WritingBench uses five prompt-specific criteria, HelloBench uses checklist items, and DoLoMiTes has no comparable native score in our setup.\n\nWe also apply a common five-dimension rubric across all three benchmarks: instruction fulfillment, organization and coherence, content adequacy and depth, style and audience fit, and factual or constraint fidelity, each scored from 1 to 5. Because these ratings concentrate near the upper end, each dimension is standardized within a benchmark across outputs from all seven pre-specified systems before averaging. The resulting composite is relative within a benchmark rather than an absolute quality scale. See Appendix~\\ref{app:prompts} for the full procedures and evaluator prompts."
+      "instruction": "Rendered PDF で Experimental Design 冒頭 paragraph の末尾が runt になるため、不要な also だけを削る。",
+      "before": "We also include one post-hoc execution variant as an exploratory diagnostic.",
+      "after": "We include one post-hoc execution variant as an exploratory diagnostic."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Rendered PDF で ablation paragraph の末尾に 1 語だけ落ちるため、同義の短い動詞に置換する。",
+      "before": "The comparison tests whether explicit goals or adaptive ordering account for the full-system gain.",
+      "after": "The comparison tests whether explicit goals or adaptive ordering explain the full-system gain."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Rendered PDF で exploratory ablation summary の末尾が runt になるため、不要な additionally だけを削る。",
+      "before": "To summarize the two ablation contrasts across generation runs, we additionally compute an exploratory prompt-level estimate.",
+      "after": "To summarize the two ablation contrasts across generation runs, we compute an exploratory prompt-level estimate."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Rendered PDF で process-results paragraph の末尾に 1 語だけ落ちるため、Appendix 案内の additional だけを削る。",
+      "before": "See Appendix~\\ref{app:process-behavior} for additional process counts, goal events, and resource-use statistics.",
+      "after": "See Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics."
+    },
+    {
+      "path": "paper/sec/08_conclusion.tex",
+      "instruction": "Rendered PDF で Conclusion の最終行に 2 語だけ落ちるため、重複した over writing operations だけを削る。",
+      "before": "Together, these results support process-level control over writing operations as a promising design for long-form writing agents and show how cognitive writing theory can yield executable, falsifiable system hypotheses.",
+      "after": "Together, these results support process-level control as a promising design for long-form writing agents and show how cognitive writing theory can yield executable, falsifiable system hypotheses."
     }
   ]
 }
