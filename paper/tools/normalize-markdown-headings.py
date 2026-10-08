@@ -14,7 +14,7 @@ PAPER = Path(__file__).resolve().parents[1]
 MARKDOWN = PAPER / "build" / "acl_latex.md"
 AUX = PAPER / "build" / "acl_latex.aux"
 HTML_SMALLCAPS = re.compile(r'<span class="smallcaps">(.*?)</span>')
-AUX_SMALLCAPS = re.compile(r"(?:\\protect)?\\textsc\s*\{([^{}]*)\}")
+AUX_SMALLCAPS = re.compile(r"(?:\\protect\s*)?\\textsc\s*\{([^{}]*)\}")
 
 
 def main() -> None:
