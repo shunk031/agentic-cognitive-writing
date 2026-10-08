@@ -11,6 +11,7 @@ PAPER = Path(__file__).resolve().parents[1]
 
 def main() -> None:
     intro = (PAPER / "sec/01_introduction.tex").read_text(encoding="utf-8")
+    lowered = intro.lower()
 
     assert "Recent coding agents" in intro, (
         "Introduce coding agents as a recent development in the Introduction"
@@ -67,21 +68,21 @@ def main() -> None:
         adaptive_keys,
     )
 
-    # Present the two evaluation views symmetrically.
-    assert "pointwise rubric scoring" in intro and "pairwise same-prompt preference evaluation" in intro, (
+    # Present the two evaluation views symmetrically without freezing sentence case.
+    assert "pointwise rubric scoring" in lowered and "pairwise same-prompt preference evaluation" in lowered, (
         "Name both pointwise and pairwise evaluation in the Introduction"
     )
 
     # Keep the headline mechanism interpretation reader-facing while leaving
     # detailed statistical qualification to Results.
-    assert "system-level interpretation" in intro, (
+    assert "system-level interpretation" in lowered, (
         "Frame the ablations at the system level rather than as a failed mechanism search"
     )
     assert re.search(r"departures?[^.]*selectively", intro, re.IGNORECASE), (
         "Explain the process traces as selective departures from the common process order"
     )
 
-    assert "we compare our system" in intro, (
+    assert "we compare our system" in lowered, (
         "Contribution list should say 'we compare our system'"
     )
 
