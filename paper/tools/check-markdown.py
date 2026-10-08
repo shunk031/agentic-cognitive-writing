@@ -245,7 +245,7 @@ def check():
     pdf_titles = re.findall(
         r"\\contentsline \{(?:section|subsection|subsubsection|paragraph)\}"
         r"\{(?:\\numberline \{[^}]+\})?([^{}]+)\}",
-        re.sub(r"\\texttt\s*\{([^{}]*)\}", r"\1", aux),
+        re.sub(r"\\text(?:tt|sc)\s*\{([^{}]*)\}", r"\1", aux),
     )
     pdf_titles.insert(pdf_titles.index("Conclusion") + 1, "Limitations")
     normalized_headings = [heading.replace(chr(96), "") for heading in headings]
