@@ -40,36 +40,45 @@ def main() -> None:
         "Describe Flower and Hayes with a lowercase generic monitor"
     )
 
-    # The proposal sentence should introduce and define the system in one pass,
-    # rather than repeating the name in a second sentence.
-    assert re.search(
-        r"we propose \\condAgenticCogWriter,[^.]*a long-form writing system",
-        intro,
-    ), "Introduce Agentic CogWriter and its role in one proposal sentence"
-    assert not re.search(
-        r"we propose \\condAgenticCogWriter[^.]*\.\s+Agentic CogWriter is",
-        intro,
-    ), "Avoid repeating the system name immediately after the proposal sentence"
+    # Introduce and define the proposal in one sentence, but do not freeze its
+    # exact wording: adjacent prose should remain editable without weakening the
+    # reader-flow decision.
+    proposal_sentence = next(
+        (sentence for sentence in re.split(r"(?<=\.)\s+", intro) if r"we propose \condAgenticCogWriter" in sentence),
+        "",
+    )
+    assert proposal_sentence and "a long-form writing system" in proposal_sentence, (
+        "Introduce Agentic CogWriter and identify it as a long-form writing system in the proposal sentence"
+    )
+    assert "Agentic CogWriter is a long-form writing system" not in intro, (
+        "Avoid immediately repeating the system name in a second definition sentence"
+    )
 
     # Cite multiple adaptive-structure systems rather than calling a single
     # paper 'others'. CogWriter and IS-CoT both adapt structure during writing.
-    assert re.search(
-        r"adapt plans or structural reasoning during generation~\\citep\{[^}]*wan2025cognitive[^}]*sun2026cot[^}]*\}",
+    adaptive = re.search(
+        r"adapt plans or structural reasoning during generation~\\citep\{([^}]+)\}",
         intro,
-    ), "Support adaptive structural reasoning with both CogWriter and IS-CoT citations"
+    )
+    assert adaptive, "Name adaptive plans or structural reasoning explicitly"
+    adaptive_keys = {key.strip() for key in adaptive.group(1).split(",")}
+    assert {"wan2025cognitive", "sun2026cot"} <= adaptive_keys, (
+        "Support adaptive structural reasoning with both CogWriter and IS-CoT citations",
+        adaptive_keys,
+    )
 
     # Present the two evaluation views symmetrically.
     assert "pointwise rubric scoring" in intro and "pairwise same-prompt preference evaluation" in intro, (
         "Name both pointwise and pairwise evaluation in the Introduction"
     )
 
-    # The headline mechanism interpretation should be system-level and
-    # reader-facing; statistical caveats remain in Results.
-    assert "supporting a system-level interpretation of the gain" in intro, (
-        "Frame the ablations as supporting a system-level interpretation"
+    # Keep the headline mechanism interpretation reader-facing while leaving
+    # detailed statistical qualification to Results.
+    assert "system-level interpretation" in intro, (
+        "Frame the ablations at the system level rather than as a failed mechanism search"
     )
-    assert "adaptive ordering is available but used selectively" in intro, (
-        "Explain the process traces as selective use of adaptivity"
+    assert re.search(r"departures?[^.]*selectively", intro, re.IGNORECASE), (
+        "Explain the process traces as selective departures from the common process order"
     )
 
     assert "we compare our system" in intro, (
