@@ -2,6 +2,7 @@
 \centering
 \small
 \setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{lrr}
 \toprule
 & \multicolumn{2}{c}{\textbf{\condAgenticCogWriter\ win rate (\%)}} \\
@@ -17,7 +18,8 @@ Other path
 & 54.9\%
 & 75.2\% \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \caption{Win rates are similar for planning--drafting--reviewing and other paths against \condFixedOrder\ and \condSingleWriter. The observational split describes association rather than a causal effect.}
 \label{tab:trace-outcome}
 \end{table}
