@@ -33,7 +33,7 @@
 \DeclareUnicodeCharacter{2514}{+}
 \DeclareUnicodeCharacter{251C}{+}
 \DeclareUnicodeCharacter{2013}{--}
-\DeclareUnicodeCharacter{2014}{---}
+\DeclareUnicodeCharacter{2014}{--}
 \DeclareUnicodeCharacter{2018}{'}
 \DeclareUnicodeCharacter{2019}{'}
 \DeclareUnicodeCharacter{201C}{"}
@@ -83,6 +83,9 @@
 }
 
 \input{numbers}
+% Generated missing-value macros historically use an em-dash command. Render
+% that command as an en dash so the manuscript cannot emit an em dash.
+\expandafter\def\csname textemdash\endcsname{--}
 
 % Shared multiline table-cell helpers.
 \newcommand{\lcell}[1]{%
