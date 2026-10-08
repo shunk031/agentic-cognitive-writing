@@ -33,6 +33,11 @@ jobs:
         working-directory: paper
         run: ./tools/build-pdf.sh
 
+      - name: Install PDF text tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends poppler-utils
+
       - name: Check rendered caption lines
         working-directory: paper
         run: python3 tools/check-caption-lines.py build/acl_latex.pdf
