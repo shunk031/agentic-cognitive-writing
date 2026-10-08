@@ -22,6 +22,11 @@ def fail(message: str) -> None:
     raise SystemExit(f"feedback-scope guard: {message}")
 
 
+def normalize_eof(text: str) -> str:
+    """Treat only trailing newline differences as non-substantive."""
+    return text.rstrip("\n")
+
+
 def main() -> None:
     repo = Path(git("rev-parse", "--show-toplevel"))
     manifest_path = repo / "paper" / "feedback-scope.json"
@@ -124,7 +129,14 @@ def main() -> None:
 
         # A declaration-only commit may still contain the baseline text. Once
         # prose editing starts, the file must equal exactly the declared result.
-        if current not in (base_text, expected):
+        # A final newline is formatting-only and is ignored; all other text
+        # remains exact.
+        normalized_current = normalize_eof(current)
+        normalized_allowed = {
+            normalize_eof(base_text),
+            normalize_eof(expected),
+        }
+        if normalized_current not in normalized_allowed:
             diff = "".join(
                 difflib.unified_diff(
                     expected.splitlines(keepends=True),
