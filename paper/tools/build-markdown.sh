@@ -17,6 +17,7 @@ fi
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 paper_dir=$(cd -- "$script_dir/.." && pwd)
 
+uv run --no-project "$script_dir/check-source-citations.py"
 uv run --no-project "$script_dir/check-reader-guards.py"
 uv run --no-project "$script_dir/check-table-style.py"
 "$script_dir/build-pdf.sh"
