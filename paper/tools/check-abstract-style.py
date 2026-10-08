@@ -11,13 +11,32 @@ PAPER = Path(__file__).resolve().parents[1]
 
 def main() -> None:
     source = (PAPER / "acl_latex.tex").read_text(encoding="utf-8")
+    assert r"\newcommand{\condAgenticCogWriter}{\textsc{Agentic CogWriter}}" in source, (
+        "Render Agentic CogWriter through the shared small-caps macro"
+    )
+    assert r"\section{\condAgenticCogWriter}" in source, (
+        "Use the shared Agentic CogWriter macro in the method section heading"
+    )
+
     match = re.search(
         r"\\begin\{abstract\}\s*(.*?)\s*\\end\{abstract\}",
         source,
         flags=re.DOTALL,
     )
     assert match, "abstract environment not found"
-    abstract = re.sub(r"\s+", " ", match.group(1)).strip()
+    raw_abstract = re.sub(r"\s+", " ", match.group(1)).strip()
+
+    commands = re.findall(r"\\[A-Za-z]+", raw_abstract)
+    unexpected_commands = [
+        command for command in commands if command != r"\condAgenticCogWriter"
+    ]
+    assert not unexpected_commands, ("Unexpected LaTeX command in Abstract", unexpected_commands)
+
+    # Normalize the one allowed display-name macro before applying semantic
+    # reader-flow checks and the word-count limit.
+    abstract = raw_abstract.replace(
+        r"\condAgenticCogWriter\ ", "Agentic CogWriter "
+    ).replace(r"\condAgenticCogWriter", "Agentic CogWriter")
 
     # Keep the Abstract in the order a new reader needs: contemporary agent
     # context -> writing-control problem -> proposal -> evaluation -> results ->
@@ -77,8 +96,6 @@ def main() -> None:
 
     words = re.findall(r"\b[\w'-]+\b", abstract)
     assert len(words) <= 200, f"Abstract exceeds 200 words: {len(words)}"
-    commands = re.findall(r"\\[A-Za-z]+", abstract)
-    assert not commands, ("LaTeX command in Abstract", commands)
 
     print(
         "Abstract reader-flow guards passed: context -> problem -> proposal -> "
