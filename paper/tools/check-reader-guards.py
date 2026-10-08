@@ -79,7 +79,6 @@ def check_caption_takeaways() -> None:
         ),
         "tab/process-dynamics.tex": (
             "accounts for 74.6\\% of runs",
-            "only rarely exercises its ability",
         ),
         "sec/05_results.tex": (
             "mostly follows the same forward",
@@ -98,6 +97,16 @@ def check_caption_takeaways() -> None:
                 path,
                 phrase,
             )
+
+    process_caption = read("tab/process-dynamics.tex").lower()
+    assert (
+        "rarely" in process_caption
+        and re.search(r"\brevisit\w*\b", process_caption)
+        and "earlier processes" in process_caption
+    ), (
+        "process-dynamics caption must state that revisiting earlier processes is rare",
+        "tab/process-dynamics.tex",
+    )
 
 
 def check():
