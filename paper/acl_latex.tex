@@ -167,13 +167,13 @@ AI agents increasingly produce long-form documents as part of multi-step knowled
 
 \section{Runtime Configuration}
 \label{app:runtime}
-Table~\ref{tab:runtime-settings} summarizes the runtime and evaluation settings used for the reported runs. Every condition received the same task input, available information, generator, tool policy, attempt budget, and final-output requirements.
+Table~\ref{tab:runtime-settings} reports the runtime controls shared across conditions. We hold the generator, output-token budget, network and retrieval policy, approval policy, task input, and final-output requirements fixed so that the compared conditions differ in how they organize the writing process rather than in model access or external information. Each prompt--condition pair is generated in three runs. Primary pairwise evaluation uses the same judge for every condition, presents each pair in both orders, and records presentation disagreements as ties; the cross-family judge is used only for the separate robustness analysis.
 \input{tab/appendix-runtime-settings}
 
 \section{Generation-Run-Level Pairwise Outcomes}
 \label{app:pairwise-detail}
 The following figure shows the prompt-level pairwise estimates for each benchmark and generation run, including the ablation contrasts. For \condAgenticCogWriter\ versus \condSinglePass, the descriptive mean win rates across generation runs are \DoLoFourOneRateMean\ on DoLoMiTes, \HelloFourOneRateMean\ on HelloBench, and \WritingFourOneRateMean\ on WritingBench.
-\begin{figure}[H]
+\begin{figure}
 \centering
 \includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
 \caption{Run-level pairwise estimates separate the large system comparisons from the ablations. \condAgenticCogWriter\ is consistently favored over \condSinglePass\ and \condTaskPlanning\ and usually over \condStaged, whereas \condNoGoals\ and \condFixedOrder\ remain near parity and do not survive the within-benchmark Holm correction. Points show 95\% Wilson intervals; filled circles survive correction, open circles do not, and diamonds are descriptive means across generation runs.}
