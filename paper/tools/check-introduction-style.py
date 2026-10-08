@@ -41,9 +41,8 @@ def main() -> None:
         "Describe Flower and Hayes with a lowercase generic monitor"
     )
 
-    # Introduce and define the proposal in one sentence, but do not freeze its
-    # exact wording: adjacent prose should remain editable without weakening the
-    # reader-flow decision.
+    # Introduce and define the proposal in one sentence without freezing its
+    # exact wording.
     proposal_sentence = next(
         (sentence for sentence in re.split(r"(?<=\.)\s+", intro) if r"we propose \condAgenticCogWriter" in sentence),
         "",
@@ -78,8 +77,8 @@ def main() -> None:
     assert "system-level interpretation" in lowered, (
         "Frame the ablations at the system level rather than as a failed mechanism search"
     )
-    assert re.search(r"departures?[^.]*selectively", intro, re.IGNORECASE), (
-        "Explain the process traces as selective departures from the common process order"
+    assert re.search(r"adaptive ordering[^.]*used selectively", intro, re.IGNORECASE), (
+        "Explain that adaptive ordering is available but used selectively"
     )
 
     assert "we compare our system" in lowered, (
