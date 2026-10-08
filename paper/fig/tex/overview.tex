@@ -36,6 +36,6 @@
 \draw[flow, dashed] (state) -- node[right, font=\scriptsize]{terminate after review} (output);
 
 \end{tikzpicture}
-\caption{Inspired by the cognitive process theory of writing~\citep{flower1981cognitive}, \condAgenticCogWriter\ turns long-form generation into a coding-agent-style control loop. The \texttt{Monitor} reads the task and persistent draft, goals, and history; selects \texttt{Planning}, \texttt{Translating}, or \texttt{Reviewing}; and delegates to the matching subagent. Each update feeds the next decision until review ends the loop. Unlike fixed pipelines, the next writing operation is selected online from the evolving document state.}
+\caption{\condAgenticCogWriter\ turns the cognitive process theory of writing~\citep{flower1981cognitive} into a coding-agent-style control loop: a \texttt{Monitor} selects \texttt{Planning}, \texttt{Translating}, or \texttt{Reviewing} from persistent state. Unlike fixed pipelines, the next process is selected online from the evolving document state.}
 \label{fig:agentic-cogwriter}
 \end{figure}
