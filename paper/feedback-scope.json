@@ -1,11 +1,29 @@
 {
-  "baseline_sha": "2dc8b73f137b9f0d356d9091e10caf056b5ae361",
+  "baseline_sha": "9405fc3e96e6ffdf3617ecf7f97fd8bde3324af0",
   "replacements": [
     {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Rendered-PDF runt check で Experimental Design 冒頭の最終行に 'check.' だけが落ちているため、意味を変えずに局所的に短縮する。",
+      "before": "We include a post-hoc execution variant as an exploratory check.",
+      "after": "We include a post-hoc exploratory execution variant."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Rendered-PDF runt check で Execution variant paragraph の最終行に 'comparisons below.' だけが落ちているため、意味を変えずに局所的に短縮する。",
+      "before": "We use it as the focal system for the comparisons below.",
+      "after": "We use it as the focal system below."
+    },
+    {
       "path": "paper/sec/05_results.tex",
-      "instruction": "5.2 に統合した robustness qualification の内容は変えず、既存の Appendix 参照ルールに合わせて 'See Appendix ... for ...' 形式にする。",
-      "before": "Resource-matched sensitivity analyses in Appendix~\\ref{app:sensitivity-analyses} largely preserve the pairwise direction, whereas cross-family rescoring is less stable and reverses the WritingBench direction against \\condSinglePass.",
-      "after": "See Appendix~\\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the pairwise direction, whereas cross-family rescoring is less stable and reverses the WritingBench direction against \\condSinglePass."
+      "instruction": "Rendered-PDF runt check で system-level interpretation paragraph の最終行に 'differences.' だけが落ちているため、直前の文脈を受ける代名詞で局所的に短縮する。",
+      "before": "The ablations below test whether explicit goals or adaptive process order explain the larger system-level differences.",
+      "after": "The ablations below test whether explicit goals or adaptive process order explain these differences."
+    },
+    {
+      "path": "paper/sec/06_discussion.tex",
+      "instruction": "Rendered-PDF runt check で Discussion 最終段落の最終行に 'and falsify.' だけが落ちているため、認知理論を人間認知の再現主張と区別する意味を保ったまま局所的に短縮する。",
+      "before": "More broadly, cognitive writing theory is useful here as a source of executable control abstractions rather than as a claim that language agents reproduce human cognition: it makes alternative writing processes explicit enough to implement, compare, and falsify.",
+      "after": "More broadly, cognitive writing theory provides executable control abstractions rather than claiming that language agents reproduce human cognition: it makes alternative writing processes explicit enough to implement, compare, and falsify."
     }
   ]
 }
