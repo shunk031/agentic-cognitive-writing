@@ -1,28 +1,42 @@
 \begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{>{\raggedright\arraybackslash}p{0.18\textwidth}*{5}{>{\centering\arraybackslash}p{0.14\textwidth}}}
+\setlength{\tabcolsep}{7pt}
+\begin{tabular}{lcccc}
 \toprule
-\textbf{Method}
-& \textbf{Explicit planning structure}
-& \textbf{Persistent writing state}
-& \textbf{Adaptive next-step selection}
-& \textbf{Evolving control structure}
-& \textbf{Online writing-operation selection} \\
-\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+\lcell{\textbf{Method}}
+& \ccell{\textbf{Unit of}\\\textbf{progress}}
+& \ccell{\textbf{Adaptive}\\\textbf{next step}}
+& \ccell{\textbf{Evolving}\\\textbf{structure}}
+& \ccell{\textbf{Online process}\\\textbf{selection}} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
 Re$^3$~\citep{yang2022re3}
-& \yes & \yes & \no & \no & \no \\
+& Passage
+& \no
+& \no
+& \no \\
 STORM~\citep{shao2024assisting}
-& \yes & \yes & \no & \no & \no \\
+& Section
+& \no
+& \no
+& \no \\
 CogWriter~\citep{wan2025cognitive}
-& \yes & \yes & \yes & \yes & \no \\
+& \ccell{Plan /\\segment}
+& \yes
+& Plan
+& \no \\
 WriteHERE~\citep{xiong2025beyond}
-& \yes & \yes & \yes & \yes & \no \\
+& Task node
+& \yes
+& Task graph
+& \no \\
 \textbf{Agentic CogWriter}
-& \yes & \yes & \yes & \yes & \yes \\
+& \textbf{Writing process}
+& \yes
+& \textbf{Goal network}
+& \yes \\
 \bottomrule
 \end{tabular}
-\caption{Architectural capabilities of representative long-form writing systems. Adaptive next-step selection chooses from the current state, while an evolving control structure updates what guides later generation. Prior systems implement subsets of these mechanisms; \condAgenticCogWriter\ is the only compared system with online selection among heterogeneous writing operations: planning, drafting, and reviewing.}
+\caption{Comparison of control choices in representative long-form writing systems. The unit of progress is what advances at each step; adaptive next step indicates whether that choice depends on the current state. Evolving structure excludes document text. \condAgenticCogWriter\ is the only compared system that selects among planning, drafting, and reviewing online.}
 \label{tab:architecture-comparison}
 \end{table*}
