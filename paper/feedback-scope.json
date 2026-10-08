@@ -1,11 +1,41 @@
 {
-  "baseline_sha": "919c120cc1bf0a5bb32a82fbe89eaa9bf086d04b",
+  "baseline_sha": "3f23a6bd98a8e5be6405391984d613a1b67a31f2",
   "replacements": [
     {
+      "path": "paper/acl_latex.tex",
+      "instruction": "Agentic CogWriter の表示名を small caps に統一するため、既存の条件名マクロの表示だけを \\textsc に変更する。",
+      "before": "\\newcommand{\\condAgenticCogWriter}{Agentic CogWriter}",
+      "after": "\\newcommand{\\condAgenticCogWriter}{\\textsc{Agentic CogWriter}}"
+    },
+    {
+      "path": "paper/acl_latex.tex",
+      "instruction": "Abstract の Agentic CogWriter 表記を共通 small-caps マクロに統一し、rendered runt を解消するため重複した 'Across the benchmarks,' だけを削る。",
+      "before": "Recent coding agents have made tool-using, stateful execution prominent. The same execution style is increasingly used for knowledge work that ends in long-form documents. Yet long-form writing systems usually advance an outline, task graph, or fixed stage sequence rather than deciding which writing process is needed next. Drawing on cognitive process theory, we propose Agentic CogWriter, which maintains a shared draft, goals, and process history while a Monitor agent chooses and delegates planning, drafting, or reviewing. We evaluate our Agentic CogWriter across three long-form writing benchmarks using pointwise rubric scoring and pairwise same-prompt preference judgments. Across the benchmarks, Agentic CogWriter achieves competitive pointwise quality and is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning in pairwise evaluation. Ablations indicate that neither explicit goals nor adaptive process order alone explains Agentic CogWriter's overall advantage. Process traces show that most runs follow one planning--drafting--reviewing cycle, with departures from that path used selectively rather than continually. Together, the results support process-level control over writing operations as a promising design for long-form writing agents.",
+      "after": "Recent coding agents have made tool-using, stateful execution prominent. The same execution style is increasingly used for knowledge work that ends in long-form documents. Yet long-form writing systems usually advance an outline, task graph, or fixed stage sequence rather than deciding which writing process is needed next. Drawing on cognitive process theory, we propose \\condAgenticCogWriter, which maintains a shared draft, goals, and process history while a Monitor agent chooses and delegates planning, drafting, or reviewing. We evaluate our \\condAgenticCogWriter\\ across three long-form writing benchmarks using pointwise rubric scoring and pairwise same-prompt preference judgments. \\condAgenticCogWriter\\ achieves competitive pointwise quality and is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning in pairwise evaluation. Ablations indicate that neither explicit goals nor adaptive process order alone explains \\condAgenticCogWriter's overall advantage. Process traces show that most runs follow one planning--drafting--reviewing cycle, with departures from that path used selectively rather than continually. Together, the results support process-level control over writing operations as a promising design for long-form writing agents."
+    },
+    {
+      "path": "paper/acl_latex.tex",
+      "instruction": "Agentic CogWriter の節見出しも共通 small-caps マクロで表示する。",
+      "before": "\\section{Agentic CogWriter}",
+      "after": "\\section{\\condAgenticCogWriter}"
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "rendered paragraph ending の runt 'diagnostic.' を解消するため、意味を保ったまま第1段落末文だけ短縮する。",
+      "before": "We compare the writing systems under the same task inputs and information policy to address three questions: (1) whether process-level organization improves long-form document quality relative to alternative writing systems, (2) which proposed components contribute to any advantage, and (3) how the writing loop behaves in practice. We include one post-hoc execution variant as an exploratory diagnostic.",
+      "after": "We compare the writing systems under the same task inputs and information policy to address three questions: (1) whether process-level organization improves long-form document quality relative to alternative writing systems, (2) which proposed components contribute to any advantage, and (3) how the writing loop behaves in practice. We include a post-hoc execution variant as an exploratory check."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "rendered paragraph ending の runt 'confirmatory.' を解消するため、exploratory/confirmatory の区別を保ったまま末文だけ短縮する。",
+      "before": "To summarize the two ablation contrasts across generation runs, we compute an exploratory prompt-level estimate. For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and then summarized across benchmarks. We report a prompt-level bootstrap interval and sign test. Because we chose this summary after seeing the main results, we treat it as exploratory rather than confirmatory.",
+      "after": "To summarize the two ablation contrasts across generation runs, we compute an exploratory prompt-level estimate. For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and then summarized across benchmarks. We report a prompt-level bootstrap interval and sign test. Because we chose this summary after seeing the main results, we treat it as exploratory, not confirmatory."
+    },
+    {
       "path": "paper/sec/06_discussion.tex",
-      "instruction": "Discussion revision の第4段落が vague-topic-sentence guard に抵触するため、内容を変えずに具体的な topic sentence にする。",
-      "before": "These observations suggest a more targeted evaluation agenda for writing agents.",
-      "after": "The process findings suggest a more targeted evaluation agenda for writing agents."
+      "instruction": "rendered paragraph ending の runt 'falsify.' を解消するため、第4段落の 'more directly' を 'directly' にだけ短縮する。",
+      "before": "Future benchmarks could test process control more directly by changing objectives, introducing new evidence, or imposing rhetorical constraints during composition.",
+      "after": "Future benchmarks could test process control directly by changing objectives, introducing new evidence, or imposing rhetorical constraints during composition."
     }
   ]
 }
