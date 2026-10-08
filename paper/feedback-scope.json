@@ -1,11 +1,11 @@
 {
-  "baseline_sha": "112200d4045d23fdbfd673719b7c1a808a76572c",
+  "baseline_sha": "da7e5f8abbac3b3e689441c76fd17c1af84f916b",
   "replacements": [
     {
       "path": "paper/tab/experiments-architecture-comparison.tex",
-      "instruction": "Table 2 の caption で、Staged と Task-planning がどの先行研究を operationalize しているかを本文の Systems Compared と同じ citation で明示する。その他の表内容は変えない。",
-      "before": "\\caption{Operational comparison of the evaluated writing systems. $X$ is the fixed task input; $D_t$, $G_t$, and $H_t$ are the current draft, goals, and process history; $T_t$ is an adaptive task graph. The first four rows expose the central difference in what advances next: a whole document, a fixed stage, a task node, or a writing process. The remaining rows modify \\condAgenticCogWriter; \\condSingleContext\\ was added post-hoc.}",
-      "after": "\\caption{Operational comparison of the evaluated writing systems. \\condStaged\\ operationalizes fixed planning--drafting--revision stages following prior staged writing systems~\\citep{yang2022re3,wan2025cognitive}; \\condTaskPlanning\\ operationalizes a WriteHERE-style adaptive task graph~\\citep{xiong2025beyond}. $X$ is the fixed task input; $D_t$, $G_t$, and $H_t$ are the current draft, goals, and process history; $T_t$ is the task graph. The remaining rows modify \\condAgenticCogWriter; \\condSingleContext\\ was added post-hoc.}"
+      "instruction": "Table 2 の citation 追加を維持しつつ、既存 caption の reader takeaway『central difference in what advances next』を復元して caption guard と整合させる。表本体は変えない。",
+      "before": "\\caption{Operational comparison of the evaluated writing systems. \\condStaged\\ operationalizes fixed planning--drafting--revision stages following prior staged writing systems~\\citep{yang2022re3,wan2025cognitive}; \\condTaskPlanning\\ operationalizes a WriteHERE-style adaptive task graph~\\citep{xiong2025beyond}. $X$ is the fixed task input; $D_t$, $G_t$, and $H_t$ are the current draft, goals, and process history; $T_t$ is the task graph. The remaining rows modify \\condAgenticCogWriter; \\condSingleContext\\ was added post-hoc.}",
+      "after": "\\caption{Operational comparison of the evaluated writing systems. \\condStaged\\ follows fixed planning--drafting--revision stages~\\citep{yang2022re3,wan2025cognitive}; \\condTaskPlanning\\ follows WriteHERE-style task planning~\\citep{xiong2025beyond}. The first four rows expose the central difference in what advances next: a whole document, a fixed stage, a task node, or a writing process. $X$ is the task input; $D_t$, $G_t$, and $H_t$ are draft, goals, and process history; $T_t$ is the task graph. The remaining rows modify \\condAgenticCogWriter; \\condSingleContext\\ was added post-hoc.}"
     }
   ]
 }
