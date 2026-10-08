@@ -1,11 +1,11 @@
 {
-  "baseline_sha": "08ed072e7d42219675e2ca13e064a3b19044daa6",
+  "baseline_sha": "0082838f0704d1b6081471fb8939beaba44f7582",
   "replacements": [
     {
-      "path": "paper/sec/08_conclusion.tex",
-      "instruction": "先行研究の Conclusion の長さを調査し、その分布に合わせて Conclusion だけを約110–120語の1段落に整える。新しい主張は追加せず、現行の method、headline result、component/process interpretation、takeaway を保持する。",
-      "before": "\\condAgenticCogWriter\\ reframes long-form writing for AI agents as a process-level control problem. A top-level \\texttt{Monitor} repeatedly chooses whether to plan, draft, or review from persistent writing state and delegates the selected process to a role-specific subagent. Across three long-form benchmark subsets, the full system is preferred to single-pass generation, fixed writing stages, and adaptive task planning in direct same-prompt comparisons.\n\nThe component analyses narrow but do not identify the source of that advantage: explicit goals and adaptive process ordering show only small or unreliable effects, and the observed writing loop usually follows one planning--drafting--reviewing cycle. These findings support process-organized, stateful execution as a promising design while leaving the causal mechanism open, and show how cognitive writing theory can yield executable, falsifiable system hypotheses.",
-      "after": "\\condAgenticCogWriter\\ reframes long-form writing for AI agents as a process-level control problem. A top-level \\texttt{Monitor} chooses whether to plan, draft, or review from persistent writing state and delegates the selected process to a role-specific subagent. Across three long-form writing benchmarks, our system is preferred to single-pass generation, fixed writing stages, and adaptive task planning in direct same-prompt comparisons. Component analyses show that neither explicit goals nor adaptive process ordering alone accounts for the overall advantage, while process traces show that most runs follow a single planning--drafting--reviewing cycle. Together, these results support process-level control over writing operations as a promising design for long-form writing agents and show how cognitive writing theory can yield executable, falsifiable system hypotheses."
+      "path": "paper/tab/ablation-results.tex",
+      "instruction": "Table 5 の single-column caption が rendered で7行になるため、表の読み方を保ちながら5行以内を狙って短縮する。",
+      "before": "\\caption{\\condAgenticCogWriter\\ win rates against the ablations and execution diagnostic, averaged across three runs; values above 50\\% favor our system. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, whereas \\condSingleWriter\\ shows a larger separation; neither ablation reproduces the bundled execution difference.}",
+      "after": "\\caption{\\condAgenticCogWriter\\ win rates against ablations and the execution diagnostic, averaged across three runs; values above 50\\% favor our system. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, unlike the larger \\condSingleWriter\\ gap.}"
     }
   ]
 }
