@@ -25,6 +25,16 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
+      - name: Ban em dashes
+        working-directory: paper
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --include='*.tex' --exclude-dir=build '(—|---|\\textemdash|\\emdash)' .; then
+            echo '::error::Em dashes are forbidden in manuscript TeX. Use punctuation such as a colon, semicolon, comma, or parentheses instead.'
+            exit 1
+          fi
+
       - name: Check caption length
         working-directory: paper
         run: python3 tools/check-caption-length.py
