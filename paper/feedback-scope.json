@@ -1,11 +1,17 @@
 {
-  "baseline_sha": "db4ea64ef8bbb7d543da071e74c35de044335ba7",
+  "baseline_sha": "902c83216c50dd2bf6a641ab1585f72db5995a85",
   "replacements": [
     {
-      "path": "paper/tab/experiments-architecture-comparison.tex",
-      "instruction": "Table 2 caption の citation と reader takeaway を維持したまま、70-word caption guard に収めるため列挙を簡潔化する。表本体は変えない。",
-      "before": "\\caption{Operational comparison of the evaluated writing systems. \\condStaged\\ follows fixed planning--drafting--revision stages~\\citep{yang2022re3,wan2025cognitive}; \\condTaskPlanning\\ follows WriteHERE-style task planning~\\citep{xiong2025beyond}. The first four rows expose the central difference in what advances next: a whole document, a fixed stage, a task node, or a writing process. $X$ is the task input; $D_t$, $G_t$, and $H_t$ are draft, goals, and process history; $T_t$ is the task graph. The remaining rows modify \\condAgenticCogWriter; \\condSingleContext\\ was added post-hoc.}",
-      "after": "\\caption{Operational comparison of the evaluated writing systems. \\condStaged\\ follows fixed planning--drafting--revision stages~\\citep{yang2022re3,wan2025cognitive}; \\condTaskPlanning\\ follows WriteHERE-style task planning~\\citep{xiong2025beyond}. The first four rows expose the central difference in what advances next: document, stage, task node, or writing process. $X$ is the task input; $D_t$, $G_t$, and $H_t$ are draft, goals, and process history; $T_t$ is the task graph. The remaining rows modify \\condAgenticCogWriter; \\condSingleContext\\ was added post-hoc.}"
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Rendered runt-line report で Table 4 caption の最終行に Single-pass. だけが残るため、主張・数値・takeaway を変えずに caption 冒頭を短縮する。",
+      "before": "\\caption{Direct same-prompt win rates for \\condAgenticCogWriter\\ across three runs; values above 50\\% favor it. Win rates exceed 50\\% on every benchmark against every alternative, with the largest mean margin over \\condSinglePass.}",
+      "after": "\\caption{Three-run direct same-prompt win rates for \\condAgenticCogWriter; values above 50\\% favor it. Win rates exceed 50\\% on every benchmark against every alternative, with the largest mean margin over \\condSinglePass.}"
+    },
+    {
+      "path": "paper/tab/ablation-results.tex",
+      "instruction": "Rendered runt-line report で Table 5 caption の最終行に Single-writer gap. だけが残るため、主張・数値・takeaway を変えずに caption 冒頭を短縮する。",
+      "before": "\\caption{\\condAgenticCogWriter\\ win rates against ablations and the execution diagnostic, averaged across three runs; values above 50\\% favor our system. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, unlike the larger \\condSingleWriter\\ gap.}",
+      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates against ablations and the execution diagnostic; values above 50\\% favor our system. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, unlike the larger \\condSingleWriter\\ gap.}"
     }
   ]
 }
