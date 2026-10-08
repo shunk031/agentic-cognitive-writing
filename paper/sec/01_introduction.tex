@@ -1,3 +1,9 @@
+% Mild main-text line-breaking tuning. The finite \parfillskip discourages
+% one- or two-word final lines; the modest \linepenalty prefers an equally
+% acceptable solution with fewer lines. Restored after the Conclusion.
+\linepenalty=20
+\parfillskip=0pt plus .8\linewidth
+
 Large language model agents~\citep{yao2023react,shinn2023reflexion,sumers2024cognitive,luo2025llmagent} increasingly combine reasoning, tool use, memory, and delegation to carry out multi-step knowledge work. Coding agents have made this interactive, tool-mediated style of execution especially prominent~\citep{yang2024sweagent,wang2024openhands}, while autonomous research agents increasingly culminate in reports or scientific manuscripts~\citep{schmidgall2025agentlab,lu2024aiscientist}. For agents that produce documents, long-form writing requires more than final text generation: the agent must organize the document, turn partial plans into prose, inspect what has been written, and decide when revision is needed.
 
 \input{fig/tex/overview}
