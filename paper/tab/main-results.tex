@@ -1,0 +1,39 @@
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{lrr rr rr}
+\toprule
+\textbf{System}
+& \multicolumn{2}{c}{\textbf{WritingBench}}
+& \multicolumn{2}{c}{\textbf{HelloBench}}
+& \multicolumn{2}{c}{\textbf{DoLoMiTes}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+& \textbf{Native $\uparrow$} & \textbf{Pointwise $\uparrow$}
+& \textbf{Native $\uparrow$} & \textbf{Pointwise $\uparrow$}
+& \textbf{Native $\uparrow$} & \textbf{Pointwise $\uparrow$} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}\cmidrule(lr){7-7}
+\multicolumn{7}{l}{\textit{Alternative writing systems}} \\
+\condSinglePass
+& 0.704 & -0.093
+& 0.769 & -0.119
+& -- & -0.019 \\
+\condStaged~\citep{yang2022re3,wan2025cognitive}
+& 0.708 & -0.054
+& 0.780 & -0.007
+& -- & \textbf{0.103} \\
+\condTaskPlanning~\citep{xiong2025beyond}
+& 0.726 & -0.062
+& 0.781 & 0.040
+& -- & -0.166 \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}\cmidrule(lr){7-7}
+\rowcolor{black!5}
+\textbf{\condAgenticCogWriter}
+& \textbf{0.754} & \textbf{0.115}
+& \textbf{0.795} & \textbf{0.058}
+& -- & 0.005 \\
+\bottomrule
+\end{tabular}
+\caption{Document-quality scores from the initial generation run. Native uses each benchmark's own evaluation criteria, whereas Pointwise uses the common five-dimension rubric applied across benchmarks; higher is better in every reported column, and DoLoMiTes has no comparable native score. \condAgenticCogWriter\ scores highest on both measures for WritingBench and HelloBench, while \condStaged\ has the highest DoLoMiTes pointwise score. Best scores in each column are in \textbf{bold}.}
+\label{tab:main-results}
+\end{table*}

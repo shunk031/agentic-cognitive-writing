@@ -1,0 +1,37 @@
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrrr}
+\toprule
+& \multicolumn{4}{c}{\textbf{\condAgenticCogWriter\ win rate (\%)}} \\
+\cmidrule(lr){2-5}
+\textbf{Variant}
+& \textbf{WritingBench}
+& \textbf{HelloBench}
+& \textbf{DoLoMiTes}
+& \textbf{Across benchmarks} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
+\multicolumn{5}{l}{\textit{Ablations}} \\
+\condNoGoals
+& 52.1\%
+& 52.4\%
+& 56.0\%
+& 53.4\% \\
+\condFixedOrder
+& 56.8\%
+& 57.4\%
+& 54.7\%
+& 56.3\% \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
+\multicolumn{5}{l}{\textit{Bundled execution diagnostic}} \\
+\condSingleWriter
+& 68.5\%
+& 83.4\%
+& 67.8\%
+& 73.5\% \\
+\bottomrule
+\end{tabular}
+\caption{Ablations and execution diagnostic, reported as \condAgenticCogWriter\ win rates averaged across three generation runs; values above 50\% favor \condAgenticCogWriter. \condNoGoals\ and \condFixedOrder\ remain close to the full system, whereas \condSingleWriter\ shows a substantially larger gap. Thus neither removing explicit goals nor fixing process order alone reproduces the larger separation associated with the bundled execution change.}
+\label{tab:ablation-results}
+\end{table*}

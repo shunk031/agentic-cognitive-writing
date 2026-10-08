@@ -1,0 +1,19 @@
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Output-length ratio} & \textbf{W/L/T} & \shortstack{\textbf{Longer-side}\\\textbf{win rate}} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}
+1.00--1.05 & \LengthRatioOneToOneZeroFiveWLT & \LengthRatioOneToOneZeroFiveRate \\
+1.05--1.10 & \LengthRatioOneZeroFiveToOneTenWLT & \LengthRatioOneZeroFiveToOneTenRate \\
+1.10--1.25 & \LengthRatioOneTenToOneTwentyFiveWLT & \LengthRatioOneTenToOneTwentyFiveRate \\
+1.25--1.50 & \LengthRatioOneTwentyFiveToOneFiftyWLT & \LengthRatioOneTwentyFiveToOneFiftyRate \\
+1.50--2.00 & \LengthRatioOneFiftyToTwoWLT & \LengthRatioOneFiftyToTwoRate \\
+2.00+ & \LengthRatioTwoPlusWLT & \LengthRatioTwoPlusRate \\
+\bottomrule
+\end{tabular}
+\caption{Pairwise outcomes from the first generation run grouped by output-length ratio. Longer responses are favored overall, motivating the matched-length checks used to test whether the main system comparisons survive when output lengths are more similar. W/L/T combines the two presentation orders for each prompt; ties are excluded from the longer-side win-rate denominator.}
+\label{tab:appendix-length-control}
+\end{table}

@@ -1,0 +1,61 @@
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllll}
+\toprule
+\textbf{System}
+& \textbf{Information available}
+& \textbf{What advances next?}
+& \textbf{Decision rule}
+& \textbf{Execution} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
+\condSinglePass
+& $X$
+& Whole document
+& One generation
+& One context \\
+\condStaged
+& $X$, prior stage output
+& Fixed stage
+& Pre-Write$\rightarrow$Write$\rightarrow$Re-Write
+& One context \\
+\condTaskPlanning
+& $X,D_t,T_t$
+& Task node
+& Select a ready task node
+& Task graph \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
+\rowcolor{black!5}
+\textbf{\condAgenticCogWriter}
+& $X,D_t,G_t,H_t$
+& \textbf{Writing process} $a_t$
+& $a_t=\mathrm{Monitor}(X,D_t,G_t,H_t)$
+& \textbf{Subagent} \\
+\condNoGoals
+& $X,D_t,H_t$
+& Writing process $a_t$
+& $a_t=\mathrm{Monitor}(X,D_t,H_t)$
+& Subagent \\
+\condFixedOrder
+& $X,D_t,G_t,H_t$
+& Fixed process
+& Planning$\rightarrow$Translating$\rightarrow$Reviewing
+& Subagent \\
+\condSingleWriter
+& $X,D_t,G_t,H_t$
+& Writing process $a_t$
+& $a_t=\mathrm{Monitor}(X,D_t,G_t,H_t)$
+& One writer \\
+\condSingleContext
+& $X,D_t,G_t,H_t$
+& Writing process $a_t$
+& $a_t=\mathrm{Monitor}(X,D_t,G_t,H_t)$
+& Monitor context \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Operational comparison of the evaluated writing systems. $X$ is the fixed task input; $D_t$, $G_t$, and $H_t$ are the current draft, goals, and process history; $T_t$ is an adaptive task graph. The first four rows expose the central difference in what advances next: a whole document, a fixed stage, a task node, or a writing process. The remaining rows modify \condAgenticCogWriter; \condSingleContext\ was added post-hoc.}
+\label{tab:experimental-conditions}
+\end{table*}

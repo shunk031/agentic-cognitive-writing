@@ -1,0 +1,27 @@
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Condition}
+& \textbf{Created}
+& \textbf{Developed}
+& \textbf{Regenerated}
+& \textbf{Ledger (no/proposal)}
+& \textbf{Pointwise} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+\condSinglePass & \mbox{\HabAoneCreated} & \mbox{\HabAoneDeveloped} & \mbox{\HabAoneRegenerated} & \mbox{\HabAoneLedger} & \mbox{\HabAonePoint} \\
+\condStaged & \mbox{\HabAtwoCreated} & \mbox{\HabAtwoDeveloped} & \mbox{\HabAtwoRegenerated} & \mbox{\HabAtwoLedger} & \mbox{\HabAtwoPoint} \\
+\condTaskPlanning & \mbox{\HabAthreeCreated} & \mbox{\HabAthreeDeveloped} & \mbox{\HabAthreeRegenerated} & \mbox{\HabAthreeLedger} & \mbox{\HabAthreePoint} \\
+\rowcolor{black!5}
+\condAgenticCogWriter & \mbox{\HabAfourCreated} & \mbox{\HabAfourDeveloped} & \mbox{\HabAfourRegenerated} & \mbox{\HabAfourLedger} & \mbox{\HabAfourPoint} \\
+\condNoGoals & \mbox{\HabAfiveCreated} & \mbox{\HabAfiveDeveloped} & \mbox{\HabAfiveRegenerated} & \mbox{\HabAfiveLedger} & \mbox{\HabAfivePoint} \\
+\condFixedOrder & \mbox{\HabAsixCreated} & \mbox{\HabAsixDeveloped} & \mbox{\HabAsixRegenerated} & \mbox{\HabAsixLedger} & \mbox{\HabAsixPoint} \\
+\condExploratoryOne & \mbox{\HabBoneCreated} & \mbox{\HabBoneDeveloped} & \mbox{\HabBoneRegenerated} & \mbox{\HabBoneLedger} & \mbox{\HabBonePoint} \\
+\condExploratoryTwo & \mbox{\HabBtwoCreated} & \mbox{\HabBtwoDeveloped} & \mbox{\HabBtwoRegenerated} & \mbox{\HabBtwoLedger} & \mbox{\HabBtwoPoint} \\
+\bottomrule
+\end{tabular}
+\caption{Additional consensus-writing evaluation on ten tasks derived from Habermas Machine data. Unlike the long-form benchmarks, \condAgenticCogWriter\ does not achieve the highest pointwise score: \condSinglePass\ and \condStaged\ are stronger in this short consensus-writing setting. The result shows that the advantage observed on the long-form benchmarks does not automatically transfer to a substantially shorter writing task; 78 of 80 attempted runs completed.}
+\label{tab:appendix-habermas}
+\end{table}

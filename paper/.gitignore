@@ -1,0 +1,15 @@
+build/*
+!build/
+!build/acl_latex.md
+.first-reader/
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+**/.tox/
+**/.cache/
+scratch/
+cache/
+tmp/
+*.tmp
+human-eval/pairs/

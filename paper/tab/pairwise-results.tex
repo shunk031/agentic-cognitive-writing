@@ -1,0 +1,34 @@
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{lrrrr}
+\toprule
+& \multicolumn{4}{c}{\textbf{\condAgenticCogWriter\ win rate (\%)}} \\
+\cmidrule(lr){2-5}
+\textbf{Comparison}
+& \textbf{Writing}
+& \textbf{Hello}
+& \textbf{DoLo}
+& \textbf{Mean} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
+vs. \condSinglePass
+& 84.3\%
+& 85.7\%
+& 72.0\%
+& 80.9\% \\
+vs. \condStaged
+& 80.9\%
+& 62.8\%
+& 55.9\%
+& 67.3\% \\
+vs. \condTaskPlanning
+& 65.5\%
+& 63.0\%
+& 75.7\%
+& 68.5\% \\
+\bottomrule
+\end{tabular}
+\caption{Direct same-prompt win rates for \condAgenticCogWriter\ across three runs; values above 50\% favor it. \condAgenticCogWriter\ is preferred on every benchmark against every alternative, with its largest overall margin over \condSinglePass.}
+\label{tab:pairwise-results}
+\end{table}

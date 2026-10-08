@@ -1,0 +1,62 @@
+\subsection{Pointwise and Benchmark-Native Quality}
+\label{sec:results-pointwise}
+
+Table~\ref{tab:main-results} summarizes the pointwise results across the three benchmarks. \condAgenticCogWriter\ obtains the highest benchmark-native and common-rubric scores on WritingBench and HelloBench, while \condStaged\ obtains the strongest DoLoMiTes pointwise score. WritingBench native scores are rescaled to 0--1 for display, and the common-rubric values are standardized relative to all seven pre-specified systems within each benchmark, so zero denotes the benchmark-specific comparison mean rather than an absolute quality threshold.
+
+\input{tab/main-results}
+
+\subsection{Direct Comparison of Writing Systems}
+\label{sec:results-effectiveness}
+
+Table~\ref{tab:pairwise-results} reports a clear system-level separation in direct same-prompt comparisons. \condAgenticCogWriter\ is preferred to \condSinglePass, \condStaged, and \condTaskPlanning, with across-benchmark mean win rates of \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean, respectively, when both presentation orders agree on a winner. The direction holds in every benchmark and generation run against \condSinglePass\ and \condTaskPlanning, and in all but one benchmark--run test against \condStaged; Appendix~\ref{app:pairwise-detail} reports the run-level intervals and corrected test decisions. The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare, \UncondFullStagedWinShare, and \UncondFullTaskPlanningWinShare, and assigning every missing pair against \condAgenticCogWriter\ still leaves win rates of at least \WorstCaseFullSinglePassRate, \WorstCaseFullStagedRate, and \WorstCaseFullTaskPlanningRate\ among comparisons with an agreed winner.
+
+\input{tab/pairwise-results}
+
+The direct-comparison result supports the tested system as a whole rather than a single mechanism. \condAgenticCogWriter\ differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \texttt{Monitor}. The ablations below test whether explicit goals or adaptive process order explain the larger system-level differences.
+
+\subsection{Ablations and Execution Diagnostics}
+\label{sec:results-mechanism}
+
+Table~\ref{tab:ablation-results} places the two pre-specified ablations much closer to \condAgenticCogWriter\ than the alternative writing systems in Table~\ref{tab:pairwise-results}. After the within-benchmark Holm correction, all benchmark--run tests comparing \condAgenticCogWriter\ with \condNoGoals\ or \condFixedOrder\ remain above the corrected significance threshold. In the exploratory prompt-level summary, \condAgenticCogWriter\ is preferred to \condFixedOrder\ at \ClusteredFullFixedOrderRate\ [\ClusteredFullFixedOrderInterval], $p=\ClusteredFullFixedOrderP$, while its preference over \condNoGoals\ is \ClusteredFullNoGoalsRate\ [\ClusteredFullNoGoalsInterval], $p=\ClusteredFullNoGoalsP$. The first estimate suggests a small benefit from adaptive ordering; the second does not provide evidence for a comparable effect from the explicit goal representation. Because the summary was defined after the main results, both estimates remain exploratory.
+
+\input{tab/ablation-results}
+
+Execution changes produce a larger but less easily isolated difference. \condSingleWriter\ removes subagent delegation, changes role context and decision granularity, and alters output length at the same time. Within the tighter and wider pre-specified output-length bands, it still wins only \SingleWriterLengthFiveRate\ ($p=\SingleWriterLengthFiveP$) and \SingleWriterLengthTenRate\ ($p=\SingleWriterLengthTenP$), respectively, against \condAgenticCogWriter, so output length alone does not explain the gap. The narrower post-hoc \condSingleContext\ check shows no significant difference from \condAgenticCogWriter\ in its exploratory generation run (\SingleContextFullRate\ win rate for \condSingleContext, $p=\SingleContextFullP$, unadjusted). The benchmark-level diagnostic and the remaining execution differences are reported with the other sensitivity analyses in Appendix~\ref{app:sensitivity-analyses}.
+
+\subsection{How Does the Writing Loop Behave in Practice?}
+\label{sec:results-process-dynamics}
+
+The adaptive writing loop usually follows a simple process path. Table~\ref{tab:process-dynamics} shows that one \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle dominates the traces; returning to planning after review and replacing an existing goal are both rare. The system therefore has the ability to revisit earlier processes but uses that flexibility infrequently on the evaluated prompts. The behavior is consistent with the small exploratory advantage over \condFixedOrder: adaptive ordering can help only on runs where the controller has reason to depart from the default cycle.
+
+\input{tab/process-dynamics}
+
+Figure~\ref{fig:process-sequences} shows the same concentration at the sequence and transition levels. The most frequent complete process path is the forward planning--drafting--reviewing progression, and the unrestricted system is visually close to \condFixedOrder\ because much of its observed behavior follows that path. The demanding-subset selection increases input length, requested output length, or procedural burden, but it does not guarantee that every task intrinsically requires replanning. The traces therefore show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing in general.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}[c]{0.60\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig/process-sequences-a.pdf}\\[-0.35em]
+\small (a) Most frequent complete process paths
+\end{minipage}\hfill
+\begin{minipage}[c]{0.37\textwidth}
+\centering
+\includegraphics[width=\linewidth]{fig/process-sequences-b.pdf}\\[-0.1em]
+\small (b) \condAgenticCogWriter\\[0.5em]
+\includegraphics[width=\linewidth]{fig/process-sequences-c.pdf}\\[-0.1em]
+\small (c) \condFixedOrder
+\end{minipage}
+\caption{Observed writing-process trajectories. Panel (a) shows the most frequent complete paths; panels (b) and (c) show transition counts for \condAgenticCogWriter\ and \condFixedOrder. \condAgenticCogWriter\ mostly follows the same forward \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} progression as \condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering. P, T, R, and E denote \texttt{Planning}, \texttt{Translating}, \texttt{Reviewing}, and end.}
+\label{fig:process-sequences}
+\end{figure*}
+
+Observed departures from the common process path do not show a larger quality advantage. Table~\ref{tab:trace-outcome} compares runs that complete exactly one planning--drafting--reviewing cycle with runs that take any other path and finds similar pairwise win rates against \condFixedOrder\ and \condSingleWriter. Because the split is defined by observed behavior rather than random assignment, it cannot establish whether taking a different path causes better or worse output. Appendix~\ref{app:process-behavior} reports additional process counts, goal events, and resource-use statistics.
+
+\input{tab/trace-outcome}
+
+\subsection{Robustness Checks}
+\label{sec:results-robustness}
+
+Appendix~\ref{app:sensitivity-analyses} collects the output-length, compute-matched, single-context, and cross-family sensitivity analyses. Within the pre-specified output-length bands, \condAgenticCogWriter\ remains favored over \condSinglePass\ despite an overall tendency for the primary evaluator to prefer longer outputs. Under the tightest available compute match, the same favorable direction holds against \condStaged\ and \condTaskPlanning; no \condAgenticCogWriter--\condSinglePass\ pairs satisfy that band. Because output length and realized compute follow from execution, these checks are descriptive rather than causal.
+
+Judge identity produces more variation than the resource-matched checks. Cross-family rescoring preserves the overall direction for the selected contrasts but yields many ties and reverses the WritingBench direction for \condAgenticCogWriter\ versus \condSinglePass. We therefore treat the cross-family result as partial robustness evidence, not proof that the exact win rates are evaluator-invariant.

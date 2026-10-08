@@ -1,0 +1,227 @@
+\documentclass[11pt]{article}
+
+\usepackage[review]{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit}
+\usepackage{array}
+\usepackage{float}
+\usepackage{stfloats}
+\usepackage{epigraph}
+\usepackage{fvextra}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+\setlength{\epigraphwidth}{0.86\columnwidth}
+\setlength{\epigraphrule}{0pt}
+\renewcommand{\epigraphflush}{center}
+
+% Keep externally authored prompt files printable under pdfLaTeX without
+% changing their source. These mappings affect only Unicode characters that
+% pdfLaTeX cannot represent directly and preserve their plain-text meaning.
+\DeclareUnicodeCharacter{2500}{-}
+\DeclareUnicodeCharacter{2502}{|}
+\DeclareUnicodeCharacter{2514}{+}
+\DeclareUnicodeCharacter{251C}{+}
+\DeclareUnicodeCharacter{2013}{--}
+\DeclareUnicodeCharacter{2014}{--}
+\DeclareUnicodeCharacter{2018}{'}
+\DeclareUnicodeCharacter{2019}{'}
+\DeclareUnicodeCharacter{201C}{"}
+\DeclareUnicodeCharacter{201D}{"}
+\DeclareUnicodeCharacter{2022}{*}
+\DeclareUnicodeCharacter{2026}{...}
+\DeclareUnicodeCharacter{2192}{->}
+\DeclareUnicodeCharacter{2194}{<->}
+\DeclareUnicodeCharacter{21D2}{=>}
+\DeclareUnicodeCharacter{2260}{!=}
+\DeclareUnicodeCharacter{2264}{<=}
+\DeclareUnicodeCharacter{2265}{>=}
+\DeclareUnicodeCharacter{2713}{[x]}
+
+% WriteHERE-style prompt cards. Color identifies the role of each prompt while
+% keeping the prompt text itself neutral and printable.
+\definecolor{PromptBaseline}{RGB}{52,91,140}
+\definecolor{PromptMonitor}{RGB}{42,109,78}
+\definecolor{PromptPlanner}{RGB}{35,112,126}
+\definecolor{PromptTranslator}{RGB}{77,88,148}
+\definecolor{PromptReviewer}{RGB}{132,72,91}
+\definecolor{PromptAblation}{RGB}{164,106,36}
+\definecolor{PromptEvaluator}{RGB}{102,76,142}
+\newtcolorbox{promptbox}[2]{
+  breakable,
+  colback=#1!4!white,
+  colframe=#1!72!black,
+  colbacktitle=#1!82!black,
+  coltitle=white,
+  title={#2},
+  fonttitle=\bfseries\small,
+  boxrule=0.6pt,
+  arc=1.5mm,
+  outer arc=1.5mm,
+  left=2mm,
+  right=2mm,
+  top=1.2mm,
+  bottom=1.2mm,
+  before skip=5pt,
+  after skip=9pt,
+  pad at break*=1mm
+}
+\newcommand{\promptinput}[3]{%
+  \begin{promptbox}{#1}{#2}%
+  \VerbatimInput[fontsize=\scriptsize,breaklines=true,breakanywhere=true,breaksymbolleft={},breaksymbolright={}]{#3}%
+  \end{promptbox}%
+}
+
+\input{numbers}
+% Generated missing-value macros historically use an em-dash command. Render
+% that command as an en dash so the manuscript cannot emit an em dash.
+\expandafter\def\csname textemdash\endcsname{--}
+
+% Shared multiline table-cell helpers.
+\newcommand{\lcell}[1]{%
+  \begin{tabular}[c]{@{}l@{}}#1\end{tabular}%
+}
+\newcommand{\ccell}[1]{%
+  \begin{tabular}[c]{@{}c@{}}#1\end{tabular}%
+}
+
+\newcommand{\yes}{\checkmark}
+\newcommand{\no}{--}
+\newcommand{\partly}{\textit{Partial}}
+\newcommand{\condSinglePass}{\texttt{Single-pass}}
+\newcommand{\condStaged}{\texttt{Staged}}
+\newcommand{\condTaskPlanning}{\texttt{Task-planning}}
+\newcommand{\condAgenticCogWriter}{Agentic CogWriter}
+\newcommand{\condNoGoals}{\texttt{No-goals}}
+\newcommand{\condFixedOrder}{\texttt{Fixed-order}}
+\newcommand{\condSingleWriter}{\texttt{Single-writer}}
+\newcommand{\condSingleContext}{\texttt{Single-context}}
+\newcommand{\condExploratoryOne}{\texttt{Exploratory-1}}
+\newcommand{\condExploratoryTwo}{\texttt{Exploratory-2}}
+\newcommand{\modelGen}{\texttt{gpt-5.6-luna medium}}
+\newcommand{\modelGenBare}{\texttt{gpt-5.6-luna}}
+\newcommand{\modelJudge}{\texttt{gpt-5.6-sol medium}}
+\newcommand{\modelJudgeBare}{\texttt{gpt-5.6-sol}}
+\newcommand{\modelCross}{\texttt{claude-sonnet-5 medium}}
+
+\title{Revisiting the Cognitive Process Theory of Writing for AI Agents: Process-Level Control for Long-Form Writing}
+
+\author{Anonymous ACL submission}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+AI agents increasingly produce long-form documents as part of multi-step knowledge work, yet most writing systems still advance generation through an outline, task graph, or fixed stage sequence. Agentic CogWriter instead treats the next writing process as the unit of control. Inspired by cognitive process theory, the system maintains a shared draft, goals, and process history while a top-level agent chooses among planning, drafting, and reviewing and delegates the selected process to a corresponding subagent. We evaluate Agentic CogWriter on demanding subsets of three long-form writing benchmarks using pointwise rubric scores and direct same-prompt comparisons. The system achieves the strongest pointwise scores on two benchmark types and is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning in pairwise evaluation. Component tests leave the source of the improvement unresolved: removing explicit goals or fixing process order does not reliably change pairwise preference, although exploratory analysis suggests a small advantage for adaptive ordering. Observed writing trajectories usually contain a single planning--drafting--reviewing cycle. The results support process-level control as a promising design for agentic writing while leaving the source of its advantage open.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+\input{sec/01_introduction}
+
+\section{Related Work}
+\label{sec:related-work}
+\input{sec/02_related_work}
+
+\section{Agentic CogWriter}
+\label{sec:method}
+\input{sec/03_method}
+
+\section{Experimental Design}
+\label{sec:experimental-design}
+\input{sec/04_experiments}
+
+\section{Results}
+\label{sec:results}
+\input{sec/05_results}
+
+\section{Discussion}
+\label{sec:discussion}
+\input{sec/06_discussion}
+
+\section{Conclusion}
+\label{sec:conclusion}
+\input{sec/08_conclusion}
+
+\input{sec/07_limitations}
+
+\bibliography{custom,agentic}
+\clearpage
+
+\appendix
+
+% Intentionally keep the full appendix in one-column mode. The appendix
+% contains long verbatim prompts and wide diagnostic material whose layout is
+% substantially more stable and readable at full text width.
+\onecolumn
+\section{Prompt and Experiment Configuration}
+\label{app:prompts}
+\input{sec/09_prompt_configuration}
+
+\section{Runtime Configuration}
+\label{app:runtime}
+Table~\ref{tab:runtime-settings} reports the runtime controls shared across conditions. We hold the generator, output-token budget, network and retrieval policy, approval policy, task input, and final-output requirements fixed so that the compared conditions differ in how they organize the writing process rather than in model access or external information. Each prompt--condition pair is generated in three runs. Primary pairwise evaluation uses the same judge for every condition, presents each pair in both orders, and records presentation disagreements as ties; the cross-family judge is used only for the separate robustness analysis.
+\input{tab/appendix-runtime-settings}
+
+\section{Generation-Run-Level Pairwise Outcomes}
+\label{app:pairwise-detail}
+The following figure shows the prompt-level pairwise estimates for each benchmark and generation run, including the ablation contrasts. For \condAgenticCogWriter\ versus \condSinglePass, the descriptive mean win rates across generation runs are \DoLoFourOneRateMean\ on DoLoMiTes, \HelloFourOneRateMean\ on HelloBench, and \WritingFourOneRateMean\ on WritingBench.
+\begin{figure}
+\centering
+\includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
+\caption{Run-level pairwise estimates separate the large system comparisons from the ablations. \condAgenticCogWriter\ is consistently favored over \condSinglePass\ and \condTaskPlanning\ and usually over \condStaged, whereas \condNoGoals\ and \condFixedOrder\ remain near parity and do not survive the within-benchmark Holm correction. Points show 95\% Wilson intervals; filled circles survive correction, open circles do not, and diamonds are descriptive means across generation runs.}
+\label{fig:appendix-confirmatory-forest}
+\end{figure}
+
+\section{Additional Process and Resource Statistics}
+\label{app:process-behavior}
+Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first generation run. For \condAgenticCogWriter, that run uses \AfourOutputTokens\ output-plus-reasoning tokens and \AfourInputTokens\ uncached input tokens per attempted run and records \AfourGoalRegenerated\ accepted goal regeneration. Across the three generation runs, the trace summaries contain mean totals of \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while the post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
+\input{tab/appendix-process}
+
+\section{Sensitivity Analyses}
+\label{app:sensitivity-analyses}
+\subsection{Record-Pooled Sensitivity}
+\label{app:record-pooled}
+Table~\ref{tab:appendix-record-pooled-pairwise} reports a sensitivity analysis that treats the two presentation records for each prompt as independent observations; the retained disagreements show how much presentation order can affect the descriptive rates. The retained presentation disagreements were \WritingPresentationDisagreementRate\ on WritingBench, \HelloPresentationDisagreementRate\ on HelloBench, and \DoLoPresentationDisagreementRate\ on DoLoMiTes across the three generation runs.
+\input{tab/appendix-record-pooled-pairwise}
+
+\subsection{Output-Length Sensitivity}
+\label{app:length-control}
+Table~\ref{tab:appendix-length-control} reports pairwise outcomes by output-length ratio. The longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. In the tighter pre-specified matching band, the outcomes from the first generation run are \LengthFullSinglePassFiveWLT\ for \condAgenticCogWriter\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condAgenticCogWriter\ versus \condNoGoals. In the wider pre-specified band, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$). These matching-band $p$-values are unadjusted descriptive sign-test results.
+\input{tab/appendix-length-control}
+
+\subsection{Compute-Stratified Sensitivity}
+\label{app:compute-control}
+Compute matching asks whether the pairwise direction persists when the compared systems use similar realized output-plus-reasoning token budgets. Table~\ref{tab:appendix-compute-control} reports outcomes within the pre-specified 1.25$\times$ and 1.50$\times$ matching bands and across descriptive ratio bins. Because realized compute is determined by execution, this analysis is a sensitivity check rather than a causal adjustment.
+\input{tab/appendix-compute-control}
+\clearpage
+
+\subsection{Single-Context Exploratory Check}
+\label{app:single-context}
+The \condSingleContext\ condition was added after the main results had been observed, to test whether the \condSingleWriter\ loss reflects delegation to separate agents or the absence of process decomposition under a \texttt{Monitor}. We registered it as an exploratory condition outside the Holm family before judging and ran one generation run, the same evidence tier as the cross-family check: the question it answers is whether an attribution survives, not whether a new contrast is confirmed. We therefore report the combined estimate with its interval and the benchmark-level results without adjustment.
+\input{tab/appendix-single-context}
+
+\subsection{Cross-Family Judge Robustness}
+\label{app:cross-family}
+Table~\ref{tab:appendix-cross-family} reports combined outcomes for the three cross-family robustness contrasts: \CrossFamilyFullSinglePassWLT\ for \condAgenticCogWriter\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ for \condAgenticCogWriter\ versus \condNoGoals. The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval. The judge yields a non-tied combined outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ overall W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
+\input{tab/appendix-cross-family}
+
+\section{Consensus-Writing Evaluation on Habermas Machine Data}
+\label{app:habermas}
+We additionally evaluate the writing systems on ten short consensus-writing tasks constructed from the Habermas Machine data~\citep{tessler2024common}. Each task provides one deliberation question and the five participants' original opinions, and asks the system to write a statement the group could endorse. The ten tasks are drawn from the \texttt{OOD\_TEST} split after requiring complete, distinct participant opinions and disagreement ratings on both sides of the scale midpoint. Across eight conditions, this produces 80 attempted runs; 78 complete successfully. Table~\ref{tab:appendix-habermas} summarizes pointwise quality and the available process statistics.
+\input{tab/appendix-habermas}
+
+\condExploratoryOne\ is the exploratory CogWriter-style~\citep{wan2025cognitive} baseline, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; \condExploratoryTwo\ is the exploratory STORM-style~\citep{shao2024assisting} baseline, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval. On these short consensus-writing tasks, \condAgenticCogWriter\ does not achieve the highest pointwise composite; in particular, it scores below \condSinglePass\ and \condStaged. \condAgenticCogWriter\ and \condFixedOrder\ record \HabAfourRegenerated\ and \HabAsixRegenerated\ regeneration events, respectively; their ledgers contain \HabAfourLedger\ and \HabAsixLedger\ no/proposal outcomes, respectively.
+
+\end{document}

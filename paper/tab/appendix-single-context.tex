@@ -1,0 +1,41 @@
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}p{0.20\textwidth}p{0.12\textwidth}rrrrp{0.27\textwidth}@{}}
+\toprule
+Contrast & Scope & $n$ & Dropped & W/L/T & Rate & 95\% Wilson / exact $p$ \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}\cmidrule(lr){7-7}
+\condSingleContext\\vs.~\condAgenticCogWriter & WritingBench & \SingleContextWritingFullN & \SingleContextWritingFullDropped & \SingleContextWritingFullWLT & \SingleContextWritingFullRate & \SingleContextWritingFullInterval; $\SingleContextWritingFullP$ \\
+\condSingleContext\\vs.~\condAgenticCogWriter & HelloBench & \SingleContextHelloFullN & \SingleContextHelloFullDropped & \SingleContextHelloFullWLT & \SingleContextHelloFullRate & \SingleContextHelloFullInterval; $\SingleContextHelloFullP$ \\
+\condSingleContext\\vs.~\condAgenticCogWriter & DoLoMiTes & \SingleContextDoLoFullN & \SingleContextDoLoFullDropped & \SingleContextDoLoFullWLT & \SingleContextDoLoFullRate & \SingleContextDoLoFullInterval; $\SingleContextDoLoFullP$ \\
+\condSingleContext\\vs.~\condAgenticCogWriter & Pooled & \SingleContextFullN & \SingleContextFullDropped & \SingleContextFullWLT & \SingleContextFullRate & \SingleContextFullInterval; $\SingleContextFullP$ \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}\cmidrule(lr){7-7}
+\condSingleContext\\vs.~\condSinglePass & WritingBench & \SingleContextWritingSinglePassN & \SingleContextWritingSinglePassDropped & \SingleContextWritingSinglePassWLT & \SingleContextWritingSinglePassRate & \SingleContextWritingSinglePassInterval; $\SingleContextWritingSinglePassP$ \\
+\condSingleContext\\vs.~\condSinglePass & HelloBench & \SingleContextHelloSinglePassN & \SingleContextHelloSinglePassDropped & \SingleContextHelloSinglePassWLT & \SingleContextHelloSinglePassRate & \SingleContextHelloSinglePassInterval; $\SingleContextHelloSinglePassP$ \\
+\condSingleContext\\vs.~\condSinglePass & DoLoMiTes & \SingleContextDoLoSinglePassN & \SingleContextDoLoSinglePassDropped & \SingleContextDoLoSinglePassWLT & \SingleContextDoLoSinglePassRate & \SingleContextDoLoSinglePassInterval; $\SingleContextDoLoSinglePassP$ \\
+\condSingleContext\\vs.~\condSinglePass & Pooled & \SingleContextSinglePassN & \SingleContextSinglePassDropped & \SingleContextSinglePassWLT & \SingleContextSinglePassRate & \SingleContextSinglePassInterval; $\SingleContextSinglePassP$ \\
+\bottomrule
+\end{tabular}
+\caption{Exploratory comparison of \condSingleContext\ with matched primary-condition outputs. In its single generation run, \condSingleContext\ does not show a reliable difference from \condAgenticCogWriter, so separate subagent contexts alone are not isolated as the source of the full system's advantage. Wilson intervals are descriptive and sign-test $p$-values are unadjusted.}
+\label{tab:appendix-single-context-pairwise}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+Metric & \condSinglePass & \condAgenticCogWriter & \condSingleContext \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}
+Completed & \AoneCompleted & \AfourCompleted & \SingleContextCompleted \\
+Output-plus-reasoning tokens per run & \AoneOutputTokens & \AfourOutputTokens & \SingleContextOutputTokens \\
+Wall-clock seconds per completed run & \AoneMeanSeconds & \AfourMeanSeconds & \SingleContextMeanSeconds \\
+Goals created/developed/regenerated & \AoneGoals & \AfourGoals & \SingleContextGoals \\
+Ledger entries & \SingleContextAoneLedgerEntries & \SingleContextAfourLedgerEntries & \SingleContextLedgerEntries \\
+Ledger entries with proposal & \SingleContextAoneLedgerWithProposal & \SingleContextAfourLedgerWithProposal & \SingleContextLedgerWithProposal \\
+Spawns per attempted run & \AoneSpawns & \AfourSpawns & \SingleContextSpawns \\
+\bottomrule
+\end{tabular}
+\caption{Process and resource profiles for the matched \condSinglePass, \condAgenticCogWriter, and \condSingleContext\ runs. \condSingleContext\ preserves the process loop and shared state without separate subagent contexts, making it a narrower execution check than \condSingleWriter.}
+\label{tab:appendix-single-context-process}
+\end{table}

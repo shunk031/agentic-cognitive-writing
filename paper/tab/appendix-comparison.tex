@@ -1,0 +1,43 @@
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{7pt}
+\begin{tabular}{lcccc}
+\toprule
+\lcell{\textbf{Method}}
+& \ccell{\textbf{Unit of}\\\textbf{progress}}
+& \ccell{\textbf{Adaptive}\\\textbf{next step}}
+& \ccell{\textbf{Evolving}\\\textbf{structure}}
+& \ccell{\textbf{Online process}\\\textbf{selection}} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
+Re$^3$~\citep{yang2022re3}
+& Passage
+& \no
+& \no
+& \no \\
+STORM~\citep{shao2024assisting}
+& Section
+& \no
+& \no
+& \no \\
+CogWriter~\citep{wan2025cognitive}
+& Plan / segment
+& \yes
+& Plan
+& \no \\
+WriteHERE~\citep{xiong2025beyond}
+& Task node
+& \yes
+& Task graph
+& \no \\
+\rowcolor{black!5}
+\textbf{Agentic CogWriter (ours)}
+& \textbf{Writing process}
+& \yes
+& \textbf{Goal network}
+& \yes \\
+\bottomrule
+\end{tabular}
+\caption{Comparison of control choices in representative long-form writing systems. The unit of progress is what advances at each step; adaptive next step indicates whether that choice depends on the current state. Evolving structure excludes document text. \condAgenticCogWriter\ is the only compared system with online selection among heterogeneous writing operations: planning, drafting, and reviewing.}
+\label{tab:architecture-comparison}
+\end{table*}
