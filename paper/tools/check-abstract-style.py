@@ -67,9 +67,15 @@ def main() -> None:
     assert re.search(r"\bProcess traces\b", abstract, re.IGNORECASE), (
         "Introduce the trace result as process evidence, not as undefined 'trajectories'"
     )
-    assert re.search(r"\brarely revisits?\b", abstract, re.IGNORECASE), (
-        "Explain why the single-cycle trace result matters to the reader"
-    )
+    # Guard the interpretation rather than one exact verb. Earlier wording used
+    # "revisits"; the tighter layout-safe prose uses "returns". What matters is
+    # that the Abstract tells the reader that the observed single-cycle traces
+    # imply little return to earlier writing processes.
+    assert re.search(
+        r"\brarely\b[^.]*\b(?:earlier|prior)\b[^.]*\bwriting process(?:es)?\b",
+        abstract,
+        re.IGNORECASE,
+    ), "Explain why the single-cycle trace result matters to the reader"
 
     words = re.findall(r"\b[\w'-]+\b", abstract)
     assert len(words) <= 200, f"Abstract exceeds 200 words: {len(words)}"
