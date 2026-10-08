@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail CI when a compiled-manuscript caption exceeds the reader-facing length cap."""
+"""Fail CI when compiled-manuscript captions violate reader-facing constraints."""
 
 from __future__ import annotations
 
@@ -78,6 +78,38 @@ def visible_word_count(caption: str) -> int:
     return len(re.findall(r"\b[A-Za-z0-9]+(?:[-'’][A-Za-z0-9]+)*\b", text))
 
 
+def first_caption(path: str) -> str:
+    found = list(captions((PAPER / path).read_text(encoding="utf-8")))
+    assert found, ("expected a caption", path)
+    return found[0][0]
+
+
+def check_semantic_caption_guards() -> None:
+    overview = first_caption("fig/tex/overview.tex")
+    assert overview.startswith(r"Overview of \condAgenticCogWriter."), (
+        "Figure 1 caption must retain the 'Overview of Agentic CogWriter.' lead",
+        overview,
+    )
+
+    comparison = first_caption("tab/appendix-comparison.tex")
+    named_prior_methods = (
+        r"Re\$\^3\$",
+        r"\bSTORM\b",
+        r"\bWriteHERE\b",
+        r"\bCogWriter\b",
+        r"yang2022re3",
+        r"shao2024assisting",
+        r"wan2025cognitive",
+        r"xiong2025beyond",
+    )
+    offenders = [pattern for pattern in named_prior_methods if re.search(pattern, comparison)]
+    assert not offenders, (
+        "Table 1 caption should explain the comparison without naming individual prior methods",
+        offenders,
+        comparison,
+    )
+
+
 def main() -> None:
     offenders = []
     checked = 0
@@ -95,7 +127,11 @@ def main() -> None:
         f"captions must be <= {MAX_CAPTION_WORDS} words",
         offenders,
     )
-    print(f"Caption length guard: {checked} compiled captions <= {MAX_CAPTION_WORDS} words")
+    check_semantic_caption_guards()
+    print(
+        f"Caption guard: {checked} compiled captions <= {MAX_CAPTION_WORDS} words; "
+        "Figure 1 overview lead and Table 1 generic comparison preserved"
+    )
 
 
 if __name__ == "__main__":
