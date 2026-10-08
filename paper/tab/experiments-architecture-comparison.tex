@@ -13,44 +13,44 @@
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
 \condSinglePass
 & $X$
-& whole document
-& one generation
-& one context \\
+& Whole document
+& One generation
+& One context \\
 \condStaged
 & $X$, prior stage output
-& fixed stage
+& Fixed stage
 & Pre-Write$\rightarrow$Write$\rightarrow$Re-Write
-& one context \\
+& One context \\
 \condTaskPlanning
 & $X,D_t,T_t$
-& task node
-& select a ready task node
-& task graph \\
+& Task node
+& Select a ready task node
+& Task graph \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
 \rowcolor{black!5}
 \textbf{\condAgenticCogWriter}
 & $\mathbf{X,D_t,G_t,H_t}$
-& \textbf{writing process $a_t$}
+& \textbf{Writing process $a_t$}
 & $\mathbf{a_t=\mathrm{Monitor}(X,D_t,G_t,H_t)}$
-& \textbf{subagent} \\
+& \textbf{Subagent} \\
 \condNoGoals
 & $X,D_t,H_t$
-& writing process $a_t$
+& Writing process $a_t$
 & $a_t=\mathrm{Monitor}(X,D_t,H_t)$
-& subagent \\
+& Subagent \\
 \condFixedOrder
 & $X,D_t,G_t,H_t$
-& fixed process
+& Fixed process
 & Planning$\rightarrow$Translating$\rightarrow$Reviewing
-& subagent \\
+& Subagent \\
 \condSingleWriter
 & $X,D_t,G_t,H_t$
-& writing process $a_t$
+& Writing process $a_t$
 & $a_t=\mathrm{Monitor}(X,D_t,G_t,H_t)$
-& one writer \\
+& One writer \\
 \condSingleContext
 & $X,D_t,G_t,H_t$
-& writing process $a_t$
+& Writing process $a_t$
 & $a_t=\mathrm{Monitor}(X,D_t,G_t,H_t)$
 & Monitor context \\
 \bottomrule
