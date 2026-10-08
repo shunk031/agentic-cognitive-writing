@@ -9,17 +9,9 @@ This checklist reflects the current manuscript sources in `acl_latex.tex`, `sec/
 | Author block | `Anonymous ACL submission` | Keep the review PDF anonymized. |
 | Repository / identifying links | No author-identifying repository link appeared in the last rendered manuscript | Re-run an anonymity-sensitive string/link sweep over the final PDF and supplementary material. |
 | Human evaluation | The manuscript explicitly states that human evaluation was not conducted | Keep the claim scope and Limitations consistent unless a human study is actually added. |
-| Limitations / References / Appendix | The #77 baseline build places Conclusion on page 9, Limitations and References from page 10, and Appendix A from page 13 | Fit the main text through Conclusion within 8 pages, then recheck the boundary against the current ARR and target-venue rules. |
+| Limitations / References / Appendix | The source places Limitations after Conclusion and before References, with `\clearpage` at the start of Limitations; the current baseline places Conclusion on page 9 | Fit the main text through Conclusion within 8 pages without typography or spacing overrides. |
 
 The last source sweep found no `TODO` or `provisional` token in `acl_latex.tex`, `sec/`, or `tab/`. Numbered-replication vocabulary has been removed from the manuscript sources; references to the first replication are intentional scope statements. Re-run this sweep after the current prose edits before submission.
-
-## Page-limit polish
-
-- [ ] Main text through Conclusion fits within 8 pages.
-- [ ] Page reduction preserves substantive evidence and does not add new experiment scope.
-- [ ] Prefer syntactic compression and moving secondary diagnostic detail to the appendix over deleting information.
-- [ ] Avoid global typography/spacing hacks; review any local `\looseness=-1` use individually.
-- [ ] Exact final PDF is built from the PR HEAD, rendered, and visually checked.
 
 ## Final gates
 
@@ -29,3 +21,4 @@ The last source sweep found no `TODO` or `provisional` token in `acl_latex.tex`,
 - Regenerate and verify `paper/build/acl_latex.md` with `paper/tools/build-markdown.sh` so the reader entry point matches the TeX manuscript.
 - Confirm that the content page limit, required Limitations section, reference placement, appendix placement, anonymization, and supplementary-material rules still match the current ARR and target-venue call.
 - Preserve the benchmark order WritingBench, HelloBench, DoLoMiTes and the established section/appendix ownership unless the manuscript itself is intentionally revised.
+- Do not use `\looseness`, `\sloppy`, global tracking, or similar line-breaking/spacing overrides to fit the page limit; recover space through prose and information placement while preserving readability.
