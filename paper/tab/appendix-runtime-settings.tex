@@ -1,3 +1,15 @@
+\paragraph{Runtime lock and isolation.}
+The runtime was designed to isolate writing-process organization rather than information access or host configuration. Before a scored run, the runner requires explicit model, decoding, budget, timeout, seed, version, plugin-commit, retry, and statistical settings; unresolved values stop execution before a model process is created. Conditions share the same assignment and supplied context, resource limits, and tool policy, while web search, network access, external retrieval, and unprovided sources are disabled. Per-run provider configuration is also isolated from local guidance, and retries reuse the same prompt and policy rather than adding information or budget. These controls implement the study's equal-information policy and reduce hidden runtime state as a source of condition differences.
+
+\paragraph{Model roles.}
+The study uses \modelGenBare\ for generation because the experiment requires high-volume long-form generation across many systems, prompts, and replications; the model is positioned for fast, cost-sensitive workloads within the GPT-5.6 family~\citep{openai2026luna,openai2026gpt56}. \modelJudgeBare\ is used as the higher-capability primary evaluator, consistent with its positioning for more demanding professional work~\citep{openai2026sol,openai2026gpt56}. Medium reasoning effort is held fixed rather than tuned within the reported study. For the primary judge, the first main run inherited the documented medium default, and later runs pin medium explicitly to reproduce the same reasoning level.
+
+\paragraph{Evaluation controls.}
+Pairwise outputs are blinded and judged in both presentation orders to reduce known position bias in LLM evaluation~\citep{zheng2023judging,wang2024fair}. The two orders are treated as repeated measurements of one prompt-level comparison rather than independent samples: a semantic winner is retained only when both orders agree, and any disagreement becomes a tie. The reported primary judge and generator are both from the GPT-5.6 family, which differs from the planned different-family judge design. We therefore report \modelCross\ separately as a cross-family robustness check rather than pooling it with the confirmatory judge, given evidence that model-family relationships can affect evaluator preferences~\citep{panickssery2024selfpreference}.
+
+\paragraph{Frozen operational values.}
+Three independent generation runs define the replication dimension of the pre-specified confirmatory analysis, but the study record gives no additional optimization rationale for choosing exactly three. The 64,000-token generator output budget, primary-judge seed, and two-retry judge policy are likewise frozen operational settings rather than values selected by a documented tuning sweep. Generator temperature is reported as unset because the scored generation interface did not expose that control; unsupported generation controls were monitored rather than varied across conditions. Reporting these values makes the execution reproducible without attributing post-hoc rationales that were not part of the recorded design.
+
 \begin{table}[H]
 \centering
 \small
@@ -22,6 +34,6 @@ Pairwise presentation & both orders \\
 Presentation disagreement & counted as tie \\
 \bottomrule
 \end{tabular}
-\caption{Runtime and evaluation settings shared across systems. The generator and generation limits are fixed across conditions, network-based information access is disabled, and the primary and cross-family judges are reported separately so system comparisons reflect writing organization rather than different generation models or external retrieval.}
+\caption{Frozen runtime and evaluation settings used for the reported runs.}
 \label{tab:runtime-settings}
 \end{table}
