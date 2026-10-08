@@ -41,19 +41,43 @@ case "${1-}" in
         ;;
 esac
 
-# @description Use the local TeX image, pulling the prebuilt GHCR image first and building it if needed.
+image_has_required_packages() {
+    docker run --rm "$1" sh -eu -c '
+        for style in \
+            zi4.sty \
+            dblfloatfix.sty \
+            stfloats.sty \
+            epigraph.sty \
+            nextpage.sty \
+            helvet.sty \
+            fvextra.sty \
+            tcolorbox.sty \
+            pdfcol.sty; do
+            kpsewhich "$style" >/dev/null
+        done
+    '
+}
+
+# @description Use a compatible local TeX image, preferring the prebuilt GHCR image and rebuilding stale images when needed.
 ensure_image() {
     if docker image inspect "$image_tag" >/dev/null 2>&1; then
-        return 0
+        if image_has_required_packages "$image_tag"; then
+            return 0
+        fi
+        printf 'Local TeX image is stale; rebuilding from the current Dockerfile.\n' >&2
+    else
+        printf 'Local TeX image is absent; trying prebuilt image %s.\n' "$prebuilt_image"
+        if docker pull "$prebuilt_image" && docker tag "$prebuilt_image" "$image_tag"; then
+            if image_has_required_packages "$image_tag"; then
+                printf 'Tagged compatible prebuilt TeX image as %s.\n' "$image_tag"
+                return 0
+            fi
+            printf 'Prebuilt TeX image is stale; rebuilding from the current Dockerfile.\n' >&2
+        else
+            printf 'Could not pull the prebuilt TeX image; falling back to a local Docker build.\n' >&2
+        fi
     fi
 
-    printf 'Local TeX image is absent; trying prebuilt image %s.\n' "$prebuilt_image"
-    if docker pull "$prebuilt_image" && docker tag "$prebuilt_image" "$image_tag"; then
-        printf 'Tagged prebuilt TeX image as %s.\n' "$image_tag"
-        return 0
-    fi
-
-    printf 'Could not pull the prebuilt TeX image; falling back to a local Docker build.\n' >&2
     docker build \
         --build-arg "HTTP_PROXY=${HTTP_PROXY-}" \
         --build-arg "HTTPS_PROXY=${HTTPS_PROXY-}" \
