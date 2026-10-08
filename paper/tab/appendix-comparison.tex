@@ -1,3 +1,13 @@
+\begingroup
+\newcommand{\oursrowleft}[2]{%
+  {\setlength{\fboxsep}{0pt}%
+   \colorbox{black!5}{\hspace{7pt}\ooalign{#2\hfil\cr\phantom{#1}\hfil\cr}\hspace{7pt}}}%
+}
+\newcommand{\oursrowcenter}[2]{%
+  {\setlength{\fboxsep}{0pt}%
+   \colorbox{black!5}{\hspace{7pt}\ooalign{\hfil#2\hfil\cr\hfil\phantom{#1}\hfil\cr}\hspace{7pt}}}%
+}
+
 \begin{table*}[t]
 \centering
 \small
@@ -21,7 +31,7 @@ STORM~\citep{shao2024assisting}
 & \no
 & \no \\
 CogWriter~\citep{wan2025cognitive}
-& \ccell{Plan /\\segment}
+& Plan / segment
 & \yes
 & Plan
 & \no \\
@@ -30,13 +40,14 @@ WriteHERE~\citep{xiong2025beyond}
 & \yes
 & Task graph
 & \no \\
-\textbf{Agentic CogWriter}
-& \textbf{Writing process}
-& \yes
-& \textbf{Goal network}
-& \yes \\
+\oursrowleft{\textbf{Agentic CogWriter (ours)}}{\textbf{Agentic CogWriter (ours)}}
+& \oursrowcenter{\ccell{\textbf{Unit of}\\\textbf{progress}}}{\textbf{Writing process}}
+& \oursrowcenter{\ccell{\textbf{Adaptive}\\\textbf{next step}}}{\yes}
+& \oursrowcenter{\ccell{\textbf{Evolving}\\\textbf{structure}}}{\textbf{Goal network}}
+& \oursrowcenter{\ccell{\textbf{Online process}\\\textbf{selection}}}{\yes} \\
 \bottomrule
 \end{tabular}
 \caption{Comparison of control choices in representative long-form writing systems. The unit of progress is what advances at each step; adaptive next step indicates whether that choice depends on the current state. Evolving structure excludes document text. \condAgenticCogWriter\ is the only compared system with online selection among heterogeneous writing operations: planning, drafting, and reviewing.}
 \label{tab:architecture-comparison}
 \end{table*}
+\endgroup
