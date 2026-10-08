@@ -1,89 +1,11 @@
 {
-  "baseline_sha": "d225e814867f989e1b82536df226120c245b9114",
+  "baseline_sha": "9ebfe934e7bba4a750a01e10a170ab75e645ea08",
   "replacements": [
     {
-      "path": "paper/tab/ablation-results.tex",
-      "instruction": "Table 5 の single-column 化に合わせ、キャプションを意味を保って短縮する。",
-      "before": "\\caption{Ablations and execution diagnostic, reported as \\condAgenticCogWriter\\ win rates averaged across three generation runs; values above 50\\% favor \\condAgenticCogWriter. \\condNoGoals\\ and \\condFixedOrder\\ remain close to the full system, whereas \\condSingleWriter\\ shows a substantially larger gap. Thus neither removing explicit goals nor fixing process order alone reproduces the larger separation associated with the bundled execution change.}",
-      "after": "\\caption{\\condAgenticCogWriter\\ win rates against the ablations and execution diagnostic, averaged across three runs; values above 50\\% favor our system. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, whereas \\condSingleWriter\\ shows a larger separation; neither ablation reproduces the bundled execution difference.}"
-    },
-    {
       "path": "paper/tab/main-results.tex",
-      "instruction": "Table 3 の WritingBench Pointwise の second-best を underline する。",
-      "before": "& 0.708 & -0.054",
-      "after": "& 0.708 & \\underline{-0.054}"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Table 3 の WritingBench Native の second-best を underline する。",
-      "before": "& 0.726 & -0.062",
-      "after": "& \\underline{0.726} & -0.062"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Table 3 の HelloBench Native / Pointwise の second-best を underline する。",
-      "before": "& 0.781 & 0.040",
-      "after": "& \\underline{0.781} & \\underline{0.040}"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Table 3 の DoLoMiTes Pointwise の second-best を underline する。",
-      "before": "& -- & 0.005",
-      "after": "& -- & \\underline{0.005}"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Table 3 のキャプションに best / second-best の表記規則を明記する。",
-      "before": "Best scores in each column are in \\textbf{bold}.",
-      "after": "Best and second-best scores in each column are shown in \\textbf{bold} and \\underline{underlined}, respectively."
-    },
-    {
-      "path": "paper/tab/pairwise-results.tex",
-      "instruction": "Table 4 のキャプションで Agentic CogWriter の連続反復を避け、後半を短く言い換える。",
-      "before": "\\caption{Direct same-prompt win rates for \\condAgenticCogWriter\\ across three runs; values above 50\\% favor it. \\condAgenticCogWriter\\ is preferred on every benchmark against every alternative, with its largest overall margin over \\condSinglePass.}",
-      "after": "\\caption{Direct same-prompt win rates for \\condAgenticCogWriter\\ across three runs; values above 50\\% favor it. Win rates exceed 50\\% on every benchmark against every alternative, with the largest mean margin over \\condSinglePass.}"
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Experimental Design 冒頭の In this experimental design と seven pre-specified systems の重複を除き、比較目的から直接始める。",
-      "before": "In this experimental design, we consider the seven pre-specified systems described in Section~\\ref{sec:baselines} under the same task inputs and information policy. The comparisons address three questions: (1) whether process-level organization improves long-form document quality relative to alternative writing systems, (2) which proposed components contribute to any advantage, and (3) how the writing loop behaves in practice. We also include one post-hoc execution variant as an exploratory diagnostic.",
-      "after": "We compare the writing systems under the same task inputs and information policy to address three questions: (1) whether process-level organization improves long-form document quality relative to alternative writing systems, (2) which proposed components contribute to any advantage, and (3) how the writing loop behaves in practice. We also include one post-hoc execution variant as an exploratory diagnostic."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Together, the benchmarks の Together を削除して冗長な接続語を除く。",
-      "before": "Together, the benchmarks cover general instruction following, sustained long-context generation, and structured expert-document production.",
-      "after": "The benchmarks cover general instruction following, sustained long-context generation, and structured expert-document production."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Pointwise evaluation の見出し直後で Pointwise evaluation を反復せず We から始める。",
-      "before": "Pointwise evaluation scores each completed document independently.",
-      "after": "We score each completed document independently."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Pairwise evaluation の見出し直後で Pairwise evaluation を反復せず We から始める。",
-      "before": "Pairwise evaluation directly compares two responses written for the same prompt using the same quality dimensions and returns a winner or tie.",
-      "after": "We directly compare two responses written for the same prompt using the same quality dimensions and return a winner or tie."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "confirmatory tests の段落は exploratory ablation summary の定義に必要なので残し、目的が先に分かるよう短く言い換える。",
-      "before": "The confirmatory tests are intentionally conservative for estimating the size of the two ablation effects. We therefore add an exploratory prompt-level summary: for each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and then summarized across benchmarks. We report a prompt-level bootstrap interval and sign test. Because we chose the summary after seeing the main results, we treat it as exploratory rather than confirmatory.",
-      "after": "To summarize the two ablation contrasts across generation runs, we additionally compute an exploratory prompt-level estimate. For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and then summarized across benchmarks. We report a prompt-level bootstrap interval and sign test. Because we chose this summary after seeing the main results, we treat it as exploratory rather than confirmatory."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "clear system-level separation の clear を削除し、数値に解釈を委ねる。",
-      "before": "Table~\\ref{tab:pairwise-results} reports a clear system-level separation in direct same-prompt comparisons.",
-      "after": "Table~\\ref{tab:pairwise-results} reports a system-level separation in direct same-prompt comparisons."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "execution diagnostic の against Agentic CogWriter を against our system に言い換えて反復を減らす。",
-      "before": "respectively, against \\condAgenticCogWriter, so output length alone does not explain the gap.",
-      "after": "respectively, against our system, so output length alone does not explain the gap."
+      "instruction": "Table 3 の best / second-best 表記を追加したことで caption が 71 words になったため、意味を変えずに caption 上限内へ圧縮する。",
+      "before": "higher is better in every reported column",
+      "after": "higher is better throughout"
     }
   ]
 }
