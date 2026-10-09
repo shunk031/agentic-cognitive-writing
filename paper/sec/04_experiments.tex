@@ -36,8 +36,7 @@ The benchmarks cover general instruction following, sustained long-context gener
 We evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document.
 We first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts.
 From the remaining benchmark items, we deterministically prioritize cases with longer supplied context and, when the prompt specifies a target length, longer requested output, while applying fixed maximum-length limits.
-This produces a different demanding subset for each benchmark: WritingBench emphasizes long inputs with explicit long-output requirements, HelloBench emphasizes very long-input summarization and continuation, and DoLoMiTes emphasizes procedurally constrained expert writing.
-See Appendix~\ref{app:prompts} for the exact selection rule, sample sizes, and sensitivity analysis.
+This produces a different demanding subset for each benchmark: WritingBench emphasizes long inputs with explicit long-output requirements, HelloBench emphasizes very long-input summarization and continuation, and DoLoMiTes emphasizes procedurally constrained expert writing.\footnote{See Appendix~\ref{app:prompts} for the exact selection rule, sample sizes, and sensitivity analysis.}
 
 \subsection{Implementation}
 \label{sec:implementation}
@@ -46,8 +45,7 @@ All systems run in the same Codex-style coding-agent harness, using \modelGenBar
 Assigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.}
 Holding the generator fixed across systems isolates writing organization rather than base-model capability.
 For a cross-family robustness check, we also rescore selected system comparisons with \modelCross.
-\condAgenticCogWriter\ is packaged as an agent skill: the top-level \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} through the harness's subagent mechanism.
-See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.
+\condAgenticCogWriter\ is packaged as an agent skill: the top-level \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} through the harness's subagent mechanism.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
 
 Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration.
 Repeating generation lets us measure variation due to stochastic execution while keeping the task set and system definition fixed.
@@ -63,8 +61,7 @@ WritingBench uses five prompt-specific criteria, HelloBench uses checklist items
 
 We also apply a common five-dimension rubric across all three benchmarks: instruction fulfillment, organization and coherence, content adequacy and depth, style and audience fit, and factual or constraint fidelity, each scored from 1 to 5.
 Because these ratings concentrate near the upper end, each dimension is standardized within a benchmark across outputs from all seven pre-specified systems before averaging.
-The resulting composite is relative within a benchmark rather than an absolute quality scale.
-See Appendix~\ref{app:prompts} for the full procedures and evaluator prompts.
+The resulting composite is relative within a benchmark rather than an absolute quality scale.\footnote{See Appendix~\ref{app:prompts} for the full procedures and evaluator prompts.}
 
 \paragraph{Pairwise evaluation.}
 We directly compare two responses written for the same prompt using the same quality dimensions and record which response is preferred, or a tie.
@@ -79,8 +76,7 @@ We therefore report the cross-family rescoring described above as a separate des
 We fixed the confirmatory comparisons before scoring to avoid choosing favorable tests after observing results.
 For each benchmark and generation run, an exact two-sided sign test compares the non-tied prompt-level wins and losses for every pre-specified contrast~\citep{dixonmood1946}.
 Testing several related contrasts increases the chance of at least one false positive, so we apply Holm's step-down correction~\citep{holm1979} across the pre-specified tests within each benchmark.
-Generation runs remain separate because they repeat the same prompt set rather than provide new independent prompt samples.
-See Appendix~\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\citep{wilson1927}, and corrected test decisions.
+Generation runs remain separate because they repeat the same prompt set rather than provide new independent prompt samples.\footnote{See Appendix~\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\citep{wilson1927}, and corrected test decisions.}
 
 To summarize the two ablation contrasts across generation runs, we compute a post-hoc prompt-level estimate.
 For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and then summarized across benchmarks.
