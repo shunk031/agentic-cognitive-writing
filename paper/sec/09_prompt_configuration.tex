@@ -1,15 +1,29 @@
 \paragraph{Prompt selection and provenance.}
-The scored study uses the committed \texttt{hard100} subset generated from the pinned WritingBench~\citep{wu2026writingbench}, HelloBench~\citep{que2024hellobench}, and DoLoMiTes~\citep{malaviya2025dolomites} manifests before generation. Prompts used while developing the protocol are removed first. Each remaining prompt is ranked by prompt word count plus the largest requested output length stated in the prompt or structured output constraints, subject to fixed maximum-length gates; ties are resolved by prompt word count, requested length, and prompt identifier. The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts. Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.
+The scored study uses the committed \texttt{hard100} subset generated from the pinned WritingBench~\citep{wu2026writingbench}, HelloBench~\citep{que2024hellobench}, and DoLoMiTes~\citep{malaviya2025dolomites} manifests before generation.
+Prompts used while developing the protocol are removed first.
+Each remaining prompt is ranked by prompt word count plus the largest requested output length stated in the prompt or structured output constraints, subject to fixed maximum-length gates; ties are resolved by prompt word count, requested length, and prompt identifier.
+The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts.
+Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.
 
-The three selected subsets stress different properties of long-form writing. WritingBench combines long inputs with explicit long-output requirements, HelloBench contributes primarily very long-input summarization and continuation tasks, and DoLoMiTes contributes methodical expert tasks with structured procedural constraints. The \texttt{hard100} name identifies the deterministic length-and-demand rule rather than a claim that every prompt has the same source of semantic difficulty.
+The three selected subsets stress different properties of long-form writing.
+WritingBench combines long inputs with explicit long-output requirements, HelloBench contributes primarily very long-input summarization and continuation tasks, and DoLoMiTes contributes methodical expert tasks with structured procedural constraints.
+The \texttt{hard100} name identifies the deterministic length-and-demand rule rather than a claim that every prompt has the same source of semantic difficulty.
 
 \paragraph{Sample size and inferential sensitivity.}
-The 100-prompt count per benchmark was fixed before scoring. Under the realized missing and tie rates, a benchmark--contrast--generation-run test contains about \PowerCellDecided\ decided comparisons; at the strictest first-step Holm threshold, an exact sign test has 80\% power for a true preference of about \PowerCellDetectablePreference. Combining benchmarks only for a descriptive sensitivity calculation gives about \PowerPooledDecided\ decided comparisons and a detectable preference of about \PowerPooledDetectablePreference. The calculation describes the sensitivity of the committed sample and does not make the subset representative of each full benchmark.
+The 100-prompt count per benchmark was fixed before scoring.
+Under the realized missing and tie rates, a benchmark--contrast--generation-run test contains about \PowerCellDecided\ decided comparisons; at the strictest first-step Holm threshold, an exact sign test has 80\% power for a true preference of about \PowerCellDetectablePreference.
+Combining benchmarks only for a descriptive sensitivity calculation gives about \PowerPooledDecided\ decided comparisons and a detectable preference of about \PowerPooledDetectablePreference.
+The calculation describes the sensitivity of the committed sample and does not make the subset representative of each full benchmark.
 
 \paragraph{Common generation setup and implementation.}
-Every pre-specified system receives the same assignment, supplied context, requested output constraints, generator, attempt budget, and information policy. External retrieval is disabled by the coding-agent sandbox and by the experiment prompts. \condAgenticCogWriter\ runs as an agent skill under a top-level \texttt{Monitor}; the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} subagents execute the role skills reproduced below. The platform-specific subagent wrappers only dispatch the corresponding role skills and add no separate writing policy. Configuration files pin the skill or stage prompt for every system and record hashes for fixed stage prompts.
+Every pre-specified system receives the same assignment, supplied context, requested output constraints, generator, attempt budget, and information policy.
+External retrieval is disabled by the coding-agent sandbox and by the experiment prompts.
+\condAgenticCogWriter\ runs as an agent skill under a top-level \texttt{Monitor}; the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} subagents execute the role skills reproduced below.
+The platform-specific subagent wrappers only dispatch the corresponding role skills and add no separate writing policy.
+Configuration files pin the skill or stage prompt for every system and record hashes for fixed stage prompts.
 
-All experiment-authored generation and evaluation prompts are reproduced verbatim below. Provider-level defaults that are not authored by the experiment are controlled through the runtime configuration in Appendix~\ref{app:runtime}.
+All experiment-authored generation and evaluation prompts are reproduced verbatim below.
+Provider-level defaults that are not authored by the experiment are controlled through the runtime configuration in Appendix~\ref{app:runtime}.
 
 \subsection{Generation Prompts}
 
@@ -53,7 +67,10 @@ The \condStaged\ prompts follow the planning--drafting--revision decomposition u
 \subsection{Evaluation Prompts}
 
 \paragraph{Benchmark-native evaluation.}
-WritingBench retains five query-specific criteria for each prompt; the evaluator scores each criterion from 1 to 10 and the native score is their unweighted mean. HelloBench retains 5--7 checklist items per prompt; the evaluator scores each item on its five-level scale and the native score is the item mean. DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark. Published leaderboard values should not be compared directly with these scores because we use a shared evaluator and our own generated outputs.
+WritingBench retains five query-specific criteria for each prompt; the evaluator scores each criterion from 1 to 10 and the native score is their unweighted mean.
+HelloBench retains 5--7 checklist items per prompt; the evaluator scores each item on its five-level scale and the native score is the item mean.
+DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark.
+Published leaderboard values should not be compared directly with these scores because we use a shared evaluator and our own generated outputs.
 
 \promptinput{PromptEvaluator}{Common Pointwise Rubric}{../experiments/prompts/judges/pointwise-v1.md}
 

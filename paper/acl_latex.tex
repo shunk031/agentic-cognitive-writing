@@ -123,7 +123,15 @@
 \maketitle
 
 \begin{abstract}
-Recent coding agents have made tool-using, stateful execution prominent. The same execution style is increasingly used for knowledge work that ends in long-form documents. Yet long-form writing systems usually advance an outline, task graph, or fixed stage sequence rather than deciding which writing process is needed next. Drawing on cognitive process theory, we propose \condAgenticCogWriter, which maintains a shared draft, goals, and process history while a Monitor agent chooses and delegates planning, drafting, or reviewing. We evaluate our \condAgenticCogWriter\ across three long-form writing benchmarks using pointwise rubric scoring and pairwise same-prompt preference judgments. \condAgenticCogWriter\ achieves competitive pointwise quality and is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning in pairwise evaluation. Ablations indicate that neither explicit goals nor adaptive process order alone explains \condAgenticCogWriter's overall advantage. Process traces show that most runs follow one planning--drafting--reviewing cycle, with departures from that path used selectively rather than continually. Together, the results support process-level control as a promising design for long-form writing agents.
+Recent coding agents have made tool-using, stateful execution prominent.
+The same execution style is increasingly used for knowledge work that ends in long-form documents.
+Yet long-form writing systems usually advance an outline, task graph, or fixed stage sequence rather than deciding which writing process is needed next.
+Drawing on cognitive process theory, we propose \condAgenticCogWriter, which maintains a shared draft, goals, and process history while a Monitor agent chooses and delegates planning, drafting, or reviewing.
+We evaluate our \condAgenticCogWriter\ across three long-form writing benchmarks using pointwise rubric scoring and pairwise same-prompt preference judgments.
+\condAgenticCogWriter\ achieves competitive pointwise quality and is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning in pairwise evaluation.
+Ablations indicate that neither explicit goals nor adaptive process order alone explains \condAgenticCogWriter's overall advantage.
+Process traces show that most runs follow one planning--drafting--reviewing cycle, with departures from that path used selectively rather than continually.
+Together, the results support process-level control as a promising design for long-form writing agents.
 \end{abstract}
 
 \section{Introduction}
@@ -165,63 +173,6 @@ Recent coding agents have made tool-using, stateful execution prominent. The sam
 % contains long verbatim prompts and wide diagnostic material whose layout is
 % substantially more stable and readable at full text width.
 \onecolumn
-\section{Prompt and Experiment Configuration}
-\label{app:prompts}
-\input{sec/09_prompt_configuration}
-
-\section{Runtime Configuration}
-\label{app:runtime}
-Table~\ref{tab:runtime-settings} reports the runtime controls shared across conditions. We hold the generator, output-token budget, network and retrieval policy, approval policy, task input, and final-output requirements fixed so that the compared conditions differ in how they organize the writing process rather than in model access or external information. Each prompt--condition pair is generated in three runs. Primary pairwise evaluation uses the same judge for every condition, presents each pair in both orders, and records presentation disagreements as ties; the cross-family judge is used only for the separate robustness analysis.
-\input{tab/appendix-runtime-settings}
-
-\section{Generation-Run-Level Pairwise Outcomes}
-\label{app:pairwise-detail}
-The following figure shows the prompt-level pairwise estimates for each benchmark and generation run, including the ablation contrasts. For \condAgenticCogWriter\ versus \condSinglePass, the descriptive mean win rates across generation runs are \DoLoFourOneRateMean\ on DoLoMiTes, \HelloFourOneRateMean\ on HelloBench, and \WritingFourOneRateMean\ on WritingBench.
-\begin{figure}
-\centering
-\includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
-\caption{Run-level pairwise estimates separate the large system comparisons from the ablations. \condAgenticCogWriter\ is consistently favored over \condSinglePass\ and \condTaskPlanning\ and usually over \condStaged, whereas \condNoGoals\ and \condFixedOrder\ remain near parity and do not survive the within-benchmark Holm correction. Points show 95\% Wilson intervals; filled circles survive correction, open circles do not, and diamonds are descriptive means across generation runs.}
-\label{fig:appendix-confirmatory-forest}
-\end{figure}
-
-\section{Additional Process and Resource Statistics}
-\label{app:process-behavior}
-Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first generation run. For \condAgenticCogWriter, that run uses \AfourOutputTokens\ output-plus-reasoning tokens and \AfourInputTokens\ uncached input tokens per attempted run and records \AfourGoalRegenerated\ accepted goal regeneration. Across the three generation runs, the trace summaries contain mean totals of \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while the post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
-\input{tab/appendix-process}
-
-\section{Sensitivity Analyses}
-\label{app:sensitivity-analyses}
-\subsection{Record-Pooled Sensitivity}
-\label{app:record-pooled}
-Table~\ref{tab:appendix-record-pooled-pairwise} reports a sensitivity analysis that treats the two presentation records for each prompt as independent observations; the retained disagreements show how much presentation order can affect the descriptive rates. The retained presentation disagreements were \WritingPresentationDisagreementRate\ on WritingBench, \HelloPresentationDisagreementRate\ on HelloBench, and \DoLoPresentationDisagreementRate\ on DoLoMiTes across the three generation runs.
-\input{tab/appendix-record-pooled-pairwise}
-
-\subsection{Output-Length Sensitivity}
-\label{app:length-control}
-Table~\ref{tab:appendix-length-control} reports pairwise outcomes by output-length ratio. The longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons. In the tighter pre-specified matching band, the outcomes from the first generation run are \LengthFullSinglePassFiveWLT\ for \condAgenticCogWriter\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ for \condAgenticCogWriter\ versus \condNoGoals. In the wider pre-specified band, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$). These matching-band $p$-values are unadjusted descriptive sign-test results.
-\input{tab/appendix-length-control}
-
-\subsection{Compute-Stratified Sensitivity}
-\label{app:compute-control}
-Compute matching asks whether the pairwise direction persists when the compared systems use similar realized output-plus-reasoning token budgets. Table~\ref{tab:appendix-compute-control} reports outcomes within the pre-specified 1.25$\times$ and 1.50$\times$ matching bands and across descriptive ratio bins. Because realized compute is determined by execution, this analysis is a sensitivity check rather than a causal adjustment.
-\input{tab/appendix-compute-control}
-\clearpage
-
-\subsection{Single-Context Exploratory Check}
-\label{app:single-context}
-The \condSingleContext\ condition was added after the main results had been observed, to test whether the \condSingleWriter\ loss reflects delegation to separate agents or the absence of process decomposition under a \texttt{Monitor}. We registered it as an exploratory condition outside the Holm family before judging and ran one generation run, the same evidence tier as the cross-family check: the question it answers is whether an attribution survives, not whether a new contrast is confirmed. We therefore report the combined estimate with its interval and the benchmark-level results without adjustment.
-\input{tab/appendix-single-context}
-
-\subsection{Cross-Family Judge Robustness}
-\label{app:cross-family}
-Table~\ref{tab:appendix-cross-family} reports combined outcomes for the three cross-family robustness contrasts: \CrossFamilyFullSinglePassWLT\ for \condAgenticCogWriter\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ for \condAgenticCogWriter\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ for \condAgenticCogWriter\ versus \condNoGoals. The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval. The judge yields a non-tied combined outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ overall W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
-\input{tab/appendix-cross-family}
-
-\section{Consensus-Writing Evaluation on Habermas Machine Data}
-\label{app:habermas}
-We additionally evaluate the writing systems on ten short consensus-writing tasks constructed from the Habermas Machine data~\citep{tessler2024common}. Each task provides one deliberation question and the five participants' original opinions, and asks the system to write a statement the group could endorse. The ten tasks are drawn from the \texttt{OOD\_TEST} split after requiring complete, distinct participant opinions and disagreement ratings on both sides of the scale midpoint. Across eight conditions, this produces 80 attempted runs; 78 complete successfully. Table~\ref{tab:appendix-habermas} summarizes pointwise quality and the available process statistics.
-\input{tab/appendix-habermas}
-
-\condExploratoryOne\ is the exploratory CogWriter-style~\citep{wan2025cognitive} baseline, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; \condExploratoryTwo\ is the exploratory STORM-style~\citep{shao2024assisting} baseline, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval. On these short consensus-writing tasks, \condAgenticCogWriter\ does not achieve the highest pointwise composite; in particular, it scores below \condSinglePass\ and \condStaged. \condAgenticCogWriter\ and \condFixedOrder\ record \HabAfourRegenerated\ and \HabAsixRegenerated\ regeneration events, respectively; their ledgers contain \HabAfourLedger\ and \HabAsixLedger\ no/proposal outcomes, respectively.
+\input{sec/10_appendix}
 
 \end{document}

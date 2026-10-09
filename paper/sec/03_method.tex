@@ -1,19 +1,28 @@
-We introduce \condAgenticCogWriter, a long-form writing system that turns document production into a stateful loop over explicit writing processes. Each run begins with a fixed writing task
+We introduce \condAgenticCogWriter, a long-form writing system that turns document production into a stateful loop over explicit writing processes.
+Each run begins with a fixed writing task
 \begin{equation}
 X=(I,C,O),
 \end{equation}
-where $I$ is the instruction, $C$ is the supplied context, and $O$ specifies the requested output requirements. Every writing process can read $X$, but only the document state changes during composition. Figure~\ref{fig:agentic-cogwriter} gives the system overview. One top-level \texttt{Monitor} agent coordinates three subagents: \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer}.
+where $I$ is the instruction, $C$ is the supplied context, and $O$ specifies the requested output requirements.
+Every writing process can read $X$, but only the document state changes during composition.
+Figure~\ref{fig:agentic-cogwriter} gives the system overview.
+One top-level \texttt{Monitor} agent coordinates three subagents: \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer}.
 
 \subsection{Persistent Writing State}
 \label{sec:method-control-state}
 
-Composition starts from an initial draft $D_0$ and updates a shared document state as writing proceeds. At writing step $t$, the shared workspace contains
+Composition starts from an initial draft $D_0$ and updates a shared document state as writing proceeds.
+At writing step $t$, the shared workspace contains
 \begin{equation}
 S_t=(D_t,G_t,H_t),
 \end{equation}
-where $D_t$ is the current draft, $G_t$ is the current hierarchy of writing goals, and $H_t$ is the observable process history. We use $D_0$ for the initial draft, which is empty unless the task provides one, and initialize $G_0$ from the assignment. Keeping these records outside any single agent context lets successive writing processes inspect and modify the same document-level state.
+where $D_t$ is the current draft, $G_t$ is the current hierarchy of writing goals, and $H_t$ is the observable process history.
+We use $D_0$ for the initial draft, which is empty unless the task provides one, and initialize $G_0$ from the assignment.
+Keeping these records outside any single agent context lets successive writing processes inspect and modify the same document-level state.
 
-The goal component $G_t$ explicitly records a hierarchy of writing goals, following \citet{flower1981cognitive}'s account of writers creating and developing goals during composition. Entries can be created, developed, or replaced as the draft changes; we call replacement of an existing entry \emph{goal regeneration}. This representation makes the theory-derived design choice observable and testable without attributing a human-like cognitive state to the agent.
+The goal component $G_t$ explicitly records a hierarchy of writing goals, following \citet{flower1981cognitive}'s account of writers creating and developing goals during composition.
+Entries can be created, developed, or replaced as the draft changes; we call replacement of an existing entry \emph{goal regeneration}.
+This representation makes the theory-derived design choice observable and testable without attributing a human-like cognitive state to the agent.
 
 \subsection{Process-Level Control and Execution}
 \label{sec:method-writing-processes}
@@ -27,8 +36,14 @@ At writing step $t$, it receives the fixed task $X$ together with the current dr
 a_t=\mathrm{Monitor}(X,D_t,G_t,H_t), \qquad a_t\in A.
 \label{eq:monitor-policy}
 \end{equation}
-We retain \citet{flower1981cognitive}'s term \texttt{Translating} for the drafting activity. Unlike a section scheduler or task-graph controller, Eq.~\eqref{eq:monitor-policy} selects the kind of writing work to perform next.
+We retain \citet{flower1981cognitive}'s term \texttt{Translating} for the drafting activity.
+Unlike a section scheduler or task-graph controller, Eq.~\eqref{eq:monitor-policy} selects the kind of writing work to perform next.
 
-If \texttt{Planning} is selected, the \texttt{Planner} reads the task and current draft, organizes relevant material for the intended audience, and creates or develops writing goals. If \texttt{Translating} is selected, the \texttt{Translator} reads the current draft and active goals and writes prose within the delegated draft scope. If \texttt{Reviewing} is selected, the \texttt{Reviewer} checks the current draft against the task and active goals, revises within the delegated scope, and reports whether further planning, drafting, or review is needed.
+If \texttt{Planning} is selected, the \texttt{Planner} reads the task and current draft, organizes relevant material for the intended audience, and creates or develops writing goals.
+If \texttt{Translating} is selected, the \texttt{Translator} reads the current draft and active goals and writes prose within the delegated draft scope.
+If \texttt{Reviewing} is selected, the \texttt{Reviewer} checks the current draft against the task and active goals, revises within the delegated scope, and reports whether further planning, drafting, or review is needed.
 
-Each subagent writes its changes to the shared workspace before control returns to the \texttt{Monitor}, yielding the next state $S_{t+1}$. Review feedback can recommend replacing a goal, but the \texttt{Monitor} decides whether to accept that change and records the decision in $H_t$. Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass. After reviewing, the \texttt{Monitor} may instead terminate the loop and return the current draft as the completed document $D_{\mathrm{final}}$.
+Each subagent writes its changes to the shared workspace before control returns to the \texttt{Monitor}, yielding the next state $S_{t+1}$.
+Review feedback can recommend replacing a goal, but the \texttt{Monitor} decides whether to accept that change and records the decision in $H_t$.
+Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass.
+After reviewing, the \texttt{Monitor} may instead terminate the loop and return the current draft as the completed document $D_{\mathrm{final}}$.
