@@ -1,89 +1,23 @@
 {
-  "baseline_sha": "0affb3b996280625d00cb9cc1385366b990a52e3",
+  "baseline_sha": "24ad12d94146eac91a757236e7a483a1a0114c31",
   "replacements": [
     {
       "path": "paper/sec/04_experiments.tex",
-      "instruction": "Move the standalone Appendix navigation for benchmark selection details into a footnote without changing the claim or destination.",
-      "before": "This produces a different demanding subset for each benchmark: WritingBench emphasizes long inputs with explicit long-output requirements, HelloBench emphasizes very long-input summarization and continuation, and DoLoMiTes emphasizes procedurally constrained expert writing.\nSee Appendix~\\ref{app:prompts} for the exact selection rule, sample sizes, and sensitivity analysis.",
-      "after": "This produces a different demanding subset for each benchmark: WritingBench emphasizes long inputs with explicit long-output requirements, HelloBench emphasizes very long-input summarization and continuation, and DoLoMiTes emphasizes procedurally constrained expert writing.\\footnote{See Appendix~\\ref{app:prompts} for the exact selection rule, sample sizes, and sensitivity analysis.}"
+      "instruction": "Define W/L/T and the win-rate denominator for system pairwise comparisons where the notation is first introduced, without changing the two-order consistency rule.",
+      "before": "Headline win rates are computed over these order-consistent comparisons.",
+      "after": "We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent comparisons as $W/(W+L)$."
     },
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Move prompt/runtime Appendix navigation into a footnote and tighten only the system-name lead-in so subagent mechanism no longer splits across lines.",
-      "before": "\\condAgenticCogWriter\\ is packaged as an agent skill: the top-level \\texttt{Monitor} invokes \\texttt{Planner}, \\texttt{Translator}, and \\texttt{Reviewer} through the harness's subagent mechanism.\nSee Appendix~\\ref{app:prompts} for the complete prompts and Appendix~\\ref{app:runtime} for the runtime settings.",
-      "after": "Our system is packaged as an agent skill: the top-level \\texttt{Monitor} invokes \\texttt{Planner}, \\texttt{Translator}, and \\texttt{Reviewer} through the harness's subagent mechanism.\\footnote{See Appendix~\\ref{app:prompts} for the complete prompts and Appendix~\\ref{app:runtime} for the runtime settings.}"
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Move pointwise-procedure Appendix navigation into a footnote and remove the rendered quality-scale runt without changing the interpretation.",
-      "before": "The resulting composite is relative within a benchmark rather than an absolute quality scale.\nSee Appendix~\\ref{app:prompts} for the full procedures and evaluator prompts.",
-      "after": "The composite is relative within a benchmark rather than an absolute quality scale.\\footnote{See Appendix~\\ref{app:prompts} for the full procedures and evaluator prompts.}"
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Move run-level Appendix navigation into a footnote and compress repeated prompt wording so the prompt-samples runt disappears without changing the independence claim.",
-      "before": "Generation runs remain separate because they repeat the same prompt set rather than provide new independent prompt samples.\nSee Appendix~\\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\\citep{wilson1927}, and corrected test decisions.",
-      "after": "Generation runs remain separate because they repeat the same prompts rather than provide new independent samples.\\footnote{See Appendix~\\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\\citep{wilson1927}, and corrected test decisions.}"
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Remove the rendered focal-condition runt while preserving which system is focal.",
-      "before": "We use the full system as the focal condition below.",
-      "after": "This is our focal system."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Preserve the post-hoc exploratory status, bootstrap interval, and sign test while removing the rendered main-results/post-hoc runt.",
-      "before": "To summarize the two ablation contrasts across generation runs, we compute a post-hoc prompt-level estimate.\nFor each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and then summarized across benchmarks.\nWe report a prompt-level bootstrap interval and sign test, treating this summary as exploratory because it was defined after the main results.",
-      "after": "To summarize the two ablation contrasts across generation runs, we compute an exploratory post-hoc prompt-level estimate.\nFor each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and summarized across benchmarks with a bootstrap interval and sign test."
+      "path": "paper/tab/appendix-length-control.tex",
+      "instruction": "Clarify that the output-length sensitivity table uses W/L/T from the longer-response perspective, which differs from the first-named-system convention for system contrasts.",
+      "before": "W/L/T combines the two presentation orders for each prompt; ties are excluded from the longer-side win-rate denominator.",
+      "after": "Here, W/L/T denotes wins/losses/ties for the longer response after applying the two-order consistency rule; ties are excluded from the longer-side win-rate denominator."
     },
     {
       "path": "paper/sec/05_results.tex",
-      "instruction": "Move the standalone Appendix navigation for run-level pairwise results into a footnote without changing the result or destination.",
-      "before": "The direction holds in every benchmark and generation run against \\condSinglePass\\ and \\condTaskPlanning, and in all but one benchmark--run test against \\condStaged.\nSee Appendix~\\ref{app:pairwise-detail} for the run-level intervals and corrected test decisions.",
-      "after": "The direction holds in every benchmark and generation run against \\condSinglePass\\ and \\condTaskPlanning, and in all but one benchmark--run test against \\condStaged.\\footnote{See Appendix~\\ref{app:pairwise-detail} for the run-level intervals and corrected test decisions.}"
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Move the standalone Appendix navigation for pairwise sensitivity analyses into a footnote without changing the result or destination.",
-      "before": "The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \\UncondFullSinglePassWinShare, \\UncondFullStagedWinShare, and \\UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \\WorstCaseFullSinglePassRate, \\WorstCaseFullStagedRate, and \\WorstCaseFullTaskPlanningRate\\ among order-consistent comparisons.\nSee Appendix~\\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \\condSinglePass.",
-      "after": "The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \\UncondFullSinglePassWinShare, \\UncondFullStagedWinShare, and \\UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \\WorstCaseFullSinglePassRate, \\WorstCaseFullStagedRate, and \\WorstCaseFullTaskPlanningRate\\ among order-consistent comparisons.\\footnote{See Appendix~\\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \\condSinglePass.}"
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Move the standalone Appendix navigation for execution diagnostics into a footnote without changing the result or destination.",
-      "before": "The narrower post-hoc \\condSingleContext\\ check shows no significant difference from our system in the exploratory generation run (\\SingleContextFullRate\\ win rate for \\condSingleContext, $p=\\SingleContextFullP$, unadjusted).\nSee Appendix~\\ref{app:sensitivity-analyses} for the benchmark-level diagnostic and the remaining execution differences.",
-      "after": "The narrower post-hoc \\condSingleContext\\ check shows no significant difference from our system in the exploratory generation run (\\SingleContextFullRate\\ win rate for \\condSingleContext, $p=\\SingleContextFullP$, unadjusted).\\footnote{See Appendix~\\ref{app:sensitivity-analyses} for the benchmark-level diagnostic and the remaining execution differences.}"
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Move process/resource Appendix navigation into a footnote and tighten only the observational caveat so the output runt disappears.",
-      "before": "Because the split is defined by observed behavior rather than random assignment, it cannot establish whether taking a different path causes better or worse output.\nSee Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.",
-      "after": "Because the split is observational rather than randomized, it cannot establish whether a different path improves or worsens output.\\footnote{See Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}"
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Remove the rendered default-cycle runt while retaining the same interpretation of selective adaptive departures.",
-      "before": "The behavior is consistent with the small exploratory advantage over \\condFixedOrder: adaptive ordering can help only on runs where the controller has reason to depart from the default cycle.",
-      "after": "This pattern is consistent with the small exploratory advantage over \\condFixedOrder: adaptive ordering can help only when the controller departs from the common path."
-    },
-    {
-      "path": "paper/sec/00_abstract.tex",
-      "instruction": "Remove the rendered Abstract runt by tightening only the process-trace sentence without changing its claim.",
-      "before": "Process traces show that most runs follow one planning--drafting--reviewing cycle, with departures from that path used selectively rather than continually.",
-      "after": "Process traces show that most runs follow one planning--drafting--reviewing cycle, with departures used selectively rather than continually."
-    },
-    {
-      "path": "paper/sec/01_introduction.tex",
-      "instruction": "Remove the rendered theory-to-system runt while preserving the contrast between process-level and content/task-level control.",
-      "before": "The resulting view suggests a writing system whose control decision is not the next section or task node, but the next kind of writing work.",
-      "after": "This view suggests choosing the next writing process rather than the next section or task node."
-    },
-    {
-      "path": "paper/sec/03_method.tex",
-      "instruction": "Remove the rendered Reviewing runt and split word by tightening only the draft reference.",
-      "before": "If \\texttt{Reviewing} is selected, the \\texttt{Reviewer} checks the current draft against the task and active goals, revises within the delegated scope, and reports whether further planning, drafting, or review is needed.",
-      "after": "If \\texttt{Reviewing} is selected, the \\texttt{Reviewer} checks the draft against the task and active goals, revises within the delegated scope, and reports whether further planning, drafting, or review is needed."
+      "instruction": "Remove the Figure 2 caption sentence that expands P, T, R, and E, without changing the remaining caption or figure contents.",
+      "before": "Our system mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.\nP, T, R, and E denote \\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, and end.}",
+      "after": "Our system mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.}"
     }
   ],
   "created_files": []

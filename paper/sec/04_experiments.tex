@@ -67,7 +67,7 @@ The composite is relative within a benchmark rather than an absolute quality sca
 We directly compare two responses written for the same prompt using the same quality dimensions and record which response is preferred, or a tie.
 LLM judges can exhibit position bias~\citep{zheng2023judging,wang2024fair}, so every pair is evaluated in both presentation orders.
 We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie.
-Headline win rates are computed over these order-consistent comparisons.
+We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent comparisons as $W/(W+L)$.
 
 The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
 We therefore report the cross-family rescoring described above as a separate descriptive robustness check rather than averaging results from the two evaluators.
