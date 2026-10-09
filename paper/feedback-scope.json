@@ -54,6 +54,12 @@
       "instruction": "Appendix の Agentic CogWriter 見出しも本文と同じ small-caps macro に統一する。",
       "before": "\\subsubsection{Agentic CogWriter}",
       "after": "\\subsubsection{\\condAgenticCogWriter}"
+    },
+    {
+      "path": "paper/tab/appendix-comparison.tex",
+      "instruction": "比較表内の raw Agentic CogWriter 表記も \\condAgenticCogWriter macro に統一し、small caps 表示を全 manuscript で一貫させる。",
+      "before": "\\textbf{Agentic CogWriter (ours)}",
+      "after": "\\textbf{\\condAgenticCogWriter\\ (ours)}"
     }
   ]
 }
