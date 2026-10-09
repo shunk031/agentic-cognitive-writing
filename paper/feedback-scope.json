@@ -1,11 +1,17 @@
 {
-  "baseline_sha": "4e6e06149b8a5e1407a61a735ec2262479f3573b",
+  "baseline_sha": "7d99601f4efe22fcf0b163fc112c654d9176a877",
   "replacements": [
     {
-      "path": "paper/acl_latex.tex",
-      "instruction": "Retitle the paper so Agentic CogWriter leads the title while retaining the Cognitive Process Theory of Writing and AI-agent framing, using the shared display-name macro and placing the line break immediately after Agentic CogWriter.",
-      "before": "\\title{Revisiting the Cognitive Process Theory of Writing for AI Agents: Process-Level Control for Long-Form Writing}",
-      "after": "\\title{\\condAgenticCogWriter:\\\\Revisiting the Cognitive Process Theory of Writing for AI Agents}"
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Tighten the Table 4 caption so the final line is not a one-word widow, while preserving the direct-comparison takeaway and keeping Agentic CogWriter visually intact.",
+      "before": "\\caption{Three-run direct same-prompt win rates for \\condAgenticCogWriter; values above 50\\% favor it. Win rates exceed 50\\% on every benchmark against every alternative, with the largest mean margin over \\condSinglePass.}",
+      "after": "\\caption{\\condAgenticCogWriter\\ same-prompt win rates; above 50\\% favors our system. Win rates exceed 50\\% on every benchmark against every alternative, with the largest mean margin over \\condSinglePass.}"
+    },
+    {
+      "path": "paper/tab/ablation-results.tex",
+      "instruction": "Tighten the Table 5 caption so its final line is not sparse, while preserving the ablation and execution-diagnostic takeaway.",
+      "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates against ablations and the execution diagnostic; values above 50\\% favor our system. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, unlike the larger \\condSingleWriter\\ gap.}",
+      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates for ablations and a diagnostic; above 50\\% favors our system. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, unlike the larger \\condSingleWriter\\ gap.}"
     }
   ],
   "created_files": []
