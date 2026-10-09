@@ -23,7 +23,7 @@ Table~\ref{tab:ablation-results} places the two pre-specified ablations much clo
 
 Execution changes produce a larger but less easily isolated difference. \condSingleWriter\ removes subagent delegation, changes role context and decision granularity, and alters output length at the same time. Within the tighter and wider pre-specified output-length bands, it still wins only \SingleWriterLengthFiveRate\ ($p=\SingleWriterLengthFiveP$) and \SingleWriterLengthTenRate\ ($p=\SingleWriterLengthTenP$), respectively, against our system, so output length alone does not explain the gap. The narrower post-hoc \condSingleContext\ check shows no significant difference from \condAgenticCogWriter\ in its exploratory generation run (\SingleContextFullRate\ win rate for \condSingleContext, $p=\SingleContextFullP$, unadjusted). See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level diagnostic and the remaining execution differences.
 
-\subsection{How Does the Writing Loop Behave?}
+\subsection{Observed Writing-Process Behavior}
 \label{sec:results-process-dynamics}
 
 The adaptive writing loop usually follows a simple process path. Table~\ref{tab:process-dynamics} shows that one \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle dominates the traces; returning to planning after review and replacing an existing goal are both rare. The system therefore has the ability to revisit earlier processes but uses that flexibility infrequently on the evaluated prompts. The behavior is consistent with the small exploratory advantage over \condFixedOrder: adaptive ordering can help only on runs where the controller has reason to depart from the default cycle.
