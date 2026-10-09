@@ -205,10 +205,10 @@ def check():
     evaluation_paragraphs = [
         paragraph
         for paragraph in intro_paragraphs
-        if r"We evaluate our \condAgenticCogWriter" in paragraph
+        if "We evaluate our system" in paragraph
     ]
     assert len(evaluation_paragraphs) == 1, (
-        "Introduction must contain one 'We evaluate our Agentic CogWriter' paragraph",
+        "Introduction must contain one 'We evaluate our system' paragraph after naming Agentic CogWriter",
         len(evaluation_paragraphs),
     )
     assert "component analyses" in evaluation_paragraphs[0], (
