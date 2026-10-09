@@ -63,6 +63,9 @@ def main() -> None:
     assert first_name == proposal.start() + proposal.group(0).lower().find("agentic cogwriter"), (
         "Do not introduce Agentic CogWriter before the proposal sentence"
     )
+    assert abstract.lower().count("agentic cogwriter") == 1, (
+        "Name Agentic CogWriter once in the Abstract proposal, then refer to 'our system'"
+    )
     problem = abstract.lower().find("writing process")
     assert 0 <= problem < proposal.start(), (
         "State the writing-process/control problem before proposing Agentic CogWriter"
@@ -76,8 +79,8 @@ def main() -> None:
         re.IGNORECASE,
     ), "Do not coordinate coding agents with the broader category 'AI agents'"
     assert re.search(
-        r"\bWe evaluate our Agentic CogWriter\b", abstract, re.IGNORECASE
-    ), "Use 'We evaluate our Agentic CogWriter' in the Abstract"
+        r"\bWe evaluate our system\b", abstract, re.IGNORECASE
+    ), "After the proposal sentence, evaluate the contribution as 'our system'"
     assert re.search(r"\bpointwise\b[^.]*\bpairwise\b", abstract, re.IGNORECASE), (
         "Name pointwise and pairwise evaluation together in the Abstract"
     )
@@ -88,7 +91,8 @@ def main() -> None:
     for banned, rationale in (
         (r"\bsubsets?\b", "do not expose benchmark subset mechanics in the Abstract"),
         (r"\btwo\b", "do not summarize Abstract results as a selective two-benchmark tally"),
-        (r"\bthe system\b", "name Agentic CogWriter instead of using an ambiguous 'the system'"),
+        (r"\bthe system\b", "use the reader-anchored 'our system' after the proposal sentence"),
+        (r"\bour Agentic CogWriter\b", "do not repeat the display name as 'our Agentic CogWriter'"),
         (r"\bAgentic CogWriter instead\b", "do not restore the abrupt proposal opening"),
         (r"\bunresolved\b", "frame ablations as narrowing explanations, not as an unresolved contribution"),
         (r"\bleaving (?:the )?source\b", "do not end the Abstract by saying the source of the gain is open"),
