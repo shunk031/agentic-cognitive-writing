@@ -1,0 +1,1005 @@
+{
+  "completion": {
+    "rows": [
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 99,
+        "condition": "A1",
+        "failed_runs": 1,
+        "failure_messages": {
+          "missing token usage: Codex stream contains no turn.completed event": 1
+        },
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 100,
+        "condition": "A2",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 100,
+        "condition": "A3",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 96,
+        "condition": "A4",
+        "failed_runs": 4,
+        "failure_messages": {
+          "Condition A4 final response is less than 50% of draft.md; final_chars=2107, draft_chars=6130": 1,
+          "Trace /run-output/DoLoMiTes/A4/codex/121fad543e8746b3a9b9b9e0886d24ae/.writing/trace/process.jsonl:2 field decision must": 1,
+          "Trace /run-output/DoLoMiTes/A4/codex/c7d9f300afcb4e81b2a07e5ffaf515d1/.writing/trace/process.jsonl:4 process 'revising' ": 1,
+          "Trace /run-output/DoLoMiTes/A4/codex/cbe99e4da76e4c449996e0bbe3478e41/.writing/trace/process.jsonl:9 process 'revising' ": 1
+        },
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 98,
+        "condition": "A5",
+        "failed_runs": 2,
+        "failure_messages": {
+          "Condition A5 final response is less than 50% of draft.md; final_chars=1724, draft_chars=5852": 1,
+          "Condition A5 final response is less than 50% of draft.md; final_chars=7054, draft_chars=14112": 1
+        },
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 97,
+        "condition": "A6",
+        "failed_runs": 3,
+        "failure_messages": {
+          "A6 requires at least one goal event": 2,
+          "Trace /run-output/DoLoMiTes/A6/codex/7d3d27d3fd24443e9732ff5eeff3bf43/.writing/trace/process.jsonl:4 is not standalone J": 1
+        },
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 100,
+        "condition": "A7",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A1",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A2",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A3",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A4",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A5",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A6",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A7",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A1",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A2",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A3",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A4",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A5",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A6",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 99,
+        "condition": "A7",
+        "failed_runs": 1,
+        "failure_messages": {
+          "Unpermitted retrieval event observed: curl; matched_pattern='curl'; matching_line='{\"type\":\"item.started\",\"item\":{\"id\":\"": 1
+        },
+        "platform": "codex",
+        "run_count": 100
+      }
+    ],
+    "run_count": 2100
+  },
+  "native": {
+    "rows": [
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7721428571428571
+        },
+        "mean_score": 0.7721428571428571,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A2",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.786047619047619
+        },
+        "mean_score": 0.786047619047619,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A3",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7841904761904762
+        },
+        "mean_score": 0.7841904761904762,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A4",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7848928571428572
+        },
+        "mean_score": 0.7848928571428572,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A1",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 6.944
+        },
+        "mean_score": 6.944,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A2",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 6.992000000000001
+        },
+        "mean_score": 6.992000000000001,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A3",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 7.206
+        },
+        "mean_score": 7.206,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 7.42
+        },
+        "mean_score": 7.42,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      }
+    ],
+    "run_count": 800
+  },
+  "pairwise": {
+    "benchmarks": {
+      "DoLoMiTes": {
+        "platforms": {
+          "codex": {
+            "contrasts": {
+              "A4:A1": {
+                "losses": 69,
+                "ties": 7,
+                "wins": 112
+              },
+              "A4:A2": {
+                "losses": 88,
+                "ties": 21,
+                "wins": 83
+              },
+              "A4:A3": {
+                "losses": 64,
+                "ties": 9,
+                "wins": 119
+              }
+            },
+            "expected_pairs": 300,
+            "fit_status": "ok",
+            "holm_family": {
+              "derivation": "Holm correction over the contrasts present in this aggregation report after canonical-run selection; not the confirmatory family.",
+              "member_labels": [
+                "report:A4:A1",
+                "report:A4:A2",
+                "report:A4:A3"
+              ],
+              "name": "report_local",
+              "size": 3
+            },
+            "judges": {
+              "gpt-5.6-sol-pairwise-v1": {
+                "contrasts": {
+                  "A4:A1": {
+                    "losses": 69,
+                    "ties": 7,
+                    "wins": 112
+                  },
+                  "A4:A2": {
+                    "losses": 88,
+                    "ties": 21,
+                    "wins": 83
+                  },
+                  "A4:A3": {
+                    "losses": 64,
+                    "ties": 9,
+                    "wins": 119
+                  }
+                },
+                "fit_status": "ok",
+                "position_consistency_rate": 0.7972027972027972,
+                "run_count": 382,
+                "scored_pairs": 286,
+                "strengths": {
+                  "A1": 0.8065939466742492,
+                  "A2": 1.3537035119984961,
+                  "A3": 0.712725914566971,
+                  "A4": 1.2849875977676262
+                }
+              }
+            },
+            "missing_pairs": 14,
+            "position_consistency_rate": 0.7972027972027972,
+            "prompt_collapsed_across_judges": {
+              "A4:A1": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 94,
+                "losses": 27,
+                "n_non_tie": 75,
+                "p_holm_report_local": 0.04059681398021489,
+                "p_raw": 0.020298406990107445,
+                "presentation_disagreements": 19,
+                "prompt_total": 94,
+                "ties": 19,
+                "wilson_high": 0.7393507109138366,
+                "wilson_low": 0.5270066131909779,
+                "win_rate": 0.64,
+                "wins": 48
+              },
+              "A4:A2": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 96,
+                "losses": 35,
+                "n_non_tie": 69,
+                "p_holm_report_local": 1.0,
+                "p_raw": 1.0,
+                "presentation_disagreements": 22,
+                "prompt_total": 96,
+                "ties": 27,
+                "wilson_high": 0.6079473243736349,
+                "wilson_low": 0.3783242300928733,
+                "win_rate": 0.4927536231884058,
+                "wins": 34
+              },
+              "A4:A3": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 96,
+                "losses": 24,
+                "n_non_tie": 76,
+                "p_holm_report_local": 0.005285616008821873,
+                "p_raw": 0.0017618720029406244,
+                "presentation_disagreements": 17,
+                "prompt_total": 96,
+                "ties": 20,
+                "wilson_high": 0.7776914584293659,
+                "wilson_low": 0.5730035365466362,
+                "win_rate": 0.6842105263157895,
+                "wins": 52
+              }
+            },
+            "record_pooled": {
+              "A4:A1": {
+                "losses": 69,
+                "n_non_tie": 181,
+                "p_holm_report_local": 0.0034411454589887615,
+                "p_raw": 0.0017205727294943808,
+                "ties": 7,
+                "wilson_high": 0.6863763828489404,
+                "wilson_low": 0.546255410225752,
+                "win_rate": 0.6187845303867403,
+                "wins": 112
+              },
+              "A4:A2": {
+                "losses": 88,
+                "n_non_tie": 171,
+                "p_holm_report_local": 0.7597940341218284,
+                "p_raw": 0.7597940341218284,
+                "ties": 21,
+                "wilson_high": 0.5597835938690416,
+                "wilson_low": 0.41161906981424606,
+                "win_rate": 0.4853801169590643,
+                "wins": 83
+              },
+              "A4:A3": {
+                "losses": 64,
+                "n_non_tie": 183,
+                "p_holm_report_local": 0.00017471718136991842,
+                "p_raw": 5.8239060456639473e-05,
+                "ties": 9,
+                "wilson_high": 0.7156325452388785,
+                "wilson_low": 0.5787346704055987,
+                "win_rate": 0.6502732240437158,
+                "wins": 119
+              }
+            },
+            "run_count": 690,
+            "scored_pairs": 286,
+            "strengths": {
+              "A1": 0.8065939466742492,
+              "A2": 1.3537035119984961,
+              "A3": 0.712725914566971,
+              "A4": 1.2849875977676262
+            }
+          }
+        }
+      },
+      "HelloBench": {
+        "platforms": {
+          "codex": {
+            "contrasts": {
+              "A4:A1": {
+                "losses": 34,
+                "ties": 9,
+                "wins": 157
+              },
+              "A4:A2": {
+                "losses": 72,
+                "ties": 27,
+                "wins": 101
+              },
+              "A4:A3": {
+                "losses": 61,
+                "ties": 34,
+                "wins": 105
+              }
+            },
+            "expected_pairs": 300,
+            "fit_status": "ok",
+            "holm_family": {
+              "derivation": "Holm correction over the contrasts present in this aggregation report after canonical-run selection; not the confirmatory family.",
+              "member_labels": [
+                "report:A4:A1",
+                "report:A4:A2",
+                "report:A4:A3"
+              ],
+              "name": "report_local",
+              "size": 3
+            },
+            "judges": {
+              "gpt-5.6-sol-pairwise-v1": {
+                "contrasts": {
+                  "A4:A1": {
+                    "losses": 34,
+                    "ties": 9,
+                    "wins": 157
+                  },
+                  "A4:A2": {
+                    "losses": 72,
+                    "ties": 27,
+                    "wins": 101
+                  },
+                  "A4:A3": {
+                    "losses": 61,
+                    "ties": 34,
+                    "wins": 105
+                  }
+                },
+                "fit_status": "ok",
+                "position_consistency_rate": 0.7133333333333334,
+                "run_count": 400,
+                "scored_pairs": 300,
+                "strengths": {
+                  "A1": 0.4104330284229721,
+                  "A2": 1.2856262382041976,
+                  "A3": 1.100750449040897,
+                  "A4": 1.7216865997448167
+                }
+              }
+            },
+            "missing_pairs": 0,
+            "position_consistency_rate": 0.7133333333333334,
+            "prompt_collapsed_across_judges": {
+              "A4:A1": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 11,
+                "n_non_tie": 82,
+                "p_holm_report_local": 2.0441349038024103e-11,
+                "p_raw": 6.813783012674701e-12,
+                "presentation_disagreements": 16,
+                "prompt_total": 100,
+                "ties": 18,
+                "wilson_high": 0.9234130857043615,
+                "wilson_low": 0.7755498725711748,
+                "win_rate": 0.8658536585365854,
+                "wins": 71
+              },
+              "A4:A2": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 25,
+                "n_non_tie": 61,
+                "p_holm_report_local": 0.20003136851310316,
+                "p_raw": 0.20003136851310316,
+                "presentation_disagreements": 37,
+                "prompt_total": 100,
+                "ties": 39,
+                "wilson_high": 0.7046466256817463,
+                "wilson_low": 0.4649979227300693,
+                "win_rate": 0.5901639344262295,
+                "wins": 36
+              },
+              "A4:A3": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 18,
+                "n_non_tie": 58,
+                "p_holm_report_local": 0.010709719301600584,
+                "p_raw": 0.005354859650800292,
+                "presentation_disagreements": 33,
+                "prompt_total": 100,
+                "ties": 42,
+                "wilson_high": 0.7937790437718092,
+                "wilson_low": 0.5619693557571829,
+                "win_rate": 0.6896551724137931,
+                "wins": 40
+              }
+            },
+            "record_pooled": {
+              "A4:A1": {
+                "losses": 34,
+                "n_non_tie": 191,
+                "p_holm_report_local": 1.2971999318471203e-19,
+                "p_raw": 4.323999772823734e-20,
+                "ties": 9,
+                "wilson_high": 0.8697261137767767,
+                "wilson_low": 0.7615563696560366,
+                "win_rate": 0.8219895287958116,
+                "wins": 157
+              },
+              "A4:A2": {
+                "losses": 72,
+                "n_non_tie": 173,
+                "p_holm_report_local": 0.032969756410882636,
+                "p_raw": 0.032969756410882636,
+                "ties": 27,
+                "wilson_high": 0.6546673685134337,
+                "wilson_low": 0.5093213261817628,
+                "win_rate": 0.5838150289017341,
+                "wins": 101
+              },
+              "A4:A3": {
+                "losses": 61,
+                "n_non_tie": 166,
+                "p_holm_report_local": 0.0015881265609396808,
+                "p_raw": 0.0007940632804698404,
+                "ties": 34,
+                "wilson_high": 0.7021011308469167,
+                "wilson_low": 0.556964001456568,
+                "win_rate": 0.6325301204819277,
+                "wins": 105
+              }
+            },
+            "run_count": 700,
+            "scored_pairs": 300,
+            "strengths": {
+              "A1": 0.4104330284229721,
+              "A2": 1.2856262382041976,
+              "A3": 1.100750449040897,
+              "A4": 1.7216865997448167
+            }
+          }
+        }
+      },
+      "WritingBench": {
+        "platforms": {
+          "codex": {
+            "contrasts": {
+              "A4:A1": {
+                "losses": 43,
+                "ties": 0,
+                "wins": 157
+              },
+              "A4:A2": {
+                "losses": 55,
+                "ties": 0,
+                "wins": 145
+              },
+              "A4:A3": {
+                "losses": 78,
+                "ties": 0,
+                "wins": 122
+              }
+            },
+            "expected_pairs": 300,
+            "fit_status": "ok",
+            "holm_family": {
+              "derivation": "Holm correction over the contrasts present in this aggregation report after canonical-run selection; not the confirmatory family.",
+              "member_labels": [
+                "report:A4:A1",
+                "report:A4:A2",
+                "report:A4:A3"
+              ],
+              "name": "report_local",
+              "size": 3
+            },
+            "judges": {
+              "gpt-5.6-sol-pairwise-v1": {
+                "contrasts": {
+                  "A4:A1": {
+                    "losses": 43,
+                    "ties": 0,
+                    "wins": 157
+                  },
+                  "A4:A2": {
+                    "losses": 55,
+                    "ties": 0,
+                    "wins": 145
+                  },
+                  "A4:A3": {
+                    "losses": 78,
+                    "ties": 0,
+                    "wins": 122
+                  }
+                },
+                "fit_status": "ok",
+                "position_consistency_rate": 0.8066666666666666,
+                "run_count": 400,
+                "scored_pairs": 300,
+                "strengths": {
+                  "A1": 0.5395034640667429,
+                  "A2": 0.7471711968332693,
+                  "A3": 1.259389901001244,
+                  "A4": 1.9698149734321546
+                }
+              }
+            },
+            "missing_pairs": 0,
+            "position_consistency_rate": 0.8066666666666666,
+            "prompt_collapsed_across_judges": {
+              "A4:A1": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 16,
+                "n_non_tie": 89,
+                "p_holm_report_local": 2.1712089195226367e-09,
+                "p_raw": 7.237363065075456e-10,
+                "presentation_disagreements": 11,
+                "prompt_total": 100,
+                "ties": 11,
+                "wilson_high": 0.8862010725043955,
+                "wilson_low": 0.727748780546544,
+                "win_rate": 0.8202247191011236,
+                "wins": 73
+              },
+              "A4:A2": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 18,
+                "n_non_tie": 81,
+                "p_holm_report_local": 1.0408807129462832e-06,
+                "p_raw": 5.204403564731416e-07,
+                "presentation_disagreements": 19,
+                "prompt_total": 100,
+                "ties": 19,
+                "wilson_high": 0.8545539259532811,
+                "wilson_low": 0.6758471376953772,
+                "win_rate": 0.7777777777777778,
+                "wins": 63
+              },
+              "A4:A3": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 25,
+                "n_non_tie": 72,
+                "p_holm_report_local": 0.012774595538064903,
+                "p_raw": 0.012774595538064903,
+                "presentation_disagreements": 28,
+                "prompt_total": 100,
+                "ties": 28,
+                "wilson_high": 0.7524657699172488,
+                "wilson_low": 0.5376130384560558,
+                "win_rate": 0.6527777777777778,
+                "wins": 47
+              }
+            },
+            "record_pooled": {
+              "A4:A1": {
+                "losses": 43,
+                "n_non_tie": 200,
+                "p_holm_report_local": 5.686538552096928e-16,
+                "p_raw": 1.895512850698976e-16,
+                "ties": 0,
+                "wilson_high": 0.8362812374549242,
+                "wilson_low": 0.7229769265100339,
+                "win_rate": 0.785,
+                "wins": 157
+              },
+              "A4:A2": {
+                "losses": 55,
+                "n_non_tie": 200,
+                "p_holm_report_local": 3.0561097618631177e-10,
+                "p_raw": 1.5280548809315588e-10,
+                "ties": 0,
+                "wilson_high": 0.7822029967069265,
+                "wilson_low": 0.6593166064233035,
+                "win_rate": 0.725,
+                "wins": 145
+              },
+              "A4:A3": {
+                "losses": 78,
+                "n_non_tie": 200,
+                "p_holm_report_local": 0.0022794385018057293,
+                "p_raw": 0.0022794385018057293,
+                "ties": 0,
+                "wilson_high": 0.6749165686253038,
+                "wilson_low": 0.5409374595716976,
+                "win_rate": 0.61,
+                "wins": 122
+              }
+            },
+            "run_count": 699,
+            "scored_pairs": 300,
+            "strengths": {
+              "A1": 0.5395034640667429,
+              "A2": 0.7471711968332693,
+              "A3": 1.259389901001244,
+              "A4": 1.9698149734321546
+            }
+          }
+        }
+      }
+    },
+    "missing_pairs": 14,
+    "run_count": 1182
+  },
+  "pointwise": {
+    "rows": [
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "dimension_means": {
+          "content_adequacy_depth": 4.333333333333333,
+          "factuality_constraint_fidelity": 4.555555555555555,
+          "instruction_fulfillment": 4.353535353535354,
+          "organization_global_coherence": 4.8686868686868685,
+          "style_voice_audience_fit": 4.838383838383838
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.022691968375093033
+        },
+        "platform": "codex",
+        "record_count": 99,
+        "run_count": 99,
+        "z_scored_composite_mean": 0.022691968375093033
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A2",
+        "dimension_means": {
+          "content_adequacy_depth": 4.42,
+          "factuality_constraint_fidelity": 4.68,
+          "instruction_fulfillment": 4.42,
+          "organization_global_coherence": 4.85,
+          "style_voice_audience_fit": 4.78
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.06662703789615762
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.06662703789615762
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A3",
+        "dimension_means": {
+          "content_adequacy_depth": 4.24,
+          "factuality_constraint_fidelity": 4.61,
+          "instruction_fulfillment": 4.19,
+          "organization_global_coherence": 4.76,
+          "style_voice_audience_fit": 4.63
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.1365007407643889
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.1365007407643889
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "dimension_means": {
+          "content_adequacy_depth": 4.385416666666667,
+          "factuality_constraint_fidelity": 4.6875,
+          "instruction_fulfillment": 4.416666666666667,
+          "organization_global_coherence": 4.885416666666667,
+          "style_voice_audience_fit": 4.6875
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.049384014767592486
+        },
+        "platform": "codex",
+        "record_count": 96,
+        "run_count": 96,
+        "z_scored_composite_mean": 0.049384014767592486
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "dimension_means": {
+          "content_adequacy_depth": 4.97,
+          "factuality_constraint_fidelity": 4.68,
+          "instruction_fulfillment": 4.94,
+          "organization_global_coherence": 4.96,
+          "style_voice_audience_fit": 4.97
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.05630683007744642
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.05630683007744642
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A2",
+        "dimension_means": {
+          "content_adequacy_depth": 4.98,
+          "factuality_constraint_fidelity": 4.77,
+          "instruction_fulfillment": 4.95,
+          "organization_global_coherence": 4.97,
+          "style_voice_audience_fit": 5.0
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.04821309304471314
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.04821309304471314
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A3",
+        "dimension_means": {
+          "content_adequacy_depth": 5.0,
+          "factuality_constraint_fidelity": 4.7,
+          "instruction_fulfillment": 4.97,
+          "organization_global_coherence": 4.98,
+          "style_voice_audience_fit": 4.95
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.025179689585104314
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.025179689585104314
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A4",
+        "dimension_means": {
+          "content_adequacy_depth": 4.98,
+          "factuality_constraint_fidelity": 4.78,
+          "instruction_fulfillment": 4.94,
+          "organization_global_coherence": 4.98,
+          "style_voice_audience_fit": 4.93
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.01708595255237327
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.01708595255237327
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A1",
+        "dimension_means": {
+          "content_adequacy_depth": 4.37,
+          "factuality_constraint_fidelity": 4.37,
+          "instruction_fulfillment": 4.15,
+          "organization_global_coherence": 4.97,
+          "style_voice_audience_fit": 4.9
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.057503896945137044
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.057503896945137044
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A2",
+        "dimension_means": {
+          "content_adequacy_depth": 4.3,
+          "factuality_constraint_fidelity": 4.62,
+          "instruction_fulfillment": 4.15,
+          "organization_global_coherence": 4.97,
+          "style_voice_audience_fit": 4.91
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.0031017237940893826
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.0031017237940893826
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A3",
+        "dimension_means": {
+          "content_adequacy_depth": 4.43,
+          "factuality_constraint_fidelity": 4.56,
+          "instruction_fulfillment": 4.18,
+          "organization_global_coherence": 4.95,
+          "style_voice_audience_fit": 4.87
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.016423228307473992
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.016423228307473992
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "dimension_means": {
+          "content_adequacy_depth": 4.56,
+          "factuality_constraint_fidelity": 4.44,
+          "instruction_fulfillment": 4.4,
+          "organization_global_coherence": 4.96,
+          "style_voice_audience_fit": 4.9
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.0770288490467008
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.0770288490467008
+      }
+    ],
+    "run_count": 1195
+  }
+}

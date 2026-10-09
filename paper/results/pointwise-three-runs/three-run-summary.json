@@ -1,0 +1,1152 @@
+{
+  "across_runs": {
+    "DoLoMiTes": {
+      "A1": {
+        "four_condition_composite": {
+          "mean": 0.013133140951,
+          "sample_sd": 0.012338745287
+        },
+        "n": {
+          "mean": 98.0,
+          "sample_sd": 2.645751311065
+        },
+        "native_mean": null,
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.343040935673,
+            "sample_sd": 0.033187739902
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.611676413255,
+            "sample_sd": 0.069918152459
+          },
+          "instruction_fulfillment": {
+            "mean": 4.339950381003,
+            "sample_sd": 0.013609849869
+          },
+          "organization_global_coherence": {
+            "mean": 4.870614921141,
+            "sample_sd": 0.008584996629
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.795601630338,
+            "sample_sd": 0.037500079993
+          }
+        }
+      },
+      "A2": {
+        "four_condition_composite": {
+          "mean": 0.082781813399,
+          "sample_sd": 0.033949631563
+        },
+        "n": {
+          "mean": 100.0,
+          "sample_sd": 0.0
+        },
+        "native_mean": null,
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.403333333333,
+            "sample_sd": 0.015275252317
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.68,
+            "sample_sd": 0.04
+          },
+          "instruction_fulfillment": {
+            "mean": 4.426666666667,
+            "sample_sd": 0.011547005384
+          },
+          "organization_global_coherence": {
+            "mean": 4.896666666667,
+            "sample_sd": 0.040414518843
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.8,
+            "sample_sd": 0.017320508076
+          }
+        }
+      },
+      "A3": {
+        "four_condition_composite": {
+          "mean": -0.144550197202,
+          "sample_sd": 0.007001122814
+        },
+        "n": {
+          "mean": 99.0,
+          "sample_sd": 1.732050807569
+        },
+        "native_mean": null,
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.25206185567,
+            "sample_sd": 0.052947855442
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.552130584192,
+            "sample_sd": 0.055224094752
+          },
+          "instruction_fulfillment": {
+            "mean": 4.235807560137,
+            "sample_sd": 0.041245402947
+          },
+          "organization_global_coherence": {
+            "mean": 4.78439862543,
+            "sample_sd": 0.031529766749
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.64295532646,
+            "sample_sd": 0.023428236721
+          }
+        }
+      },
+      "A4": {
+        "four_condition_composite": {
+          "mean": 0.048769685883,
+          "sample_sd": 0.02555707642
+        },
+        "n": {
+          "mean": 97.0,
+          "sample_sd": 1.0
+        },
+        "native_mean": null,
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.429510163172,
+            "sample_sd": 0.065809526253
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.707951995231,
+            "sample_sd": 0.048089213457
+          },
+          "instruction_fulfillment": {
+            "mean": 4.4228148304,
+            "sample_sd": 0.048630255266
+          },
+          "organization_global_coherence": {
+            "mean": 4.872949394534,
+            "sample_sd": 0.014429660273
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.694171225191,
+            "sample_sd": 0.014991364695
+          }
+        }
+      }
+    },
+    "HelloBench": {
+      "A1": {
+        "four_condition_composite": {
+          "mean": -0.080256124001,
+          "sample_sd": 0.030786771188
+        },
+        "n": {
+          "mean": 98.0,
+          "sample_sd": 3.464101615138
+        },
+        "native_mean": {
+          "mean": 0.77312816616,
+          "sample_sd": 0.004789144079
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.95914893617,
+            "sample_sd": 0.01010806257
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.634609929078,
+            "sample_sd": 0.062107739933
+          },
+          "instruction_fulfillment": {
+            "mean": 4.938936170213,
+            "sample_sd": 0.00845460276
+          },
+          "organization_global_coherence": {
+            "mean": 4.955815602837,
+            "sample_sd": 0.005195731321
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.965815602837,
+            "sample_sd": 0.007247588486
+          }
+        }
+      },
+      "A2": {
+        "four_condition_composite": {
+          "mean": 0.02469766407,
+          "sample_sd": 0.02904669027
+        },
+        "n": {
+          "mean": 100.0,
+          "sample_sd": 0.0
+        },
+        "native_mean": {
+          "mean": 0.781273809524,
+          "sample_sd": 0.00422582158
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.976666666667,
+            "sample_sd": 0.005773502692
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.74,
+            "sample_sd": 0.03
+          },
+          "instruction_fulfillment": {
+            "mean": 4.946666666667,
+            "sample_sd": 0.005773502692
+          },
+          "organization_global_coherence": {
+            "mean": 4.96,
+            "sample_sd": 0.017320508076
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.996666666667,
+            "sample_sd": 0.005773502692
+          }
+        }
+      },
+      "A3": {
+        "four_condition_composite": {
+          "mean": 0.013196058909,
+          "sample_sd": 0.04038379705
+        },
+        "n": {
+          "mean": 99.333333333333,
+          "sample_sd": 1.154700538379
+        },
+        "native_mean": {
+          "mean": 0.780788548753,
+          "sample_sd": 0.003398813814
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.983197278912,
+            "sample_sd": 0.015321534191
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.76537414966,
+            "sample_sd": 0.057186693584
+          },
+          "instruction_fulfillment": {
+            "mean": 4.949727891156,
+            "sample_sd": 0.026307011696
+          },
+          "organization_global_coherence": {
+            "mean": 4.969863945578,
+            "sample_sd": 0.017203891995
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.949727891156,
+            "sample_sd": 0.009594731073
+          }
+        }
+      },
+      "A4": {
+        "four_condition_composite": {
+          "mean": 0.040608496162,
+          "sample_sd": 0.049997463126
+        },
+        "n": {
+          "mean": 99.666666666667,
+          "sample_sd": 0.57735026919
+        },
+        "native_mean": {
+          "mean": 0.790905323072,
+          "sample_sd": 0.005417287526
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.986632996633,
+            "sample_sd": 0.005744565607
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.779393939394,
+            "sample_sd": 0.03909443254
+          },
+          "instruction_fulfillment": {
+            "mean": 4.976666666667,
+            "sample_sd": 0.032145502537
+          },
+          "organization_global_coherence": {
+            "mean": 4.979898989899,
+            "sample_sd": 0.010151892048
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.939797979798,
+            "sample_sd": 0.010006119952
+          }
+        }
+      }
+    },
+    "WritingBench": {
+      "A1": {
+        "four_condition_composite": {
+          "mean": -0.07634177133,
+          "sample_sd": 0.024079821509
+        },
+        "n": {
+          "mean": 100.0,
+          "sample_sd": 0.0
+        },
+        "native_mean": {
+          "mean": 6.974666666667,
+          "sample_sd": 0.060177515181
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.363333333333,
+            "sample_sd": 0.011547005384
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.423333333333,
+            "sample_sd": 0.050332229568
+          },
+          "instruction_fulfillment": {
+            "mean": 4.146666666667,
+            "sample_sd": 0.005773502692
+          },
+          "organization_global_coherence": {
+            "mean": 4.96,
+            "sample_sd": 0.01
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.873333333333,
+            "sample_sd": 0.025166114784
+          }
+        }
+      },
+      "A2": {
+        "four_condition_composite": {
+          "mean": -0.021547068689,
+          "sample_sd": 0.016315178537
+        },
+        "n": {
+          "mean": 100.0,
+          "sample_sd": 0.0
+        },
+        "native_mean": {
+          "mean": 7.020666666667,
+          "sample_sd": 0.054930258814
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.29,
+            "sample_sd": 0.01
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.616666666667,
+            "sample_sd": 0.045092497528
+          },
+          "instruction_fulfillment": {
+            "mean": 4.136666666667,
+            "sample_sd": 0.023094010768
+          },
+          "organization_global_coherence": {
+            "mean": 4.973333333333,
+            "sample_sd": 0.005773502692
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.893333333333,
+            "sample_sd": 0.015275252317
+          }
+        }
+      },
+      "A3": {
+        "four_condition_composite": {
+          "mean": -0.01539037639,
+          "sample_sd": 0.01923327731
+        },
+        "n": {
+          "mean": 99.0,
+          "sample_sd": 1.732050807569
+        },
+        "native_mean": {
+          "mean": 7.217910652921,
+          "sample_sd": 0.035402009819
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.447560137457,
+            "sample_sd": 0.036935762348
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.57910652921,
+            "sample_sd": 0.020059782406
+          },
+          "instruction_fulfillment": {
+            "mean": 4.205395189003,
+            "sample_sd": 0.025009368705
+          },
+          "organization_global_coherence": {
+            "mean": 4.956048109966,
+            "sample_sd": 0.021573340158
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.83470790378,
+            "sample_sd": 0.033189525763
+          }
+        }
+      },
+      "A4": {
+        "four_condition_composite": {
+          "mean": 0.114723971461,
+          "sample_sd": 0.032646808829
+        },
+        "n": {
+          "mean": 98.666666666667,
+          "sample_sd": 2.309401076759
+        },
+        "native_mean": {
+          "mean": 7.472527777778,
+          "sample_sd": 0.061101028209
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.578055555556,
+            "sample_sd": 0.023159071497
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.510138888889,
+            "sample_sd": 0.070000413359
+          },
+          "instruction_fulfillment": {
+            "mean": 4.380694444444,
+            "sample_sd": 0.070956184315
+          },
+          "organization_global_coherence": {
+            "mean": 4.983333333333,
+            "sample_sd": 0.020816659995
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.901944444444,
+            "sample_sd": 0.00728074579
+          }
+        }
+      }
+    }
+  },
+  "condition_labels": {
+    "A1": "Single-pass",
+    "A2": "Staged",
+    "A3": "Task-planning",
+    "A4": "Agentic CogWriter"
+  },
+  "conditions": [
+    "A1",
+    "A2",
+    "A3",
+    "A4"
+  ],
+  "dimensions": [
+    "instruction_fulfillment",
+    "organization_global_coherence",
+    "content_adequacy_depth",
+    "style_voice_audience_fit",
+    "factuality_constraint_fidelity"
+  ],
+  "dolomites_staged_vs_agentic_cogwriter": {
+    "run1": {
+      "agentic_cogwriter_composite": 0.022910983225,
+      "agentic_cogwriter_condition": "A4",
+      "staged_composite": 0.121792110884,
+      "staged_condition": "A2",
+      "staged_exceeds_agentic_cogwriter": true
+    },
+    "run2": {
+      "agentic_cogwriter_composite": 0.074014059655,
+      "agentic_cogwriter_condition": "A4",
+      "staged_composite": 0.059926291417,
+      "staged_condition": "A2",
+      "staged_exceeds_agentic_cogwriter": false
+    },
+    "run3": {
+      "agentic_cogwriter_composite": 0.049384014768,
+      "agentic_cogwriter_condition": "A4",
+      "staged_composite": 0.066627037896,
+      "staged_condition": "A2",
+      "staged_exceeds_agentic_cogwriter": true
+    }
+  },
+  "per_run": {
+    "run1": {
+      "DoLoMiTes": {
+        "A1": {
+          "four_condition_composite": -0.000795931168,
+          "n": 95,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.315789473684,
+            "factuality_constraint_fidelity": 4.589473684211,
+            "instruction_fulfillment": 4.326315789474,
+            "organization_global_coherence": 4.863157894737,
+            "style_voice_audience_fit": 4.768421052632
+          }
+        },
+        "A2": {
+          "four_condition_composite": 0.121792110884,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.4,
+            "factuality_constraint_fidelity": 4.72,
+            "instruction_fulfillment": 4.42,
+            "organization_global_coherence": 4.92,
+            "style_voice_audience_fit": 4.81
+          }
+        },
+        "A3": {
+          "four_condition_composite": -0.147926535913,
+          "n": 97,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.20618556701,
+            "factuality_constraint_fidelity": 4.546391752577,
+            "instruction_fulfillment": 4.247422680412,
+            "organization_global_coherence": 4.773195876289,
+            "style_voice_audience_fit": 4.628865979381
+          }
+        },
+        "A4": {
+          "four_condition_composite": 0.022910983225,
+          "n": 98,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.397959183673,
+            "factuality_constraint_fidelity": 4.673469387755,
+            "instruction_fulfillment": 4.377551020408,
+            "organization_global_coherence": 4.857142857143,
+            "style_voice_audience_fit": 4.683673469388
+          }
+        }
+      },
+      "HelloBench": {
+        "A1": {
+          "four_condition_composite": -0.114982666941,
+          "n": 94,
+          "native_mean": 0.768908308004,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.957446808511,
+            "factuality_constraint_fidelity": 4.563829787234,
+            "instruction_fulfillment": 4.946808510638,
+            "organization_global_coherence": 4.957446808511,
+            "style_voice_audience_fit": 4.957446808511
+          }
+        },
+        "A2": {
+          "four_condition_composite": -0.007771850574,
+          "n": 100,
+          "native_mean": 0.779761904762,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.97,
+            "factuality_constraint_fidelity": 4.74,
+            "instruction_fulfillment": 4.94,
+            "organization_global_coherence": 4.94,
+            "style_voice_audience_fit": 5.0
+          }
+        },
+        "A3": {
+          "four_condition_composite": 0.046231740429,
+          "n": 98,
+          "native_mean": 0.780782312925,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.979591836735,
+            "factuality_constraint_fidelity": 4.80612244898,
+            "instruction_fulfillment": 4.959183673469,
+            "organization_global_coherence": 4.979591836735,
+            "style_voice_audience_fit": 4.959183673469
+          }
+        },
+        "A4": {
+          "four_condition_composite": 0.071261062503,
+          "n": 99,
+          "native_mean": 0.795406445406,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.989898989899,
+            "factuality_constraint_fidelity": 4.818181818182,
+            "instruction_fulfillment": 5.0,
+            "organization_global_coherence": 4.969696969697,
+            "style_voice_audience_fit": 4.939393939394
+          }
+        }
+      },
+      "WritingBench": {
+        "A1": {
+          "four_condition_composite": -0.068049450227,
+          "n": 100,
+          "native_mean": 7.044,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.37,
+            "factuality_constraint_fidelity": 4.43,
+            "instruction_fulfillment": 4.15,
+            "organization_global_coherence": 4.95,
+            "style_voice_audience_fit": 4.85
+          }
+        },
+        "A2": {
+          "four_condition_composite": -0.027451309355,
+          "n": 100,
+          "native_mean": 7.084,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.29,
+            "factuality_constraint_fidelity": 4.57,
+            "instruction_fulfillment": 4.11,
+            "organization_global_coherence": 4.97,
+            "style_voice_audience_fit": 4.89
+          }
+        },
+        "A3": {
+          "four_condition_composite": -0.034086416924,
+          "n": 97,
+          "native_mean": 7.257731958763,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.422680412371,
+            "factuality_constraint_fidelity": 4.577319587629,
+            "instruction_fulfillment": 4.20618556701,
+            "organization_global_coherence": 4.938144329897,
+            "style_voice_audience_fit": 4.80412371134
+          }
+        },
+        "A4": {
+          "four_condition_composite": 0.133921441665,
+          "n": 96,
+          "native_mean": 7.539583333333,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.604166666667,
+            "factuality_constraint_fidelity": 4.510416666667,
+            "instruction_fulfillment": 4.302083333333,
+            "organization_global_coherence": 5.0,
+            "style_voice_audience_fit": 4.895833333333
+          }
+        }
+      }
+    },
+    "run2": {
+      "DoLoMiTes": {
+        "A1": {
+          "four_condition_composite": 0.017503385647,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.38,
+            "factuality_constraint_fidelity": 4.69,
+            "instruction_fulfillment": 4.34,
+            "organization_global_coherence": 4.88,
+            "style_voice_audience_fit": 4.78
+          }
+        },
+        "A2": {
+          "four_condition_composite": 0.059926291417,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.39,
+            "factuality_constraint_fidelity": 4.64,
+            "instruction_fulfillment": 4.44,
+            "organization_global_coherence": 4.92,
+            "style_voice_audience_fit": 4.81
+          }
+        },
+        "A3": {
+          "four_condition_composite": -0.149223314929,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.31,
+            "factuality_constraint_fidelity": 4.5,
+            "instruction_fulfillment": 4.27,
+            "organization_global_coherence": 4.82,
+            "style_voice_audience_fit": 4.67
+          }
+        },
+        "A4": {
+          "four_condition_composite": 0.074014059655,
+          "n": 97,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.505154639175,
+            "factuality_constraint_fidelity": 4.762886597938,
+            "instruction_fulfillment": 4.474226804124,
+            "organization_global_coherence": 4.876288659794,
+            "style_voice_audience_fit": 4.711340206186
+          }
+        }
+      },
+      "HelloBench": {
+        "A1": {
+          "four_condition_composite": -0.069478874986,
+          "n": 100,
+          "native_mean": 0.778333333333,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.95,
+            "factuality_constraint_fidelity": 4.66,
+            "instruction_fulfillment": 4.93,
+            "organization_global_coherence": 4.95,
+            "style_voice_audience_fit": 4.97
+          }
+        },
+        "A2": {
+          "four_condition_composite": 0.033651749739,
+          "n": 100,
+          "native_mean": 0.778011904762,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.98,
+            "factuality_constraint_fidelity": 4.71,
+            "instruction_fulfillment": 4.95,
+            "organization_global_coherence": 4.97,
+            "style_voice_audience_fit": 4.99
+          }
+        },
+        "A3": {
+          "four_condition_composite": -0.031823253288,
+          "n": 100,
+          "native_mean": 0.777392857143,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.97,
+            "factuality_constraint_fidelity": 4.79,
+            "instruction_fulfillment": 4.92,
+            "organization_global_coherence": 4.95,
+            "style_voice_audience_fit": 4.94
+          }
+        },
+        "A4": {
+          "four_condition_composite": 0.067650378536,
+          "n": 100,
+          "native_mean": 0.792416666667,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.99,
+            "factuality_constraint_fidelity": 4.74,
+            "instruction_fulfillment": 4.99,
+            "organization_global_coherence": 4.99,
+            "style_voice_audience_fit": 4.95
+          }
+        }
+      },
+      "WritingBench": {
+        "A1": {
+          "four_condition_composite": -0.103471966818,
+          "n": 100,
+          "native_mean": 6.936,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.35,
+            "factuality_constraint_fidelity": 4.47,
+            "instruction_fulfillment": 4.14,
+            "organization_global_coherence": 4.96,
+            "style_voice_audience_fit": 4.87
+          }
+        },
+        "A2": {
+          "four_condition_composite": -0.034088172917,
+          "n": 100,
+          "native_mean": 6.986,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.28,
+            "factuality_constraint_fidelity": 4.66,
+            "instruction_fulfillment": 4.15,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.88
+          }
+        },
+        "A3": {
+          "four_condition_composite": 0.004338516063,
+          "n": 100,
+          "native_mean": 7.19,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.49,
+            "factuality_constraint_fidelity": 4.6,
+            "instruction_fulfillment": 4.23,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.83
+          }
+        },
+        "A4": {
+          "four_condition_composite": 0.133221623671,
+          "n": 100,
+          "native_mean": 7.458,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.57,
+            "factuality_constraint_fidelity": 4.58,
+            "instruction_fulfillment": 4.44,
+            "organization_global_coherence": 4.99,
+            "style_voice_audience_fit": 4.91
+          }
+        }
+      }
+    },
+    "run3": {
+      "DoLoMiTes": {
+        "A1": {
+          "four_condition_composite": 0.022691968375,
+          "n": 99,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.333333333333,
+            "factuality_constraint_fidelity": 4.555555555556,
+            "instruction_fulfillment": 4.353535353535,
+            "organization_global_coherence": 4.868686868687,
+            "style_voice_audience_fit": 4.838383838384
+          }
+        },
+        "A2": {
+          "four_condition_composite": 0.066627037896,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.42,
+            "factuality_constraint_fidelity": 4.68,
+            "instruction_fulfillment": 4.42,
+            "organization_global_coherence": 4.85,
+            "style_voice_audience_fit": 4.78
+          }
+        },
+        "A3": {
+          "four_condition_composite": -0.136500740764,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.24,
+            "factuality_constraint_fidelity": 4.61,
+            "instruction_fulfillment": 4.19,
+            "organization_global_coherence": 4.76,
+            "style_voice_audience_fit": 4.63
+          }
+        },
+        "A4": {
+          "four_condition_composite": 0.049384014768,
+          "n": 96,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.385416666667,
+            "factuality_constraint_fidelity": 4.6875,
+            "instruction_fulfillment": 4.416666666667,
+            "organization_global_coherence": 4.885416666667,
+            "style_voice_audience_fit": 4.6875
+          }
+        }
+      },
+      "HelloBench": {
+        "A1": {
+          "four_condition_composite": -0.056306830077,
+          "n": 100,
+          "native_mean": 0.772142857143,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.97,
+            "factuality_constraint_fidelity": 4.68,
+            "instruction_fulfillment": 4.94,
+            "organization_global_coherence": 4.96,
+            "style_voice_audience_fit": 4.97
+          }
+        },
+        "A2": {
+          "four_condition_composite": 0.048213093045,
+          "n": 100,
+          "native_mean": 0.786047619048,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.98,
+            "factuality_constraint_fidelity": 4.77,
+            "instruction_fulfillment": 4.95,
+            "organization_global_coherence": 4.97,
+            "style_voice_audience_fit": 5.0
+          }
+        },
+        "A3": {
+          "four_condition_composite": 0.025179689585,
+          "n": 100,
+          "native_mean": 0.78419047619,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 5.0,
+            "factuality_constraint_fidelity": 4.7,
+            "instruction_fulfillment": 4.97,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.95
+          }
+        },
+        "A4": {
+          "four_condition_composite": -0.017085952552,
+          "n": 100,
+          "native_mean": 0.784892857143,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.98,
+            "factuality_constraint_fidelity": 4.78,
+            "instruction_fulfillment": 4.94,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.93
+          }
+        }
+      },
+      "WritingBench": {
+        "A1": {
+          "four_condition_composite": -0.057503896945,
+          "n": 100,
+          "native_mean": 6.944,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.37,
+            "factuality_constraint_fidelity": 4.37,
+            "instruction_fulfillment": 4.15,
+            "organization_global_coherence": 4.97,
+            "style_voice_audience_fit": 4.9
+          }
+        },
+        "A2": {
+          "four_condition_composite": -0.003101723794,
+          "n": 100,
+          "native_mean": 6.992,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.3,
+            "factuality_constraint_fidelity": 4.62,
+            "instruction_fulfillment": 4.15,
+            "organization_global_coherence": 4.97,
+            "style_voice_audience_fit": 4.91
+          }
+        },
+        "A3": {
+          "four_condition_composite": -0.016423228307,
+          "n": 100,
+          "native_mean": 7.206,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.43,
+            "factuality_constraint_fidelity": 4.56,
+            "instruction_fulfillment": 4.18,
+            "organization_global_coherence": 4.95,
+            "style_voice_audience_fit": 4.87
+          }
+        },
+        "A4": {
+          "four_condition_composite": 0.077028849047,
+          "n": 100,
+          "native_mean": 7.42,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.56,
+            "factuality_constraint_fidelity": 4.44,
+            "instruction_fulfillment": 4.4,
+            "organization_global_coherence": 4.96,
+            "style_voice_audience_fit": 4.9
+          }
+        }
+      }
+    }
+  },
+  "production_aggregation": {
+    "run2": "run2-aggregate/aggregation.json",
+    "run3": "run3-aggregate/aggregation.json"
+  },
+  "runs": [
+    "run1",
+    "run2",
+    "run3"
+  ],
+  "schema_version": 1,
+  "unscored_outputs": {
+    "run1": [
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-1358",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-1359",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-1360",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-1781",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-319",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A3",
+        "prompt_id": "dolomites-1014",
+        "status": "unscored"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A3",
+        "prompt_id": "dolomites-1499",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A3",
+        "prompt_id": "dolomites-532",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-1495",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-857",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-summarization_063",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-summarization_090",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-summarization_092",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-summarization_098",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-summarization_099",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-text_completion_006",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A3",
+        "prompt_id": "hellobench-text_completion_049",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A3",
+        "prompt_id": "hellobench-text_completion_051",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A4",
+        "prompt_id": "hellobench-summarization_074",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A3",
+        "prompt_id": "writingbench-0091",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A3",
+        "prompt_id": "writingbench-0273",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A3",
+        "prompt_id": "writingbench-0691",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "prompt_id": "writingbench-0379",
+        "status": "unscored"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "prompt_id": "writingbench-0907",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "prompt_id": "writingbench-0936",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "prompt_id": "writingbench-0992",
+        "status": "failed"
+      }
+    ],
+    "run2": [
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-1471",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-307",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-74",
+        "status": "failed"
+      }
+    ],
+    "run3": [
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-1014",
+        "status": "unscored"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-1014",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-376",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-447",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-74",
+        "status": "failed"
+      }
+    ]
+  }
+}
