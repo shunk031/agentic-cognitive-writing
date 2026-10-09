@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Check rendered caption length and report sparse paragraph endings.
 
-Captions remain a hard CI guard. Paragraph density is report-only for now: the
-report highlights likely runt final lines so authors can decide whether a small
-rewrite or a local ``\\looseness=-1`` improves the page without degrading prose.
+Captions remain a hard CI guard. Paragraph density is report-only for now. The
+PDF text extractor may merge adjacent paragraphs into one block, so prose blocks
+are split at rendered first-line indents before checking their final lines.
 """
 
 from __future__ import annotations
@@ -19,8 +19,10 @@ from pathlib import Path
 MAX_CAPTION_LINES = 5  # target ~4 lines; allow one line of layout variation
 RUNT_MAX_WORDS = 2
 RUNT_MAX_FILL = 0.25
+PARAGRAPH_INDENT_MIN = 7.0  # ACL body first-line indent is about 11 pt
 CAPTION_RE = re.compile(r"^(Table|Figure)\s+\d+:\s")
 LINE_NUMBER_BLOCK_RE = re.compile(r"^(?:\d{3}\s*)+$")
+SENTENCE_END_RE = re.compile(r"[.!?][\"'’”)]*$")
 XHTML = {"x": "http://www.w3.org/1999/xhtml"}
 
 
@@ -28,9 +30,12 @@ XHTML = {"x": "http://www.w3.org/1999/xhtml"}
 class RenderedBlock:
     page: int
     block: int
+    segment: int
     text: str
     lines: list[str]
     widths: list[float]
+    starts: list[float]
+    ends: list[float]
     x_min: float
     x_max: float
 
@@ -52,6 +57,11 @@ class RenderedBlock:
     def preview(self) -> str:
         return self.text[:88]
 
+    @property
+    def location(self) -> str:
+        suffix = f".{self.segment}" if self.segment else ""
+        return f"p{self.page:02d} b{self.block:03d}{suffix}"
+
 
 def line_words(line: ET.Element) -> list[ET.Element]:
     return [word for word in line.findall("x:word", XHTML) if (word.text or "").strip()]
@@ -60,25 +70,75 @@ def line_words(line: ET.Element) -> list[ET.Element]:
 def rendered_block(page: int, index: int, block: ET.Element) -> RenderedBlock | None:
     lines: list[str] = []
     widths: list[float] = []
-    all_words: list[ET.Element] = []
+    starts: list[float] = []
+    ends: list[float] = []
     for line in block.findall("x:line", XHTML):
         words = line_words(line)
         if not words:
             continue
-        all_words.extend(words)
+        start = float(words[0].attrib["xMin"])
+        end = float(words[-1].attrib["xMax"])
         lines.append(" ".join((word.text or "").strip() for word in words))
-        widths.append(float(words[-1].attrib["xMax"]) - float(words[0].attrib["xMin"]))
+        widths.append(end - start)
+        starts.append(start)
+        ends.append(end)
     if not lines:
         return None
     return RenderedBlock(
         page=page,
         block=index,
+        segment=0,
         text=" ".join(lines).strip(),
         lines=lines,
         widths=widths,
-        x_min=min(float(word.attrib["xMin"]) for word in all_words),
-        x_max=max(float(word.attrib["xMax"]) for word in all_words),
+        starts=starts,
+        ends=ends,
+        x_min=min(starts),
+        x_max=max(ends),
     )
+
+
+def slice_block(block: RenderedBlock, start: int, end: int, segment: int) -> RenderedBlock:
+    lines = block.lines[start:end]
+    widths = block.widths[start:end]
+    starts = block.starts[start:end]
+    ends = block.ends[start:end]
+    return RenderedBlock(
+        page=block.page,
+        block=block.block,
+        segment=segment,
+        text=" ".join(lines).strip(),
+        lines=lines,
+        widths=widths,
+        starts=starts,
+        ends=ends,
+        x_min=min(starts),
+        x_max=max(ends),
+    )
+
+
+def paragraph_segments(block: RenderedBlock) -> list[RenderedBlock]:
+    """Split a bbox block where an indented line starts a new prose paragraph."""
+    if block.line_count < 2 or CAPTION_RE.match(block.text):
+        return [block]
+
+    left_edge = min(block.starts)
+    split_at: list[int] = []
+    for index in range(1, block.line_count):
+        is_indented = block.starts[index] - left_edge >= PARAGRAPH_INDENT_MIN
+        previous_ends_sentence = bool(SENTENCE_END_RE.search(block.lines[index - 1].rstrip()))
+        if is_indented and previous_ends_sentence:
+            split_at.append(index)
+
+    if not split_at:
+        return [block]
+
+    boundaries = [0, *split_at, block.line_count]
+    return [
+        slice_block(block, start, end, segment=index)
+        for index, (start, end) in enumerate(zip(boundaries, boundaries[1:]), start=1)
+        if start < end
+    ]
 
 
 def is_prose_candidate(block: RenderedBlock) -> bool:
@@ -141,7 +201,13 @@ def main() -> None:
     )
 
     main_end = main_body_end_page(root)
-    prose = [block for block in blocks if block.page <= main_end and is_prose_candidate(block)]
+    prose = [
+        segment
+        for block in blocks
+        if block.page <= main_end
+        for segment in paragraph_segments(block)
+        if is_prose_candidate(segment)
+    ]
     runts = [
         block
         for block in prose
@@ -157,11 +223,11 @@ def main() -> None:
     report_lines = [
         f"Main-body pages scanned: 1-{main_end}",
         "",
-        "Rendered prose blocks:",
+        "Rendered prose paragraphs:",
     ]
     for block in prose:
         report_lines.append(
-            f"p{block.page:02d} b{block.block:03d} lines={block.line_count:2d} "
+            f"{block.location} lines={block.line_count:2d} "
             f"last_words={block.last_words:2d} last_fill={block.last_fill:5.1%} | "
             f"{block.preview}"
         )
@@ -176,12 +242,12 @@ def main() -> None:
     report_path.write_text("\n".join(report_lines) + "\n", encoding="utf-8")
 
     print(
-        f"Layout density report: {len(prose)} prose-like blocks; "
+        f"Layout density report: {len(prose)} prose-like paragraphs; "
         f"{len(runts)} potential runt endings; {len(caption_runts)} caption runt endings."
     )
     for block in runts:
         print(
-            f"  WARN p{block.page:02d} b{block.block:03d}: "
+            f"  WARN {block.location}: "
             f"lines={block.line_count}, last_words={block.last_words}, "
             f"last_fill={block.last_fill:.0%}, last='{block.lines[-1][:70]}'"
         )
