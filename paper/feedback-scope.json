@@ -1,11 +1,4 @@
 {
-  "baseline_sha": "520c733f9a9120f31ea17b493016c25e68c44d54",
-  "replacements": [
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Results subsection headingを、ユーザーが第一候補として指定していた `Observed Writing-Process Behavior` に戻す。見出し以外は変更しない。",
-      "before": "\\subsection{How Does the Writing Loop Behave?}",
-      "after": "\\subsection{Observed Writing-Process Behavior}"
-    }
-  ]
+  "baseline_sha": "2abfab1ee3a4d8bb06ab28bf64bab3aefe7b57c2",
+  "replacements": []
 }
