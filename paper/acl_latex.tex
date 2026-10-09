@@ -49,20 +49,49 @@
 \DeclareUnicodeCharacter{2265}{>=}
 \DeclareUnicodeCharacter{2713}{[x]}
 
-% WriteHERE-style prompt cards. Color identifies the role of each prompt while
-% keeping the prompt text itself neutral and printable.
-\definecolor{PromptBaseline}{RGB}{52,91,140}
-\definecolor{PromptMonitor}{RGB}{42,109,78}
-\definecolor{PromptPlanner}{RGB}{35,112,126}
-\definecolor{PromptTranslator}{RGB}{77,88,148}
-\definecolor{PromptReviewer}{RGB}{132,72,91}
-\definecolor{PromptAblation}{RGB}{164,106,36}
-\definecolor{PromptEvaluator}{RGB}{102,76,142}
+% Shared editorial palette for Figure 1 and Appendix prompt cards. Accent colors
+% come from Paul Tol's muted qualitative scheme; low-chroma tints keep black
+% manuscript text readable while the stronger strokes preserve role identity.
+\definecolor{EditorialGray}{HTML}{666666}
+\definecolor{EditorialIndigo}{HTML}{332288}
+\definecolor{EditorialTeal}{HTML}{44AA99}
+\definecolor{EditorialPurple}{HTML}{AA4499}
+\definecolor{EditorialRose}{HTML}{CC6677}
+\definecolor{EditorialOlive}{HTML}{999933}
+\definecolor{EditorialCyan}{HTML}{88CCEE}
+\definecolor{EditorialSand}{HTML}{DDCC77}
+
+\colorlet{PromptBaselineStroke}{EditorialGray}
+\colorlet{PromptBaselineFill}{EditorialGray!7!white}
+\colorlet{PromptBaselineTitle}{EditorialGray!65!black}
+\colorlet{PromptMonitorStroke}{EditorialIndigo}
+\colorlet{PromptMonitorFill}{EditorialIndigo!16!white}
+\colorlet{PromptMonitorTitle}{EditorialIndigo!65!black}
+\colorlet{PromptPlannerStroke}{EditorialTeal}
+\colorlet{PromptPlannerFill}{EditorialTeal!16!white}
+\colorlet{PromptPlannerTitle}{EditorialTeal!65!black}
+\colorlet{PromptTranslatorStroke}{EditorialPurple}
+\colorlet{PromptTranslatorFill}{EditorialPurple!16!white}
+\colorlet{PromptTranslatorTitle}{EditorialPurple!65!black}
+\colorlet{PromptReviewerStroke}{EditorialRose}
+\colorlet{PromptReviewerFill}{EditorialRose!16!white}
+\colorlet{PromptReviewerTitle}{EditorialRose!65!black}
+\colorlet{PromptAblationStroke}{EditorialOlive}
+\colorlet{PromptAblationFill}{EditorialOlive!16!white}
+\colorlet{PromptAblationTitle}{EditorialOlive!65!black}
+\colorlet{PromptEvaluatorStroke}{EditorialCyan}
+\colorlet{PromptEvaluatorFill}{EditorialCyan!16!white}
+\colorlet{PromptEvaluatorTitle}{EditorialCyan!55!black}
+\colorlet{WritingStateStroke}{EditorialSand!68!black}
+\colorlet{WritingStateFill}{EditorialSand!24!white}
+\colorlet{EndpointStroke}{EditorialGray}
+\colorlet{EndpointFill}{EditorialGray!7!white}
+
 \newtcolorbox{promptbox}[2]{
   breakable,
-  colback=#1!4!white,
-  colframe=#1!72!black,
-  colbacktitle=#1!82!black,
+  colback=#1Fill,
+  colframe=#1Stroke,
+  colbacktitle=#1Title,
   coltitle=white,
   title={#2},
   fonttitle=\bfseries\small,
