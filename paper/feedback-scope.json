@@ -1,17 +1,53 @@
 {
-  "baseline_sha": "4385283b14b9072c10849bcb4312444390e111e5",
+  "baseline_sha": "29b89542dac880b2723e2b51ca05e10f8f4e7948",
   "replacements": [
     {
-      "path": "paper/tab/pairwise-results.tex",
-      "instruction": "Check LaTeX diagnostics で Table 4 の tabular が 5.04759pt overfull になるため、文言・数値・caption を変えずに tabular 全体を column width に収める。",
-      "before": "\\begin{tabular}{lrrrr}\n\\toprule\n& \\multicolumn{4}{c}{\\textbf{\\condAgenticCogWriter\\ win rate (\\%)}} \\\\\n\\cmidrule(lr){2-5}\n\\textbf{Comparison}\n& \\textbf{Writing}\n& \\textbf{Hello}\n& \\textbf{DoLo}\n& \\textbf{Mean} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\\cmidrule(lr){3-3}\\cmidrule(lr){4-4}\\cmidrule(lr){5-5}\nvs. \\condSinglePass\n& 84.3\\%\n& 85.7\\%\n& 72.0\\%\n& 80.9\\% \\\\\nvs. \\condStaged\n& 80.9\\%\n& 62.8\\%\n& 55.9\\%\n& 67.3\\% \\\\\nvs. \\condTaskPlanning\n& 65.5\\%\n& 63.0\\%\n& 75.7\\%\n& 68.5\\% \\\\\n\\bottomrule\n\\end{tabular}",
-      "after": "\\resizebox{\\columnwidth}{!}{%\n\\begin{tabular}{lrrrr}\n\\toprule\n& \\multicolumn{4}{c}{\\textbf{\\condAgenticCogWriter\\ win rate (\\%)}} \\\\\n\\cmidrule(lr){2-5}\n\\textbf{Comparison}\n& \\textbf{Writing}\n& \\textbf{Hello}\n& \\textbf{DoLo}\n& \\textbf{Mean} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\\cmidrule(lr){3-3}\\cmidrule(lr){4-4}\\cmidrule(lr){5-5}\nvs. \\condSinglePass\n& 84.3\\%\n& 85.7\\%\n& 72.0\\%\n& 80.9\\% \\\\\nvs. \\condStaged\n& 80.9\\%\n& 62.8\\%\n& 55.9\\%\n& 67.3\\% \\\\\nvs. \\condTaskPlanning\n& 65.5\\%\n& 63.0\\%\n& 75.7\\%\n& 68.5\\% \\\\\n\\bottomrule\n\\end{tabular}%\n}"
+      "path": "paper/sec/01_introduction.tex",
+      "instruction": "Agentic CogWriter の reader-facing 表記を常に small caps に統一するため、生の system name を既存の \\condAgenticCogWriter macro に置き換える。",
+      "before": "In pairwise evaluation, Agentic CogWriter is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning.",
+      "after": "In pairwise evaluation, \\condAgenticCogWriter\\ is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning."
     },
     {
-      "path": "paper/tab/trace-outcome.tex",
-      "instruction": "Check LaTeX diagnostics で Table 7 の tabular が 13.03886pt overfull になるため、文言・数値・caption を変えずに tabular 全体を column width に収める。",
-      "before": "\\begin{tabular}{lrr}\n\\toprule\n& \\multicolumn{2}{c}{\\textbf{\\condAgenticCogWriter\\ win rate (\\%)}} \\\\\n\\cmidrule(lr){2-3}\n\\textbf{Process path}\n& \\textbf{\\condFixedOrder}\n& \\textbf{\\condSingleWriter} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\\cmidrule(lr){3-3}\nPlan$\\rightarrow$draft$\\rightarrow$review\n& 57.4\\%\n& 72.2\\% \\\\\nOther path\n& 54.9\\%\n& 75.2\\% \\\\\n\\bottomrule\n\\end{tabular}",
-      "after": "\\resizebox{\\columnwidth}{!}{%\n\\begin{tabular}{lrr}\n\\toprule\n& \\multicolumn{2}{c}{\\textbf{\\condAgenticCogWriter\\ win rate (\\%)}} \\\\\n\\cmidrule(lr){2-3}\n\\textbf{Process path}\n& \\textbf{\\condFixedOrder}\n& \\textbf{\\condSingleWriter} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\\cmidrule(lr){3-3}\nPlan$\\rightarrow$draft$\\rightarrow$review\n& 57.4\\%\n& 72.2\\% \\\\\nOther path\n& 54.9\\%\n& 75.2\\% \\\\\n\\bottomrule\n\\end{tabular}%\n}"
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Experimental Design 冒頭の内容を保ったまま圧縮し、段落末の短い exploratory 系 runt を避ける。",
+      "before": "We compare the writing systems under the same task inputs and information policy to address three questions: (1) whether process-level organization improves long-form document quality relative to alternative writing systems, (2) which proposed components contribute to any advantage, and (3) how the writing loop behaves in practice. We include a post-hoc exploratory execution variant.",
+      "after": "We compare the writing systems under the same task inputs and information policy to study three questions: whether process-level organization improves document quality, which components contribute to any advantage, and how the writing loop behaves in practice. We also use one post-hoc execution variant as a diagnostic."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Pointwise evaluation の段落末で `our setup.` だけが次行に残るのを避けつつ、DoLoMiTes に comparable native score がないという意味を保つ。",
+      "before": "WritingBench uses five prompt-specific criteria, HelloBench uses checklist items, and DoLoMiTes has no comparable native score in our setup.",
+      "after": "WritingBench uses five prompt-specific criteria, HelloBench uses checklist items, and DoLoMiTes provides no comparable native score."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Pairwise evaluation を agreed winner ではなく order-consistent preference として reader-facing に説明する。",
+      "before": "We directly compare two responses written for the same prompt using the same quality dimensions and return a winner or tie. LLM judges can exhibit position bias~\\citep{zheng2023judging,wang2024fair}, so every pair is evaluated in both presentation orders. We retain a winner only when both orders select the same semantic response; any disagreement, including winner versus tie, is recorded as a tie. Headline win rates condition on comparisons with an agreed winner.",
+      "after": "We directly compare two responses written for the same prompt using the same quality dimensions and record which response is preferred, or a tie. LLM judges can exhibit position bias~\\citep{zheng2023judging,wang2024fair}, so every pair is evaluated in both presentation orders. We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie. Headline win rates are computed over these order-consistent comparisons."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Exploratory summary の末尾で `confirmatory.` が一語だけ残るのを避け、post-hoc なので exploratory という evidence boundary を保つ。",
+      "before": "To summarize the two ablation contrasts across generation runs, we compute an exploratory prompt-level estimate. For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and then summarized across benchmarks. We report a prompt-level bootstrap interval and sign test. Because we chose this summary after seeing the main results, we treat it as exploratory, not confirmatory.",
+      "after": "To summarize the two ablation contrasts across generation runs, we compute a post-hoc prompt-level estimate. For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and then summarized across benchmarks. We report a prompt-level bootstrap interval and sign test, treating this summary as exploratory because it was defined after the main results."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Results の agreed winner wording を Experimental Design の order-consistent comparison terminology に揃える。",
+      "before": "respectively, when both presentation orders agree on a winner.",
+      "after": "respectively, among order-consistent comparisons."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Worst-case sensitivity の agreed winner wording を order-consistent comparison terminology に揃える。",
+      "before": "among comparisons with an agreed winner.",
+      "after": "among order-consistent comparisons."
+    },
+    {
+      "path": "paper/sec/07_limitations.tex",
+      "instruction": "Limitations の agreed winner wording を order-consistent comparison terminology に揃え、評価手順を plain language で説明する。",
+      "before": "Pairwise win rates condition on comparisons where both presentation orders agree on a winner; Section~\\ref{sec:results-effectiveness} also reports unconditional and worst-case missing-output views.",
+      "after": "Pairwise win rates are computed over order-consistent comparisons, where both presentation orders select the same response; Section~\\ref{sec:results-effectiveness} also reports unconditional and worst-case missing-output views."
     }
   ]
 }
