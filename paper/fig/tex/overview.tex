@@ -5,12 +5,14 @@
   node distance=4.5mm and 3mm,
   box/.style={draw, align=center, inner sep=3.2pt, font=\small},
   io/.style={box, minimum width=0.82\columnwidth},
-  input/.style={io, fill=gray!12},
-  output/.style={io, fill=green!10, double, double distance=0.6pt},
+  input/.style={io, fill=EndpointFill, draw=EndpointStroke},
+  output/.style={io, fill=EndpointFill, draw=EndpointStroke, double, double distance=0.6pt},
   agent/.style={box, rounded corners=2pt, minimum width=0.25\columnwidth},
-  mainagent/.style={agent, fill=blue!16, line width=0.65pt},
-  subagent/.style={agent, fill=blue!7},
-  state/.style={box, rounded corners=1.5pt, dashed, fill=orange!10, minimum width=0.82\columnwidth},
+  mainagent/.style={agent, fill=PromptMonitorFill, draw=PromptMonitorStroke, line width=0.65pt},
+  planner/.style={agent, fill=PromptPlannerFill, draw=PromptPlannerStroke},
+  translator/.style={agent, fill=PromptTranslatorFill, draw=PromptTranslatorStroke},
+  reviewer/.style={agent, fill=PromptReviewerFill, draw=PromptReviewerStroke},
+  state/.style={box, rounded corners=1.5pt, dashed, fill=WritingStateFill, draw=WritingStateStroke, minimum width=0.82\columnwidth},
   flow/.style={->, line width=0.55pt},
   loop/.style={->, line width=0.55pt, rounded corners=4pt}
 ]
@@ -18,9 +20,9 @@
 \node[input] (task) {\textbf{Input: writing task}\\instruction $I$ \; + \; context $C$ \; + \; output requirements $O$};
 \node[mainagent, below=of task] (monitor) {\textbf{Monitor}\\select next process};
 
-\node[subagent, below=7mm of monitor] (translator) {\textbf{Translator}\\\texttt{Translating}};
-\node[subagent, left=2.5mm of translator] (planner) {\textbf{Planner}\\\texttt{Planning}};
-\node[subagent, right=2.5mm of translator] (reviewer) {\textbf{Reviewer}\\\texttt{Reviewing}};
+\node[translator, below=7mm of monitor] (translator) {\textbf{Translator}};
+\node[planner, left=2.5mm of translator] (planner) {\textbf{Planner}};
+\node[reviewer, right=2.5mm of translator] (reviewer) {\textbf{Reviewer}};
 
 \node[state, below=7mm of translator] (state) {\textbf{Persistent writing state}\\draft $D_t$ \; | \; goals $G_t$ \; | \; history $H_t$};
 \node[output, below=of state] (output) {\textbf{Output: completed document} $D_{\mathrm{final}}$};
