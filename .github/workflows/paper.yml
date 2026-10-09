@@ -43,6 +43,9 @@ jobs:
       - name: Check main-text appendix references
         run: python3 paper/tools/check-appendix-refs.py
 
+      - name: Check Figure 1 and Appendix role colors
+        run: python3 paper/tools/check-role-colors.py
+
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
