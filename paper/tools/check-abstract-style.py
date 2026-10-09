@@ -10,7 +10,7 @@ PAPER = Path(__file__).resolve().parents[1]
 
 
 def expand_inputs(text: str) -> str:
-    """Recursively expand manuscript \input files from the paper root."""
+    r"""Recursively expand manuscript \input files from the paper root."""
 
     def include(match: re.Match[str]) -> str:
         relative = match.group(1)
