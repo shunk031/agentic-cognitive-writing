@@ -1,126 +1,17 @@
 {
-  "baseline_sha": "8365b7cec7b4b6c664599e05487b1cd04f76a81f",
+  "baseline_sha": "4e6e06149b8a5e1407a61a735ec2262479f3573b",
   "replacements": [
     {
-      "path": "paper/sec/00_abstract.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "We evaluate our \\condAgenticCogWriter\\ across three long-form writing benchmarks using pointwise rubric scoring and pairwise same-prompt preference judgments.",
-      "after": "We evaluate our system across three long-form writing benchmarks using pointwise rubric scoring and pairwise same-prompt preference judgments."
+      "path": "paper/acl_latex.tex",
+      "instruction": "Replace the ad-hoc prompt-card colors with a shared editorial role palette based on muted scientific colors, and reuse semantic fill/stroke/title aliases for prompt cards without changing prompt content.",
+      "before": "% WriteHERE-style prompt cards. Color identifies the role of each prompt while\n% keeping the prompt text itself neutral and printable.\n\\definecolor{PromptBaseline}{RGB}{52,91,140}\n\\definecolor{PromptMonitor}{RGB}{42,109,78}\n\\definecolor{PromptPlanner}{RGB}{35,112,126}\n\\definecolor{PromptTranslator}{RGB}{77,88,148}\n\\definecolor{PromptReviewer}{RGB}{132,72,91}\n\\definecolor{PromptAblation}{RGB}{164,106,36}\n\\definecolor{PromptEvaluator}{RGB}{102,76,142}\n\\newtcolorbox{promptbox}[2]{\n  breakable,\n  colback=#1!4!white,\n  colframe=#1!72!black,\n  colbacktitle=#1!82!black,\n  coltitle=white,\n  title={#2},\n  fonttitle=\\bfseries\\small,\n  boxrule=0.6pt,\n  arc=1.5mm,\n  outer arc=1.5mm,\n  left=2mm,\n  right=2mm,\n  top=1.2mm,\n  bottom=1.2mm,\n  before skip=5pt,\n  after skip=9pt,\n  pad at break*=1mm\n}",
+      "after": "% Shared editorial palette for Figure 1 and Appendix prompt cards. Accent colors\n% come from Paul Tol's muted qualitative scheme; low-chroma tints keep black\n% manuscript text readable while the stronger strokes preserve role identity.\n\\definecolor{EditorialGray}{HTML}{666666}\n\\definecolor{EditorialIndigo}{HTML}{332288}\n\\definecolor{EditorialTeal}{HTML}{44AA99}\n\\definecolor{EditorialPurple}{HTML}{AA4499}\n\\definecolor{EditorialRose}{HTML}{CC6677}\n\\definecolor{EditorialOlive}{HTML}{999933}\n\\definecolor{EditorialCyan}{HTML}{88CCEE}\n\\definecolor{EditorialSand}{HTML}{DDCC77}\n\n\\colorlet{PromptBaselineStroke}{EditorialGray}\n\\colorlet{PromptBaselineFill}{EditorialGray!7!white}\n\\colorlet{PromptBaselineTitle}{EditorialGray!65!black}\n\\colorlet{PromptMonitorStroke}{EditorialIndigo}\n\\colorlet{PromptMonitorFill}{EditorialIndigo!16!white}\n\\colorlet{PromptMonitorTitle}{EditorialIndigo!65!black}\n\\colorlet{PromptPlannerStroke}{EditorialTeal}\n\\colorlet{PromptPlannerFill}{EditorialTeal!16!white}\n\\colorlet{PromptPlannerTitle}{EditorialTeal!65!black}\n\\colorlet{PromptTranslatorStroke}{EditorialPurple}\n\\colorlet{PromptTranslatorFill}{EditorialPurple!16!white}\n\\colorlet{PromptTranslatorTitle}{EditorialPurple!65!black}\n\\colorlet{PromptReviewerStroke}{EditorialRose}\n\\colorlet{PromptReviewerFill}{EditorialRose!16!white}\n\\colorlet{PromptReviewerTitle}{EditorialRose!65!black}\n\\colorlet{PromptAblationStroke}{EditorialOlive}\n\\colorlet{PromptAblationFill}{EditorialOlive!16!white}\n\\colorlet{PromptAblationTitle}{EditorialOlive!65!black}\n\\colorlet{PromptEvaluatorStroke}{EditorialCyan}\n\\colorlet{PromptEvaluatorFill}{EditorialCyan!16!white}\n\\colorlet{PromptEvaluatorTitle}{EditorialCyan!55!black}\n\\colorlet{WritingStateStroke}{EditorialSand!68!black}\n\\colorlet{WritingStateFill}{EditorialSand!24!white}\n\\colorlet{EndpointStroke}{EditorialGray}\n\\colorlet{EndpointFill}{EditorialGray!7!white}\n\n\\newtcolorbox{promptbox}[2]{\n  breakable,\n  colback=#1Fill,\n  colframe=#1Stroke,\n  colbacktitle=#1Title,\n  coltitle=white,\n  title={#2},\n  fonttitle=\\bfseries\\small,\n  boxrule=0.6pt,\n  arc=1.5mm,\n  outer arc=1.5mm,\n  left=2mm,\n  right=2mm,\n  top=1.2mm,\n  bottom=1.2mm,\n  before skip=5pt,\n  after skip=9pt,\n  pad at break*=1mm\n}"
     },
     {
-      "path": "paper/sec/00_abstract.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "\\condAgenticCogWriter\\ achieves competitive pointwise quality and is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning in pairwise evaluation.",
-      "after": "Our system achieves competitive pointwise quality and is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning in pairwise evaluation."
-    },
-    {
-      "path": "paper/sec/00_abstract.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "Ablations indicate that neither explicit goals nor adaptive process order alone explains \\condAgenticCogWriter's overall advantage.",
-      "after": "Ablations indicate that neither explicit goals nor adaptive process order alone explains the overall advantage."
-    },
-    {
-      "path": "paper/sec/01_introduction.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "We evaluate our \\condAgenticCogWriter\\ on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.",
-      "after": "We evaluate our system on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}."
-    },
-    {
-      "path": "paper/sec/01_introduction.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "In pairwise evaluation, \\condAgenticCogWriter\\ is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning.",
-      "after": "In pairwise evaluation, our system is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas \\condAgenticCogWriter\\ advances a writing process.",
-      "after": "The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas our system advances a writing process."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Avoid an underspecified pronoun when identifying the full system as the focal condition.",
-      "before": "We use it as the focal system below.",
-      "after": "We use the full system as the focal condition below."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Avoid ambiguous pronouns in the post-hoc execution-check description while keeping the diagnostic scope explicit.",
-      "before": "It preserves the full process loop and shared state but executes each selected process in the \\texttt{Monitor}'s context rather than a separate subagent context, so we use it only as a diagnostic of whether separate role contexts are necessary to explain the observed difference.",
-      "after": "The condition preserves the full process loop and shared state but executes each selected process in the \\texttt{Monitor}'s context rather than a separate subagent context, serving only as a diagnostic of whether separate role contexts are necessary to explain the observed difference."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \\UncondFullSinglePassWinShare, \\UncondFullStagedWinShare, and \\UncondFullTaskPlanningWinShare, and assigning every missing pair against \\condAgenticCogWriter\\ still leaves win rates of at least \\WorstCaseFullSinglePassRate, \\WorstCaseFullStagedRate, and \\WorstCaseFullTaskPlanningRate\\ among order-consistent comparisons.",
-      "after": "The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \\UncondFullSinglePassWinShare, \\UncondFullStagedWinShare, and \\UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \\WorstCaseFullSinglePassRate, \\WorstCaseFullStagedRate, and \\WorstCaseFullTaskPlanningRate\\ among order-consistent comparisons."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "\\condAgenticCogWriter\\ differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \\texttt{Monitor}.",
-      "after": "Our system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \\texttt{Monitor}."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "After the within-benchmark Holm correction, all benchmark--run tests comparing \\condAgenticCogWriter\\ with \\condNoGoals\\ or \\condFixedOrder\\ remain above the corrected significance threshold.",
-      "after": "After the within-benchmark Holm correction, all benchmark--run tests comparing our system with \\condNoGoals\\ or \\condFixedOrder\\ remain above the corrected significance threshold."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "In the exploratory prompt-level summary, \\condAgenticCogWriter\\ is preferred to \\condFixedOrder\\ at \\ClusteredFullFixedOrderRate\\ [\\ClusteredFullFixedOrderInterval], $p=\\ClusteredFullFixedOrderP$, while its preference over \\condNoGoals\\ is \\ClusteredFullNoGoalsRate\\ [\\ClusteredFullNoGoalsInterval], $p=\\ClusteredFullNoGoalsP$.",
-      "after": "In the exploratory prompt-level summary, our system is preferred to \\condFixedOrder\\ at \\ClusteredFullFixedOrderRate\\ [\\ClusteredFullFixedOrderInterval], $p=\\ClusteredFullFixedOrderP$, while the corresponding preference over \\condNoGoals\\ is \\ClusteredFullNoGoalsRate\\ [\\ClusteredFullNoGoalsInterval], $p=\\ClusteredFullNoGoalsP$."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Avoid an ambiguous pronoun for the Single-writer condition in the execution diagnostic.",
-      "before": "Within the tighter and wider pre-specified output-length bands, it still wins only \\SingleWriterLengthFiveRate\\ ($p=\\SingleWriterLengthFiveP$) and \\SingleWriterLengthTenRate\\ ($p=\\SingleWriterLengthTenP$), respectively, against our system, so output length alone does not explain the gap.",
-      "after": "Within the tighter and wider pre-specified output-length bands, \\condSingleWriter\\ still wins only \\SingleWriterLengthFiveRate\\ ($p=\\SingleWriterLengthFiveP$) and \\SingleWriterLengthTenRate\\ ($p=\\SingleWriterLengthTenP$), respectively, against our system, so output length alone does not explain the gap."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "The narrower post-hoc \\condSingleContext\\ check shows no significant difference from \\condAgenticCogWriter\\ in its exploratory generation run (\\SingleContextFullRate\\ win rate for \\condSingleContext, $p=\\SingleContextFullP$, unadjusted).",
-      "after": "The narrower post-hoc \\condSingleContext\\ check shows no significant difference from our system in the exploratory generation run (\\SingleContextFullRate\\ win rate for \\condSingleContext, $p=\\SingleContextFullP$, unadjusted)."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "The system therefore has the ability to revisit earlier processes but uses that flexibility infrequently on the evaluated prompts.",
-      "after": "Our system therefore has the ability to revisit earlier processes but uses that flexibility infrequently on the evaluated prompts."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "The most frequent complete process path is the forward planning--drafting--reviewing progression, and the unrestricted system is visually close to \\condFixedOrder\\ because much of its observed behavior follows that path.",
-      "after": "The most frequent complete process path is the forward planning--drafting--reviewing progression, and our system is visually close to \\condFixedOrder\\ because much of the observed behavior follows that path."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "\\condAgenticCogWriter\\ mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.",
-      "after": "Our system mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering."
-    },
-    {
-      "path": "paper/sec/10_appendix.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "In the tighter pre-specified matching band, the outcomes from the first generation run are \\LengthFullSinglePassFiveWLT\\ for \\condAgenticCogWriter\\ versus \\condSinglePass\\ ($p=\\LengthFullSinglePassFiveP$), \\LengthFullTaskPlanningFiveWLT\\ for \\condAgenticCogWriter\\ versus \\condTaskPlanning\\ ($p=\\LengthFullTaskPlanningFiveP$), and \\LengthFullNoGoalsFiveWLT\\ for \\condAgenticCogWriter\\ versus \\condNoGoals.",
-      "after": "In the tighter pre-specified matching band, the outcomes from the first generation run for our system are \\LengthFullSinglePassFiveWLT\\ versus \\condSinglePass\\ ($p=\\LengthFullSinglePassFiveP$), \\LengthFullTaskPlanningFiveWLT\\ versus \\condTaskPlanning\\ ($p=\\LengthFullTaskPlanningFiveP$), and \\LengthFullNoGoalsFiveWLT\\ versus \\condNoGoals."
-    },
-    {
-      "path": "paper/sec/10_appendix.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "Table~\\ref{tab:appendix-cross-family} reports combined outcomes for the three cross-family robustness contrasts: \\CrossFamilyFullSinglePassWLT\\ for \\condAgenticCogWriter\\ versus \\condSinglePass, \\CrossFamilyFullTaskPlanningWLT\\ for \\condAgenticCogWriter\\ versus \\condTaskPlanning, and \\CrossFamilyFullNoGoalsWLT\\ for \\condAgenticCogWriter\\ versus \\condNoGoals.",
-      "after": "Table~\\ref{tab:appendix-cross-family} reports combined outcomes for three cross-family robustness contrasts involving our system: \\CrossFamilyFullSinglePassWLT\\ versus \\condSinglePass, \\CrossFamilyFullTaskPlanningWLT\\ versus \\condTaskPlanning, and \\CrossFamilyFullNoGoalsWLT\\ versus \\condNoGoals."
-    },
-    {
-      "path": "paper/sec/10_appendix.tex",
-      "instruction": "Reduce repeated mentions of Agentic CogWriter within the same paragraph, preferring 'our system' when the referent is clear, while preserving the existing argument, evidence, terminology, and forward reader flow.",
-      "before": "\\condAgenticCogWriter\\ and \\condFixedOrder\\ record \\HabAfourRegenerated\\ and \\HabAsixRegenerated\\ regeneration events, respectively; their ledgers contain \\HabAfourLedger\\ and \\HabAsixLedger\\ no/proposal outcomes, respectively.",
-      "after": "Our system and \\condFixedOrder\\ record \\HabAfourRegenerated\\ and \\HabAsixRegenerated\\ regeneration events, respectively; their ledgers contain \\HabAfourLedger\\ and \\HabAsixLedger\\ no/proposal outcomes, respectively."
+      "path": "paper/fig/tex/overview.tex",
+      "instruction": "Apply the shared editorial role palette to Figure 1 and remove the redundant Planning/Translating/Reviewing process labels from the Planner/Translator/Reviewer nodes while preserving the architecture and caption.",
+      "before": "\\begin{figure}[t]\n\\centering\n\\begin{tikzpicture}[\n  >=Latex,\n  node distance=4.5mm and 3mm,\n  box/.style={draw, align=center, inner sep=3.2pt, font=\\small},\n  io/.style={box, minimum width=0.82\\columnwidth},\n  input/.style={io, fill=gray!12},\n  output/.style={io, fill=green!10, double, double distance=0.6pt},\n  agent/.style={box, rounded corners=2pt, minimum width=0.25\\columnwidth},\n  mainagent/.style={agent, fill=blue!16, line width=0.65pt},\n  subagent/.style={agent, fill=blue!7},\n  state/.style={box, rounded corners=1.5pt, dashed, fill=orange!10, minimum width=0.82\\columnwidth},\n  flow/.style={->, line width=0.55pt},\n  loop/.style={->, line width=0.55pt, rounded corners=4pt}\n]\n\n\\node[input] (task) {\\textbf{Input: writing task}\\\\instruction $I$ \\; + \\; context $C$ \\; + \\; output requirements $O$};\n\\node[mainagent, below=of task] (monitor) {\\textbf{Monitor}\\\\select next process};\n\n\\node[subagent, below=7mm of monitor] (translator) {\\textbf{Translator}\\\\\\texttt{Translating}};\n\\node[subagent, left=2.5mm of translator] (planner) {\\textbf{Planner}\\\\\\texttt{Planning}};\n\\node[subagent, right=2.5mm of translator] (reviewer) {\\textbf{Reviewer}\\\\\\texttt{Reviewing}};\n\n\\node[state, below=7mm of translator] (state) {\\textbf{Persistent writing state}\\\\draft $D_t$ \\; | \\; goals $G_t$ \\; | \\; history $H_t$};\n\\node[output, below=of state] (output) {\\textbf{Output: completed document} $D_{\\mathrm{final}}$};\n\n\\draw[flow] (task) -- (monitor);\n\\draw[flow] (monitor) -- (planner);\n\\draw[flow] (monitor) -- (translator);\n\\draw[flow] (monitor) -- (reviewer);\n\\draw[flow] (planner) -- (state);\n\\draw[flow] (translator) -- (state);\n\\draw[flow] (reviewer) -- (state);\n\\draw[loop] (state.west) -- ++(-7mm,0) |- (monitor.west);\n\\draw[flow, dashed] (state) -- node[right, font=\\scriptsize]{terminate after review} (output);\n\n\\end{tikzpicture}\n\\caption{Overview of \\condAgenticCogWriter. Inspired by the cognitive process theory of writing, a coding-agent-style control loop turns the task into a document via Planning, Translating, or Reviewing, selected online from the evolving document state.}\n\\label{fig:agentic-cogwriter}\n\\end{figure}\n",
+      "after": "\\begin{figure}[t]\n\\centering\n\\begin{tikzpicture}[\n  >=Latex,\n  node distance=4.5mm and 3mm,\n  box/.style={draw, align=center, inner sep=3.2pt, font=\\small},\n  io/.style={box, minimum width=0.82\\columnwidth},\n  input/.style={io, fill=EndpointFill, draw=EndpointStroke},\n  output/.style={io, fill=EndpointFill, draw=EndpointStroke, double, double distance=0.6pt},\n  agent/.style={box, rounded corners=2pt, minimum width=0.25\\columnwidth},\n  mainagent/.style={agent, fill=PromptMonitorFill, draw=PromptMonitorStroke, line width=0.65pt},\n  planner/.style={agent, fill=PromptPlannerFill, draw=PromptPlannerStroke},\n  translator/.style={agent, fill=PromptTranslatorFill, draw=PromptTranslatorStroke},\n  reviewer/.style={agent, fill=PromptReviewerFill, draw=PromptReviewerStroke},\n  state/.style={box, rounded corners=1.5pt, dashed, fill=WritingStateFill, draw=WritingStateStroke, minimum width=0.82\\columnwidth},\n  flow/.style={->, line width=0.55pt},\n  loop/.style={->, line width=0.55pt, rounded corners=4pt}\n]\n\n\\node[input] (task) {\\textbf{Input: writing task}\\\\instruction $I$ \\; + \\; context $C$ \\; + \\; output requirements $O$};\n\\node[mainagent, below=of task] (monitor) {\\textbf{Monitor}\\\\select next process};\n\n\\node[translator, below=7mm of monitor] (translator) {\\textbf{Translator}};\n\\node[planner, left=2.5mm of translator] (planner) {\\textbf{Planner}};\n\\node[reviewer, right=2.5mm of translator] (reviewer) {\\textbf{Reviewer}};\n\n\\node[state, below=7mm of translator] (state) {\\textbf{Persistent writing state}\\\\draft $D_t$ \\; | \\; goals $G_t$ \\; | \\; history $H_t$};\n\\node[output, below=of state] (output) {\\textbf{Output: completed document} $D_{\\mathrm{final}}$};\n\n\\draw[flow] (task) -- (monitor);\n\\draw[flow] (monitor) -- (planner);\n\\draw[flow] (monitor) -- (translator);\n\\draw[flow] (monitor) -- (reviewer);\n\\draw[flow] (planner) -- (state);\n\\draw[flow] (translator) -- (state);\n\\draw[flow] (reviewer) -- (state);\n\\draw[loop] (state.west) -- ++(-7mm,0) |- (monitor.west);\n\\draw[flow, dashed] (state) -- node[right, font=\\scriptsize]{terminate after review} (output);\n\n\\end{tikzpicture}\n\\caption{Overview of \\condAgenticCogWriter. Inspired by the cognitive process theory of writing, a coding-agent-style control loop turns the task into a document via Planning, Translating, or Reviewing, selected online from the evolving document state.}\n\\label{fig:agentic-cogwriter}\n\\end{figure}\n"
     }
-  ],
-  "created_files": []
+  ]
 }
