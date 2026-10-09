@@ -48,6 +48,12 @@
       "instruction": "Limitations の agreed winner wording を order-consistent comparison terminology に揃え、評価手順を plain language で説明する。",
       "before": "Pairwise win rates condition on comparisons where both presentation orders agree on a winner; Section~\\ref{sec:results-effectiveness} also reports unconditional and worst-case missing-output views.",
       "after": "Pairwise win rates are computed over order-consistent comparisons, where both presentation orders select the same response; Section~\\ref{sec:results-effectiveness} also reports unconditional and worst-case missing-output views."
+    },
+    {
+      "path": "paper/sec/09_prompt_configuration.tex",
+      "instruction": "Appendix の Agentic CogWriter 見出しも本文と同じ small-caps macro に統一する。",
+      "before": "\\subsubsection{Agentic CogWriter}",
+      "after": "\\subsubsection{\\condAgenticCogWriter}"
     }
   ]
 }
