@@ -1,11 +1,11 @@
 {
-  "baseline_sha": "3d4fa9ac9b02c53f223f86e2c763736bb041d4af",
+  "baseline_sha": "adc4213c01a96488b5540b5f3f8dcdecde4da306",
   "replacements": [
     {
-      "path": "paper/acl_latex.tex",
-      "instruction": "Rendered paragraph-end checkでAbstract末尾の `agents.` だけが次行に落ちるruntを、意味を変えず局所的に短縮する。第一候補のみを適用する。",
-      "before": "Together, the results support process-level control over writing operations as a promising design for long-form writing agents.",
-      "after": "Together, the results support process-level control as a promising design for long-form writing agents."
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Rendered paragraph-end checkでResults subsection headingの末尾 `Practice?` だけが次行に落ちるruntを解消するため、見出しだけを短縮する。本文や他のrunt候補は変更しない。",
+      "before": "\\subsection{How Does the Writing Loop Behave in Practice?}",
+      "after": "\\subsection{How Does the Writing Loop Behave?}"
     }
   ]
 }
