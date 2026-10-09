@@ -48,6 +48,66 @@
       "instruction": "Move the standalone Appendix navigation for process and resource statistics into a footnote without changing the result or destination.",
       "before": "Because the split is defined by observed behavior rather than random assignment, it cannot establish whether taking a different path causes better or worse output.\nSee Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.",
       "after": "Because the split is defined by observed behavior rather than random assignment, it cannot establish whether taking a different path causes better or worse output.\\footnote{See Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}"
+    },
+    {
+      "path": "paper/sec/00_abstract.tex",
+      "instruction": "Remove the rendered runt ending in the Abstract by tightening only the process-trace sentence without changing its claim.",
+      "before": "Process traces show that most runs follow one planning--drafting--reviewing cycle, with departures from that path used selectively rather than continually.",
+      "after": "Process traces show that most runs follow one planning--drafting--reviewing cycle, with departures used selectively rather than continually."
+    },
+    {
+      "path": "paper/sec/01_introduction.tex",
+      "instruction": "Remove the rendered runt ending in the theory-to-system bridge by using the already established writing-process terminology.",
+      "before": "The resulting view suggests a writing system whose control decision is not the next section or task node, but the next kind of writing work.",
+      "after": "The resulting view suggests a writing system whose control decision is not the next section or task node, but the next writing process."
+    },
+    {
+      "path": "paper/sec/03_method.tex",
+      "instruction": "Remove the rendered runt and split word at the end of the Reviewing description by tightening only the draft reference.",
+      "before": "If \\texttt{Reviewing} is selected, the \\texttt{Reviewer} checks the current draft against the task and active goals, revises within the delegated scope, and reports whether further planning, drafting, or review is needed.",
+      "after": "If \\texttt{Reviewing} is selected, the \\texttt{Reviewer} checks the draft against the task and active goals, revises within the delegated scope, and reports whether further planning, drafting, or review is needed."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Remove the rendered runt ending in the full-system description by dropping the unnecessary directional adverb only.",
+      "before": "We use the full system as the focal condition below.",
+      "after": "We use the full system as the focal condition."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Prevent the rendered split of subagent mechanism by shortening only the system-name lead-in while preserving the implementation claim and footnote.",
+      "before": "\\condAgenticCogWriter\\ is packaged as an agent skill: the top-level \\texttt{Monitor} invokes \\texttt{Planner}, \\texttt{Translator}, and \\texttt{Reviewer} through the harness's subagent mechanism.\\footnote{See Appendix~\\ref{app:prompts} for the complete prompts and Appendix~\\ref{app:runtime} for the runtime settings.}",
+      "after": "Our system is packaged as an agent skill: the top-level \\texttt{Monitor} invokes \\texttt{Planner}, \\texttt{Translator}, and \\texttt{Reviewer} through the harness's subagent mechanism.\\footnote{See Appendix~\\ref{app:prompts} for the complete prompts and Appendix~\\ref{app:runtime} for the runtime settings.}"
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Remove the rendered quality-scale runt by deleting only the redundant modifier before composite while preserving the pointwise interpretation and footnote.",
+      "before": "The resulting composite is relative within a benchmark rather than an absolute quality scale.\\footnote{See Appendix~\\ref{app:prompts} for the full procedures and evaluator prompts.}",
+      "after": "The composite is relative within a benchmark rather than an absolute quality scale.\\footnote{See Appendix~\\ref{app:prompts} for the full procedures and evaluator prompts.}"
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Remove the rendered prompt-samples runt by compressing the repeated prompt-set wording without changing the independence claim or footnote.",
+      "before": "Generation runs remain separate because they repeat the same prompt set rather than provide new independent prompt samples.\\footnote{See Appendix~\\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\\citep{wilson1927}, and corrected test decisions.}",
+      "after": "Generation runs remain separate because they repeat the same prompts rather than provide new independent samples.\\footnote{See Appendix~\\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\\citep{wilson1927}, and corrected test decisions.}"
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Remove the rendered main-results runt by replacing the redundant timing clause with the standard post-hoc term already used in the paragraph.",
+      "before": "We report a prompt-level bootstrap interval and sign test, treating this summary as exploratory because it was defined after the main results.",
+      "after": "We report a prompt-level bootstrap interval and sign test, treating this summary as exploratory because it was defined post hoc."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Remove the rendered default-cycle runt by referring back to the cycle established in the preceding sentence.",
+      "before": "The behavior is consistent with the small exploratory advantage over \\condFixedOrder: adaptive ordering can help only on runs where the controller has reason to depart from the default cycle.",
+      "after": "The behavior is consistent with the small exploratory advantage over \\condFixedOrder: adaptive ordering can help only on runs where the controller has reason to depart from that cycle."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Remove the rendered worse-output runt by tightening only the causal wording while preserving the observational caveat and footnote.",
+      "before": "Because the split is defined by observed behavior rather than random assignment, it cannot establish whether taking a different path causes better or worse output.\\footnote{See Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}",
+      "after": "Because the split is defined by observed behavior rather than random assignment, it cannot establish whether a different path improves or worsens output.\\footnote{See Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}"
     }
   ],
   "created_files": []
