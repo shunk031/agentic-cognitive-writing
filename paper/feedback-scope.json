@@ -1,11 +1,11 @@
 {
-  "baseline_sha": "adc4213c01a96488b5540b5f3f8dcdecde4da306",
+  "baseline_sha": "520c733f9a9120f31ea17b493016c25e68c44d54",
   "replacements": [
     {
       "path": "paper/sec/05_results.tex",
-      "instruction": "Rendered paragraph-end checkでResults subsection headingの末尾 `Practice?` だけが次行に落ちるruntを解消するため、見出しだけを短縮する。本文や他のrunt候補は変更しない。",
-      "before": "\\subsection{How Does the Writing Loop Behave in Practice?}",
-      "after": "\\subsection{How Does the Writing Loop Behave?}"
+      "instruction": "Results subsection headingを、ユーザーが第一候補として指定していた `Observed Writing-Process Behavior` に戻す。見出し以外は変更しない。",
+      "before": "\\subsection{How Does the Writing Loop Behave?}",
+      "after": "\\subsection{Observed Writing-Process Behavior}"
     }
   ]
 }
