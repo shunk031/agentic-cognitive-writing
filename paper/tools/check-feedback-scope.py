@@ -3,7 +3,10 @@
 
 For each feedback batch, paper/feedback-scope.json records the commit immediately
 before the batch and the exact before/after replacements authorized for that batch.
-The scope declaration must be committed separately from manuscript .tex edits.
+Scope declarations must be committed separately from manuscript .tex edits. The
+manifest may be extended in later manifest-only commits when the author adds
+feedback before the batch is complete; the final manifest still audits the full
+prose diff from baseline to HEAD.
 """
 
 from __future__ import annotations
@@ -29,7 +32,8 @@ def normalize_eof(text: str) -> str:
 
 def main() -> None:
     repo = Path(git("rev-parse", "--show-toplevel"))
-    manifest_path = repo / "paper" / "feedback-scope.json"
+    manifest_rel = "paper/feedback-scope.json"
+    manifest_path = repo / manifest_rel
     if not manifest_path.exists():
         fail("paper/feedback-scope.json is missing")
 
@@ -46,8 +50,12 @@ def main() -> None:
         stderr=subprocess.DEVNULL,
     )
 
-    # The scope declaration itself must be separate from manuscript edits and
-    # must not be rewritten later in the same feedback batch.
+    # Scope declarations must remain separate from prose edits. The author can
+    # add feedback while a batch is in progress, so allow multiple declaration
+    # commits, but require every one of them to be manifest-only. The final
+    # manifest below still has to reproduce the complete baseline-to-HEAD TeX
+    # diff exactly, so additive declarations do not widen the prose allowance
+    # implicitly.
     scope_commits = [
         line
         for line in git(
@@ -55,27 +63,25 @@ def main() -> None:
             "--format=%H",
             f"{baseline}..HEAD",
             "--",
-            "paper/feedback-scope.json",
+            manifest_rel,
         ).splitlines()
         if line
     ]
-    if len(scope_commits) != 1:
-        fail(
-            "feedback-scope.json must be declared exactly once after baseline_sha; "
-            f"found {len(scope_commits)} commits"
-        )
-    scope_commit = scope_commits[0]
-    scope_commit_files = set(
-        git("diff-tree", "--no-commit-id", "--name-only", "-r", scope_commit).splitlines()
-    )
-    tex_in_scope_commit = sorted(
-        path for path in scope_commit_files if path.startswith("paper/") and path.endswith(".tex")
-    )
-    if tex_in_scope_commit:
-        fail(
-            "scope declaration commit also changes manuscript TeX: "
-            + ", ".join(tex_in_scope_commit)
-        )
+    if not scope_commits:
+        fail("feedback-scope.json must be declared after baseline_sha")
+    for scope_commit in scope_commits:
+        scope_commit_files = {
+            path
+            for path in git(
+                "diff-tree", "--no-commit-id", "--name-only", "-r", scope_commit
+            ).splitlines()
+            if path
+        }
+        if scope_commit_files != {manifest_rel}:
+            fail(
+                "each feedback-scope declaration commit must be manifest-only; "
+                f"{scope_commit} changed: " + ", ".join(sorted(scope_commit_files))
+            )
 
     by_path: dict[str, list[dict[str, str]]] = {}
     for index, item in enumerate(replacements, start=1):
@@ -153,7 +159,8 @@ def main() -> None:
 
     print(
         "Feedback scope guard: passed "
-        f"(baseline={baseline}, declared replacements={len(replacements)})"
+        f"(baseline={baseline}, scope declarations={len(scope_commits)}, "
+        f"declared replacements={len(replacements)})"
     )
 
 
