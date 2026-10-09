@@ -12,10 +12,8 @@ WritingBench native scores are rescaled to 0--1 for display, and the common-rubr
 
 Table~\ref{tab:pairwise-results} reports a system-level separation in direct same-prompt comparisons.
 \condAgenticCogWriter\ is preferred to \condSinglePass, \condStaged, and \condTaskPlanning, with across-benchmark mean win rates of \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean, respectively, among order-consistent comparisons.
-The direction holds in every benchmark and generation run against \condSinglePass\ and \condTaskPlanning, and in all but one benchmark--run test against \condStaged.
-See Appendix~\ref{app:pairwise-detail} for the run-level intervals and corrected test decisions.
-The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare, \UncondFullStagedWinShare, and \UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate, \WorstCaseFullStagedRate, and \WorstCaseFullTaskPlanningRate\ among order-consistent comparisons.
-See Appendix~\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \condSinglePass.
+The direction holds in every benchmark and generation run against \condSinglePass\ and \condTaskPlanning, and in all but one benchmark--run test against \condStaged.\footnote{See Appendix~\ref{app:pairwise-detail} for the run-level intervals and corrected test decisions.}
+The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare, \UncondFullStagedWinShare, and \UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate, \WorstCaseFullStagedRate, and \WorstCaseFullTaskPlanningRate\ among order-consistent comparisons.\footnote{See Appendix~\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \condSinglePass.}
 
 \input{tab/pairwise-results}
 
@@ -37,8 +35,7 @@ Because the summary was defined after the main results, both remain exploratory.
 Execution changes produce a larger but less easily isolated difference.
 \condSingleWriter\ removes subagent delegation, changes role context and decision granularity, and alters output length at the same time.
 Within the tighter and wider pre-specified output-length bands, \condSingleWriter\ still wins only \SingleWriterLengthFiveRate\ ($p=\SingleWriterLengthFiveP$) and \SingleWriterLengthTenRate\ ($p=\SingleWriterLengthTenP$), respectively, against our system, so output length alone does not explain the gap.
-The narrower post-hoc \condSingleContext\ check shows no significant difference from our system in the exploratory generation run (\SingleContextFullRate\ win rate for \condSingleContext, $p=\SingleContextFullP$, unadjusted).
-See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level diagnostic and the remaining execution differences.
+The narrower post-hoc \condSingleContext\ check shows no significant difference from our system in the exploratory generation run (\SingleContextFullRate\ win rate for \condSingleContext, $p=\SingleContextFullP$, unadjusted).\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level diagnostic and the remaining execution differences.}
 
 \subsection{Observed Writing-Process Behavior}
 \label{sec:results-process-dynamics}
@@ -78,7 +75,6 @@ P, T, R, and E denote \texttt{Planning}, \texttt{Translating}, \texttt{Reviewing
 
 Observed departures from the common process path do not show a larger quality advantage.
 Table~\ref{tab:trace-outcome} compares runs that complete exactly one planning--drafting--reviewing cycle with runs that take any other path and finds similar pairwise win rates against \condFixedOrder\ and \condSingleWriter.
-Because the split is defined by observed behavior rather than random assignment, it cannot establish whether taking a different path causes better or worse output.
-See Appendix~\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.
+Because the split is defined by observed behavior rather than random assignment, it cannot establish whether taking a different path causes better or worse output.\footnote{See Appendix~\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}
 
 \input{tab/trace-outcome}
