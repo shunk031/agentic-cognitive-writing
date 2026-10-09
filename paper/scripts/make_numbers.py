@@ -2097,10 +2097,10 @@ def _three_run_quality_entries(report: dict[str, Any]) -> list[tuple[str, str, s
             if not isinstance(cell, dict):
                 raise ValueError(f"{source} is missing")
             prefix = f"\\ThreeRun{benchmark_word}{condition_word}"
-            mean, sd = _three_run_stat(cell.get("four_condition_composite"), source + ".four_condition_composite")
+            mean, sd = _three_run_stat(cell.get("composite"), source + ".composite")
             entries += [
-                (prefix + "PointwiseMean", f"{mean:.3f}", source + ".four_condition_composite.mean"),
-                (prefix + "PointwiseSD", f"{sd:.3f}", source + ".four_condition_composite.sample_sd"),
+                (prefix + "PointwiseMean", f"{mean:.3f}", source + ".composite.mean"),
+                (prefix + "PointwiseSD", f"{sd:.3f}", source + ".composite.sample_sd"),
             ]
             if benchmark in THREE_RUN_NATIVE_SCALE:
                 scale = THREE_RUN_NATIVE_SCALE[benchmark]
@@ -2125,9 +2125,35 @@ def _three_run_quality_entries(report: dict[str, Any]) -> list[tuple[str, str, s
     return entries
 
 
-def _render_three_run_quality_block(report: dict[str, Any]) -> str:
+def _paired_quality_entries(paired: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Paired prompt-level bootstrap differences, Agentic CogWriter minus each compared system."""
+    contrasts = paired.get("contrasts")
+    if not isinstance(contrasts, dict):
+        raise ValueError("paired quality JSON is missing contrasts")
+    entries = []
+    for benchmark, benchmark_word in THREE_RUN_BENCHMARKS.items():
+        scores = ("native", "pointwise") if benchmark in THREE_RUN_NATIVE_SCALE else ("pointwise",)
+        for score in scores:
+            for condition, condition_word in THREE_RUN_CONDITIONS.items():
+                if condition == "A4":
+                    continue
+                source = f"paired quality JSON contrasts.{benchmark}.{score}.A4-{condition}"
+                cell = contrasts.get(benchmark, {}).get(score, {}).get(f"A4-{condition}") if isinstance(contrasts.get(benchmark), dict) else None
+                if not isinstance(cell, dict) or not isinstance(cell.get("ci95"), list) or len(cell["ci95"]) != 2:
+                    raise ValueError(f"{source} is missing or lacks a two-sided ci95")
+                scale = THREE_RUN_NATIVE_SCALE[benchmark] if score == "native" else 1.0
+                values = [cell.get("mean_difference"), *cell["ci95"]]
+                if any(isinstance(v, bool) or not isinstance(v, (int, float)) for v in values):
+                    raise ValueError(f"{source} has non-numeric values")
+                prefix = f"\\PairedQuality{benchmark_word}{score.capitalize()}{condition_word}"
+                for suffix, value, field in zip(("Diff", "Low", "High"), values, ("mean_difference", "ci95[0]", "ci95[1]")):
+                    entries.append((prefix + suffix, f"{value / scale:+.3f}", source + f".{field}" + (f" / {scale:g}" if scale != 1 else "")))
+    return entries
+
+
+def _render_three_run_quality_block(report: dict[str, Any], paired: dict[str, Any]) -> str:
     lines = ["% Three-run document-quality macros."]
-    for name, value, source in _three_run_quality_entries(report):
+    for name, value, source in [*_three_run_quality_entries(report), *_paired_quality_entries(paired)]:
         lines.extend([_source_comment(source), f"\\newcommand{{{name}}}{{{value}}}"])
     return "\n".join(lines) + "\n"
 
@@ -2142,7 +2168,7 @@ def main() -> None:
     parser.add_argument("--process-sequences", type=Path)
     parser.add_argument("--compute-stratified-sensitivity", type=Path)
     parser.add_argument("--adversarial-review-analysis", type=Path)
-    parser.add_argument("--three-run-quality", type=Path)
+    parser.add_argument("--three-run-quality", nargs=2, type=Path, metavar=("SUMMARY", "PAIRED"))
     parser.add_argument(
         "--a8-stage1",
         nargs=3,
@@ -2157,12 +2183,13 @@ def main() -> None:
     if args.three_run_quality is not None:
         if args.aggregations or args.a8_stage1 is not None or args.adversarial_review_analysis is not None:
             parser.error("--three-run-quality runs on its own and appends to the existing numbers.tex")
-        report = _read_json_object(args.three_run_quality, "three-run quality")
+        report = _read_json_object(args.three_run_quality[0], "three-run quality")
+        paired = _read_json_object(args.three_run_quality[1], "paired quality")
         existing_text = args.output.read_text(encoding="utf-8") if args.output.is_file() else ""
         marker = "% Three-run document-quality macros."
         if marker in existing_text:
             existing_text = existing_text.split(marker, 1)[0].rstrip() + "\n"
-        args.output.write_text(existing_text.rstrip() + "\n\n" + _render_three_run_quality_block(report), encoding="utf-8")
+        args.output.write_text(existing_text.rstrip() + "\n\n" + _render_three_run_quality_block(report, paired), encoding="utf-8")
         print(f"wrote {args.output}")
         return
     if not args.aggregations and args.a8_stage1 is None and args.adversarial_review_analysis is None:

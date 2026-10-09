@@ -171,8 +171,8 @@ def check() -> None:
         for cell in (f"Writing{condition}Native", f"Writing{condition}Pointwise", f"Hello{condition}Native", f"Hello{condition}Pointwise", f"DoLo{condition}Pointwise"):
             expected_main.extend(f"{numeric_macro(numbers, f'ThreeRun{cell}{stat}'):.3f}" for stat in ("Mean", "SD"))
     assert main_values == expected_main, ("tab/main-results.tex: displayed scores are stale relative to numbers.tex", main_values, expected_main)
-    assert "Best and second-best means in each column are shown in \\textbf{bold} and \\underline{underlined}, respectively." in main
-    assert tabular_body(main).count(r"\underline{") == 5, "tab/main-results.tex: underline the second-best score in each reported column"
+    assert "Bold marks the highest mean in each column." in main
+    assert tabular_body(main).count(r"\tnote{\dag}") == main.count(r"\textcolor{tiedgray}"), "tab/main-results.tex: every gray leader carries the dagger note"
     assert main.count(r"\uparrow") == 6, "tab/main-results.tex: mark every score column as higher-is-better"
     assert "divided by 10" not in main, "tab/main-results.tex: keep display-rescaling detail out of the caption"
 

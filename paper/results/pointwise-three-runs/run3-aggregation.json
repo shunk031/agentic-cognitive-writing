@@ -255,6 +255,39 @@
         "scale": "0-1"
       },
       {
+        "benchmark": "HelloBench",
+        "condition": "A5",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7883690476190476
+        },
+        "mean_score": 0.7883690476190476,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A6",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7865000000000001
+        },
+        "mean_score": 0.7865000000000001,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A7",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7698452380952381
+        },
+        "mean_score": 0.7698452380952381,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
         "benchmark": "WritingBench",
         "condition": "A1",
         "judge_scores": {
@@ -297,9 +330,42 @@
         "platform": "codex",
         "run_count": 100,
         "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A5",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 7.376
+        },
+        "mean_score": 7.376,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A6",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 7.422000000000001
+        },
+        "mean_score": 7.422000000000001,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 7.587878787878789
+        },
+        "mean_score": 7.587878787878789,
+        "platform": "codex",
+        "run_count": 99,
+        "scale": "1-10"
       }
     ],
-    "run_count": 800
+    "run_count": 1399
   },
   "pairwise": {
     "benchmarks": {
@@ -321,19 +387,31 @@
                 "losses": 64,
                 "ties": 9,
                 "wins": 119
+              },
+              "A4:A5": {
+                "losses": 85,
+                "ties": 20,
+                "wins": 85
+              },
+              "A4:A6": {
+                "losses": 73,
+                "ties": 31,
+                "wins": 84
               }
             },
-            "expected_pairs": 300,
+            "expected_pairs": 500,
             "fit_status": "ok",
             "holm_family": {
               "derivation": "Holm correction over the contrasts present in this aggregation report after canonical-run selection; not the confirmatory family.",
               "member_labels": [
                 "report:A4:A1",
                 "report:A4:A2",
-                "report:A4:A3"
+                "report:A4:A3",
+                "report:A4:A5",
+                "report:A4:A6"
               ],
               "name": "report_local",
-              "size": 3
+              "size": 5
             },
             "judges": {
               "gpt-5.6-sol-pairwise-v1": {
@@ -352,29 +430,41 @@
                     "losses": 64,
                     "ties": 9,
                     "wins": 119
+                  },
+                  "A4:A5": {
+                    "losses": 85,
+                    "ties": 20,
+                    "wins": 85
+                  },
+                  "A4:A6": {
+                    "losses": 73,
+                    "ties": 31,
+                    "wins": 84
                   }
                 },
                 "fit_status": "ok",
-                "position_consistency_rate": 0.7972027972027972,
-                "run_count": 382,
-                "scored_pairs": 286,
+                "position_consistency_rate": 0.7684210526315789,
+                "run_count": 571,
+                "scored_pairs": 475,
                 "strengths": {
-                  "A1": 0.8065939466742492,
-                  "A2": 1.3537035119984961,
-                  "A3": 0.712725914566971,
-                  "A4": 1.2849875977676262
+                  "A1": 0.756545898893905,
+                  "A2": 1.2697080663312954,
+                  "A3": 0.6685022493999024,
+                  "A4": 1.2052558802989448,
+                  "A5": 1.205255880318306,
+                  "A6": 1.072011511654858
                 }
               }
             },
-            "missing_pairs": 14,
-            "position_consistency_rate": 0.7972027972027972,
+            "missing_pairs": 25,
+            "position_consistency_rate": 0.7684210526315789,
             "prompt_collapsed_across_judges": {
               "A4:A1": {
                 "judge_disagreements": 0,
                 "judge_prompt_observations": 94,
                 "losses": 27,
                 "n_non_tie": 75,
-                "p_holm_report_local": 0.04059681398021489,
+                "p_holm_report_local": 0.08119362796042978,
                 "p_raw": 0.020298406990107445,
                 "presentation_disagreements": 19,
                 "prompt_total": 94,
@@ -404,7 +494,7 @@
                 "judge_prompt_observations": 96,
                 "losses": 24,
                 "n_non_tie": 76,
-                "p_holm_report_local": 0.005285616008821873,
+                "p_holm_report_local": 0.008809360014703121,
                 "p_raw": 0.0017618720029406244,
                 "presentation_disagreements": 17,
                 "prompt_total": 96,
@@ -413,13 +503,43 @@
                 "wilson_low": 0.5730035365466362,
                 "win_rate": 0.6842105263157895,
                 "wins": 52
+              },
+              "A4:A5": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 95,
+                "losses": 32,
+                "n_non_tie": 67,
+                "p_holm_report_local": 1.0,
+                "p_raw": 0.807194691367025,
+                "presentation_disagreements": 23,
+                "prompt_total": 95,
+                "ties": 28,
+                "wilson_high": 0.6374961340504036,
+                "wilson_low": 0.4048519492604335,
+                "win_rate": 0.5223880597014925,
+                "wins": 35
+              },
+              "A4:A6": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 94,
+                "losses": 26,
+                "n_non_tie": 57,
+                "p_holm_report_local": 1.0,
+                "p_raw": 0.5966417603730826,
+                "presentation_disagreements": 29,
+                "prompt_total": 94,
+                "ties": 37,
+                "wilson_high": 0.6662739441690716,
+                "wilson_low": 0.41590685979119335,
+                "win_rate": 0.543859649122807,
+                "wins": 31
               }
             },
             "record_pooled": {
               "A4:A1": {
                 "losses": 69,
                 "n_non_tie": 181,
-                "p_holm_report_local": 0.0034411454589887615,
+                "p_holm_report_local": 0.006882290917977523,
                 "p_raw": 0.0017205727294943808,
                 "ties": 7,
                 "wilson_high": 0.6863763828489404,
@@ -430,7 +550,7 @@
               "A4:A2": {
                 "losses": 88,
                 "n_non_tie": 171,
-                "p_holm_report_local": 0.7597940341218284,
+                "p_holm_report_local": 1.0,
                 "p_raw": 0.7597940341218284,
                 "ties": 21,
                 "wilson_high": 0.5597835938690416,
@@ -441,22 +561,46 @@
               "A4:A3": {
                 "losses": 64,
                 "n_non_tie": 183,
-                "p_holm_report_local": 0.00017471718136991842,
+                "p_holm_report_local": 0.00029119530228319734,
                 "p_raw": 5.8239060456639473e-05,
                 "ties": 9,
                 "wilson_high": 0.7156325452388785,
                 "wilson_low": 0.5787346704055987,
                 "win_rate": 0.6502732240437158,
                 "wins": 119
+              },
+              "A4:A5": {
+                "losses": 85,
+                "n_non_tie": 170,
+                "p_holm_report_local": 1.0,
+                "p_raw": 1.0,
+                "ties": 20,
+                "wilson_high": 0.5743261121740796,
+                "wilson_low": 0.4256738878259204,
+                "win_rate": 0.5,
+                "wins": 85
+              },
+              "A4:A6": {
+                "losses": 73,
+                "n_non_tie": 157,
+                "p_holm_report_local": 1.0,
+                "p_raw": 0.4249115601338554,
+                "ties": 31,
+                "wilson_high": 0.6112812669539669,
+                "wilson_low": 0.4571090602704508,
+                "win_rate": 0.535031847133758,
+                "wins": 84
               }
             },
             "run_count": 690,
-            "scored_pairs": 286,
+            "scored_pairs": 475,
             "strengths": {
-              "A1": 0.8065939466742492,
-              "A2": 1.3537035119984961,
-              "A3": 0.712725914566971,
-              "A4": 1.2849875977676262
+              "A1": 0.756545898893905,
+              "A2": 1.2697080663312954,
+              "A3": 0.6685022493999024,
+              "A4": 1.2052558802989448,
+              "A5": 1.205255880318306,
+              "A6": 1.072011511654858
             }
           }
         }
@@ -479,19 +623,31 @@
                 "losses": 61,
                 "ties": 34,
                 "wins": 105
+              },
+              "A4:A5": {
+                "losses": 82,
+                "ties": 27,
+                "wins": 91
+              },
+              "A4:A6": {
+                "losses": 74,
+                "ties": 34,
+                "wins": 92
               }
             },
-            "expected_pairs": 300,
+            "expected_pairs": 500,
             "fit_status": "ok",
             "holm_family": {
               "derivation": "Holm correction over the contrasts present in this aggregation report after canonical-run selection; not the confirmatory family.",
               "member_labels": [
                 "report:A4:A1",
                 "report:A4:A2",
-                "report:A4:A3"
+                "report:A4:A3",
+                "report:A4:A5",
+                "report:A4:A6"
               ],
               "name": "report_local",
-              "size": 3
+              "size": 5
             },
             "judges": {
               "gpt-5.6-sol-pairwise-v1": {
@@ -510,29 +666,41 @@
                     "losses": 61,
                     "ties": 34,
                     "wins": 105
+                  },
+                  "A4:A5": {
+                    "losses": 82,
+                    "ties": 27,
+                    "wins": 91
+                  },
+                  "A4:A6": {
+                    "losses": 74,
+                    "ties": 34,
+                    "wins": 92
                   }
                 },
                 "fit_status": "ok",
-                "position_consistency_rate": 0.7133333333333334,
-                "run_count": 400,
-                "scored_pairs": 300,
+                "position_consistency_rate": 0.668,
+                "run_count": 600,
+                "scored_pairs": 500,
                 "strengths": {
-                  "A1": 0.4104330284229721,
-                  "A2": 1.2856262382041976,
-                  "A3": 1.100750449040897,
-                  "A4": 1.7216865997448167
+                  "A1": 0.358239887434033,
+                  "A2": 1.1221382466318568,
+                  "A3": 0.9607723785453195,
+                  "A4": 1.5027465407925593,
+                  "A5": 1.3733233936880398,
+                  "A6": 1.254586561596036
                 }
               }
             },
             "missing_pairs": 0,
-            "position_consistency_rate": 0.7133333333333334,
+            "position_consistency_rate": 0.668,
             "prompt_collapsed_across_judges": {
               "A4:A1": {
                 "judge_disagreements": 0,
                 "judge_prompt_observations": 100,
                 "losses": 11,
                 "n_non_tie": 82,
-                "p_holm_report_local": 2.0441349038024103e-11,
+                "p_holm_report_local": 3.4068915063373505e-11,
                 "p_raw": 6.813783012674701e-12,
                 "presentation_disagreements": 16,
                 "prompt_total": 100,
@@ -547,7 +715,7 @@
                 "judge_prompt_observations": 100,
                 "losses": 25,
                 "n_non_tie": 61,
-                "p_holm_report_local": 0.20003136851310316,
+                "p_holm_report_local": 0.6000941055393094,
                 "p_raw": 0.20003136851310316,
                 "presentation_disagreements": 37,
                 "prompt_total": 100,
@@ -562,7 +730,7 @@
                 "judge_prompt_observations": 100,
                 "losses": 18,
                 "n_non_tie": 58,
-                "p_holm_report_local": 0.010709719301600584,
+                "p_holm_report_local": 0.02141943860320117,
                 "p_raw": 0.005354859650800292,
                 "presentation_disagreements": 33,
                 "prompt_total": 100,
@@ -571,13 +739,43 @@
                 "wilson_low": 0.5619693557571829,
                 "win_rate": 0.6896551724137931,
                 "wins": 40
+              },
+              "A4:A5": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 23,
+                "n_non_tie": 52,
+                "p_holm_report_local": 0.6000941055393094,
+                "p_raw": 0.48845566937989204,
+                "presentation_disagreements": 45,
+                "prompt_total": 100,
+                "ties": 48,
+                "wilson_high": 0.6840494318059871,
+                "wilson_low": 0.42339761787202884,
+                "win_rate": 0.5576923076923077,
+                "wins": 29
+              },
+              "A4:A6": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 24,
+                "n_non_tie": 57,
+                "p_holm_report_local": 0.6000941055393094,
+                "p_raw": 0.2892437471090205,
+                "presentation_disagreements": 35,
+                "prompt_total": 100,
+                "ties": 43,
+                "wilson_high": 0.6981240331724827,
+                "wilson_low": 0.44980141395599427,
+                "win_rate": 0.5789473684210527,
+                "wins": 33
               }
             },
             "record_pooled": {
               "A4:A1": {
                 "losses": 34,
                 "n_non_tie": 191,
-                "p_holm_report_local": 1.2971999318471203e-19,
+                "p_holm_report_local": 2.1619998864118668e-19,
                 "p_raw": 4.323999772823734e-20,
                 "ties": 9,
                 "wilson_high": 0.8697261137767767,
@@ -588,7 +786,7 @@
               "A4:A2": {
                 "losses": 72,
                 "n_non_tie": 173,
-                "p_holm_report_local": 0.032969756410882636,
+                "p_holm_report_local": 0.09890926923264791,
                 "p_raw": 0.032969756410882636,
                 "ties": 27,
                 "wilson_high": 0.6546673685134337,
@@ -599,22 +797,46 @@
               "A4:A3": {
                 "losses": 61,
                 "n_non_tie": 166,
-                "p_holm_report_local": 0.0015881265609396808,
+                "p_holm_report_local": 0.0031762531218793616,
                 "p_raw": 0.0007940632804698404,
                 "ties": 34,
                 "wilson_high": 0.7021011308469167,
                 "wilson_low": 0.556964001456568,
                 "win_rate": 0.6325301204819277,
                 "wins": 105
+              },
+              "A4:A5": {
+                "losses": 82,
+                "n_non_tie": 173,
+                "p_holm_report_local": 0.5431598394773466,
+                "p_raw": 0.5431598394773466,
+                "ties": 27,
+                "wilson_high": 0.599041870094428,
+                "wilson_low": 0.45185117308684,
+                "win_rate": 0.5260115606936416,
+                "wins": 91
+              },
+              "A4:A6": {
+                "losses": 74,
+                "n_non_tie": 166,
+                "p_holm_report_local": 0.3737076432936736,
+                "p_raw": 0.1868538216468368,
+                "ties": 34,
+                "wilson_high": 0.6277535311901231,
+                "wilson_low": 0.4782276592976661,
+                "win_rate": 0.5542168674698795,
+                "wins": 92
               }
             },
             "run_count": 700,
-            "scored_pairs": 300,
+            "scored_pairs": 500,
             "strengths": {
-              "A1": 0.4104330284229721,
-              "A2": 1.2856262382041976,
-              "A3": 1.100750449040897,
-              "A4": 1.7216865997448167
+              "A1": 0.358239887434033,
+              "A2": 1.1221382466318568,
+              "A3": 0.9607723785453195,
+              "A4": 1.5027465407925593,
+              "A5": 1.3733233936880398,
+              "A6": 1.254586561596036
             }
           }
         }
@@ -637,19 +859,31 @@
                 "losses": 78,
                 "ties": 0,
                 "wins": 122
+              },
+              "A4:A5": {
+                "losses": 96,
+                "ties": 3,
+                "wins": 101
+              },
+              "A4:A6": {
+                "losses": 88,
+                "ties": 3,
+                "wins": 107
               }
             },
-            "expected_pairs": 300,
+            "expected_pairs": 500,
             "fit_status": "ok",
             "holm_family": {
               "derivation": "Holm correction over the contrasts present in this aggregation report after canonical-run selection; not the confirmatory family.",
               "member_labels": [
                 "report:A4:A1",
                 "report:A4:A2",
-                "report:A4:A3"
+                "report:A4:A3",
+                "report:A4:A5",
+                "report:A4:A6"
               ],
               "name": "report_local",
-              "size": 3
+              "size": 5
             },
             "judges": {
               "gpt-5.6-sol-pairwise-v1": {
@@ -668,29 +902,41 @@
                     "losses": 78,
                     "ties": 0,
                     "wins": 122
+                  },
+                  "A4:A5": {
+                    "losses": 96,
+                    "ties": 3,
+                    "wins": 101
+                  },
+                  "A4:A6": {
+                    "losses": 88,
+                    "ties": 3,
+                    "wins": 107
                   }
                 },
                 "fit_status": "ok",
-                "position_consistency_rate": 0.8066666666666666,
-                "run_count": 400,
-                "scored_pairs": 300,
+                "position_consistency_rate": 0.781563126252505,
+                "run_count": 599,
+                "scored_pairs": 499,
                 "strengths": {
-                  "A1": 0.5395034640667429,
-                  "A2": 0.7471711968332693,
-                  "A3": 1.259389901001244,
-                  "A4": 1.9698149734321546
+                  "A1": 0.4481328199255911,
+                  "A2": 0.6206298155669597,
+                  "A3": 1.0460988396562514,
+                  "A4": 1.6362058773993526,
+                  "A5": 1.5563909564943132,
+                  "A6": 1.3496813458995063
                 }
               }
             },
-            "missing_pairs": 0,
-            "position_consistency_rate": 0.8066666666666666,
+            "missing_pairs": 1,
+            "position_consistency_rate": 0.781563126252505,
             "prompt_collapsed_across_judges": {
               "A4:A1": {
                 "judge_disagreements": 0,
                 "judge_prompt_observations": 100,
                 "losses": 16,
                 "n_non_tie": 89,
-                "p_holm_report_local": 2.1712089195226367e-09,
+                "p_holm_report_local": 3.618681532537728e-09,
                 "p_raw": 7.237363065075456e-10,
                 "presentation_disagreements": 11,
                 "prompt_total": 100,
@@ -705,7 +951,7 @@
                 "judge_prompt_observations": 100,
                 "losses": 18,
                 "n_non_tie": 81,
-                "p_holm_report_local": 1.0408807129462832e-06,
+                "p_holm_report_local": 2.0817614258925663e-06,
                 "p_raw": 5.204403564731416e-07,
                 "presentation_disagreements": 19,
                 "prompt_total": 100,
@@ -720,7 +966,7 @@
                 "judge_prompt_observations": 100,
                 "losses": 25,
                 "n_non_tie": 72,
-                "p_holm_report_local": 0.012774595538064903,
+                "p_holm_report_local": 0.03832378661419471,
                 "p_raw": 0.012774595538064903,
                 "presentation_disagreements": 28,
                 "prompt_total": 100,
@@ -729,13 +975,43 @@
                 "wilson_low": 0.5376130384560558,
                 "win_rate": 0.6527777777777778,
                 "wins": 47
+              },
+              "A4:A5": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 33,
+                "n_non_tie": 68,
+                "p_holm_report_local": 0.9035973456835125,
+                "p_raw": 0.9035973456835125,
+                "presentation_disagreements": 32,
+                "prompt_total": 100,
+                "ties": 32,
+                "wilson_high": 0.6294915452743935,
+                "wilson_low": 0.39834753306325144,
+                "win_rate": 0.5147058823529411,
+                "wins": 35
+              },
+              "A4:A6": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 99,
+                "losses": 35,
+                "n_non_tie": 80,
+                "p_holm_report_local": 0.6286131597278741,
+                "p_raw": 0.31430657986393706,
+                "presentation_disagreements": 19,
+                "prompt_total": 99,
+                "ties": 19,
+                "wilson_high": 0.6658613908385618,
+                "wilson_low": 0.4534113429694972,
+                "win_rate": 0.5625,
+                "wins": 45
               }
             },
             "record_pooled": {
               "A4:A1": {
                 "losses": 43,
                 "n_non_tie": 200,
-                "p_holm_report_local": 5.686538552096928e-16,
+                "p_holm_report_local": 9.47756425349488e-16,
                 "p_raw": 1.895512850698976e-16,
                 "ties": 0,
                 "wilson_high": 0.8362812374549242,
@@ -746,7 +1022,7 @@
               "A4:A2": {
                 "losses": 55,
                 "n_non_tie": 200,
-                "p_holm_report_local": 3.0561097618631177e-10,
+                "p_holm_report_local": 6.112219523726235e-10,
                 "p_raw": 1.5280548809315588e-10,
                 "ties": 0,
                 "wilson_high": 0.7822029967069265,
@@ -757,29 +1033,53 @@
               "A4:A3": {
                 "losses": 78,
                 "n_non_tie": 200,
-                "p_holm_report_local": 0.0022794385018057293,
+                "p_holm_report_local": 0.006838315505417188,
                 "p_raw": 0.0022794385018057293,
                 "ties": 0,
                 "wilson_high": 0.6749165686253038,
                 "wilson_low": 0.5409374595716976,
                 "win_rate": 0.61,
                 "wins": 122
+              },
+              "A4:A5": {
+                "losses": 96,
+                "n_non_tie": 197,
+                "p_holm_report_local": 0.775738716706879,
+                "p_raw": 0.775738716706879,
+                "ties": 3,
+                "wilson_high": 0.5815756561802421,
+                "wilson_low": 0.443319602146197,
+                "win_rate": 0.5126903553299492,
+                "wins": 101
+              },
+              "A4:A6": {
+                "losses": 88,
+                "n_non_tie": 195,
+                "p_holm_report_local": 0.3945397781234663,
+                "p_raw": 0.19726988906173315,
+                "ties": 3,
+                "wilson_high": 0.6169492515330469,
+                "wilson_low": 0.4786042618674623,
+                "win_rate": 0.5487179487179488,
+                "wins": 107
               }
             },
             "run_count": 699,
-            "scored_pairs": 300,
+            "scored_pairs": 499,
             "strengths": {
-              "A1": 0.5395034640667429,
-              "A2": 0.7471711968332693,
-              "A3": 1.259389901001244,
-              "A4": 1.9698149734321546
+              "A1": 0.4481328199255911,
+              "A2": 0.6206298155669597,
+              "A3": 1.0460988396562514,
+              "A4": 1.6362058773993526,
+              "A5": 1.5563909564943132,
+              "A6": 1.3496813458995063
             }
           }
         }
       }
     },
-    "missing_pairs": 14,
-    "run_count": 1182
+    "missing_pairs": 26,
+    "run_count": 1770
   },
   "pointwise": {
     "rows": [
@@ -794,12 +1094,12 @@
           "style_voice_audience_fit": 4.838383838383838
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": 0.022691968375093033
+          "gpt-5.6-sol-pointwise-v1": -0.013007220983355987
         },
         "platform": "codex",
         "record_count": 99,
         "run_count": 99,
-        "z_scored_composite_mean": 0.022691968375093033
+        "z_scored_composite_mean": -0.013007220983355987
       },
       {
         "benchmark": "DoLoMiTes",
@@ -812,12 +1112,12 @@
           "style_voice_audience_fit": 4.78
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": 0.06662703789615762
+          "gpt-5.6-sol-pointwise-v1": 0.03294859845591873
         },
         "platform": "codex",
         "record_count": 100,
         "run_count": 100,
-        "z_scored_composite_mean": 0.06662703789615762
+        "z_scored_composite_mean": 0.03294859845591873
       },
       {
         "benchmark": "DoLoMiTes",
@@ -830,12 +1130,12 @@
           "style_voice_audience_fit": 4.63
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": -0.1365007407643889
+          "gpt-5.6-sol-pointwise-v1": -0.17681704357555122
         },
         "platform": "codex",
         "record_count": 100,
         "run_count": 100,
-        "z_scored_composite_mean": -0.1365007407643889
+        "z_scored_composite_mean": -0.17681704357555122
       },
       {
         "benchmark": "DoLoMiTes",
@@ -848,12 +1148,66 @@
           "style_voice_audience_fit": 4.6875
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": 0.049384014767592486
+          "gpt-5.6-sol-pointwise-v1": 0.016447571508456046
         },
         "platform": "codex",
         "record_count": 96,
         "run_count": 96,
-        "z_scored_composite_mean": 0.049384014767592486
+        "z_scored_composite_mean": 0.016447571508456046
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A5",
+        "dimension_means": {
+          "content_adequacy_depth": 4.448979591836735,
+          "factuality_constraint_fidelity": 4.714285714285714,
+          "instruction_fulfillment": 4.418367346938775,
+          "organization_global_coherence": 4.887755102040816,
+          "style_voice_audience_fit": 4.744897959183674
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.05945624542187259
+        },
+        "platform": "codex",
+        "record_count": 98,
+        "run_count": 98,
+        "z_scored_composite_mean": 0.05945624542187259
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "dimension_means": {
+          "content_adequacy_depth": 4.43298969072165,
+          "factuality_constraint_fidelity": 4.77319587628866,
+          "instruction_fulfillment": 4.443298969072165,
+          "organization_global_coherence": 4.917525773195877,
+          "style_voice_audience_fit": 4.731958762886598
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.09314744287606931
+        },
+        "platform": "codex",
+        "record_count": 97,
+        "run_count": 97,
+        "z_scored_composite_mean": 0.09314744287606931
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A7",
+        "dimension_means": {
+          "content_adequacy_depth": 4.47,
+          "factuality_constraint_fidelity": 4.63,
+          "instruction_fulfillment": 4.42,
+          "organization_global_coherence": 4.84,
+          "style_voice_audience_fit": 4.69
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.00766421485818512
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.00766421485818512
       },
       {
         "benchmark": "HelloBench",
@@ -866,12 +1220,12 @@
           "style_voice_audience_fit": 4.97
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": -0.05630683007744642
+          "gpt-5.6-sol-pointwise-v1": -0.09191664521955265
         },
         "platform": "codex",
         "record_count": 100,
         "run_count": 100,
-        "z_scored_composite_mean": -0.05630683007744642
+        "z_scored_composite_mean": -0.09191664521955265
       },
       {
         "benchmark": "HelloBench",
@@ -884,12 +1238,12 @@
           "style_voice_audience_fit": 5.0
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": 0.04821309304471314
+          "gpt-5.6-sol-pointwise-v1": 0.02086396965165235
         },
         "platform": "codex",
         "record_count": 100,
         "run_count": 100,
-        "z_scored_composite_mean": 0.04821309304471314
+        "z_scored_composite_mean": 0.02086396965165235
       },
       {
         "benchmark": "HelloBench",
@@ -902,12 +1256,12 @@
           "style_voice_audience_fit": 4.95
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": 0.025179689585104314
+          "gpt-5.6-sol-pointwise-v1": -0.005761354936480232
         },
         "platform": "codex",
         "record_count": 100,
         "run_count": 100,
-        "z_scored_composite_mean": 0.025179689585104314
+        "z_scored_composite_mean": -0.005761354936480232
       },
       {
         "benchmark": "HelloBench",
@@ -920,12 +1274,66 @@
           "style_voice_audience_fit": 4.93
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": -0.01708595255237327
+          "gpt-5.6-sol-pointwise-v1": -0.05582133058316212
         },
         "platform": "codex",
         "record_count": 100,
         "run_count": 100,
-        "z_scored_composite_mean": -0.01708595255237327
+        "z_scored_composite_mean": -0.05582133058316212
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A5",
+        "dimension_means": {
+          "content_adequacy_depth": 5.0,
+          "factuality_constraint_fidelity": 4.85,
+          "instruction_fulfillment": 4.99,
+          "organization_global_coherence": 4.98,
+          "style_voice_audience_fit": 4.98
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.11309200200473607
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.11309200200473607
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A6",
+        "dimension_means": {
+          "content_adequacy_depth": 5.0,
+          "factuality_constraint_fidelity": 4.8,
+          "instruction_fulfillment": 4.97,
+          "organization_global_coherence": 4.98,
+          "style_voice_audience_fit": 4.99
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.0855093460277563
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.0855093460277563
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A7",
+        "dimension_means": {
+          "content_adequacy_depth": 4.97,
+          "factuality_constraint_fidelity": 4.74,
+          "instruction_fulfillment": 4.94,
+          "organization_global_coherence": 4.95,
+          "style_voice_audience_fit": 4.98
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.0659659869449522
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.0659659869449522
       },
       {
         "benchmark": "WritingBench",
@@ -938,12 +1346,12 @@
           "style_voice_audience_fit": 4.9
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": -0.057503896945137044
+          "gpt-5.6-sol-pointwise-v1": -0.08008268067648147
         },
         "platform": "codex",
         "record_count": 100,
         "run_count": 100,
-        "z_scored_composite_mean": -0.057503896945137044
+        "z_scored_composite_mean": -0.08008268067648147
       },
       {
         "benchmark": "WritingBench",
@@ -956,12 +1364,12 @@
           "style_voice_audience_fit": 4.91
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": -0.0031017237940893826
+          "gpt-5.6-sol-pointwise-v1": -0.03007144286618261
         },
         "platform": "codex",
         "record_count": 100,
         "run_count": 100,
-        "z_scored_composite_mean": -0.0031017237940893826
+        "z_scored_composite_mean": -0.03007144286618261
       },
       {
         "benchmark": "WritingBench",
@@ -974,12 +1382,12 @@
           "style_voice_audience_fit": 4.87
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": -0.016423228307473992
+          "gpt-5.6-sol-pointwise-v1": -0.0394051374129292
         },
         "platform": "codex",
         "record_count": 100,
         "run_count": 100,
-        "z_scored_composite_mean": -0.016423228307473992
+        "z_scored_composite_mean": -0.0394051374129292
       },
       {
         "benchmark": "WritingBench",
@@ -992,14 +1400,68 @@
           "style_voice_audience_fit": 4.9
         },
         "judge_composites": {
-          "gpt-5.6-sol-pointwise-v1": 0.0770288490467008
+          "gpt-5.6-sol-pointwise-v1": 0.05717218541356257
         },
         "platform": "codex",
         "record_count": 100,
         "run_count": 100,
-        "z_scored_composite_mean": 0.0770288490467008
+        "z_scored_composite_mean": 0.05717218541356257
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A5",
+        "dimension_means": {
+          "content_adequacy_depth": 4.58,
+          "factuality_constraint_fidelity": 4.49,
+          "instruction_fulfillment": 4.37,
+          "organization_global_coherence": 4.98,
+          "style_voice_audience_fit": 4.88
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.07390583422743952
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.07390583422743952
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A6",
+        "dimension_means": {
+          "content_adequacy_depth": 4.54,
+          "factuality_constraint_fidelity": 4.54,
+          "instruction_fulfillment": 4.37,
+          "organization_global_coherence": 4.95,
+          "style_voice_audience_fit": 4.9
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.060444285323576326
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.060444285323576326
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "dimension_means": {
+          "content_adequacy_depth": 4.666666666666667,
+          "factuality_constraint_fidelity": 4.101010101010101,
+          "instruction_fulfillment": 4.424242424242424,
+          "organization_global_coherence": 4.888888888888889,
+          "style_voice_audience_fit": 4.91919191919192
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.042386913140387526
+        },
+        "platform": "codex",
+        "record_count": 99,
+        "run_count": 99,
+        "z_scored_composite_mean": -0.042386913140387526
       }
     ],
-    "run_count": 1195
+    "run_count": 2089
   }
 }
