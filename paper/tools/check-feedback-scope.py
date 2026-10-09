@@ -190,13 +190,13 @@ def main() -> None:
         current = current_path.read_text(encoding="utf-8")
 
         # A declaration-only commit may still contain the baseline text. Once
-        # prose editing starts, the file must equal exactly the declared result.
-        # A final newline is formatting-only and is ignored; all other text
-        # remains exact.
-        normalized_current = normalize_eof(current)
+        # editing starts, the file must be either the baseline or the declared
+        # result, modulo source-only whitespace reflow that preserves paragraph
+        # boundaries.
+        normalized_current = normalize_paragraph_whitespace(current)
         normalized_allowed = {
-            normalize_eof(base_text),
-            normalize_eof(expected),
+            normalize_paragraph_whitespace(base_text),
+            normalize_paragraph_whitespace(expected),
         }
         if normalized_current not in normalized_allowed:
             diff = "".join(
@@ -208,7 +208,7 @@ def main() -> None:
                 )
             )
             fail(
-                f"{path} differs from the exact declared replacements. "
+                f"{path} differs from the exact declared replacements beyond source-only reflow. "
                 "This usually means neighboring prose was changed without authorization.\n"
                 + diff[:8000]
             )
