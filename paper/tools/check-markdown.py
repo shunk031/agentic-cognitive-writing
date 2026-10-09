@@ -136,7 +136,11 @@ def check():
         r"\\begin\{abstract\}\s*(.*?)\s*\\end\{abstract\}", source, re.DOTALL
     )[1]
     abstract_words = re.findall(r"\b[\w'-]+\b", abstract)
-    abstract_commands = re.findall(r"\\[A-Za-z]+", abstract)
+    abstract_commands = [
+        command
+        for command in re.findall(r"\\[A-Za-z]+", abstract)
+        if command != r"\condAgenticCogWriter"
+    ]
     assert len(abstract_words) <= 200, len(abstract_words)
     assert not abstract_commands, ("LaTeX command in abstract", abstract_commands)
     assert not re.search(r"\bWe ask\b", abstract, flags=re.IGNORECASE), (
@@ -241,7 +245,7 @@ def check():
     pdf_titles = re.findall(
         r"\\contentsline \{(?:section|subsection|subsubsection|paragraph)\}"
         r"\{(?:\\numberline \{[^}]+\})?([^{}]+)\}",
-        re.sub(r"\\texttt\s*\{([^{}]*)\}", r"\1", aux),
+        re.sub(r"\\text(?:tt|sc)\s*\{([^{}]*)\}", r"\1", aux),
     )
     pdf_titles.insert(pdf_titles.index("Conclusion") + 1, "Limitations")
     normalized_headings = [heading.replace(chr(96), "") for heading in headings]

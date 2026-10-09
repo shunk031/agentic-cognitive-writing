@@ -178,7 +178,8 @@ def check() -> None:
             ]
         )
     assert main_values == expected_main, ("tab/main-results.tex: displayed scores are stale relative to numbers.tex", main_values, expected_main)
-    assert "Best scores in each column are in \\textbf{bold}." in main
+    assert "Best and second-best scores in each column are shown in \\textbf{bold} and \\underline{underlined}, respectively." in main
+    assert tabular_body(main).count(r"\underline{") == 5, "tab/main-results.tex: underline the second-best score in each reported column"
     assert main.count(r"\uparrow") == 6, "tab/main-results.tex: mark every score column as higher-is-better"
     assert "divided by 10" not in main, "tab/main-results.tex: keep display-rescaling detail out of the caption"
 

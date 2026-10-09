@@ -2,6 +2,7 @@
 \centering
 \small
 \setlength{\tabcolsep}{2pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{lrrrr}
 \toprule
 & \multicolumn{4}{c}{\textbf{\condAgenticCogWriter\ win rate (\%)}} \\
@@ -28,7 +29,8 @@ vs. \condTaskPlanning
 & 75.7\%
 & 68.5\% \\
 \bottomrule
-\end{tabular}
-\caption{Direct same-prompt win rates for \condAgenticCogWriter\ across three runs; values above 50\% favor it. \condAgenticCogWriter\ is preferred on every benchmark against every alternative, with its largest overall margin over \condSinglePass.}
+\end{tabular}%
+}
+\caption{Three-run direct same-prompt win rates for \condAgenticCogWriter; values above 50\% favor it. Win rates exceed 50\% on every benchmark against every alternative, with the largest mean margin over \condSinglePass.}
 \label{tab:pairwise-results}
 \end{table}
