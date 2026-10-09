@@ -49,20 +49,52 @@
 \DeclareUnicodeCharacter{2265}{>=}
 \DeclareUnicodeCharacter{2713}{[x]}
 
-% WriteHERE-style prompt cards. Color identifies the role of each prompt while
-% keeping the prompt text itself neutral and printable.
-\definecolor{PromptBaseline}{RGB}{52,91,140}
-\definecolor{PromptMonitor}{RGB}{42,109,78}
-\definecolor{PromptPlanner}{RGB}{35,112,126}
-\definecolor{PromptTranslator}{RGB}{77,88,148}
-\definecolor{PromptReviewer}{RGB}{132,72,91}
-\definecolor{PromptAblation}{RGB}{164,106,36}
-\definecolor{PromptEvaluator}{RGB}{102,76,142}
+% Muted editorial palette shared by Figure 1 and the Appendix prompt cards.
+% Pale fills keep large regions quiet; restrained strokes carry role identity.
+\definecolor{RoleNeutralFill}{HTML}{F4F5F6}
+\definecolor{RoleNeutralStroke}{HTML}{777D85}
+\definecolor{RoleMonitorFill}{HTML}{E8EEF7}
+\definecolor{RoleMonitorStroke}{HTML}{4E6FAE}
+\definecolor{RolePlannerFill}{HTML}{E7F0EC}
+\definecolor{RolePlannerStroke}{HTML}{4F826F}
+\definecolor{RoleTranslatorFill}{HTML}{EDEAF4}
+\definecolor{RoleTranslatorStroke}{HTML}{74679B}
+\definecolor{RoleReviewerFill}{HTML}{F4E7EA}
+\definecolor{RoleReviewerStroke}{HTML}{A55D6A}
+\definecolor{RoleStateFill}{HTML}{F5F0E2}
+\definecolor{RoleStateStroke}{HTML}{9B8553}
+\definecolor{RoleAblationFill}{HTML}{F6EBDD}
+\definecolor{RoleAblationStroke}{HTML}{A87342}
+\definecolor{RoleEvaluatorFill}{HTML}{E9EFF2}
+\definecolor{RoleEvaluatorStroke}{HTML}{5B7280}
+
+\colorlet{PromptBaselineFill}{RoleNeutralFill}
+\colorlet{PromptBaselineStroke}{RoleNeutralStroke}
+\colorlet{PromptBaselineTitle}{RoleNeutralStroke!72!black}
+\colorlet{PromptMonitorFill}{RoleMonitorFill}
+\colorlet{PromptMonitorStroke}{RoleMonitorStroke}
+\colorlet{PromptMonitorTitle}{RoleMonitorStroke!72!black}
+\colorlet{PromptPlannerFill}{RolePlannerFill}
+\colorlet{PromptPlannerStroke}{RolePlannerStroke}
+\colorlet{PromptPlannerTitle}{RolePlannerStroke!72!black}
+\colorlet{PromptTranslatorFill}{RoleTranslatorFill}
+\colorlet{PromptTranslatorStroke}{RoleTranslatorStroke}
+\colorlet{PromptTranslatorTitle}{RoleTranslatorStroke!72!black}
+\colorlet{PromptReviewerFill}{RoleReviewerFill}
+\colorlet{PromptReviewerStroke}{RoleReviewerStroke}
+\colorlet{PromptReviewerTitle}{RoleReviewerStroke!72!black}
+\colorlet{PromptAblationFill}{RoleAblationFill}
+\colorlet{PromptAblationStroke}{RoleAblationStroke}
+\colorlet{PromptAblationTitle}{RoleAblationStroke!72!black}
+\colorlet{PromptEvaluatorFill}{RoleEvaluatorFill}
+\colorlet{PromptEvaluatorStroke}{RoleEvaluatorStroke}
+\colorlet{PromptEvaluatorTitle}{RoleEvaluatorStroke!72!black}
+
 \newtcolorbox{promptbox}[2]{
   breakable,
-  colback=#1!4!white,
-  colframe=#1!72!black,
-  colbacktitle=#1!82!black,
+  colback=#1Fill,
+  colframe=#1Stroke,
+  colbacktitle=#1Title,
   coltitle=white,
   title={#2},
   fonttitle=\bfseries\small,
