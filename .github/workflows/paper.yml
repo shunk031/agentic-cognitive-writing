@@ -43,6 +43,9 @@ jobs:
       - name: Check main-text appendix references
         run: python3 paper/tools/check-appendix-refs.py
 
+      - name: Check Figure 1 and Appendix role colors
+        run: python3 paper/tools/check-role-colors.py
+
       - name: Enforce one sentence per manuscript source line
         run: python3 paper/tools/check-sentence-lines.py
 
