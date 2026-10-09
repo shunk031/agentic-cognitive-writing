@@ -43,7 +43,7 @@ The narrower post-hoc \condSingleContext\ check shows no significant difference 
 The adaptive writing loop usually follows a simple process path.
 Table~\ref{tab:process-dynamics} shows that one \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle dominates the traces; returning to planning after review and replacing an existing goal are both rare.
 Our system therefore has the ability to revisit earlier processes but uses that flexibility infrequently on the evaluated prompts.
-The behavior is consistent with the small exploratory advantage over \condFixedOrder: adaptive ordering can help only on runs where the controller has reason to depart from the default cycle.
+The behavior is consistent with the small exploratory advantage over \condFixedOrder: adaptive ordering can help only on runs where the controller has reason to depart from that cycle.
 
 \input{tab/process-dynamics}
 
@@ -75,6 +75,6 @@ P, T, R, and E denote \texttt{Planning}, \texttt{Translating}, \texttt{Reviewing
 
 Observed departures from the common process path do not show a larger quality advantage.
 Table~\ref{tab:trace-outcome} compares runs that complete exactly one planning--drafting--reviewing cycle with runs that take any other path and finds similar pairwise win rates against \condFixedOrder\ and \condSingleWriter.
-Because the split is defined by observed behavior rather than random assignment, it cannot establish whether taking a different path causes better or worse output.\footnote{See Appendix~\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}
+Because the split is defined by observed behavior rather than random assignment, it cannot establish whether a different path improves or worsens output.\footnote{See Appendix~\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}
 
 \input{tab/trace-outcome}
