@@ -4,6 +4,8 @@
 Captions remain a hard CI guard. Paragraph density is report-only for now. The
 PDF text extractor may merge adjacent paragraphs into one block, so prose blocks
 are split at rendered first-line indents before checking their final lines.
+Rendered footnote markers are ignored when recognizing paragraph endings and
+counting words on a final line.
 """
 
 from __future__ import annotations
@@ -17,13 +19,21 @@ from dataclasses import dataclass
 from pathlib import Path
 
 MAX_CAPTION_LINES = 5  # target ~4 lines; allow one line of layout variation
-RUNT_MAX_WORDS = 2
-RUNT_MAX_FILL = 0.25
+RUNT_MAX_WORDS = 3
+RUNT_MAX_FILL = 0.35
 PARAGRAPH_INDENT_MIN = 7.0  # ACL body first-line indent is about 11 pt
 CAPTION_RE = re.compile(r"^(Table|Figure)\s+\d+:\s")
 LINE_NUMBER_BLOCK_RE = re.compile(r"^(?:\d{3}\s*)+$")
-SENTENCE_END_RE = re.compile(r"[.!?][\"'’”)]*$")
+SENTENCE_END_RE = re.compile(r"[.!?][\"'’”)]*(?:\s+\d+)*$")
+FOOTNOTE_MARKER_RE = re.compile(r"^\d+$")
 XHTML = {"x": "http://www.w3.org/1999/xhtml"}
+
+
+def semantic_words(line: str) -> list[str]:
+    words = line.split()
+    while words and FOOTNOTE_MARKER_RE.fullmatch(words[-1]):
+        words.pop()
+    return words
 
 
 @dataclass
@@ -45,7 +55,7 @@ class RenderedBlock:
 
     @property
     def last_words(self) -> int:
-        return len(self.lines[-1].split()) if self.lines else 0
+        return len(semantic_words(self.lines[-1])) if self.lines else 0
 
     @property
     def last_fill(self) -> float:
