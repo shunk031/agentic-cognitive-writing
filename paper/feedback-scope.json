@@ -1,23 +1,53 @@
 {
-  "baseline_sha": "2e3d2f7c4953e61d7502661949871fdfa99b387a",
+  "baseline_sha": "0affb3b996280625d00cb9cc1385366b990a52e3",
   "replacements": [
     {
-      "path": "paper/acl_latex.tex",
-      "instruction": "Replace the prompt-card role colors with the approved muted editorial palette shared with Figure 1, preserving prompt content and layout.",
-      "before": "% WriteHERE-style prompt cards. Color identifies the role of each prompt while\n% keeping the prompt text itself neutral and printable.\n\\definecolor{PromptBaseline}{RGB}{52,91,140}\n\\definecolor{PromptMonitor}{RGB}{42,109,78}\n\\definecolor{PromptPlanner}{RGB}{35,112,126}\n\\definecolor{PromptTranslator}{RGB}{77,88,148}\n\\definecolor{PromptReviewer}{RGB}{132,72,91}\n\\definecolor{PromptAblation}{RGB}{164,106,36}\n\\definecolor{PromptEvaluator}{RGB}{102,76,142}\n\\newtcolorbox{promptbox}[2]{\n  breakable,\n  colback=#1!4!white,\n  colframe=#1!72!black,\n  colbacktitle=#1!82!black,\n  coltitle=white,\n  title={#2},\n  fonttitle=\\bfseries\\small,\n  boxrule=0.6pt,\n  arc=1.5mm,\n  outer arc=1.5mm,\n  left=2mm,\n  right=2mm,\n  top=1.2mm,\n  bottom=1.2mm,\n  before skip=5pt,\n  after skip=9pt,\n  pad at break*=1mm\n}",
-      "after": "% Muted editorial palette shared by Figure 1 and the Appendix prompt cards.\n% Pale fills keep large regions quiet; restrained strokes carry role identity.\n\\definecolor{RoleNeutralFill}{HTML}{F4F5F6}\n\\definecolor{RoleNeutralStroke}{HTML}{777D85}\n\\definecolor{RoleMonitorFill}{HTML}{E8EEF7}\n\\definecolor{RoleMonitorStroke}{HTML}{4E6FAE}\n\\definecolor{RolePlannerFill}{HTML}{E7F0EC}\n\\definecolor{RolePlannerStroke}{HTML}{4F826F}\n\\definecolor{RoleTranslatorFill}{HTML}{EDEAF4}\n\\definecolor{RoleTranslatorStroke}{HTML}{74679B}\n\\definecolor{RoleReviewerFill}{HTML}{F4E7EA}\n\\definecolor{RoleReviewerStroke}{HTML}{A55D6A}\n\\definecolor{RoleStateFill}{HTML}{F5F0E2}\n\\definecolor{RoleStateStroke}{HTML}{9B8553}\n\\definecolor{RoleAblationFill}{HTML}{F6EBDD}\n\\definecolor{RoleAblationStroke}{HTML}{A87342}\n\\definecolor{RoleEvaluatorFill}{HTML}{E9EFF2}\n\\definecolor{RoleEvaluatorStroke}{HTML}{5B7280}\n\n\\colorlet{PromptBaselineFill}{RoleNeutralFill}\n\\colorlet{PromptBaselineStroke}{RoleNeutralStroke}\n\\colorlet{PromptBaselineTitle}{RoleNeutralStroke!72!black}\n\\colorlet{PromptMonitorFill}{RoleMonitorFill}\n\\colorlet{PromptMonitorStroke}{RoleMonitorStroke}\n\\colorlet{PromptMonitorTitle}{RoleMonitorStroke!72!black}\n\\colorlet{PromptPlannerFill}{RolePlannerFill}\n\\colorlet{PromptPlannerStroke}{RolePlannerStroke}\n\\colorlet{PromptPlannerTitle}{RolePlannerStroke!72!black}\n\\colorlet{PromptTranslatorFill}{RoleTranslatorFill}\n\\colorlet{PromptTranslatorStroke}{RoleTranslatorStroke}\n\\colorlet{PromptTranslatorTitle}{RoleTranslatorStroke!72!black}\n\\colorlet{PromptReviewerFill}{RoleReviewerFill}\n\\colorlet{PromptReviewerStroke}{RoleReviewerStroke}\n\\colorlet{PromptReviewerTitle}{RoleReviewerStroke!72!black}\n\\colorlet{PromptAblationFill}{RoleAblationFill}\n\\colorlet{PromptAblationStroke}{RoleAblationStroke}\n\\colorlet{PromptAblationTitle}{RoleAblationStroke!72!black}\n\\colorlet{PromptEvaluatorFill}{RoleEvaluatorFill}\n\\colorlet{PromptEvaluatorStroke}{RoleEvaluatorStroke}\n\\colorlet{PromptEvaluatorTitle}{RoleEvaluatorStroke!72!black}\n\n\\newtcolorbox{promptbox}[2]{\n  breakable,\n  colback=#1Fill,\n  colframe=#1Stroke,\n  colbacktitle=#1Title,\n  coltitle=white,\n  title={#2},\n  fonttitle=\\bfseries\\small,\n  boxrule=0.6pt,\n  arc=1.5mm,\n  outer arc=1.5mm,\n  left=2mm,\n  right=2mm,\n  top=1.2mm,\n  bottom=1.2mm,\n  before skip=5pt,\n  after skip=9pt,\n  pad at break*=1mm\n}"
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Move the standalone Appendix navigation for benchmark selection details into a footnote without changing the claim or destination.",
+      "before": "This produces a different demanding subset for each benchmark: WritingBench emphasizes long inputs with explicit long-output requirements, HelloBench emphasizes very long-input summarization and continuation, and DoLoMiTes emphasizes procedurally constrained expert writing.\nSee Appendix~\\ref{app:prompts} for the exact selection rule, sample sizes, and sensitivity analysis.",
+      "after": "This produces a different demanding subset for each benchmark: WritingBench emphasizes long inputs with explicit long-output requirements, HelloBench emphasizes very long-input summarization and continuation, and DoLoMiTes emphasizes procedurally constrained expert writing.\\footnote{See Appendix~\\ref{app:prompts} for the exact selection rule, sample sizes, and sensitivity analysis.}"
     },
     {
-      "path": "paper/fig/tex/overview.tex",
-      "instruction": "Apply the approved muted editorial role palette to Figure 1 while preserving its structure.",
-      "before": "  input/.style={io, fill=gray!12},\n  output/.style={io, fill=green!10, double, double distance=0.6pt},\n  agent/.style={box, rounded corners=2pt, minimum width=0.25\\columnwidth},\n  mainagent/.style={agent, fill=blue!16, line width=0.65pt},\n  subagent/.style={agent, fill=blue!7},\n  state/.style={box, rounded corners=1.5pt, dashed, fill=orange!10, minimum width=0.82\\columnwidth},",
-      "after": "  input/.style={io, fill=RoleNeutralFill, draw=RoleNeutralStroke},\n  output/.style={io, fill=RoleNeutralFill, draw=RoleNeutralStroke, double, double distance=0.6pt},\n  agent/.style={box, rounded corners=2pt, minimum width=0.25\\columnwidth},\n  mainagent/.style={agent, fill=RoleMonitorFill, draw=RoleMonitorStroke, line width=0.7pt},\n  planner/.style={agent, fill=RolePlannerFill, draw=RolePlannerStroke},\n  translator/.style={agent, fill=RoleTranslatorFill, draw=RoleTranslatorStroke},\n  reviewer/.style={agent, fill=RoleReviewerFill, draw=RoleReviewerStroke},\n  state/.style={box, rounded corners=1.5pt, dashed, fill=RoleStateFill, draw=RoleStateStroke, minimum width=0.82\\columnwidth},"
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Move the standalone Appendix navigation for prompts and runtime settings into a footnote without changing the claim or destinations.",
+      "before": "\\condAgenticCogWriter\\ is packaged as an agent skill: the top-level \\texttt{Monitor} invokes \\texttt{Planner}, \\texttt{Translator}, and \\texttt{Reviewer} through the harness's subagent mechanism.\nSee Appendix~\\ref{app:prompts} for the complete prompts and Appendix~\\ref{app:runtime} for the runtime settings.",
+      "after": "\\condAgenticCogWriter\\ is packaged as an agent skill: the top-level \\texttt{Monitor} invokes \\texttt{Planner}, \\texttt{Translator}, and \\texttt{Reviewer} through the harness's subagent mechanism.\\footnote{See Appendix~\\ref{app:prompts} for the complete prompts and Appendix~\\ref{app:runtime} for the runtime settings.}"
     },
     {
-      "path": "paper/fig/tex/overview.tex",
-      "instruction": "Remove the redundant Planning, Translating, and Reviewing second-line labels from Figure 1 role nodes.",
-      "before": "\\node[subagent, below=7mm of monitor] (translator) {\\textbf{Translator}\\\\\\texttt{Translating}};\n\\node[subagent, left=2.5mm of translator] (planner) {\\textbf{Planner}\\\\\\texttt{Planning}};\n\\node[subagent, right=2.5mm of translator] (reviewer) {\\textbf{Reviewer}\\\\\\texttt{Reviewing}};",
-      "after": "\\node[translator, below=7mm of monitor] (translator) {\\textbf{Translator}};\n\\node[planner, left=2.5mm of translator] (planner) {\\textbf{Planner}};\n\\node[reviewer, right=2.5mm of translator] (reviewer) {\\textbf{Reviewer}};"
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Move the standalone Appendix navigation for pointwise procedures into a footnote without changing the claim or destination.",
+      "before": "The resulting composite is relative within a benchmark rather than an absolute quality scale.\nSee Appendix~\\ref{app:prompts} for the full procedures and evaluator prompts.",
+      "after": "The resulting composite is relative within a benchmark rather than an absolute quality scale.\\footnote{See Appendix~\\ref{app:prompts} for the full procedures and evaluator prompts.}"
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Move the standalone Appendix navigation for run-level statistical details into a footnote without changing the claim or destination.",
+      "before": "Generation runs remain separate because they repeat the same prompt set rather than provide new independent prompt samples.\nSee Appendix~\\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\\citep{wilson1927}, and corrected test decisions.",
+      "after": "Generation runs remain separate because they repeat the same prompt set rather than provide new independent prompt samples.\\footnote{See Appendix~\\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\\citep{wilson1927}, and corrected test decisions.}"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Move the standalone Appendix navigation for run-level pairwise results into a footnote without changing the result or destination.",
+      "before": "The direction holds in every benchmark and generation run against \\condSinglePass\\ and \\condTaskPlanning, and in all but one benchmark--run test against \\condStaged.\nSee Appendix~\\ref{app:pairwise-detail} for the run-level intervals and corrected test decisions.",
+      "after": "The direction holds in every benchmark and generation run against \\condSinglePass\\ and \\condTaskPlanning, and in all but one benchmark--run test against \\condStaged.\\footnote{See Appendix~\\ref{app:pairwise-detail} for the run-level intervals and corrected test decisions.}"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Move the standalone Appendix navigation for pairwise sensitivity analyses into a footnote without changing the result or destination.",
+      "before": "The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \\UncondFullSinglePassWinShare, \\UncondFullStagedWinShare, and \\UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \\WorstCaseFullSinglePassRate, \\WorstCaseFullStagedRate, and \\WorstCaseFullTaskPlanningRate\\ among order-consistent comparisons.\nSee Appendix~\\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \\condSinglePass.",
+      "after": "The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \\UncondFullSinglePassWinShare, \\UncondFullStagedWinShare, and \\UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \\WorstCaseFullSinglePassRate, \\WorstCaseFullStagedRate, and \\WorstCaseFullTaskPlanningRate\\ among order-consistent comparisons.\\footnote{See Appendix~\\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \\condSinglePass.}"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Move the standalone Appendix navigation for execution diagnostics into a footnote without changing the result or destination.",
+      "before": "The narrower post-hoc \\condSingleContext\\ check shows no significant difference from our system in the exploratory generation run (\\SingleContextFullRate\\ win rate for \\condSingleContext, $p=\\SingleContextFullP$, unadjusted).\nSee Appendix~\\ref{app:sensitivity-analyses} for the benchmark-level diagnostic and the remaining execution differences.",
+      "after": "The narrower post-hoc \\condSingleContext\\ check shows no significant difference from our system in the exploratory generation run (\\SingleContextFullRate\\ win rate for \\condSingleContext, $p=\\SingleContextFullP$, unadjusted).\\footnote{See Appendix~\\ref{app:sensitivity-analyses} for the benchmark-level diagnostic and the remaining execution differences.}"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Move the standalone Appendix navigation for process and resource statistics into a footnote without changing the result or destination.",
+      "before": "Because the split is defined by observed behavior rather than random assignment, it cannot establish whether taking a different path causes better or worse output.\nSee Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.",
+      "after": "Because the split is defined by observed behavior rather than random assignment, it cannot establish whether taking a different path causes better or worse output.\\footnote{See Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}"
     }
   ],
   "created_files": []
