@@ -164,21 +164,14 @@ def check() -> None:
 
     # Main quality scores use three decimals and remain synchronized with numbers.tex.
     main_values = re.findall(r"(?<![A-Za-z0-9])(-?\d+\.\d+)(?![A-Za-z0-9])", tabular_body(main))
-    assert len(main_values) == 20, ("tab/main-results.tex: unexpected number of displayed scores", len(main_values))
+    assert len(main_values) == 40, ("tab/main-results.tex: unexpected number of displayed scores", len(main_values))
     assert_fixed_decimals(main_values, 3, "tab/main-results.tex")
     expected_main: list[str] = []
-    for condition in ("Aone", "Atwo", "Athree", "Afour"):
-        expected_main.extend(
-            [
-                f"{numeric_macro(numbers, f'Writing{condition}Native') / 10:.3f}",
-                f"{numeric_macro(numbers, f'Writing{condition}Point'):.3f}",
-                f"{numeric_macro(numbers, f'Hello{condition}Native'):.3f}",
-                f"{numeric_macro(numbers, f'Hello{condition}Point'):.3f}",
-                f"{numeric_macro(numbers, f'DoLo{condition}Point'):.3f}",
-            ]
-        )
+    for condition in ("SinglePass", "Staged", "TaskPlanning", "Full"):
+        for cell in (f"Writing{condition}Native", f"Writing{condition}Pointwise", f"Hello{condition}Native", f"Hello{condition}Pointwise", f"DoLo{condition}Pointwise"):
+            expected_main.extend(f"{numeric_macro(numbers, f'ThreeRun{cell}{stat}'):.3f}" for stat in ("Mean", "SD"))
     assert main_values == expected_main, ("tab/main-results.tex: displayed scores are stale relative to numbers.tex", main_values, expected_main)
-    assert "Best and second-best scores in each column are shown in \\textbf{bold} and \\underline{underlined}, respectively." in main
+    assert "Best and second-best means in each column are shown in \\textbf{bold} and \\underline{underlined}, respectively." in main
     assert tabular_body(main).count(r"\underline{") == 5, "tab/main-results.tex: underline the second-best score in each reported column"
     assert main.count(r"\uparrow") == 6, "tab/main-results.tex: mark every score column as higher-is-better"
     assert "divided by 10" not in main, "tab/main-results.tex: keep display-rescaling detail out of the caption"

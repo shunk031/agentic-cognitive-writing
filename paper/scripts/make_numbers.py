@@ -235,6 +235,11 @@ SINGLE_CONTEXT_PAIR_FIELDS = (
     "non_ties",
 )
 
+THREE_RUN_BENCHMARKS = {"WritingBench": "Writing", "HelloBench": "Hello", "DoLoMiTes": "DoLo"}
+THREE_RUN_CONDITIONS = {"A1": "SinglePass", "A2": "Staged", "A3": "TaskPlanning", "A4": "Full"}
+# The manuscript reports WritingBench's 1-10 native scale divided by 10 so both native columns read 0-1.
+THREE_RUN_NATIVE_SCALE = {"WritingBench": 10.0, "HelloBench": 1.0}
+
 REVIEW_CLUSTERED_CONTRASTS = {
     "A4:A6": "FullFixedOrder",
     "A4:A5": "FullNoGoals",
@@ -2067,6 +2072,66 @@ def _render_adversarial_review_block(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _three_run_stat(cell: Any, source: str) -> tuple[float, float]:
+    if not isinstance(cell, dict):
+        raise ValueError(f"{source} must be an object with mean and sample_sd")
+    values = []
+    for key in ("mean", "sample_sd"):
+        value = cell.get(key)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"{source}.{key} must be numeric")
+        values.append(float(value))
+    return values[0], values[1]
+
+
+def _three_run_quality_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Macros for the three-run native and four-condition pointwise table, mean and SD."""
+    across = report.get("across_runs")
+    if not isinstance(across, dict):
+        raise ValueError("three-run quality JSON is missing across_runs")
+    entries = []
+    for benchmark, benchmark_word in THREE_RUN_BENCHMARKS.items():
+        for condition, condition_word in THREE_RUN_CONDITIONS.items():
+            source = f"three-run quality JSON across_runs.{benchmark}.{condition}"
+            cell = across.get(benchmark, {}).get(condition) if isinstance(across.get(benchmark), dict) else None
+            if not isinstance(cell, dict):
+                raise ValueError(f"{source} is missing")
+            prefix = f"\\ThreeRun{benchmark_word}{condition_word}"
+            mean, sd = _three_run_stat(cell.get("four_condition_composite"), source + ".four_condition_composite")
+            entries += [
+                (prefix + "PointwiseMean", f"{mean:.3f}", source + ".four_condition_composite.mean"),
+                (prefix + "PointwiseSD", f"{sd:.3f}", source + ".four_condition_composite.sample_sd"),
+            ]
+            if benchmark in THREE_RUN_NATIVE_SCALE:
+                scale = THREE_RUN_NATIVE_SCALE[benchmark]
+                mean, sd = _three_run_stat(cell.get("native_mean"), source + ".native_mean")
+                entries += [
+                    (prefix + "NativeMean", f"{mean / scale:.3f}", source + f".native_mean.mean / {scale:g}"),
+                    (prefix + "NativeSD", f"{sd / scale:.3f}", source + f".native_mean.sample_sd / {scale:g}"),
+                ]
+    comparison = report.get("dolomites_staged_vs_agentic_cogwriter")
+    if not isinstance(comparison, dict) or not comparison:
+        raise ValueError("three-run quality JSON is missing dolomites_staged_vs_agentic_cogwriter")
+    exceeds = []
+    for run, row in comparison.items():
+        flag = row.get("staged_exceeds_agentic_cogwriter") if isinstance(row, dict) else None
+        if not isinstance(flag, bool):
+            raise ValueError(f"three-run quality JSON dolomites_staged_vs_agentic_cogwriter.{run} lacks a boolean")
+        exceeds.append(flag)
+    entries += [
+        ("\\ThreeRunDoLoStagedExceedsFullRuns", str(sum(exceeds)), "three-run quality JSON dolomites_staged_vs_agentic_cogwriter"),
+        ("\\ThreeRunCount", str(len(exceeds)), "three-run quality JSON dolomites_staged_vs_agentic_cogwriter"),
+    ]
+    return entries
+
+
+def _render_three_run_quality_block(report: dict[str, Any]) -> str:
+    lines = ["% Three-run document-quality macros."]
+    for name, value, source in _three_run_quality_entries(report):
+        lines.extend([_source_comment(source), f"\\newcommand{{{name}}}{{{value}}}"])
+    return "\n".join(lines) + "\n"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("aggregations", nargs="*", type=Path)
@@ -2077,6 +2142,7 @@ def main() -> None:
     parser.add_argument("--process-sequences", type=Path)
     parser.add_argument("--compute-stratified-sensitivity", type=Path)
     parser.add_argument("--adversarial-review-analysis", type=Path)
+    parser.add_argument("--three-run-quality", type=Path)
     parser.add_argument(
         "--a8-stage1",
         nargs=3,
@@ -2088,6 +2154,17 @@ def main() -> None:
     cost_group.add_argument("--public-prices", type=Path)
     cost_group.add_argument("--no-cost", action="store_true")
     args = parser.parse_args()
+    if args.three_run_quality is not None:
+        if args.aggregations or args.a8_stage1 is not None or args.adversarial_review_analysis is not None:
+            parser.error("--three-run-quality runs on its own and appends to the existing numbers.tex")
+        report = _read_json_object(args.three_run_quality, "three-run quality")
+        existing_text = args.output.read_text(encoding="utf-8") if args.output.is_file() else ""
+        marker = "% Three-run document-quality macros."
+        if marker in existing_text:
+            existing_text = existing_text.split(marker, 1)[0].rstrip() + "\n"
+        args.output.write_text(existing_text.rstrip() + "\n\n" + _render_three_run_quality_block(report), encoding="utf-8")
+        print(f"wrote {args.output}")
+        return
     if not args.aggregations and args.a8_stage1 is None and args.adversarial_review_analysis is None:
         parser.error("at least one aggregation, --a8-stage1, or --adversarial-review-analysis is required")
     if args.aggregations and args.contrasts is None:
