@@ -20,6 +20,18 @@ def read(path: str) -> str:
     return (PAPER / path).read_text(encoding="utf-8")
 
 
+def expand_inputs(text: str) -> str:
+    """Recursively expand manuscript \input files from the paper root."""
+
+    def include(match: re.Match[str]) -> str:
+        relative = match.group(1)
+        path = PAPER / (relative if relative.endswith(".tex") else relative + ".tex")
+        assert path.exists(), ("missing manuscript input", relative)
+        return expand_inputs(path.read_text(encoding="utf-8"))
+
+    return re.sub(r"\\input\{([^}]+)\}", include, text)
+
+
 def check_appendix_sections(acl: str) -> None:
     appendix = acl.split(r"\appendix", 1)[1]
     headings = list(re.finditer(r"\\(section|subsection)\{([^}]*)\}", appendix))
@@ -120,7 +132,7 @@ def check():
     experiments = read("sec/04_experiments.tex")
     results = read("sec/05_results.tex")
     conclusion = read("sec/08_conclusion.tex")
-    acl = read("acl_latex.tex")
+    acl = expand_inputs(read("acl_latex.tex"))
     main_sources = "\n".join(read(path) for path in MAIN_SECTIONS)
     reader_tex_sources = "\n".join(
         path.read_text(encoding="utf-8") for path in sorted(PAPER.rglob("*.tex"))
