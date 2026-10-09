@@ -5,7 +5,7 @@
       "path": "paper/sec/04_experiments.tex",
       "instruction": "Define W/L/T and the win-rate denominator for system pairwise comparisons where the notation is first introduced, without changing the two-order consistency rule.",
       "before": "Headline win rates are computed over these order-consistent comparisons.",
-      "after": "We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent outcomes as $W/(W+L)$."
+      "after": "We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent comparisons as $W/(W+L)$."
     },
     {
       "path": "paper/tab/appendix-length-control.tex",
