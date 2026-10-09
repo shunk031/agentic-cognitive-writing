@@ -12,9 +12,9 @@ SOURCE_CITATION_CONTRACTS = (
     ("sec/04_experiments.tex", "WritingBench", "wu2026writingbench"),
     ("sec/04_experiments.tex", "HelloBench", "que2024hellobench"),
     ("sec/04_experiments.tex", "DoLoMiTes", "malaviya2025dolomites"),
-    ("acl_latex.tex", "Habermas Machine data", "tessler2024common"),
-    ("acl_latex.tex", "CogWriter-style", "wan2025cognitive"),
-    ("acl_latex.tex", "STORM-style", "shao2024assisting"),
+    ("sec/10_appendix.tex", "Habermas Machine data", "tessler2024common"),
+    ("sec/10_appendix.tex", "CogWriter-style", "wan2025cognitive"),
+    ("sec/10_appendix.tex", "STORM-style", "shao2024assisting"),
 )
 
 
