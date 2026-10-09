@@ -25,6 +25,7 @@ def main() -> None:
         ("component analyses do not isolate a single source", "do not frame the Introduction around failure to isolate a mechanism"),
         ("Exploratory analysis suggests", "do not foreground a weak exploratory effect in the Introduction"),
         ("we compare this system", "refer to the contribution as 'our system'"),
+        (r"our \condAgenticCogWriter", "after the proposal introduces the name, refer to the contribution as 'our system'"),
     ):
         assert banned not in intro, (rationale, banned)
 
@@ -70,6 +71,9 @@ def main() -> None:
     # Present the two evaluation views symmetrically without freezing sentence case.
     assert "pointwise rubric scoring" in lowered and "pairwise same-prompt preference evaluation" in lowered, (
         "Name both pointwise and pairwise evaluation in the Introduction"
+    )
+    assert "we evaluate our system" in lowered, (
+        "After introducing Agentic CogWriter, refer to the evaluated contribution as 'our system'"
     )
 
     # Keep the headline mechanism interpretation reader-facing while leaving
