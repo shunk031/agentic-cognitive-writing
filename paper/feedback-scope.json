@@ -1,17 +1,11 @@
 {
-  "baseline_sha": "0deb80f27aa775924f745f782eaf83699141377f",
+  "baseline_sha": "91a8c8d596daabe7f2d1be9b93fcb6d325d4de0a",
   "replacements": [
     {
       "path": "paper/sec/05_results.tex",
-      "instruction": "Rendered paragraph endingで `Single-pass.` だけが次行に残るruntを避けるため、直前文脈で自明な `pairwise` の重複だけを削る。数値・比較方向・cross-family caveatは変えない。",
-      "before": "See Appendix~\\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the pairwise direction, whereas cross-family rescoring is less stable and reverses the WritingBench direction against \\condSinglePass.",
-      "after": "See Appendix~\\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable and reverses the WritingBench direction against \\condSinglePass."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Rendered paragraph endingで `exploratory.` だけが次行に残るruntを避けるため、直前に2つのestimateを明示しているので冗長な `estimates` だけを削る。post-hoc/exploratoryのevidence boundaryは変えない。",
-      "before": "Because the summary was defined after the main results, both estimates remain exploratory.",
-      "after": "Because the summary was defined after the main results, both remain exploratory."
+      "instruction": "Rendered paragraph endingで `Single-pass.` だけが次行に残るruntを解消するため、sensitivity文を意味を変えずに局所短縮する。resource-matchedの方向、cross-familyの不安定さ、WritingBenchでのSingle-pass比較の反転という3点は保持する。",
+      "before": "See Appendix~\\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable and reverses the WritingBench direction against \\condSinglePass.",
+      "after": "See Appendix~\\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \\condSinglePass."
     }
   ]
 }
