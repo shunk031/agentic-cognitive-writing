@@ -1,57 +1,96 @@
-We compare the writing systems under the same task inputs and information policy to study three questions: whether process-level organization improves document quality, which components contribute to any advantage, and how the writing loop behaves in practice. We also use one post-hoc execution variant as a diagnostic.
+We compare the writing systems under the same task inputs and information policy to study three questions: whether process-level organization improves document quality, which components contribute to any advantage, and how the writing loop behaves in practice.
+We also use one post-hoc execution variant as a diagnostic.
 
 \subsection{Systems Compared}
 \label{sec:baselines}
 
-We consider seven pre-specified systems under the same generation setup. The systems are numbered below so that the alternatives, ablations, execution variant, and full system can be distinguished throughout the analysis.
+We consider seven pre-specified systems under the same generation setup.
+The systems are numbered below so that the alternatives, ablations, execution variant, and full system can be distinguished throughout the analysis.
 
 \paragraph{Alternative writing systems.}
-We compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ produces the complete document in one generation call; (2) \condStaged\ executes \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write}, following the common separation of planning, drafting, and revision~\citep{yang2022re3,wan2025cognitive}; and (3) \condTaskPlanning\ follows a WriteHERE-style adaptive task graph~\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes. The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas \condAgenticCogWriter\ advances a writing process.
+We compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ produces the complete document in one generation call; (2) \condStaged\ executes \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write}, following the common separation of planning, drafting, and revision~\citep{yang2022re3,wan2025cognitive}; and (3) \condTaskPlanning\ follows a WriteHERE-style adaptive task graph~\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes.
+The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas \condAgenticCogWriter\ advances a writing process.
 
 \paragraph{Ablations of \condAgenticCogWriter.}
-Two pre-specified ablations change one control mechanism while retaining the rest of the loop. (4) \condNoGoals\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \condFixedOrder\ keeps the shared draft, goals, process history, and subagents but replaces the \texttt{Monitor}'s adaptive decision with a repeated \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle. The comparison tests whether explicit goals or adaptive ordering explain the full-system gain.
+Two pre-specified ablations change one control mechanism while retaining the rest of the loop.
+(4) \condNoGoals\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \condFixedOrder\ keeps the shared draft, goals, process history, and subagents but replaces the \texttt{Monitor}'s adaptive decision with a repeated \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle.
+The comparison tests whether explicit goals or adaptive ordering explain the full-system gain.
 
 \paragraph{Execution variant and full system.}
-(6) \condSingleWriter\ retains the goal representation and adaptive process loop but performs planning, drafting, and reviewing in one writer context without subagent delegation; it also limits each \texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation. (7) \condAgenticCogWriter\ is the full system described in Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents. We use it as the focal system below.
+(6) \condSingleWriter\ retains the goal representation and adaptive process loop but performs planning, drafting, and reviewing in one writer context without subagent delegation; it also limits each \texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.
+(7) \condAgenticCogWriter\ is the full system described in Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.
+We use it as the focal system below.
 
 \paragraph{Post-hoc execution check.}
-\condSingleContext\ was added after the main results as a narrower exploratory check and is not one of the seven pre-specified systems. It preserves the full process loop and shared state but executes each selected process in the \texttt{Monitor}'s context rather than a separate subagent context, so we use it only as a diagnostic of whether separate role contexts are necessary to explain the observed difference.
+\condSingleContext\ was added after the main results as a narrower exploratory check and is not one of the seven pre-specified systems.
+It preserves the full process loop and shared state but executes each selected process in the \texttt{Monitor}'s context rather than a separate subagent context, so we use it only as a diagnostic of whether separate role contexts are necessary to explain the observed difference.
 
 \input{tab/experiments-architecture-comparison}
 
 \subsection{Benchmarks and Prompts}
 \label{sec:benchmarks}
 
-We use three benchmarks to test whether process-level organization transfers across different forms of long-form writing: (1) WritingBench~\citep{wu2026writingbench}, which covers broad real-world writing requests with task-specific evaluation criteria; (2) HelloBench~\citep{que2024hellobench}, which includes long-text summarization, open-ended generation, and completion; and (3) DoLoMiTes~\citep{malaviya2025dolomites}, which targets methodical expert writing with explicit objectives, procedures, inputs, and constraints. The benchmarks cover general instruction following, sustained long-context generation, and structured expert-document production.
+We use three benchmarks to test whether process-level organization transfers across different forms of long-form writing: (1) WritingBench~\citep{wu2026writingbench}, which covers broad real-world writing requests with task-specific evaluation criteria; (2) HelloBench~\citep{que2024hellobench}, which includes long-text summarization, open-ended generation, and completion; and (3) DoLoMiTes~\citep{malaviya2025dolomites}, which targets methodical expert writing with explicit objectives, procedures, inputs, and constraints.
+The benchmarks cover general instruction following, sustained long-context generation, and structured expert-document production.
 
-We evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document. We first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts. From the remaining benchmark items, we deterministically prioritize cases with longer supplied context and, when the prompt specifies a target length, longer requested output, while applying fixed maximum-length limits. This produces a different demanding subset for each benchmark: WritingBench emphasizes long inputs with explicit long-output requirements, HelloBench emphasizes very long-input summarization and continuation, and DoLoMiTes emphasizes procedurally constrained expert writing. See Appendix~\ref{app:prompts} for the exact selection rule, sample sizes, and sensitivity analysis.
+We evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document.
+We first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts.
+From the remaining benchmark items, we deterministically prioritize cases with longer supplied context and, when the prompt specifies a target length, longer requested output, while applying fixed maximum-length limits.
+This produces a different demanding subset for each benchmark: WritingBench emphasizes long inputs with explicit long-output requirements, HelloBench emphasizes very long-input summarization and continuation, and DoLoMiTes emphasizes procedurally constrained expert writing.
+See Appendix~\ref{app:prompts} for the exact selection rule, sample sizes, and sensitivity analysis.
 
 \subsection{Implementation}
 \label{sec:implementation}
 
-All systems run in the same Codex-style coding-agent harness, using \modelGenBare\ as the generator and \modelJudgeBare\ as the primary evaluator.\footnote{We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work. Assigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.} Holding the generator fixed across systems isolates writing organization rather than base-model capability. For a cross-family robustness check, we also rescore selected system comparisons with \modelCross. \condAgenticCogWriter\ is packaged as an agent skill: the top-level \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} through the harness's subagent mechanism. See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.
+All systems run in the same Codex-style coding-agent harness, using \modelGenBare\ as the generator and \modelJudgeBare\ as the primary evaluator.\footnote{We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work.
+Assigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.}
+Holding the generator fixed across systems isolates writing organization rather than base-model capability.
+For a cross-family robustness check, we also rescore selected system comparisons with \modelCross.
+\condAgenticCogWriter\ is packaged as an agent skill: the top-level \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} through the harness's subagent mechanism.
+See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.
 
-Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration. Repeating generation lets us measure variation due to stochastic execution while keeping the task set and system definition fixed. Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
+Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration.
+Repeating generation lets us measure variation due to stochastic execution while keeping the task set and system definition fixed.
+Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
 
 \subsection{Evaluation}
 \label{sec:evaluation}
 
 \paragraph{Pointwise evaluation.}
-We score each completed document independently. When a benchmark defines its own rubric, we report that score as the \emph{benchmark-native} score, meaning the benchmark authors' original criteria rather than our shared rubric. WritingBench uses five prompt-specific criteria, HelloBench uses checklist items, and DoLoMiTes provides no comparable native score.
+We score each completed document independently.
+When a benchmark defines its own rubric, we report that score as the \emph{benchmark-native} score, meaning the benchmark authors' original criteria rather than our shared rubric.
+WritingBench uses five prompt-specific criteria, HelloBench uses checklist items, and DoLoMiTes provides no comparable native score.
 
-We also apply a common five-dimension rubric across all three benchmarks: instruction fulfillment, organization and coherence, content adequacy and depth, style and audience fit, and factual or constraint fidelity, each scored from 1 to 5. Because these ratings concentrate near the upper end, each dimension is standardized within a benchmark across outputs from all seven pre-specified systems before averaging. The resulting composite is relative within a benchmark rather than an absolute quality scale. See Appendix~\ref{app:prompts} for the full procedures and evaluator prompts.
+We also apply a common five-dimension rubric across all three benchmarks: instruction fulfillment, organization and coherence, content adequacy and depth, style and audience fit, and factual or constraint fidelity, each scored from 1 to 5.
+Because these ratings concentrate near the upper end, each dimension is standardized within a benchmark across outputs from all seven pre-specified systems before averaging.
+The resulting composite is relative within a benchmark rather than an absolute quality scale.
+See Appendix~\ref{app:prompts} for the full procedures and evaluator prompts.
 
 \paragraph{Pairwise evaluation.}
-We directly compare two responses written for the same prompt using the same quality dimensions and record which response is preferred, or a tie. LLM judges can exhibit position bias~\citep{zheng2023judging,wang2024fair}, so every pair is evaluated in both presentation orders. We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie. Headline win rates are computed over these order-consistent comparisons.
+We directly compare two responses written for the same prompt using the same quality dimensions and record which response is preferred, or a tie.
+LLM judges can exhibit position bias~\citep{zheng2023judging,wang2024fair}, so every pair is evaluated in both presentation orders.
+We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie.
+Headline win rates are computed over these order-consistent comparisons.
 
-The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}. We therefore report the cross-family rescoring described above as a separate descriptive robustness check rather than averaging results from the two evaluators.
+The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
+We therefore report the cross-family rescoring described above as a separate descriptive robustness check rather than averaging results from the two evaluators.
 
 \paragraph{Pre-specified statistical testing.}
-We fixed the confirmatory comparisons before scoring to avoid choosing favorable tests after observing results. For each benchmark and generation run, an exact two-sided sign test compares the non-tied prompt-level wins and losses for every pre-specified contrast~\citep{dixonmood1946}. Testing several related contrasts increases the chance of at least one false positive, so we apply Holm's step-down correction~\citep{holm1979} across the pre-specified tests within each benchmark. Generation runs remain separate because they repeat the same prompt set rather than provide new independent prompt samples. See Appendix~\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\citep{wilson1927}, and corrected test decisions.
+We fixed the confirmatory comparisons before scoring to avoid choosing favorable tests after observing results.
+For each benchmark and generation run, an exact two-sided sign test compares the non-tied prompt-level wins and losses for every pre-specified contrast~\citep{dixonmood1946}.
+Testing several related contrasts increases the chance of at least one false positive, so we apply Holm's step-down correction~\citep{holm1979} across the pre-specified tests within each benchmark.
+Generation runs remain separate because they repeat the same prompt set rather than provide new independent prompt samples.
+See Appendix~\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\citep{wilson1927}, and corrected test decisions.
 
-To summarize the two ablation contrasts across generation runs, we compute a post-hoc prompt-level estimate. For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and then summarized across benchmarks. We report a prompt-level bootstrap interval and sign test, treating this summary as exploratory because it was defined after the main results.
+To summarize the two ablation contrasts across generation runs, we compute a post-hoc prompt-level estimate.
+For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and then summarized across benchmarks.
+We report a prompt-level bootstrap interval and sign test, treating this summary as exploratory because it was defined after the main results.
 
 \paragraph{Robustness and behavioral analysis.}
-Pairwise LLM evaluation can favor longer outputs and can change with judge identity~\citep{zheng2023judging,dubois2024length,li2026preference,panickssery2024selfpreference}. We therefore test whether the pairwise direction persists within pre-specified output-length bands, under a tight compute match, and under the cross-family evaluator. Output length and realized compute are consequences of execution, so the first two analyses are descriptive sensitivity checks rather than causal adjustments.
+Pairwise LLM evaluation can favor longer outputs and can change with judge identity~\citep{zheng2023judging,dubois2024length,li2026preference,panickssery2024selfpreference}.
+We therefore test whether the pairwise direction persists within pre-specified output-length bands, under a tight compute match, and under the cross-family evaluator.
+Output length and realized compute are consequences of execution, so the first two analyses are descriptive sensitivity checks rather than causal adjustments.
 
-We analyze observable traces of process transitions, goal creation and development, goal replacement, and subagent invocations to characterize how the writing loop is actually used. We also compare runs that complete one planning--drafting--reviewing cycle with runs that take another process path. The trace-defined split is observational rather than randomized, so it describes behavior without identifying a causal mechanism.
+We analyze observable traces of process transitions, goal creation and development, goal replacement, and subagent invocations to characterize how the writing loop is actually used.
+We also compare runs that complete one planning--drafting--reviewing cycle with runs that take another process path.
+The trace-defined split is observational rather than randomized, so it describes behavior without identifying a causal mechanism.

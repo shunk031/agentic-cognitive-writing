@@ -23,6 +23,18 @@ def _without_code_blocks(text):
     return re.sub(r"(?m)^(?: {4}|\t).*$", "", text)
 
 
+def _expand_inputs(text):
+    r"""Recursively expand manuscript \input files from the paper root."""
+
+    def include(match):
+        relative = match[1]
+        path = PAPER / (relative if relative.endswith(".tex") else relative + ".tex")
+        assert path.exists(), ("missing manuscript input", relative)
+        return _expand_inputs(path.read_text())
+
+    return re.sub(r"\\input\{([^}]+)\}", include, text)
+
+
 def _main_prose_paragraphs():
     """Yield normalized prose paragraphs from the main paper."""
     for relative in MAIN_SECTIONS:
@@ -131,7 +143,7 @@ def check():
     aux = (PAPER / "build" / "acl_latex.aux").read_text()
     structural_text = _without_code_blocks(text)
 
-    source = (PAPER / "acl_latex.tex").read_text()
+    source = _expand_inputs((PAPER / "acl_latex.tex").read_text())
     abstract = re.search(
         r"\\begin\{abstract\}\s*(.*?)\s*\\end\{abstract\}", source, re.DOTALL
     )[1]

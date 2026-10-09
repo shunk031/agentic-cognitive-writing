@@ -7,12 +7,21 @@ Scope declarations must be committed separately from manuscript .tex edits. The
 manifest may be extended in later manifest-only commits when the author adds
 feedback before the batch is complete; the final manifest still audits the full
 prose diff from baseline to HEAD.
+
+Source-only reflow is allowed without a replacement declaration when it changes
+only ordinary whitespace inside existing paragraphs. Exact source extraction is
+also allowed when a new paper/sec/*.tex file contains only text already present
+in one baseline manuscript file and the current parent replaces that text with
+the matching \\input{...}. These allowances support source organization without
+weakening the guard against prose edits. Other new manuscript files remain
+forbidden unless their exact contents are declared in ``created_files``.
 """
 
 from __future__ import annotations
 
 import difflib
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -30,6 +39,90 @@ def normalize_eof(text: str) -> str:
     return text.rstrip("\n")
 
 
+def normalize_paragraph_whitespace(text: str) -> str:
+    """Canonicalize whitespace while preserving TeX paragraph boundaries.
+
+    A single physical newline in ordinary TeX prose is whitespace, so inserting
+    one between sentences is source formatting only. A blank line is a paragraph
+    boundary and is retained here because changing it can change typesetting.
+    """
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n").rstrip("\n")
+    paragraphs = re.split(r"\n[ \t]*\n+", normalized)
+    return "\n\n".join(re.sub(r"[ \t\n]+", " ", paragraph).strip() for paragraph in paragraphs)
+
+
+def text_at_commit(commit: str, path: str) -> str | None:
+    result = subprocess.run(
+        ["git", "show", f"{commit}:{path}"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    if result.returncode != 0:
+        return None
+    return result.stdout
+
+
+def input_token(path: str) -> str:
+    relative = Path(path).relative_to("paper").as_posix()
+    if relative.endswith(".tex"):
+        relative = relative[:-4]
+    return rf"\input{{{relative}}}"
+
+
+def source_only_extractions(
+    repo: Path,
+    baseline: str,
+    changed_tex: set[str],
+    declared_created: set[str],
+) -> dict[str, str]:
+    """Return undeclared new files that are exact source extractions.
+
+    A candidate is accepted only when exactly one changed baseline manuscript
+    currently inputs it and the candidate's normalized text already occurred in
+    that parent's baseline text. Parent validation later expands the input back
+    to the candidate text, so moving text to a different location cannot pass.
+    """
+    existing_changed = {
+        path
+        for path in changed_tex
+        if text_at_commit(baseline, path) is not None and (repo / path).exists()
+    }
+    extracted: dict[str, str] = {}
+
+    for path in sorted(changed_tex - declared_created):
+        if text_at_commit(baseline, path) is not None:
+            continue
+        current_path = repo / path
+        if not current_path.exists() or not path.startswith("paper/sec/"):
+            continue
+
+        content = current_path.read_text(encoding="utf-8")
+        normalized_content = normalize_paragraph_whitespace(content)
+        token = input_token(path)
+        parents: list[str] = []
+
+        for parent in sorted(existing_changed):
+            current_parent = (repo / parent).read_text(encoding="utf-8")
+            if current_parent.count(token) != 1:
+                continue
+            baseline_parent = text_at_commit(baseline, parent)
+            assert baseline_parent is not None
+            if normalized_content in normalize_paragraph_whitespace(baseline_parent):
+                parents.append(parent)
+
+        if len(parents) == 1:
+            extracted[path] = content
+
+    return extracted
+
+
+def expand_source_only_extractions(text: str, extracted: dict[str, str]) -> str:
+    for path, content in extracted.items():
+        text = text.replace(input_token(path), normalize_eof(content), 1)
+    return text
+
+
 def main() -> None:
     repo = Path(git("rev-parse", "--show-toplevel"))
     manifest_rel = "paper/feedback-scope.json"
@@ -40,6 +133,7 @@ def main() -> None:
     scope = json.loads(manifest_path.read_text(encoding="utf-8"))
     baseline = scope.get("baseline_sha", "").strip()
     replacements = scope.get("replacements", [])
+    created_files = scope.get("created_files", [])
     if not baseline:
         fail("baseline_sha is required")
 
@@ -97,12 +191,49 @@ def main() -> None:
             fail(f"replacement {index} needs distinct non-empty before/after text")
         by_path.setdefault(path, []).append(item)
 
+    created_by_path: dict[str, dict[str, str]] = {}
+    for index, item in enumerate(created_files, start=1):
+        path = item.get("path", "").strip()
+        instruction = item.get("instruction", "").strip()
+        content = item.get("content", "")
+        if not path.startswith("paper/") or not path.endswith(".tex"):
+            fail(f"created file {index} must be a manuscript .tex file under paper/")
+        if not instruction:
+            fail(f"created file {index} needs the exact author instruction it implements")
+        if not content:
+            fail(f"created file {index} needs non-empty exact content")
+        if path in created_by_path:
+            fail(f"created file declared more than once: {path}")
+        created_by_path[path] = item
+
     changed_tex = {
         path
         for path in git("diff", "--name-only", f"{baseline}..HEAD", "--", "paper").splitlines()
         if path.startswith("paper/") and path.endswith(".tex")
     }
-    unauthorized_files = sorted(changed_tex - set(by_path))
+    extracted = source_only_extractions(
+        repo,
+        baseline,
+        changed_tex,
+        set(created_by_path),
+    )
+
+    # Existing files may be reflowed without a declaration only when paragraph
+    # boundaries and all non-whitespace characters are identical to baseline.
+    # Exact source extractions are compared after expanding their new \input.
+    unauthorized_files: list[str] = []
+    allowed_new_files = set(created_by_path) | set(extracted)
+    for path in sorted(changed_tex - set(by_path) - allowed_new_files):
+        base_text = text_at_commit(baseline, path)
+        current_path = repo / path
+        if base_text is None or not current_path.exists():
+            unauthorized_files.append(path)
+            continue
+        current = expand_source_only_extractions(
+            current_path.read_text(encoding="utf-8"), extracted
+        )
+        if normalize_paragraph_whitespace(base_text) != normalize_paragraph_whitespace(current):
+            unauthorized_files.append(path)
     if unauthorized_files:
         fail(
             "manuscript TeX changed outside the declared feedback scope: "
@@ -110,12 +241,9 @@ def main() -> None:
         )
 
     for path, items in by_path.items():
-        try:
-            base_text = subprocess.check_output(
-                ["git", "show", f"{baseline}:{path}"], text=True
-            )
-        except subprocess.CalledProcessError as exc:
-            fail(f"cannot read {path} at baseline {baseline}: {exc}")
+        base_text = text_at_commit(baseline, path)
+        if base_text is None:
+            fail(f"cannot read {path} at baseline {baseline}")
 
         expected = base_text
         for item in items:
@@ -131,16 +259,17 @@ def main() -> None:
         current_path = repo / path
         if not current_path.exists():
             fail(f"declared manuscript file disappeared: {path}")
-        current = current_path.read_text(encoding="utf-8")
+        current = expand_source_only_extractions(
+            current_path.read_text(encoding="utf-8"), extracted
+        )
 
         # A declaration-only commit may still contain the baseline text. Once
-        # prose editing starts, the file must equal exactly the declared result.
-        # A final newline is formatting-only and is ignored; all other text
-        # remains exact.
-        normalized_current = normalize_eof(current)
+        # editing starts, the file must be either the baseline or the declared
+        # result, modulo source-only whitespace reflow and exact extraction.
+        normalized_current = normalize_paragraph_whitespace(current)
         normalized_allowed = {
-            normalize_eof(base_text),
-            normalize_eof(expected),
+            normalize_paragraph_whitespace(base_text),
+            normalize_paragraph_whitespace(expected),
         }
         if normalized_current not in normalized_allowed:
             diff = "".join(
@@ -152,15 +281,27 @@ def main() -> None:
                 )
             )
             fail(
-                f"{path} differs from the exact declared replacements. "
+                f"{path} differs from the exact declared replacements beyond source-only reflow/extraction. "
                 "This usually means neighboring prose was changed without authorization.\n"
                 + diff[:8000]
             )
 
+    for path, item in created_by_path.items():
+        if text_at_commit(baseline, path) is not None:
+            fail(f"declared created file already exists at baseline: {path}")
+        current_path = repo / path
+        if not current_path.exists():
+            # A declaration-only commit may precede creation of the file.
+            continue
+        current = current_path.read_text(encoding="utf-8")
+        if normalize_eof(current) != normalize_eof(item["content"]):
+            fail(f"created manuscript file differs from declared exact content: {path}")
+
     print(
         "Feedback scope guard: passed "
         f"(baseline={baseline}, scope declarations={len(scope_commits)}, "
-        f"declared replacements={len(replacements)})"
+        f"declared replacements={len(replacements)}, declared created files={len(created_files)}, "
+        f"source-only extractions={len(extracted)})"
     )
 
 
