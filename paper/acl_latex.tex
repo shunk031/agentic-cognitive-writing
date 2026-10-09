@@ -49,20 +49,50 @@
 \DeclareUnicodeCharacter{2265}{>=}
 \DeclareUnicodeCharacter{2713}{[x]}
 
-% WriteHERE-style prompt cards. Color identifies the role of each prompt while
-% keeping the prompt text itself neutral and printable.
-\definecolor{PromptBaseline}{RGB}{52,91,140}
-\definecolor{PromptMonitor}{RGB}{42,109,78}
-\definecolor{PromptPlanner}{RGB}{35,112,126}
-\definecolor{PromptTranslator}{RGB}{77,88,148}
-\definecolor{PromptReviewer}{RGB}{132,72,91}
-\definecolor{PromptAblation}{RGB}{164,106,36}
-\definecolor{PromptEvaluator}{RGB}{102,76,142}
+% Shared draw.io-style pastel palette. Figure 1 and the Appendix prompt cards
+% use the same role colors so visual identity is consistent across the paper.
+\definecolor{DrawioGrayFill}{HTML}{F5F5F5}
+\definecolor{DrawioGrayStroke}{HTML}{666666}
+\definecolor{DrawioBlueFill}{HTML}{DAE8FC}
+\definecolor{DrawioBlueStroke}{HTML}{6C8EBF}
+\definecolor{DrawioGreenFill}{HTML}{D5E8D4}
+\definecolor{DrawioGreenStroke}{HTML}{82B366}
+\definecolor{DrawioPurpleFill}{HTML}{E1D5E7}
+\definecolor{DrawioPurpleStroke}{HTML}{9673A6}
+\definecolor{DrawioRedFill}{HTML}{F8CECC}
+\definecolor{DrawioRedStroke}{HTML}{B85450}
+\definecolor{DrawioOrangeFill}{HTML}{FFE6CC}
+\definecolor{DrawioOrangeStroke}{HTML}{D79B00}
+\definecolor{DrawioYellowFill}{HTML}{FFF2CC}
+\definecolor{DrawioYellowStroke}{HTML}{D6B656}
+
+\colorlet{PromptBaselineFill}{DrawioGrayFill}
+\colorlet{PromptBaselineStroke}{DrawioGrayStroke}
+\colorlet{PromptBaselineTitle}{DrawioGrayStroke!65!black}
+\colorlet{PromptMonitorFill}{DrawioBlueFill}
+\colorlet{PromptMonitorStroke}{DrawioBlueStroke}
+\colorlet{PromptMonitorTitle}{DrawioBlueStroke!65!black}
+\colorlet{PromptPlannerFill}{DrawioGreenFill}
+\colorlet{PromptPlannerStroke}{DrawioGreenStroke}
+\colorlet{PromptPlannerTitle}{DrawioGreenStroke!65!black}
+\colorlet{PromptTranslatorFill}{DrawioPurpleFill}
+\colorlet{PromptTranslatorStroke}{DrawioPurpleStroke}
+\colorlet{PromptTranslatorTitle}{DrawioPurpleStroke!65!black}
+\colorlet{PromptReviewerFill}{DrawioRedFill}
+\colorlet{PromptReviewerStroke}{DrawioRedStroke}
+\colorlet{PromptReviewerTitle}{DrawioRedStroke!65!black}
+\colorlet{PromptAblationFill}{DrawioOrangeFill}
+\colorlet{PromptAblationStroke}{DrawioOrangeStroke}
+\colorlet{PromptAblationTitle}{DrawioOrangeStroke!65!black}
+\colorlet{PromptEvaluatorFill}{DrawioYellowFill}
+\colorlet{PromptEvaluatorStroke}{DrawioYellowStroke}
+\colorlet{PromptEvaluatorTitle}{DrawioYellowStroke!65!black}
+
 \newtcolorbox{promptbox}[2]{
   breakable,
-  colback=#1!4!white,
-  colframe=#1!72!black,
-  colbacktitle=#1!82!black,
+  colback=#1Fill,
+  colframe=#1Stroke,
+  colbacktitle=#1Title,
   coltitle=white,
   title={#2},
   fonttitle=\bfseries\small,
