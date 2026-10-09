@@ -15,7 +15,7 @@
     },
     {
       "path": "paper/sec/05_results.tex",
-      "instruction": "Remove the Figure 2 caption sentence that expands P, T, R, and E; the panel graphics already make the notation legible and the extra sentence is unnecessary.",
+      "instruction": "Remove the Figure 2 caption sentence that expands P, T, R, and E, without changing the remaining caption or figure contents.",
       "before": "Our system mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.\nP, T, R, and E denote \\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, and end.}",
       "after": "Our system mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.}"
     }
