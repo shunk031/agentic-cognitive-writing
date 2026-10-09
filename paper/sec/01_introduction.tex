@@ -17,10 +17,10 @@ Building on \citet{flower1981cognitive}, we propose \condAgenticCogWriter, a lon
 A top-level Monitor agent observes the evolving draft, goals, and process history, chooses whether the next activity should be planning, drafting, or reviewing, and delegates that activity to a corresponding subagent.
 The resulting process order is chosen during writing rather than fixed in advance.
 
-We evaluate our \condAgenticCogWriter\ on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.
+We evaluate our system on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.
 We hold the generator and task information constant across the compared conditions so that differences reflect how writing is organized.
 Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives.
-In pairwise evaluation, \condAgenticCogWriter\ is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning.
+In pairwise evaluation, our system is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning.
 The component analyses support a system-level interpretation of this advantage rather than attributing it to explicit goals or adaptive ordering alone under the pre-specified tests.
 Process traces show that most runs follow a simple planning--drafting--reviewing path, indicating that adaptive ordering is available but used selectively.
 
