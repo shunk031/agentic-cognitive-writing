@@ -1,0 +1,18 @@
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{lrrrrr}
+\toprule
+& \multicolumn{2}{c}{\textbf{WritingBench}} & \multicolumn{2}{c}{\textbf{HelloBench}} & \textbf{DoLoMiTes} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-6}
+\textbf{vs.} & \textbf{Native} & \textbf{Pointwise} & \textbf{Native} & \textbf{Pointwise} & \textbf{Pointwise} \\
+\midrule
+\condSinglePass & \PairedQualityWritingNativeSinglePassDiff\,{\scriptsize[\PairedQualityWritingNativeSinglePassLow, \PairedQualityWritingNativeSinglePassHigh]} & \PairedQualityWritingPointwiseSinglePassDiff\,{\scriptsize[\PairedQualityWritingPointwiseSinglePassLow, \PairedQualityWritingPointwiseSinglePassHigh]} & \PairedQualityHelloNativeSinglePassDiff\,{\scriptsize[\PairedQualityHelloNativeSinglePassLow, \PairedQualityHelloNativeSinglePassHigh]} & \PairedQualityHelloPointwiseSinglePassDiff\,{\scriptsize[\PairedQualityHelloPointwiseSinglePassLow, \PairedQualityHelloPointwiseSinglePassHigh]} & \PairedQualityDoLoPointwiseSinglePassDiff\,{\scriptsize[\PairedQualityDoLoPointwiseSinglePassLow, \PairedQualityDoLoPointwiseSinglePassHigh]} \\
+\condStaged & \PairedQualityWritingNativeStagedDiff\,{\scriptsize[\PairedQualityWritingNativeStagedLow, \PairedQualityWritingNativeStagedHigh]} & \PairedQualityWritingPointwiseStagedDiff\,{\scriptsize[\PairedQualityWritingPointwiseStagedLow, \PairedQualityWritingPointwiseStagedHigh]} & \PairedQualityHelloNativeStagedDiff\,{\scriptsize[\PairedQualityHelloNativeStagedLow, \PairedQualityHelloNativeStagedHigh]} & \PairedQualityHelloPointwiseStagedDiff\,{\scriptsize[\PairedQualityHelloPointwiseStagedLow, \PairedQualityHelloPointwiseStagedHigh]} & \PairedQualityDoLoPointwiseStagedDiff\,{\scriptsize[\PairedQualityDoLoPointwiseStagedLow, \PairedQualityDoLoPointwiseStagedHigh]} \\
+\condTaskPlanning & \PairedQualityWritingNativeTaskPlanningDiff\,{\scriptsize[\PairedQualityWritingNativeTaskPlanningLow, \PairedQualityWritingNativeTaskPlanningHigh]} & \PairedQualityWritingPointwiseTaskPlanningDiff\,{\scriptsize[\PairedQualityWritingPointwiseTaskPlanningLow, \PairedQualityWritingPointwiseTaskPlanningHigh]} & \PairedQualityHelloNativeTaskPlanningDiff\,{\scriptsize[\PairedQualityHelloNativeTaskPlanningLow, \PairedQualityHelloNativeTaskPlanningHigh]} & \PairedQualityHelloPointwiseTaskPlanningDiff\,{\scriptsize[\PairedQualityHelloPointwiseTaskPlanningLow, \PairedQualityHelloPointwiseTaskPlanningHigh]} & \PairedQualityDoLoPointwiseTaskPlanningDiff\,{\scriptsize[\PairedQualityDoLoPointwiseTaskPlanningLow, \PairedQualityDoLoPointwiseTaskPlanningHigh]} \\
+\bottomrule
+\end{tabular}
+\caption{Paired differences in document quality, \condAgenticCogWriter\ minus the compared system, with 95\% bootstrap intervals in brackets. Each prompt's three generation runs are averaged per system before differencing, and prompts are resampled 10,000 times; positive values favor \condAgenticCogWriter, and intervals that exclude zero indicate a difference beyond prompt-level sampling variation.}
+\label{tab:paired-quality}
+\end{table*}

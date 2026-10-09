@@ -10,7 +10,6 @@ The alternative writing systems are matched implementations under our common gen
 
 \paragraph{Evaluator dependence.}
 The primary evaluation also leaves uncertainty about judge dependence.
-Pointwise scores use the initial generation run, whereas pairwise comparisons cover three runs of the same prompt set.
 Pairwise win rates are computed over order-consistent comparisons, where both presentation orders select the same response; Section~\ref{sec:results-effectiveness} also reports unconditional and worst-case missing-output views.
 The primary evaluator belongs to the same model family as the generator, and related generator--judge models can exhibit preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
 The cross-family check produces many ties and reverses one WritingBench direction, and we did not collect human judgments, so model-judge preference should not be treated as human preference.

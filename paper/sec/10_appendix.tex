@@ -23,6 +23,11 @@ Points show 95\% Wilson intervals; filled circles survive correction, open circl
 \label{fig:appendix-confirmatory-forest}
 \end{figure}
 
+\section{Paired Document-Quality Differences}
+\label{app:paired-quality}
+Table~\ref{tab:paired-quality} reports paired differences behind Table~\ref{tab:main-results}. Each prompt's three generation runs are averaged per system before differencing, so the prompt is the resampling unit, and the intervals come from 10,000 prompt-level bootstrap resamples.
+\input{tab/appendix-paired-quality}
+
 \section{Additional Process and Resource Statistics}
 \label{app:process-behavior}
 Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first generation run.

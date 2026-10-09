@@ -1,0 +1,2158 @@
+{
+  "across_runs": {
+    "DoLoMiTes": {
+      "A1": {
+        "composite": {
+          "mean": -0.005952543216,
+          "sample_sd": 0.017974352102
+        },
+        "n": {
+          "mean": 98.0,
+          "sample_sd": 2.645751311065
+        },
+        "native_mean": null,
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.343040935672,
+            "sample_sd": 0.033187739902
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.611676413256,
+            "sample_sd": 0.069918152459
+          },
+          "instruction_fulfillment": {
+            "mean": 4.339950381003,
+            "sample_sd": 0.013609849869
+          },
+          "organization_global_coherence": {
+            "mean": 4.870614921141,
+            "sample_sd": 0.008584996629
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.795601630339,
+            "sample_sd": 0.037500079993
+          }
+        }
+      },
+      "A2": {
+        "composite": {
+          "mean": 0.064193490008,
+          "sample_sd": 0.035842169066
+        },
+        "n": {
+          "mean": 100.0,
+          "sample_sd": 0.0
+        },
+        "native_mean": null,
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.403333333333,
+            "sample_sd": 0.015275252317
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.68,
+            "sample_sd": 0.04
+          },
+          "instruction_fulfillment": {
+            "mean": 4.426666666667,
+            "sample_sd": 0.011547005384
+          },
+          "organization_global_coherence": {
+            "mean": 4.896666666667,
+            "sample_sd": 0.040414518843
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.8,
+            "sample_sd": 0.017320508076
+          }
+        }
+      },
+      "A3": {
+        "composite": {
+          "mean": -0.163587068196,
+          "sample_sd": 0.014629273905
+        },
+        "n": {
+          "mean": 99.0,
+          "sample_sd": 1.732050807569
+        },
+        "native_mean": null,
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.25206185567,
+            "sample_sd": 0.052947855442
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.552130584192,
+            "sample_sd": 0.055224094752
+          },
+          "instruction_fulfillment": {
+            "mean": 4.235807560137,
+            "sample_sd": 0.041245402947
+          },
+          "organization_global_coherence": {
+            "mean": 4.78439862543,
+            "sample_sd": 0.031529766749
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.64295532646,
+            "sample_sd": 0.023428236721
+          }
+        }
+      },
+      "A4": {
+        "composite": {
+          "mean": 0.030550157994,
+          "sample_sd": 0.034567872708
+        },
+        "n": {
+          "mean": 97.0,
+          "sample_sd": 1.0
+        },
+        "native_mean": null,
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.429510163172,
+            "sample_sd": 0.065809526252
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.707951995231,
+            "sample_sd": 0.048089213457
+          },
+          "instruction_fulfillment": {
+            "mean": 4.4228148304,
+            "sample_sd": 0.048630255266
+          },
+          "organization_global_coherence": {
+            "mean": 4.872949394535,
+            "sample_sd": 0.014429660273
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.694171225191,
+            "sample_sd": 0.014991364695
+          }
+        }
+      },
+      "A5": {
+        "composite": {
+          "mean": -0.001285092654,
+          "sample_sd": 0.058603189546
+        },
+        "n": {
+          "mean": 98.333333333333,
+          "sample_sd": 0.57735026919
+        },
+        "native_mean": null,
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.389919604205,
+            "sample_sd": 0.051250395227
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.651102865389,
+            "sample_sd": 0.070060366931
+          },
+          "instruction_fulfillment": {
+            "mean": 4.37308458737,
+            "sample_sd": 0.054130155213
+          },
+          "organization_global_coherence": {
+            "mean": 4.874493231636,
+            "sample_sd": 0.03317884184
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.708616780046,
+            "sample_sd": 0.039422536623
+          }
+        }
+      },
+      "A6": {
+        "composite": {
+          "mean": 0.047806875621,
+          "sample_sd": 0.041183716334
+        },
+        "n": {
+          "mean": 95.333333333333,
+          "sample_sd": 1.527525231652
+        },
+        "native_mean": null,
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.440597160812,
+            "sample_sd": 0.010542738971
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.744406090902,
+            "sample_sd": 0.037404953332
+          },
+          "instruction_fulfillment": {
+            "mean": 4.415739447324,
+            "sample_sd": 0.038038744019
+          },
+          "organization_global_coherence": {
+            "mean": 4.880795265198,
+            "sample_sd": 0.031817879845
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.695386030332,
+            "sample_sd": 0.042383439694
+          }
+        }
+      },
+      "A7": {
+        "composite": {
+          "mean": 0.030078417417,
+          "sample_sd": 0.037545500629
+        },
+        "n": {
+          "mean": 98.666666666667,
+          "sample_sd": 2.309401076759
+        },
+        "native_mean": null,
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.530833333333,
+            "sample_sd": 0.052698039179
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.631944444444,
+            "sample_sd": 0.013025971208
+          },
+          "instruction_fulfillment": {
+            "mean": 4.459861111111,
+            "sample_sd": 0.035882556631
+          },
+          "organization_global_coherence": {
+            "mean": 4.841111111111,
+            "sample_sd": 0.008388704928
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.730138888889,
+            "sample_sd": 0.036229240544
+          }
+        }
+      }
+    },
+    "HelloBench": {
+      "A1": {
+        "composite": {
+          "mean": -0.112065532023,
+          "sample_sd": 0.017711586293
+        },
+        "n": {
+          "mean": 98.0,
+          "sample_sd": 3.464101615138
+        },
+        "native_mean": {
+          "mean": 0.77312816616,
+          "sample_sd": 0.004789144079
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.95914893617,
+            "sample_sd": 0.01010806257
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.634609929078,
+            "sample_sd": 0.062107739933
+          },
+          "instruction_fulfillment": {
+            "mean": 4.938936170213,
+            "sample_sd": 0.00845460276
+          },
+          "organization_global_coherence": {
+            "mean": 4.955815602837,
+            "sample_sd": 0.005195731321
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.965815602837,
+            "sample_sd": 0.007247588485
+          }
+        }
+      },
+      "A2": {
+        "composite": {
+          "mean": 0.002722809044,
+          "sample_sd": 0.015736654584
+        },
+        "n": {
+          "mean": 100.0,
+          "sample_sd": 0.0
+        },
+        "native_mean": {
+          "mean": 0.781273809524,
+          "sample_sd": 0.00422582158
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.976666666667,
+            "sample_sd": 0.005773502692
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.74,
+            "sample_sd": 0.03
+          },
+          "instruction_fulfillment": {
+            "mean": 4.946666666667,
+            "sample_sd": 0.005773502692
+          },
+          "organization_global_coherence": {
+            "mean": 4.96,
+            "sample_sd": 0.017320508076
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.996666666667,
+            "sample_sd": 0.005773502692
+          }
+        }
+      },
+      "A3": {
+        "composite": {
+          "mean": -0.015874875518,
+          "sample_sd": 0.061268409277
+        },
+        "n": {
+          "mean": 99.333333333333,
+          "sample_sd": 1.154700538379
+        },
+        "native_mean": {
+          "mean": 0.780788548753,
+          "sample_sd": 0.003398813814
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.983197278912,
+            "sample_sd": 0.015321534191
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.76537414966,
+            "sample_sd": 0.057186693584
+          },
+          "instruction_fulfillment": {
+            "mean": 4.949727891156,
+            "sample_sd": 0.026307011696
+          },
+          "organization_global_coherence": {
+            "mean": 4.969863945578,
+            "sample_sd": 0.017203891995
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.949727891156,
+            "sample_sd": 0.009594731073
+          }
+        }
+      },
+      "A4": {
+        "composite": {
+          "mean": 0.012544102393,
+          "sample_sd": 0.060265908442
+        },
+        "n": {
+          "mean": 99.666666666667,
+          "sample_sd": 0.57735026919
+        },
+        "native_mean": {
+          "mean": 0.790905323072,
+          "sample_sd": 0.005417287526
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.986632996633,
+            "sample_sd": 0.005744565607
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.779393939394,
+            "sample_sd": 0.03909443254
+          },
+          "instruction_fulfillment": {
+            "mean": 4.976666666667,
+            "sample_sd": 0.032145502537
+          },
+          "organization_global_coherence": {
+            "mean": 4.979898989899,
+            "sample_sd": 0.010151892048
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.939797979798,
+            "sample_sd": 0.010006119952
+          }
+        }
+      },
+      "A5": {
+        "composite": {
+          "mean": 0.096165144577,
+          "sample_sd": 0.055641735749
+        },
+        "n": {
+          "mean": 99.0,
+          "sample_sd": 1.732050807569
+        },
+        "native_mean": {
+          "mean": 0.788948821797,
+          "sample_sd": 0.001014525621
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.993127147766,
+            "sample_sd": 0.011904129262
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.807319587629,
+            "sample_sd": 0.065455637109
+          },
+          "instruction_fulfillment": {
+            "mean": 4.982920962199,
+            "sample_sd": 0.021510682522
+          },
+          "organization_global_coherence": {
+            "mean": 4.983127147766,
+            "sample_sd": 0.005960094502
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.983127147766,
+            "sample_sd": 0.005960094502
+          }
+        }
+      },
+      "A6": {
+        "composite": {
+          "mean": 0.05481086705,
+          "sample_sd": 0.072108532318
+        },
+        "n": {
+          "mean": 98.0,
+          "sample_sd": 3.464101615138
+        },
+        "native_mean": {
+          "mean": 0.787452718676,
+          "sample_sd": 0.003457537337
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.989361702128,
+            "sample_sd": 0.018426072421
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.804893617021,
+            "sample_sd": 0.062802729942
+          },
+          "instruction_fulfillment": {
+            "mean": 4.958510638298,
+            "sample_sd": 0.028994777944
+          },
+          "organization_global_coherence": {
+            "mean": 4.972482269504,
+            "sample_sd": 0.013021091177
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.979574468085,
+            "sample_sd": 0.010027124824
+          }
+        }
+      },
+      "A7": {
+        "composite": {
+          "mean": -0.040160425545,
+          "sample_sd": 0.04925587327
+        },
+        "n": {
+          "mean": 98.333333333333,
+          "sample_sd": 2.886751345948
+        },
+        "native_mean": {
+          "mean": 0.770273809524,
+          "sample_sd": 0.001464479275
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.98298245614,
+            "sample_sd": 0.015401670353
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.701578947368,
+            "sample_sd": 0.035498039429
+          },
+          "instruction_fulfillment": {
+            "mean": 4.946140350877,
+            "sample_sd": 0.019932943912
+          },
+          "organization_global_coherence": {
+            "mean": 4.945964912281,
+            "sample_sd": 0.01437847473
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.979824561404,
+            "sample_sd": 0.009738027429
+          }
+        }
+      }
+    },
+    "WritingBench": {
+      "A1": {
+        "composite": {
+          "mean": -0.090243088554,
+          "sample_sd": 0.009183663401
+        },
+        "n": {
+          "mean": 100.0,
+          "sample_sd": 0.0
+        },
+        "native_mean": {
+          "mean": 6.974666666667,
+          "sample_sd": 0.060177515181
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.363333333333,
+            "sample_sd": 0.011547005384
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.423333333333,
+            "sample_sd": 0.050332229568
+          },
+          "instruction_fulfillment": {
+            "mean": 4.146666666667,
+            "sample_sd": 0.005773502692
+          },
+          "organization_global_coherence": {
+            "mean": 4.96,
+            "sample_sd": 0.01
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.873333333333,
+            "sample_sd": 0.025166114784
+          }
+        }
+      },
+      "A2": {
+        "composite": {
+          "mean": -0.04095911341,
+          "sample_sd": 0.011807353435
+        },
+        "n": {
+          "mean": 100.0,
+          "sample_sd": 0.0
+        },
+        "native_mean": {
+          "mean": 7.020666666667,
+          "sample_sd": 0.054930258814
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.29,
+            "sample_sd": 0.01
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.616666666667,
+            "sample_sd": 0.045092497528
+          },
+          "instruction_fulfillment": {
+            "mean": 4.136666666667,
+            "sample_sd": 0.023094010768
+          },
+          "organization_global_coherence": {
+            "mean": 4.973333333333,
+            "sample_sd": 0.005773502692
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.893333333333,
+            "sample_sd": 0.015275252317
+          }
+        }
+      },
+      "A3": {
+        "composite": {
+          "mean": -0.032905203546,
+          "sample_sd": 0.032960464142
+        },
+        "n": {
+          "mean": 99.0,
+          "sample_sd": 1.732050807569
+        },
+        "native_mean": {
+          "mean": 7.217910652921,
+          "sample_sd": 0.035402009819
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.447560137457,
+            "sample_sd": 0.036935762349
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.57910652921,
+            "sample_sd": 0.020059782406
+          },
+          "instruction_fulfillment": {
+            "mean": 4.205395189003,
+            "sample_sd": 0.025009368705
+          },
+          "organization_global_coherence": {
+            "mean": 4.956048109966,
+            "sample_sd": 0.021573340158
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.83470790378,
+            "sample_sd": 0.033189525763
+          }
+        }
+      },
+      "A4": {
+        "composite": {
+          "mean": 0.101870118712,
+          "sample_sd": 0.039845740216
+        },
+        "n": {
+          "mean": 98.666666666667,
+          "sample_sd": 2.309401076759
+        },
+        "native_mean": {
+          "mean": 7.472527777778,
+          "sample_sd": 0.061101028208
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.578055555556,
+            "sample_sd": 0.023159071497
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.510138888889,
+            "sample_sd": 0.070000413359
+          },
+          "instruction_fulfillment": {
+            "mean": 4.380694444444,
+            "sample_sd": 0.070956184316
+          },
+          "organization_global_coherence": {
+            "mean": 4.983333333333,
+            "sample_sd": 0.020816659995
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.901944444444,
+            "sample_sd": 0.00728074579
+          }
+        }
+      },
+      "A5": {
+        "composite": {
+          "mean": 0.054992576087,
+          "sample_sd": 0.042381489633
+        },
+        "n": {
+          "mean": 99.666666666667,
+          "sample_sd": 0.57735026919
+        },
+        "native_mean": {
+          "mean": 7.402808080808,
+          "sample_sd": 0.03501542797
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.521616161616,
+            "sample_sd": 0.051126280338
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.477946127946,
+            "sample_sd": 0.088697241365
+          },
+          "instruction_fulfillment": {
+            "mean": 4.347575757576,
+            "sample_sd": 0.066533613784
+          },
+          "organization_global_coherence": {
+            "mean": 4.986632996633,
+            "sample_sd": 0.005744565607
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.876195286195,
+            "sample_sd": 0.016048954967
+          }
+        }
+      },
+      "A6": {
+        "composite": {
+          "mean": 0.046114831286,
+          "sample_sd": 0.085846463678
+        },
+        "n": {
+          "mean": 98.0,
+          "sample_sd": 3.464101615138
+        },
+        "native_mean": {
+          "mean": 7.461390070922,
+          "sample_sd": 0.06479237772
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.551489361702,
+            "sample_sd": 0.019900158214
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.496453900709,
+            "sample_sd": 0.040468808489
+          },
+          "instruction_fulfillment": {
+            "mean": 4.381631205674,
+            "sample_sd": 0.029236809102
+          },
+          "organization_global_coherence": {
+            "mean": 4.949361702128,
+            "sample_sd": 0.019050574799
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.882056737589,
+            "sample_sd": 0.064970771481
+          }
+        }
+      },
+      "A7": {
+        "composite": {
+          "mean": -0.036954634154,
+          "sample_sd": 0.006443290371
+        },
+        "n": {
+          "mean": 95.333333333333,
+          "sample_sd": 5.507570547286
+        },
+        "native_mean": {
+          "mean": 7.611842803175,
+          "sample_sd": 0.075704600709
+        },
+        "raw_dimension_means": {
+          "content_adequacy_depth": {
+            "mean": 4.657825677087,
+            "sample_sd": 0.022119512915
+          },
+          "factuality_constraint_fidelity": {
+            "mean": 4.093862650042,
+            "sample_sd": 0.124151191715
+          },
+          "instruction_fulfillment": {
+            "mean": 4.450402905459,
+            "sample_sd": 0.042973930519
+          },
+          "organization_global_coherence": {
+            "mean": 4.892184089616,
+            "sample_sd": 0.016528882678
+          },
+          "style_voice_audience_fit": {
+            "mean": 4.919635860246,
+            "sample_sd": 0.001539270868
+          }
+        }
+      }
+    }
+  },
+  "condition_labels": {
+    "A1": "Single-pass",
+    "A2": "Staged",
+    "A3": "Task-planning",
+    "A4": "Agentic CogWriter",
+    "A5": "No-goals",
+    "A6": "Fixed-order",
+    "A7": "Single-writer"
+  },
+  "conditions": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "A7"
+  ],
+  "dimensions": [
+    "instruction_fulfillment",
+    "organization_global_coherence",
+    "content_adequacy_depth",
+    "style_voice_audience_fit",
+    "factuality_constraint_fidelity"
+  ],
+  "dolomites_staged_vs_agentic_cogwriter": {
+    "run1": {
+      "agentic_cogwriter_composite": 0.005262997126,
+      "agentic_cogwriter_condition": "A4",
+      "staged_composite": 0.103320800117,
+      "staged_condition": "A2",
+      "staged_exceeds_agentic_cogwriter": true
+    },
+    "run2": {
+      "agentic_cogwriter_composite": 0.069939905349,
+      "agentic_cogwriter_condition": "A4",
+      "staged_composite": 0.056311071452,
+      "staged_condition": "A2",
+      "staged_exceeds_agentic_cogwriter": false
+    },
+    "run3": {
+      "agentic_cogwriter_composite": 0.016447571508,
+      "agentic_cogwriter_condition": "A4",
+      "staged_composite": 0.032948598456,
+      "staged_condition": "A2",
+      "staged_exceeds_agentic_cogwriter": true
+    }
+  },
+  "per_run": {
+    "run1": {
+      "DoLoMiTes": {
+        "A1": {
+          "composite": -0.019329374666,
+          "n": 95,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.315789473684,
+            "factuality_constraint_fidelity": 4.589473684211,
+            "instruction_fulfillment": 4.326315789474,
+            "organization_global_coherence": 4.863157894737,
+            "style_voice_audience_fit": 4.768421052632
+          }
+        },
+        "A2": {
+          "composite": 0.103320800117,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.4,
+            "factuality_constraint_fidelity": 4.72,
+            "instruction_fulfillment": 4.42,
+            "organization_global_coherence": 4.92,
+            "style_voice_audience_fit": 4.81
+          }
+        },
+        "A3": {
+          "composite": -0.166068314262,
+          "n": 97,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.20618556701,
+            "factuality_constraint_fidelity": 4.546391752577,
+            "instruction_fulfillment": 4.247422680412,
+            "organization_global_coherence": 4.773195876289,
+            "style_voice_audience_fit": 4.628865979381
+          }
+        },
+        "A4": {
+          "composite": 0.005262997126,
+          "n": 98,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.397959183673,
+            "factuality_constraint_fidelity": 4.673469387755,
+            "instruction_fulfillment": 4.377551020408,
+            "organization_global_coherence": 4.857142857143,
+            "style_voice_audience_fit": 4.683673469388
+          }
+        },
+        "A5": {
+          "composite": -0.005825523375,
+          "n": 98,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.357142857143,
+            "factuality_constraint_fidelity": 4.663265306122,
+            "instruction_fulfillment": 4.387755102041,
+            "organization_global_coherence": 4.836734693878,
+            "style_voice_audience_fit": 4.714285714286
+          }
+        },
+        "A6": {
+          "composite": 0.012715915206,
+          "n": 94,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.436170212766,
+            "factuality_constraint_fidelity": 4.702127659574,
+            "instruction_fulfillment": 4.372340425532,
+            "organization_global_coherence": 4.86170212766,
+            "style_voice_audience_fit": 4.648936170213
+          }
+        },
+        "A7": {
+          "composite": 0.067423631334,
+          "n": 96,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.5625,
+            "factuality_constraint_fidelity": 4.645833333333,
+            "instruction_fulfillment": 4.489583333333,
+            "organization_global_coherence": 4.833333333333,
+            "style_voice_audience_fit": 4.760416666667
+          }
+        }
+      },
+      "HelloBench": {
+        "A1": {
+          "composite": -0.119104014379,
+          "n": 94,
+          "native_mean": 0.768908308004,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.957446808511,
+            "factuality_constraint_fidelity": 4.563829787234,
+            "instruction_fulfillment": 4.946808510638,
+            "organization_global_coherence": 4.957446808511,
+            "style_voice_audience_fit": 4.957446808511
+          }
+        },
+        "A2": {
+          "composite": -0.007251107484,
+          "n": 100,
+          "native_mean": 0.779761904762,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.97,
+            "factuality_constraint_fidelity": 4.74,
+            "instruction_fulfillment": 4.94,
+            "organization_global_coherence": 4.94,
+            "style_voice_audience_fit": 5.0
+          }
+        },
+        "A3": {
+          "composite": 0.039707505853,
+          "n": 98,
+          "native_mean": 0.780782312925,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.979591836735,
+            "factuality_constraint_fidelity": 4.80612244898,
+            "instruction_fulfillment": 4.959183673469,
+            "organization_global_coherence": 4.979591836735,
+            "style_voice_audience_fit": 4.959183673469
+          }
+        },
+        "A4": {
+          "composite": 0.057978725425,
+          "n": 99,
+          "native_mean": 0.795406445406,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.989898989899,
+            "factuality_constraint_fidelity": 4.818181818182,
+            "instruction_fulfillment": 5.0,
+            "organization_global_coherence": 4.969696969697,
+            "style_voice_audience_fit": 4.939393939394
+          }
+        },
+        "A5": {
+          "composite": 0.034025707438,
+          "n": 97,
+          "native_mean": 0.790120274914,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.979381443299,
+            "factuality_constraint_fidelity": 4.731958762887,
+            "instruction_fulfillment": 4.958762886598,
+            "organization_global_coherence": 4.979381443299,
+            "style_voice_audience_fit": 4.979381443299
+          }
+        },
+        "A6": {
+          "composite": -0.027567045217,
+          "n": 94,
+          "native_mean": 0.791286727457,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.968085106383,
+            "factuality_constraint_fidelity": 4.744680851064,
+            "instruction_fulfillment": 4.925531914894,
+            "organization_global_coherence": 4.957446808511,
+            "style_voice_audience_fit": 4.978723404255
+          }
+        },
+        "A7": {
+          "composite": 0.016636498298,
+          "n": 95,
+          "native_mean": 0.771904761905,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.978947368421,
+            "factuality_constraint_fidelity": 4.694736842105,
+            "instruction_fulfillment": 4.968421052632,
+            "organization_global_coherence": 4.957894736842,
+            "style_voice_audience_fit": 4.989473684211
+          }
+        }
+      },
+      "WritingBench": {
+        "A1": {
+          "composite": -0.09269379496,
+          "n": 100,
+          "native_mean": 7.044,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.37,
+            "factuality_constraint_fidelity": 4.43,
+            "instruction_fulfillment": 4.15,
+            "organization_global_coherence": 4.95,
+            "style_voice_audience_fit": 4.85
+          }
+        },
+        "A2": {
+          "composite": -0.053509816328,
+          "n": 100,
+          "native_mean": 7.084,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.29,
+            "factuality_constraint_fidelity": 4.57,
+            "instruction_fulfillment": 4.11,
+            "organization_global_coherence": 4.97,
+            "style_voice_audience_fit": 4.89
+          }
+        },
+        "A3": {
+          "composite": -0.062131463937,
+          "n": 97,
+          "native_mean": 7.257731958763,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.422680412371,
+            "factuality_constraint_fidelity": 4.577319587629,
+            "instruction_fulfillment": 4.20618556701,
+            "organization_global_coherence": 4.938144329897,
+            "style_voice_audience_fit": 4.80412371134
+          }
+        },
+        "A4": {
+          "composite": 0.114771647481,
+          "n": 96,
+          "native_mean": 7.539583333333,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.604166666667,
+            "factuality_constraint_fidelity": 4.510416666667,
+            "instruction_fulfillment": 4.302083333333,
+            "organization_global_coherence": 5.0,
+            "style_voice_audience_fit": 4.895833333333
+          }
+        },
+        "A5": {
+          "composite": 0.006447493947,
+          "n": 99,
+          "native_mean": 7.442424242424,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.484848484848,
+            "factuality_constraint_fidelity": 4.383838383838,
+            "instruction_fulfillment": 4.272727272727,
+            "organization_global_coherence": 4.989898989899,
+            "style_voice_audience_fit": 4.858585858586
+          }
+        },
+        "A6": {
+          "composite": 0.123894882719,
+          "n": 94,
+          "native_mean": 7.536170212766,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.574468085106,
+            "factuality_constraint_fidelity": 4.489361702128,
+            "instruction_fulfillment": 4.414893617021,
+            "organization_global_coherence": 4.968085106383,
+            "style_voice_audience_fit": 4.936170212766
+          }
+        },
+        "A7": {
+          "composite": -0.029835796673,
+          "n": 89,
+          "native_mean": 7.696629213483,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.674157303371,
+            "factuality_constraint_fidelity": 3.966292134831,
+            "instruction_fulfillment": 4.426966292135,
+            "organization_global_coherence": 4.910112359551,
+            "style_voice_audience_fit": 4.921348314607
+          }
+        }
+      }
+    },
+    "run2": {
+      "DoLoMiTes": {
+        "A1": {
+          "composite": 0.014478966002,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.38,
+            "factuality_constraint_fidelity": 4.69,
+            "instruction_fulfillment": 4.34,
+            "organization_global_coherence": 4.88,
+            "style_voice_audience_fit": 4.78
+          }
+        },
+        "A2": {
+          "composite": 0.056311071452,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.39,
+            "factuality_constraint_fidelity": 4.64,
+            "instruction_fulfillment": 4.44,
+            "organization_global_coherence": 4.92,
+            "style_voice_audience_fit": 4.81
+          }
+        },
+        "A3": {
+          "composite": -0.147875846749,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.31,
+            "factuality_constraint_fidelity": 4.5,
+            "instruction_fulfillment": 4.27,
+            "organization_global_coherence": 4.82,
+            "style_voice_audience_fit": 4.67
+          }
+        },
+        "A4": {
+          "composite": 0.069939905349,
+          "n": 97,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.505154639175,
+            "factuality_constraint_fidelity": 4.762886597938,
+            "instruction_fulfillment": 4.474226804124,
+            "organization_global_coherence": 4.876288659794,
+            "style_voice_audience_fit": 4.711340206186
+          }
+        },
+        "A5": {
+          "composite": -0.057486000009,
+          "n": 99,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.363636363636,
+            "factuality_constraint_fidelity": 4.575757575758,
+            "instruction_fulfillment": 4.313131313131,
+            "organization_global_coherence": 4.89898989899,
+            "style_voice_audience_fit": 4.666666666667
+          }
+        },
+        "A6": {
+          "composite": 0.037557268782,
+          "n": 95,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.452631578947,
+            "factuality_constraint_fidelity": 4.757894736842,
+            "instruction_fulfillment": 4.431578947368,
+            "organization_global_coherence": 4.863157894737,
+            "style_voice_audience_fit": 4.705263157895
+          }
+        },
+        "A7": {
+          "composite": 0.030475835774,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.56,
+            "factuality_constraint_fidelity": 4.62,
+            "instruction_fulfillment": 4.47,
+            "organization_global_coherence": 4.85,
+            "style_voice_audience_fit": 4.74
+          }
+        }
+      },
+      "HelloBench": {
+        "A1": {
+          "composite": -0.125175936469,
+          "n": 100,
+          "native_mean": 0.778333333333,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.95,
+            "factuality_constraint_fidelity": 4.66,
+            "instruction_fulfillment": 4.93,
+            "organization_global_coherence": 4.95,
+            "style_voice_audience_fit": 4.97
+          }
+        },
+        "A2": {
+          "composite": -0.005444435036,
+          "n": 100,
+          "native_mean": 0.778011904762,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.98,
+            "factuality_constraint_fidelity": 4.71,
+            "instruction_fulfillment": 4.95,
+            "organization_global_coherence": 4.97,
+            "style_voice_audience_fit": 4.99
+          }
+        },
+        "A3": {
+          "composite": -0.08157077747,
+          "n": 100,
+          "native_mean": 0.777392857143,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.97,
+            "factuality_constraint_fidelity": 4.79,
+            "instruction_fulfillment": 4.92,
+            "organization_global_coherence": 4.95,
+            "style_voice_audience_fit": 4.94
+          }
+        },
+        "A4": {
+          "composite": 0.035474912337,
+          "n": 100,
+          "native_mean": 0.792416666667,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.99,
+            "factuality_constraint_fidelity": 4.74,
+            "instruction_fulfillment": 4.99,
+            "organization_global_coherence": 4.99,
+            "style_voice_audience_fit": 4.95
+          }
+        },
+        "A5": {
+          "composite": 0.141377724287,
+          "n": 100,
+          "native_mean": 0.788357142857,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 5.0,
+            "factuality_constraint_fidelity": 4.84,
+            "instruction_fulfillment": 5.0,
+            "organization_global_coherence": 4.99,
+            "style_voice_audience_fit": 4.99
+          }
+        },
+        "A6": {
+          "composite": 0.106490300338,
+          "n": 100,
+          "native_mean": 0.784571428571,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 5.0,
+            "factuality_constraint_fidelity": 4.87,
+            "instruction_fulfillment": 4.98,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.97
+          }
+        },
+        "A7": {
+          "composite": -0.071151787988,
+          "n": 100,
+          "native_mean": 0.769071428571,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 5.0,
+            "factuality_constraint_fidelity": 4.67,
+            "instruction_fulfillment": 4.93,
+            "organization_global_coherence": 4.93,
+            "style_voice_audience_fit": 4.97
+          }
+        }
+      },
+      "WritingBench": {
+        "A1": {
+          "composite": -0.097952790026,
+          "n": 100,
+          "native_mean": 6.936,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.35,
+            "factuality_constraint_fidelity": 4.47,
+            "instruction_fulfillment": 4.14,
+            "organization_global_coherence": 4.96,
+            "style_voice_audience_fit": 4.87
+          }
+        },
+        "A2": {
+          "composite": -0.039296081037,
+          "n": 100,
+          "native_mean": 6.986,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.28,
+            "factuality_constraint_fidelity": 4.66,
+            "instruction_fulfillment": 4.15,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.88
+          }
+        },
+        "A3": {
+          "composite": 0.002820990712,
+          "n": 100,
+          "native_mean": 7.19,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.49,
+            "factuality_constraint_fidelity": 4.6,
+            "instruction_fulfillment": 4.23,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.83
+          }
+        },
+        "A4": {
+          "composite": 0.133666523242,
+          "n": 100,
+          "native_mean": 7.458,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.57,
+            "factuality_constraint_fidelity": 4.58,
+            "instruction_fulfillment": 4.44,
+            "organization_global_coherence": 4.99,
+            "style_voice_audience_fit": 4.91
+          }
+        },
+        "A5": {
+          "composite": 0.084624400088,
+          "n": 100,
+          "native_mean": 7.39,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.5,
+            "factuality_constraint_fidelity": 4.56,
+            "instruction_fulfillment": 4.4,
+            "organization_global_coherence": 4.99,
+            "style_voice_audience_fit": 4.89
+          }
+        },
+        "A6": {
+          "composite": -0.045994674184,
+          "n": 100,
+          "native_mean": 7.426,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.54,
+            "factuality_constraint_fidelity": 4.46,
+            "instruction_fulfillment": 4.36,
+            "organization_global_coherence": 4.93,
+            "style_voice_audience_fit": 4.81
+          }
+        },
+        "A7": {
+          "composite": -0.038641192648,
+          "n": 98,
+          "native_mean": 7.551020408163,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.632653061224,
+            "factuality_constraint_fidelity": 4.214285714286,
+            "instruction_fulfillment": 4.5,
+            "organization_global_coherence": 4.877551020408,
+            "style_voice_audience_fit": 4.918367346939
+          }
+        }
+      }
+    },
+    "run3": {
+      "DoLoMiTes": {
+        "A1": {
+          "composite": -0.013007220983,
+          "n": 99,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.333333333333,
+            "factuality_constraint_fidelity": 4.555555555556,
+            "instruction_fulfillment": 4.353535353535,
+            "organization_global_coherence": 4.868686868687,
+            "style_voice_audience_fit": 4.838383838384
+          }
+        },
+        "A2": {
+          "composite": 0.032948598456,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.42,
+            "factuality_constraint_fidelity": 4.68,
+            "instruction_fulfillment": 4.42,
+            "organization_global_coherence": 4.85,
+            "style_voice_audience_fit": 4.78
+          }
+        },
+        "A3": {
+          "composite": -0.176817043576,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.24,
+            "factuality_constraint_fidelity": 4.61,
+            "instruction_fulfillment": 4.19,
+            "organization_global_coherence": 4.76,
+            "style_voice_audience_fit": 4.63
+          }
+        },
+        "A4": {
+          "composite": 0.016447571508,
+          "n": 96,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.385416666667,
+            "factuality_constraint_fidelity": 4.6875,
+            "instruction_fulfillment": 4.416666666667,
+            "organization_global_coherence": 4.885416666667,
+            "style_voice_audience_fit": 4.6875
+          }
+        },
+        "A5": {
+          "composite": 0.059456245422,
+          "n": 98,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.448979591837,
+            "factuality_constraint_fidelity": 4.714285714286,
+            "instruction_fulfillment": 4.418367346939,
+            "organization_global_coherence": 4.887755102041,
+            "style_voice_audience_fit": 4.744897959184
+          }
+        },
+        "A6": {
+          "composite": 0.093147442876,
+          "n": 97,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.432989690722,
+            "factuality_constraint_fidelity": 4.773195876289,
+            "instruction_fulfillment": 4.443298969072,
+            "organization_global_coherence": 4.917525773196,
+            "style_voice_audience_fit": 4.731958762887
+          }
+        },
+        "A7": {
+          "composite": -0.007664214858,
+          "n": 100,
+          "native_mean": null,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.47,
+            "factuality_constraint_fidelity": 4.63,
+            "instruction_fulfillment": 4.42,
+            "organization_global_coherence": 4.84,
+            "style_voice_audience_fit": 4.69
+          }
+        }
+      },
+      "HelloBench": {
+        "A1": {
+          "composite": -0.09191664522,
+          "n": 100,
+          "native_mean": 0.772142857143,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.97,
+            "factuality_constraint_fidelity": 4.68,
+            "instruction_fulfillment": 4.94,
+            "organization_global_coherence": 4.96,
+            "style_voice_audience_fit": 4.97
+          }
+        },
+        "A2": {
+          "composite": 0.020863969652,
+          "n": 100,
+          "native_mean": 0.786047619048,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.98,
+            "factuality_constraint_fidelity": 4.77,
+            "instruction_fulfillment": 4.95,
+            "organization_global_coherence": 4.97,
+            "style_voice_audience_fit": 5.0
+          }
+        },
+        "A3": {
+          "composite": -0.005761354936,
+          "n": 100,
+          "native_mean": 0.78419047619,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 5.0,
+            "factuality_constraint_fidelity": 4.7,
+            "instruction_fulfillment": 4.97,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.95
+          }
+        },
+        "A4": {
+          "composite": -0.055821330583,
+          "n": 100,
+          "native_mean": 0.784892857143,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.98,
+            "factuality_constraint_fidelity": 4.78,
+            "instruction_fulfillment": 4.94,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.93
+          }
+        },
+        "A5": {
+          "composite": 0.113092002005,
+          "n": 100,
+          "native_mean": 0.788369047619,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 5.0,
+            "factuality_constraint_fidelity": 4.85,
+            "instruction_fulfillment": 4.99,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.98
+          }
+        },
+        "A6": {
+          "composite": 0.085509346028,
+          "n": 100,
+          "native_mean": 0.7865,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 5.0,
+            "factuality_constraint_fidelity": 4.8,
+            "instruction_fulfillment": 4.97,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.99
+          }
+        },
+        "A7": {
+          "composite": -0.065965986945,
+          "n": 100,
+          "native_mean": 0.769845238095,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.97,
+            "factuality_constraint_fidelity": 4.74,
+            "instruction_fulfillment": 4.94,
+            "organization_global_coherence": 4.95,
+            "style_voice_audience_fit": 4.98
+          }
+        }
+      },
+      "WritingBench": {
+        "A1": {
+          "composite": -0.080082680676,
+          "n": 100,
+          "native_mean": 6.944,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.37,
+            "factuality_constraint_fidelity": 4.37,
+            "instruction_fulfillment": 4.15,
+            "organization_global_coherence": 4.97,
+            "style_voice_audience_fit": 4.9
+          }
+        },
+        "A2": {
+          "composite": -0.030071442866,
+          "n": 100,
+          "native_mean": 6.992,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.3,
+            "factuality_constraint_fidelity": 4.62,
+            "instruction_fulfillment": 4.15,
+            "organization_global_coherence": 4.97,
+            "style_voice_audience_fit": 4.91
+          }
+        },
+        "A3": {
+          "composite": -0.039405137413,
+          "n": 100,
+          "native_mean": 7.206,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.43,
+            "factuality_constraint_fidelity": 4.56,
+            "instruction_fulfillment": 4.18,
+            "organization_global_coherence": 4.95,
+            "style_voice_audience_fit": 4.87
+          }
+        },
+        "A4": {
+          "composite": 0.057172185414,
+          "n": 100,
+          "native_mean": 7.42,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.56,
+            "factuality_constraint_fidelity": 4.44,
+            "instruction_fulfillment": 4.4,
+            "organization_global_coherence": 4.96,
+            "style_voice_audience_fit": 4.9
+          }
+        },
+        "A5": {
+          "composite": 0.073905834227,
+          "n": 100,
+          "native_mean": 7.376,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.58,
+            "factuality_constraint_fidelity": 4.49,
+            "instruction_fulfillment": 4.37,
+            "organization_global_coherence": 4.98,
+            "style_voice_audience_fit": 4.88
+          }
+        },
+        "A6": {
+          "composite": 0.060444285324,
+          "n": 100,
+          "native_mean": 7.422,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.54,
+            "factuality_constraint_fidelity": 4.54,
+            "instruction_fulfillment": 4.37,
+            "organization_global_coherence": 4.95,
+            "style_voice_audience_fit": 4.9
+          }
+        },
+        "A7": {
+          "composite": -0.04238691314,
+          "n": 99,
+          "native_mean": 7.587878787879,
+          "raw_dimension_means": {
+            "content_adequacy_depth": 4.666666666667,
+            "factuality_constraint_fidelity": 4.10101010101,
+            "instruction_fulfillment": 4.424242424242,
+            "organization_global_coherence": 4.888888888889,
+            "style_voice_audience_fit": 4.919191919192
+          }
+        }
+      }
+    }
+  },
+  "production_aggregation": {
+    "run2": "run2-aggregate/aggregation.json",
+    "run3": "run3-aggregate/aggregation.json"
+  },
+  "run1_reproduction_check": {
+    "actual": {
+      "run1_dolomites_staged": 0.103320800117,
+      "run1_writingbench_agentic_cogwriter": 0.114771647481,
+      "run1_writingbench_single_pass": -0.09269379496
+    },
+    "expected": {
+      "run1_dolomites_staged": 0.103,
+      "run1_writingbench_agentic_cogwriter": 0.115,
+      "run1_writingbench_single_pass": -0.093
+    },
+    "matches_to_three_decimals": true
+  },
+  "runs": [
+    "run1",
+    "run2",
+    "run3"
+  ],
+  "schema_version": 1,
+  "unscored_outputs": {
+    "run1": [
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-1358",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-1359",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-1360",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-1781",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-319",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A3",
+        "prompt_id": "dolomites-1014",
+        "status": "unscored"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A3",
+        "prompt_id": "dolomites-1499",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A3",
+        "prompt_id": "dolomites-532",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-1495",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-857",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A5",
+        "prompt_id": "dolomites-1135",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A5",
+        "prompt_id": "dolomites-790",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-1014",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-1493",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-1583",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-1781",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-423",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-447",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A7",
+        "prompt_id": "dolomites-118",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A7",
+        "prompt_id": "dolomites-1808",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A7",
+        "prompt_id": "dolomites-1852",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A7",
+        "prompt_id": "dolomites-659",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-summarization_063",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-summarization_090",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-summarization_092",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-summarization_098",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-summarization_099",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "prompt_id": "hellobench-text_completion_006",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A3",
+        "prompt_id": "hellobench-text_completion_049",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A3",
+        "prompt_id": "hellobench-text_completion_051",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A4",
+        "prompt_id": "hellobench-summarization_074",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A5",
+        "prompt_id": "hellobench-summarization_029",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A5",
+        "prompt_id": "hellobench-summarization_062",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A5",
+        "prompt_id": "hellobench-summarization_079",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A6",
+        "prompt_id": "hellobench-chat_021",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A6",
+        "prompt_id": "hellobench-summarization_006",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A6",
+        "prompt_id": "hellobench-summarization_019",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A6",
+        "prompt_id": "hellobench-summarization_075",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A6",
+        "prompt_id": "hellobench-summarization_097",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A6",
+        "prompt_id": "hellobench-summarization_098",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A7",
+        "prompt_id": "hellobench-summarization_063",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A7",
+        "prompt_id": "hellobench-summarization_075",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A7",
+        "prompt_id": "hellobench-summarization_096",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A7",
+        "prompt_id": "hellobench-text_completion_049",
+        "status": "failed"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A7",
+        "prompt_id": "hellobench-text_completion_053",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A3",
+        "prompt_id": "writingbench-0091",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A3",
+        "prompt_id": "writingbench-0273",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A3",
+        "prompt_id": "writingbench-0691",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "prompt_id": "writingbench-0379",
+        "status": "unscored"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "prompt_id": "writingbench-0907",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "prompt_id": "writingbench-0936",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "prompt_id": "writingbench-0992",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A5",
+        "prompt_id": "writingbench-0925",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A6",
+        "prompt_id": "writingbench-0184",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A6",
+        "prompt_id": "writingbench-0340",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A6",
+        "prompt_id": "writingbench-0502",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A6",
+        "prompt_id": "writingbench-0589",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A6",
+        "prompt_id": "writingbench-0905",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A6",
+        "prompt_id": "writingbench-0925",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0073",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0273",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0298",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0340",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0566",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0610",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0681",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0697",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0718",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0720",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0986",
+        "status": "failed"
+      }
+    ],
+    "run2": [
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-1471",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-307",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-74",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A5",
+        "prompt_id": "dolomites-167",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-1014",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-110",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-1359",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-1831",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-1848",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0298",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0720",
+        "status": "failed"
+      }
+    ],
+    "run3": [
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "prompt_id": "dolomites-1014",
+        "status": "unscored"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-1014",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-376",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-447",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "prompt_id": "dolomites-74",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A5",
+        "prompt_id": "dolomites-1014",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A5",
+        "prompt_id": "dolomites-924",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-1014",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-570",
+        "status": "failed"
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "prompt_id": "dolomites-892",
+        "status": "failed"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "prompt_id": "writingbench-0720",
+        "status": "failed"
+      }
+    ]
+  }
+}

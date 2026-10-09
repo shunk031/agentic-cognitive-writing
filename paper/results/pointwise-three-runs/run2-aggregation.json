@@ -1,0 +1,1465 @@
+{
+  "completion": {
+    "rows": [
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 100,
+        "condition": "A1",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 100,
+        "condition": "A2",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 100,
+        "condition": "A3",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 97,
+        "condition": "A4",
+        "failed_runs": 3,
+        "failure_messages": {
+          "A4 requires at least one goal event": 1,
+          "Trace /run-output/DoLoMiTes/A4/codex/4dbf7c31fe384d9b8aadcee3d72ffa23/.writing/trace/process.jsonl:3 field timestamp mus": 1,
+          "Trace /run-output/DoLoMiTes/A4/codex/f11fdcb704b84931831a203f24e4e24c/.writing/trace/process.jsonl:7 process 'revising' ": 1
+        },
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 99,
+        "condition": "A5",
+        "failed_runs": 1,
+        "failure_messages": {
+          "Condition A5 final response is less than 50% of draft.md; final_chars=3910, draft_chars=8338": 1
+        },
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 95,
+        "condition": "A6",
+        "failed_runs": 5,
+        "failure_messages": {
+          "A6 requires at least one goal event": 3,
+          "Condition A6 final response is less than 50% of draft.md; final_chars=2386, draft_chars=6807": 1,
+          "Trace /run-output/DoLoMiTes/A6/codex/eb6fcc473f0144eb91ce599d933ec2fa/.writing/trace/process.jsonl:5 is not standalone J": 1
+        },
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "completed_runs": 100,
+        "condition": "A7",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A1",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A2",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A3",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A4",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A5",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A6",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "HelloBench",
+        "completed_runs": 100,
+        "condition": "A7",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A1",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A2",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A3",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A4",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A5",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 100,
+        "condition": "A6",
+        "failed_runs": 0,
+        "failure_messages": {},
+        "platform": "codex",
+        "run_count": 100
+      },
+      {
+        "benchmark": "WritingBench",
+        "completed_runs": 98,
+        "condition": "A7",
+        "failed_runs": 2,
+        "failure_messages": {
+          "Unpermitted retrieval event observed: NC; matched_pattern='NC'; matching_line='{\"type\":\"item.started\",\"item\":{\"id\":\"item": 1,
+          "Unpermitted retrieval event observed: curl; matched_pattern='curl'; matching_line='{\"type\":\"item.started\",\"item\":{\"id\":\"": 1
+        },
+        "platform": "codex",
+        "run_count": 100
+      }
+    ],
+    "run_count": 2100
+  },
+  "native": {
+    "rows": [
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7783333333333333
+        },
+        "mean_score": 0.7783333333333333,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A2",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7780119047619047
+        },
+        "mean_score": 0.7780119047619047,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A3",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7773928571428571
+        },
+        "mean_score": 0.7773928571428571,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A4",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7924166666666665
+        },
+        "mean_score": 0.7924166666666665,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A5",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7883571428571429
+        },
+        "mean_score": 0.7883571428571429,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A6",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7845714285714286
+        },
+        "mean_score": 0.7845714285714286,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A7",
+        "judge_scores": {
+          "gpt-5.6-sol-hellobench-native-v1": 0.7690714285714286
+        },
+        "mean_score": 0.7690714285714286,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "0-1"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A1",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 6.936
+        },
+        "mean_score": 6.936,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A2",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 6.986000000000001
+        },
+        "mean_score": 6.986000000000001,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A3",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 7.19
+        },
+        "mean_score": 7.19,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 7.457999999999999
+        },
+        "mean_score": 7.457999999999999,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A5",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 7.39
+        },
+        "mean_score": 7.39,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A6",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 7.426
+        },
+        "mean_score": 7.426,
+        "platform": "codex",
+        "run_count": 100,
+        "scale": "1-10"
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "judge_scores": {
+          "gpt-5.6-sol-writingbench-native-v1": 7.551020408163265
+        },
+        "mean_score": 7.551020408163265,
+        "platform": "codex",
+        "run_count": 98,
+        "scale": "1-10"
+      }
+    ],
+    "run_count": 1398
+  },
+  "pairwise": {
+    "benchmarks": {
+      "DoLoMiTes": {
+        "platforms": {
+          "codex": {
+            "contrasts": {
+              "A4:A1": {
+                "losses": 47,
+                "ties": 14,
+                "wins": 133
+              },
+              "A4:A2": {
+                "losses": 68,
+                "ties": 28,
+                "wins": 98
+              },
+              "A4:A3": {
+                "losses": 48,
+                "ties": 6,
+                "wins": 140
+              },
+              "A4:A5": {
+                "losses": 68,
+                "ties": 21,
+                "wins": 103
+              },
+              "A4:A6": {
+                "losses": 83,
+                "ties": 17,
+                "wins": 84
+              }
+            },
+            "expected_pairs": 500,
+            "fit_status": "ok",
+            "holm_family": {
+              "derivation": "Holm correction over the contrasts present in this aggregation report after canonical-run selection; not the confirmatory family.",
+              "member_labels": [
+                "report:A4:A1",
+                "report:A4:A2",
+                "report:A4:A3",
+                "report:A4:A5",
+                "report:A4:A6"
+              ],
+              "name": "report_local",
+              "size": 5
+            },
+            "judges": {
+              "gpt-5.6-sol-pairwise-v1": {
+                "contrasts": {
+                  "A4:A1": {
+                    "losses": 47,
+                    "ties": 14,
+                    "wins": 133
+                  },
+                  "A4:A2": {
+                    "losses": 68,
+                    "ties": 28,
+                    "wins": 98
+                  },
+                  "A4:A3": {
+                    "losses": 48,
+                    "ties": 6,
+                    "wins": 140
+                  },
+                  "A4:A5": {
+                    "losses": 68,
+                    "ties": 21,
+                    "wins": 103
+                  },
+                  "A4:A6": {
+                    "losses": 83,
+                    "ties": 17,
+                    "wins": 84
+                  }
+                },
+                "fit_status": "ok",
+                "position_consistency_rate": 0.7807933194154488,
+                "run_count": 576,
+                "scored_pairs": 479,
+                "strengths": {
+                  "A1": 0.6024082570248547,
+                  "A2": 1.143460117511143,
+                  "A3": 0.5570053036980538,
+                  "A4": 1.5617991848737285,
+                  "A5": 1.0801871014435345,
+                  "A6": 1.5449148693026824
+                }
+              }
+            },
+            "missing_pairs": 21,
+            "position_consistency_rate": 0.7807933194154488,
+            "prompt_collapsed_across_judges": {
+              "A4:A1": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 97,
+                "losses": 18,
+                "n_non_tie": 79,
+                "p_holm_report_local": 5.078789747361714e-06,
+                "p_raw": 1.2696974368404285e-06,
+                "presentation_disagreements": 15,
+                "prompt_total": 97,
+                "ties": 18,
+                "wilson_high": 0.8507322531324035,
+                "wilson_low": 0.6683315177395119,
+                "win_rate": 0.7721518987341772,
+                "wins": 61
+              },
+              "A4:A2": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 97,
+                "losses": 26,
+                "n_non_tie": 66,
+                "p_holm_report_local": 0.2177139288194322,
+                "p_raw": 0.1088569644097161,
+                "presentation_disagreements": 23,
+                "prompt_total": 97,
+                "ties": 31,
+                "wilson_high": 0.7149699950538045,
+                "wilson_low": 0.4854840080039292,
+                "win_rate": 0.6060606060606061,
+                "wins": 40
+              },
+              "A4:A3": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 97,
+                "losses": 19,
+                "n_non_tie": 83,
+                "p_holm_report_local": 3.695765853666923e-06,
+                "p_raw": 7.391531707333846e-07,
+                "presentation_disagreements": 13,
+                "prompt_total": 97,
+                "ties": 14,
+                "wilson_high": 0.848266352592755,
+                "wilson_low": 0.6699193229025606,
+                "win_rate": 0.7710843373493976,
+                "wins": 64
+              },
+              "A4:A5": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 96,
+                "losses": 25,
+                "n_non_tie": 68,
+                "p_holm_report_local": 0.11538016004678252,
+                "p_raw": 0.038460053348927506,
+                "presentation_disagreements": 24,
+                "prompt_total": 96,
+                "ties": 28,
+                "wilson_high": 0.7369953486476433,
+                "wilson_low": 0.5135563563911616,
+                "win_rate": 0.6323529411764706,
+                "wins": 43
+              },
+              "A4:A6": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 92,
+                "losses": 29,
+                "n_non_tie": 60,
+                "p_holm_report_local": 0.8974218269914305,
+                "p_raw": 0.8974218269914305,
+                "presentation_disagreements": 30,
+                "prompt_total": 92,
+                "ties": 32,
+                "wilson_high": 0.6382495046026722,
+                "wilson_low": 0.39307810032592494,
+                "win_rate": 0.5166666666666667,
+                "wins": 31
+              }
+            },
+            "record_pooled": {
+              "A4:A1": {
+                "losses": 47,
+                "n_non_tie": 180,
+                "p_holm_report_local": 4.166478910120328e-10,
+                "p_raw": 1.041619727530082e-10,
+                "ties": 14,
+                "wilson_high": 0.7975865056527294,
+                "wilson_low": 0.6702078675625001,
+                "win_rate": 0.7388888888888889,
+                "wins": 133
+              },
+              "A4:A2": {
+                "losses": 68,
+                "n_non_tie": 166,
+                "p_holm_report_local": 0.04820686134629384,
+                "p_raw": 0.02410343067314692,
+                "ties": 28,
+                "wilson_high": 0.6623039750412738,
+                "wilson_low": 0.5143313424383751,
+                "win_rate": 0.5903614457831325,
+                "wins": 98
+              },
+              "A4:A3": {
+                "losses": 48,
+                "n_non_tie": 188,
+                "p_holm_report_local": 6.190181720301873e-11,
+                "p_raw": 1.2380363440603747e-11,
+                "ties": 6,
+                "wilson_high": 0.8016781733443574,
+                "wilson_low": 0.6778844851422443,
+                "win_rate": 0.7446808510638298,
+                "wins": 140
+              },
+              "A4:A5": {
+                "losses": 68,
+                "n_non_tie": 171,
+                "p_holm_report_local": 0.027366249226296126,
+                "p_raw": 0.009122083075432042,
+                "ties": 21,
+                "wilson_high": 0.6726697387340516,
+                "wilson_low": 0.5275116154829348,
+                "win_rate": 0.6023391812865497,
+                "wins": 103
+              },
+              "A4:A6": {
+                "losses": 83,
+                "n_non_tie": 167,
+                "p_holm_report_local": 1.0,
+                "p_raw": 1.0,
+                "ties": 17,
+                "wilson_high": 0.5779012367443229,
+                "wilson_low": 0.42795214338309406,
+                "win_rate": 0.5029940119760479,
+                "wins": 84
+              }
+            },
+            "run_count": 691,
+            "scored_pairs": 479,
+            "strengths": {
+              "A1": 0.6024082570248547,
+              "A2": 1.143460117511143,
+              "A3": 0.5570053036980538,
+              "A4": 1.5617991848737285,
+              "A5": 1.0801871014435345,
+              "A6": 1.5449148693026824
+            }
+          }
+        }
+      },
+      "HelloBench": {
+        "platforms": {
+          "codex": {
+            "contrasts": {
+              "A4:A1": {
+                "losses": 34,
+                "ties": 18,
+                "wins": 148
+              },
+              "A4:A2": {
+                "losses": 65,
+                "ties": 26,
+                "wins": 109
+              },
+              "A4:A3": {
+                "losses": 67,
+                "ties": 28,
+                "wins": 105
+              },
+              "A4:A5": {
+                "losses": 82,
+                "ties": 36,
+                "wins": 82
+              },
+              "A4:A6": {
+                "losses": 71,
+                "ties": 49,
+                "wins": 80
+              }
+            },
+            "expected_pairs": 500,
+            "fit_status": "ok",
+            "holm_family": {
+              "derivation": "Holm correction over the contrasts present in this aggregation report after canonical-run selection; not the confirmatory family.",
+              "member_labels": [
+                "report:A4:A1",
+                "report:A4:A2",
+                "report:A4:A3",
+                "report:A4:A5",
+                "report:A4:A6"
+              ],
+              "name": "report_local",
+              "size": 5
+            },
+            "judges": {
+              "gpt-5.6-sol-pairwise-v1": {
+                "contrasts": {
+                  "A4:A1": {
+                    "losses": 34,
+                    "ties": 18,
+                    "wins": 148
+                  },
+                  "A4:A2": {
+                    "losses": 65,
+                    "ties": 26,
+                    "wins": 109
+                  },
+                  "A4:A3": {
+                    "losses": 67,
+                    "ties": 28,
+                    "wins": 105
+                  },
+                  "A4:A5": {
+                    "losses": 82,
+                    "ties": 36,
+                    "wins": 82
+                  },
+                  "A4:A6": {
+                    "losses": 71,
+                    "ties": 49,
+                    "wins": 80
+                  }
+                },
+                "fit_status": "ok",
+                "position_consistency_rate": 0.646,
+                "run_count": 600,
+                "scored_pairs": 500,
+                "strengths": {
+                  "A1": 0.3963212425699968,
+                  "A2": 0.9251524850417845,
+                  "A3": 0.984955489893775,
+                  "A4": 1.447033374032324,
+                  "A5": 1.4470333739830659,
+                  "A6": 1.3224084901668667
+                }
+              }
+            },
+            "missing_pairs": 0,
+            "position_consistency_rate": 0.646,
+            "prompt_collapsed_across_judges": {
+              "A4:A1": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 9,
+                "n_non_tie": 72,
+                "p_holm_report_local": 2.0906139546375655e-10,
+                "p_raw": 4.181227909275131e-11,
+                "presentation_disagreements": 22,
+                "prompt_total": 100,
+                "ties": 28,
+                "wilson_high": 0.9328221577942649,
+                "wilson_low": 0.7791894627583916,
+                "win_rate": 0.875,
+                "wins": 63
+              },
+              "A4:A2": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 20,
+                "n_non_tie": 63,
+                "p_holm_report_local": 0.02060958816836825,
+                "p_raw": 0.005152397042092063,
+                "presentation_disagreements": 32,
+                "prompt_total": 100,
+                "ties": 37,
+                "wilson_high": 0.7841331334648034,
+                "wilson_low": 0.5599646825583142,
+                "win_rate": 0.6825396825396826,
+                "wins": 43
+              },
+              "A4:A3": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 22,
+                "n_non_tie": 62,
+                "p_holm_report_local": 0.09004759304720188,
+                "p_raw": 0.030015864349067292,
+                "presentation_disagreements": 34,
+                "prompt_total": 100,
+                "ties": 38,
+                "wilson_high": 0.752572671489501,
+                "wilson_low": 0.5208113075778423,
+                "win_rate": 0.6451612903225806,
+                "wins": 40
+              },
+              "A4:A5": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 22,
+                "n_non_tie": 48,
+                "p_holm_report_local": 1.0,
+                "p_raw": 0.6654658120766186,
+                "presentation_disagreements": 44,
+                "prompt_total": 100,
+                "ties": 52,
+                "wilson_high": 0.6742475770713254,
+                "wilson_low": 0.40291074545649797,
+                "win_rate": 0.5416666666666666,
+                "wins": 26
+              },
+              "A4:A6": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 21,
+                "n_non_tie": 46,
+                "p_holm_report_local": 1.0,
+                "p_raw": 0.6587380770236564,
+                "presentation_disagreements": 45,
+                "prompt_total": 100,
+                "ties": 54,
+                "wilson_high": 0.6784526621771542,
+                "wilson_low": 0.4018018105980127,
+                "win_rate": 0.5434782608695652,
+                "wins": 25
+              }
+            },
+            "record_pooled": {
+              "A4:A1": {
+                "losses": 34,
+                "n_non_tie": 182,
+                "p_holm_report_local": 1.8477802163072665e-17,
+                "p_raw": 3.695560432614533e-18,
+                "ties": 18,
+                "wilson_high": 0.8631228609213978,
+                "wilson_low": 0.750303232068923,
+                "win_rate": 0.8131868131868132,
+                "wins": 148
+              },
+              "A4:A2": {
+                "losses": 65,
+                "n_non_tie": 174,
+                "p_holm_report_local": 0.004223654129625475,
+                "p_raw": 0.0010559135324063687,
+                "ties": 26,
+                "wilson_high": 0.6948552858337707,
+                "wilson_low": 0.5525560899600048,
+                "win_rate": 0.6264367816091954,
+                "wins": 109
+              },
+              "A4:A3": {
+                "losses": 67,
+                "n_non_tie": 172,
+                "p_holm_report_local": 0.013925436987322036,
+                "p_raw": 0.004641812329107345,
+                "ties": 28,
+                "wilson_high": 0.6801683302452535,
+                "wilson_low": 0.5359354273944545,
+                "win_rate": 0.6104651162790697,
+                "wins": 105
+              },
+              "A4:A5": {
+                "losses": 82,
+                "n_non_tie": 164,
+                "p_holm_report_local": 1.0,
+                "p_raw": 1.0,
+                "ties": 36,
+                "wilson_high": 0.5756429526119711,
+                "wilson_low": 0.424357047388029,
+                "win_rate": 0.5,
+                "wins": 82
+              },
+              "A4:A6": {
+                "losses": 71,
+                "n_non_tie": 151,
+                "p_holm_report_local": 1.0,
+                "p_raw": 0.5151625027710791,
+                "ties": 49,
+                "wilson_high": 0.6076797845735076,
+                "wilson_low": 0.4504441834422031,
+                "win_rate": 0.5298013245033113,
+                "wins": 80
+              }
+            },
+            "run_count": 700,
+            "scored_pairs": 500,
+            "strengths": {
+              "A1": 0.3963212425699968,
+              "A2": 0.9251524850417845,
+              "A3": 0.984955489893775,
+              "A4": 1.447033374032324,
+              "A5": 1.4470333739830659,
+              "A6": 1.3224084901668667
+            }
+          }
+        }
+      },
+      "WritingBench": {
+        "platforms": {
+          "codex": {
+            "contrasts": {
+              "A4:A1": {
+                "losses": 40,
+                "ties": 1,
+                "wins": 159
+              },
+              "A4:A2": {
+                "losses": 49,
+                "ties": 2,
+                "wins": 149
+              },
+              "A4:A3": {
+                "losses": 84,
+                "ties": 0,
+                "wins": 116
+              },
+              "A4:A5": {
+                "losses": 104,
+                "ties": 1,
+                "wins": 95
+              },
+              "A4:A6": {
+                "losses": 88,
+                "ties": 2,
+                "wins": 110
+              }
+            },
+            "expected_pairs": 500,
+            "fit_status": "ok",
+            "holm_family": {
+              "derivation": "Holm correction over the contrasts present in this aggregation report after canonical-run selection; not the confirmatory family.",
+              "member_labels": [
+                "report:A4:A1",
+                "report:A4:A2",
+                "report:A4:A3",
+                "report:A4:A5",
+                "report:A4:A6"
+              ],
+              "name": "report_local",
+              "size": 5
+            },
+            "judges": {
+              "gpt-5.6-sol-pairwise-v1": {
+                "contrasts": {
+                  "A4:A1": {
+                    "losses": 40,
+                    "ties": 1,
+                    "wins": 159
+                  },
+                  "A4:A2": {
+                    "losses": 49,
+                    "ties": 2,
+                    "wins": 149
+                  },
+                  "A4:A3": {
+                    "losses": 84,
+                    "ties": 0,
+                    "wins": 116
+                  },
+                  "A4:A5": {
+                    "losses": 104,
+                    "ties": 1,
+                    "wins": 95
+                  },
+                  "A4:A6": {
+                    "losses": 88,
+                    "ties": 2,
+                    "wins": 110
+                  }
+                },
+                "fit_status": "ok",
+                "position_consistency_rate": 0.796,
+                "run_count": 600,
+                "scored_pairs": 500,
+                "strengths": {
+                  "A1": 0.4132998824054971,
+                  "A2": 0.5425623970676096,
+                  "A3": 1.1786700350179211,
+                  "A4": 1.6276871911969633,
+                  "A5": 1.7810817955266762,
+                  "A6": 1.3050825226921914
+                }
+              }
+            },
+            "missing_pairs": 0,
+            "position_consistency_rate": 0.796,
+            "prompt_collapsed_across_judges": {
+              "A4:A1": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 11,
+                "n_non_tie": 81,
+                "p_holm_report_local": 5.914110927456348e-11,
+                "p_raw": 1.1828221854912696e-11,
+                "presentation_disagreements": 19,
+                "prompt_total": 100,
+                "ties": 19,
+                "wilson_high": 0.9224453655826947,
+                "wilson_low": 0.7729693623122125,
+                "win_rate": 0.8641975308641975,
+                "wins": 70
+              },
+              "A4:A2": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 15,
+                "n_non_tie": 80,
+                "p_holm_report_local": 5.645867363925583e-08,
+                "p_raw": 1.4114668409813958e-08,
+                "presentation_disagreements": 19,
+                "prompt_total": 100,
+                "ties": 20,
+                "wilson_high": 0.8829468953302267,
+                "wilson_low": 0.7134167737100688,
+                "win_rate": 0.8125,
+                "wins": 65
+              },
+              "A4:A3": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 34,
+                "n_non_tie": 84,
+                "p_holm_report_local": 0.3034090264164136,
+                "p_raw": 0.10113634213880453,
+                "presentation_disagreements": 16,
+                "prompt_total": 100,
+                "ties": 16,
+                "wilson_high": 0.6938039773845952,
+                "wilson_low": 0.48834236006023146,
+                "win_rate": 0.5952380952380952,
+                "wins": 50
+              },
+              "A4:A5": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 42,
+                "n_non_tie": 80,
+                "p_holm_report_local": 0.7375543089843226,
+                "p_raw": 0.7375543089843226,
+                "presentation_disagreements": 20,
+                "prompt_total": 100,
+                "ties": 20,
+                "wilson_high": 0.5830435735027005,
+                "wilson_low": 0.36924733297407564,
+                "win_rate": 0.475,
+                "wins": 38
+              },
+              "A4:A6": {
+                "judge_disagreements": 0,
+                "judge_prompt_observations": 100,
+                "losses": 30,
+                "n_non_tie": 72,
+                "p_holm_report_local": 0.38901033173479815,
+                "p_raw": 0.19450516586739908,
+                "presentation_disagreements": 28,
+                "prompt_total": 100,
+                "ties": 28,
+                "wilson_high": 0.6901478252526017,
+                "wilson_low": 0.46807697931465553,
+                "win_rate": 0.5833333333333334,
+                "wins": 42
+              }
+            },
+            "record_pooled": {
+              "A4:A1": {
+                "losses": 40,
+                "n_non_tie": 199,
+                "p_holm_report_local": 2.712661150849644e-17,
+                "p_raw": 5.425322301699288e-18,
+                "ties": 1,
+                "wilson_high": 0.8487724282144606,
+                "wilson_low": 0.737892648500416,
+                "win_rate": 0.7989949748743719,
+                "wins": 159
+              },
+              "A4:A2": {
+                "losses": 49,
+                "n_non_tie": 198,
+                "p_holm_report_local": 2.5141559049342805e-12,
+                "p_raw": 6.285389762335701e-13,
+                "ties": 2,
+                "wilson_high": 0.8074473771559485,
+                "wilson_low": 0.6879909762144312,
+                "win_rate": 0.7525252525252525,
+                "wins": 149
+              },
+              "A4:A3": {
+                "losses": 84,
+                "n_non_tie": 200,
+                "p_holm_report_local": 0.0843762216987792,
+                "p_raw": 0.028125407232926402,
+                "ties": 0,
+                "wilson_high": 0.6462640083838327,
+                "wilson_low": 0.5107207393958046,
+                "win_rate": 0.58,
+                "wins": 116
+              },
+              "A4:A5": {
+                "losses": 104,
+                "n_non_tie": 199,
+                "p_holm_report_local": 0.5707535104620824,
+                "p_raw": 0.5707535104620824,
+                "ties": 1,
+                "wilson_high": 0.5465542404620931,
+                "wilson_low": 0.4090761318872018,
+                "win_rate": 0.47738693467336685,
+                "wins": 95
+              },
+              "A4:A6": {
+                "losses": 88,
+                "n_non_tie": 198,
+                "p_holm_report_local": 0.2707825949746415,
+                "p_raw": 0.13539129748732076,
+                "ties": 2,
+                "wilson_high": 0.6230576246119892,
+                "wilson_low": 0.48593881312949433,
+                "win_rate": 0.5555555555555556,
+                "wins": 110
+              }
+            },
+            "run_count": 698,
+            "scored_pairs": 500,
+            "strengths": {
+              "A1": 0.4132998824054971,
+              "A2": 0.5425623970676096,
+              "A3": 1.1786700350179211,
+              "A4": 1.6276871911969633,
+              "A5": 1.7810817955266762,
+              "A6": 1.3050825226921914
+            }
+          }
+        }
+      }
+    },
+    "missing_pairs": 21,
+    "run_count": 1776
+  },
+  "pointwise": {
+    "rows": [
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A1",
+        "dimension_means": {
+          "content_adequacy_depth": 4.38,
+          "factuality_constraint_fidelity": 4.69,
+          "instruction_fulfillment": 4.34,
+          "organization_global_coherence": 4.88,
+          "style_voice_audience_fit": 4.78
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.014478966002359112
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.014478966002359112
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A2",
+        "dimension_means": {
+          "content_adequacy_depth": 4.39,
+          "factuality_constraint_fidelity": 4.64,
+          "instruction_fulfillment": 4.44,
+          "organization_global_coherence": 4.92,
+          "style_voice_audience_fit": 4.81
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.05631107145180939
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.05631107145180939
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A3",
+        "dimension_means": {
+          "content_adequacy_depth": 4.31,
+          "factuality_constraint_fidelity": 4.5,
+          "instruction_fulfillment": 4.27,
+          "organization_global_coherence": 4.82,
+          "style_voice_audience_fit": 4.67
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.14787584674930485
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.14787584674930485
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A4",
+        "dimension_means": {
+          "content_adequacy_depth": 4.505154639175258,
+          "factuality_constraint_fidelity": 4.762886597938144,
+          "instruction_fulfillment": 4.474226804123711,
+          "organization_global_coherence": 4.876288659793815,
+          "style_voice_audience_fit": 4.711340206185567
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.06993990534879997
+        },
+        "platform": "codex",
+        "record_count": 97,
+        "run_count": 97,
+        "z_scored_composite_mean": 0.06993990534879997
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A5",
+        "dimension_means": {
+          "content_adequacy_depth": 4.363636363636363,
+          "factuality_constraint_fidelity": 4.575757575757576,
+          "instruction_fulfillment": 4.313131313131313,
+          "organization_global_coherence": 4.898989898989899,
+          "style_voice_audience_fit": 4.666666666666667
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.05748600000940311
+        },
+        "platform": "codex",
+        "record_count": 99,
+        "run_count": 99,
+        "z_scored_composite_mean": -0.05748600000940311
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A6",
+        "dimension_means": {
+          "content_adequacy_depth": 4.4526315789473685,
+          "factuality_constraint_fidelity": 4.757894736842105,
+          "instruction_fulfillment": 4.431578947368421,
+          "organization_global_coherence": 4.863157894736842,
+          "style_voice_audience_fit": 4.705263157894737
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.03755726878155926
+        },
+        "platform": "codex",
+        "record_count": 95,
+        "run_count": 95,
+        "z_scored_composite_mean": 0.03755726878155926
+      },
+      {
+        "benchmark": "DoLoMiTes",
+        "condition": "A7",
+        "dimension_means": {
+          "content_adequacy_depth": 4.56,
+          "factuality_constraint_fidelity": 4.62,
+          "instruction_fulfillment": 4.47,
+          "organization_global_coherence": 4.85,
+          "style_voice_audience_fit": 4.74
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.030475835773628713
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.030475835773628713
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A1",
+        "dimension_means": {
+          "content_adequacy_depth": 4.95,
+          "factuality_constraint_fidelity": 4.66,
+          "instruction_fulfillment": 4.93,
+          "organization_global_coherence": 4.95,
+          "style_voice_audience_fit": 4.97
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.12517593646911226
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.12517593646911226
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A2",
+        "dimension_means": {
+          "content_adequacy_depth": 4.98,
+          "factuality_constraint_fidelity": 4.71,
+          "instruction_fulfillment": 4.95,
+          "organization_global_coherence": 4.97,
+          "style_voice_audience_fit": 4.99
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.005444435035623991
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.005444435035623991
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A3",
+        "dimension_means": {
+          "content_adequacy_depth": 4.97,
+          "factuality_constraint_fidelity": 4.79,
+          "instruction_fulfillment": 4.92,
+          "organization_global_coherence": 4.95,
+          "style_voice_audience_fit": 4.94
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.08157077747026571
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.08157077747026571
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A4",
+        "dimension_means": {
+          "content_adequacy_depth": 4.99,
+          "factuality_constraint_fidelity": 4.74,
+          "instruction_fulfillment": 4.99,
+          "organization_global_coherence": 4.99,
+          "style_voice_audience_fit": 4.95
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.03547491233705124
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.03547491233705124
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A5",
+        "dimension_means": {
+          "content_adequacy_depth": 5.0,
+          "factuality_constraint_fidelity": 4.84,
+          "instruction_fulfillment": 5.0,
+          "organization_global_coherence": 4.99,
+          "style_voice_audience_fit": 4.99
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.14137772428736575
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.14137772428736575
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A6",
+        "dimension_means": {
+          "content_adequacy_depth": 5.0,
+          "factuality_constraint_fidelity": 4.87,
+          "instruction_fulfillment": 4.98,
+          "organization_global_coherence": 4.98,
+          "style_voice_audience_fit": 4.97
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.10649030033823037
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.10649030033823037
+      },
+      {
+        "benchmark": "HelloBench",
+        "condition": "A7",
+        "dimension_means": {
+          "content_adequacy_depth": 5.0,
+          "factuality_constraint_fidelity": 4.67,
+          "instruction_fulfillment": 4.93,
+          "organization_global_coherence": 4.93,
+          "style_voice_audience_fit": 4.97
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.0711517879876435
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.0711517879876435
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A1",
+        "dimension_means": {
+          "content_adequacy_depth": 4.35,
+          "factuality_constraint_fidelity": 4.47,
+          "instruction_fulfillment": 4.14,
+          "organization_global_coherence": 4.96,
+          "style_voice_audience_fit": 4.87
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.09795279002611773
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.09795279002611773
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A2",
+        "dimension_means": {
+          "content_adequacy_depth": 4.28,
+          "factuality_constraint_fidelity": 4.66,
+          "instruction_fulfillment": 4.15,
+          "organization_global_coherence": 4.98,
+          "style_voice_audience_fit": 4.88
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.03929608103708946
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.03929608103708946
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A3",
+        "dimension_means": {
+          "content_adequacy_depth": 4.49,
+          "factuality_constraint_fidelity": 4.6,
+          "instruction_fulfillment": 4.23,
+          "organization_global_coherence": 4.98,
+          "style_voice_audience_fit": 4.83
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.0028209907121384144
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.0028209907121384144
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A4",
+        "dimension_means": {
+          "content_adequacy_depth": 4.57,
+          "factuality_constraint_fidelity": 4.58,
+          "instruction_fulfillment": 4.44,
+          "organization_global_coherence": 4.99,
+          "style_voice_audience_fit": 4.91
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.1336665232416631
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.1336665232416631
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A5",
+        "dimension_means": {
+          "content_adequacy_depth": 4.5,
+          "factuality_constraint_fidelity": 4.56,
+          "instruction_fulfillment": 4.4,
+          "organization_global_coherence": 4.99,
+          "style_voice_audience_fit": 4.89
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": 0.08462440008802372
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": 0.08462440008802372
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A6",
+        "dimension_means": {
+          "content_adequacy_depth": 4.54,
+          "factuality_constraint_fidelity": 4.46,
+          "instruction_fulfillment": 4.36,
+          "organization_global_coherence": 4.93,
+          "style_voice_audience_fit": 4.81
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.045994674183916125
+        },
+        "platform": "codex",
+        "record_count": 100,
+        "run_count": 100,
+        "z_scored_composite_mean": -0.045994674183916125
+      },
+      {
+        "benchmark": "WritingBench",
+        "condition": "A7",
+        "dimension_means": {
+          "content_adequacy_depth": 4.63265306122449,
+          "factuality_constraint_fidelity": 4.214285714285714,
+          "instruction_fulfillment": 4.5,
+          "organization_global_coherence": 4.877551020408164,
+          "style_voice_audience_fit": 4.918367346938775
+        },
+        "judge_composites": {
+          "gpt-5.6-sol-pointwise-v1": -0.038641192647654886
+        },
+        "platform": "codex",
+        "record_count": 98,
+        "run_count": 98,
+        "z_scored_composite_mean": -0.038641192647654886
+      }
+    ],
+    "run_count": 2089
+  }
+}
