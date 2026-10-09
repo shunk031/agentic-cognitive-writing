@@ -11,7 +11,7 @@ A complementary design question remains comparatively underexplored: should the 
 
 The cognitive process theory of writing~\citep{flower1981cognitive,hayes1996new,hayes2012modeling} provides a useful abstraction for process-level control.
 \citet{flower1981cognitive} characterize writing as coordination among planning, translating, and reviewing, with a monitor deciding which process to invoke as the document develops.
-The resulting view suggests a writing system whose control decision is not the next section or task node, but the next kind of writing work.
+This view suggests choosing the next writing process rather than the next section or task node.
 
 Building on \citet{flower1981cognitive}, we propose \condAgenticCogWriter, a long-form writing system that implements this process-level control on top of a coding-agent-style harness with persistent state and subagent delegation (Figure~\ref{fig:agentic-cogwriter}).
 A top-level Monitor agent observes the evolving draft, goals, and process history, chooses whether the next activity should be planning, drafting, or reviewing, and delegates that activity to a corresponding subagent.

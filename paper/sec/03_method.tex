@@ -41,7 +41,7 @@ Unlike a section scheduler or task-graph controller, Eq.~\eqref{eq:monitor-polic
 
 If \texttt{Planning} is selected, the \texttt{Planner} reads the task and current draft, organizes relevant material for the intended audience, and creates or develops writing goals.
 If \texttt{Translating} is selected, the \texttt{Translator} reads the current draft and active goals and writes prose within the delegated draft scope.
-If \texttt{Reviewing} is selected, the \texttt{Reviewer} checks the current draft against the task and active goals, revises within the delegated scope, and reports whether further planning, drafting, or review is needed.
+If \texttt{Reviewing} is selected, the \texttt{Reviewer} checks the draft against the task and active goals, revises within the delegated scope, and reports whether further planning, drafting, or review is needed.
 
 Each subagent writes its changes to the shared workspace before control returns to the \texttt{Monitor}, yielding the next state $S_{t+1}$.
 Review feedback can recommend replacing a goal, but the \texttt{Monitor} decides whether to accept that change and records the decision in $H_t$.
