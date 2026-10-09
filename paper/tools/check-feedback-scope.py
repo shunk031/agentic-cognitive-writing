@@ -9,10 +9,12 @@ feedback before the batch is complete; the final manifest still audits the full
 prose diff from baseline to HEAD.
 
 Source-only reflow is allowed without a replacement declaration when it changes
-only ordinary whitespace inside existing paragraphs. This supports conventions
-such as one-sentence-per-line without weakening the guard against prose edits.
-New manuscript files remain forbidden unless their exact contents are declared
-in ``created_files``.
+only ordinary whitespace inside existing paragraphs. Exact source extraction is
+also allowed when a new paper/sec/*.tex file contains only text already present
+in one baseline manuscript file and the current parent replaces that text with
+the matching \\input{...}. These allowances support source organization without
+weakening the guard against prose edits. Other new manuscript files remain
+forbidden unless their exact contents are declared in ``created_files``.
 """
 
 from __future__ import annotations
@@ -59,6 +61,66 @@ def text_at_commit(commit: str, path: str) -> str | None:
     if result.returncode != 0:
         return None
     return result.stdout
+
+
+def input_token(path: str) -> str:
+    relative = Path(path).relative_to("paper").as_posix()
+    if relative.endswith(".tex"):
+        relative = relative[:-4]
+    return rf"\input{{{relative}}}"
+
+
+def source_only_extractions(
+    repo: Path,
+    baseline: str,
+    changed_tex: set[str],
+    declared_created: set[str],
+) -> dict[str, str]:
+    """Return undeclared new files that are exact source extractions.
+
+    A candidate is accepted only when exactly one changed baseline manuscript
+    currently inputs it and the candidate's normalized text already occurred in
+    that parent's baseline text. Parent validation later expands the input back
+    to the candidate text, so moving text to a different location cannot pass.
+    """
+    existing_changed = {
+        path
+        for path in changed_tex
+        if text_at_commit(baseline, path) is not None and (repo / path).exists()
+    }
+    extracted: dict[str, str] = {}
+
+    for path in sorted(changed_tex - declared_created):
+        if text_at_commit(baseline, path) is not None:
+            continue
+        current_path = repo / path
+        if not current_path.exists() or not path.startswith("paper/sec/"):
+            continue
+
+        content = current_path.read_text(encoding="utf-8")
+        normalized_content = normalize_paragraph_whitespace(content)
+        token = input_token(path)
+        parents: list[str] = []
+
+        for parent in sorted(existing_changed):
+            current_parent = (repo / parent).read_text(encoding="utf-8")
+            if current_parent.count(token) != 1:
+                continue
+            baseline_parent = text_at_commit(baseline, parent)
+            assert baseline_parent is not None
+            if normalized_content in normalize_paragraph_whitespace(baseline_parent):
+                parents.append(parent)
+
+        if len(parents) == 1:
+            extracted[path] = content
+
+    return extracted
+
+
+def expand_source_only_extractions(text: str, extracted: dict[str, str]) -> str:
+    for path, content in extracted.items():
+        text = text.replace(input_token(path), normalize_eof(content), 1)
+    return text
 
 
 def main() -> None:
@@ -149,17 +211,27 @@ def main() -> None:
         for path in git("diff", "--name-only", f"{baseline}..HEAD", "--", "paper").splitlines()
         if path.startswith("paper/") and path.endswith(".tex")
     }
+    extracted = source_only_extractions(
+        repo,
+        baseline,
+        changed_tex,
+        set(created_by_path),
+    )
 
     # Existing files may be reflowed without a declaration only when paragraph
     # boundaries and all non-whitespace characters are identical to baseline.
+    # Exact source extractions are compared after expanding their new \input.
     unauthorized_files: list[str] = []
-    for path in sorted(changed_tex - set(by_path) - set(created_by_path)):
+    allowed_new_files = set(created_by_path) | set(extracted)
+    for path in sorted(changed_tex - set(by_path) - allowed_new_files):
         base_text = text_at_commit(baseline, path)
         current_path = repo / path
         if base_text is None or not current_path.exists():
             unauthorized_files.append(path)
             continue
-        current = current_path.read_text(encoding="utf-8")
+        current = expand_source_only_extractions(
+            current_path.read_text(encoding="utf-8"), extracted
+        )
         if normalize_paragraph_whitespace(base_text) != normalize_paragraph_whitespace(current):
             unauthorized_files.append(path)
     if unauthorized_files:
@@ -187,12 +259,13 @@ def main() -> None:
         current_path = repo / path
         if not current_path.exists():
             fail(f"declared manuscript file disappeared: {path}")
-        current = current_path.read_text(encoding="utf-8")
+        current = expand_source_only_extractions(
+            current_path.read_text(encoding="utf-8"), extracted
+        )
 
         # A declaration-only commit may still contain the baseline text. Once
         # editing starts, the file must be either the baseline or the declared
-        # result, modulo source-only whitespace reflow that preserves paragraph
-        # boundaries.
+        # result, modulo source-only whitespace reflow and exact extraction.
         normalized_current = normalize_paragraph_whitespace(current)
         normalized_allowed = {
             normalize_paragraph_whitespace(base_text),
@@ -208,7 +281,7 @@ def main() -> None:
                 )
             )
             fail(
-                f"{path} differs from the exact declared replacements beyond source-only reflow. "
+                f"{path} differs from the exact declared replacements beyond source-only reflow/extraction. "
                 "This usually means neighboring prose was changed without authorization.\n"
                 + diff[:8000]
             )
@@ -227,7 +300,8 @@ def main() -> None:
     print(
         "Feedback scope guard: passed "
         f"(baseline={baseline}, scope declarations={len(scope_commits)}, "
-        f"declared replacements={len(replacements)}, declared created files={len(created_files)})"
+        f"declared replacements={len(replacements)}, declared created files={len(created_files)}, "
+        f"source-only extractions={len(extracted)})"
     )
 
 
