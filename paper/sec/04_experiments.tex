@@ -19,7 +19,7 @@ The comparison tests whether explicit goals or adaptive ordering explain the ful
 \paragraph{Execution variant and full system.}
 (6) \condSingleWriter\ retains the goal representation and adaptive process loop but performs planning, drafting, and reviewing in one writer context without subagent delegation; it also limits each \texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.
 (7) \condAgenticCogWriter\ is the full system described in Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.
-We use the full system as the focal condition.
+This is our focal system.
 
 \paragraph{Post-hoc execution check.}
 \condSingleContext\ was added after the main results as a narrower exploratory check and is not one of the seven pre-specified systems.
@@ -78,9 +78,8 @@ For each benchmark and generation run, an exact two-sided sign test compares the
 Testing several related contrasts increases the chance of at least one false positive, so we apply Holm's step-down correction~\citep{holm1979} across the pre-specified tests within each benchmark.
 Generation runs remain separate because they repeat the same prompts rather than provide new independent samples.\footnote{See Appendix~\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\citep{wilson1927}, and corrected test decisions.}
 
-To summarize the two ablation contrasts across generation runs, we compute a post-hoc prompt-level estimate.
-For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and then summarized across benchmarks.
-We report a prompt-level bootstrap interval and sign test, treating this summary as exploratory because it was defined post hoc.
+To summarize the two ablation contrasts across generation runs, we compute an exploratory post-hoc prompt-level estimate.
+For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and summarized across benchmarks with a bootstrap interval and sign test.
 
 \paragraph{Robustness and behavioral analysis.}
 Pairwise LLM evaluation can favor longer outputs and can change with judge identity~\citep{zheng2023judging,dubois2024length,li2026preference,panickssery2024selfpreference}.
