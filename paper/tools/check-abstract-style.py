@@ -9,6 +9,18 @@ from pathlib import Path
 PAPER = Path(__file__).resolve().parents[1]
 
 
+def expand_inputs(text: str) -> str:
+    """Recursively expand manuscript \input files from the paper root."""
+
+    def include(match: re.Match[str]) -> str:
+        relative = match.group(1)
+        path = PAPER / (relative if relative.endswith(".tex") else relative + ".tex")
+        assert path.exists(), ("missing manuscript input", relative)
+        return expand_inputs(path.read_text(encoding="utf-8"))
+
+    return re.sub(r"\\input\{([^}]+)\}", include, text)
+
+
 def main() -> None:
     source = (PAPER / "acl_latex.tex").read_text(encoding="utf-8")
     assert r"\newcommand{\condAgenticCogWriter}{\textsc{Agentic CogWriter}}" in source, (
@@ -18,9 +30,10 @@ def main() -> None:
         "Use the shared Agentic CogWriter macro in the method section heading"
     )
 
+    expanded_source = expand_inputs(source)
     match = re.search(
         r"\\begin\{abstract\}\s*(.*?)\s*\\end\{abstract\}",
-        source,
+        expanded_source,
         flags=re.DOTALL,
     )
     assert match, "abstract environment not found"
