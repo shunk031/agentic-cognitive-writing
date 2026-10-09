@@ -42,6 +42,27 @@ def check_display_name() -> None:
     )
 
 
+def check_display_name_repetition() -> None:
+    """Keep the display name as an anchor, not a repeated paragraph subject."""
+    offenders: list[str] = []
+    for path in sorted((PAPER / "sec").glob("*.tex")):
+        text = without_comments(path.read_text(encoding="utf-8"))
+        paragraphs = re.split(r"\n[ \t]*\n+", text)
+        for index, paragraph in enumerate(paragraphs, start=1):
+            # Figure and table source can legitimately repeat condition labels in
+            # panel names, captions, and legends; this guard targets prose.
+            if r"\begin{figure" in paragraph or r"\begin{table" in paragraph:
+                continue
+            count = paragraph.count(r"\condAgenticCogWriter")
+            if count > 1:
+                offenders.append(f"{path.relative_to(PAPER)} paragraph {index}: {count} mentions")
+    assert not offenders, (
+        "use Agentic CogWriter at most once per prose paragraph; after the name anchors the referent, "
+        "prefer 'our system', 'the full system' when contrasting ablations, or restructure the sentence",
+        offenders,
+    )
+
+
 def check_pairwise_language() -> None:
     main = "\n".join(
         without_comments((PAPER / path).read_text(encoding="utf-8"))
@@ -69,8 +90,9 @@ def check_pairwise_language() -> None:
 
 def main() -> None:
     check_display_name()
+    check_display_name_repetition()
     check_pairwise_language()
-    print("Manuscript display-name and pairwise-language guards: passed")
+    print("Manuscript display-name, repetition, and pairwise-language guards: passed")
 
 
 if __name__ == "__main__":
