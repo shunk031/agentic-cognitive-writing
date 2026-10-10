@@ -80,6 +80,7 @@ def math_ascii(text):
         "sigma": "sigma",
         "rightarrow": " -> ",
         "uparrow": "↑",
+        "pm": "±",
         "in": " in ",
         "times": " x ",
         "checkmark": "yes",
