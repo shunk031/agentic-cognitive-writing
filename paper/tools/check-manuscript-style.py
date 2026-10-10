@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guard manuscript-wide display-name and pairwise-evaluation terminology."""
+"""Guard manuscript-wide display-name, evaluation, and run-scope terminology."""
 
 from __future__ import annotations
 
@@ -88,11 +88,54 @@ def check_pairwise_language() -> None:
     ), "pairwise evaluation must name the filtered comparisons plainly"
 
 
+def check_core_three_run_scope() -> None:
+    """Prevent legacy run-1 appendix summaries from surviving a three-run study."""
+    # The pre-specified study regenerates the same prompt set three times. If an
+    # older run-1 resource or length table survives after all three runs are
+    # available, a reviewer can reasonably read that as selective reporting or
+    # incomplete propagation. Separately identified one-run exploratory checks
+    # remain allowed; this guard targets only the core-study appendix artifacts.
+    core_paths = (
+        "sec/10_appendix.tex",
+        "tab/appendix-process.tex",
+        "tab/appendix-length-control.tex",
+    )
+    for relative in core_paths:
+        text = without_comments((PAPER / relative).read_text(encoding="utf-8"))
+        for stale in ("first generation run", "generation run 1 of 3"):
+            assert stale not in text, (
+                "core three-run appendix evidence must not silently fall back to run 1",
+                relative,
+                stale,
+            )
+
+    process = without_comments((PAPER / "tab/appendix-process.tex").read_text(encoding="utf-8"))
+    assert "across the three generation runs" in process, (
+        "the core process/resource table must state its three-run scope"
+    )
+    for suffix in ("MedianOutputMean", "SpawnsMean", "OutputTokensMean", "InputTokensMean", "MeanSecondsMean"):
+        assert suffix in process, (
+            "the core process/resource table must use three-run summary macros",
+            suffix,
+        )
+
+    length = without_comments((PAPER / "tab/appendix-length-control.tex").read_text(encoding="utf-8"))
+    for run in ("RunOne", "RunTwo", "RunThree"):
+        assert run in length, (
+            "the core output-length sensitivity table must expose every generation run",
+            run,
+        )
+    assert r"\LengthRatio" not in length, (
+        "run-1-only length-ratio macros must not be used in the core three-run sensitivity table"
+    )
+
+
 def main() -> None:
     check_display_name()
     check_display_name_repetition()
     check_pairwise_language()
-    print("Manuscript display-name, repetition, and pairwise-language guards: passed")
+    check_core_three_run_scope()
+    print("Manuscript display-name, repetition, pairwise-language, and run-scope guards: passed")
 
 
 if __name__ == "__main__":
