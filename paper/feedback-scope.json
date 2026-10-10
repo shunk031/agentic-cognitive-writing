@@ -78,6 +78,18 @@
       "instruction": "Replace the hard-coded Table 7 process-path win rates with the existing process-sequence macros regenerated from the three-run process-sequences JSON.",
       "before": "Plan$\\rightarrow$draft$\\rightarrow$review\n& 57.4\\%\n& 72.2\\% \\\\\nOther path\n& 54.9\\%\n& 75.2\\% \\\\",
       "after": "Plan$\\rightarrow$draft$\\rightarrow$review\n& \\AfourExactCycleFixedOrderWinRate\n& \\AfourExactCycleSingleWriterWinRate \\\\\nOther path\n& \\AfourNonExactFixedOrderWinRate\n& \\AfourNonExactSingleWriterWinRate \\\\"
+    },
+    {
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Replace the reader-check-forbidden verb 'pools' in the Across-column definition without changing the statistic or the table takeaway.",
+      "before": "Across pools wins and losses over benchmarks per run.",
+      "after": "Across combines wins and losses over benchmarks within each run."
+    },
+    {
+      "path": "paper/tab/ablation-results.tex",
+      "instruction": "Replace the reader-check-forbidden verb 'pools' in the Across-column definition without changing the statistic or the ablation takeaway.",
+      "before": "Across pools wins and losses over benchmarks within each run.",
+      "after": "Across combines wins and losses over benchmarks within each run."
     }
   ],
   "created_files": []
