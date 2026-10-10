@@ -42,8 +42,8 @@ The narrower post-hoc \condSingleContext\ check shows no significant difference 
 \label{sec:results-process-dynamics}
 
 The adaptive writing loop usually follows a simple process path.
-Table~\ref{tab:process-dynamics} shows that one \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle dominates the traces; returning to planning after review and replacing an existing goal are both rare.
-Our system therefore has the ability to revisit earlier processes but uses that flexibility infrequently on the evaluated prompts.
+Table~\ref{tab:process-dynamics} shows that 74.6\% of traces are cycle-compliant with the \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} order, while a return from Review to Translating occurs in 14.8\% of runs.
+Full replanning after Review is rare (0.3\%), as is replacing an existing goal (0.5\%), so our system uses its adaptive control more often for targeted redrafting than for full replanning.
 This pattern is consistent with the small exploratory advantage over \condFixedOrder: adaptive ordering can help only when the controller departs from the common path.
 
 \input{tab/process-dynamics}
@@ -69,7 +69,7 @@ The traces therefore show that adaptive control is rarely exercised on these sub
 \end{minipage}
 \caption{Observed writing-process trajectories.
 Panel (a) shows the most frequent complete paths; panels (b) and (c) show transition counts for \condAgenticCogWriter\ and \condFixedOrder.
-Our system mostly follows the same forward \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} progression as \condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.}
+Our system mostly follows the same forward \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} progression as \condFixedOrder; returns to Translating are more common than returns to Planning, consistent with the small exploratory advantage of adaptive ordering.}
 \label{fig:process-sequences}
 \end{figure*}
 
