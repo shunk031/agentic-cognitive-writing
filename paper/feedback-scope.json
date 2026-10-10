@@ -1,23 +1,77 @@
 {
-  "baseline_sha": "24ad12d94146eac91a757236e7a483a1a0114c31",
+  "baseline_sha": "5c90aa8cd54b02521ff828e18029c0684556d95d",
   "replacements": [
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Define W/L/T and the win-rate denominator for system pairwise comparisons where the notation is first introduced, without changing the two-order consistency rule.",
-      "before": "Headline win rates are computed over these order-consistent comparisons.",
-      "after": "We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent comparisons as $W/(W+L)$."
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "State that Table 4 reports mean pairwise win rates across the three generation runs, define the across-benchmark column, and preserve its reader takeaway.",
+      "before": "\\caption{\\condAgenticCogWriter\\ same-prompt win rates; above 50\\% favors our system. Win rates exceed 50\\% on every benchmark against every alternative, with the largest mean margin over \\condSinglePass.}",
+      "after": "\\caption{Three-run mean \\condAgenticCogWriter\\ same-prompt win rates; above 50\\% favors our system. Across pools wins and losses over benchmarks within each run. Win rates exceed 50\\% on every benchmark against every alternative, with the largest mean margin over \\condSinglePass.}"
     },
     {
-      "path": "paper/tab/appendix-length-control.tex",
-      "instruction": "Clarify that the output-length sensitivity table uses W/L/T from the longer-response perspective, which differs from the first-named-system convention for system contrasts.",
-      "before": "W/L/T combines the two presentation orders for each prompt; ties are excluded from the longer-side win-rate denominator.",
-      "after": "Here, W/L/T denotes wins/losses/ties for the longer response after applying the two-order consistency rule; ties are excluded from the longer-side win-rate denominator."
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Use a short across-benchmark heading that preserves the one-column fit without implying an arithmetic mean of the displayed benchmark rates.",
+      "before": "& \\textbf{Mean} \\\\",
+      "after": "& \\textbf{Across} \\\\" 
+    },
+    {
+      "path": "paper/tab/ablation-results.tex",
+      "instruction": "Use a short across-benchmark heading that preserves the one-column fit without implying an arithmetic mean of the displayed benchmark rates.",
+      "before": "& \\textbf{Mean} \\\\",
+      "after": "& \\textbf{Across} \\\\" 
+    },
+    {
+      "path": "paper/tab/ablation-results.tex",
+      "instruction": "Define the across-benchmark column in Table 5 while preserving the existing ablation takeaway.",
+      "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates for ablations and a diagnostic; above 50\\% favors our system. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, unlike the larger \\condSingleWriter\\ gap.}",
+      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates for ablations and a diagnostic; above 50\\% favors our system. Across pools wins and losses over benchmarks within each run. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, unlike the larger \\condSingleWriter\\ gap.}"
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Clarify Table 6 so the cycle-compliance classification visibly forms a 100% partition, expose the targeted Review-to-Translating return rate, distinguish it from rare replanning and goal replacement, state the three-run scope, and document leading-Planning reconstruction.",
+      "before": "\\begin{table}[t]\n\\centering\n\\small\n\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{lr}\n\\toprule\n\\textbf{Observed writing-loop behavior}\n& \\textbf{Rate} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\nOne Planning$\\rightarrow$Translating$\\rightarrow$Reviewing cycle\n& 74.6\\% \\\\\nReview followed by renewed Planning\n& 0.3\\% \\\\\nRuns with an accepted goal replacement\n& 0.5\\% \\\\\n\\bottomrule\n\\end{tabular}\n\\caption{One \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle accounts for 74.6\\% of runs; replanning and goal replacement are each below 1\\%. \\condAgenticCogWriter\\ only rarely revisits earlier processes.}\n\\label{tab:process-dynamics}\n\\end{table}",
+      "after": "\\begin{table}[t]\n\\centering\n\\small\n\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{lr}\n\\toprule\n\\textbf{Observed writing-loop behavior}\n& \\textbf{Rate} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\\nCycle-compliant path\n& 74.6\\% \\\\\nAny other complete path\n& 25.4\\% \\\\\n\\addlinespace[2pt]\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\\nReview followed by renewed Translating\n& 14.8\\% \\\\\nReview followed by renewed Planning\n& 0.3\\% \\\\\nRuns with an accepted goal replacement\n& 0.5\\% \\\\\n\\bottomrule\n\\end{tabular}\n\\caption{Three-run writing-loop behavior. Cycle-compliant paths follow one or more planning--drafting--reviewing cycles after collapsing repeats and reconstructing an omitted leading Planning when supported by delegation logs. The first two rows partition complete process paths; the last three are non-exclusive indicators.}\n\\label{tab:process-dynamics}\n\\end{table}"
     },
     {
       "path": "paper/sec/05_results.tex",
-      "instruction": "Remove the Figure 2 caption sentence that expands P, T, R, and E, without changing the remaining caption or figure contents.",
-      "before": "Our system mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.\nP, T, R, and E denote \\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, and end.}",
-      "after": "Our system mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.}"
+      "instruction": "Report the targeted Review-to-Translating return separately from rare full replanning and goal replacement.",
+      "before": "Table~\\ref{tab:process-dynamics} shows that one \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle dominates the traces; returning to planning after review and replacing an existing goal are both rare.\nOur system therefore has the ability to revisit earlier processes but uses that flexibility infrequently on the evaluated prompts.",
+      "after": "Table~\\ref{tab:process-dynamics} shows that 74.6\\% of traces are cycle-compliant with the \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} order, while a return from Review to Translating occurs in 14.8\\% of runs.\nFull replanning after Review is rare (0.3\\%), as is replacing an existing goal (0.5\\%), so our system uses its adaptive control more often for targeted redrafting than for full replanning."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Align the Figure 2 interpretation with the observed difference between targeted redrafting and full replanning while preserving the adaptive-ordering interpretation.",
+      "before": "Our system mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.",
+      "after": "Our system mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder; returns to Translating are more common than returns to Planning, consistent with the small exploratory advantage of adaptive ordering."
+    },
+    {
+      "path": "paper/tab/trace-outcome.tex",
+      "instruction": "State that the process-path outcome split pools the three generation runs while preserving its observational interpretation.",
+      "before": "\\caption{Win rates are similar for planning--drafting--reviewing and other paths against \\condFixedOrder\\ and \\condSingleWriter. The observational split describes association rather than a causal effect.}",
+      "after": "\\caption{Win rates are similar for the two process-path groups against \\condFixedOrder\\ and \\condSingleWriter when pooled across the three generation runs. The observational split describes association rather than a causal effect.}"
+    },
+    {
+      "path": "paper/sec/07_limitations.tex",
+      "instruction": "State the material benchmark-level instability of the cross-family judge rather than describing only one reversal.",
+      "before": "The cross-family check produces many ties and reverses one WritingBench direction, and we did not collect human judgments, so model-judge preference should not be treated as human preference.",
+      "after": "The pooled direction remains positive for all three selected cross-family contrasts, but the cross-family judge produces many ties and reverses 3 of 9 benchmark-level comparisons; we also did not collect human judgments, so model-judge preference should not be treated as human preference."
+    },
+    {
+      "path": "paper/tab/appendix-cross-family.tex",
+      "instruction": "Make the cross-family robustness caption explicit that pooled directions remain positive but three of nine benchmark-level selected comparisons reverse and many outcomes are ties.",
+      "before": "\\caption{Cross-family judge robustness using \\modelCross. Changing judge family preserves the overall direction of the selected comparisons but produces more ties and reverses the WritingBench direction for \\condAgenticCogWriter\\ versus \\condSinglePass, so the exact win rates are judge-sensitive. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose combined outcome matches the primary judge.}",
+      "after": "\\caption{Cross-family judge robustness using \\modelCross. The pooled direction remains positive for all three selected contrasts, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and the cross-family judge produces many ties, so exact win rates are judge-sensitive. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose combined outcome matches the primary judge.}"
+    },
+    {
+      "path": "paper/tab/appendix-process.tex",
+      "instruction": "Label the appendix process/resource table as generation run 1 of 3 rather than using the ambiguous phrase 'first generation run'.",
+      "before": "\\caption{Realized process and resource use in the first generation run.",
+      "after": "\\caption{Realized process and resource use in generation run 1 of 3."
+    },
+    {
+      "path": "paper/tab/appendix-length-control.tex",
+      "instruction": "Label the appendix output-length table as generation run 1 of 3 rather than using the ambiguous phrase 'first generation run'.",
+      "before": "\\caption{Pairwise outcomes from the first generation run grouped by output-length ratio.",
+      "after": "\\caption{Pairwise outcomes from generation run 1 of 3 grouped by output-length ratio."
     }
   ],
   "created_files": []
