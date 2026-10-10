@@ -198,6 +198,24 @@
       "instruction": "Compact the explicit Table 4 aggregation definition after the rendered-caption guard found six lines, preserving the same aggregation order and reader takeaway.",
       "before": "\\caption{Three-run mean same-prompt win rates for \\condAgenticCogWriter; above 50\\% favors our system. Across sums wins and losses over benchmarks within each run, computes $W/(W+L)$, then averages the three run-level rates. All benchmark-level rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}",
       "after": "\\caption{Three-run mean same-prompt win rates for \\condAgenticCogWriter; above 50\\% favors our system. Across is the mean of three run-level $W/(W+L)$ rates after summing W/L over benchmarks within each run. All benchmark-level rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}"
+    },
+    {
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Compact the explicit Table 4 aggregation wording to fit the rendered five-line guard while preserving the order: sum benchmark W/L within a run, compute run-level W/(W+L), then average the three run-level rates.",
+      "before": "\\caption{Three-run mean same-prompt win rates for \\condAgenticCogWriter; above 50\\% favors our system. Across is the mean of three run-level $W/(W+L)$ rates after summing W/L over benchmarks within each run. All benchmark-level rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}",
+      "after": "\\caption{Three-run mean same-prompt win rates for \\condAgenticCogWriter; above 50\\% favors our system. Across averages run-level $W/(W+L)$ after summing W/L over benchmarks. All benchmark-level rates exceed 50\\%; the largest mean margin is over \\condSinglePass.}"
+    },
+    {
+      "path": "paper/tab/ablation-results.tex",
+      "instruction": "Compact the explicit Table 5 aggregation wording to fit the rendered five-line guard while preserving the same Across computation and ablation takeaway; the table body already labels the ablation and bundled diagnostic groups.",
+      "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates for ablations and a diagnostic; above 50\\% favors our system. Across sums wins and losses over benchmarks within each run, computes $W/(W+L)$, then averages the three run-level rates. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, unlike the larger \\condSingleWriter\\ gap.}",
+      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level $W/(W+L)$ after summing W/L over benchmarks. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}"
+    },
+    {
+      "path": "paper/tab/trace-outcome.tex",
+      "instruction": "Compact the explicit Table 7 aggregation wording to fit the rendered five-line guard while retaining both aggregation dimensions, the per-group/per-comparison scope, and the observational qualification.",
+      "before": "\\caption{Win rates are similar for the two process-path groups against \\condFixedOrder\\ and \\condSingleWriter. W/L/T counts are summed over all benchmarks and three generation runs within each group and comparison before computing $W/(W+L)$. The split is observational rather than causal.}",
+      "after": "\\caption{Similar win rates appear for both process-path groups against \\condFixedOrder\\ and \\condSingleWriter. Within each group and comparison, W/L/T are summed over benchmarks and all three runs before $W/(W+L)$. The split is observational, not causal.}"
     }
   ],
   "created_files": []
