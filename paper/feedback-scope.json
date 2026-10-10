@@ -1,71 +1,17 @@
 {
-  "baseline_sha": "183d23a27268d1b94890f85b4fe00842cab9287c",
+  "baseline_sha": "754ccb773e60aed23f018bb03d7c5ba21df1eee8",
   "replacements": [
     {
       "path": "paper/tab/main-results.tex",
-      "instruction": "N/A にしてみて pdf 見せてください",
-      "before": "\\condSinglePass\n& 0.697\\,{\\scriptsize(0.006)} & -0.090\\,{\\scriptsize(0.009)}\n& 0.773\\,{\\scriptsize(0.005)} & -0.112\\,{\\scriptsize(0.018)}\n& -- & -0.006\\,{\\scriptsize(0.018)} \\\\",
-      "after": "\\condSinglePass\n& 0.697\\,{\\scriptsize(0.006)} & -0.090\\,{\\scriptsize(0.009)}\n& 0.773\\,{\\scriptsize(0.005)} & -0.112\\,{\\scriptsize(0.018)}\n& N/A & -0.006\\,{\\scriptsize(0.018)} \\\\"
+      "instruction": "±のところ含めて灰色とかになってないですね？修正しましょう",
+      "before": "\\textcolor{tiedgray}{\\textbf{0.064}}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}",
+      "after": "\\textcolor{tiedgray}{\\textbf{0.064}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}}"
     },
     {
       "path": "paper/tab/main-results.tex",
-      "instruction": "N/A にしてみて pdf 見せてください",
-      "before": "\\condStaged~\\citep{yang2022re3,wan2025cognitive}\n& 0.702\\,{\\scriptsize(0.005)} & -0.041\\,{\\scriptsize(0.012)}\n& 0.781\\,{\\scriptsize(0.004)} & 0.003\\,{\\scriptsize(0.016)}\n& -- & \\textcolor{tiedgray}{\\textbf{0.064}}\\tnote{\\dag}\\,{\\scriptsize(0.036)} \\\\",
-      "after": "\\condStaged~\\citep{yang2022re3,wan2025cognitive}\n& 0.702\\,{\\scriptsize(0.005)} & -0.041\\,{\\scriptsize(0.012)}\n& 0.781\\,{\\scriptsize(0.004)} & 0.003\\,{\\scriptsize(0.016)}\n& N/A & \\textcolor{tiedgray}{\\textbf{0.064}}\\tnote{\\dag}\\,{\\scriptsize(0.036)} \\\\"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "N/A にしてみて pdf 見せてください",
-      "before": "\\condTaskPlanning~\\citep{xiong2025beyond}\n& 0.722\\,{\\scriptsize(0.004)} & -0.033\\,{\\scriptsize(0.033)}\n& 0.781\\,{\\scriptsize(0.003)} & -0.016\\,{\\scriptsize(0.061)}\n& -- & -0.164\\,{\\scriptsize(0.015)} \\\\",
-      "after": "\\condTaskPlanning~\\citep{xiong2025beyond}\n& 0.722\\,{\\scriptsize(0.004)} & -0.033\\,{\\scriptsize(0.033)}\n& 0.781\\,{\\scriptsize(0.003)} & -0.016\\,{\\scriptsize(0.061)}\n& N/A & -0.164\\,{\\scriptsize(0.015)} \\\\"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "N/A にしてみて pdf 見せてください",
-      "before": "\\textbf{\\condAgenticCogWriter}\n& \\textbf{0.747}\\,{\\scriptsize(0.006)} & \\textbf{0.102}\\,{\\scriptsize(0.040)}\n& \\textbf{0.791}\\,{\\scriptsize(0.005)} & \\textcolor{tiedgray}{\\textbf{0.013}}\\tnote{\\dag}\\,{\\scriptsize(0.060)}\n& -- & 0.031\\,{\\scriptsize(0.035)} \\\\",
-      "after": "\\textbf{\\condAgenticCogWriter}\n& \\textbf{0.747}\\,{\\scriptsize(0.006)} & \\textbf{0.102}\\,{\\scriptsize(0.040)}\n& \\textbf{0.791}\\,{\\scriptsize(0.005)} & \\textcolor{tiedgray}{\\textbf{0.013}}\\tnote{\\dag}\\,{\\scriptsize(0.060)}\n& N/A & 0.031\\,{\\scriptsize(0.035)} \\\\"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Table 3 の Alternative writing systems 行を削除し、Agentic CogWriter 前の区切り線は残す",
-      "before": "\\multicolumn{7}{l}{\\textit{Alternative writing systems}} \\\\\n",
-      "after": ""
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Table 3 の Native と Pointwise のヘッダだけ中央揃えにし、数値列は右揃えのままにする",
-      "before": "& \\textbf{Native $\\uparrow$} & \\textbf{Pointwise $\\uparrow$}\n& \\textbf{Native $\\uparrow$} & \\textbf{Pointwise $\\uparrow$}\n& \\textbf{Native $\\uparrow$} & \\textbf{Pointwise $\\uparrow$} \\\\",
-      "after": "& \\multicolumn{1}{c}{\\textbf{Native $\\uparrow$}} & \\multicolumn{1}{c}{\\textbf{Pointwise $\\uparrow$}}\n& \\multicolumn{1}{c}{\\textbf{Native $\\uparrow$}} & \\multicolumn{1}{c}{\\textbf{Pointwise $\\uparrow$}}\n& \\multicolumn{1}{c}{\\textbf{Native $\\uparrow$}} & \\multicolumn{1}{c}{\\textbf{Pointwise $\\uparrow$}} \\\\"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Table 3 の各セルを mean と小さい ± sample SD の表記にし、平均値の右揃えは維持する",
-      "before": "\\condSinglePass\n& 0.697\\,{\\scriptsize(0.006)} & -0.090\\,{\\scriptsize(0.009)}\n& 0.773\\,{\\scriptsize(0.005)} & -0.112\\,{\\scriptsize(0.018)}\n& N/A & -0.006\\,{\\scriptsize(0.018)} \\\\\n\\condStaged~\\citep{yang2022re3,wan2025cognitive}\n& 0.702\\,{\\scriptsize(0.005)} & -0.041\\,{\\scriptsize(0.012)}\n& 0.781\\,{\\scriptsize(0.004)} & 0.003\\,{\\scriptsize(0.016)}\n& N/A & \\textcolor{tiedgray}{\\textbf{0.064}}\\tnote{\\dag}\\,{\\scriptsize(0.036)} \\\\\n\\condTaskPlanning~\\citep{xiong2025beyond}\n& 0.722\\,{\\scriptsize(0.004)} & -0.033\\,{\\scriptsize(0.033)}\n& 0.781\\,{\\scriptsize(0.003)} & -0.016\\,{\\scriptsize(0.061)}\n& N/A & -0.164\\,{\\scriptsize(0.015)} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\\cmidrule(lr){3-3}\\cmidrule(lr){4-4}\\cmidrule(lr){5-5}\\cmidrule(lr){6-6}\\cmidrule(lr){7-7}\n\\textbf{\\condAgenticCogWriter}\n& \\textbf{0.747}\\,{\\scriptsize(0.006)} & \\textbf{0.102}\\,{\\scriptsize(0.040)}\n& \\textbf{0.791}\\,{\\scriptsize(0.005)} & \\textcolor{tiedgray}{\\textbf{0.013}}\\tnote{\\dag}\\,{\\scriptsize(0.060)}\n& N/A & 0.031\\,{\\scriptsize(0.035)} \\\\"
-      ,"after": "\\condSinglePass\n& 0.697\\,{\\scriptsize $\\pm$ 0.006} & -0.090\\,{\\scriptsize $\\pm$ 0.009}\n& 0.773\\,{\\scriptsize $\\pm$ 0.005} & -0.112\\,{\\scriptsize $\\pm$ 0.018}\n& N/A & -0.006\\,{\\scriptsize $\\pm$ 0.018} \\\\\n\\condStaged~\\citep{yang2022re3,wan2025cognitive}\n& 0.702\\,{\\scriptsize $\\pm$ 0.005} & -0.041\\,{\\scriptsize $\\pm$ 0.012}\n& 0.781\\,{\\scriptsize $\\pm$ 0.004} & 0.003\\,{\\scriptsize $\\pm$ 0.016}\n& N/A & \\textcolor{tiedgray}{\\textbf{0.064}}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036} \\\\\n\\condTaskPlanning~\\citep{xiong2025beyond}\n& 0.722\\,{\\scriptsize $\\pm$ 0.004} & -0.033\\,{\\scriptsize $\\pm$ 0.033}\n& 0.781\\,{\\scriptsize $\\pm$ 0.003} & -0.016\\,{\\scriptsize $\\pm$ 0.061}\n& N/A & -0.164\\,{\\scriptsize $\\pm$ 0.015} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\\cmidrule(lr){3-3}\\cmidrule(lr){4-4}\\cmidrule(lr){5-5}\\cmidrule(lr){6-6}\\cmidrule(lr){7-7}\n\\textbf{\\condAgenticCogWriter}\n& \\textbf{0.747}\\,{\\scriptsize $\\pm$ 0.006} & \\textbf{0.102}\\,{\\scriptsize $\\pm$ 0.040}\n& \\textbf{0.791}\\,{\\scriptsize $\\pm$ 0.005} & \\textcolor{tiedgray}{\\textbf{0.013}}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.060}\n& N/A & 0.031\\,{\\scriptsize $\\pm$ 0.035} \\\\"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Table 3 の caption を mean ± sample SD と明示する",
-      "before": "\\caption{Document-quality scores, mean (sample SD in small type) across \\ThreeRunCount\\ generation runs. Native uses each benchmark's criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}",
-      "after": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across \\ThreeRunCount\\ generation runs. Native uses each benchmark's criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}"
-    },
-    {
-      "path": "paper/tab/ablation-results.tex",
-      "instruction": "Table 5 の Ablations グループ見出しを削除する",
-      "before": "\\multicolumn{5}{l}{\\textit{Ablations}} \\\\\n",
-      "after": ""
-    },
-    {
-      "path": "paper/tab/ablation-results.tex",
-      "instruction": "Table 5 の Bundled execution diagnostic グループ見出しを削除し、Single-writer 前の区切り線は残す",
-      "before": "\\multicolumn{5}{l}{\\textit{Bundled execution diagnostic}} \\\\\n",
-      "after": ""
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Table 3 の mean ± sample SD 表記を保ったまま横幅に収めるため、列間余白だけを詰める",
-      "before": "\\setlength{\\tabcolsep}{3.0pt}",
-      "after": "\\setlength{\\tabcolsep}{1.75pt}"
+      "instruction": "±のところ含めて灰色とかになってないですね？修正しましょう",
+      "before": "\\textcolor{tiedgray}{\\textbf{0.013}}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.060}",
+      "after": "\\textcolor{tiedgray}{\\textbf{0.013}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.060}}"
     }
   ],
   "created_files": []
