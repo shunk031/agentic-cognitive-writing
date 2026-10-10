@@ -18,6 +18,12 @@
       "instruction": "Align the Discussion with Table 3's displayed-system scope and the paired DoLoMiTes evidence: Staged has the highest displayed DoLoMiTes pointwise mean, but its paired interval does not separate it from our system.",
       "before": "The system ranks first on WritingBench and HelloBench pointwise metrics but not DoLoMiTes, while pairwise evaluation favors it over single-pass generation, fixed writing stages, and adaptive task planning on every benchmark.",
       "after": "The system has the highest displayed means on WritingBench and HelloBench, whereas \\condStaged has the highest DoLoMiTes pointwise mean without a paired interval separating it from our system; pairwise evaluation favors our system over single-pass generation, fixed writing stages, and adaptive task planning on every benchmark."
+    },
+    {
+      "path": "paper/sec/06_discussion.tex",
+      "instruction": "Preserve a visible word boundary after the Staged macro in the rendered Discussion sentence; without an explicit TeX space, the PDF renders 'Stagedhas', which is a reader-facing typography error introduced by this batch.",
+      "before": "The system has the highest displayed means on WritingBench and HelloBench, whereas \\condStaged has the highest DoLoMiTes pointwise mean without a paired interval separating it from our system; pairwise evaluation favors our system over single-pass generation, fixed writing stages, and adaptive task planning on every benchmark.",
+      "after": "The system has the highest displayed means on WritingBench and HelloBench, whereas \\condStaged\\ has the highest DoLoMiTes pointwise mean without a paired interval separating it from our system; pairwise evaluation favors our system over single-pass generation, fixed writing stages, and adaptive task planning on every benchmark."
     }
   ],
   "created_files": []
