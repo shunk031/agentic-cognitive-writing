@@ -96,6 +96,18 @@
       "instruction": "Restore the standalone Table 7 caption by naming both path groups explicitly while retaining aggregation dimensions and the observational non-causal qualification.",
       "before": "\\caption{Similar win rates appear for both process-path groups against \\condFixedOrder\\ and \\condSingleWriter. Within each group and comparison, W/L/T are summed over benchmarks and all three runs before $W/(W+L)$. The split is observational, not causal.}",
       "after": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins/losses summed across benchmarks and three runs for each path group and comparison; the split is observational, not causal.}"
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Remove the source-only blank line left after deleting the Complete process paths row label so the table source matches the reviewed compact form.",
+      "before": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\nCycle-compliant path",
+      "after": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\nCycle-compliant path"
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Remove the source-only blank line left after deleting the Non-exclusive indicators row label so the table source matches the reviewed compact form.",
+      "before": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\nReview followed by renewed Translating",
+      "after": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\nReview followed by renewed Translating"
     }
   ],
   "created_files": []
