@@ -1,17 +1,11 @@
 {
-  "baseline_sha": "754ccb773e60aed23f018bb03d7c5ba21df1eee8",
+  "baseline_sha": "a3e3bfe5a72a3d62773e3c084629946201fafb00",
   "replacements": [
     {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "±のところ含めて灰色とかになってないですね？修正しましょう",
-      "before": "\\textcolor{tiedgray}{\\textbf{0.064}}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}",
-      "after": "\\textcolor{tiedgray}{\\textbf{0.064}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}}"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "±のところ含めて灰色とかになってないですね？修正しましょう",
-      "before": "\\textcolor{tiedgray}{\\textbf{0.013}}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.060}",
-      "after": "\\textcolor{tiedgray}{\\textbf{0.013}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.060}}"
+      "path": "paper/acl_latex.tex",
+      "instruction": "footnote の継続行を本文開始位置に揃え、本文を左揃えにし、\\@makefntext を直接上書きせず標準的な footnote 設定機構を使う",
+      "before": "\\usepackage{tcolorbox}\n\\tcbuselibrary{breakable}",
+      "after": "\\usepackage{tcolorbox}\n\\usepackage[hang,ragged]{footmisc}\n\\tcbuselibrary{breakable}"
     }
   ],
   "created_files": []
