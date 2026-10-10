@@ -180,7 +180,7 @@ def check() -> None:
     for path, text, count in (
         ("tab/pairwise-results.tex", pairwise, 12),
         ("tab/ablation-results.tex", ablation, 12),
-        ("tab/process-dynamics.tex", process, 3),
+        ("tab/process-dynamics.tex", process, 5),
         ("tab/trace-outcome.tex", trace, 4),
     ):
         values = percentages(tabular_body(text))
@@ -215,8 +215,11 @@ def check() -> None:
         "tab/ablation-results.tex: displayed rates are stale relative to numbers.tex"
     )
 
+    cycle_rate = percent_macro(numbers, "AfourCycleCompliantRate")
     expected_process = [
-        f"{percent_macro(numbers, 'AfourCycleCompliantRate'):.1f}",
+        f"{cycle_rate:.1f}",
+        f"{100.0 - cycle_rate:.1f}",
+        f"{percent_macro(numbers, 'AfourReviewingToTranslatingRate'):.1f}",
         f"{percent_macro(numbers, 'AfourReviewingToPlanningRate'):.1f}",
         f"{100 * numeric_macro(numbers, 'AfourRegenerationRuns') / numeric_macro(numbers, 'AfourRunCount'):.1f}",
     ]
