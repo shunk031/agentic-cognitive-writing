@@ -20,7 +20,7 @@ RUN set -eu; \
         echo "Trying TeX Live repository: ${repository}" >&2; \
         if tlmgr option repository "${repository}" \
             && tlmgr update --self \
-            && tlmgr install inconsolata dblfloatfix sttools epigraph nextpage helvetic fvextra tcolorbox pdfcol threeparttable; then \
+            && tlmgr install inconsolata dblfloatfix sttools epigraph nextpage helvetic fvextra tcolorbox pdfcol threeparttable footmisc; then \
             exit 0; \
         fi; \
         echo "TeX Live repository failed: ${repository}" >&2; \
