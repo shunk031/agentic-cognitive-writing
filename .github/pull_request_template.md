@@ -1,4 +1,4 @@
-## Background / Why
+## Background
 <!-- Explain the problem, reader/user-facing failure mode, and why this change is needed. Do not only restate the diff. -->
 
 ## Summary
