@@ -1,0 +1,8 @@
+\section*{Ethical considerations}
+\label{sec:ethical-considerations}
+
+Agentic long-form writing can support the organization and revision of complex documents, but the same capability can also scale persuasive or misleading text and amplify unsupported claims or biases inherited from the underlying model.
+Process decomposition and reviewing do not provide factuality or safety guarantees, and the system should not be treated as an autonomous authority for high-stakes writing.
+Our experiments disable external retrieval and study benchmark tasks rather than deployment; downstream use should retain human verification and domain-appropriate safeguards.
+Multi-step agent execution also makes additional model calls and can increase computational cost relative to one-pass generation, so we report token and runtime statistics to make this tradeoff visible.
+We recruited no human annotators or participants and collected no new personal data; the study reuses published benchmark artifacts under their released terms, as documented in Appendix~\ref{app:prompts}.
