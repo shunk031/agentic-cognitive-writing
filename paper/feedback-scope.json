@@ -4,19 +4,19 @@
     {
       "path": "paper/tab/main-results.tex",
       "instruction": "Remove the redundant Table 3 row-group label 'Alternative writing systems'; the three alternative rows are already identified in the surrounding text and separated visually from Agentic CogWriter.",
-      "before": "\\multicolumn{7}{l}{\\textit{Alternative writing systems}} \\\\",
+      "before": "\\multicolumn{7}{l}{\\textit{Alternative writing systems}} \\\\\n",
       "after": ""
     },
     {
       "path": "paper/tab/ablation-results.tex",
       "instruction": "Remove the Table 5 row-group labels 'Ablations' and 'Bundled execution diagnostic' to save vertical space, while preserving in the caption that NoGoals and FixedOrder are ablations and SingleWriter is a bundled execution diagnostic.",
-      "before": "\\multicolumn{5}{l}{\\textit{Ablations}} \\\\",
+      "before": "\\multicolumn{5}{l}{\\textit{Ablations}} \\\\\n",
       "after": ""
     },
     {
       "path": "paper/tab/ablation-results.tex",
       "instruction": "Remove the second Table 5 row-group label while retaining the separator before SingleWriter.",
-      "before": "\\multicolumn{5}{l}{\\textit{Bundled execution diagnostic}} \\\\",
+      "before": "\\multicolumn{5}{l}{\\textit{Bundled execution diagnostic}} \\\\\n",
       "after": ""
     },
     {
@@ -28,14 +28,14 @@
     {
       "path": "paper/tab/process-dynamics.tex",
       "instruction": "Remove the redundant Table 6 row-group label 'Complete process paths'; the caption already states that the first two rows partition complete process paths.",
-      "before": "\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\",
+      "before": "\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\\n",
       "after": ""
     },
     {
       "path": "paper/tab/process-dynamics.tex",
       "instruction": "Remove the redundant Table 6 row-group label 'Non-exclusive indicators' and the now-unneeded full-width separator; retain a small vertical gap and the caption's explicit distinction between the two row groups.",
-      "before": "\\addlinespace[2pt]\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\",
-      "after": "\\addlinespace[2pt]"
+      "before": "\\addlinespace[2pt]\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\\n",
+      "after": "\\addlinespace[2pt]\n"
     }
   ],
   "created_files": []
