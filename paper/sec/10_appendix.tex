@@ -70,9 +70,10 @@ We therefore report the combined estimate with its interval and the benchmark-le
 
 \subsection{Cross-Family Judge Robustness}
 \label{app:cross-family}
-Table~\ref{tab:appendix-cross-family} reports combined outcomes for three cross-family robustness contrasts involving our system: \CrossFamilyFullSinglePassWLT\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ versus \condNoGoals.
+Table~\ref{tab:appendix-cross-family} reports benchmark-level results for three cross-family robustness contrasts involving our system.
+Within each contrast, summing W/L/T counts over the three benchmarks gives \CrossFamilyFullSinglePassWLT\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ versus \condNoGoals.
 The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval.
-The judge yields a non-tied combined outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ overall W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
+Across all three selected contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
 \input{tab/appendix-cross-family}
 
 \section{Consensus-Writing Evaluation on Habermas Machine Data}
