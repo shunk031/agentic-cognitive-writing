@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Check rendered caption length and report sparse paragraph endings.
 
-Captions remain a hard CI guard. Paragraph density is report-only for now. The
-PDF text extractor may merge adjacent paragraphs into one block, so prose blocks
-are split at rendered first-line indents before checking their final lines.
-Rendered footnote markers are ignored when recognizing paragraph endings and
-counting words on a final line.
+Caption line count and sparse caption endings are hard CI guards. Paragraph
+density is report-only for now. The PDF text extractor may merge adjacent
+paragraphs into one block, so prose blocks are split at rendered first-line
+indents before checking their final lines. Rendered footnote markers are ignored
+when recognizing paragraph endings and counting words on a final line.
 """
 
 from __future__ import annotations
@@ -264,11 +264,23 @@ def main() -> None:
     for block in caption_runts:
         label = CAPTION_RE.match(block.text).group(0).strip()
         print(
-            f"  WARN {label}: lines={block.line_count}, "
+            f"  ERROR {label}: lines={block.line_count}, "
             f"last_words={block.last_words}, last_fill={block.last_fill:.0%}, "
             f"last='{block.lines[-1][:70]}'"
         )
     print(f"Full layout report: {report_path}")
+    assert not caption_runts, (
+        "rendered main-text captions must not end in sparse runt lines",
+        [
+            (
+                CAPTION_RE.match(block.text).group(0).strip(),
+                block.last_words,
+                round(block.last_fill, 3),
+                block.lines[-1],
+            )
+            for block in caption_runts
+        ],
+    )
 
 
 if __name__ == "__main__":
