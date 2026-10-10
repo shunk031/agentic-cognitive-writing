@@ -40,16 +40,13 @@ The narrower post-hoc \condSingleContext\ check shows no significant difference 
 \subsection{Observed Writing-Process Behavior}
 \label{sec:results-process-dynamics}
 
-Table~\ref{tab:process-dynamics} shows that the adaptive writing loop usually follows a simple process path: 74.6\% of traces are cycle-compliant with the Planning--Translating--Reviewing order, while a return from Review to Translating occurs in 14.8\% of runs.
-Full replanning after Review is rare (0.3\%), as is replacing an existing goal (0.5\%), so our system uses its adaptive control more often for targeted redrafting than for full replanning.
-This pattern is consistent with the small exploratory advantage over \condFixedOrder: adaptive ordering can help only when the controller departs from the common path.
+Table~\ref{tab:process-dynamics} shows a mostly simple writing loop: 74.6\% of traces follow Planning--Translating--Reviewing, while 14.8\% return from Review to Translating.
+Full replanning (0.3\%) and goal replacement (0.5\%) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over \condFixedOrder\ because ordering can matter only when the controller departs from the common path.
 
 \input{tab/process-dynamics}
 
-Figure~\ref{fig:process-sequences} shows the same concentration at the sequence and transition levels.
-The most frequent complete process path is the forward planning--drafting--reviewing progression, and our system is visually close to \condFixedOrder\ because much of the observed behavior follows that path.
-The demanding-subset selection increases input length, requested output length, or procedural burden, but it does not guarantee that every task intrinsically requires replanning.
-The traces therefore show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing in general.
+Figure~\ref{fig:process-sequences} shows the same concentration: the forward planning--drafting--reviewing progression is most frequent, making our system visually close to \condFixedOrder.
+Because the demanding subsets increase input or requested output length or procedural burden without guaranteeing a need to replan, the traces show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing.
 
 \begin{figure*}[t]
 \centering
@@ -65,13 +62,11 @@ The traces therefore show that adaptive control is rarely exercised on these sub
 \includegraphics[width=\linewidth]{fig/process-sequences-c.pdf}\\[-0.1em]
 \small (c) \condFixedOrder
 \end{minipage}
-\caption{Observed writing-process trajectories.
-Panel (a) shows the most frequent complete paths; panels (b) and (c) show transition counts for \condAgenticCogWriter\ and \condFixedOrder.
-Our system mostly follows the same forward Planning--Translating--Reviewing progression as \condFixedOrder; returns to Translating are more common than returns to Planning, consistent with the small exploratory advantage of adaptive ordering.}
+\caption{Observed writing-process trajectories: panel (a) shows frequent complete paths; panels (b) and (c) show transition counts for \condAgenticCogWriter\ and \condFixedOrder. Our system mostly follows the same forward Planning--Translating--Reviewing progression as \condFixedOrder; more returns to Translating than Planning are consistent with the small exploratory advantage of adaptive ordering.}
 \label{fig:process-sequences}
 \end{figure*}
 
-Table~\ref{tab:trace-outcome} shows that observed departures from the common process path do not yield a larger quality advantage: runs that complete exactly one planning--drafting--reviewing cycle have similar pairwise win rates against \condFixedOrder\ and \condSingleWriter\ to runs that take any other path.
-Because the split is observational rather than randomized, it cannot establish whether a different path improves or worsens output.\footnote{See Appendix~\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}
+Table~\ref{tab:trace-outcome} shows similar pairwise win rates against \condFixedOrder\ and \condSingleWriter\ for one planning--drafting--reviewing cycle and other paths, so observed departures do not yield a larger quality advantage.
+Because the split is observational, it cannot establish whether path choice affects output quality.\footnote{See Appendix~\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}
 
 \input{tab/trace-outcome}
