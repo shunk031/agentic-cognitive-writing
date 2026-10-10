@@ -13,7 +13,7 @@ WritingBench native scores are rescaled to 0--1 for display, and the common-rubr
 
 Table~\ref{tab:pairwise-results} reports a system-level separation in direct same-prompt comparisons.
 \condAgenticCogWriter\ is preferred to \condSinglePass, \condStaged, and \condTaskPlanning, with across-benchmark mean win rates of \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean, respectively, among order-consistent comparisons.
-The direction holds in every benchmark and generation run against \condSinglePass\ and \condTaskPlanning, and in all but one benchmark--run test against \condStaged.\footnote{See Appendix~\ref{app:pairwise-detail} for the run-level intervals and corrected test decisions.}
+The direction holds in every benchmark and generation run against \condSinglePass\ and \condTaskPlanning, and in all but one benchmark--run test against \condStaged.\footnote{See Appendix~\ref{app:pairwise-detail} for run-level intervals and corrected results.}
 The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare, \UncondFullStagedWinShare, and \UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate, \WorstCaseFullStagedRate, and \WorstCaseFullTaskPlanningRate\ among order-consistent comparisons.\footnote{See Appendix~\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \condSinglePass.}
 
 \input{tab/pairwise-results}
@@ -75,6 +75,6 @@ Our system mostly follows the same forward Planning--Translating--Reviewing prog
 
 Observed departures from the common process path do not show a larger quality advantage.
 Table~\ref{tab:trace-outcome} compares runs that complete exactly one planning--drafting--reviewing cycle with runs that take any other path and finds similar pairwise win rates against \condFixedOrder\ and \condSingleWriter.
-Because the split is observational rather than randomized, it cannot establish whether a different path improves or worsens output.\footnote{See Appendix~\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}
+Because the split is observational rather than randomized, it cannot establish whether a different path improves or worsens output.\footnote{See Appendix~\ref{app:process-behavior} for process counts, goal events, and resource use.}
 
 \input{tab/trace-outcome}
