@@ -28,6 +28,7 @@ The condition preserves the full process loop and shared state but executes each
 
 We use three benchmarks to test whether process-level organization transfers across different forms of long-form writing: (1) WritingBench~\citep{wu2026writingbench}, which covers broad real-world writing requests with task-specific evaluation criteria; (2) HelloBench~\citep{que2024hellobench}, which includes long-text summarization, open-ended generation, and completion; and (3) DoLoMiTes~\citep{malaviya2025dolomites}, which targets methodical expert writing with explicit objectives, procedures, inputs, and constraints.
 We evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document.
+
 We first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts.
 From the remaining benchmark items, we deterministically prioritize cases with longer supplied context and, when the prompt specifies a target length, longer requested output, while applying fixed maximum-length limits.
 This produces a different demanding subset for each benchmark: WritingBench emphasizes long inputs with explicit long-output requirements, HelloBench emphasizes very long-input summarization and continuation, and DoLoMiTes emphasizes procedurally constrained expert writing.\footnote{See Appendix~\ref{app:prompts} for the exact selection rule, sample sizes, and sensitivity analysis.}
