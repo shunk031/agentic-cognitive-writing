@@ -1,16 +1,16 @@
 \begin{table*}[t]
 \centering
 \small
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{lrrrrrr}
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}lrrrrrr@{}}
 \toprule
 \textbf{Condition}
-& \shortstack{\textbf{Mean median}\\\textbf{units}}
-& \shortstack{\textbf{Mean spawns}\\\textbf{/attempt}}
-& \shortstack{\textbf{Mean goal events/run}\\\textbf{created/developed/regenerated}}
-& \shortstack{\textbf{Mean output}\\\textbf{tokens/attempt}}
-& \shortstack{\textbf{Mean input}\\\textbf{tokens/attempt}}
-& \shortstack{\textbf{Mean sec.}\\\textbf{/completed run}} \\
+& \shortstack{\textbf{Median}\\\textbf{units}}
+& \shortstack{\textbf{Spawns}\\\textbf{/attempt}}
+& \shortstack{\textbf{Mean goals/run}\\\textbf{C/D/R}}
+& \shortstack{\textbf{Output tokens}\\\textbf{/attempt}}
+& \shortstack{\textbf{Input tokens}\\\textbf{/attempt}}
+& \shortstack{\textbf{Sec.}\\\textbf{/completed}} \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}\cmidrule(lr){7-7}
 \condSinglePass & \AoneMedianOutputMean & \AoneSpawnsMean & \AoneGoalCreatedMean/\AoneGoalDevelopedMean/\AoneGoalRegeneratedMean & \AoneOutputTokensMean & \AoneInputTokensMean & \AoneMeanSecondsMean \\
 \condStaged & \AtwoMedianOutputMean & \AtwoSpawnsMean & \AtwoGoalCreatedMean/\AtwoGoalDevelopedMean/\AtwoGoalRegeneratedMean & \AtwoOutputTokensMean & \AtwoInputTokensMean & \AtwoMeanSecondsMean \\
@@ -22,6 +22,6 @@
 \condSingleWriter & \AsevenMedianOutputMean & \AsevenSpawnsMean & \AsevenGoalCreatedMean/\AsevenGoalDevelopedMean/\AsevenGoalRegeneratedMean & \AsevenOutputTokensMean & \AsevenInputTokensMean & \AsevenMeanSecondsMean \\
 \bottomrule
 \end{tabular}
-\caption{Process and resource summaries across all three generation runs. Each cell averages the corresponding run-level summary; output units averages the three run-level medians. Goal entries are mean event totals per generation run. Token values are per attempted run and wall-clock time per completed run.}
+\caption{Process and resource summaries across all three generation runs. Each cell averages the corresponding run-level summary; output units averages the three run-level medians. C/D/R denotes created/developed/regenerated goal events per generation run. Token values are per attempted run and wall-clock time per completed run.}
 \label{tab:process-summary}
 \end{table*}
