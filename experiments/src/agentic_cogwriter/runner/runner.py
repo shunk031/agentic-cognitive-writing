@@ -83,6 +83,10 @@ _GENERATOR_CONFIG_ALLOWLIST = {
     "codex": ("config.toml", "auth.json"),
     "claude-code": (".credentials.json",),
 }
+_CLAUDE_CODE_USE_BEDROCK = "CLAUDE_CODE_USE_BEDROCK"
+_ANTHROPIC_MODEL = "ANTHROPIC_MODEL"
+_AWS_SESSION_TOKEN = "AWS_SESSION_TOKEN"
+_GEN_AI_GATEWAY_PAT = "GEN_AI_GATEWAY_PAT"
 _GUIDANCE_MARKERS = ("AGENTS.md", "CLAUDE.md", ".claude", ".codex")
 _STAGE_TOKEN_PATTERN = re.compile(r"\{\{([^{}]+)\}\}")
 _SHARED_STAGE_INPUT_BLOCK = re.compile(
@@ -574,6 +578,17 @@ class ExperimentRunner:
 
         child_environment = dict(os.environ)
         child_environment[_GENERATOR_CONFIG_ENV[platform]] = str(config_root.resolve())
+        if platform == "claude-code":
+            child_environment[_CLAUDE_CODE_USE_BEDROCK] = "1"
+            child_environment[_ANTHROPIC_MODEL] = self.runtime_config.model_for(
+                platform
+            )
+            if _AWS_SESSION_TOKEN not in child_environment and child_environment.get(
+                _GEN_AI_GATEWAY_PAT
+            ):
+                child_environment[_AWS_SESSION_TOKEN] = child_environment[
+                    _GEN_AI_GATEWAY_PAT
+                ]
         return config_root, child_environment
 
     def _sweep_stale_generator_configs(self) -> None:
