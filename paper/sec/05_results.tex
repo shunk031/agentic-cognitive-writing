@@ -18,8 +18,7 @@ The preference also persists under more conservative accounting: counting every 
 
 \input{tab/pairwise-results}
 
-The direct-comparison result supports the tested system as a whole rather than a single mechanism.
-Our system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \texttt{Monitor}.
+The direct-comparison result supports the tested system as a whole because our system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \texttt{Monitor}.
 The ablations below test whether explicit goals or adaptive process order explain these differences.
 
 \subsection{Ablations and Execution Diagnostics}
@@ -41,8 +40,7 @@ The narrower post-hoc \condSingleContext\ check shows no significant difference 
 \subsection{Observed Writing-Process Behavior}
 \label{sec:results-process-dynamics}
 
-The adaptive writing loop usually follows a simple process path.
-Table~\ref{tab:process-dynamics} shows that 74.6\% of traces are cycle-compliant with the Planning--Translating--Reviewing order, while a return from Review to Translating occurs in 14.8\% of runs.
+Table~\ref{tab:process-dynamics} shows that the adaptive writing loop usually follows a simple process path: 74.6\% of traces are cycle-compliant with the Planning--Translating--Reviewing order, while a return from Review to Translating occurs in 14.8\% of runs.
 Full replanning after Review is rare (0.3\%), as is replacing an existing goal (0.5\%), so our system uses its adaptive control more often for targeted redrafting than for full replanning.
 This pattern is consistent with the small exploratory advantage over \condFixedOrder: adaptive ordering can help only when the controller departs from the common path.
 
@@ -73,8 +71,7 @@ Our system mostly follows the same forward Planning--Translating--Reviewing prog
 \label{fig:process-sequences}
 \end{figure*}
 
-Observed departures from the common process path do not show a larger quality advantage.
-Table~\ref{tab:trace-outcome} compares runs that complete exactly one planning--drafting--reviewing cycle with runs that take any other path and finds similar pairwise win rates against \condFixedOrder\ and \condSingleWriter.
+Table~\ref{tab:trace-outcome} shows that observed departures from the common process path do not yield a larger quality advantage: runs that complete exactly one planning--drafting--reviewing cycle have similar pairwise win rates against \condFixedOrder\ and \condSingleWriter\ to runs that take any other path.
 Because the split is observational rather than randomized, it cannot establish whether a different path improves or worsens output.\footnote{See Appendix~\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}
 
 \input{tab/trace-outcome}
