@@ -5,6 +5,13 @@ Each remaining prompt is ranked by prompt word count plus the largest requested 
 The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts.
 Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.
 
+\paragraph{Artifact provenance and terms.}
+We use pinned snapshots of WritingBench (Apache-2.0), HelloBench (MIT), and DoLoMiTes (CC BY 4.0 for the benchmark materials); the exploratory Habermas Machine analysis likewise uses CC BY 4.0 materials.
+The corresponding source commits or archives, content hashes, and transformation notes are recorded in the experiment provenance manifest.
+We use these artifacts only for research evaluation under their released terms and redistribute only the derived prompt manifests described by that provenance record rather than hidden reference outputs or additional source data.
+For the Habermas Machine tasks, the materialized prompts omit source participant identifiers.
+We did not conduct an independent audit of the source benchmarks for offensive content or latent personal information beyond the transformations used to construct the evaluation prompts.
+
 The three selected subsets stress different properties of long-form writing.
 WritingBench combines long inputs with explicit long-output requirements, HelloBench contributes primarily very long-input summarization and continuation tasks, and DoLoMiTes contributes methodical expert tasks with structured procedural constraints.
 The \texttt{hard100} name identifies the deterministic length-and-demand rule rather than a claim that every prompt has the same source of semantic difficulty.
