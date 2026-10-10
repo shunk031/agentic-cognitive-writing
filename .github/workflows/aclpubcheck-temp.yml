@@ -29,9 +29,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build manuscript
-        working-directory: paper
-        run: ./tools/build-pdf.sh
+      - name: Build line-number-free validation copy
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("paper/acl_latex.tex")
+          text = path.read_text()
+          old = r"\usepackage[review]{acl}"
+          new = r"\usepackage[final]{acl}"
+          if text.count(old) != 1:
+              raise SystemExit("expected exactly one review-mode ACL package declaration")
+          path.write_text(text.replace(old, new, 1))
+          PY
+          cd paper
+          ./tools/build-pdf.sh
 
       - name: Run ACL pubcheck
         shell: bash
