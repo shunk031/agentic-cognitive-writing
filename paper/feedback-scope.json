@@ -1,11 +1,23 @@
 {
-  "baseline_sha": "eea138e433487ac921ae3a83aa0f38980977bf7f",
+  "baseline_sha": "2fa3a1fd534f5f894633e5bf363db81bd1c38a42",
   "replacements": [
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Split the benchmark subset rationale from the selection-procedure details to satisfy the paragraph-length guard, without restoring the deleted redundant benchmark-summary sentence or changing any prose.",
-      "before": "We evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document.\nWe first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts.",
-      "after": "We evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document.\n\nWe first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts."
+      "path": "paper/sec/06_discussion.tex",
+      "instruction": "Remove the benchmark-by-benchmark score recap from Discussion because those results are already reported in Results, while retaining the discussion-level synthesis that direct same-prompt preference is the clearest advantage and the interpretation that process-level control need not maximize every metric.",
+      "before": "Tables~\\ref{tab:main-results} and~\\ref{tab:pairwise-results} show that the clearest advantage of \\condAgenticCogWriter\\ is not uniform dominance under every pointwise score, but consistent preference in direct same-prompt comparisons.\nThe system has the highest displayed means on WritingBench and HelloBench, whereas \\condStaged\\ has the highest DoLoMiTes pointwise mean without a paired interval separating it from our system; pairwise evaluation favors our system over single-pass generation, fixed writing stages, and adaptive task planning on every benchmark.\nThe pattern supports process-level control as a useful way to organize long-form generation without requiring it to maximize every benchmark-specific metric.",
+      "after": "Tables~\\ref{tab:main-results} and~\\ref{tab:pairwise-results} show that the clearest advantage of \\condAgenticCogWriter\\ is not uniform dominance under every pointwise score, but consistent preference in direct same-prompt comparisons.\nThe pattern supports process-level control as a useful way to organize long-form generation without requiring it to maximize every benchmark-specific metric."
+    },
+    {
+      "path": "paper/sec/06_discussion.tex",
+      "instruction": "Combine the repeated ablation and execution-diagnostic evidence into one sentence while preserving the near-parity No-goals/Fixed-order result, the larger Single-writer gap, and the fact that the post-hoc Single-context diagnostic does not isolate subagent delegation.",
+      "before": "Removing the goal representation or fixing the process order leaves performance near the full system, whereas the larger \\condSingleWriter\\ gap points to execution structure as another candidate explanation.\nThe post-hoc \\condSingleContext\\ diagnostic, however, does not reduce that difference to subagent delegation alone.",
+      "after": "Near-parity results for \\condNoGoals\\ and \\condFixedOrder\\ and the larger \\condSingleWriter\\ gap point to execution structure as another candidate explanation, but the post-hoc \\condSingleContext\\ diagnostic does not reduce that gap to subagent delegation alone."
+    },
+    {
+      "path": "paper/sec/06_discussion.tex",
+      "instruction": "Merge the Figure 2/Table 6 setup with its immediately following finding so the first sentence both names the evidence and states the finding, preserving the selective-adaptivity interpretation and the comparison to continual replanning.",
+      "before": "Figure~\\ref{fig:process-sequences} and Table~\\ref{tab:process-dynamics} add a complementary view of adaptivity.\n\\condAgenticCogWriter\\ usually follows planning--drafting--reviewing and departs from that path only selectively, so process-level control should not be equated with continual replanning.",
+      "after": "Figure~\\ref{fig:process-sequences} and Table~\\ref{tab:process-dynamics} show that \\condAgenticCogWriter\\ usually follows planning--drafting--reviewing and departs from that path only selectively, so process-level control should not be equated with continual replanning."
     }
   ],
   "created_files": []
