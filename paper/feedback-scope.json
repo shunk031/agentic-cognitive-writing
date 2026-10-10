@@ -30,6 +30,12 @@
       "instruction": "Table 3 の Alternative writing systems 行を削除し、Agentic CogWriter 前の区切り線は残す",
       "before": "\\multicolumn{7}{l}{\\textit{Alternative writing systems}} \\\\\n",
       "after": ""
+    },
+    {
+      "path": "paper/tab/main-results.tex",
+      "instruction": "Table 3 の Native と Pointwise のヘッダだけ中央揃えにし、数値列は右揃えのままにする",
+      "before": "& \\textbf{Native $\\uparrow$} & \\textbf{Pointwise $\\uparrow$}\n& \\textbf{Native $\\uparrow$} & \\textbf{Pointwise $\\uparrow$}\n& \\textbf{Native $\\uparrow$} & \\textbf{Pointwise $\\uparrow$} \\\\",
+      "after": "& \\multicolumn{1}{c}{\\textbf{Native $\\uparrow$}} & \\multicolumn{1}{c}{\\textbf{Pointwise $\\uparrow$}}\n& \\multicolumn{1}{c}{\\textbf{Native $\\uparrow$}} & \\multicolumn{1}{c}{\\textbf{Pointwise $\\uparrow$}}\n& \\multicolumn{1}{c}{\\textbf{Native $\\uparrow$}} & \\multicolumn{1}{c}{\\textbf{Pointwise $\\uparrow$}} \\\\"
     }
   ],
   "created_files": []
