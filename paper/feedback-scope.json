@@ -1,17 +1,23 @@
 {
-  "baseline_sha": "754ccb773e60aed23f018bb03d7c5ba21df1eee8",
+  "baseline_sha": "a14a3a8b50d9d3f1d5eeb5abae865b42fa1d37b8",
   "replacements": [
     {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "±のところ含めて灰色とかになってないですね？修正しましょう",
-      "before": "\\textcolor{tiedgray}{\\textbf{0.064}}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}",
-      "after": "\\textcolor{tiedgray}{\\textbf{0.064}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}}"
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Render the named Fixed-order process sequence as ordinary prose rather than typewriter text separated by math-mode arrows, preserving the same process names and order while allowing more natural line breaking.",
+      "before": "\\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle",
+      "after": "Planning--Translating--Reviewing cycle"
     },
     {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "±のところ含めて灰色とかになってないですね？修正しましょう",
-      "before": "\\textcolor{tiedgray}{\\textbf{0.013}}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.060}",
-      "after": "\\textcolor{tiedgray}{\\textbf{0.013}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.060}}"
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Render the observed process sequence as ordinary prose rather than typewriter text separated by math-mode arrows so the Results sentence can wrap naturally without changing its meaning.",
+      "before": "\\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} order",
+      "after": "Planning--Translating--Reviewing order"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Render the Figure 2 caption process sequence as ordinary prose rather than typewriter text separated by math-mode arrows, preserving the same named forward progression while improving caption typography and wrapping.",
+      "before": "forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression",
+      "after": "forward Planning--Translating--Reviewing progression"
     }
   ],
   "created_files": []
