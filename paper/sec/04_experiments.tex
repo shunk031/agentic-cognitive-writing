@@ -6,7 +6,7 @@ We also examine how the writing loop behaves in practice.
 
 \paragraph{Alternative writing systems.}
 Among the seven pre-specified systems under the same generation setup, we compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ produces the complete document in one generation call; (2) \condStaged\ executes \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write}, following the common separation of planning, drafting, and revision~\citep{yang2022re3,wan2025cognitive}; and (3) \condTaskPlanning\ follows a WriteHERE-style adaptive task graph~\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes.
-The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas our system advances a writing process.
+Table~\ref{tab:experimental-conditions} shows that the alternatives advance a whole document, a fixed writing stage, or an adaptive task node, whereas our system advances a writing process.
 
 \paragraph{Ablations of \condAgenticCogWriter.}
 Two pre-specified ablations test whether explicit goals or adaptive ordering explain the full-system gain by changing one control mechanism while retaining the rest of the loop.
