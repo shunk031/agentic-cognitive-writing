@@ -36,8 +36,7 @@ This produces a different demanding subset for each benchmark: WritingBench emph
 \subsection{Implementation}
 \label{sec:implementation}
 
-All systems run in the same Codex-style coding-agent harness, using \modelGenBare\ as the generator and \modelJudgeBare\ as the primary evaluator.\footnote{We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work.
-Assigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.}
+All systems run in the same Codex-style coding-agent harness, using \modelGenBare\ as the generator and \modelJudgeBare\ as the primary evaluator.
 Holding the generator fixed across systems isolates writing organization rather than base-model capability.
 For a cross-family robustness check, we also rescore selected system comparisons with \modelCross.
 Our system is packaged as an agent skill: the top-level \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} through the harness's subagent mechanism.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
