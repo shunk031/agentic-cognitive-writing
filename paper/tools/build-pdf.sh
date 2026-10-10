@@ -53,7 +53,8 @@ image_has_required_packages() {
             fvextra.sty \
             tcolorbox.sty \
             pdfcol.sty \
-            threeparttable.sty; do
+            threeparttable.sty \
+            footmisc.sty; do
             kpsewhich "$style" >/dev/null
         done
         command -v pdftotext >/dev/null
