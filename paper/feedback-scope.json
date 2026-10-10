@@ -77,7 +77,7 @@
       "path": "paper/tab/trace-outcome.tex",
       "instruction": "Replace the hard-coded Table 7 process-path win rates with the existing process-sequence macros regenerated from the three-run process-sequences JSON.",
       "before": "Plan$\\rightarrow$draft$\\rightarrow$review\n& 57.4\\%\n& 72.2\\% \\\\\nOther path\n& 54.9\\%\n& 75.2\\% \\\\",
-      "after": "Plan$\\rightarrow$draft$\\rightarrow$review\n& \\AfourExactCycleFixedOrderWinRate\n& \\AfourExactCycleSingleWriterWinRate \\\\\nOther path\n& \\AfourNonExactFixedOrderWinRate\n& \\AfourNonExactSingleWriterWinRate \\\\"
+      "after": "Plan$\\rightarrow$draft$\\rightarrow$review\n& \\AfourExactCycleFixedOrderWinRate\n& \\AfourExactCycleSingleWriterWinRate \\\\\nOther path\n& \\AfourNonExactFixedOrderWinRate\n& \\AfourNonExactSingleWriterWinRate \\\\""
     },
     {
       "path": "paper/tab/pairwise-results.tex",
@@ -192,6 +192,12 @@
       "instruction": "Make the cross-family appendix prose explicit about benchmark-level versus contrast-level aggregation and replace combined/overall shorthand with order-consistent outcomes and the exact W/L/T scope.",
       "before": "Table~\\ref{tab:appendix-cross-family} reports combined outcomes for three cross-family robustness contrasts involving our system: \\CrossFamilyFullSinglePassWLT\\ versus \\condSinglePass, \\CrossFamilyFullTaskPlanningWLT\\ versus \\condTaskPlanning, and \\CrossFamilyFullNoGoalsWLT\\ versus \\condNoGoals.\nThe corresponding Wilson intervals are \\CrossFamilyFullSinglePassInterval, \\CrossFamilyFullTaskPlanningInterval, and \\CrossFamilyFullNoGoalsInterval.\nThe judge yields a non-tied combined outcome on \\CrossFamilyPooledCommitRate\\ of \\CrossFamilyPooledN\\ eligible pairs, with \\CrossFamilyPooledWLT\\ overall W/L/T; \\CrossFamilyPooledAgreement\\ prompt-level outcomes agree with the same-family judge.",
       "after": "Table~\\ref{tab:appendix-cross-family} reports benchmark-level results for three cross-family robustness contrasts involving our system.\nWithin each contrast, summing W/L/T counts over the three benchmarks gives \\CrossFamilyFullSinglePassWLT\\ versus \\condSinglePass, \\CrossFamilyFullTaskPlanningWLT\\ versus \\condTaskPlanning, and \\CrossFamilyFullNoGoalsWLT\\ versus \\condNoGoals.\nThe corresponding Wilson intervals are \\CrossFamilyFullSinglePassInterval, \\CrossFamilyFullTaskPlanningInterval, and \\CrossFamilyFullNoGoalsInterval.\nAcross all three selected contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on \\CrossFamilyPooledCommitRate\\ of \\CrossFamilyPooledN\\ eligible pairs, with \\CrossFamilyPooledWLT\\ W/L/T; \\CrossFamilyPooledAgreement\\ prompt-level outcomes agree with the same-family judge."
+    },
+    {
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Compact the explicit Table 4 aggregation definition after the rendered-caption guard found six lines, preserving the same aggregation order and reader takeaway.",
+      "before": "\\caption{Three-run mean same-prompt win rates for \\condAgenticCogWriter; above 50\\% favors our system. Across sums wins and losses over benchmarks within each run, computes $W/(W+L)$, then averages the three run-level rates. All benchmark-level rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}",
+      "after": "\\caption{Three-run mean same-prompt win rates for \\condAgenticCogWriter; above 50\\% favors our system. Across is the mean of three run-level $W/(W+L)$ rates after summing W/L over benchmarks within each run. All benchmark-level rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}"
     }
   ],
   "created_files": []
