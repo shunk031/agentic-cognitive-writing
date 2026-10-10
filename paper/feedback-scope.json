@@ -15,9 +15,9 @@
     },
     {
       "path": "paper/sec/05_results.tex",
-      "instruction": "脚注10の末尾の短い折り返しを避けるため、resource-use statistics を簡潔な resource use に言い換える",
+      "instruction": "脚注10の末尾の短い折り返しを避けるため、process counts・goal events・resource-use statistics の意味を保って簡潔にまとめる",
       "before": "\\footnote{See Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}",
-      "after": "\\footnote{See Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource use.}"
+      "after": "\\footnote{See Appendix~\\ref{app:process-behavior} for process, goal, and resource statistics.}"
     }
   ],
   "created_files": []
