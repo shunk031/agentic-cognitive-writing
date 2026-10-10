@@ -222,6 +222,12 @@
       "instruction": "Further compact the Table 4 caption after the rendered guard still found six lines, while keeping the reader-facing aggregation order explicit: sum benchmark W/L within each run, compute run-level W/(W+L), then average the three rates, and preserve the benchmark-level takeaway.",
       "before": "\\caption{Three-run mean same-prompt win rates for \\condAgenticCogWriter; above 50\\% favors our system. Across averages run-level $W/(W+L)$ after summing W/L over benchmarks. All benchmark-level rates exceed 50\\%; the largest mean margin is over \\condSinglePass.}",
       "after": "\\caption{Three-run mean same-prompt \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across sums benchmark W/L within each run, computes $W/(W+L)$, then averages the three rates. All benchmark rates exceed 50\\%; the largest mean margin is over \\condSinglePass.}"
+    },
+    {
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Remove the redundant system name from the Table 4 caption because the table header already identifies Agentic CogWriter, while retaining the same-prompt scope, the exact per-run aggregation order, and the benchmark-level takeaway so the caption can satisfy the five-line rendered guard.",
+      "before": "\\caption{Three-run mean same-prompt \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across sums benchmark W/L within each run, computes $W/(W+L)$, then averages the three rates. All benchmark rates exceed 50\\%; the largest mean margin is over \\condSinglePass.}",
+      "after": "\\caption{Three-run mean same-prompt win rates; above 50\\% favors our system. Across averages three run-level $W/(W+L)$ rates, each after summing benchmark W/L. All benchmark rates exceed 50\\%; the largest mean margin is over \\condSinglePass.}"
     }
   ],
   "created_files": []
