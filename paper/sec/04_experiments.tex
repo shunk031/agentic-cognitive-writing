@@ -1,5 +1,5 @@
-We compare the writing systems under the same task inputs and information policy to study three questions: whether process-level organization improves document quality, which components contribute to any advantage, and how the writing loop behaves in practice.
-We also use one post-hoc execution variant as a diagnostic.
+We compare the writing systems under the same task inputs and information policy to study whether process-level organization improves document quality and which components contribute to any advantage.
+We also examine how the writing loop behaves in practice.
 
 \subsection{Systems Compared}
 \label{sec:baselines}
@@ -9,9 +9,8 @@ Among the seven pre-specified systems under the same generation setup, we compar
 The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas our system advances a writing process.
 
 \paragraph{Ablations of \condAgenticCogWriter.}
-Two pre-specified ablations change one control mechanism while retaining the rest of the loop.
+Two pre-specified ablations test whether explicit goals or adaptive ordering explain the full-system gain by changing one control mechanism while retaining the rest of the loop.
 (4) \condNoGoals\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \condFixedOrder\ keeps the shared draft, goals, process history, and subagents but replaces the \texttt{Monitor}'s adaptive decision with a repeated \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle.
-The comparison tests whether explicit goals or adaptive ordering explain the full-system gain.
 
 \paragraph{Execution variant and full system.}
 (6) \condSingleWriter\ retains the goal representation and adaptive process loop but performs planning, drafting, and reviewing in one writer context without subagent delegation; it also limits each \texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.
