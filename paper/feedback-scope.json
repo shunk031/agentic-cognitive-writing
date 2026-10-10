@@ -9,21 +9,21 @@
     },
     {
       "path": "paper/tab/ablation-results.tex",
-      "instruction": "Remove the Table 5 row-group labels 'Ablations' and 'Bundled execution diagnostic' to save vertical space, while preserving in the caption that NoGoals and FixedOrder are ablations and SingleWriter is a bundled diagnostic.",
+      "instruction": "Remove the redundant Table 5 row-group label 'Ablations'; NoGoals and FixedOrder are already defined as the two pre-specified ablations in the surrounding manuscript.",
       "before": "\\multicolumn{5}{l}{\\textit{Ablations}} \\\\\n",
       "after": ""
     },
     {
       "path": "paper/tab/ablation-results.tex",
-      "instruction": "Remove the second Table 5 row-group label while retaining the separator before SingleWriter.",
+      "instruction": "Remove the redundant Table 5 row-group label 'Bundled execution diagnostic' while retaining the separator before SingleWriter; the manuscript already defines SingleWriter as diagnostic rather than a clean ablation.",
       "before": "\\multicolumn{5}{l}{\\textit{Bundled execution diagnostic}} \\\\\n",
       "after": ""
     },
     {
       "path": "paper/tab/ablation-results.tex",
-      "instruction": "Move the scientific distinction carried by the removed Table 5 group labels into a compact caption without changing the reported rates, aggregation scope, or takeaway.",
+      "instruction": "Keep the Table 5 caption concise after removing redundant group labels: preserve the aggregation scope and comparative takeaway without repeating the condition taxonomy already defined in the prose.",
       "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level rates after summing benchmark wins and losses. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}",
-      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; 50\\% is parity. Across averages per-run rates after summing benchmark wins/losses. \\condNoGoals\\ and \\condFixedOrder\\ are near-parity ablations; \\condSingleWriter\\ is a larger-gap bundled diagnostic.}"
+      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; 50\\% is parity. Across averages run-level rates after summing benchmark wins and losses. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}"
     },
     {
       "path": "paper/tab/process-dynamics.tex",
