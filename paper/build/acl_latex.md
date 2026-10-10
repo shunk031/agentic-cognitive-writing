@@ -182,12 +182,12 @@ Table 4 reports a system-level separation in direct same-prompt comparisons. <sp
 |  |  |  |  |  |
 |:---|---:|---:|---:|---:|
 |  | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** |
-| **Comparison** | **Writing** | **Hello** | **DoLo** | **Mean** |
+| **Comparison** | **Writing** | **Hello** | **DoLo** | **Across** |
 | vs. `Single-pass` | 84.3% | 85.7% | 72.0% | 80.9% |
 | vs. `Staged` | 80.9% | 62.8% | 55.9% | 67.3% |
 | vs. `Task-planning` | 65.5% | 63.0% | 75.7% | 68.5% |
 
-Table 4. <span class="smallcaps">Agentic CogWriter</span> same-prompt win rates; above 50% favors our system. Win rates exceed 50% on every benchmark against every alternative, with the largest mean margin over `Single-pass`.
+Table 4. Three-run mean same-prompt win rates for <span class="smallcaps">Agentic CogWriter</span>; above 50% favors our system. Across pools wins and losses over benchmarks per run. Win rates exceed 50% on every benchmark against every alternative, with the largest mean margin over `Single-pass`.
 
 The direct-comparison result supports the tested system as a whole rather than a single mechanism. Our system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the `Monitor`. The ablations below test whether explicit goals or adaptive process order explain these differences.
 
@@ -198,33 +198,37 @@ Table 5 places the two pre-specified ablations much closer to <span class="small
 |  |  |  |  |  |
 |:---|---:|---:|---:|---:|
 |  | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** |
-| **Variant** | **Writing** | **Hello** | **DoLo** | **Mean** |
+| **Variant** | **Writing** | **Hello** | **DoLo** | **Across** |
 | *Ablations* | *Ablations* | *Ablations* | *Ablations* | *Ablations* |
 | `No-goals` | 52.1% | 52.4% | 56.0% | 53.4% |
 | `Fixed-order` | 56.8% | 57.4% | 54.7% | 56.3% |
 | *Bundled execution diagnostic* | *Bundled execution diagnostic* | *Bundled execution diagnostic* | *Bundled execution diagnostic* | *Bundled execution diagnostic* |
 | `Single-writer` | 68.5% | 83.4% | 67.8% | 73.5% |
 
-Table 5. Three-run <span class="smallcaps">Agentic CogWriter</span> win rates for ablations and a diagnostic; above 50% favors our system. `No-goals` and `Fixed-order` remain near parity, unlike the larger `Single-writer` gap.
+Table 5. Three-run <span class="smallcaps">Agentic CogWriter</span> win rates for ablations and a diagnostic; above 50% favors our system. Across pools wins and losses over benchmarks within each run. `No-goals` and `Fixed-order` remain near parity, unlike the larger `Single-writer` gap.
 
 Execution changes produce a larger but less easily isolated difference. `Single-writer` removes subagent delegation, changes role context and decision granularity, and alters output length at the same time. Within the tighter and wider pre-specified output-length bands, `Single-writer` still wins only 35.1% (`p=0.0141`) and 30.6% (`p=2.32 x 10^-5`), respectively, against our system, so output length alone does not explain the gap. The narrower post-hoc `Single-context` check shows no significant difference from our system in the exploratory generation run (47.4% win rate for `Single-context`, `p=0.5161`, unadjusted).[^9]
 
 ### Observed Writing-Process Behavior
 
-The adaptive writing loop usually follows a simple process path. Table 6 shows that one `Planning``->``Translating``->``Reviewing` cycle dominates the traces; returning to planning after review and replacing an existing goal are both rare. Our system therefore has the ability to revisit earlier processes but uses that flexibility infrequently on the evaluated prompts. This pattern is consistent with the small exploratory advantage over `Fixed-order`: adaptive ordering can help only when the controller departs from the common path.
+The adaptive writing loop usually follows a simple process path. Table 6 shows that 74.6% of traces are cycle-compliant with the `Planning``->``Translating``->``Reviewing` order, while a return from Review to Translating occurs in 14.8% of runs. Full replanning after Review is rare (0.3%), as is replacing an existing goal (0.5%), so our system uses its adaptive control more often for targeted redrafting than for full replanning. This pattern is consistent with the small exploratory advantage over `Fixed-order`: adaptive ordering can help only when the controller departs from the common path.
 
-|                                                |          |
-|:-----------------------------------------------|---------:|
-| **Observed writing-loop behavior**             | **Rate** |
-| One Planning`->`Translating`->`Reviewing cycle |    74.6% |
-| Review followed by renewed Planning            |     0.3% |
-| Runs with an accepted goal replacement         |     0.5% |
+|                                        |                            |
+|:---------------------------------------|---------------------------:|
+| **Observed writing-loop behavior**     |                   **Rate** |
+| *Complete process paths*               |   *Complete process paths* |
+| Cycle-compliant path                   |                      74.6% |
+| Any other complete path                |                      25.4% |
+| *Non-exclusive indicators*             | *Non-exclusive indicators* |
+| Review followed by renewed Translating |                      14.8% |
+| Review followed by renewed Planning    |                       0.3% |
+| Runs with an accepted goal replacement |                       0.5% |
 
-Table 6. One `Planning``->``Translating``->``Reviewing` cycle accounts for 74.6% of runs; replanning and goal replacement are each below 1%. <span class="smallcaps">Agentic CogWriter</span> only rarely revisits earlier processes.
+Table 6. Three-run writing-loop behavior after repeat collapsing and leading-Planning reconstruction. The first two rows partition complete process paths; the last three are non-exclusive indicators.
 
 Figure 2 shows the same concentration at the sequence and transition levels. The most frequent complete process path is the forward planning–drafting–reviewing progression, and our system is visually close to `Fixed-order` because much of the observed behavior follows that path. The demanding-subset selection increases input length, requested output length, or procedural burden, but it does not guarantee that every task intrinsically requires replanning. The traces therefore show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing in general.
 
-Figure 2. Observed writing-process trajectories. Panel (a) shows the most frequent complete paths; panels (b) and (c) show transition counts for <span class="smallcaps">Agentic CogWriter</span> and `Fixed-order`. Our system mostly follows the same forward `Planning``->``Translating``->``Reviewing` progression as `Fixed-order`, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.
+Figure 2. Observed writing-process trajectories. Panel (a) shows the most frequent complete paths; panels (b) and (c) show transition counts for <span class="smallcaps">Agentic CogWriter</span> and `Fixed-order`. Our system mostly follows the same forward `Planning``->``Translating``->``Reviewing` progression as `Fixed-order`; returns to Translating are more common than returns to Planning, consistent with the small exploratory advantage of adaptive ordering.
 
 Observed departures from the common process path do not show a larger quality advantage. Table 7 compares runs that complete exactly one planning–drafting–reviewing cycle with runs that take any other path and finds similar pairwise win rates against `Fixed-order` and `Single-writer`. Because the split is observational rather than randomized, it cannot establish whether a different path improves or worsens output.[^10]
 
@@ -232,10 +236,10 @@ Observed departures from the common process path do not show a larger quality ad
 |:---|---:|---:|
 |  | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** |
 | **Process path** | **`Fixed-order`** | **`Single-writer`** |
-| Plan`->`draft`->`review | 57.4% | 72.2% |
-| Other path | 54.9% | 75.2% |
+| Plan`->`draft`->`review | 57.5% | 72.6% |
+| Other path | 54.7% | 74.7% |
 
-Table 7. Win rates are similar for planning–drafting–reviewing and other paths against `Fixed-order` and `Single-writer`. The observational split describes association rather than a causal effect.
+Table 7. Win rates are similar for the two process-path groups against `Fixed-order` and `Single-writer` when pooled across the three generation runs. The observational split describes association rather than a causal effect.
 
 ## Discussion
 
@@ -259,7 +263,7 @@ Our conclusions concern one generator family, one coding-agent-style harness, an
 
 ##### Evaluator dependence.
 
-The primary evaluation also leaves uncertainty about judge dependence. Pairwise win rates are computed over order-consistent comparisons, where both presentation orders select the same response; Section 5.2 also reports unconditional and worst-case missing-output views. The primary evaluator belongs to the same model family as the generator, and related generator–judge models can exhibit preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). The cross-family check produces many ties and reverses one WritingBench direction, and we did not collect human judgments, so model-judge preference should not be treated as human preference. The primary evaluator also favors longer outputs overall.
+The primary evaluation also leaves uncertainty about judge dependence. Pairwise win rates are computed over order-consistent comparisons, where both presentation orders select the same response; Section 5.2 also reports unconditional and worst-case missing-output views. The primary evaluator belongs to the same model family as the generator, and related generator–judge models can exhibit preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). The pooled direction remains positive for all three selected cross-family contrasts, but the cross-family judge produces many ties and reverses 3 of 9 benchmark-level comparisons; we also did not collect human judgments, so model-judge preference should not be treated as human preference. The primary evaluator also favors longer outputs overall.
 
 ##### Component attribution.
 
@@ -1678,7 +1682,7 @@ Table 10 reports completion, output size, delegated invocations, goal events, to
 | `Fixed-order` | 282/300 | 1,773 | 3.43 | 267/1,163/3 | 11,402 | 42,888 | 219 |
 | `Single-writer` | 280/300 | 1,111 | 0 | 1,621/169/1 | 15,356 | 30,715 | 103 |
 
-Table 10. Realized process and resource use in the first generation run. The systems differ substantially in delegated invocations and token use in addition to their control logic, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses rather than treating raw resource use as a controlled mechanism.
+Table 10. Realized process and resource use in generation run 1 of 3. The systems differ substantially in delegated invocations and token use in addition to their control logic, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses rather than treating raw resource use as a controlled mechanism.
 
 ## Sensitivity Analyses
 
@@ -1714,7 +1718,7 @@ Table 12 reports pairwise outcomes by output-length ratio. The longer side wins 
 | 1.50–2.00               |   188/68/66 |                        73.44% |
 | 2.00+                   |    94/14/23 |                        87.04% |
 
-Table 12. Pairwise outcomes from the first generation run grouped by output-length ratio. Longer responses are favored overall, motivating the matched-length checks used to test whether the main system comparisons survive when output lengths are more similar. Here, W/L/T denotes wins/losses/ties for the longer response after applying the two-order consistency rule; ties are excluded from the longer-side win-rate denominator.
+Table 12. Pairwise outcomes from generation run 1 of 3 grouped by output-length ratio. Longer responses are favored overall, motivating the matched-length checks used to test whether the main system comparisons survive when output lengths are more similar. Here, W/L/T denotes wins/losses/ties for the longer response after applying the two-order consistency rule; ties are excluded from the longer-side win-rate denominator.
 
 ### Compute-Stratified Sensitivity
 
@@ -1826,7 +1830,7 @@ Table 16 reports combined outcomes for three cross-family robustness contrasts i
 | <span class="smallcaps">Agentic CogWriter</span> vs `No-goals` | HelloBench | 96 | 4/5/87 | 9.38% | 44.44% | 43/96 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `No-goals` | DoLoMiTes | 96 | 24/15/57 | 40.62% | 61.54% | 46/96 |
 
-Table 16. Cross-family judge robustness using `claude-sonnet-5 medium`. Changing judge family preserves the overall direction of the selected comparisons but produces more ties and reverses the WritingBench direction for <span class="smallcaps">Agentic CogWriter</span> versus `Single-pass`, so the exact win rates are judge-sensitive. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose combined outcome matches the primary judge.
+Table 16. Cross-family judge robustness using `claude-sonnet-5 medium`. The pooled direction remains positive for all three selected contrasts, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and the cross-family judge produces many ties, so exact win rates are judge-sensitive. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose combined outcome matches the primary judge.
 
 ## Consensus-Writing Evaluation on Habermas Machine Data
 

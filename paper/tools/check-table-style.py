@@ -181,7 +181,6 @@ def check() -> None:
         ("tab/pairwise-results.tex", pairwise, 12),
         ("tab/ablation-results.tex", ablation, 12),
         ("tab/process-dynamics.tex", process, 5),
-        ("tab/trace-outcome.tex", trace, 4),
     ):
         values = percentages(tabular_body(text))
         assert len(values) == count, (f"{path}: unexpected number of displayed percentages", len(values))
@@ -227,18 +226,15 @@ def check() -> None:
         "tab/process-dynamics.tex: displayed rates are stale relative to numbers.tex"
     )
 
-    expected_trace = [
-        f"{percent_macro(numbers, name):.1f}"
-        for name in (
-            "AfourExactCycleFixedOrderWinRate",
-            "AfourExactCycleSingleWriterWinRate",
-            "AfourNonExactFixedOrderWinRate",
-            "AfourNonExactSingleWriterWinRate",
-        )
-    ]
-    assert percentages(tabular_body(trace)) == expected_trace, (
-        "tab/trace-outcome.tex: displayed rates are stale relative to numbers.tex"
-    )
+    # Table 7 cites the process-sequence macros directly, in row order.
+    trace_macros = re.findall(r"\\(Afour(?:ExactCycle|NonExact)(?:FixedOrder|SingleWriter)WinRate)", tabular_body(trace))
+    assert trace_macros == [
+        "AfourExactCycleFixedOrderWinRate",
+        "AfourExactCycleSingleWriterWinRate",
+        "AfourNonExactFixedOrderWinRate",
+        "AfourNonExactSingleWriterWinRate",
+    ], ("tab/trace-outcome.tex: cite the four process-path win-rate macros in row order", trace_macros)
+    assert not percentages(tabular_body(trace)), "tab/trace-outcome.tex: do not hard-code rates; use the macros"
     assert "Fisher $p$" not in trace, "tab/trace-outcome.tex: keep the observational path comparison descriptive"
 
     # Table 4 has no informative best-cell distinction because every displayed rate favors the focal system.
