@@ -20,12 +20,6 @@
       "after": ""
     },
     {
-      "path": "paper/tab/ablation-results.tex",
-      "instruction": "Keep the pre-existing concise Table 5 caption while removing only the redundant row-group labels; do not add condition-taxonomy prose to the caption.",
-      "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level rates after summing benchmark wins and losses. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}",
-      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level rates after summing benchmark wins and losses. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}"
-    },
-    {
       "path": "paper/tab/process-dynamics.tex",
       "instruction": "Remove the redundant Table 6 row-group label 'Complete process paths'; the caption already states that the first two rows partition complete process paths.",
       "before": "\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\\n",
