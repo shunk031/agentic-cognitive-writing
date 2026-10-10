@@ -1,12 +1,30 @@
 {
-  "baseline_sha": "ae9003c100cbfe272c2d0b902d5142f013bb7547",
+  "baseline_sha": "4b3b3ed739c68b77bc3cdcbcc06d9cadb18b5c18",
   "replacements": [
     {
       "path": "paper/acl_latex.tex",
-      "instruction": "footnote の継続行を本文開始位置に揃え、元の LaTeX 脚注と同じく番号と本文の間に余計な間隔を置かず、右端は通常の両端揃えを保ち、\\@makefntext を直接上書きせず footmisc の標準オプションを使う",
-      "before": "\\usepackage{tcolorbox}\n\\tcbuselibrary{breakable}",
-      "after": "\\usepackage{tcolorbox}\n\\usepackage[hang,flushmargin]{footmisc}\n\\tcbuselibrary{breakable}"
+      "instruction": "ARR October 2026 submission preparationとして、Limitationsの後かつReferencesの前にEthical considerationsを追加する",
+      "before": "\\input{sec/07_limitations}\n\n\\bibliography{custom,agentic}",
+      "after": "\\input{sec/07_limitations}\n\n\\input{sec/08_ethical_considerations}\n\n\\bibliography{custom,agentic}"
+    },
+    {
+      "path": "paper/sec/09_prompt_configuration.tex",
+      "instruction": "Responsible NLP Checklistに答えられるよう、利用benchmarkのlicense、pinned provenance、intended use、再配布方針、PII/offensive-content監査の範囲を明記する",
+      "before": "Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.\n\nThe three selected subsets stress different properties of long-form writing.",
+      "after": "Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.\n\n\\paragraph{Artifact provenance and terms.}\nWe use pinned snapshots of WritingBench (Apache-2.0), HelloBench (MIT), and DoLoMiTes (CC BY 4.0 for the benchmark materials); the exploratory Habermas Machine analysis likewise uses CC BY 4.0 materials.\nThe corresponding source commits or archives, content hashes, and transformation notes are recorded in the experiment provenance manifest.\nWe use these artifacts only for research evaluation under their released terms and redistribute only the derived prompt manifests described by that provenance record rather than hidden reference outputs or additional source data.\nFor the Habermas Machine tasks, the materialized prompts omit source participant identifiers.\nWe did not conduct an independent audit of the source benchmarks for offensive content or latent personal information beyond the transformations used to construct the evaluation prompts.\n\nThe three selected subsets stress different properties of long-form writing."
+    },
+    {
+      "path": "paper/tab/appendix-runtime-settings.tex",
+      "instruction": "Responsible NLP Checklistのcompute項目に対して、closed hosted modelsではparameter countとprovider-side hardware/GPU-hoursが取得不能であることと、代わりに報告するobservable computeを明記する",
+      "before": "Medium reasoning effort is held fixed rather than tuned within the reported study. For the primary judge, the first main run inherited the documented medium default, and later runs pin medium explicitly to reproduce the same reasoning level.\n\n\\paragraph{Evaluation controls.}",
+      "after": "Medium reasoning effort is held fixed rather than tuned within the reported study. For the primary judge, the first main run inherited the documented medium default, and later runs pin medium explicitly to reproduce the same reasoning level.\n\n\\paragraph{Compute reporting.}\nThe generator and both judges are hosted closed models whose parameter counts and provider-side accelerator configurations are not disclosed to us, so we cannot report model parameter counts or GPU-hours.\nInstead, we report the model identifiers and roles, reasoning effort, output-token budget, retry policy, available token accounting, and wall-clock statistics recorded by the harness; these quantify observable consumption rather than provider-side compute.\nNo model weights are trained or fine-tuned in this study.\n\n\\paragraph{Evaluation controls.}"
     }
   ],
-  "created_files": []
+  "created_files": [
+    {
+      "path": "paper/sec/08_ethical_considerations.tex",
+      "instruction": "ARR October 2026 submission preparationとして、長文writing agentのdual-use、factuality/bias、high-stakes use、compute cost、人間参加者の有無を簡潔に議論するEthical considerationsを追加する",
+      "content": "\\section*{Ethical considerations}\n\\label{sec:ethical-considerations}\n\nAgentic long-form writing can support the organization and revision of complex documents, but the same capability can also scale persuasive or misleading text and amplify unsupported claims or biases inherited from the underlying model.\nProcess decomposition and reviewing do not provide factuality or safety guarantees, and the system should not be treated as an autonomous authority for high-stakes writing.\nOur experiments disable external retrieval and study benchmark tasks rather than deployment; downstream use should retain human verification and domain-appropriate safeguards.\nMulti-step agent execution also makes additional model calls and can increase computational cost relative to one-pass generation, so we report token and runtime statistics to make this tradeoff visible.\nWe recruited no human annotators or participants and collected no new personal data; the study reuses published benchmark artifacts under their released terms, as documented in Appendix~\\ref{app:prompts}.\n"
+    }
+  ]
 }
