@@ -89,7 +89,8 @@ def check_caption_takeaways() -> None:
             "larger \\condSingleWriter\\ gap",
         ),
         "tab/process-dynamics.tex": (
-            "accounts for 74.6\\% of runs",
+            "partition complete process paths",
+            "Non-exclusive indicators",
         ),
         "sec/05_results.tex": (
             "mostly follows the same forward",
@@ -116,13 +117,13 @@ def check_caption_takeaways() -> None:
             concept,
         )
 
-    process_caption = read("tab/process-dynamics.tex").lower()
-    assert (
-        "rarely" in process_caption
-        and re.search(r"\brevisit\w*\b", process_caption)
-        and "earlier processes" in process_caption
-    ), (
-        "process-dynamics caption must state that revisiting earlier processes is rare",
+    process_table = read("tab/process-dynamics.tex")
+    assert "74.6\\%" in process_table and "25.4\\%" in process_table, (
+        "process-dynamics table must show both sides of the complete-path partition",
+        "tab/process-dynamics.tex",
+    )
+    assert r"\AfourCompliantOnePassRate" in process_table, (
+        "process-dynamics table must report the one-pass rate among cycle-compliant paths",
         "tab/process-dynamics.tex",
     )
 
