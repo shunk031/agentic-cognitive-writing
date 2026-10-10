@@ -14,7 +14,7 @@ def read(path: str) -> str:
 
 
 def tabular_spec(text: str) -> str:
-    match = re.search(r"\\begin\{tabular\}\{([^{}]+)\}", text)
+    match = re.search(r"\\begin\{tabular\}\{((?:[^{}]|\{\})+)\}", text)
     assert match, "could not find a simple tabular column specification"
     return match.group(1).replace(" ", "")
 
@@ -70,8 +70,8 @@ def check() -> None:
         "tab/appendix-compute-control.tex": [5],
         "tab/appendix-cross-family.tex": [7],
         "tab/appendix-habermas.tex": [6],
-        "tab/appendix-length-control.tex": [3],
-        "tab/appendix-process.tex": [8],
+        "tab/appendix-length-control.tex": [7],
+        "tab/appendix-process.tex": [7],
         "tab/appendix-record-pooled-pairwise.tex": [5],
         "tab/appendix-runtime-settings.tex": [2],
         "tab/appendix-single-context.tex": [7, 4],
@@ -93,7 +93,7 @@ def check() -> None:
     for relative_path, column_counts in expected_columns.items():
         text = read(relative_path)
         tabulars = re.findall(
-            r"\\begin\{tabular\}\{.*?\}(.*?)\\end\{tabular\}",
+            r"\\begin\{tabular\}\{(?:[^{}]|\{\})+\}(.*?)\\end\{tabular\}",
             text,
             flags=re.DOTALL,
         )
@@ -151,8 +151,8 @@ def check() -> None:
         "tab/ablation-results.tex": "lrrrr",
         "tab/process-dynamics.tex": "lr",
         "tab/trace-outcome.tex": "lrr",
-        "tab/appendix-length-control.tex": "lrr",
-        "tab/appendix-process.tex": "lrrrrrrr",
+        "tab/appendix-length-control.tex": "lrrrrrr",
+        "tab/appendix-process.tex": "@{}lrrrrrr@{}",
         "tab/appendix-record-pooled-pairwise.tex": "lrrrr",
         "tab/appendix-compute-control.tex": "llrrr",
         "tab/appendix-cross-family.tex": "llrrrrr",
@@ -161,6 +161,31 @@ def check() -> None:
     for path, expected in expected_specs.items():
         actual = tabular_spec(read(path))
         assert actual == expected, f"{path}: expected numeric columns right-aligned as {expected}, got {actual}"
+
+    # Once the study declares three repeated generation runs, leaving an
+    # available run-1-only appendix artifact looks like unexplained selective
+    # reporting to a reader. Guard both the table captions and their prose scope.
+    appendix_process = read("tab/appendix-process.tex")
+    appendix_length = read("tab/appendix-length-control.tex")
+    for path, text in (
+        ("tab/appendix-process.tex", appendix_process),
+        ("tab/appendix-length-control.tex", appendix_length),
+    ):
+        assert "across all three generation runs" in text, (
+            f"{path}: report all available declared generation runs"
+        )
+        assert "generation run 1 of 3" not in text and "first generation run" not in text, (
+            f"{path}: do not regress to a stale run-1-only artifact"
+        )
+
+    appendix = read("sec/10_appendix.tex")
+    process_scope = appendix.split(r"\section{Additional Process and Resource Statistics}", 1)[1].split(r"\section{Sensitivity Analyses}", 1)[0]
+    length_scope = appendix.split(r"\subsection{Output-Length Sensitivity}", 1)[1].split(r"\subsection{Compute-Stratified Sensitivity}", 1)[0]
+    for label, text in (("process/resource prose", process_scope), ("output-length prose", length_scope)):
+        assert "all three generation runs" in text, f"{label}: state the complete three-run scope"
+        assert "first generation run" not in text and "generation run 1 of 3" not in text, (
+            f"{label}: do not retain stale run-1-only scope"
+        )
 
     # Main quality scores use three decimals and remain synchronized with numbers.tex.
     main_values = re.findall(r"(?<![A-Za-z0-9])(-?\d+\.\d+)(?![A-Za-z0-9])", tabular_body(main))

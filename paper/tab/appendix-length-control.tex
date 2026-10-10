@@ -1,19 +1,20 @@
-\begin{table}[H]
+\begin{table*}[t]
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
-\begin{tabular}{lrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-\textbf{Output-length ratio} & \textbf{W/L/T} & \shortstack{\textbf{Longer-side}\\\textbf{win rate}} \\
-\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}
-1.00--1.05 & \LengthRatioOneToOneZeroFiveWLT & \LengthRatioOneToOneZeroFiveRate \\
-1.05--1.10 & \LengthRatioOneZeroFiveToOneTenWLT & \LengthRatioOneZeroFiveToOneTenRate \\
-1.10--1.25 & \LengthRatioOneTenToOneTwentyFiveWLT & \LengthRatioOneTenToOneTwentyFiveRate \\
-1.25--1.50 & \LengthRatioOneTwentyFiveToOneFiftyWLT & \LengthRatioOneTwentyFiveToOneFiftyRate \\
-1.50--2.00 & \LengthRatioOneFiftyToTwoWLT & \LengthRatioOneFiftyToTwoRate \\
-2.00+ & \LengthRatioTwoPlusWLT & \LengthRatioTwoPlusRate \\
+& \multicolumn{3}{c}{\textbf{Output-length ratio $\leq 1.05$}}
+& \multicolumn{3}{c}{\textbf{Output-length ratio $\leq 1.10$}} \\
+\textbf{Comparison}
+& \textbf{Run 1} & \textbf{Run 2} & \textbf{Run 3}
+& \textbf{Run 1} & \textbf{Run 2} & \textbf{Run 3} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}\cmidrule(lr){7-7}
+\condSinglePass & \LengthFullSinglePassFiveRateRunOne & \LengthFullSinglePassFiveRateRunTwo & \LengthFullSinglePassFiveRateRunThree & \LengthFullSinglePassTenRateRunOne & \LengthFullSinglePassTenRateRunTwo & \LengthFullSinglePassTenRateRunThree \\
+\condTaskPlanning & \LengthFullTaskPlanningFiveRateRunOne & \LengthFullTaskPlanningFiveRateRunTwo & \LengthFullTaskPlanningFiveRateRunThree & \LengthFullTaskPlanningTenRateRunOne & \LengthFullTaskPlanningTenRateRunTwo & \LengthFullTaskPlanningTenRateRunThree \\
+\condNoGoals & \LengthFullNoGoalsFiveRateRunOne & \LengthFullNoGoalsFiveRateRunTwo & \LengthFullNoGoalsFiveRateRunThree & \LengthFullNoGoalsTenRateRunOne & \LengthFullNoGoalsTenRateRunTwo & \LengthFullNoGoalsTenRateRunThree \\
 \bottomrule
 \end{tabular}
-\caption{Pairwise outcomes from generation run 1 of 3 grouped by output-length ratio. Longer responses are favored overall, motivating the matched-length checks used to test whether the main system comparisons survive when output lengths are more similar. Here, W/L/T denotes wins/losses/ties for the longer response after applying the two-order consistency rule; ties are excluded from the longer-side win-rate denominator.}
+\caption{Output-length sensitivity across all three generation runs. Cells are our system's $W/(W+L)$ rates among order-consistent non-ties whose output-length ratio is within the stated band. Runs are reported separately because repeated generations of the same prompts are not independent replications.}
 \label{tab:appendix-length-control}
-\end{table}
+\end{table*}
