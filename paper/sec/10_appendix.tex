@@ -6,6 +6,8 @@
 \label{app:runtime}
 Table~\ref{tab:runtime-settings} reports the runtime controls shared across conditions.
 We hold the generator, output-token budget, network and retrieval policy, approval policy, task input, and final-output requirements fixed so that the compared conditions differ in how they organize the writing process rather than in model access or external information.
+We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work.
+Assigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.
 Each prompt--condition pair is generated in three runs.
 Primary pairwise evaluation uses the same judge for every condition, presents each pair in both orders, and records presentation disagreements as ties; the cross-family judge is used only for the separate robustness analysis.
 \input{tab/appendix-runtime-settings}
