@@ -1,28 +1,26 @@
-Large language model agents~\citep{yao2023react,shinn2023reflexion,sumers2024cognitive,luo2025llmagent} increasingly combine reasoning, tool use, memory, and delegation to carry out multi-step knowledge work.
-Recent coding agents have made this interactive, tool-mediated style of execution especially prominent~\citep{yang2024sweagent,wang2024openhands}, while similar agentic workflows increasingly produce reports or scientific manuscripts~\citep{schmidgall2025agentlab,lu2024aiscientist}.
-For agents that produce documents, long-form writing requires more than final text generation: the agent must organize the document, turn partial plans into prose, inspect what has been written, and decide when revision is needed.
+Large language model agents~\citep{yao2023react,shinn2023reflexion,sumers2024cognitive,luo2025llmagent} increasingly combine reasoning, tools, memory, and delegation for multi-step knowledge work.
+Recent coding agents have made this tool-mediated execution style especially prominent~\citep{yang2024sweagent,wang2024openhands}, while similar workflows increasingly produce reports and scientific manuscripts~\citep{schmidgall2025agentlab,lu2024aiscientist}.
+For document-producing agents, long-form writing therefore requires coordinating organization, drafting, inspection, and revision rather than merely generating final text.
 
 \input{fig/tex/overview}
 
-Existing long-form writing systems impose different forms of structure on generation~\citep{yao2019plan,yang2022re3,shao2024assisting,bai2025longwriter,xiong2025beyond,sun2026cot}.
-Some build an outline before drafting~\citep{yao2019plan,yang2022re3}, some generate a document section by section~\citep{shao2024assisting,bai2025longwriter}, some recursively decompose the document into tasks~\citep{xiong2025beyond}, and some adapt plans or structural reasoning during generation~\citep{wan2025cognitive,sun2026cot}.
-Across these systems, the next step is usually defined by a content unit, task node, or prescribed stage.
-A complementary design question remains comparatively underexplored: should the writer decide which kind of writing process is needed next?
+Existing long-form writing systems structure generation through plans, document units, and task decomposition~\citep{yao2019plan,yang2022re3,shao2024assisting,bai2025longwriter,xiong2025beyond}.
+Some build outlines or generate section by section~\citep{yao2019plan,yang2022re3,shao2024assisting,bai2025longwriter}, some recursively decompose a document into tasks~\citep{xiong2025beyond}, and some adapt plans or structural reasoning during generation~\citep{wan2025cognitive,sun2026cot}.
+Across these approaches, the next step is usually a content unit, task node, or prescribed stage.
+A complementary question remains: should the writer instead decide which kind of writing process is needed next?
 
-The cognitive process theory of writing~\citep{flower1981cognitive,hayes1996new,hayes2012modeling} provides a useful abstraction for process-level control.
+The cognitive process theory of writing~\citep{flower1981cognitive,hayes1996new,hayes2012modeling} offers a process-level control abstraction.
 \citet{flower1981cognitive} characterize writing as coordination among planning, translating, and reviewing, with a monitor deciding which process to invoke as the document develops.
-This view suggests choosing the next writing process rather than the next section or task node.
+The theory therefore suggests choosing the next writing process rather than the next section or task node.
 
-Building on \citet{flower1981cognitive}, we propose \condAgenticCogWriter, a long-form writing system that implements this process-level control on top of a coding-agent-style harness with persistent state and subagent delegation (Figure~\ref{fig:agentic-cogwriter}).
-A top-level Monitor agent observes the evolving draft, goals, and process history, chooses whether the next activity should be planning, drafting, or reviewing, and delegates that activity to a corresponding subagent.
-The resulting process order is chosen during writing rather than fixed in advance.
+Building on \citet{flower1981cognitive}, we propose \condAgenticCogWriter, a long-form writing system that applies this control structure in a coding-agent-style harness with persistent state and subagent delegation (Figure~\ref{fig:agentic-cogwriter}).
+A top-level Monitor agent observes the draft, goals, and process history, chooses planning, drafting, or reviewing, and delegates the selected activity to the corresponding subagent.
+The resulting process order is selected during writing rather than fixed in advance.
 
 We evaluate our system on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.
-We hold the generator and task information constant across the compared conditions so that differences reflect how writing is organized.
-Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives.
-In pairwise evaluation, our system is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning.
-The component analyses support a system-level interpretation of this advantage rather than attributing it to explicit goals or adaptive ordering alone under the pre-specified tests.
-Process traces show that most runs follow a simple planning--drafting--reviewing path, indicating that adaptive ordering is available but used selectively.
+We hold the generator and task information constant across the compared conditions and assess quality with pointwise rubric scoring and pairwise same-prompt preference evaluation.
+Our system is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning; pointwise scores are competitive.
+The ablations support a system-level interpretation rather than attributing the advantage to explicit goals or adaptive ordering alone, while process traces show that adaptive ordering is used selectively around a common planning--drafting--reviewing path.
 
 Our contributions are threefold.
-(1) we formulate long-form writing for general-purpose agents as a process-level control problem and introduce a concrete system that chooses among planning, drafting, and reviewing during composition; (2) we compare our system with one-shot, fixed-stage, and adaptive task-planning alternatives across complementary long-form benchmarks; and (3) we use ablations and process analyses to test which proposed components explain the observed advantage and characterize the writing loop in practice.
+We formulate long-form writing for general-purpose agents as a process-level control problem and introduce a system that chooses among planning, drafting, and reviewing; we compare our system with one-shot, fixed-stage, and adaptive task-planning alternatives across complementary long-form benchmarks; and we use ablations and process analyses to test proposed components and characterize the writing loop.
