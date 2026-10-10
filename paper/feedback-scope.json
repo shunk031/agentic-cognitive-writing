@@ -21,9 +21,9 @@
     },
     {
       "path": "paper/tab/ablation-results.tex",
-      "instruction": "Move the scientific distinction carried by the removed Table 5 group labels into the caption without changing the reported rates or takeaway.",
+      "instruction": "Move the scientific distinction carried by the removed Table 5 group labels into a compact caption without changing the reported rates, aggregation scope, or takeaway.",
       "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level rates after summing benchmark wins and losses. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}",
-      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; 50\\% is parity. Across averages run-level rates after summing benchmark wins and losses. \\condNoGoals\\ and \\condFixedOrder\\ are ablations and stay near parity; \\condSingleWriter\\ is a bundled execution diagnostic with a larger gap.}"
+      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; 50\\% is parity. Across averages run-level rates from wins and losses summed across benchmarks. \\condNoGoals\\ and \\condFixedOrder\\ are near-parity ablations; \\condSingleWriter\\ is a bundled execution diagnostic with a larger gap.}"
     },
     {
       "path": "paper/tab/process-dynamics.tex",
