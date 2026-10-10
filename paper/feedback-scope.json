@@ -11,13 +11,13 @@
       "path": "paper/tab/pairwise-results.tex",
       "instruction": "Use a short across-benchmark heading that preserves the one-column fit without implying an arithmetic mean of the displayed benchmark rates.",
       "before": "& \\textbf{Mean} \\\\",
-      "after": "& \\textbf{Across} \\\\" 
+      "after": "& \\textbf{Across} \\\\"
     },
     {
       "path": "paper/tab/ablation-results.tex",
       "instruction": "Use a short across-benchmark heading that preserves the one-column fit without implying an arithmetic mean of the displayed benchmark rates.",
       "before": "& \\textbf{Mean} \\\\",
-      "after": "& \\textbf{Across} \\\\" 
+      "after": "& \\textbf{Across} \\\\"
     },
     {
       "path": "paper/tab/ablation-results.tex",
@@ -29,7 +29,7 @@
       "path": "paper/tab/process-dynamics.tex",
       "instruction": "Clarify Table 6 so the cycle-compliance classification visibly forms a 100% partition, expose the targeted Review-to-Translating return rate, distinguish it from rare replanning and goal replacement, state the three-run scope, document leading-Planning reconstruction, preserve the reader-facing partition wording, and keep the rendered caption within the layout guard.",
       "before": "\\begin{table}[t]\n\\centering\n\\small\n\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{lr}\n\\toprule\n\\textbf{Observed writing-loop behavior}\n& \\textbf{Rate} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\nOne Planning$\\rightarrow$Translating$\\rightarrow$Reviewing cycle\n& 74.6\\% \\\\\nReview followed by renewed Planning\n& 0.3\\% \\\\\nRuns with an accepted goal replacement\n& 0.5\\% \\\\\n\\bottomrule\n\\end{tabular}\n\\caption{One \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle accounts for 74.6\\% of runs; replanning and goal replacement are each below 1\\%. \\condAgenticCogWriter\\ only rarely revisits earlier processes.}\n\\label{tab:process-dynamics}\n\\end{table}",
-      "after": "\\begin{table}[t]\n\\centering\n\\small\n\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{lr}\n\\toprule\n\\textbf{Observed writing-loop behavior}\n& \\textbf{Rate} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\\nCycle-compliant path\n& 74.6\\% \\\\\nAny other complete path\n& 25.4\\% \\\\\n\\addlinespace[2pt]\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\\nReview followed by renewed Translating\n& 14.8\\% \\\\\nReview followed by renewed Planning\n& 0.3\\% \\\\\nRuns with an accepted goal replacement\n& 0.5\\% \\\\\n\\bottomrule\n\\end{tabular}\n\\caption{Three-run writing-loop behavior after repeat collapsing and supported leading-Planning reconstruction. The first two rows partition complete process paths; the last three are non-exclusive indicators.}\n\\label{tab:process-dynamics}\n\\end{table}"
+      "after": "\\begin{table}[t]\n\\centering\n\\small\n\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{lr}\n\\toprule\n\\textbf{Observed writing-loop behavior}\n& \\textbf{Rate} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\\nCycle-compliant path\n& 74.6\\% \\\\\nAny other complete path\n& 25.4\\% \\\\\n\\addlinespace[2pt]\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\\nReview followed by renewed Translating\n& 14.8\\% \\\\\nReview followed by renewed Planning\n& 0.3\\% \\\\\nRuns with an accepted goal replacement\n& 0.5\\% \\\\\n\\bottomrule\n\\end{tabular}\n\\caption{Three-run writing-loop behavior after repeat collapsing and leading-Planning reconstruction. The first two rows partition complete process paths; the last three are non-exclusive indicators.}\n\\label{tab:process-dynamics}\n\\end{table}"
     },
     {
       "path": "paper/sec/05_results.tex",
