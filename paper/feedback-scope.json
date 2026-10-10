@@ -90,6 +90,54 @@
       "instruction": "Replace the reader-check-forbidden verb 'pools' in the Across-column definition without changing the statistic or the ablation takeaway.",
       "before": "Across pools wins and losses over benchmarks within each run.",
       "after": "Across combines wins and losses over benchmarks within each run."
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Regenerate the Agentic CogWriter exact single-cycle rate from the new three-run process-sequences JSON after applying leading-Planning reconstruction.",
+      "before": "\\newcommand{\\AfourSingleCycleRate}{56.4\\%}",
+      "after": "\\newcommand{\\AfourSingleCycleRate}{58.1\\%}"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Regenerate the Fixed-order exact single-cycle rate from the new three-run process-sequences JSON after applying leading-Planning reconstruction.",
+      "before": "\\newcommand{\\AsixSingleCycleRate}{50.8\\%}",
+      "after": "\\newcommand{\\AsixSingleCycleRate}{56.1\\%}"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Regenerate the exact-cycle Agentic CogWriter win rate against Fixed-order from the new three-run process-sequences JSON.",
+      "before": "\\newcommand{\\AfourExactCycleFixedOrderWinRate}{57.4\\%}",
+      "after": "\\newcommand{\\AfourExactCycleFixedOrderWinRate}{57.5\\%}"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Regenerate the non-exact Agentic CogWriter win rate against Fixed-order from the new three-run process-sequences JSON.",
+      "before": "\\newcommand{\\AfourNonExactFixedOrderWinRate}{54.9\\%}",
+      "after": "\\newcommand{\\AfourNonExactFixedOrderWinRate}{54.7\\%}"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Regenerate the Fisher exact p-value for the Fixed-order path split from the new three-run process-sequences JSON.",
+      "before": "\\newcommand{\\AfourFixedOrderCycleSplitP}{0.60}",
+      "after": "\\newcommand{\\AfourFixedOrderCycleSplitP}{0.54}"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Regenerate the exact-cycle Agentic CogWriter win rate against Single-writer from the new three-run process-sequences JSON.",
+      "before": "\\newcommand{\\AfourExactCycleSingleWriterWinRate}{72.2\\%}",
+      "after": "\\newcommand{\\AfourExactCycleSingleWriterWinRate}{72.6\\%}"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Regenerate the non-exact Agentic CogWriter win rate against Single-writer from the new three-run process-sequences JSON.",
+      "before": "\\newcommand{\\AfourNonExactSingleWriterWinRate}{75.2\\%}",
+      "after": "\\newcommand{\\AfourNonExactSingleWriterWinRate}{74.7\\%}"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Regenerate the Fisher exact p-value for the Single-writer path split from the new three-run process-sequences JSON.",
+      "before": "\\newcommand{\\AfourSingleWriterCycleSplitP}{0.43}",
+      "after": "\\newcommand{\\AfourSingleWriterCycleSplitP}{0.60}"
     }
   ],
   "created_files": []
