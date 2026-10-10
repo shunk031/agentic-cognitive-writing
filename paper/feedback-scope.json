@@ -5,7 +5,7 @@
       "path": "paper/sec/04_experiments.tex",
       "instruction": "Restore a concise one-sentence generator/evaluator selection rationale with all required supporting citations in the main Implementation section, while leaving the fuller product-positioning detail to Appendix Runtime Configuration.",
       "before": "All systems run in the same Codex-style coding-agent harness, using \\modelGenBare\\ as the generator and \\modelJudgeBare\\ as the primary evaluator.",
-      "after": "All systems run in the same Codex-style coding-agent harness, using \\modelGenBare\\ as the generator and \\modelJudgeBare\\ as the primary evaluator.\\footnote{We use Luna for high-volume long-form generation and the higher-capability Sol tier for evaluation; their shared model family motivates the cross-family check~\\citep{openai2026luna,openai2026sol,openai2026gpt56}.}"
+      "after": "All systems run in the same Codex-style coding-agent harness, using \\modelGenBare\\ as the generator and \\modelJudgeBare\\ as the primary evaluator.\\footnote{We use Luna for high-volume long-form generation and Sol, the higher-capability tier, for evaluation; their shared model family motivates the cross-family check~\\citep{openai2026luna,openai2026sol,openai2026gpt56}.}"
     },
     {
       "path": "paper/sec/10_appendix.tex",
