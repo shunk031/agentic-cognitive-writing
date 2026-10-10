@@ -216,6 +216,12 @@
       "instruction": "Compact the explicit Table 7 aggregation wording to fit the rendered five-line guard while retaining both aggregation dimensions, the per-group/per-comparison scope, and the observational qualification.",
       "before": "\\caption{Win rates are similar for the two process-path groups against \\condFixedOrder\\ and \\condSingleWriter. W/L/T counts are summed over all benchmarks and three generation runs within each group and comparison before computing $W/(W+L)$. The split is observational rather than causal.}",
       "after": "\\caption{Similar win rates appear for both process-path groups against \\condFixedOrder\\ and \\condSingleWriter. Within each group and comparison, W/L/T are summed over benchmarks and all three runs before $W/(W+L)$. The split is observational, not causal.}"
+    },
+    {
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Further compact the Table 4 caption after the rendered guard still found six lines, while keeping the reader-facing aggregation order explicit: sum benchmark W/L within each run, compute run-level W/(W+L), then average the three rates, and preserve the benchmark-level takeaway.",
+      "before": "\\caption{Three-run mean same-prompt win rates for \\condAgenticCogWriter; above 50\\% favors our system. Across averages run-level $W/(W+L)$ after summing W/L over benchmarks. All benchmark-level rates exceed 50\\%; the largest mean margin is over \\condSinglePass.}",
+      "after": "\\caption{Three-run mean same-prompt \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across sums benchmark W/L within each run, computes $W/(W+L)$, then averages the three rates. All benchmark rates exceed 50\\%; the largest mean margin is over \\condSinglePass.}"
     }
   ],
   "created_files": []
