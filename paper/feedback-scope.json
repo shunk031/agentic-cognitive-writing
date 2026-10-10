@@ -28,7 +28,7 @@
     {
       "path": "paper/tab/main-results.tex",
       "instruction": "Table 3 の Alternative writing systems 行を削除し、Agentic CogWriter 前の区切り線は残す",
-      "before": "\\multicolumn{7}{l}{\\textit{Alternative writing systems}} \\\\",
+      "before": "\\multicolumn{7}{l}{\\textit{Alternative writing systems}} \\\\\n",
       "after": ""
     }
   ],
