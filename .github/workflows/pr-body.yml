@@ -21,11 +21,11 @@ jobs:
           import sys
 
           body = os.environ.get("PR_BODY", "")
-          required = ["Background / Why", "Summary", "Validation", "Scope"]
+          required = ["Background", "Summary", "Validation", "Scope"]
           missing = []
           empty = []
 
-          for i, heading in enumerate(required):
+          for heading in required:
               start = re.search(
                   rf"(?m)^##\s+{re.escape(heading)}\s*$",
                   body,
