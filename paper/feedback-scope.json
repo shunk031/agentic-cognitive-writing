@@ -24,6 +24,12 @@
       "instruction": "Merge the redundant topic sentence and Table 6 evidence sentence into one evidence-first Results sentence while preserving the table reference, both percentages, and the simple-process-path interpretation.",
       "before": "The adaptive writing loop usually follows a simple process path.\nTable~\\ref{tab:process-dynamics} shows that 74.6\\% of traces are cycle-compliant with the \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} order, while a return from Review to Translating occurs in 14.8\\% of runs.",
       "after": "Table~\\ref{tab:process-dynamics} shows that the adaptive writing loop usually follows a simple process path: 74.6\\% of traces are cycle-compliant with the \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} order, while a return from Review to Translating occurs in 14.8\\% of runs."
+    },
+    {
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Remove the Table 4 one-word caption runt by shortening the parity explanation while preserving the three-run same-prompt estimand, aggregation definition, and substantive takeaway.",
+      "before": "Three-run mean same-prompt win rates; above 50\\% favors our system.",
+      "after": "Three-run mean same-prompt win rates; 50\\% is parity."
     }
   ],
   "created_files": []
