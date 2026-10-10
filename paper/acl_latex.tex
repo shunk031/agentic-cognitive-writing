@@ -28,6 +28,17 @@
 \setlength{\epigraphrule}{0pt}
 \renewcommand{\epigraphflush}{center}
 
+% Align wrapped footnote lines with the start of the footnote text.
+\makeatletter
+\renewcommand{\@makefntext}[1]{%
+  \parindent 1em
+  \noindent
+  \hangindent 1.8em
+  \hangafter 1
+  \hb@xt@1.8em{\hss\@makefnmark}#1%
+}
+\makeatother
+
 % Keep externally authored prompt files printable under pdfLaTeX without
 % changing their source. These mappings affect only Unicode characters that
 % pdfLaTeX cannot represent directly and preserve their plain-text meaning.
