@@ -42,7 +42,8 @@ The narrower post-hoc \condSingleContext\ check shows no significant difference 
 \label{sec:results-process-dynamics}
 
 The adaptive writing loop usually follows a simple process path.
-Table~\ref{tab:process-dynamics} shows that one \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle dominates the traces; returning to planning after review and replacing an existing goal are both rare.
+Because the trace log can omit the initial \texttt{Planning} switch, this diagnostic recovers it from the first subagent-delegation event when available and collapses immediate repetitions of the same process.
+Table~\ref{tab:process-dynamics} shows that \AfourCycleCompliantRate\ of runs are cycle-compliant with the \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} order; \AfourCompliantOnePassRate\ of those contain one pass, while returning to planning after review and replacing an existing goal are both rare.
 Our system therefore has the ability to revisit earlier processes but uses that flexibility infrequently on the evaluated prompts.
 This pattern is consistent with the small exploratory advantage over \condFixedOrder: adaptive ordering can help only when the controller departs from the common path.
 
@@ -74,6 +75,7 @@ Our system mostly follows the same forward \texttt{Planning}$\rightarrow$\texttt
 \end{figure*}
 
 Observed departures from the common process path do not show a larger quality advantage.
+Unlike the normalized cycle-compliance diagnostic in Table~\ref{tab:process-dynamics}, this analysis uses the exact observed process sequence.
 Table~\ref{tab:trace-outcome} compares runs that complete exactly one planning--drafting--reviewing cycle with runs that take any other path and finds similar pairwise win rates against \condFixedOrder\ and \condSingleWriter.
 Because the split is observational rather than randomized, it cannot establish whether a different path improves or worsens output.\footnote{See Appendix~\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}
 
