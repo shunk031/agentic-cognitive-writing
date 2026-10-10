@@ -35,7 +35,7 @@
       "path": "paper/sec/05_results.tex",
       "instruction": "Merge the generic trace-outcome lead into the Table 7 evidence sentence so the result is stated once while retaining the observational causal caveat in the following sentence.",
       "before": "Observed departures from the common process path do not show a larger quality advantage.\nTable~\\ref{tab:trace-outcome} compares runs that complete exactly one planning--drafting--reviewing cycle with runs that take any other path and finds similar pairwise win rates against \\condFixedOrder\\ and \\condSingleWriter.",
-      "after": "Table~\\ref{tab:trace-outcome} shows that observed departures from the common process path do not yield a larger quality advantage: runs that complete exactly one planning--drafting--reviewing cycle have similar pairwise win rates against \\condFixedOrder\\ and \\condSingleWriter\ to runs that take any other path."
+      "after": "Table~\\ref{tab:trace-outcome} shows that observed departures from the common process path do not yield a larger quality advantage: runs that complete exactly one planning--drafting--reviewing cycle have similar pairwise win rates against \\condFixedOrder\\ and \\condSingleWriter\\ to runs that take any other path."
     },
     {
       "path": "paper/sec/06_discussion.tex",
