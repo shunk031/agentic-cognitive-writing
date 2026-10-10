@@ -1,28 +1,27 @@
 \begin{table}[H]
 \centering
 \small
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{lrrrrrrr}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrr}
 \toprule
 \textbf{Condition}
-& \textbf{Completed}
 & \shortstack{\textbf{Median}\\\textbf{units}}
 & \shortstack{\textbf{Spawns}\\\textbf{/run}}
-& \shortstack{\textbf{Goals created}\\\textbf{developed/regenerated}}
+& \shortstack{\textbf{Goals}\\\textbf{created/developed/regenerated}}
 & \shortstack{\textbf{Output}\\\textbf{tokens}\\\textbf{/run}}
 & \shortstack{\textbf{Input}\\\textbf{tokens}\\\textbf{/run}}
 & \shortstack{\textbf{Mean sec.}\\\textbf{/completed run}} \\
-\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}\cmidrule(lr){7-7}\cmidrule(lr){8-8}
-\condSinglePass & \AoneCompleted & \AoneMedianOutput & \AoneSpawns & \AoneGoals & \AoneOutputTokens & \AoneInputTokens & \AoneMeanSeconds \\
-\condStaged & \AtwoCompleted & \AtwoMedianOutput & \AtwoSpawns & \AtwoGoals & \AtwoOutputTokens & \AtwoInputTokens & \AtwoMeanSeconds \\
-\condTaskPlanning & \AthreeCompleted & \AthreeMedianOutput & \AthreeSpawns & \AthreeGoals & \AthreeOutputTokens & \AthreeInputTokens & \AthreeMeanSeconds \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}\cmidrule(lr){7-7}
+\condSinglePass & \AoneMedianOutputMean & \AoneSpawnsMean & \AoneGoalCreatedMean/\AoneGoalDevelopedMean/\AoneGoalRegeneratedMean & \AoneOutputTokensMean & \AoneInputTokensMean & \AoneMeanSecondsMean \\
+\condStaged & \AtwoMedianOutputMean & \AtwoSpawnsMean & \AtwoGoalCreatedMean/\AtwoGoalDevelopedMean/\AtwoGoalRegeneratedMean & \AtwoOutputTokensMean & \AtwoInputTokensMean & \AtwoMeanSecondsMean \\
+\condTaskPlanning & \AthreeMedianOutputMean & \AthreeSpawnsMean & \AthreeGoalCreatedMean/\AthreeGoalDevelopedMean/\AthreeGoalRegeneratedMean & \AthreeOutputTokensMean & \AthreeInputTokensMean & \AthreeMeanSecondsMean \\
 \rowcolor{black!5}
-\condAgenticCogWriter & \AfourCompleted & \AfourMedianOutput & \AfourSpawns & \AfourGoals & \AfourOutputTokens & \AfourInputTokens & \AfourMeanSeconds \\
-\condNoGoals & \AfiveCompleted & \AfiveMedianOutput & \AfiveSpawns & \AfiveGoals & \AfiveOutputTokens & \AfiveInputTokens & \AfiveMeanSeconds \\
-\condFixedOrder & \AsixCompleted & \AsixMedianOutput & \AsixSpawns & \AsixGoals & \AsixOutputTokens & \AsixInputTokens & \AsixMeanSeconds \\
-\condSingleWriter & \AsevenCompleted & \AsevenMedianOutput & \AsevenSpawns & \AsevenGoals & \AsevenOutputTokens & \AsevenInputTokens & \AsevenMeanSeconds \\
+\condAgenticCogWriter & \AfourMedianOutputMean & \AfourSpawnsMean & \AfourGoalCreatedMean/\AfourGoalDevelopedMean/\AfourGoalRegeneratedMean & \AfourOutputTokensMean & \AfourInputTokensMean & \AfourMeanSecondsMean \\
+\condNoGoals & \AfiveMedianOutputMean & \AfiveSpawnsMean & \AfiveGoalCreatedMean/\AfiveGoalDevelopedMean/\AfiveGoalRegeneratedMean & \AfiveOutputTokensMean & \AfiveInputTokensMean & \AfiveMeanSecondsMean \\
+\condFixedOrder & \AsixMedianOutputMean & \AsixSpawnsMean & \AsixGoalCreatedMean/\AsixGoalDevelopedMean/\AsixGoalRegeneratedMean & \AsixOutputTokensMean & \AsixInputTokensMean & \AsixMeanSecondsMean \\
+\condSingleWriter & \AsevenMedianOutputMean & \AsevenSpawnsMean & \AsevenGoalCreatedMean/\AsevenGoalDevelopedMean/\AsevenGoalRegeneratedMean & \AsevenOutputTokensMean & \AsevenInputTokensMean & \AsevenMeanSecondsMean \\
 \bottomrule
 \end{tabular}
-\caption{Realized process and resource use in generation run 1 of 3. The systems differ substantially in delegated invocations and token use in addition to their control logic, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses rather than treating raw resource use as a controlled mechanism.}
+\caption{Process and resource use across the three generation runs. Each value is the mean of the three run-level summaries; Median units therefore averages the run-level medians rather than recomputing a median after joining runs. Goal entries report mean created/developed/regenerated events. These realized differences motivate the output-length and compute-matched sensitivity analyses rather than treating raw resource use as a controlled mechanism.}
 \label{tab:process-summary}
 \end{table}
