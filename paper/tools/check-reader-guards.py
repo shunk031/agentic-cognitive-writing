@@ -81,7 +81,7 @@ def check_caption_takeaways() -> None:
             "scores highest on both measures for WritingBench and HelloBench",
         ),
         "tab/pairwise-results.tex": (
-            "Win rates exceed 50\\% on every benchmark against every alternative",
+            "All benchmark-level rates exceed 50\\%",
             "largest mean margin over \\condSinglePass",
         ),
         "tab/ablation-results.tex": (
