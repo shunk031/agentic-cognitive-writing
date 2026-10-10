@@ -1,23 +1,35 @@
 {
-  "baseline_sha": "24ad12d94146eac91a757236e7a483a1a0114c31",
+  "baseline_sha": "5c90aa8cd54b02521ff828e18029c0684556d95d",
   "replacements": [
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Define W/L/T and the win-rate denominator for system pairwise comparisons where the notation is first introduced, without changing the two-order consistency rule.",
-      "before": "Headline win rates are computed over these order-consistent comparisons.",
-      "after": "We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent comparisons as $W/(W+L)$."
-    },
-    {
-      "path": "paper/tab/appendix-length-control.tex",
-      "instruction": "Clarify that the output-length sensitivity table uses W/L/T from the longer-response perspective, which differs from the first-named-system convention for system contrasts.",
-      "before": "W/L/T combines the two presentation orders for each prompt; ties are excluded from the longer-side win-rate denominator.",
-      "after": "Here, W/L/T denotes wins/losses/ties for the longer response after applying the two-order consistency rule; ties are excluded from the longer-side win-rate denominator."
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Clarify Table 6 so the cycle-compliance classification forms a 100% partition, the conditional one-pass rate is explicit, and replanning and goal-replacement rates are identified as non-exclusive indicators.",
+      "before": "\\begin{table}[t]\n\\centering\n\\small\n\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{lr}\n\\toprule\n\\textbf{Observed writing-loop behavior}\n& \\textbf{Rate} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\nOne Planning$\\rightarrow$Translating$\\rightarrow$Reviewing cycle\n& 74.6\\% \\\\\nReview followed by renewed Planning\n& 0.3\\% \\\\\nRuns with an accepted goal replacement\n& 0.5\\% \\\\\n\\bottomrule\n\\end{tabular}\n\\caption{One \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle accounts for 74.6\\% of runs; replanning and goal replacement are each below 1\\%. \\condAgenticCogWriter\\ only rarely revisits earlier processes.}\n\\label{tab:process-dynamics}\n\\end{table}",
+      "after": "\\begin{table}[t]\n\\centering\n\\small\n\\setlength{\\tabcolsep}{4pt}\n\\begin{tabular}{lr}\n\\toprule\n\\textbf{Observed writing-loop behavior}\n& \\textbf{Rate} \\\\\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\\nCycle-compliant path\n& 74.6\\% \\\\\nAny other complete process path\n& 25.4\\% \\\\\n\\addlinespace[2pt]\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\\nReview followed by renewed Planning\n& 0.3\\% \\\\\nRuns with an accepted goal replacement\n& 0.5\\% \\\\\n\\bottomrule\n\\end{tabular}\n\\caption{Observed writing-loop behavior. The first two rows partition complete process paths by compliance with the \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle (100\\%); \\AfourCompliantOnePassRate\\ of cycle-compliant paths contain one pass. The last two rates are non-exclusive.}\n\\label{tab:process-dynamics}\n\\end{table}"
     },
     {
       "path": "paper/sec/05_results.tex",
-      "instruction": "Remove the Figure 2 caption sentence that expands P, T, R, and E, without changing the remaining caption or figure contents.",
-      "before": "Our system mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.\nP, T, R, and E denote \\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, and end.}",
-      "after": "Our system mostly follows the same forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression as \\condFixedOrder, with few departures to earlier processes; this concentration is consistent with the small exploratory advantage of adaptive ordering.}"
+      "instruction": "Define the normalization used for Table 6 and report both the cycle-compliance rate and the conditional one-pass rate while preserving the finding that replanning and goal replacement are rare.",
+      "before": "Table~\\ref{tab:process-dynamics} shows that one \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle dominates the traces; returning to planning after review and replacing an existing goal are both rare.",
+      "after": "Because the trace log can omit the initial \\texttt{Planning} switch, this diagnostic recovers it from the first subagent-delegation event when available and collapses immediate repetitions of the same process.\nTable~\\ref{tab:process-dynamics} shows that \\AfourCycleCompliantRate\\ of runs are cycle-compliant with the \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} order; \\AfourCompliantOnePassRate\\ of those contain one pass, while returning to planning after review and replacing an existing goal are both rare."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Distinguish the raw exact-path association in Table 7 from the normalized cycle-compliance diagnostic in Table 6.",
+      "before": "Table~\\ref{tab:trace-outcome} compares runs that complete exactly one planning--drafting--reviewing cycle with runs that take any other path and finds similar pairwise win rates against \\condFixedOrder\\ and \\condSingleWriter.",
+      "after": "Unlike the normalized cycle-compliance diagnostic in Table~\\ref{tab:process-dynamics}, this analysis uses the exact observed process sequence.\nTable~\\ref{tab:trace-outcome} compares runs that complete exactly one planning--drafting--reviewing cycle with runs that take any other path and finds similar pairwise win rates against \\condFixedOrder\\ and \\condSingleWriter."
+    },
+    {
+      "path": "paper/sec/00_abstract.tex",
+      "instruction": "State the high-level process-trace finding as a simple planning--drafting--reviewing path rather than an exact single-cycle metric.",
+      "before": "Process traces show that most runs follow one planning--drafting--reviewing cycle, with departures used selectively rather than continually.",
+      "after": "Process traces show that most runs follow a simple planning--drafting--reviewing path, with departures used selectively rather than continually."
+    },
+    {
+      "path": "paper/sec/08_conclusion.tex",
+      "instruction": "State the high-level process-trace finding as a simple planning--drafting--reviewing path rather than an exact single-cycle metric.",
+      "before": "Component analyses show that neither explicit goals nor adaptive process ordering alone accounts for the overall advantage, while process traces show that most runs follow a single planning--drafting--reviewing cycle.",
+      "after": "Component analyses show that neither explicit goals nor adaptive process ordering alone accounts for the overall advantage, while process traces show that most runs follow a simple planning--drafting--reviewing path."
     }
   ],
   "created_files": []
