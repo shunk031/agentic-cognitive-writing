@@ -173,7 +173,7 @@ Table 3 summarizes the pointwise results across the three benchmarks. <span clas
 | `Task-planning` (Xiong et al., 2025) | 0.722 (0.004) | -0.033 (0.033) | 0.781 (0.003) | -0.016 (0.061) | – | -0.164 (0.015) |
 | **<span class="smallcaps">Agentic CogWriter</span>** | **0.747** (0.006) | **0.102** (0.040) | **0.791** (0.005) | <span style="color: tiedgray">**0.013**</span> (0.060) | – | 0.031 (0.035) |
 
-Table 3. Document-quality scores, mean (sample SD in small type) across 3 generation runs. Native uses each benchmark’s own evaluation criteria; Pointwise uses the common five-dimension rubric, z-scored within each run and benchmark over all seven pre-specified systems; higher is better throughout, and DoLoMiTes has no comparable native score. Bold marks the highest mean in each column. <span class="smallcaps">Agentic CogWriter</span> scores highest on both measures for WritingBench and HelloBench, and its paired differences exclude zero against every alternative except on HelloBench pointwise scores; the DoLoMiTes pointwise leader, `Staged`, is not separated from <span class="smallcaps">Agentic CogWriter</span>.
+Table 3. Document-quality scores, mean (sample SD in small type) across 3 generation runs. Native uses each benchmark’s criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. <span class="smallcaps">Agentic CogWriter</span> scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.
 
 ### Direct Comparison of Writing Systems
 
@@ -1651,7 +1651,7 @@ Figure 3. Run-level pairwise estimates separate the large system comparisons fro
 
 ## Paired Document-Quality Differences
 
-Table 9 reports paired differences behind Table 3. Each prompt’s three generation runs are averaged per system before differencing, so the prompt is the resampling unit, and the intervals come from 10,000 prompt-level bootstrap resamples.
+Table 9 reports paired differences behind Table 3 Each prompt’s three generation runs are averaged per system before differencing, so the prompt is the resampling unit, and the intervals come from 10,000 prompt-level bootstrap resamples.
 
 |  |  |  |  |  |  |
 |:---|---:|---:|---:|---:|---:|
