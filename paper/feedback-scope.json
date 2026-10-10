@@ -138,6 +138,12 @@
       "instruction": "Regenerate the Fisher exact p-value for the Single-writer path split from the new three-run process-sequences JSON.",
       "before": "\\newcommand{\\AfourSingleWriterCycleSplitP}{0.43}",
       "after": "\\newcommand{\\AfourSingleWriterCycleSplitP}{0.60}"
+    },
+    {
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Shorten the Table 4 takeaway so the rendered caption fits the five-line guard without changing the conclusion.",
+      "before": "Win rates exceed 50\\% on every benchmark against every alternative, with the largest mean margin over \\condSinglePass.",
+      "after": "All benchmark-level rates exceed 50\\%, with the largest mean margin over \\condSinglePass."
     }
   ],
   "created_files": []
