@@ -1,13 +1,10 @@
-Tables~\ref{tab:main-results} and~\ref{tab:pairwise-results} show that \condAgenticCogWriter's clearest advantage is consistent preference in direct same-prompt comparisons rather than uniform pointwise dominance.
-Our system has the highest displayed means on WritingBench and HelloBench, while \condStaged\ has the highest DoLoMiTes pointwise mean without a paired interval separating it from our system.
-Pairwise evaluation favors our system over single-pass generation, fixed writing stages, and adaptive task planning on every benchmark, supporting process-level control as an organizational advantage rather than a guarantee of maximizing every metric.
+Tables~\ref{tab:main-results} and~\ref{tab:pairwise-results} show that \condAgenticCogWriter's clearest advantage is consistent same-prompt preference rather than uniform pointwise dominance.
+Although \condStaged\ has the highest DoLoMiTes pointwise mean without a paired interval separating it from our system, pairwise evaluation favors our system over all three alternatives on every benchmark.
 
 Table~\ref{tab:ablation-results} supports a system-level interpretation.
-Removing explicit goals or fixing process order leaves performance near the full system, whereas the larger \condSingleWriter\ gap points to execution structure; the post-hoc \condSingleContext\ diagnostic does not reduce that gap to delegation alone.
-The evidence therefore favors the coordinated writing loop over any single tested mechanism.
+Removing explicit goals or fixing process order leaves performance near the full system, while the larger \condSingleWriter\ gap points to execution structure; the post-hoc \condSingleContext\ diagnostic does not reduce that gap to delegation alone.
 
-Figure~\ref{fig:process-sequences} and Table~\ref{tab:process-dynamics} show that adaptivity is selective: \condAgenticCogWriter\ usually follows planning--drafting--reviewing and departs only occasionally.
-Process-level control should therefore not be equated with continual replanning.
+Figure~\ref{fig:process-sequences} and Table~\ref{tab:process-dynamics} show that adaptivity is selective: \condAgenticCogWriter\ usually follows planning--drafting--reviewing and departs only occasionally, so process-level control should not be equated with continual replanning.
 Relative to systems that adapt task decomposition or structural reasoning during generation~\citep{xiong2025beyond,wan2025cognitive,sun2026cot}, our design adapts which writing action is selected.
 
 Current long-input tasks may be demanding without requiring process changes; benchmarks that change objectives, introduce evidence, or impose rhetorical constraints during composition could test process control more directly.
