@@ -1,23 +1,23 @@
 {
-  "baseline_sha": "a14a3a8b50d9d3f1d5eeb5abae865b42fa1d37b8",
+  "baseline_sha": "77e1491e3d663eef62d20079fbb2b8eab94bcaa8",
   "replacements": [
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Render the named Fixed-order process sequence as ordinary prose rather than typewriter text separated by math-mode arrows, preserving the same process names and order while allowing more natural line breaking.",
-      "before": "\\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle",
-      "after": "Planning--Translating--Reviewing cycle"
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Remove the redundant Complete process paths and Non-exclusive indicators row labels from Table 6 while preserving the rule that visually separates the two row groups.",
+      "before": "\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\\n",
+      "after": ""
     },
     {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Render the observed process sequence as ordinary prose rather than typewriter text separated by math-mode arrows so the Results sentence can wrap naturally without changing its meaning.",
-      "before": "\\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} order",
-      "after": "Planning--Translating--Reviewing order"
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Remove the redundant Complete process paths and Non-exclusive indicators row labels from Table 6 while preserving the rule that visually separates the two row groups.",
+      "before": "\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\\n",
+      "after": ""
     },
     {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Render the Figure 2 caption process sequence as ordinary prose rather than typewriter text separated by math-mode arrows, preserving the same named forward progression while improving caption typography and wrapping.",
-      "before": "forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression",
-      "after": "forward Planning--Translating--Reviewing progression"
+      "path": "paper/tab/trace-outcome.tex",
+      "instruction": "Make the Table 7 caption standalone by naming the compared process-path groups explicitly instead of referring to both groups indirectly, while retaining the aggregation and observational qualification.",
+      "before": "\\caption{Similar win rates appear for both process-path groups against \\condFixedOrder\\ and \\condSingleWriter. Within each group and comparison, W/L/T are summed over benchmarks and all three runs before $W/(W+L)$. The split is observational, not causal.}",
+      "after": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates sum wins and losses across benchmarks and all three runs by path group and comparison. The split is observational, not causal.}"
     }
   ],
   "created_files": []
