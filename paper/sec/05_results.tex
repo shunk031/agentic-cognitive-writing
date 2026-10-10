@@ -18,9 +18,8 @@ The preference also persists under more conservative accounting: counting every 
 
 \input{tab/pairwise-results}
 
-The direct-comparison result supports the tested system as a whole rather than a single mechanism.
-Our system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \texttt{Monitor}.
-The ablations below test whether explicit goals or adaptive process order explain these differences.
+The direct-comparison result supports the tested system as a whole because it differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \texttt{Monitor}.
+The ablations below test whether explicit goals or adaptive process order explain the advantage.
 
 \subsection{Ablations and Execution Diagnostics}
 \label{sec:results-mechanism}
@@ -48,10 +47,8 @@ This pattern is consistent with the small exploratory advantage over \condFixedO
 
 \input{tab/process-dynamics}
 
-Figure~\ref{fig:process-sequences} shows the same concentration at the sequence and transition levels.
-The most frequent complete process path is the forward planning--drafting--reviewing progression, and our system is visually close to \condFixedOrder\ because much of the observed behavior follows that path.
-The demanding-subset selection increases input length, requested output length, or procedural burden, but it does not guarantee that every task intrinsically requires replanning.
-The traces therefore show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing in general.
+Figure~\ref{fig:process-sequences} shows the same concentration at the sequence and transition levels: the most frequent complete process path is the forward planning--drafting--reviewing progression, making our system visually close to \condFixedOrder.
+Because demanding-subset selection increases input length, requested output length, or procedural burden without guaranteeing that every task intrinsically requires replanning, the traces show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing in general.
 
 \begin{figure*}[t]
 \centering
@@ -73,8 +70,7 @@ Our system mostly follows the same forward \texttt{Planning}$\rightarrow$\texttt
 \label{fig:process-sequences}
 \end{figure*}
 
-Observed departures from the common process path do not show a larger quality advantage.
-Table~\ref{tab:trace-outcome} compares runs that complete exactly one planning--drafting--reviewing cycle with runs that take any other path and finds similar pairwise win rates against \condFixedOrder\ and \condSingleWriter.
+Table~\ref{tab:trace-outcome} shows that observed departures from the common process path do not yield a larger quality advantage: runs that complete exactly one planning--drafting--reviewing cycle have similar pairwise win rates against \condFixedOrder\ and \condSingleWriter\ to runs that take another path.
 Because the split is observational rather than randomized, it cannot establish whether a different path improves or worsens output.\footnote{See Appendix~\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}
 
 \input{tab/trace-outcome}
