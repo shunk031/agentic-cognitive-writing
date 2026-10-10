@@ -1,23 +1,11 @@
 {
-  "baseline_sha": "3348e1e03cdc39031f94bf0264c4472c8e066cd6",
+  "baseline_sha": "eea138e433487ac921ae3a83aa0f38980977bf7f",
   "replacements": [
     {
       "path": "paper/sec/04_experiments.tex",
-      "instruction": "Remove the navigation-only sentence explaining why the seven pre-specified systems are numbered, while preserving the seven-system study definition by folding it into the Alternative writing systems topic sentence.",
-      "before": "We consider seven pre-specified systems under the same generation setup.\nThe systems are numbered below so that the alternatives, ablations, execution variant, and full system can be distinguished throughout the analysis.\n\n\\paragraph{Alternative writing systems.}\nWe compare three alternatives to \\condAgenticCogWriter: (1) \\condSinglePass\\ produces the complete document in one generation call; (2) \\condStaged\\ executes \\texttt{Pre-Write}$\\rightarrow$\\texttt{Write}$\\rightarrow$\\texttt{Re-Write}, following the common separation of planning, drafting, and revision~\\citep{yang2022re3,wan2025cognitive}; and (3) \\condTaskPlanning\\ follows a WriteHERE-style adaptive task graph~\\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes.",
-      "after": "\\paragraph{Alternative writing systems.}\nAmong the seven pre-specified systems under the same generation setup, we compare three alternatives to \\condAgenticCogWriter: (1) \\condSinglePass\\ produces the complete document in one generation call; (2) \\condStaged\\ executes \\texttt{Pre-Write}$\\rightarrow$\\texttt{Write}$\\rightarrow$\\texttt{Re-Write}, following the common separation of planning, drafting, and revision~\\citep{yang2022re3,wan2025cognitive}; and (3) \\condTaskPlanning\\ follows a WriteHERE-style adaptive task graph~\\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Delete the redundant sentence 'This is our focal system.' because the immediately preceding sentence already identifies Agentic CogWriter as the full system; preserve the full-system definition itself.",
-      "before": "(7) \\condAgenticCogWriter\\ is the full system described in Section~\\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.\nThis is our focal system.",
-      "after": "(7) \\condAgenticCogWriter\\ is the full system described in Section~\\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Delete the benchmark-summary sentence that merely restates the three benchmark descriptions, and join the demanding-subset rationale to the same paragraph so the manuscript does not create a one-sentence body paragraph.",
-      "before": "We use three benchmarks to test whether process-level organization transfers across different forms of long-form writing: (1) WritingBench~\\citep{wu2026writingbench}, which covers broad real-world writing requests with task-specific evaluation criteria; (2) HelloBench~\\citep{que2024hellobench}, which includes long-text summarization, open-ended generation, and completion; and (3) DoLoMiTes~\\citep{malaviya2025dolomites}, which targets methodical expert writing with explicit objectives, procedures, inputs, and constraints.\nThe benchmarks cover general instruction following, sustained long-context generation, and structured expert-document production.\n\nWe evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document.",
-      "after": "We use three benchmarks to test whether process-level organization transfers across different forms of long-form writing: (1) WritingBench~\\citep{wu2026writingbench}, which covers broad real-world writing requests with task-specific evaluation criteria; (2) HelloBench~\\citep{que2024hellobench}, which includes long-text summarization, open-ended generation, and completion; and (3) DoLoMiTes~\\citep{malaviya2025dolomites}, which targets methodical expert writing with explicit objectives, procedures, inputs, and constraints.\nWe evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document."
+      "instruction": "Split the benchmark subset rationale from the selection-procedure details to satisfy the paragraph-length guard, without restoring the deleted redundant benchmark-summary sentence or changing any prose.",
+      "before": "We evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document.\nWe first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts.",
+      "after": "We evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document.\n\nWe first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts."
     }
   ],
   "created_files": []
