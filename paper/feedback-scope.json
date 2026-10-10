@@ -126,6 +126,30 @@
       "instruction": "Tighten the vertical gap between Figure 2 panels (b) and (c) without changing their content.",
       "before": "\\small (b) \\condAgenticCogWriter\\\\[0.5em]",
       "after": "\\small (b) \\condAgenticCogWriter\\\\[-0.2em]"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Reduce Figure 2 panel widths one final step after PDF inspection showed five Conclusion lines still spilling, while preserving panel legibility.",
+      "before": "\\begin{minipage}[c]{0.54\\textwidth}",
+      "after": "\\begin{minipage}[c]{0.47\\textwidth}"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Reduce Figure 2 panel widths one final step after PDF inspection showed five Conclusion lines still spilling, while preserving panel legibility.",
+      "before": "\\begin{minipage}[c]{0.34\\textwidth}",
+      "after": "\\begin{minipage}[c]{0.30\\textwidth}"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Shorten the Figure 2 panel-identification sentence to target a three-line rendered caption while retaining standalone panel meanings and the process takeaway.",
+      "before": "\\caption{Observed writing-process trajectories: (a) frequent complete paths; (b,c) transition counts for \\condAgenticCogWriter\\ and \\condFixedOrder.\nOur system mostly follows the same forward Planning--Translating--Reviewing progression as \\condFixedOrder; more returns to Translating than Planning are consistent with the small exploratory advantage of adaptive ordering.}",
+      "after": "\\caption{Observed writing-process trajectories: (a) frequent paths; (b,c) \\condAgenticCogWriter\\ and \\condFixedOrder\\ transition counts.\nOur system mostly follows the same forward Planning--Translating--Reviewing progression as \\condFixedOrder; more returns to Translating than Planning are consistent with the small exploratory advantage of adaptive ordering.}"
+    },
+    {
+      "path": "paper/tab/trace-outcome.tex",
+      "instruction": "Shorten the Table 7 aggregation sentence after PDF inspection while keeping benchmark, run, path-group, comparison, observational, and non-causal information explicit.",
+      "before": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins/losses summed across benchmarks and three runs for each path group and comparison; the split is observational, not causal.}",
+      "after": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. W/L are summed over benchmarks and three runs by path group and comparison; the split is observational, not causal.}"
     }
   ],
   "created_files": []
