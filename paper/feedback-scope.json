@@ -1,23 +1,11 @@
 {
-  "baseline_sha": "a14a3a8b50d9d3f1d5eeb5abae865b42fa1d37b8",
+  "baseline_sha": "ae9003c100cbfe272c2d0b902d5142f013bb7547",
   "replacements": [
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Render the named Fixed-order process sequence as ordinary prose rather than typewriter text separated by math-mode arrows, preserving the same process names and order while allowing more natural line breaking.",
-      "before": "\\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle",
-      "after": "Planning--Translating--Reviewing cycle"
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Render the observed process sequence as ordinary prose rather than typewriter text separated by math-mode arrows so the Results sentence can wrap naturally without changing its meaning.",
-      "before": "\\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} order",
-      "after": "Planning--Translating--Reviewing order"
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Render the Figure 2 caption process sequence as ordinary prose rather than typewriter text separated by math-mode arrows, preserving the same named forward progression while improving caption typography and wrapping.",
-      "before": "forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression",
-      "after": "forward Planning--Translating--Reviewing progression"
+      "path": "paper/acl_latex.tex",
+      "instruction": "footnote の継続行を本文開始位置に揃え、元の LaTeX 脚注と同じく番号と本文の間に余計な間隔を置かず、右端は通常の両端揃えを保ち、\\@makefntext を直接上書きせず footmisc の標準オプションを使う",
+      "before": "\\usepackage{tcolorbox}\n\\tcbuselibrary{breakable}",
+      "after": "\\usepackage{tcolorbox}\n\\usepackage[hang,flushmargin]{footmisc}\n\\tcbuselibrary{breakable}"
     }
   ],
   "created_files": []
