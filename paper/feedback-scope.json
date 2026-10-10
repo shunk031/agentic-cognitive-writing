@@ -1,41 +1,23 @@
 {
-  "baseline_sha": "addb30950d7884a00e4e369b7b1db53a33966a1f",
+  "baseline_sha": "8e8258e6477f8aeb209bdfe8160b81a0415b7fbb",
   "replacements": [
     {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Remove the redundant Table 3 row-group label 'Alternative writing systems'; the three alternative rows are already identified in the surrounding text and separated visually from Agentic CogWriter.",
-      "before": "\\multicolumn{7}{l}{\\textit{Alternative writing systems}} \\\\\n",
-      "after": ""
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Render the named Fixed-order process sequence as ordinary prose rather than typewriter text separated by math-mode arrows, preserving the same process names and order while allowing more natural line breaking.",
+      "before": "\\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle",
+      "after": "Planning--Translating--Reviewing cycle"
     },
     {
-      "path": "paper/tab/ablation-results.tex",
-      "instruction": "Remove the redundant Table 5 row-group label 'Ablations'; NoGoals and FixedOrder are already defined as the two pre-specified ablations in the surrounding manuscript.",
-      "before": "\\multicolumn{5}{l}{\\textit{Ablations}} \\\\\n",
-      "after": ""
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Render the Table 6 process sequence as ordinary prose rather than typewriter text separated by math-mode arrows so the opening Results paragraph can wrap compactly without changing its meaning.",
+      "before": "\\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} order",
+      "after": "Planning--Translating--Reviewing order"
     },
     {
-      "path": "paper/tab/ablation-results.tex",
-      "instruction": "Remove the redundant Table 5 row-group label 'Bundled execution diagnostic' while retaining the separator before SingleWriter; the manuscript already defines SingleWriter as diagnostic rather than a clean ablation.",
-      "before": "\\multicolumn{5}{l}{\\textit{Bundled execution diagnostic}} \\\\\n",
-      "after": ""
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Remove the redundant Table 6 row-group label 'Complete process paths'; the caption already states that the first two rows partition complete process paths.",
-      "before": "\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\\n",
-      "after": ""
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Remove the redundant Table 6 row-group label 'Non-exclusive indicators' but preserve a visible rule separating the complete-path rows from the non-exclusive indicators so the table structure remains legible.",
-      "before": "\\addlinespace[2pt]\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\\n",
-      "after": "\\addlinespace[2pt]\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n"
-    },
-    {
-      "path": "paper/tab/trace-outcome.tex",
-      "instruction": "Make the Table 7 caption standalone by naming the two process-path groups explicitly instead of beginning with the anaphoric 'Both process-path groups'. Preserve the aggregation definition and observational-not-causal qualifier while keeping the rendered caption within the five-line limit.",
-      "before": "\\caption{Both process-path groups have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins and losses summed over benchmarks and all three runs within each group and comparison. The split is observational, not causal.}",
-      "after": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates sum wins and losses across benchmarks and all three runs by path group and comparison. The split is observational, not causal.}"
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Render the Figure 2 caption process sequence as ordinary prose rather than typewriter text separated by math-mode arrows, preserving the same named forward progression while improving caption typography and wrapping.",
+      "before": "forward \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} progression",
+      "after": "forward Planning--Translating--Reviewing progression"
     }
   ],
   "created_files": []
