@@ -17,7 +17,7 @@
       "path": "paper/tab/trace-outcome.tex",
       "instruction": "Remove the repeated W/(W+L) and W/L/T notation from the Table 7 caption because those are already defined in Evaluation, while preserving exactly which observations are aggregated and the observational-not-causal takeaway.",
       "before": "\\caption{Similar win rates appear for both process-path groups against \\condFixedOrder\\ and \\condSingleWriter. Within each group and comparison, W/L/T are summed over benchmarks and all three runs before $W/(W+L)$. The split is observational, not causal.}",
-      "after": "\\caption{Similar win rates appear for both process-path groups against \\condFixedOrder\\ and \\condSingleWriter. Within each group and comparison, wins and losses are summed over benchmarks and all three runs before computing the win rate. The split is observational, not causal.}"
+      "after": "\\caption{Both process-path groups have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins and losses summed over benchmarks and all three runs within each group and comparison. The split is observational, not causal.}"
     }
   ],
   "created_files": []
