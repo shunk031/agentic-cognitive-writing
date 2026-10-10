@@ -1,17 +1,11 @@
 {
-  "baseline_sha": "754ccb773e60aed23f018bb03d7c5ba21df1eee8",
+  "baseline_sha": "a14a3a8b50d9d3f1d5eeb5abae865b42fa1d37b8",
   "replacements": [
     {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "±のところ含めて灰色とかになってないですね？修正しましょう",
-      "before": "\\textcolor{tiedgray}{\\textbf{0.064}}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}",
-      "after": "\\textcolor{tiedgray}{\\textbf{0.064}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}}"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "±のところ含めて灰色とかになってないですね？修正しましょう",
-      "before": "\\textcolor{tiedgray}{\\textbf{0.013}}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.060}",
-      "after": "\\textcolor{tiedgray}{\\textbf{0.013}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.060}}"
+      "path": "paper/acl_latex.tex",
+      "instruction": "footnoteのインデントを揃えたいです。",
+      "before": "\\renewcommand{\\epigraphflush}{center}",
+      "after": "\\renewcommand{\\epigraphflush}{center}\n\n% Align wrapped footnote lines with the start of the footnote text.\n\\makeatletter\n\\renewcommand{\\@makefntext}[1]{%\n  \\parindent 1em\n  \\noindent\n  \\hangindent 1.8em\n  \\hangafter 1\n  \\hb@xt@1.8em{\\hss\\@makefnmark}#1%\n}\n\\makeatother"
     }
   ],
   "created_files": []
