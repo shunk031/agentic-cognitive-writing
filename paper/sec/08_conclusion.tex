@@ -1,5 +1,3 @@
-\condAgenticCogWriter\ reframes long-form writing for AI agents as a process-level control problem.
-A top-level \texttt{Monitor} chooses whether to plan, draft, or review from persistent writing state and delegates the selected process to a role-specific subagent.
-Across three long-form writing benchmarks, our system is preferred to single-pass generation, fixed writing stages, and adaptive task planning in direct same-prompt comparisons.
-Component analyses show that neither explicit goals nor adaptive process ordering alone accounts for the overall advantage, while process traces show that most runs follow a single planning--drafting--reviewing cycle.
+\condAgenticCogWriter\ reframes long-form writing for AI agents as a process-level control problem: a top-level \texttt{Monitor} selects planning, drafting, or reviewing from persistent writing state and delegates each process to a role-specific subagent.
+Across three long-form writing benchmarks, our system is preferred to single-pass generation, fixed writing stages, and adaptive task planning in direct same-prompt comparisons; component analyses show that neither explicit goals nor adaptive process ordering alone explains the advantage, while most traces follow a single planning--drafting--reviewing cycle.
 Together, these results support process-level control as a promising design for long-form writing agents and show how cognitive writing theory can yield executable, falsifiable system hypotheses.
