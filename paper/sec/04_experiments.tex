@@ -10,7 +10,7 @@ Table~\ref{tab:experimental-conditions} shows that the alternatives advance a wh
 
 \paragraph{Ablations of \condAgenticCogWriter.}
 Two pre-specified ablations test whether explicit goals or adaptive ordering explain the full-system gain by changing one control mechanism while retaining the rest of the loop.
-(4) \condNoGoals\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \condFixedOrder\ keeps the shared draft, goals, process history, and subagents but replaces the \texttt{Monitor}'s adaptive decision with a repeated \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} cycle.
+(4) \condNoGoals\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \condFixedOrder\ keeps the shared draft, goals, process history, and subagents but replaces the \texttt{Monitor}'s adaptive decision with a repeated Planning--Translating--Reviewing cycle.
 
 \paragraph{Execution variant and full system.}
 (6) \condSingleWriter\ retains the goal representation and adaptive process loop but performs planning, drafting, and reviewing in one writer context without subagent delegation; it also limits each \texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.
