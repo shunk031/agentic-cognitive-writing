@@ -12,6 +12,12 @@
       "instruction": "Merge the duplicated ablation framing so the paragraph states once that the two pre-specified ablations each change one mechanism and test whether explicit goals or adaptive ordering explain the full-system gain, while preserving both condition definitions unchanged.",
       "before": "Two pre-specified ablations change one control mechanism while retaining the rest of the loop.\n(4) \\condNoGoals\\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \\condFixedOrder\\ keeps the shared draft, goals, process history, and subagents but replaces the \\texttt{Monitor}'s adaptive decision with a repeated \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle.\nThe comparison tests whether explicit goals or adaptive ordering explain the full-system gain.",
       "after": "Two pre-specified ablations test whether explicit goals or adaptive ordering explain the full-system gain by changing one control mechanism while retaining the rest of the loop.\n(4) \\condNoGoals\\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \\condFixedOrder\\ keeps the shared draft, goals, process history, and subagents but replaces the \\texttt{Monitor}'s adaptive decision with a repeated \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle."
+    },
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Keep Table 2 explicitly referenced from main prose so the operational comparison remains discoverable; preserve the existing takeaway and change only its lead-in.",
+      "before": "The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas our system advances a writing process.",
+      "after": "Table~\\ref{tab:experimental-conditions} shows that the alternatives advance a whole document, a fixed writing stage, or an adaptive task node, whereas our system advances a writing process."
     }
   ],
   "created_files": []
