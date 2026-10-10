@@ -40,8 +40,7 @@ The narrower post-hoc \condSingleContext\ check shows no significant difference 
 \subsection{Observed Writing-Process Behavior}
 \label{sec:results-process-dynamics}
 
-The adaptive writing loop usually follows a simple process path.
-Table~\ref{tab:process-dynamics} shows that 74.6\% of traces are cycle-compliant with the \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} order, while a return from Review to Translating occurs in 14.8\% of runs.
+Table~\ref{tab:process-dynamics} shows that the adaptive writing loop usually follows a simple process path: 74.6\% of traces are cycle-compliant with the \texttt{Planning}$\rightarrow$\texttt{Translating}$\rightarrow$\texttt{Reviewing} order, while a return from Review to Translating occurs in 14.8\% of runs.
 Full replanning after Review is rare (0.3\%), as is replacing an existing goal (0.5\%), so our system uses its adaptive control more often for targeted redrafting than for full replanning.
 This pattern is consistent with the small exploratory advantage over \condFixedOrder: adaptive ordering can help only when the controller departs from the common path.
 
