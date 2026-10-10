@@ -27,9 +27,15 @@
     },
     {
       "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Remove the redundant Table 6 row-group label 'Non-exclusive indicators' and the now-unneeded full-width separator; retain a small vertical gap and the caption's explicit distinction between the two row groups.",
+      "instruction": "Remove the redundant Table 6 row-group label 'Non-exclusive indicators' but preserve a visible rule separating the complete-path rows from the non-exclusive indicators so the table structure remains legible.",
       "before": "\\addlinespace[2pt]\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\\n",
-      "after": "\\addlinespace[2pt]\n"
+      "after": "\\addlinespace[2pt]\n\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n"
+    },
+    {
+      "path": "paper/tab/trace-outcome.tex",
+      "instruction": "Make the Table 7 caption standalone by naming the two process-path groups explicitly instead of beginning with the anaphoric 'Both process-path groups'. Preserve the aggregation definition and observational-not-causal qualifier.",
+      "before": "\\caption{Both process-path groups have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins and losses summed over benchmarks and all three runs within each group and comparison. The split is observational, not causal.}",
+      "after": "\\caption{Planning--drafting--reviewing runs and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins and losses summed over benchmarks and all three runs within each group and comparison. The split is observational, not causal.}"
     }
   ],
   "created_files": []
