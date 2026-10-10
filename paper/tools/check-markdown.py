@@ -366,6 +366,8 @@ def check():
     ):
         assert "\\" + required_macro in main_sources, required_macro
 
+    # These spot checks protect the current reader-facing estimands in Markdown.
+    # Core process/resource evidence is three-run by default, so requiring run-1 values here would force stale evidence back into the reader-facing build.
     names = [
         "PooledFourOneRateMean",
         "PooledFourTwoRateMean",
@@ -373,9 +375,9 @@ def check():
         "DoLoFourOneRateMean",
         "HelloFourOneRateMean",
         "WritingFourOneRateMean",
-        "AfourOutputTokens",
-        "AfourInputTokens",
-        "AfourGoalRegenerated",
+        "AfourOutputTokensMean",
+        "AfourInputTokensMean",
+        "AfourGoalRegeneratedMean",
         "AfourLedgerEntriesMean",
         "AfourLedgerWithProposalMean",
         "AfourGoalCreatedMean",
