@@ -1,11 +1,23 @@
 {
-  "baseline_sha": "ae9003c100cbfe272c2d0b902d5142f013bb7547",
+  "baseline_sha": "4b3b3ed739c68b77bc3cdcbcc06d9cadb18b5c18",
   "replacements": [
     {
-      "path": "paper/acl_latex.tex",
-      "instruction": "footnote の継続行を本文開始位置に揃え、元の LaTeX 脚注と同じく番号と本文の間に余計な間隔を置かず、右端は通常の両端揃えを保ち、\\@makefntext を直接上書きせず footmisc の標準オプションを使う",
-      "before": "\\usepackage{tcolorbox}\n\\tcbuselibrary{breakable}",
-      "after": "\\usepackage{tcolorbox}\n\\usepackage[hang,flushmargin]{footmisc}\n\\tcbuselibrary{breakable}"
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "脚注4の末尾1語だけの折り返しを避けるため、意味を保ったまま簡潔に言い換える",
+      "before": "\\footnote{See Appendix~\\ref{app:prompts} for the full procedures and evaluator prompts.}",
+      "after": "\\footnote{See Appendix~\\ref{app:prompts} for evaluation procedures and prompts.}"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "脚注7の末尾1語だけの折り返しを避けるため、run-level の意味を保ったまま簡潔に言い換える",
+      "before": "\\footnote{See Appendix~\\ref{app:pairwise-detail} for the run-level intervals and corrected test decisions.}",
+      "after": "\\footnote{See Appendix~\\ref{app:pairwise-detail} for run-level intervals and corrected results.}"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "脚注10の末尾の短い折り返しを避けるため、process counts・goal events・resource-use statistics の意味を保って簡潔にまとめる",
+      "before": "\\footnote{See Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}",
+      "after": "\\footnote{See Appendix~\\ref{app:process-behavior} for process, goal, and resource statistics.}"
     }
   ],
   "created_files": []
