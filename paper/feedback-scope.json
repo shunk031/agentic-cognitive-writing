@@ -77,7 +77,7 @@
       "path": "paper/tab/trace-outcome.tex",
       "instruction": "Replace the hard-coded Table 7 process-path win rates with the existing process-sequence macros regenerated from the three-run process-sequences JSON.",
       "before": "Plan$\\rightarrow$draft$\\rightarrow$review\n& 57.4\\%\n& 72.2\\% \\\\\nOther path\n& 54.9\\%\n& 75.2\\% \\\\",
-      "after": "Plan$\\rightarrow$draft$\\rightarrow$review\n& \\AfourExactCycleFixedOrderWinRate\n& \\AfourExactCycleSingleWriterWinRate \\\\\nOther path\n& \\AfourNonExactFixedOrderWinRate\n& \\AfourNonExactSingleWriterWinRate \\\\"
+      "after": "Plan$\\rightarrow$draft$\\rightarrow$review\n& \\AfourExactCycleFixedOrderWinRate\n& \\AfourExactCycleSingleWriterWinRate \\\\\nOther path\n& \\AfourNonExactFixedOrderWinRate\n& \\AfourNonExactSingleWriterWinRate \\\\""
     },
     {
       "path": "paper/tab/pairwise-results.tex",
@@ -156,6 +156,42 @@
       "instruction": "Replace the reader-check-forbidden word 'pooled' in the cross-family limitation without changing the conclusion about the selected contrasts.",
       "before": "The pooled direction remains positive for all three selected cross-family contrasts,",
       "after": "The overall direction remains positive for all three selected cross-family contrasts,"
+    },
+    {
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Replace the vague Across-column verb with the exact aggregation order so readers can see that benchmark counts are summed within each generation run, W/(W+L) is computed at the run level, and the three run-level rates are then averaged.",
+      "before": "\\caption{Three-run mean same-prompt win rates for \\condAgenticCogWriter; above 50\\% favors our system. Across combines wins and losses over benchmarks within each run. All benchmark-level rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}",
+      "after": "\\caption{Three-run mean same-prompt win rates for \\condAgenticCogWriter; above 50\\% favors our system. Across sums wins and losses over benchmarks within each run, computes $W/(W+L)$, then averages the three run-level rates. All benchmark-level rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}"
+    },
+    {
+      "path": "paper/tab/ablation-results.tex",
+      "instruction": "Replace the vague Across-column verb with the exact aggregation order so readers can see that benchmark counts are summed within each generation run, W/(W+L) is computed at the run level, and the three run-level rates are then averaged.",
+      "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates for ablations and a diagnostic; above 50\\% favors our system. Across combines wins and losses over benchmarks within each run. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, unlike the larger \\condSingleWriter\\ gap.}",
+      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates for ablations and a diagnostic; above 50\\% favors our system. Across sums wins and losses over benchmarks within each run, computes $W/(W+L)$, then averages the three run-level rates. \\condNoGoals\\ and \\condFixedOrder\\ remain near parity, unlike the larger \\condSingleWriter\\ gap.}"
+    },
+    {
+      "path": "paper/tab/trace-outcome.tex",
+      "instruction": "State the Table 7 aggregation explicitly: within each process-path group and comparison, sum W/L/T counts over all benchmarks and all three generation runs before computing W/(W+L), while preserving the observational interpretation.",
+      "before": "\\caption{Win rates are similar for the two process-path groups against \\condFixedOrder\\ and \\condSingleWriter when combined across the three generation runs. The observational split describes association rather than a causal effect.}",
+      "after": "\\caption{Win rates are similar for the two process-path groups against \\condFixedOrder\\ and \\condSingleWriter. W/L/T counts are summed over all benchmarks and three generation runs within each group and comparison before computing $W/(W+L)$. The split is observational rather than causal.}"
+    },
+    {
+      "path": "paper/sec/07_limitations.tex",
+      "instruction": "Replace the vague cross-family overall-direction wording with the actual aggregation unit and scope: this is a single-run robustness check, and W/L/T counts are summed over the three benchmarks within each selected contrast before interpreting its direction.",
+      "before": "The overall direction remains positive for all three selected cross-family contrasts, but the cross-family judge produces many ties and reverses 3 of 9 benchmark-level comparisons; we also did not collect human judgments, so model-judge preference should not be treated as human preference.",
+      "after": "In the single-run cross-family check, summing W/L/T counts over the three benchmarks within each selected contrast leaves all three contrasts favoring our system, but the cross-family judge produces many ties and reverses 3 of 9 benchmark-level comparisons; we also did not collect human judgments, so model-judge preference should not be treated as human preference."
+    },
+    {
+      "path": "paper/tab/appendix-cross-family.tex",
+      "instruction": "Replace pooled and combined shorthand in the cross-family caption with the exact aggregation and order-consistency operations used by the analysis.",
+      "before": "\\caption{Cross-family judge robustness using \\modelCross. The pooled direction remains positive for all three selected contrasts, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and the cross-family judge produces many ties, so exact win rates are judge-sensitive. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose combined outcome matches the primary judge.}",
+      "after": "\\caption{Cross-family judge robustness using \\modelCross. Within each selected contrast, W/L/T counts are summed over benchmarks before computing $W/(W+L)$; all three contrasts favor our system, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.}"
+    },
+    {
+      "path": "paper/sec/10_appendix.tex",
+      "instruction": "Make the cross-family appendix prose explicit about benchmark-level versus contrast-level aggregation and replace combined/overall shorthand with order-consistent outcomes and the exact W/L/T scope.",
+      "before": "Table~\\ref{tab:appendix-cross-family} reports combined outcomes for three cross-family robustness contrasts involving our system: \\CrossFamilyFullSinglePassWLT\\ versus \\condSinglePass, \\CrossFamilyFullTaskPlanningWLT\\ versus \\condTaskPlanning, and \\CrossFamilyFullNoGoalsWLT\\ versus \\condNoGoals.\nThe corresponding Wilson intervals are \\CrossFamilyFullSinglePassInterval, \\CrossFamilyFullTaskPlanningInterval, and \\CrossFamilyFullNoGoalsInterval.\nThe judge yields a non-tied combined outcome on \\CrossFamilyPooledCommitRate\\ of \\CrossFamilyPooledN\\ eligible pairs, with \\CrossFamilyPooledWLT\\ overall W/L/T; \\CrossFamilyPooledAgreement\\ prompt-level outcomes agree with the same-family judge.",
+      "after": "Table~\\ref{tab:appendix-cross-family} reports benchmark-level results for three cross-family robustness contrasts involving our system.\nWithin each contrast, summing W/L/T counts over the three benchmarks gives \\CrossFamilyFullSinglePassWLT\\ versus \\condSinglePass, \\CrossFamilyFullTaskPlanningWLT\\ versus \\condTaskPlanning, and \\CrossFamilyFullNoGoalsWLT\\ versus \\condNoGoals.\nThe corresponding Wilson intervals are \\CrossFamilyFullSinglePassInterval, \\CrossFamilyFullTaskPlanningInterval, and \\CrossFamilyFullNoGoalsInterval.\nAcross all three selected contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on \\CrossFamilyPooledCommitRate\\ of \\CrossFamilyPooledN\\ eligible pairs, with \\CrossFamilyPooledWLT\\ W/L/T; \\CrossFamilyPooledAgreement\\ prompt-level outcomes agree with the same-family judge."
     }
   ],
   "created_files": []
