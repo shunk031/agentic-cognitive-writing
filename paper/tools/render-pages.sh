@@ -59,15 +59,18 @@ for page_number in "$@"; do
         printf 'Invalid page number: %s\n' "$page_number" >&2
         exit 2
     fi
-    docker run --rm \
-        --user "$(id -u):$(id -g)" \
-        --volume "$paper_dir:/workspace" \
-        --workdir /workspace \
-        "$image_tag" \
-        gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r110 \
-        -dFirstPage="$page_number" -dLastPage="$page_number" \
-        -sOutputFile="/workspace/build/render/$render_stamp/page-$page_number.png" \
-        /workspace/build/acl_latex.pdf
 done
+
+# One container renders every requested page, one Ghostscript process per CPU.
+printf '%s\n' "$@" | docker run --rm -i \
+    --user "$(id -u):$(id -g)" \
+    --volume "$paper_dir:/workspace" \
+    --workdir /workspace \
+    "$image_tag" \
+    xargs -P "$(nproc)" -I '{}' \
+    gs -q -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r110 \
+    -dFirstPage='{}' -dLastPage='{}' \
+    -sOutputFile="/workspace/build/render/$render_stamp/page-{}.png" \
+    /workspace/build/acl_latex.pdf
 
 printf 'Rendered pages under %s\n' "$render_dir"

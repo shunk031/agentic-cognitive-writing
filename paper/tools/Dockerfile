@@ -8,6 +8,10 @@ ENV HTTP_PROXY=${HTTP_PROXY}
 ENV HTTPS_PROXY=${HTTPS_PROXY}
 ENV NO_PROXY=${NO_PROXY}
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN set -eu; \
     for repository in \
         https://mirrors.mit.edu/CTAN/systems/texlive/tlnet \

@@ -52,9 +52,11 @@ image_has_required_packages() {
             helvet.sty \
             fvextra.sty \
             tcolorbox.sty \
-            pdfcol.sty; do
+            pdfcol.sty \
+            threeparttable.sty; do
             kpsewhich "$style" >/dev/null
         done
+        command -v pdftotext >/dev/null
     '
 }
 
