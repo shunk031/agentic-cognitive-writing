@@ -208,9 +208,9 @@ def analyze_trace_events(
         "sequence_for_cycle_compliance": sequence_for_cycle_compliance,
         "collapsed_sequence": collapsed_sequence,
         "sequence_length": len(sequence),
-        "single_cycle_exact": sequence == list(fixed_order),
+        "single_cycle_exact": sequence_for_cycle_compliance == list(fixed_order),
         "matches_fixed_order_up_to_single_process_repetition": (
-            _single_process_repetition(sequence, fixed_order)
+            _single_process_repetition(sequence_for_cycle_compliance, fixed_order)
         ),
         "cycle_compliant": cycle_passes is not None,
         "cycle_passes": cycle_passes,
@@ -761,7 +761,8 @@ def analyze_run_roots(
                 "Collapse immediate repeats in the observed sequence and compare "
                 "with one or more canonical passes. If the first delegated role "
                 "is Planning while the first process_switch target is later, "
-                "prepend that omitted Planning only for cycle-compliance metrics."
+                "prepend that omitted Planning for all path-classification metrics, "
+                "including exact-cycle and cycle-compliance metrics."
             ),
             "leading_process_analysis": {
                 "decision": "logging_artifact",

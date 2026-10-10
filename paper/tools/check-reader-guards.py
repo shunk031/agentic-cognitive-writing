@@ -62,6 +62,22 @@ def check_appendix_sections(acl: str) -> None:
         )
 
 
+def require_concepts(
+    path: str,
+    concept_groups: tuple[tuple[str, tuple[str, ...]], ...],
+) -> None:
+    """Require reader-facing concepts without freezing one exact sentence."""
+
+    text = read(path)
+    for concept, alternatives in concept_groups:
+        assert any(phrase in text for phrase in alternatives), (
+            "main figure/table captions must preserve the intended reader concept",
+            path,
+            concept,
+            alternatives,
+        )
+
+
 def check_caption_takeaways() -> None:
     required = {
         "fig/tex/overview.tex": (
@@ -80,24 +96,13 @@ def check_caption_takeaways() -> None:
             "higher is better",
             "scores highest on both measures for WritingBench and HelloBench",
         ),
-        "tab/pairwise-results.tex": (
-            "Win rates exceed 50\\% on every benchmark against every alternative",
-            "largest mean margin over \\condSinglePass",
-        ),
-        "tab/ablation-results.tex": (
-            "remain near parity",
-            "larger \\condSingleWriter\\ gap",
-        ),
         "tab/process-dynamics.tex": (
-            "accounts for 74.6\\% of runs",
+            "partition complete process paths",
+            "non-exclusive indicators",
         ),
         "sec/05_results.tex": (
             "mostly follows the same forward",
             "consistent with the small exploratory advantage of adaptive ordering",
-        ),
-        "tab/trace-outcome.tex": (
-            "Win rates are similar",
-            "describes association rather than a causal effect",
         ),
     }
     for path, phrases in required.items():
@@ -109,6 +114,41 @@ def check_caption_takeaways() -> None:
                 phrase,
             )
 
+    # These guards protect conclusions a reader must be able to recover, not exact
+    # caption copy. Captions also have rendered line limits, so semantically equivalent
+    # compaction must remain valid while dropping the substantive takeaway must fail.
+    require_concepts(
+        "tab/pairwise-results.tex",
+        (
+            ("all benchmark rates exceed 50%", ("benchmark-level rates exceed 50\\%", "benchmark rates exceed 50\\%")),
+            ("largest mean margin", ("largest mean margin",)),
+            ("largest margin is against Single-pass", (r"\condSinglePass",)),
+        ),
+    )
+    require_concepts(
+        "tab/ablation-results.tex",
+        (
+            ("No-goals and Fixed-order are near parity", ("near parity",)),
+            ("No-goals comparison", (r"\condNoGoals",)),
+            ("Fixed-order comparison", (r"\condFixedOrder",)),
+            ("Single-writer comparison", (r"\condSingleWriter",)),
+            ("Single-writer gap is larger", ("larger",)),
+            ("Single-writer gap", ("gap",)),
+        ),
+    )
+    require_concepts(
+        "tab/trace-outcome.tex",
+        (
+            ("the process-path win rates are similar", ("win rates", "Win rates")),
+            ("similarity conclusion", ("similar", "Similar")),
+            ("process-path grouping", ("process-path groups",)),
+            ("Fixed-order comparison", (r"\condFixedOrder",)),
+            ("Single-writer comparison", (r"\condSingleWriter",)),
+            ("observational qualification", ("observational", "Observational")),
+            ("non-causal qualification", ("not causal", "rather than a causal effect")),
+        ),
+    )
+
     architecture_caption = read("tab/experiments-architecture-comparison.tex").lower()
     for concept in ("document", "stage", "task node", "writing process"):
         assert concept in architecture_caption, (
@@ -116,13 +156,9 @@ def check_caption_takeaways() -> None:
             concept,
         )
 
-    process_caption = read("tab/process-dynamics.tex").lower()
-    assert (
-        "rarely" in process_caption
-        and re.search(r"\brevisit\w*\b", process_caption)
-        and "earlier processes" in process_caption
-    ), (
-        "process-dynamics caption must state that revisiting earlier processes is rare",
+    process_table = read("tab/process-dynamics.tex")
+    assert "74.6\\%" in process_table and "25.4\\%" in process_table, (
+        "process-dynamics table must show both sides of the complete-path partition",
         "tab/process-dynamics.tex",
     )
 

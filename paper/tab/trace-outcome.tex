@@ -12,14 +12,15 @@
 & \textbf{\condSingleWriter} \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}
 Plan$\rightarrow$draft$\rightarrow$review
-& 57.4\%
-& 72.2\% \\
+& \AfourExactCycleFixedOrderWinRate
+& \AfourExactCycleSingleWriterWinRate \\
 Other path
-& 54.9\%
-& 75.2\% \\
+& \AfourNonExactFixedOrderWinRate
+& \AfourNonExactSingleWriterWinRate \\
+
 \bottomrule
 \end{tabular}%
 }
-\caption{Win rates are similar for planning--drafting--reviewing and other paths against \condFixedOrder\ and \condSingleWriter. The observational split describes association rather than a causal effect.}
+\caption{Similar win rates appear for both process-path groups against \condFixedOrder\ and \condSingleWriter. Within each group and comparison, W/L/T are summed over benchmarks and all three runs before $W/(W+L)$. The split is observational, not causal.}
 \label{tab:trace-outcome}
 \end{table}

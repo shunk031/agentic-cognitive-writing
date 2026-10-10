@@ -167,6 +167,8 @@ def test_cycle_compliance_collapses_repeats_and_reconstructs_leading_planning(
         "reviewing",
     ]
     assert reconstructed["leading_process"]["reconstructed"] is True
+    assert reconstructed["single_cycle_exact"] is True
+    assert reconstructed["matches_fixed_order_up_to_single_process_repetition"] is True
     assert reconstructed["cycle_compliant"] is True
     assert reconstructed["cycle_passes"] == 1
 
