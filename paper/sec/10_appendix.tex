@@ -31,9 +31,9 @@ Each prompt's three generation runs are averaged per system before differencing,
 
 \section{Additional Process and Resource Statistics}
 \label{app:process-behavior}
-Table~\ref{tab:process-summary} reports completion, output size, delegated invocations, goal events, token accounting, and wall-clock time from the first generation run.
-For \condAgenticCogWriter, that run uses \AfourOutputTokens\ output-plus-reasoning tokens and \AfourInputTokens\ uncached input tokens per attempted run and records \AfourGoalRegenerated\ accepted goal regeneration.
-Across the three generation runs, the trace summaries contain mean totals of \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while the post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
+Table~\ref{tab:process-summary} reports output size, delegated invocations, goal events, token accounting, and wall-clock time across the three generation runs.
+For \condAgenticCogWriter, the three run-level summaries average \AfourOutputTokensMean\ output-plus-reasoning tokens and \AfourInputTokensMean\ uncached input tokens per attempted run, while accepted goal regeneration averages \AfourGoalRegeneratedMean\ events.
+Across the same three runs, the post-\texttt{Reviewing} ledger averages \AfourLedgerEntriesMean\ entries, including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
 \input{tab/appendix-process}
 
 \section{Sensitivity Analyses}
@@ -46,11 +46,9 @@ The retained presentation disagreements were \WritingPresentationDisagreementRat
 
 \subsection{Output-Length Sensitivity}
 \label{app:length-control}
-Table~\ref{tab:appendix-length-control} reports pairwise outcomes by output-length ratio.
-The longer side wins \LengthLongerRate\ of \LengthLongerNonTie\ non-tied comparisons.
-In the tighter pre-specified matching band, the outcomes from the first generation run for our system are \LengthFullSinglePassFiveWLT\ versus \condSinglePass\ ($p=\LengthFullSinglePassFiveP$), \LengthFullTaskPlanningFiveWLT\ versus \condTaskPlanning\ ($p=\LengthFullTaskPlanningFiveP$), and \LengthFullNoGoalsFiveWLT\ versus \condNoGoals.
-In the wider pre-specified band, the corresponding outcomes are \LengthFullSinglePassTenWLT\ ($p=\LengthFullSinglePassTenP$), \LengthFullTaskPlanningTenWLT\ ($p=\LengthFullTaskPlanningTenP$), and \LengthFullNoGoalsTenWLT\ ($p=\LengthFullNoGoalsTenP$).
-These matching-band $p$-values are unadjusted descriptive sign-test results.
+Table~\ref{tab:appendix-length-control} reports pre-specified output-length-matched win rates for our system separately for all three generation runs.
+Within each run and comparison, we retain pairs at or below the stated output-length ratio, apply the two-order consistency rule, and compute $W/(W+L)$ after excluding ties.
+Keeping the runs separate respects the shared prompt set rather than treating the three generation runs as independent replications.
 \input{tab/appendix-length-control}
 
 \subsection{Compute-Stratified Sensitivity}

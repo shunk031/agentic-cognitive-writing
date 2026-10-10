@@ -366,6 +366,9 @@ def check():
     ):
         assert "\\" + required_macro in main_sources, required_macro
 
+    # Spot-check values that are intentionally reader-facing. Core resource
+    # reporting now uses three-run mean summaries; retaining run-1 macro names
+    # here would force stale first-run values back into the manuscript for CI.
     names = [
         "PooledFourOneRateMean",
         "PooledFourTwoRateMean",
@@ -373,9 +376,9 @@ def check():
         "DoLoFourOneRateMean",
         "HelloFourOneRateMean",
         "WritingFourOneRateMean",
-        "AfourOutputTokens",
-        "AfourInputTokens",
-        "AfourGoalRegenerated",
+        "AfourOutputTokensMean",
+        "AfourInputTokensMean",
+        "AfourGoalRegeneratedMean",
         "AfourLedgerEntriesMean",
         "AfourLedgerWithProposalMean",
         "AfourGoalCreatedMean",

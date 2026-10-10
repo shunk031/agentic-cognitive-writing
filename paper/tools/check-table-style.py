@@ -70,8 +70,8 @@ def check() -> None:
         "tab/appendix-compute-control.tex": [5],
         "tab/appendix-cross-family.tex": [7],
         "tab/appendix-habermas.tex": [6],
-        "tab/appendix-length-control.tex": [3],
-        "tab/appendix-process.tex": [8],
+        "tab/appendix-length-control.tex": [5],
+        "tab/appendix-process.tex": [7],
         "tab/appendix-record-pooled-pairwise.tex": [5],
         "tab/appendix-runtime-settings.tex": [2],
         "tab/appendix-single-context.tex": [7, 4],
@@ -144,15 +144,18 @@ def check() -> None:
             old_header,
         )
 
-    # Numeric columns are right-aligned. Text columns remain left-aligned.
+    # Numeric columns are right-aligned. Text columns remain left-aligned. The
+    # three-run Appendix tables changed shape with their reader-facing scope:
+    # length sensitivity now has two text columns plus one numeric column per
+    # run, and process/resource reporting removes the run-1 completion column.
     expected_specs = {
         "tab/main-results.tex": "lrrrrrr",
         "tab/pairwise-results.tex": "lrrrr",
         "tab/ablation-results.tex": "lrrrr",
         "tab/process-dynamics.tex": "lr",
         "tab/trace-outcome.tex": "lrr",
-        "tab/appendix-length-control.tex": "lrr",
-        "tab/appendix-process.tex": "lrrrrrrr",
+        "tab/appendix-length-control.tex": "llrrr",
+        "tab/appendix-process.tex": "lrrrrrr",
         "tab/appendix-record-pooled-pairwise.tex": "lrrrr",
         "tab/appendix-compute-control.tex": "llrrr",
         "tab/appendix-cross-family.tex": "llrrrrr",
