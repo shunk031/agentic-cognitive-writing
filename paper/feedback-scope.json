@@ -21,9 +21,9 @@
     },
     {
       "path": "paper/tab/ablation-results.tex",
-      "instruction": "Keep the Table 5 caption concise after removing redundant group labels: preserve the aggregation scope and comparative takeaway without repeating the condition taxonomy already defined in the prose.",
+      "instruction": "Keep the pre-existing concise Table 5 caption while removing only the redundant row-group labels; do not add condition-taxonomy prose to the caption.",
       "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level rates after summing benchmark wins and losses. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}",
-      "after": "\\caption{\\condAgenticCogWriter\\ win rates over three runs (50\\%=parity). Across averages per-run rates from benchmark-summed wins/losses. \\condNoGoals/\\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}"
+      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level rates after summing benchmark wins and losses. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}"
     },
     {
       "path": "paper/tab/process-dynamics.tex",
