@@ -1,23 +1,101 @@
 {
-  "baseline_sha": "4b3b3ed739c68b77bc3cdcbcc06d9cadb18b5c18",
+  "baseline_sha": "4c4cb8994e749e0a46581deeef87633d7d9c45b5",
   "replacements": [
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "脚注4の末尾1語だけの折り返しを避けるため、意味を保ったまま簡潔に言い換える",
-      "before": "\\footnote{See Appendix~\\ref{app:prompts} for the full procedures and evaluator prompts.}",
-      "after": "\\footnote{See Appendix~\\ref{app:prompts} for evaluation procedures and prompts.}"
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Reapply the previously reviewed page-fit cleanup on current main by merging the redundant direct-comparison restatement while preserving the ablation setup.",
+      "before": "The direct-comparison result supports the tested system as a whole rather than a single mechanism.\nOur system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \\texttt{Monitor}.\nThe ablations below test whether explicit goals or adaptive process order explain these differences.",
+      "after": "The direct-comparison result supports the tested system as a whole because our system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \\texttt{Monitor}.\nThe ablations below test whether explicit goals or adaptive process order explain these differences."
     },
     {
       "path": "paper/sec/05_results.tex",
-      "instruction": "脚注7の末尾1語だけの折り返しを避けるため、run-level の意味を保ったまま簡潔に言い換える",
-      "before": "\\footnote{See Appendix~\\ref{app:pairwise-detail} for the run-level intervals and corrected test decisions.}",
-      "after": "\\footnote{See Appendix~\\ref{app:pairwise-detail} for run-level intervals and corrected results.}"
+      "instruction": "Reapply the reviewed Results compression around Table 6 while preserving all reported process rates, the targeted-redrafting interpretation, and the exploratory Fixed-order connection.",
+      "before": "The adaptive writing loop usually follows a simple process path.\nTable~\\ref{tab:process-dynamics} shows that 74.6\\% of traces are cycle-compliant with the Planning--Translating--Reviewing order, while a return from Review to Translating occurs in 14.8\\% of runs.\nFull replanning after Review is rare (0.3\\%), as is replacing an existing goal (0.5\\%), so our system uses its adaptive control more often for targeted redrafting than for full replanning.\nThis pattern is consistent with the small exploratory advantage over \\condFixedOrder: adaptive ordering can help only when the controller departs from the common path.",
+      "after": "Table~\\ref{tab:process-dynamics} shows a mostly simple writing loop: 74.6\\% of traces follow Planning--Translating--Reviewing, while 14.8\\% return from Review to Translating.\nFull replanning (0.3\\%) and goal replacement (0.5\\%) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over \\condFixedOrder\\ because ordering can matter only when the controller departs from the common path."
     },
     {
       "path": "paper/sec/05_results.tex",
-      "instruction": "脚注10の末尾の短い折り返しを避けるため、process counts・goal events・resource-use statistics の意味を保って簡潔にまとめる",
-      "before": "\\footnote{See Appendix~\\ref{app:process-behavior} for process counts, goal events, and resource-use statistics.}",
-      "after": "\\footnote{See Appendix~\\ref{app:process-behavior} for process, goal, and resource statistics.}"
+      "instruction": "Reapply the reviewed Figure 2 lead compression while preserving the dominant-path observation, Fixed-order similarity, demanding-subset qualification, and non-generalization about replanning.",
+      "before": "Figure~\\ref{fig:process-sequences} shows the same concentration at the sequence and transition levels.\nThe most frequent complete process path is the forward planning--drafting--reviewing progression, and our system is visually close to \\condFixedOrder\\ because much of the observed behavior follows that path.\nThe demanding-subset selection increases input length, requested output length, or procedural burden, but it does not guarantee that every task intrinsically requires replanning.\nThe traces therefore show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing in general.",
+      "after": "Figure~\\ref{fig:process-sequences} shows the same concentration: the forward planning--drafting--reviewing progression is most frequent, making our system visually close to \\condFixedOrder.\nBecause the demanding subsets increase input or requested output length or procedural burden without guaranteeing a need to replan, the traces show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Restore the reviewed compact Figure 2 layout without changing panel content.",
+      "before": "\\begin{minipage}[c]{0.60\\textwidth}",
+      "after": "\\begin{minipage}[c]{0.54\\textwidth}"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Restore the reviewed compact Figure 2 layout without changing panel content.",
+      "before": "\\begin{minipage}[c]{0.37\\textwidth}",
+      "after": "\\begin{minipage}[c]{0.34\\textwidth}"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Tighten the reviewed vertical gap between Figure 2 panels (b) and (c) without changing their content.",
+      "before": "\\small (b) \\condAgenticCogWriter\\\\[0.5em]",
+      "after": "\\small (b) \\condAgenticCogWriter\\\\[-0.2em]"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Restore the reviewed compact standalone Figure 2 caption while preserving panel identification, the dominant forward path, relative return pattern, and exploratory adaptive-ordering takeaway.",
+      "before": "\\caption{Observed writing-process trajectories.\nPanel (a) shows the most frequent complete paths; panels (b) and (c) show transition counts for \\condAgenticCogWriter\\ and \\condFixedOrder.\nOur system mostly follows the same forward Planning--Translating--Reviewing progression as \\condFixedOrder; returns to Translating are more common than returns to Planning, consistent with the small exploratory advantage of adaptive ordering.}",
+      "after": "\\caption{Observed writing-process trajectories: (a) frequent complete paths; (b,c) transition counts for \\condAgenticCogWriter\\ and \\condFixedOrder.\nOur system mostly follows the same forward Planning--Translating--Reviewing progression as \\condFixedOrder; more returns to Translating than Planning are consistent with the small exploratory advantage of adaptive ordering.}"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Restore the reviewed Table 7 interpretation compression while preserving the process-path comparison, observational non-causal qualification, and the newer main-branch footnote wording.",
+      "before": "Observed departures from the common process path do not show a larger quality advantage.\nTable~\\ref{tab:trace-outcome} compares runs that complete exactly one planning--drafting--reviewing cycle with runs that take any other path and finds similar pairwise win rates against \\condFixedOrder\\ and \\condSingleWriter.\nBecause the split is observational rather than randomized, it cannot establish whether a different path improves or worsens output.\\footnote{See Appendix~\\ref{app:process-behavior} for process, goal, and resource statistics.}",
+      "after": "Table~\\ref{tab:trace-outcome} shows similar pairwise win rates against \\condFixedOrder\\ and \\condSingleWriter\\ for one planning--drafting--reviewing cycle and other paths, so observed departures do not yield a larger quality advantage.\nBecause the split is observational, it cannot establish whether path choice affects output quality.\\footnote{See Appendix~\\ref{app:process-behavior} for process, goal, and resource statistics.}"
+    },
+    {
+      "path": "paper/sec/06_discussion.tex",
+      "instruction": "Reapply the previously reviewed Discussion compression, removing Results restatement while preserving the pointwise-versus-pairwise interpretation, system-level ablation interpretation, execution caveat, selective adaptivity comparison, benchmark-design implication, and cognitive-theory framing.",
+      "before": "Tables~\\ref{tab:main-results} and~\\ref{tab:pairwise-results} show that the clearest advantage of \\condAgenticCogWriter\\ is not uniform dominance under every pointwise score, but consistent preference in direct same-prompt comparisons.\nThe system has the highest displayed means on WritingBench and HelloBench, whereas \\condStaged\\ has the highest DoLoMiTes pointwise mean without a paired interval separating it from our system; pairwise evaluation favors our system over single-pass generation, fixed writing stages, and adaptive task planning on every benchmark.\nThe pattern supports process-level control as a useful way to organize long-form generation without requiring it to maximize every benchmark-specific metric.\n\nTable~\\ref{tab:ablation-results} suggests that the advantage is better interpreted at the system level than assigned to either explicit goals or adaptive ordering alone.\nRemoving the goal representation or fixing the process order leaves performance near the full system, whereas the larger \\condSingleWriter\\ gap points to execution structure as another candidate explanation.\nThe post-hoc \\condSingleContext\\ diagnostic, however, does not reduce that difference to subagent delegation alone.\nThe current evidence therefore supports the coordinated writing loop more strongly than any single tested mechanism.\n\nFigure~\\ref{fig:process-sequences} and Table~\\ref{tab:process-dynamics} add a complementary view of adaptivity.\n\\condAgenticCogWriter\\ usually follows planning--drafting--reviewing and departs from that path only selectively, so process-level control should not be equated with continual replanning.\nThis perspective complements systems that adapt task decomposition or structural reasoning during generation~\\citep{xiong2025beyond,wan2025cognitive,sun2026cot}: another design axis is not only how dynamically a writer replans, but what kind of writing action its controller selects.\n\nThe process findings suggest a more targeted evaluation agenda for writing agents.\nLong inputs and, where stated, long requested outputs, together with procedural constraints, make document production demanding but do not necessarily create reasons to revisit earlier decisions.\nFuture benchmarks could test process control directly by changing objectives, introducing new evidence, or imposing rhetorical constraints during composition.\nMore broadly, cognitive writing theory provides executable control abstractions rather than claiming that language agents reproduce human cognition: it makes alternative writing processes explicit enough to implement, compare, and falsify.\n",
+      "after": "Tables~\\ref{tab:main-results} and~\\ref{tab:pairwise-results} show that \\condAgenticCogWriter\\ is distinguished by consistent same-prompt preference rather than uniform pointwise dominance, supporting process-level control without requiring every benchmark-specific metric to peak.\nTable~\\ref{tab:ablation-results} further suggests a system-level interpretation: removing goals or fixing process order leaves performance near the full system, whereas the larger \\condSingleWriter\\ gap points to execution structure; the post-hoc \\condSingleContext\\ diagnostic does not isolate that gap to subagent delegation, supporting the coordinated loop more strongly than any single tested mechanism.\n\nFigure~\\ref{fig:process-sequences} and Table~\\ref{tab:process-dynamics} show that \\condAgenticCogWriter\\ usually follows planning--drafting--reviewing and departs selectively, so process-level control should not be equated with continual replanning.\nThis complements systems that adapt task decomposition or structural reasoning during generation~\\citep{xiong2025beyond,wan2025cognitive,sun2026cot}: another design axis is what writing action a controller selects, not only how dynamically it replans.\n\nThe process findings motivate benchmarks that directly induce revision: long inputs and, where stated, long requested outputs, together with procedural constraints, can be demanding without requiring earlier decisions to be revisited.\nSuch benchmarks could change objectives, introduce new evidence, or impose rhetorical constraints; more broadly, cognitive writing theory provides executable control abstractions rather than claims that language agents reproduce human cognition, making alternative writing processes explicit enough to implement, compare, and falsify.\n"
+    },
+    {
+      "path": "paper/sec/08_conclusion.tex",
+      "instruction": "Reapply the previously reviewed Conclusion compression without dropping the process-level-control contribution, Monitor/persistent-state execution, three-benchmark preference result, ablation interpretation, observed common process path, or cognitive-theory implication.",
+      "before": "\\condAgenticCogWriter\\ reframes long-form writing for AI agents as a process-level control problem.\nA top-level \\texttt{Monitor} chooses whether to plan, draft, or review from persistent writing state and delegates the selected process to a role-specific subagent.\nAcross three long-form writing benchmarks, our system is preferred to single-pass generation, fixed writing stages, and adaptive task planning in direct same-prompt comparisons.\nComponent analyses show that neither explicit goals nor adaptive process ordering alone accounts for the overall advantage, while process traces show that most runs follow a single planning--drafting--reviewing cycle.\nTogether, these results support process-level control as a promising design for long-form writing agents and show how cognitive writing theory can yield executable, falsifiable system hypotheses.\n",
+      "after": "\\condAgenticCogWriter\\ reframes long-form writing for AI agents as process-level control: a top-level \\texttt{Monitor} selects planning, drafting, or reviewing from persistent state and delegates to role-specific subagents.\nAcross three long-form writing benchmarks, our system is preferred to single-pass generation, fixed writing stages, and adaptive task planning in same-prompt comparisons; neither explicit goals nor adaptive process ordering alone explains the advantage, and most traces follow one planning--drafting--reviewing cycle.\nThese results support process-level control for long-form writing agents and show how cognitive writing theory can yield executable, falsifiable system hypotheses.\n"
+    },
+    {
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Restore the reviewed Table 4 caption compaction without dropping the three-run aggregation, benchmark-summed wins/losses, direction threshold, or system-level takeaway.",
+      "before": "\\caption{Three-run mean same-prompt win rates; above 50\\% favors our system. Across averages three run-level $W/(W+L)$ rates, each after summing benchmark W/L. All benchmark rates exceed 50\\%; the largest mean margin is over \\condSinglePass.}",
+      "after": "\\caption{Three-run mean same-prompt win rates; above 50\\% favors our system. Across averages run-level $W/(W+L)$ after benchmark-summed W/L; benchmark rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}"
+    },
+    {
+      "path": "paper/tab/ablation-results.tex",
+      "instruction": "Restore the reviewed Table 5 caption compaction without dropping the three-run aggregation, benchmark-summed wins/losses, parity interpretation, or Single-writer contrast.",
+      "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level $W/(W+L)$ after summing W/L over benchmarks. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}",
+      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level $W/(W+L)$ after benchmark-summed W/L. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}"
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Remove the redundant Complete process paths row label while preserving the separator rule between the two row groups.",
+      "before": "\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\",
+      "after": ""
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Remove the redundant Non-exclusive indicators row label while preserving the separator rule between the two row groups.",
+      "before": "\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\",
+      "after": ""
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Restore the reviewed Table 6 caption compaction while preserving preprocessing and the distinction between the complete-path partition and non-exclusive indicators.",
+      "before": "\\caption{Three-run writing-loop behavior after repeat collapsing and leading-Planning reconstruction. The first two rows partition complete process paths; the last three are non-exclusive indicators.}",
+      "after": "\\caption{Three-run writing-loop behavior after repeat collapsing and leading-Planning reconstruction. Rows 1--2 partition complete process paths; rows 3--5 are non-exclusive indicators.}"
+    },
+    {
+      "path": "paper/tab/trace-outcome.tex",
+      "instruction": "Restore the standalone Table 7 caption by naming both path groups explicitly while retaining aggregation dimensions and the observational non-causal qualification.",
+      "before": "\\caption{Similar win rates appear for both process-path groups against \\condFixedOrder\\ and \\condSingleWriter. Within each group and comparison, W/L/T are summed over benchmarks and all three runs before $W/(W+L)$. The split is observational, not causal.}",
+      "after": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins/losses summed across benchmarks and three runs for each path group and comparison; the split is observational, not causal.}"
     }
   ],
   "created_files": []
