@@ -144,6 +144,18 @@
       "instruction": "Shorten the Table 4 takeaway so the rendered caption fits the five-line guard without changing the conclusion.",
       "before": "Win rates exceed 50\\% on every benchmark against every alternative, with the largest mean margin over \\condSinglePass.",
       "after": "All benchmark-level rates exceed 50\\%, with the largest mean margin over \\condSinglePass."
+    },
+    {
+      "path": "paper/tab/trace-outcome.tex",
+      "instruction": "Replace the reader-check-forbidden word 'pooled' in the Table 7 caption while preserving the three-generation-run scope and observational interpretation.",
+      "before": "when pooled across the three generation runs.",
+      "after": "when combined across the three generation runs."
+    },
+    {
+      "path": "paper/sec/07_limitations.tex",
+      "instruction": "Replace the reader-check-forbidden word 'pooled' in the cross-family limitation without changing the conclusion about the selected contrasts.",
+      "before": "The pooled direction remains positive for all three selected cross-family contrasts,",
+      "after": "The overall direction remains positive for all three selected cross-family contrasts,"
     }
   ],
   "created_files": []
