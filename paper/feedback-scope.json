@@ -1,17 +1,17 @@
 {
-  "baseline_sha": "5d4fee0918142f1c9b8492b07af241d1d89706fa",
+  "baseline_sha": "1bf32f848f29fb8b5166c5a450804300a2b363ef",
   "replacements": [
     {
       "path": "paper/sec/04_experiments.tex",
-      "instruction": "Remove only the model-tier selection rationale footnote from the main Implementation section while retaining the generator/evaluator assignments, fixed-generator control, and cross-family robustness setup in the main text.",
-      "before": "All systems run in the same Codex-style coding-agent harness, using \\modelGenBare\\ as the generator and \\modelJudgeBare\\ as the primary evaluator.\\footnote{We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work.\nAssigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\\citep{openai2026luna,openai2026sol,openai2026gpt56}.}",
-      "after": "All systems run in the same Codex-style coding-agent harness, using \\modelGenBare\\ as the generator and \\modelJudgeBare\\ as the primary evaluator."
+      "instruction": "Keep the required generator/evaluator selection rationale and all supporting citations in the main Implementation section, but compress the existing two-sentence rationale to one concise sentence.",
+      "before": "All systems run in the same Codex-style coding-agent harness, using \\modelGenBare\\ as the generator and \\modelJudgeBare\\ as the primary evaluator.",
+      "after": "All systems run in the same Codex-style coding-agent harness, using \\modelGenBare\\ as the generator and \\modelJudgeBare\\ as the primary evaluator.\\footnote{We use Luna for high-volume long-form generation and Sol, the higher-capability tier, for evaluation; their shared model family motivates the cross-family check~\\citep{openai2026luna,openai2026sol,openai2026gpt56}.}"
     },
     {
       "path": "paper/sec/10_appendix.tex",
-      "instruction": "Preserve the removed model-tier selection rationale verbatim in Appendix Runtime Configuration, where model and runtime choices are documented.",
-      "before": "We hold the generator, output-token budget, network and retrieval policy, approval policy, task input, and final-output requirements fixed so that the compared conditions differ in how they organize the writing process rather than in model access or external information.\nEach prompt--condition pair is generated in three runs.",
-      "after": "We hold the generator, output-token budget, network and retrieval policy, approval policy, task input, and final-output requirements fixed so that the compared conditions differ in how they organize the writing process rather than in model access or external information.\nWe choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work.\nAssigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\\citep{openai2026luna,openai2026sol,openai2026gpt56}.\nEach prompt--condition pair is generated in three runs."
+      "instruction": "Remove the duplicated model-tier selection rationale from Appendix Runtime Configuration once the concise rationale and citations are restored in the main Implementation section.",
+      "before": "We hold the generator, output-token budget, network and retrieval policy, approval policy, task input, and final-output requirements fixed so that the compared conditions differ in how they organize the writing process rather than in model access or external information.\nWe choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work.\nAssigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\\citep{openai2026luna,openai2026sol,openai2026gpt56}.\nEach prompt--condition pair is generated in three runs.",
+      "after": "We hold the generator, output-token budget, network and retrieval policy, approval policy, task input, and final-output requirements fixed so that the compared conditions differ in how they organize the writing process rather than in model access or external information.\nEach prompt--condition pair is generated in three runs."
     }
   ],
   "created_files": []
