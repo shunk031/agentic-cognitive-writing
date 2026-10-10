@@ -4,11 +4,8 @@ We also use one post-hoc execution variant as a diagnostic.
 \subsection{Systems Compared}
 \label{sec:baselines}
 
-We consider seven pre-specified systems under the same generation setup.
-The systems are numbered below so that the alternatives, ablations, execution variant, and full system can be distinguished throughout the analysis.
-
 \paragraph{Alternative writing systems.}
-We compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ produces the complete document in one generation call; (2) \condStaged\ executes \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write}, following the common separation of planning, drafting, and revision~\citep{yang2022re3,wan2025cognitive}; and (3) \condTaskPlanning\ follows a WriteHERE-style adaptive task graph~\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes.
+Among the seven pre-specified systems under the same generation setup, we compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ produces the complete document in one generation call; (2) \condStaged\ executes \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write}, following the common separation of planning, drafting, and revision~\citep{yang2022re3,wan2025cognitive}; and (3) \condTaskPlanning\ follows a WriteHERE-style adaptive task graph~\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes.
 The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas our system advances a writing process.
 
 \paragraph{Ablations of \condAgenticCogWriter.}
@@ -19,7 +16,6 @@ The comparison tests whether explicit goals or adaptive ordering explain the ful
 \paragraph{Execution variant and full system.}
 (6) \condSingleWriter\ retains the goal representation and adaptive process loop but performs planning, drafting, and reviewing in one writer context without subagent delegation; it also limits each \texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.
 (7) \condAgenticCogWriter\ is the full system described in Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.
-This is our focal system.
 
 \paragraph{Post-hoc execution check.}
 \condSingleContext\ was added after the main results as a narrower exploratory check and is not one of the seven pre-specified systems.
@@ -31,8 +27,6 @@ The condition preserves the full process loop and shared state but executes each
 \label{sec:benchmarks}
 
 We use three benchmarks to test whether process-level organization transfers across different forms of long-form writing: (1) WritingBench~\citep{wu2026writingbench}, which covers broad real-world writing requests with task-specific evaluation criteria; (2) HelloBench~\citep{que2024hellobench}, which includes long-text summarization, open-ended generation, and completion; and (3) DoLoMiTes~\citep{malaviya2025dolomites}, which targets methodical expert writing with explicit objectives, procedures, inputs, and constraints.
-The benchmarks cover general instruction following, sustained long-context generation, and structured expert-document production.
-
 We evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document.
 We first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts.
 From the remaining benchmark items, we deterministically prioritize cases with longer supplied context and, when the prompt specifies a target length, longer requested output, while applying fixed maximum-length limits.
