@@ -37,7 +37,10 @@ jobs:
           echo "Checked out $exact_head"
           echo "sha=$exact_head" >> "$GITHUB_OUTPUT"
 
+      # The scope guard audits per-commit feedback batches on a working branch;
+      # squash merges fold the manifest and prose commits together, so main is skipped.
       - name: Enforce declared feedback scope
+        if: ${{ !contains(fromJSON('["main", "refs/heads/main"]'), inputs.ref || github.ref) }}
         run: python3 paper/tools/check-feedback-scope.py
 
       - name: Check main-text appendix references
