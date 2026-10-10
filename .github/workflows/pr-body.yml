@@ -1,0 +1,56 @@
+name: PR body
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  require-pr-template:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require non-empty PR template sections
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+
+          body = os.environ.get("PR_BODY", "")
+          required = ["Background / Why", "Summary", "Validation", "Scope"]
+          missing = []
+          empty = []
+
+          for i, heading in enumerate(required):
+              start = re.search(
+                  rf"(?m)^##\s+{re.escape(heading)}\s*$",
+                  body,
+              )
+              if not start:
+                  missing.append(heading)
+                  continue
+
+              next_heading = re.search(r"(?m)^##\s+.+$", body[start.end():])
+              end = start.end() + next_heading.start() if next_heading else len(body)
+              section = body[start.end():end]
+              section = re.sub(r"<!--.*?-->", "", section, flags=re.S).strip()
+              if not section:
+                  empty.append(heading)
+
+          problems = []
+          if missing:
+              problems.append("missing sections: " + ", ".join(missing))
+          if empty:
+              problems.append("empty sections: " + ", ".join(empty))
+
+          if problems:
+              print("PR body check failed: " + "; ".join(problems))
+              print("Fill in all sections from .github/pull_request_template.md.")
+              sys.exit(1)
+
+          print("PR body check passed: all required template sections are present and non-empty")
+          PY
