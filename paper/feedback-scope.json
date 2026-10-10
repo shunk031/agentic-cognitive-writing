@@ -1,17 +1,17 @@
 {
-  "baseline_sha": "1bf32f848f29fb8b5166c5a450804300a2b363ef",
+  "baseline_sha": "ced34b3801b2f460561c6e550b2d874042bfbacd",
   "replacements": [
     {
       "path": "paper/sec/04_experiments.tex",
-      "instruction": "Restore a concise one-sentence generator/evaluator selection rationale with all required supporting citations in the main Implementation section, while leaving the fuller product-positioning detail to Appendix Runtime Configuration.",
-      "before": "All systems run in the same Codex-style coding-agent harness, using \\modelGenBare\\ as the generator and \\modelJudgeBare\\ as the primary evaluator.",
-      "after": "All systems run in the same Codex-style coding-agent harness, using \\modelGenBare\\ as the generator and \\modelJudgeBare\\ as the primary evaluator.\\footnote{We use Luna for high-volume long-form generation and Sol, the higher-capability tier, for evaluation; their shared model family motivates the cross-family check~\\citep{openai2026luna,openai2026sol,openai2026gpt56}.}"
+      "instruction": "Remove the redundant opening sentence that separately announces the post-hoc execution diagnostic while preserving the three study questions and the two-sentence-paragraph rule.",
+      "before": "We compare the writing systems under the same task inputs and information policy to study three questions: whether process-level organization improves document quality, which components contribute to any advantage, and how the writing loop behaves in practice.\nWe also use one post-hoc execution variant as a diagnostic.",
+      "after": "We compare the writing systems under the same task inputs and information policy to study whether process-level organization improves document quality and which components contribute to any advantage.\nWe also examine how the writing loop behaves in practice."
     },
     {
-      "path": "paper/sec/10_appendix.tex",
-      "instruction": "Keep the fuller model-tier selection rationale in Appendix Runtime Configuration as implementation detail, but avoid repeating the concise main-text sentence verbatim.",
-      "before": "We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work.\nAssigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\\citep{openai2026luna,openai2026sol,openai2026gpt56}.",
-      "after": "OpenAI positions Luna for fast, cost-sensitive workloads and Sol as the higher-capability tier for complex professional work; this division keeps generation scalable while reserving the stronger tier for evaluation~\\citep{openai2026luna,openai2026sol,openai2026gpt56}."
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Merge the duplicated ablation framing so the paragraph states once that the two pre-specified ablations each change one mechanism and test whether explicit goals or adaptive ordering explain the full-system gain, while preserving both condition definitions unchanged.",
+      "before": "Two pre-specified ablations change one control mechanism while retaining the rest of the loop.\n(4) \\condNoGoals\\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \\condFixedOrder\\ keeps the shared draft, goals, process history, and subagents but replaces the \\texttt{Monitor}'s adaptive decision with a repeated \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle.\nThe comparison tests whether explicit goals or adaptive ordering explain the full-system gain.",
+      "after": "Two pre-specified ablations test whether explicit goals or adaptive ordering explain the full-system gain by changing one control mechanism while retaining the rest of the loop.\n(4) \\condNoGoals\\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \\condFixedOrder\\ keeps the shared draft, goals, process history, and subagents but replaces the \\texttt{Monitor}'s adaptive decision with a repeated \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing} cycle."
     }
   ],
   "created_files": []
