@@ -1,16 +1,10 @@
-Tables~\ref{tab:main-results} and~\ref{tab:pairwise-results} show that the clearest advantage of \condAgenticCogWriter\ is not uniform dominance under every pointwise score, but consistent preference in direct same-prompt comparisons.
-The pattern supports process-level control as a useful way to organize long-form generation without requiring it to maximize every benchmark-specific metric.
+Tables~\ref{tab:main-results} and~\ref{tab:pairwise-results} show that \condAgenticCogWriter\ is distinguished by consistent same-prompt preference rather than uniform pointwise dominance, supporting process-level control without requiring every benchmark-specific metric to peak.
+Table~\ref{tab:ablation-results} further suggests a system-level interpretation: removing goals or fixing process order leaves performance near the full system, whereas the larger \condSingleWriter\ gap points to execution structure; the post-hoc \condSingleContext\ diagnostic does not isolate that gap to subagent delegation.
+The evidence therefore supports the coordinated writing loop more strongly than any single tested mechanism.
 
-Table~\ref{tab:ablation-results} suggests that the advantage is better interpreted at the system level than assigned to either explicit goals or adaptive ordering alone.
-Removing the goal representation or fixing the process order leaves performance near the full system, whereas the larger \condSingleWriter\ gap points to execution structure as another candidate explanation.
-The post-hoc \condSingleContext\ diagnostic, however, does not reduce that difference to subagent delegation alone.
-The current evidence therefore supports the coordinated writing loop more strongly than any single tested mechanism.
+Figure~\ref{fig:process-sequences} and Table~\ref{tab:process-dynamics} show that \condAgenticCogWriter\ usually follows planning--drafting--reviewing and departs selectively, so process-level control should not be equated with continual replanning.
+This complements systems that adapt task decomposition or structural reasoning during generation~\citep{xiong2025beyond,wan2025cognitive,sun2026cot}: another design axis is what writing action a controller selects, not only how dynamically it replans.
 
-Figure~\ref{fig:process-sequences} and Table~\ref{tab:process-dynamics} add a complementary view of adaptivity.
-\condAgenticCogWriter\ usually follows planning--drafting--reviewing and departs from that path only selectively, so process-level control should not be equated with continual replanning.
-This perspective complements systems that adapt task decomposition or structural reasoning during generation~\citep{xiong2025beyond,wan2025cognitive,sun2026cot}: another design axis is not only how dynamically a writer replans, but what kind of writing action its controller selects.
-
-The process findings suggest a more targeted evaluation agenda for writing agents.
-Long inputs and, where stated, long requested outputs, together with procedural constraints, make document production demanding but do not necessarily create reasons to revisit earlier decisions.
-Future benchmarks could test process control directly by changing objectives, introducing new evidence, or imposing rhetorical constraints during composition.
-More broadly, cognitive writing theory provides executable control abstractions rather than claiming that language agents reproduce human cognition: it makes alternative writing processes explicit enough to implement, compare, and falsify.
+These process findings motivate benchmarks that directly induce revision: long inputs and, where stated, long requested outputs, together with procedural constraints, can be demanding without requiring earlier decisions to be revisited.
+Future benchmarks could change objectives, introduce new evidence, or impose rhetorical constraints during composition.
+More broadly, cognitive writing theory provides executable control abstractions rather than claims that language agents reproduce human cognition, making alternative writing processes explicit enough to implement, compare, and falsify.
