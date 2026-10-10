@@ -1,14 +1,11 @@
 Tables~\ref{tab:main-results} and~\ref{tab:pairwise-results} show that the clearest advantage of \condAgenticCogWriter\ is not uniform dominance under every pointwise score, but consistent preference in direct same-prompt comparisons.
-The system has the highest displayed means on WritingBench and HelloBench, whereas \condStaged\ has the highest DoLoMiTes pointwise mean without a paired interval separating it from our system; pairwise evaluation favors our system over single-pass generation, fixed writing stages, and adaptive task planning on every benchmark.
 The pattern supports process-level control as a useful way to organize long-form generation without requiring it to maximize every benchmark-specific metric.
 
 Table~\ref{tab:ablation-results} suggests that the advantage is better interpreted at the system level than assigned to either explicit goals or adaptive ordering alone.
-Removing the goal representation or fixing the process order leaves performance near the full system, whereas the larger \condSingleWriter\ gap points to execution structure as another candidate explanation.
-The post-hoc \condSingleContext\ diagnostic, however, does not reduce that difference to subagent delegation alone.
+Near-parity results for \condNoGoals\ and \condFixedOrder\ and the larger \condSingleWriter\ gap point to execution structure as another candidate explanation, but the post-hoc \condSingleContext\ diagnostic does not reduce that gap to subagent delegation alone.
 The current evidence therefore supports the coordinated writing loop more strongly than any single tested mechanism.
 
-Figure~\ref{fig:process-sequences} and Table~\ref{tab:process-dynamics} add a complementary view of adaptivity.
-\condAgenticCogWriter\ usually follows planning--drafting--reviewing and departs from that path only selectively, so process-level control should not be equated with continual replanning.
+Figure~\ref{fig:process-sequences} and Table~\ref{tab:process-dynamics} show that \condAgenticCogWriter\ usually follows planning--drafting--reviewing and departs from that path only selectively, so process-level control should not be equated with continual replanning.
 This perspective complements systems that adapt task decomposition or structural reasoning during generation~\citep{xiong2025beyond,wan2025cognitive,sun2026cot}: another design axis is not only how dynamically a writer replans, but what kind of writing action its controller selects.
 
 The process findings suggest a more targeted evaluation agenda for writing agents.
