@@ -16,6 +16,7 @@ This view suggests choosing the next writing process rather than the next sectio
 Building on \citet{flower1981cognitive}, we propose \condAgenticCogWriter, a long-form writing system that implements this process-level control on top of a coding-agent-style harness with persistent state and subagent delegation (Figure~\ref{fig:agentic-cogwriter}).
 A top-level Monitor agent observes the evolving draft, goals, and process history, chooses whether the next activity should be planning, drafting, or reviewing, and delegates that activity to a corresponding subagent.
 The resulting process order is chosen during writing rather than fixed in advance.
+We call the system \textit{agentic} for this combination: online selection of the next writing process, a persistent state shared across steps, and delegation of each selected process to a subagent.
 
 We evaluate our system on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.
 We hold the generator and task information constant across the compared conditions so that differences reflect how writing is organized.
