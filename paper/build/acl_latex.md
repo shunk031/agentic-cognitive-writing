@@ -8,7 +8,7 @@ Recent coding agents have made tool-using, stateful execution prominent. The sam
 
 ## Introduction
 
-Large language model agents (Yao et al., 2023; Shinn et al., 2023; Sumers et al., 2024; Luo et al., 2025) increasingly combine reasoning, tool use, memory, and delegation to carry out multi-step knowledge work. Recent coding agents have made this interactive, tool-mediated style of execution especially prominent (Yang et al., 2024; Wang et al., 2024b), while similar agentic workflows increasingly produce reports or scientific manuscripts (Schmidgall et al., 2025; Lu et al., 2024). For agents that produce documents, long-form writing requires more than final text generation: the agent must organize the document, turn partial plans into prose, inspect what has been written, and decide when revision is needed.
+Large language model agents (Yao et al., 2023; Shinn et al., 2023; Sumers et al., 2024; Luo et al., 2025) increasingly combine reasoning, tool use, memory, and delegation to carry out multi-step knowledge work. Recent coding agents have made this interactive, tool-mediated style of execution especially prominent (Yang et al., 2024; Wang et al., 2025), while similar agentic workflows increasingly produce reports or scientific manuscripts (Schmidgall et al., 2025; Lu et al., 2024). For agents that produce documents, long-form writing requires more than final text generation: the agent must organize the document, turn partial plans into prose, inspect what has been written, and decide when revision is needed.
 
 Figure 1. Overview of <span class="smallcaps">Agentic CogWriter</span>. Inspired by the cognitive process theory of writing, a coding-agent-style control loop turns the task into a document via Planning, Translating, or Reviewing, selected online from the evolving document state.
 
@@ -18,7 +18,7 @@ The cognitive process theory of writing (Flower and Hayes, 1981; Hayes, 1996; Ha
 
 Building on Flower and Hayes (1981), we propose <span class="smallcaps">Agentic CogWriter</span>, a long-form writing system that implements this process-level control on top of a coding-agent-style harness with persistent state and subagent delegation (Figure 1). A top-level Monitor agent observes the evolving draft, goals, and process history, chooses whether the next activity should be planning, drafting, or reviewing, and delegates that activity to a corresponding subagent. The resulting process order is chosen during writing rather than fixed in advance. We call the system *agentic* for this combination: online selection of the next writing process, a persistent state shared across steps, and delegation of each selected process to a subagent.
 
-We evaluate our system on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production (Wu et al., 2026b; Que et al., 2024; Malaviya et al., 2025). We hold the generator and task information constant across the compared conditions so that differences reflect how writing is organized. Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives. In pairwise evaluation, our system is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning. The component analyses support a system-level interpretation of this advantage rather than attributing it to explicit goals or adaptive ordering alone under the pre-specified tests. Process traces show that most runs follow a simple planning–drafting–reviewing path, indicating that adaptive ordering is available but used selectively.
+We evaluate our system on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production (Wu et al., 2025; Que et al., 2024; Malaviya et al., 2025). We hold the generator and task information constant across the compared conditions so that differences reflect how writing is organized. Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives. In pairwise evaluation, our system is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning. The component analyses support a system-level interpretation of this advantage rather than attributing it to explicit goals or adaptive ordering alone under the pre-specified tests. Process traces show that most runs follow a simple planning–drafting–reviewing path, indicating that adaptive ordering is available but used selectively.
 
 Our contributions are threefold. (1) we formulate long-form writing for general-purpose agents as a process-level control problem and introduce a concrete system that chooses among planning, drafting, and reviewing during composition; (2) we compare our system with one-shot, fixed-stage, and adaptive task-planning alternatives across complementary long-form benchmarks; and (3) we use ablations and process analyses to test which proposed components explain the observed advantage and characterize the writing loop in practice.
 
@@ -30,7 +30,7 @@ Language-agent research studies systems that interleave reasoning with actions, 
 
 ##### Long-form generation and planning.
 
-Long-form generation becomes harder to control and evaluate as outputs grow in length (Tan et al., 2024; Wu et al., 2026a), motivating explicit planning and decomposition (Yao et al., 2019; Yang et al., 2022; Shao et al., 2024; Bai et al., 2025; Wan et al., 2025; Xiong et al., 2025; Sun et al., 2026). Plan-and-Write (Yao et al., 2019), Re`^3` (Yang et al., 2022), STORM (Shao et al., 2024), and LongWriter (Bai et al., 2025) organize generation around plans, revisions, sections, or manageable content units. CogWriter (Wan et al., 2025), WriteHERE (Xiong et al., 2025), IS-CoT (Sun et al., 2026), and SuperWriter (Wu et al., 2026a) make structure or refinement increasingly adaptive. CogWriter conditionally revises plans and generated segments within a planning-and-generation workflow, whereas WriteHERE schedules nodes in an evolving heterogeneous task graph. Our <span class="smallcaps">Agentic CogWriter</span> instead makes planning, drafting, or reviewing the document-level control decision.
+Long-form generation becomes harder to control and evaluate as outputs grow in length (Tan et al., 2024; Wu et al., 2026), motivating explicit planning and decomposition (Yao et al., 2019; Yang et al., 2022; Shao et al., 2024; Bai et al., 2025; Wan et al., 2025; Xiong et al., 2025; Sun et al., 2026). Plan-and-Write (Yao et al., 2019), Re`^3` (Yang et al., 2022), STORM (Shao et al., 2024), and LongWriter (Bai et al., 2025) organize generation around plans, revisions, sections, or manageable content units. CogWriter (Wan et al., 2025), WriteHERE (Xiong et al., 2025), IS-CoT (Sun et al., 2026), and SuperWriter (Wu et al., 2026) make structure or refinement increasingly adaptive. CogWriter conditionally revises plans and generated segments within a planning-and-generation workflow, whereas WriteHERE schedules nodes in an evolving heterogeneous task graph. Our <span class="smallcaps">Agentic CogWriter</span> instead makes planning, drafting, or reviewing the document-level control decision.
 
 ##### Iteration and cognitive models of writing.
 
@@ -121,7 +121,7 @@ Table 2. Operational comparison of the evaluated writing systems. `Staged` foll
 
 ### Benchmarks and Prompts
 
-We use three benchmarks to test whether process-level organization transfers across different forms of long-form writing: (1) WritingBench (Wu et al., 2026b), which covers broad real-world writing requests with task-specific evaluation criteria; (2) HelloBench (Que et al., 2024), which includes long-text summarization, open-ended generation, and completion; and (3) DoLoMiTes (Malaviya et al., 2025), which targets methodical expert writing with explicit objectives, procedures, inputs, and constraints. The benchmarks cover general instruction following, sustained long-context generation, and structured expert-document production.
+We use three benchmarks to test whether process-level organization transfers across different forms of long-form writing: (1) WritingBench (Wu et al., 2025), which covers broad real-world writing requests with task-specific evaluation criteria; (2) HelloBench (Que et al., 2024), which includes long-text summarization, open-ended generation, and completion; and (3) DoLoMiTes (Malaviya et al., 2025), which targets methodical expert writing with explicit objectives, procedures, inputs, and constraints. The benchmarks cover general instruction following, sustained long-context generation, and structured expert-document production.
 
 We evaluate fixed demanding subsets because short or lightly constrained tasks may not reveal differences in how a system manages a long document. We first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts. From the remaining benchmark items, we deterministically prioritize cases with longer supplied context and, when the prompt specifies a target length, longer requested output, while applying fixed maximum-length limits. This produces a different demanding subset for each benchmark: WritingBench emphasizes long inputs with explicit long-output requirements, HelloBench emphasizes very long-input summarization and continuation, and DoLoMiTes emphasizes procedurally constrained expert writing.[^1]
 
@@ -141,7 +141,7 @@ We also apply a common five-dimension rubric across all three benchmarks: instru
 
 ##### Pairwise evaluation.
 
-We directly compare two responses written for the same prompt using the same quality dimensions and record which response is preferred, or a tie. LLM judges can exhibit position bias (Zheng et al., 2023; Wang et al., 2024a), so every pair is evaluated in both presentation orders. We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie. We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent comparisons as `W/(W+L)`.
+We directly compare two responses written for the same prompt using the same quality dimensions and record which response is preferred, or a tie. LLM judges can exhibit position bias (Zheng et al., 2023; Wang et al., 2024), so every pair is evaluated in both presentation orders. We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie. We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent comparisons as `W/(W+L)`.
 
 The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). We therefore report the cross-family rescoring described above as a separate descriptive robustness check rather than averaging results from the two evaluators.
 
@@ -274,7 +274,7 @@ Agentic long-form writing can support the organization and revision of complex d
 
 ##### Prompt selection and provenance.
 
-The scored study uses the committed `hard100` subset generated from the pinned WritingBench (Wu et al., 2026b), HelloBench (Que et al., 2024), and DoLoMiTes (Malaviya et al., 2025) manifests before generation. Prompts used while developing the protocol are removed first. Each remaining prompt is ranked by prompt word count plus the largest requested output length stated in the prompt or structured output constraints, subject to fixed maximum-length gates; ties are resolved by prompt word count, requested length, and prompt identifier. The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts. Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.
+The scored study uses the committed `hard100` subset generated from the pinned WritingBench (Wu et al., 2025), HelloBench (Que et al., 2024), and DoLoMiTes (Malaviya et al., 2025) manifests before generation. Prompts used while developing the protocol are removed first. Each remaining prompt is ranked by prompt word count plus the largest requested output length stated in the prompt or structured output constraints, subject to fixed maximum-length gates; ties are resolved by prompt word count, requested length, and prompt identifier. The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts. Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.
 
 ##### Artifact provenance and terms.
 
@@ -1626,7 +1626,7 @@ The generator and both judges are hosted closed models whose parameter counts an
 
 ##### Evaluation controls.
 
-Pairwise outputs are blinded and judged in both presentation orders to reduce known position bias in LLM evaluation (Zheng et al., 2023; Wang et al., 2024a). The two orders are treated as repeated measurements of one prompt-level comparison rather than independent samples: a semantic winner is retained only when both orders agree, and any disagreement becomes a tie. The reported primary judge and generator are both from the GPT-5.6 family, which differs from the planned different-family judge design. We therefore report `claude-sonnet-5 medium` separately as a cross-family robustness check rather than pooling it with the confirmatory judge, given evidence that model-family relationships can affect evaluator preferences (Panickssery et al., 2024).
+Pairwise outputs are blinded and judged in both presentation orders to reduce known position bias in LLM evaluation (Zheng et al., 2023; Wang et al., 2024). The two orders are treated as repeated measurements of one prompt-level comparison rather than independent samples: a semantic winner is retained only when both orders agree, and any disagreement becomes a tie. The reported primary judge and generator are both from the GPT-5.6 family, which differs from the planned different-family judge design. We therefore report `claude-sonnet-5 medium` separately as a cross-family robustness check rather than pooling it with the confirmatory judge, given evidence that model-family relationships can affect evaluator preferences (Panickssery et al., 2024).
 
 ##### Frozen operational values.
 
@@ -1859,33 +1859,33 @@ Table 17. Additional consensus-writing evaluation on ten tasks derived from Habe
 
 ## References
 
-Yushi Bai, Jiajie Zhang, Xin Lv, Linzhi Zheng, Siqi Zhu, Lei Hou, Yuxiao Dong, Jie Tang, and Juanzi Li. 2025. Longwriter: Unleashing 10,000+ word generation from long context llms. In *International Conference on Learning Representations*, volume 2025, pages 36528–36546.
+Yushi Bai, Jiajie Zhang, Xin Lv, Linzhi Zheng, Siqi Zhu, Lei Hou, Yuxiao Dong, Jie Tang, and Juanzi Li. 2025. LongWriter: Unleashing 10,000+ word generation from long context LLMs. In *International Conference on Learning Representations*, volume 2025, pages 36528–36546.
 
 W. J. Dixon and A. M. Mood. 1946. [The statistical sign test](https://doi.org/10.1080/01621459.1946.10501898). *Journal of the American Statistical Association*, 41(236):557–566.
 
 Wanyu Du, Vipul Raheja, Dhruv Kumar, Zae Myung Kim, Melissa Lopez, and Dongyeop Kang. 2022. [Understanding iterative revision from human-written text](https://doi.org/10.18653/v1/2022.acl-long.250). In *Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)*, pages 3573–3590. Association for Computational Linguistics.
 
-Yann Dubois, Balázs Galambosi, Percy Liang, and Tatsunori B. Hashimoto. 2024. [Length-controlled AlpacaEval: A simple way to debias automatic evaluators](https://arxiv.org/abs/2404.04475). *arXiv preprint arXiv:2404.04475*. COLM 2024.
+Yann Dubois, Percy Liang, and Tatsunori Hashimoto. 2024. [Length-controlled AlpacaEval: A simple debiasing of automatic evaluators](https://openreview.net/forum?id=CybBmzWBX0). In *First Conference on Language Modeling*.
 
-Linda Flower and John R Hayes. 1981. A cognitive process theory of writing. *College Composition & Communication*, 32(4):365–387.
+Linda Flower and John R Hayes. 1981. [A cognitive process theory of writing](https://doi.org/10.58680/ccc198115885). *College Composition & Communication*, 32(4):365–387.
 
-Katy Gero, Alex Calderwood, Charlotte Li, and Lydia Chilton. 2022. A design space for writing support tools using a cognitive process model of writing. In *Proceedings of the first workshop on intelligent and interactive writing assistants (In2Writing 2022)*, pages 11–24.
+Katy Gero, Alex Calderwood, Charlotte Li, and Lydia Chilton. 2022. [A design space for writing support tools using a cognitive process model of writing](https://doi.org/10.18653/v1/2022.in2writing-1.2). In *Proceedings of the First Workshop on Intelligent and Interactive Writing Assistants (In2Writing 2022)*, pages 11–24. Association for Computational Linguistics.
 
-John R Hayes. 1996. [A new framework for understanding cognition and affect in writing](https://doi.org/10.4324/9780203811122-2). In C. Michael Levy and Sarah Ransdell, editors, *The Science of Writing: Theories, Methods, Individual Differences, and Applications*, pages 1–27. Lawrence Erlbaum Associates, Mahwah, NJ.
+John R Hayes. 1996. A new framework for understanding cognition and affect in writing. In C. Michael Levy and Sarah Ransdell, editors, *The Science of Writing: Theories, Methods, Individual Differences, and Applications*, pages 1–27. Lawrence Erlbaum Associates, Mahwah, NJ.
 
-John R Hayes. 2012. Modeling and remodeling writing. *Written communication*, 29(3):369–388.
+John R Hayes. 2012. [Modeling and remodeling writing](https://doi.org/10.1177/0741088312451260). *Written Communication*, 29(3):369–388.
 
 Sture Holm. 1979. [A simple sequentially rejective multiple test procedure](https://www.jstor.org/stable/4615733). *Scandinavian Journal of Statistics*, 6(2):65–70.
 
-Dawei Li, Renliang Sun, Yue Huang, Ming Zhong, Bohan Jiang, Jiawei Han, Xiangliang Zhang, Wei Wang, and Huan Liu. 2026. [Preference leakage: A contamination problem in LLM-as-a-judge](https://openreview.net/forum?id=grIvSXVJ65). In *International Conference on Learning Representations*.
+Dawei Li, Renliang Sun, Yue Huang, Ming Zhong, Bohan Jiang, Jiawei Han, Xiangliang Zhang, Wei Wang, and Huan Liu. 2026. [Preference leakage: A contamination problem in LLM-as-a-judge](https://openreview.net/forum?id=grIvSXVJ65). In *International Conference on Learning Representations*, volume 2026, pages 60486–60511.
 
-Chris Lu, Cong Lu, Robert Tjarko Lange, Jakob Foerster, Jeff Clune, and David Ha. 2024. [The AI scientist: Towards fully automated open-ended scientific discovery](https://arxiv.org/abs/2408.06292). *arXiv preprint arXiv:2408.06292*.
+Chris Lu, Cong Lu, Robert Tjarko Lange, Jakob Foerster, Jeff Clune, and David Ha. 2024. [The AI Scientist: Towards fully automated open-ended scientific discovery](https://doi.org/10.48550/arXiv.2408.06292). *arXiv preprint arXiv:2408.06292*.
 
 Junyu Luo, Weizhi Zhang, Ye Yuan, Yusheng Zhao, Junwei Yang, Yiyang Gu, et al. 2025. [Large language model agent: A survey on methodology, applications and challenges](https://doi.org/10.48550/arXiv.2503.21460). *arXiv preprint arXiv:2503.21460*.
 
-Aman Madaan, Niket Tandon, Prakhar Gupta, Skyler Hallinan, Luyu Gao, Sarah Wiegreffe, Uri Alon, Nouha Dziri, Shrimai Prabhumoye, Yiming Yang, et al. 2023. Self-refine: Iterative refinement with self-feedback. *Advances in neural information processing systems*, 36:46534–46594.
+Aman Madaan, Niket Tandon, Prakhar Gupta, Skyler Hallinan, Luyu Gao, Sarah Wiegreffe, Uri Alon, Nouha Dziri, Shrimai Prabhumoye, Yiming Yang, et al. 2023. [Self-Refine: Iterative refinement with self-feedback](https://doi.org/10.52202/075280-2019). In *Advances in Neural Information Processing Systems*, volume 36, pages 46534–46594.
 
-Chaitanya Malaviya, Priyanka Agrawal, Kuzman Ganchev, Pranesh Srinivasan, Fantine Huot, Jonathan Berant, Mark Yatskar, Dipanjan Das, Mirella Lapata, and Chris Alberti. 2025. Dolomites: Domain-specific long-form methodical tasks. *Transactions of the Association for Computational Linguistics*, 13:1–29.
+Chaitanya Malaviya, Priyanka Agrawal, Kuzman Ganchev, Pranesh Srinivasan, Fantine Huot, Jonathan Berant, Mark Yatskar, Dipanjan Das, Mirella Lapata, and Chris Alberti. 2025. [Dolomites: Domain-specific long-form methodical tasks](https://doi.org/10.1162/tacl_a_00727). *Transactions of the Association for Computational Linguistics*, 13:1–29.
 
 OpenAI. 2026. GPT-5.6: Frontier intelligence that scales with your ambition. <https://openai.com/index/gpt-5-6/>. Accessed 2026-10-05.
 
@@ -1893,47 +1893,47 @@ OpenAI. 2026. GPT-5.6 Luna model. <https://developers.openai.com/api/docs/models
 
 OpenAI. 2026. GPT-5.6 Sol model. <https://developers.openai.com/api/docs/models/gpt-5.6-sol>. Accessed 2026-10-05.
 
-Arjun Panickssery, Samuel R. Bowman, and Shi Feng. 2024. [LLM evaluators recognize and favor their own generations](https://doi.org/10.52202/079017-2197). In *Advances in Neural Information Processing Systems*.
+Arjun Panickssery, Samuel R. Bowman, and Shi Feng. 2024. [LLM evaluators recognize and favor their own generations](https://doi.org/10.52202/079017-2197). In *Advances in Neural Information Processing Systems*, volume 37, pages 68772–68802.
 
-Haoran Que, Feiyu Duan, Liqun He, Yutao Mou, Wangchunshu Zhou, Jiaheng Liu, Wenge Rong, Zekun Moore Wang, Jian Yang, Ge Zhang, et al. 2024. Hellobench: Evaluating long text generation capabilities of large language models. *arXiv preprint arXiv:2409.16191*.
+Haoran Que, Feiyu Duan, Liqun He, Yutao Mou, Wangchunshu Zhou, Jiaheng Liu, Wenge Rong, Zekun Moore Wang, Jian Yang, Ge Zhang, et al. 2024. [HelloBench: Evaluating long text generation capabilities of large language models](https://doi.org/10.48550/arXiv.2409.16191). *arXiv preprint arXiv:2409.16191*.
 
-Samuel Schmidgall, Yusheng Su, Ze Wang, Ximeng Sun, Jialian Wu, Xiaodong Yu, Jiang Liu, Michael Moor, Zicheng Liu, and Emad Barsoum. 2025. [Agent laboratory: Using LLM agents as research assistants](https://doi.org/10.18653/v1/2025.findings-emnlp.320). In *Findings of the Association for Computational Linguistics: EMNLP 2025*, pages 5977–6043. Association for Computational Linguistics.
+Samuel Schmidgall, Yusheng Su, Ze Wang, Ximeng Sun, Jialian Wu, Xiaodong Yu, Jiang Liu, Michael Moor, Zicheng Liu, and Emad Barsoum. 2025. [Agent Laboratory: Using LLM agents as research assistants](https://doi.org/10.18653/v1/2025.findings-emnlp.320). In *Findings of the Association for Computational Linguistics: EMNLP 2025*, pages 5977–6043. Association for Computational Linguistics.
 
-Yijia Shao, Yucheng Jiang, Theodore Kanell, Peter Xu, Omar Khattab, and Monica Lam. 2024. Assisting in writing wikipedia-like articles from scratch with large language models. In *Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)*, pages 6252–6278.
+Yijia Shao, Yucheng Jiang, Theodore Kanell, Peter Xu, Omar Khattab, and Monica Lam. 2024. [Assisting in writing Wikipedia-like articles from scratch with large language models](https://doi.org/10.18653/v1/2024.naacl-long.347). In *Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)*, pages 6252–6278. Association for Computational Linguistics.
 
-Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. 2023. Reflexion: Language agents with verbal reinforcement learning. *Advances in neural information processing systems*, 36:8634–8652.
+Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. 2023. [Reflexion: Language agents with verbal reinforcement learning](https://doi.org/10.52202/075280-0377). In *Advances in Neural Information Processing Systems*, volume 36, pages 8634–8652.
 
 Theodore Sumers, Shunyu Yao, Karthik R Narasimhan, and Thomas L. Griffiths. 2024. [Cognitive architectures for language agents](https://openreview.net/forum?id=1i6ZCvflQJ). *Transactions on Machine Learning Research*. Survey Certification, Featured Certification.
 
-Zechen Sun, Yuyang Sun, Zecheng Tang, Juntao Li, Wenpeng Hu, Wenliang Chen, Zhunchen Luo, Guotong Geng, and Min Zhang. 2026. Is-cot: Breaking the long-form generation collapse via interleaved structural thinking. In *Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)*, pages 19874–19887.
+Zechen Sun, Yuyang Sun, Zecheng Tang, Juntao Li, Wenpeng Hu, Wenliang Chen, Zhunchen Luo, Guotong Geng, and Min Zhang. 2026. [IS-CoT: Breaking the long-form generation collapse via interleaved structural thinking](https://doi.org/10.18653/v1/2026.acl-long.911). In *Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)*, pages 19874–19887. Association for Computational Linguistics.
 
 Haochen Tan, Zhijiang Guo, Zhan Shi, Lu Xu, Zhili Liu, Yunlong Feng, Xiaoguang Li, Yasheng Wang, Lifeng Shang, Qun Liu, and Linqi Song. 2024. [ProxyQA: An alternative framework for evaluating long-form text generation with large language models](https://doi.org/10.18653/v1/2024.acl-long.368). In *Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)*, pages 6806–6827. Association for Computational Linguistics.
 
 Michael Henry Tessler, Michiel A. Bakker, Daniel Jarrett, Hannah Sheahan, Martin J. Chadwick, Raphael Koster, Georgina Evans, Lucy Campbell-Gillingham, Tantum Collins, David C. Parkes, Matthew Botvinick, and Christopher Summerfield. 2024. [AI can help humans find common ground in democratic deliberation](https://doi.org/10.1126/science.adq2852). *Science*, 386(6719):eadq2852.
 
-Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen. 2025. A cognitive writing perspective for constrained long-form text generation. In *Findings of the Association for Computational Linguistics: ACL 2025*, pages 9832–9844.
+Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen. 2025. [A cognitive writing perspective for constrained long-form text generation](https://doi.org/10.18653/v1/2025.findings-acl.511). In *Findings of the Association for Computational Linguistics: ACL 2025*, pages 9832–9844. Association for Computational Linguistics.
 
 Peiyi Wang, Lei Li, Liang Chen, Zefan Cai, Dawei Zhu, Binghuai Lin, Yunbo Cao, Lingpeng Kong, Qi Liu, Tianyu Liu, and Zhifang Sui. 2024. [Large language models are not fair evaluators](https://doi.org/10.18653/v1/2024.acl-long.511). In *Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)*, pages 9440–9450. Association for Computational Linguistics.
 
-Xingyao Wang, Boxuan Li, Yufan Song, Frank F. Xu, Xiangru Tang, Mingchen Zhuge, Jiayi Pan, Yueqi Song, Bowen Li, Jaskirat Singh, et al. 2024. [OpenHands: An open platform for AI software developers as generalist agents](https://arxiv.org/abs/2407.16741). *arXiv preprint arXiv:2407.16741*.
+Xingyao Wang, Boxuan Li, Yufan Song, Frank F. Xu, Xiangru Tang, Mingchen Zhuge, Jiayi Pan, Yueqi Song, Bowen Li, Jaskirat Singh, et al. 2025. [OpenHands: An open platform for AI software developers as generalist agents](https://openreview.net/forum?id=OJd3ayDDoF). In *International Conference on Learning Representations*, volume 2025, pages 65882–65919.
 
 Edwin B. Wilson. 1927. [Probable inference, the law of succession, and statistical inference](https://doi.org/10.1080/01621459.1927.10502953). *Journal of the American Statistical Association*, 22(158):209–212.
 
-Yuhao Wu, Yushi Bai, Zhiqiang Hu, Juanzi Li, and Roy Ka-Wei Lee. 2026. [SuperWriter: Reflection-driven long-form generation with large language models](https://aclanthology.org/2026.findings-acl.428/). In *Findings of the Association for Computational Linguistics: ACL 2026*, pages 8790–8812. Association for Computational Linguistics.
+Yuhao Wu, Yushi Bai, Zhiqiang Hu, Juanzi Li, and Roy Ka-Wei Lee. 2026. [SuperWriter: Reflection-driven long-form generation with large language models](https://doi.org/10.18653/v1/2026.findings-acl.428). In *Findings of the Association for Computational Linguistics: ACL 2026*, pages 8790–8812. Association for Computational Linguistics.
 
-Yuning Wu, Jiahao Mei, Ming Yan, Chenliang Li, Shaopeng Lai, Yuran Ren, Zijia Wang, Ji Zhang, Mengyue Wu, Qin Jin, et al. 2026. Writingbench: A comprehensive benchmark for generative writing. *Advances in Neural Information Processing Systems*, 38.
+Yuning Wu, Jiahao Mei, Ming Yan, Chenliang Li, Shaopeng Lai, Yuran Ren, Zijia Wang, Ji Zhang, Mengyue Wu, Qin Jin, et al. 2025. [WritingBench: A comprehensive benchmark for generative writing](https://doi.org/10.52202/085713-1737). In *Advances in Neural Information Processing Systems*, volume 38, pages 58018–58051.
 
-Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmidhuber. 2025. Beyond outlining: Heterogeneous recursive planning for adaptive long-form writing with language models. In *Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing*, pages 24689–24725.
+Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmidhuber. 2025. [Beyond outlining: Heterogeneous recursive planning for adaptive long-form writing with language models](https://doi.org/10.18653/v1/2025.emnlp-main.1254). In *Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing*, pages 24689–24725. Association for Computational Linguistics.
 
-John Yang, Carlos E. Jimenez, Alexander Wettig, Kilian Lieret, Shunyu Yao, Karthik R. Narasimhan, and Ofir Press. 2024. [SWE-agent: Agent-computer interfaces enable automated software engineering](https://arxiv.org/abs/2405.15793). *arXiv preprint arXiv:2405.15793*.
+John Yang, Carlos E. Jimenez, Alexander Wettig, Kilian Lieret, Shunyu Yao, Karthik R. Narasimhan, and Ofir Press. 2024. [SWE-agent: Agent-computer interfaces enable automated software engineering](https://doi.org/10.52202/079017-1601). In *Advances in Neural Information Processing Systems*, volume 37, pages 50528–50652.
 
-Kevin Yang, Yuandong Tian, Nanyun Peng, and Dan Klein. 2022. Re3: Generating longer stories with recursive reprompting and revision. In *Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing*, pages 4393–4479.
+Kevin Yang, Yuandong Tian, Nanyun Peng, and Dan Klein. 2022. [Re3: Generating longer stories with recursive reprompting and revision](https://doi.org/10.18653/v1/2022.emnlp-main.296). In *Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing*, pages 4393–4479. Association for Computational Linguistics.
 
-Lili Yao, Nanyun Peng, Ralph Weischedel, Kevin Knight, Dongyan Zhao, and Rui Yan. 2019. [Plan-and-write: Towards better automatic storytelling](https://doi.org/10.1609/aaai.v33i01.33017378). In *Proceedings of the AAAI conference on artificial intelligence*, volume 33, pages 7378–7385. AAAI.
+Lili Yao, Nanyun Peng, Ralph Weischedel, Kevin Knight, Dongyan Zhao, and Rui Yan. 2019. [Plan-and-write: Towards better automatic storytelling](https://doi.org/10.1609/aaai.v33i01.33017378). In *Proceedings of the AAAI Conference on Artificial Intelligence*, volume 33, pages 7378–7385. AAAI.
 
-Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik R Narasimhan, and Yuan Cao. 2023. [React: Synergizing reasoning and acting in language models](https://openreview.net/forum?id=WE_vluYUL-X). In *The Eleventh International Conference on Learning Representations*.
+Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik R Narasimhan, and Yuan Cao. 2023. [ReAct: Synergizing reasoning and acting in language models](https://openreview.net/forum?id=WE_vluYUL-X). In *The Eleventh International Conference on Learning Representations*.
 
-Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica. 2023. [Judging LLM-as-a-judge with MT-Bench and chatbot arena](https://doi.org/10.52202/075280-2020). In *Advances in Neural Information Processing Systems*, volume 36, pages 46595–46623.
+Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica. 2023. [Judging LLM-as-a-judge with MT-Bench and Chatbot Arena](https://doi.org/10.52202/075280-2020). In *Advances in Neural Information Processing Systems*, volume 36, pages 46595–46623.
 
 [^1]: See Appendix A for the exact selection rule, sample sizes, and sensitivity analysis.
 
