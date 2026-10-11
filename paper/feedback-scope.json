@@ -1,12 +1,5 @@
 {
-  "baseline_sha": "1e30df17b4e0bc8bef8f884d57600023dad82b92",
-  "replacements": [
-    {
-      "path": "paper/sec/01_introduction.tex",
-      "instruction": "Define what 'agentic' means for the system (online process selection, persistent shared state, and subagent delegation), with the term in italics, without positioning it against CogWriter.",
-      "before": "The resulting process order is chosen during writing rather than fixed in advance.\n",
-      "after": "The resulting process order is chosen during writing rather than fixed in advance.\nWe call the system \\textit{agentic} for this combination: online selection of the next writing process, a persistent state shared across steps, and delegation of each selected process to a subagent.\n"
-    }
-  ],
+  "baseline_sha": "324bc1407d0b04a5f8d5de69a7cd91e48f79a2a2",
+  "replacements": [],
   "created_files": []
 }
