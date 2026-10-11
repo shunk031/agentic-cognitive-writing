@@ -29,6 +29,13 @@
 \setlength{\epigraphrule}{0pt}
 \renewcommand{\epigraphflush}{center}
 
+% PDF bookmarks: show section numbers so Appendix A-G are distinguishable from
+% Sections 1-7, and list the unnumbered References heading that acl.sty sets
+% with \section*. \addcontentsline reuses the anchor \section* already placed.
+\hypersetup{bookmarksnumbered=true}
+\usepackage{etoolbox}
+\patchcmd{\thebibliography}{\list}{\addcontentsline{toc}{section}{References}\list}{}{\PackageError{acl_latex}{Could not add References bookmark}{}}
+
 % Keep externally authored prompt files printable under pdfLaTeX without
 % changing their source. These mappings affect only Unicode characters that
 % pdfLaTeX cannot represent directly and preserve their plain-text meaning.

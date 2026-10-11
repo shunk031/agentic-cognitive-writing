@@ -1,11 +1,23 @@
 {
-  "baseline_sha": "9e3aaf4939ad809d9fd0d3b588b189f546afc64c",
+  "baseline_sha": "cce4a7f2488853ee023f2a35ee1baaf4b639f39e",
   "replacements": [
     {
       "path": "paper/acl_latex.tex",
-      "instruction": "Make the gray of the Table 3 entries whose lead is within the paired intervals one step lighter.",
-      "before": "\\usepackage{threeparttable}\n\\definecolor{tiedgray}{gray}{0.45}\n\\usepackage{amssymb}",
-      "after": "\\usepackage{threeparttable}\n\\definecolor{tiedgray}{gray}{0.6}\n\\usepackage{amssymb}"
+      "instruction": "Make the PDF bookmarks list Limitations, Ethical Considerations, and References and number all sections so the appendices are distinguishable, without changing the rendered text.",
+      "before": "\\renewcommand{\\epigraphflush}{center}\n",
+      "after": "\\renewcommand{\\epigraphflush}{center}\n\n% PDF bookmarks: show section numbers so Appendix A-G are distinguishable from\n% Sections 1-7, and list the unnumbered References heading that acl.sty sets\n% with \\section*. \\addcontentsline reuses the anchor \\section* already placed.\n\\hypersetup{bookmarksnumbered=true}\n\\usepackage{etoolbox}\n\\patchcmd{\\thebibliography}{\\list}{\\addcontentsline{toc}{section}{References}\\list}{}{\\PackageError{acl_latex}{Could not add References bookmark}{}}\n"
+    },
+    {
+      "path": "paper/sec/07_limitations.tex",
+      "instruction": "Make the PDF bookmarks list Limitations, Ethical Considerations, and References and number all sections so the appendices are distinguishable, without changing the rendered text.",
+      "before": "\\section*{Limitations}\n\\label{sec:limitations}",
+      "after": "\\section*{Limitations}\n\\addcontentsline{toc}{section}{Limitations}\n\\label{sec:limitations}"
+    },
+    {
+      "path": "paper/sec/08_ethical_considerations.tex",
+      "instruction": "Make the PDF bookmarks list Limitations, Ethical Considerations, and References and number all sections so the appendices are distinguishable, without changing the rendered text.",
+      "before": "\\section*{Ethical Considerations}\n\\label{sec:ethical-considerations}",
+      "after": "\\section*{Ethical Considerations}\n\\addcontentsline{toc}{section}{Ethical Considerations}\n\\label{sec:ethical-considerations}"
     }
   ],
   "created_files": []

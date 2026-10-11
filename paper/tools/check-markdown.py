@@ -251,7 +251,8 @@ def check():
         r"\\contentsline \{(section|subsection|subsubsection|paragraph)\}", aux
     )
     headings = re.findall(r"^#{1,6} (.+)$", structural_text, re.MULTILINE)
-    expected = len(pdf_headings) + 2
+    # The aux lists References before the appendices; the Markdown places it last.
+    expected = len(pdf_headings) - 1
     actual = len(headings) - 3
     assert actual == expected, (actual, expected, headings)
     pdf_titles = re.findall(
@@ -259,10 +260,7 @@ def check():
         r"\{(?:\\numberline \{[^}]+\})?([^{}]+)\}",
         re.sub(r"\\text(?:tt|sc)\s*\{([^{}]*)\}", r"\1", aux),
     )
-    # Unnumbered sections are absent from the aux: Limitations (with its paragraph
-    # titles) follows Conclusion, and Ethical Considerations precedes the appendices.
-    pdf_titles.insert(pdf_titles.index("Conclusion") + 1, "Limitations")
-    pdf_titles.insert(pdf_titles.index("Prompt and Experiment Configuration"), "Ethical Considerations")
+    pdf_titles.remove("References")
     normalized_headings = [heading.replace(chr(96), "") for heading in headings]
     assert normalized_headings[2:-1] == pdf_titles, (
         normalized_headings[2:-1],
@@ -401,7 +399,7 @@ def check():
             f"Abstract words: {len(abstract_words)}/200; LaTeX commands: 0",
             f"Introduction prose paragraphs: {len(intro_paragraphs)}/6 max",
             "Introduction citation and proposal-structure guards: passed",
-            f"Section headings: Markdown {actual}; PDF {expected} ({len(pdf_headings)} aux entries plus unnumbered Limitations and Ethical Considerations)",
+            f"Section headings: Markdown {actual}; PDF {expected} ({len(pdf_headings)} aux entries minus References)",
             "Title, Abstract, and References headings excluded from section count.",
             "Paragraph-style violations: 0",
             "Main-text references to appendix tables or figures: 0",
