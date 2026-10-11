@@ -36,6 +36,12 @@
       "instruction": "Remove 'demanding subsets of' from the Introduction's evaluation sentence; the subset rule is described in Experimental Design.",
       "before": "We evaluate our system on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.",
       "after": "We evaluate our system on three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}."
+    },
+    {
+      "path": "paper/sec/03_method.tex",
+      "instruction": "Add one concrete example of an online Monitor decision after the sentence stating that the process order is not fixed.",
+      "before": "Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass.",
+      "after": "Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass.\nFor example, if \\texttt{Reviewing} finds that the draft omits a section the task requires, the \\texttt{Monitor} can select \\texttt{Planning} to add a goal for that section before further \\texttt{Translating}."
     }
   ],
   "created_files": []
