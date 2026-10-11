@@ -30,6 +30,12 @@
       "instruction": "Fit the main text within eight pages by removing redundancy in Experimental Design: shorten the numbering sentence, drop the trivial focal-system sentence, condense the model-choice footnote that Appendix B repeats, introduce the cross-family evaluator once where the robustness check is described, and keep paragraphs free of runt endings.",
       "before": "The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference~\\citep{li2026preference,panickssery2024selfpreference}.\nWe therefore report the cross-family rescoring described above as a separate descriptive robustness check rather than averaging results from the two evaluators.\n",
       "after": "The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference~\\citep{li2026preference,panickssery2024selfpreference}.\nWe therefore rescore selected system comparisons with \\modelCross\\ as a separate descriptive robustness check rather than averaging results from the two evaluators.\n"
+    },
+    {
+      "path": "paper/sec/01_introduction.tex",
+      "instruction": "Remove 'demanding subsets of' from the Introduction's evaluation sentence; the subset rule is described in Experimental Design.",
+      "before": "We evaluate our system on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.",
+      "after": "We evaluate our system on three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}."
     }
   ],
   "created_files": []
