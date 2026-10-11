@@ -39,9 +39,9 @@
     },
     {
       "path": "paper/tab/trace-outcome.tex",
-      "instruction": "Keep Table 7 aligned with the centralized replication convention: omit the common three-run count, state the process-path quantity and table-specific pooling across benchmarks and runs, then give the observational interpretation without repeating the win-rate formula.",
+      "instruction": "Keep Table 7 aligned with the centralized replication convention: omit the common three-run count, state the process-path quantity, say explicitly that wins and losses are summed across benchmarks and runs within each path group and comparison, and give the observational interpretation without vague pooling or aggregation wording and without repeating the win-rate formula.",
       "before": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins/losses summed across benchmarks and three runs for each path group and comparison; the split is observational, not causal.}",
-      "after": "\\caption{\\condAgenticCogWriter\\ win rates by observed process path against \\condFixedOrder\\ and \\condSingleWriter. Rates aggregate wins and losses across benchmarks and runs within each path group and comparison. The two path groups show similar rates; the split is observational, not causal.}"
+      "after": "\\caption{\\condAgenticCogWriter\\ win rates by observed process path against \\condFixedOrder\\ and \\condSingleWriter. Wins and losses are summed across benchmarks and runs within each path group and comparison. The two path groups show similar rates; the split is observational, not causal.}"
     }
   ],
   "created_files": []
