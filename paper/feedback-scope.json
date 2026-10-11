@@ -3,9 +3,9 @@
   "replacements": [
     {
       "path": "paper/sec/00_abstract.tex",
-      "instruction": "Table 6 の normalized cycle-compliance を exact one-cycle と誤読させない",
+      "instruction": "Table 6 の normalized cycle-compliance を exact one-cycle と誤読させず、Abstract 末尾の rendered runt を再発させない",
       "before": "Process traces show that most runs follow one planning--drafting--reviewing cycle, with departures used selectively rather than continually.",
-      "after": "Process traces show that most runs follow a simple planning--drafting--reviewing path, with departures used selectively rather than continually."
+      "after": "Process traces show that most runs follow a planning--drafting--reviewing path, with departures used selectively rather than continually."
     },
     {
       "path": "paper/sec/05_results.tex",
