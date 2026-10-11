@@ -4,6 +4,11 @@ The runtime was designed to isolate writing-process organization rather than inf
 \paragraph{Model roles.}
 The study uses \modelGenBare\ for generation because the experiment requires high-volume long-form generation across many systems, prompts, and replications; the model is positioned for fast, cost-sensitive workloads within the GPT-5.6 family~\citep{openai2026luna,openai2026gpt56}. \modelJudgeBare\ is used as the higher-capability primary evaluator, consistent with its positioning for more demanding professional work~\citep{openai2026sol,openai2026gpt56}. Medium reasoning effort is held fixed rather than tuned within the reported study. For the primary judge, the first main run inherited the documented medium default, and later runs pin medium explicitly to reproduce the same reasoning level.
 
+\paragraph{Compute reporting.}
+The generator and both judges are hosted closed models whose parameter counts and provider-side accelerator configurations are not disclosed to us, so we cannot report model parameter counts or GPU-hours.
+Instead, we report the model identifiers and roles, reasoning effort, output-token budget, retry policy, available token accounting, and wall-clock statistics recorded by the harness; these quantify observable consumption rather than provider-side compute.
+No model weights are trained or fine-tuned in this study.
+
 \paragraph{Evaluation controls.}
 Pairwise outputs are blinded and judged in both presentation orders to reduce known position bias in LLM evaluation~\citep{zheng2023judging,wang2024fair}. The two orders are treated as repeated measurements of one prompt-level comparison rather than independent samples: a semantic winner is retained only when both orders agree, and any disagreement becomes a tie. The reported primary judge and generator are both from the GPT-5.6 family, which differs from the planned different-family judge design. We therefore report \modelCross\ separately as a cross-family robustness check rather than pooling it with the confirmatory judge, given evidence that model-family relationships can affect evaluator preferences~\citep{panickssery2024selfpreference}.
 
