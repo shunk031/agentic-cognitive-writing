@@ -178,13 +178,16 @@ def is_prose_candidate(block: RenderedBlock) -> bool:
     return bool(visible and alphabetic / visible >= 0.45)
 
 
-def main_body_end_page(root: ET.Element) -> int:
-    pages = root.findall(".//x:page", XHTML)
-    for page_number, page in enumerate(pages, 1):
-        words = " ".join((word.text or "") for word in page.findall(".//x:word", XHTML))
-        if re.search(r"\bLimitations\b", words):
-            return page_number - 1
-    return len(pages)
+def main_body(blocks: list[RenderedBlock]) -> list[RenderedBlock]:
+    """Blocks in reading order before the References heading.
+
+    The body includes the unnumbered Limitations and Ethical Considerations
+    sections; the bibliography and appendices follow References.
+    """
+    for index, block in enumerate(blocks):
+        if block.text == "References":
+            return blocks[:index]
+    return blocks
 
 
 def main() -> None:
@@ -224,19 +227,19 @@ def main() -> None:
         offenders,
     )
 
-    main_end = main_body_end_page(root)
+    body = main_body(blocks)
+    main_end = body[-1].page
     prose = [
         segment
-        for block in blocks
-        if block.page <= main_end
+        for block in body
         for segment in paragraph_segments(block)
         if is_prose_candidate(segment)
     ]
     runts = [block for block in prose if is_runt(block)]
-    caption_runts = [block for block in captions if block.page <= main_end and is_runt(block)]
+    caption_runts = [block for block in captions if block in body and is_runt(block)]
 
     report_lines = [
-        f"Main-body pages scanned: 1-{main_end}",
+        f"Main-body pages scanned: 1-{main_end}, up to References",
         "",
         "Rendered prose paragraphs:",
     ]
