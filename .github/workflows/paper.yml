@@ -9,7 +9,7 @@ on:
         type: string
   push:
     branches:
-      - paper-manuscript
+      - paper-preview-fig2-original-bd971d13
     paths:
       - "paper/**"
       - ".github/workflows/paper.yml"
