@@ -87,7 +87,7 @@ We compare the writing systems under the same task inputs and information policy
 
 ### Systems Compared
 
-We consider seven pre-specified systems under the same generation setup. The systems are numbered below so that the alternatives, ablations, execution variant, and full system can be distinguished throughout the analysis.
+We consider seven pre-specified systems under the same generation setup. Their numbers below are used throughout the analysis.
 
 ##### Alternative writing systems.
 
@@ -99,7 +99,7 @@ Two pre-specified ablations change one control mechanism while retaining the res
 
 ##### Execution variant and full system.
 
-\(6\) `Single-writer` retains the goal representation and adaptive process loop but performs `Planning`, `Translating`, and `Reviewing` in one writer context without subagent delegation; it also limits each `Translating` step to one paragraph, so the condition is diagnostic rather than a clean ablation. (7) <span class="smallcaps">Agentic CogWriter</span> is the full system described in Section 3.2, with adaptive process selection, explicit goals, and role-specific subagents. This is our focal system.
+\(6\) `Single-writer` retains the goal representation and adaptive process loop but performs `Planning`, `Translating`, and `Reviewing` in one writer context without subagent delegation; it also limits each `Translating` step to one paragraph, so the condition is diagnostic rather than a clean ablation. (7) <span class="smallcaps">Agentic CogWriter</span> is the full system of Section 3.2, with adaptive process selection, explicit goals, and role-specific subagents.
 
 ##### Post-hoc execution check.
 
@@ -127,7 +127,7 @@ We evaluate fixed demanding subsets because short or lightly constrained tasks m
 
 ### Implementation
 
-All systems run in Codex CLI as the coding-agent harness with `gpt-5.6-luna` as the generator; API-based scoring uses `gpt-5.6-sol` as the primary evaluator.[^2] Holding the generator fixed across systems isolates writing organization rather than base-model capability. For a cross-family robustness check, we rescore selected system comparisons with `claude-sonnet-5 medium`. Our system is packaged as an agent skill: the top-level `Monitor` invokes `Planner`, `Translator`, and `Reviewer` as harness subagents.[^3]
+All systems run in Codex CLI as the coding-agent harness with `gpt-5.6-luna` as the generator; API-based scoring uses `gpt-5.6-sol` as the primary evaluator.[^2] Holding the generator fixed across systems isolates writing organization rather than base-model capability. Our system is an agent skill: its `Monitor` invokes `Planner`, `Translator`, and `Reviewer` as subagents.[^3]
 
 Every generation run uses the same generator, prompt set, and runtime configuration; main-result tables summarize the three runs unless noted otherwise. Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
 
@@ -145,7 +145,7 @@ We also apply a common five-dimension rubric across all three benchmarks: instru
 
 The judge uses the same quality dimensions and records a preference or a tie. LLM judges can exhibit position bias (Zheng et al., 2023; Wang et al., 2024), so every pair is evaluated in both presentation orders. We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie. For a contrast written as “A vs. B”, we report wins/losses/ties (W/L/T) for A and compute its win rate over non-tied order-consistent comparisons as `W/(W+L)`.
 
-The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). We therefore report the cross-family rescoring described above as a separate descriptive robustness check rather than averaging results from the two evaluators.
+The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). We therefore rescore selected system comparisons with `claude-sonnet-5 medium` as a separate descriptive robustness check rather than averaging results from the two evaluators.
 
 ##### Pre-specified statistical testing.
 
@@ -1939,7 +1939,7 @@ Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Z
 
 [^1]: See Appendix A for the exact selection rule, sample sizes, and sensitivity analysis.
 
-[^2]: We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work. Assigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check (OpenAI, 2026b; OpenAI, 2026c; OpenAI, 2026a).
+[^2]: We use Luna, which OpenAI positions for fast, cost-sensitive workloads, for high-volume long-form generation and the higher-capability tier, Sol, for evaluation; the shared model family motivates the cross-family check (OpenAI, 2026b; OpenAI, 2026c; OpenAI, 2026a).
 
 [^3]: See Appendix A for the complete prompts and Appendix B for the runtime settings.
 
