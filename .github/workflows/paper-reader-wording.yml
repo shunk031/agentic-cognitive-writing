@@ -1,0 +1,28 @@
+name: Paper reader wording guards
+
+on:
+  pull_request:
+    paths:
+      - "paper/**"
+      - ".github/workflows/paper-reader-wording.yml"
+  push:
+    branches:
+      - "paper-*"
+    paths:
+      - "paper/**"
+      - ".github/workflows/paper-reader-wording.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  reader-wording:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Ban win-rate formulas in manuscript text
+        run: python3 paper/tools/check-win-rate-notation.py
