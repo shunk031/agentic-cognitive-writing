@@ -1,11 +1,23 @@
 {
-  "baseline_sha": "2c7463e53f27f15c9d71f7dd2adabdf9b192d93d",
+  "baseline_sha": "ab40d6dcd8d5f7afc6db51c52a0ecfcae04c49e8",
   "replacements": [
     {
+      "path": "paper/sec/00_abstract.tex",
+      "instruction": "Table 6 の normalized cycle-compliance を exact one-cycle と誤読させず、Abstract 末尾の rendered runt を再発させない",
+      "before": "Process traces show that most runs follow one planning--drafting--reviewing cycle, with departures used selectively rather than continually.",
+      "after": "Process traces show that most runs follow a planning--drafting--reviewing path, with departures used selectively rather than continually."
+    },
+    {
       "path": "paper/sec/05_results.tex",
-      "instruction": "図のサイズはそのままにし、CIで固定する",
-      "before": "\\begin{figure*}[t]\n\\centering\n\\begin{minipage}[c]{0.54\\textwidth}\n\\centering\n\\includegraphics[width=\\linewidth]{fig/process-sequences-a.pdf}\\\\[-0.35em]\n\\small (a) Most frequent complete process paths\n\\end{minipage}\\hfill\n\\begin{minipage}[c]{0.34\\textwidth}\n\\centering\n\\includegraphics[width=\\linewidth]{fig/process-sequences-b.pdf}\\\\[-0.1em]\n\\small (b) \\condAgenticCogWriter\\\\[-0.2em]\n\\includegraphics[width=\\linewidth]{fig/process-sequences-c.pdf}\\\\[-0.1em]\n\\small (c) \\condFixedOrder\n\\end{minipage}",
-      "after": "\\begin{figure*}[t]\n\\centering\n\\begin{minipage}[c]{0.60\\textwidth}\n\\centering\n\\includegraphics[width=\\linewidth]{fig/process-sequences-a.pdf}\\\\[-0.35em]\n\\small (a) Most frequent complete process paths\n\\end{minipage}\\hfill\n\\begin{minipage}[c]{0.37\\textwidth}\n\\centering\n\\includegraphics[width=\\linewidth]{fig/process-sequences-b.pdf}\\\\[-0.1em]\n\\small (b) \\condAgenticCogWriter\\\\[0.5em]\n\\includegraphics[width=\\linewidth]{fig/process-sequences-c.pdf}\\\\[-0.1em]\n\\small (c) \\condFixedOrder\n\\end{minipage}"
+      "instruction": "Table 6 の 74.6% が repeat collapsing と leading-Planning reconstruction 後の process-path diagnostic であることを明示する",
+      "before": "Table~\\ref{tab:process-dynamics} shows a mostly simple writing loop: 74.6\\% of traces follow Planning--Translating--Reviewing, while 14.8\\% return from Review to Translating.",
+      "after": "Table~\\ref{tab:process-dynamics} shows a mostly simple writing loop after repeat collapsing and leading-Planning reconstruction: 74.6\\% of complete paths conform to the Planning--Translating--Reviewing cycle structure, while 14.8\\% of runs return from Review to Translating."
+    },
+    {
+      "path": "paper/sec/08_conclusion.tex",
+      "instruction": "Conclusion でも normalized cycle-compliance を exact one-cycle と誤読させない",
+      "before": "Across three long-form writing benchmarks, our system is preferred to single-pass generation, fixed writing stages, and adaptive task planning in same-prompt comparisons; neither explicit goals nor adaptive process ordering alone explains the advantage, and most traces follow one planning--drafting--reviewing cycle.",
+      "after": "Across three long-form writing benchmarks, our system is preferred to single-pass generation, fixed writing stages, and adaptive task planning in same-prompt comparisons; neither explicit goals nor adaptive process ordering alone explains the advantage, and most traces follow a simple planning--drafting--reviewing path."
     }
   ],
   "created_files": []
