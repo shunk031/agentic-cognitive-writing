@@ -8,10 +8,40 @@
       "after": "\\caption{Cross-family judge robustness using \\modelCross. Within each selected contrast, wins, losses, and ties are summed over benchmarks before computing the win rate; all three contrasts favor our system, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.}"
     },
     {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "State the shared three-run replication convention once in Implementation and make clear that the main-result tables use those runs unless explicitly noted, so captions do not repeat the common run count.",
+      "before": "Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration.",
+      "after": "Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration; all main-result tables summarize these runs unless explicitly noted otherwise."
+    },
+    {
+      "path": "paper/tab/main-results.tex",
+      "instruction": "Remove the shared three-run count from the Table 3 caption because the replication convention is defined once in Implementation; retain only table-specific summary and scoring details.",
+      "before": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across \\ThreeRunCount\\ generation runs. Native uses each benchmark's criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}",
+      "after": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD. Native uses each benchmark's criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}"
+    },
+    {
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Remove the shared three-run count from the pairwise-results caption; retain the table-specific mean, Across aggregation, threshold interpretation, and result takeaway.",
+      "before": "\\caption{Three-run mean same-prompt win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks; benchmark rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}",
+      "after": "\\caption{Mean same-prompt win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks; benchmark rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}"
+    },
+    {
+      "path": "paper/tab/ablation-results.tex",
+      "instruction": "Remove the shared three-run count from the ablation-results caption; retain the table-specific Across aggregation, threshold interpretation, and comparison takeaway.",
+      "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}",
+      "after": "\\caption{\\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}"
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Remove the shared three-run count from the process-dynamics caption; retain only the trace-processing definition and row semantics.",
+      "before": "\\caption{Three-run writing-loop behavior after repeat collapsing and leading-Planning reconstruction. Rows 1--2 partition complete process paths; rows 3--5 are non-exclusive indicators.}",
+      "after": "\\caption{Writing-loop behavior after repeat collapsing and leading-Planning reconstruction. Rows 1--2 partition complete process paths; rows 3--5 are non-exclusive indicators.}"
+    },
+    {
       "path": "paper/tab/trace-outcome.tex",
-      "instruction": "Align the Table 7 caption with the other result-table captions: start with the three-run quantity being reported, then state aggregation and interpretation; do not repeat the win-rate formula here.",
+      "instruction": "Keep Table 7 aligned with the centralized replication convention: omit the common three-run count, state the process-path quantity and table-specific pooling across benchmarks and runs, then give the observational interpretation without repeating the win-rate formula.",
       "before": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins/losses summed across benchmarks and three runs for each path group and comparison; the split is observational, not causal.}",
-      "after": "\\caption{Three-run \\condAgenticCogWriter\\ win rates by observed process path against \\condFixedOrder\\ and \\condSingleWriter. Rates aggregate wins and losses across benchmarks and runs within each path group and comparison. The two path groups show similar rates; the split is observational, not causal.}"
+      "after": "\\caption{\\condAgenticCogWriter\\ win rates by observed process path against \\condFixedOrder\\ and \\condSingleWriter. Rates aggregate wins and losses across benchmarks and runs within each path group and comparison. The two path groups show similar rates; the split is observational, not causal.}"
     }
   ],
   "created_files": []
