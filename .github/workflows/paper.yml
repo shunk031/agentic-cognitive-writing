@@ -99,7 +99,7 @@ jobs:
             exit 1
           fi
 
-      - name: Check rendered caption lines
+      - name: Check rendered captions and runt endings
         working-directory: paper
         run: |
           docker run --rm --user "$(id -u):$(id -g)" --volume "$PWD:/workspace" --workdir /workspace \
