@@ -1,89 +1,11 @@
 {
-  "baseline_sha": "b16f87a9abc15f7e685ca8a1afc3769c53132864",
+  "baseline_sha": "1e30df17b4e0bc8bef8f884d57600023dad82b92",
   "replacements": [
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}.",
-      "before": "(4) \\condNoGoals\\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \\condFixedOrder\\ keeps the shared draft, goals, process history, and subagents but replaces the \\texttt{Monitor}'s adaptive decision with a repeated Planning--Translating--Reviewing cycle.",
-      "after": "(4) \\condNoGoals\\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \\condFixedOrder\\ keeps the shared draft, goals, process history, and subagents but replaces the \\texttt{Monitor}'s adaptive decision with a repeated \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} cycle."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}.",
-      "before": "(6) \\condSingleWriter\\ retains the goal representation and adaptive process loop but performs planning, drafting, and reviewing in one writer context without subagent delegation; it also limits each \\texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.",
-      "after": "(6) \\condSingleWriter\\ retains the goal representation and adaptive process loop but performs \\texttt{Planning}, \\texttt{Translating}, and \\texttt{Reviewing} in one writer context without subagent delegation; it also limits each \\texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}.",
-      "before": "We also compare runs that complete one planning--drafting--reviewing cycle with runs that take another process path.",
-      "after": "We also compare runs that complete one \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} cycle with runs that take another process path."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}.",
-      "before": "Table~\\ref{tab:process-dynamics} shows a mostly simple writing loop after repeat collapsing and leading-Planning reconstruction: 74.6\\% of complete paths conform to the Planning--Translating--Reviewing cycle structure, while 14.8\\% of runs return from Review to Translating.",
-      "after": "Table~\\ref{tab:process-dynamics} shows a mostly simple writing loop after repeat collapsing and leading-\\texttt{Planning} reconstruction: 74.6\\% of complete paths conform to the \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} cycle structure, while 14.8\\% of runs return from \\texttt{Reviewing} to \\texttt{Translating}."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}; shorten 'making our system visually close to' to 'so our system looks close to' so the paragraph does not end on a runt.",
-      "before": "Figure~\\ref{fig:process-sequences} shows the same concentration: the forward planning--drafting--reviewing progression is most frequent, making our system visually close to \\condFixedOrder.",
-      "after": "Figure~\\ref{fig:process-sequences} shows the same concentration: the forward \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} progression is most frequent, so our system looks close to \\condFixedOrder."
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}.",
-      "before": "Our system mostly follows the same forward Planning--Translating--Reviewing progression as \\condFixedOrder; more returns to Translating than Planning are consistent with the small exploratory advantage of adaptive ordering.}",
-      "after": "Our system mostly follows the same forward \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} progression as \\condFixedOrder; more returns to \\texttt{Translating} than \\texttt{Planning} are consistent with the small exploratory advantage of adaptive ordering.}"
-    },
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}; say 'runs with one ... cycle and runs with other paths' so the paragraph does not end on a runt.",
-      "before": "Table~\\ref{tab:trace-outcome} shows similar pairwise win rates against \\condFixedOrder\\ and \\condSingleWriter\\ for one planning--drafting--reviewing cycle and other paths, so observed departures do not yield a larger quality advantage.",
-      "after": "Table~\\ref{tab:trace-outcome} shows similar pairwise win rates against \\condFixedOrder\\ and \\condSingleWriter\\ for runs with one \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} cycle and runs with other paths, so observed departures do not yield a larger quality advantage."
-    },
-    {
-      "path": "paper/tab/experiments-architecture-comparison.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}.",
-      "before": "& Planning$\\rightarrow$Translating$\\rightarrow$Reviewing",
-      "after": "& \\texttt{Planning}$\\rightarrow$\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing}"
-    },
-    {
-      "path": "paper/tab/experiments-architecture-comparison.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}.",
-      "before": "& Monitor context \\\\",
-      "after": "& \\texttt{Monitor} context \\\\"
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}.",
-      "before": "Review followed by renewed Translating",
-      "after": "\\texttt{Reviewing} followed by renewed \\texttt{Translating}"
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}.",
-      "before": "Review followed by renewed Planning",
-      "after": "\\texttt{Reviewing} followed by renewed \\texttt{Planning}"
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}.",
-      "before": "\\caption{Writing-loop behavior of \\condAgenticCogWriter\\ after repeat collapsing and leading-Planning reconstruction. Rows 1--2 partition complete process paths; rows 3--5 are non-exclusive indicators.}",
-      "after": "\\caption{Writing-loop behavior of \\condAgenticCogWriter\\ after repeat collapsing and leading-\\texttt{Planning} reconstruction. Rows 1--2 partition complete process paths; rows 3--5 are non-exclusive indicators.}"
-    },
-    {
-      "path": "paper/tab/trace-outcome.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}; break the code-formatted path over two lines so the column-width table does not shrink.",
-      "before": "Plan$\\rightarrow$draft$\\rightarrow$review",
-      "after": "\\lcell{\\texttt{Planning}$\\rightarrow$\\\\\\texttt{Translating}$\\rightarrow$\\texttt{Reviewing}}"
-    },
-    {
-      "path": "paper/tab/trace-outcome.tex",
-      "instruction": "Option A naming convention: in trace and system-behavior analyses, write system process and role names in typewriter font (\\texttt{Planning}, \\texttt{Translating}, \\texttt{Reviewing}, \\texttt{Monitor}) and paths as \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing}; compress the aggregation sentence to 'Each rate sums wins/losses over benchmarks and runs' so the caption stays within five rendered lines.",
-      "before": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins/losses summed across benchmarks and runs for each path group and comparison; the split is observational, not causal.}",
-      "after": "\\caption{\\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Each rate sums wins/losses over benchmarks and runs; the split is observational, not causal.}"
+      "path": "paper/sec/01_introduction.tex",
+      "instruction": "Define what 'agentic' means for the system (online process selection, persistent shared state, and subagent delegation), with the term in italics, without positioning it against CogWriter.",
+      "before": "The resulting process order is chosen during writing rather than fixed in advance.\n",
+      "after": "The resulting process order is chosen during writing rather than fixed in advance.\nWe call the system \\textit{agentic} for this combination: online selection of the next writing process, a persistent state shared across steps, and delegation of each selected process to a subagent.\n"
     }
   ],
   "created_files": []
