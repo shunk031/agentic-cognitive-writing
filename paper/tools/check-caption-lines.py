@@ -19,8 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 MAX_CAPTION_LINES = 5  # target ~4 lines; allow one line of layout variation
-RUNT_MAX_WORDS = 3
-RUNT_MAX_FILL = 0.35
+RUNT_MAX_FILL = 0.35  # a final line shorter than about a third of the column
 PARAGRAPH_INDENT_MIN = 7.0  # ACL body first-line indent is about 11 pt
 CAPTION_RE = re.compile(r"^(Table|Figure)\s+\d+:\s")
 LINE_NUMBER_BLOCK_RE = re.compile(r"^(?:\d{3}\s*)+$")
@@ -151,6 +150,20 @@ def paragraph_segments(block: RenderedBlock) -> list[RenderedBlock]:
     ]
 
 
+def is_runt(block: RenderedBlock) -> bool:
+    """A sentence-final last line that starts at the left margin and fills under RUNT_MAX_FILL.
+
+    Width, not word count, decides: math and hyphenation split words unpredictably.
+    A last line ending in ':' or ',' leads into display math and is not a paragraph end;
+    a last line starting far from the left edge is a right-aligned table cell.
+    """
+    if not block.lines:
+        return False
+    starts_at_margin = block.starts[-1] - block.x_min < PARAGRAPH_INDENT_MIN
+    ends_sentence = bool(SENTENCE_END_RE.search(block.lines[-1].rstrip()))
+    return starts_at_margin and ends_sentence and block.last_fill < RUNT_MAX_FILL
+
+
 def is_prose_candidate(block: RenderedBlock) -> bool:
     """Heuristically keep body-width prose and exclude line numbers/table cells."""
     if block.line_count < 2 or CAPTION_RE.match(block.text):
@@ -218,17 +231,8 @@ def main() -> None:
         for segment in paragraph_segments(block)
         if is_prose_candidate(segment)
     ]
-    runts = [
-        block
-        for block in prose
-        if block.last_words <= RUNT_MAX_WORDS or block.last_fill < RUNT_MAX_FILL
-    ]
-    caption_runts = [
-        block
-        for block in captions
-        if block.page <= main_end
-        and (block.last_words <= RUNT_MAX_WORDS or block.last_fill < RUNT_MAX_FILL)
-    ]
+    runts = [block for block in prose if is_runt(block)]
+    caption_runts = [block for block in captions if block.page <= main_end and is_runt(block)]
 
     report_lines = [
         f"Main-body pages scanned: 1-{main_end}",
