@@ -24,6 +24,18 @@
       "instruction": "Shorten the descriptive-execution limitation so its rendered final line is not a runt.",
       "before": "Process traces likewise record implemented state transitions and agent actions; they characterize how \\condAgenticCogWriter\\ behaves on these tasks but do not measure human cognition or validate cognitive process theory as a model of language-agent internals.",
       "after": "Process traces likewise record state transitions and agent actions; they characterize how \\condAgenticCogWriter\\ behaves on these tasks but do not measure human cognition or validate cognitive process theory as a model of language-agent internals."
+    },
+    {
+      "path": "paper/sec/09_prompt_configuration.tex",
+      "instruction": "Shorten the appendix sentence so its rendered final line is not a runt.",
+      "before": "Provider-level defaults that are not authored by the experiment are controlled through the runtime configuration in Appendix~\\ref{app:runtime}.",
+      "after": "Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix~\\ref{app:runtime}."
+    },
+    {
+      "path": "paper/sec/09_prompt_configuration.tex",
+      "instruction": "Shorten the appendix sentence so its rendered final line is not a runt.",
+      "before": "Published leaderboard values should not be compared directly with these scores because we use a shared evaluator and our own generated outputs.",
+      "after": "Published leaderboard values are not comparable with these scores because we use a shared evaluator and our own outputs."
     }
   ],
   "created_files": [
