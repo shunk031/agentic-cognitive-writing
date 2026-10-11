@@ -210,7 +210,7 @@ def check():
     acl = expand_inputs(read("acl_latex.tex"))
     main_sources = "\n".join(read(path) for path in MAIN_SECTIONS)
     reader_tex_sources = "\n".join(
-        path.read_text(encoding="utf-8") for path in sorted(PAPER.rglob("*.tex"))
+        path.read_text(encoding="utf-8") for path in sorted(PAPER.rglob("*.tex")) if "build" not in path.relative_to(PAPER).parts
     )
     reader_tex_sources = re.sub(r"(?m)%.*$", "", reader_tex_sources)
 
