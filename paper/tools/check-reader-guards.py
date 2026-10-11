@@ -141,7 +141,8 @@ def check_caption_takeaways() -> None:
         (
             ("the process-path win rates are similar", ("win rates", "Win rates")),
             ("similarity conclusion", ("similar", "Similar")),
-            ("process-path grouping", ("process-path groups",)),
+            ("planning--drafting--reviewing path group", ("Planning--drafting--reviewing",)),
+            ("other-path group", ("other-path runs",)),
             ("Fixed-order comparison", (r"\condFixedOrder",)),
             ("Single-writer comparison", (r"\condSingleWriter",)),
             ("observational qualification", ("observational", "Observational")),
