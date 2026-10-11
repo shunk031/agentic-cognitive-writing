@@ -1,5 +1,12 @@
 {
-  "baseline_sha": "06265a219088de485b1bcd3d8e083a1a6c8453a1",
-  "replacements": [],
+  "baseline_sha": "2c7463e53f27f15c9d71f7dd2adabdf9b192d93d",
+  "replacements": [
+    {
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "Do not write W/(W+L)-style formulas in reader-facing manuscript text; make CI fail if one is introduced.",
+      "before": "We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent comparisons as $W/(W+L)$.",
+      "after": "We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute the win rate over non-tied order-consistent comparisons."
+    }
+  ],
   "created_files": []
 }
