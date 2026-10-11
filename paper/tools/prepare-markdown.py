@@ -36,8 +36,7 @@ def epigraph_blocks(text):
         assert attribution_start, text[match.start() : match.start() + 120]
         attribution, stop = group(text, end + attribution_start.end())
         replacement = (
-            f"\n\n\\begin{{quote}}\n{quotation}\n\n"
-            f"{attribution}\n\\end{{quote}}\n\n"
+            f"\n\n\\begin{{quote}}\n{quotation}\n\n{attribution}\n\\end{{quote}}\n\n"
         )
         text = text[: match.start()] + replacement + text[stop:]
     return text
@@ -109,9 +108,7 @@ def math_ascii(text):
         text,
     )
     text = text.replace("{", "").replace("}", "")
-    return re.sub(r"\s+", " ", text).strip() + "".join(
-        f" [{note}]" for note in notes
-    )
+    return re.sub(r"\s+", " ", text).strip() + "".join(f" [{note}]" for note in notes)
 
 
 def main():
@@ -188,11 +185,20 @@ def main():
         table = re.search(r"\\begin\{tabular\}.*?\\end\{tabular\}", body, re.DOTALL)[0]
         table = re.sub(r"\\cmidrule(?:\([^)]*\))?\{[^}]*\}", "", table)
         for name in ("lcell", "ccell", "shortstack"):
-            table = commands(table, name, lambda value: value.replace(r"\\", "; "))
+            # A break after an arrow continues one path rather than separating items.
+            table = commands(
+                table,
+                name,
+                lambda value: value.replace(
+                    r"$\rightarrow$\\", r"$\rightarrow$"
+                ).replace(r"\\", "; "),
+            )
         pattern = re.compile(r"\\multicolumn\{(\d+)\}\{[^}]*\}")
         while span := pattern.search(table):
             value, end = group(table, span.end())
-            table = table[: span.start()] + " & ".join([value] * int(span[1])) + table[end:]
+            table = (
+                table[: span.start()] + " & ".join([value] * int(span[1])) + table[end:]
+            )
         return "\n\n" + table + "\n\n" + prefix + caption + "\n\n"
 
     text = re.sub(
@@ -203,11 +209,17 @@ def main():
     )
     text = re.sub(r"\\label\{[^}]+\}", "", text)
     text = text.replace(r"\maketitle", "").replace(r"\appendix", "")
-    text = text.replace(r"\begin{abstract}", r"\section*{Abstract}").replace(r"\end{abstract}", "")
+    text = text.replace(r"\begin{abstract}", r"\section*{Abstract}").replace(
+        r"\end{abstract}", ""
+    )
     text = re.sub(r"\\bibliography\{[^}]+\}", "", text)
     bbl = (PAPER / "build" / "acl_latex.bbl").read_text()
     entries = re.split(r"\\bibitem\[.*?\]\{[^}]+\}", bbl, flags=re.DOTALL)[1:]
-    bibliography = "\n\n".join(entries).replace(r"\end{thebibliography}", "").replace(r"\newblock", "")
+    bibliography = (
+        "\n\n".join(entries)
+        .replace(r"\end{thebibliography}", "")
+        .replace(r"\newblock", "")
+    )
     text += "\n\\section*{References}\n" + bibliography
     for name, value in {
         "yes": "yes",

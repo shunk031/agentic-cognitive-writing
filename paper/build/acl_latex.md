@@ -95,11 +95,11 @@ We compare three alternatives to <span class="smallcaps">Agentic CogWriter</span
 
 ##### Ablations of Agentic CogWriter.
 
-Two pre-specified ablations change one control mechanism while retaining the rest of the loop. (4) `No-goals` removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) `Fixed-order` keeps the shared draft, goals, process history, and subagents but replaces the `Monitor`’s adaptive decision with a repeated Planning–Translating–Reviewing cycle. The comparison tests whether explicit goals or adaptive ordering explain the full-system gain.
+Two pre-specified ablations change one control mechanism while retaining the rest of the loop. (4) `No-goals` removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) `Fixed-order` keeps the shared draft, goals, process history, and subagents but replaces the `Monitor`’s adaptive decision with a repeated `Planning`–`Translating`–`Reviewing` cycle. The comparison tests whether explicit goals or adaptive ordering explain the full-system gain.
 
 ##### Execution variant and full system.
 
-\(6\) `Single-writer` retains the goal representation and adaptive process loop but performs planning, drafting, and reviewing in one writer context without subagent delegation; it also limits each `Translating` step to one paragraph, so the condition is diagnostic rather than a clean ablation. (7) <span class="smallcaps">Agentic CogWriter</span> is the full system described in Section 3.2, with adaptive process selection, explicit goals, and role-specific subagents. This is our focal system.
+\(6\) `Single-writer` retains the goal representation and adaptive process loop but performs `Planning`, `Translating`, and `Reviewing` in one writer context without subagent delegation; it also limits each `Translating` step to one paragraph, so the condition is diagnostic rather than a clean ablation. (7) <span class="smallcaps">Agentic CogWriter</span> is the full system described in Section 3.2, with adaptive process selection, explicit goals, and role-specific subagents. This is our focal system.
 
 ##### Post-hoc execution check.
 
@@ -113,9 +113,9 @@ Two pre-specified ablations change one control mechanism while retaining the res
 | `Task-planning` | `X,D_t,T_t` | Task node | Select a ready task node | Task graph |
 | **<span class="smallcaps">Agentic CogWriter</span>** | `X,D_t,G_t,H_t` | **Writing process** `a_t` | `a_t=Monitor(X,D_t,G_t,H_t)` | **Subagent** |
 | `No-goals` | `X,D_t,H_t` | Writing process `a_t` | `a_t=Monitor(X,D_t,H_t)` | Subagent |
-| `Fixed-order` | `X,D_t,G_t,H_t` | Fixed process | Planning`->`Translating`->`Reviewing | Subagent |
+| `Fixed-order` | `X,D_t,G_t,H_t` | Fixed process | `Planning``->``Translating``->``Reviewing` | Subagent |
 | `Single-writer` | `X,D_t,G_t,H_t` | Writing process `a_t` | `a_t=Monitor(X,D_t,G_t,H_t)` | One writer |
-| `Single-context` | `X,D_t,G_t,H_t` | Writing process `a_t` | `a_t=Monitor(X,D_t,G_t,H_t)` | Monitor context |
+| `Single-context` | `X,D_t,G_t,H_t` | Writing process `a_t` | `a_t=Monitor(X,D_t,G_t,H_t)` | `Monitor` context |
 
 Table 2. Operational comparison of the evaluated writing systems. `Staged` follows fixed planning–drafting–revision stages (Yang et al., 2022; Wan et al., 2025); `Task-planning` follows WriteHERE-style task planning (Xiong et al., 2025). The first four rows expose the central difference in what advances next: document, stage, task node, or writing process. `X` is the task input; `D_t`, `G_t`, and `H_t` are draft, goals, and process history; `T_t` is the task graph. The remaining rows modify <span class="smallcaps">Agentic CogWriter</span>; `Single-context` was added post-hoc.
 
@@ -155,7 +155,7 @@ To summarize the two ablation contrasts across generation runs, we compute an ex
 
 Pairwise LLM evaluation can favor longer outputs and can change with judge identity (Zheng et al., 2023; Dubois et al., 2024; Li et al., 2026; Panickssery et al., 2024). We therefore test whether the pairwise direction persists within pre-specified output-length bands, under a tight compute match, and under the cross-family evaluator. Output length and realized compute are consequences of execution, so the first two analyses are descriptive sensitivity checks rather than causal adjustments.
 
-We analyze observable traces of process transitions, goal creation and development, goal replacement, and subagent invocations to characterize how the writing loop is actually used. We also compare runs that complete one planning–drafting–reviewing cycle with runs that take another process path. The trace-defined split is observational rather than randomized, so it describes behavior without identifying a causal mechanism.
+We analyze observable traces of process transitions, goal creation and development, goal replacement, and subagent invocations to characterize how the writing loop is actually used. We also compare runs that complete one `Planning`–`Translating`–`Reviewing` cycle with runs that take another process path. The trace-defined split is observational rather than randomized, so it describes behavior without identifying a causal mechanism.
 
 ## Results
 
@@ -208,33 +208,33 @@ Execution changes produce a larger but less easily isolated difference. `Single-
 
 ### Observed Writing-Process Behavior
 
-Table 6 shows a mostly simple writing loop after repeat collapsing and leading-Planning reconstruction: 74.6% of complete paths conform to the Planning–Translating–Reviewing cycle structure, while 14.8% of runs return from Review to Translating. Full replanning (0.3%) and goal replacement (0.5%) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over `Fixed-order` because ordering can matter only when the controller departs from the common path.
+Table 6 shows a mostly simple writing loop after repeat collapsing and leading-`Planning` reconstruction: 74.6% of complete paths conform to the `Planning`–`Translating`–`Reviewing` cycle structure, while 14.8% of runs return from `Reviewing` to `Translating`. Full replanning (0.3%) and goal replacement (0.5%) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over `Fixed-order` because ordering can matter only when the controller departs from the common path.
 
-|                                        |          |
-|:---------------------------------------|---------:|
-| **Observed writing-loop behavior**     | **Rate** |
-| Cycle-compliant path                   |    74.6% |
-| Any other complete path                |    25.4% |
-| Review followed by renewed Translating |    14.8% |
-| Review followed by renewed Planning    |     0.3% |
-| Runs with an accepted goal replacement |     0.5% |
+|                                               |          |
+|:----------------------------------------------|---------:|
+| **Observed writing-loop behavior**            | **Rate** |
+| Cycle-compliant path                          |    74.6% |
+| Any other complete path                       |    25.4% |
+| `Reviewing` followed by renewed `Translating` |    14.8% |
+| `Reviewing` followed by renewed `Planning`    |     0.3% |
+| Runs with an accepted goal replacement        |     0.5% |
 
-Table 6. Writing-loop behavior of <span class="smallcaps">Agentic CogWriter</span> after repeat collapsing and leading-Planning reconstruction. Rows 1–2 partition complete process paths; rows 3–5 are non-exclusive indicators.
+Table 6. Writing-loop behavior of <span class="smallcaps">Agentic CogWriter</span> after repeat collapsing and leading-`Planning` reconstruction. Rows 1–2 partition complete process paths; rows 3–5 are non-exclusive indicators.
 
-Figure 2 shows the same concentration: the forward planning–drafting–reviewing progression is most frequent, making our system visually close to `Fixed-order`. Because the demanding subsets increase input or requested output length or procedural burden without guaranteeing a need to replan, the traces show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing.
+Figure 2 shows the same concentration: the forward `Planning`–`Translating`–`Reviewing` progression is most frequent, so our system looks close to `Fixed-order`. Because the demanding subsets increase input or requested output length or procedural burden without guaranteeing a need to replan, the traces show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing.
 
-Figure 2. Process trajectories: (a) frequent complete paths; (b,c) transition counts per system. Our system mostly follows the same forward Planning–Translating–Reviewing progression as `Fixed-order`; more returns to Translating than Planning are consistent with the small exploratory advantage of adaptive ordering.
+Figure 2. Process trajectories: (a) frequent complete paths; (b,c) transition counts per system. Our system mostly follows the same forward `Planning`–`Translating`–`Reviewing` progression as `Fixed-order`; more returns to `Translating` than `Planning` are consistent with the small exploratory advantage of adaptive ordering.
 
-Table 7 shows similar pairwise win rates against `Fixed-order` and `Single-writer` for one planning–drafting–reviewing cycle and other paths, so observed departures do not yield a larger quality advantage. Because the split is observational, it cannot show whether path choice affects quality.[^10]
+Table 7 shows similar pairwise win rates against `Fixed-order` and `Single-writer` for runs with one `Planning`–`Translating`–`Reviewing` cycle and runs with other paths, so observed departures do not yield a larger quality advantage. Because the split is observational, it cannot show whether path choice affects quality.[^10]
 
 |  |  |  |
 |:---|---:|---:|
 |  | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** | **<span class="smallcaps">Agentic CogWriter</span> win rate (%)** |
 | **Process path** | **`Fixed-order`** | **`Single-writer`** |
-| Plan`->`draft`->`review | 57.5% | 72.6% |
+| `Planning``->``Translating``->``Reviewing` | 57.5% | 72.6% |
 | Other path | 54.7% | 74.7% |
 
-Table 7. Planning–drafting–reviewing and other-path runs have similar win rates against `Fixed-order` and `Single-writer`. Rates use wins/losses summed across benchmarks and runs for each path group and comparison; the split is observational, not causal.
+Table 7. `Planning`–`Translating`–`Reviewing` and other-path runs have similar win rates against `Fixed-order` and `Single-writer`. Each rate sums wins/losses over benchmarks and runs; the split is observational, not causal.
 
 ## Discussion
 
