@@ -2,14 +2,8 @@
   "baseline_sha": "2c7463e53f27f15c9d71f7dd2adabdf9b192d93d",
   "replacements": [
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Do not write W/(W+L)-style formulas in reader-facing manuscript text; make CI fail if one is introduced.",
-      "before": "We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent comparisons as $W/(W+L)$.",
-      "after": "We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute the win rate over non-tied order-consistent comparisons."
-    },
-    {
       "path": "paper/tab/appendix-cross-family.tex",
-      "instruction": "Do not write W/(W+L)-style formulas in reader-facing manuscript text; make CI fail if one is introduced.",
+      "instruction": "Keep the formal W/(W+L) definition once in Experimental Design, but do not repeat formula notation in captions or other reader-facing locations; make CI fail if it is repeated outside the canonical definition.",
       "before": "\\caption{Cross-family judge robustness using \\modelCross. Within each selected contrast, W/L/T counts are summed over benchmarks before computing $W/(W+L)$; all three contrasts favor our system, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.}",
       "after": "\\caption{Cross-family judge robustness using \\modelCross. Within each selected contrast, wins, losses, and ties are summed over benchmarks before computing the win rate; all three contrasts favor our system, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.}"
     }
