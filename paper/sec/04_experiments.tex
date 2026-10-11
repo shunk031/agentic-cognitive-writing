@@ -1,5 +1,6 @@
 We compare the writing systems under the same task inputs and information policy to study three questions: whether process-level organization improves document quality, which components contribute to any advantage, and how the writing loop behaves in practice.
 We also use one post-hoc execution variant as a diagnostic.
+Because agent execution is stochastic, every prompt--system pair is generated in three runs, so differences between systems can be judged against run-to-run variation.
 
 \subsection{Systems Compared}
 \label{sec:baselines}
@@ -41,33 +42,34 @@ This produces a different demanding subset for each benchmark: WritingBench emph
 \subsection{Implementation}
 \label{sec:implementation}
 
-All systems run in the same Codex-style coding-agent harness, using \modelGenBare\ as the generator and \modelJudgeBare\ as the primary evaluator.\footnote{We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work.
+All systems run in Codex CLI as the coding-agent harness with \modelGenBare\ as the generator; API-based scoring uses \modelJudgeBare\ as the primary evaluator.\footnote{We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work.
 Assigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.}
 Holding the generator fixed across systems isolates writing organization rather than base-model capability.
-For a cross-family robustness check, we also rescore selected system comparisons with \modelCross.
-Our system is packaged as an agent skill: the top-level \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} through the harness's subagent mechanism.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
+For a cross-family robustness check, we rescore selected system comparisons with \modelCross.
+Our system is packaged as an agent skill: the top-level \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} as harness subagents.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
 
-Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration; main-result tables summarize these runs unless noted otherwise.
-Repeating generation lets us measure variation due to stochastic execution while keeping the task set and system definition fixed.
+Every generation run uses the same generator, prompt set, and runtime configuration; main-result tables summarize the three runs unless noted otherwise.
 Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
 
 \subsection{Evaluation}
 \label{sec:evaluation}
 
-\paragraph{Pointwise evaluation.}
-We score each completed document independently.
-When a benchmark defines its own rubric, we report that score as the \emph{benchmark-native} score, meaning the benchmark authors' original criteria rather than our shared rubric.
-WritingBench uses five prompt-specific criteria, HelloBench uses checklist items, and DoLoMiTes provides no comparable native score.
+We evaluate documents with LLM-as-a-judge~\citep{zheng2023judging}, in which an evaluator model reads the prompt and the generated documents and returns rubric scores or a preference.
+We use two protocols: pointwise evaluation scores each document alone, and pairwise evaluation compares two systems' documents per prompt.
 
-We also apply a common five-dimension rubric across all three benchmarks: instruction fulfillment, organization and coherence, content adequacy and depth, style and audience fit, and factual or constraint fidelity, each scored from 1 to 5.
+\paragraph{Pointwise evaluation.}
+When a benchmark defines its own rubric, we report that score as the \emph{benchmark-native} score, meaning the benchmark authors' original criteria rather than our shared rubric.
+WritingBench uses five prompt-specific criteria scored from 1 to 10, which we rescale to 0--1, HelloBench uses checklist items, and DoLoMiTes provides no comparable native score.
+
+We also apply a common five-dimension rubric across all three benchmarks: instruction fulfillment, organization and coherence, content adequacy and depth, style and audience fit, and factual or constraint fidelity, each scored from 1 to 5.\footnote{See Appendix~\ref{app:prompts} for evaluation procedures and prompts.}
 Because these ratings concentrate near the upper end, each dimension is standardized within each generation run and benchmark across outputs from all seven pre-specified systems before averaging.
-The composite is relative within a benchmark rather than an absolute quality scale.\footnote{See Appendix~\ref{app:prompts} for evaluation procedures and prompts.}
+The composite is relative within a benchmark rather than an absolute quality scale.
 
 \paragraph{Pairwise evaluation.}
-We directly compare two responses written for the same prompt using the same quality dimensions and record which response is preferred, or a tie.
+The judge uses the same quality dimensions and records a preference or a tie.
 LLM judges can exhibit position bias~\citep{zheng2023judging,wang2024fair}, so every pair is evaluated in both presentation orders.
 We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie.
-We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent comparisons as $W/(W+L)$.
+For a contrast written as ``A vs.\ B'', we report wins/losses/ties (W/L/T) for A and compute its win rate over non-tied order-consistent comparisons as $W/(W+L)$.
 
 The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
 We therefore report the cross-family rescoring described above as a separate descriptive robustness check rather than averaging results from the two evaluators.

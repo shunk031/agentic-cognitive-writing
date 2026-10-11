@@ -83,7 +83,7 @@ Each subagent writes its changes to the shared workspace before control returns 
 
 ## Experimental Design
 
-We compare the writing systems under the same task inputs and information policy to study three questions: whether process-level organization improves document quality, which components contribute to any advantage, and how the writing loop behaves in practice. We also use one post-hoc execution variant as a diagnostic.
+We compare the writing systems under the same task inputs and information policy to study three questions: whether process-level organization improves document quality, which components contribute to any advantage, and how the writing loop behaves in practice. We also use one post-hoc execution variant as a diagnostic. Because agent execution is stochastic, every prompt–system pair is generated in three runs, so differences between systems can be judged against run-to-run variation.
 
 ### Systems Compared
 
@@ -127,21 +127,23 @@ We evaluate fixed demanding subsets because short or lightly constrained tasks m
 
 ### Implementation
 
-All systems run in the same Codex-style coding-agent harness, using `gpt-5.6-luna` as the generator and `gpt-5.6-sol` as the primary evaluator.[^2] Holding the generator fixed across systems isolates writing organization rather than base-model capability. For a cross-family robustness check, we also rescore selected system comparisons with `claude-sonnet-5 medium`. Our system is packaged as an agent skill: the top-level `Monitor` invokes `Planner`, `Translator`, and `Reviewer` through the harness’s subagent mechanism.[^3]
+All systems run in Codex CLI as the coding-agent harness with `gpt-5.6-luna` as the generator; API-based scoring uses `gpt-5.6-sol` as the primary evaluator.[^2] Holding the generator fixed across systems isolates writing organization rather than base-model capability. For a cross-family robustness check, we rescore selected system comparisons with `claude-sonnet-5 medium`. Our system is packaged as an agent skill: the top-level `Monitor` invokes `Planner`, `Translator`, and `Reviewer` as harness subagents.[^3]
 
-Each prompt–system pair is generated in three runs with the same generator, prompt set, and runtime configuration; main-result tables summarize these runs unless noted otherwise. Repeating generation lets us measure variation due to stochastic execution while keeping the task set and system definition fixed. Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
+Every generation run uses the same generator, prompt set, and runtime configuration; main-result tables summarize the three runs unless noted otherwise. Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
 
 ### Evaluation
 
+We evaluate documents with LLM-as-a-judge (Zheng et al., 2023), in which an evaluator model reads the prompt and the generated documents and returns rubric scores or a preference. We use two protocols: pointwise evaluation scores each document alone, and pairwise evaluation compares two systems’ documents per prompt.
+
 ##### Pointwise evaluation.
 
-We score each completed document independently. When a benchmark defines its own rubric, we report that score as the *benchmark-native* score, meaning the benchmark authors’ original criteria rather than our shared rubric. WritingBench uses five prompt-specific criteria, HelloBench uses checklist items, and DoLoMiTes provides no comparable native score.
+When a benchmark defines its own rubric, we report that score as the *benchmark-native* score, meaning the benchmark authors’ original criteria rather than our shared rubric. WritingBench uses five prompt-specific criteria scored from 1 to 10, which we rescale to 0–1, HelloBench uses checklist items, and DoLoMiTes provides no comparable native score.
 
-We also apply a common five-dimension rubric across all three benchmarks: instruction fulfillment, organization and coherence, content adequacy and depth, style and audience fit, and factual or constraint fidelity, each scored from 1 to 5. Because these ratings concentrate near the upper end, each dimension is standardized within each generation run and benchmark across outputs from all seven pre-specified systems before averaging. The composite is relative within a benchmark rather than an absolute quality scale.[^4]
+We also apply a common five-dimension rubric across all three benchmarks: instruction fulfillment, organization and coherence, content adequacy and depth, style and audience fit, and factual or constraint fidelity, each scored from 1 to 5.[^4] Because these ratings concentrate near the upper end, each dimension is standardized within each generation run and benchmark across outputs from all seven pre-specified systems before averaging. The composite is relative within a benchmark rather than an absolute quality scale.
 
 ##### Pairwise evaluation.
 
-We directly compare two responses written for the same prompt using the same quality dimensions and record which response is preferred, or a tie. LLM judges can exhibit position bias (Zheng et al., 2023; Wang et al., 2024), so every pair is evaluated in both presentation orders. We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie. We report each system contrast as wins/losses/ties (W/L/T) for the first-named system and compute its win rate over non-tied order-consistent comparisons as `W/(W+L)`.
+The judge uses the same quality dimensions and records a preference or a tie. LLM judges can exhibit position bias (Zheng et al., 2023; Wang et al., 2024), so every pair is evaluated in both presentation orders. We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie. For a contrast written as “A vs. B”, we report wins/losses/ties (W/L/T) for A and compute its win rate over non-tied order-consistent comparisons as `W/(W+L)`.
 
 The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). We therefore report the cross-family rescoring described above as a separate descriptive robustness check rather than averaging results from the two evaluators.
 
@@ -161,7 +163,7 @@ We analyze observable traces of process transitions, goal creation and developme
 
 ### Pointwise and Benchmark-Native Quality
 
-Table 3 reports three-run mean document-quality scores with sample SDs for benchmark-native and common-rubric evaluation across the three benchmarks. <span class="smallcaps">Agentic CogWriter</span> obtains the highest displayed mean on every WritingBench and HelloBench measure, and its paired prompt-level differences exclude zero against every displayed alternative on both WritingBench measures and on HelloBench native scores. Its lead over `Staged` and `Task-planning` on HelloBench pointwise scores lies within the paired intervals, as does the higher DoLoMiTes pointwise mean of `Staged` over our system.[^6] WritingBench native scores are rescaled to 0–1 for display, and the common-rubric values are standardized relative to all seven pre-specified systems within each generation run and benchmark, so zero denotes the benchmark-specific comparison mean rather than an absolute quality threshold.
+Table 3 reports document-quality scores for benchmark-native and common-rubric evaluation across the three benchmarks. <span class="smallcaps">Agentic CogWriter</span> obtains the highest mean among the four systems in Table 3 on every WritingBench and HelloBench measure, and its paired prompt-level differences exclude zero against every alternative on both WritingBench measures and on HelloBench native scores. Its lead over `Staged` and `Task-planning` on HelloBench pointwise scores lies within the paired intervals, as does the higher DoLoMiTes pointwise mean of `Staged`.[^6]
 
 |  |  |  |  |  |  |  |
 |:---|---:|---:|---:|---:|---:|---:|
@@ -1614,7 +1616,7 @@ Table 8 reports the runtime controls shared across conditions. We hold the gener
 
 ##### Runtime lock and isolation.
 
-The runtime was designed to isolate writing-process organization rather than information access or host configuration. Before a scored run, the runner requires explicit model, decoding, budget, timeout, seed, version, plugin-commit, retry, and statistical settings; unresolved values stop execution before a model process is created. Conditions share the same assignment and supplied context, resource limits, and tool policy, while web search, network access, external retrieval, and unprovided sources are disabled. Per-run provider configuration is also isolated from local guidance, and retries reuse the same prompt and policy rather than adding information or budget. These controls implement the study’s equal-information policy and reduce hidden runtime state as a source of condition differences.
+The runtime was designed to isolate writing-process organization rather than information access or host configuration. Before a scored run, the runner requires explicit model, decoding, budget, timeout, seed, version, plugin-commit, retry, and statistical settings; unresolved values stop execution before a model process is created. Conditions share the same assignment and supplied context, resource limits, and tool policy, while web search, network access, external retrieval, and unprovided sources are disabled. Per-run provider configuration is also isolated from local guidance, and retries reuse the same prompt and policy rather than adding information or budget. These controls implement the study’s equal-information policy and reduce hidden runtime state as a source of condition differences. The runner also supports Claude Code as the harness, but every reported generation run uses Codex CLI.
 
 ##### Model roles.
 
