@@ -47,7 +47,7 @@ Holding the generator fixed across systems isolates writing organization rather 
 For a cross-family robustness check, we also rescore selected system comparisons with \modelCross.
 Our system is packaged as an agent skill: the top-level \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} through the harness's subagent mechanism.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
 
-Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration.
+Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration; main-result tables summarize these runs unless noted otherwise.
 Repeating generation lets us measure variation due to stochastic execution while keeping the task set and system definition fixed.
 Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
 

@@ -129,7 +129,7 @@ We evaluate fixed demanding subsets because short or lightly constrained tasks m
 
 All systems run in the same Codex-style coding-agent harness, using `gpt-5.6-luna` as the generator and `gpt-5.6-sol` as the primary evaluator.[^2] Holding the generator fixed across systems isolates writing organization rather than base-model capability. For a cross-family robustness check, we also rescore selected system comparisons with `claude-sonnet-5 medium`. Our system is packaged as an agent skill: the top-level `Monitor` invokes `Planner`, `Translator`, and `Reviewer` through the harness’s subagent mechanism.[^3]
 
-Each prompt–system pair is generated in three runs with the same generator, prompt set, and runtime configuration. Repeating generation lets us measure variation due to stochastic execution while keeping the task set and system definition fixed. Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
+Each prompt–system pair is generated in three runs with the same generator, prompt set, and runtime configuration; main-result tables summarize these runs unless noted otherwise. Repeating generation lets us measure variation due to stochastic execution while keeping the task set and system definition fixed. Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
 
 ### Evaluation
 
@@ -172,7 +172,7 @@ Table 3 reports three-run mean document-quality scores with sample SDs for bench
 | `Task-planning` (Xiong et al., 2025) | 0.722 `±` 0.004 | -0.033 `±` 0.033 | 0.781 `±` 0.003 | -0.016 `±` 0.061 | N/A | -0.164 `±` 0.015 |
 | **<span class="smallcaps">Agentic CogWriter</span>** | **0.747** `±` 0.006 | **0.102** `±` 0.040 | **0.791** `±` 0.005 | <span style="color: tiedgray">**0.013** `±` 0.060</span> | N/A | 0.031 `±` 0.035 |
 
-Table 3. Document-quality scores, reported as mean `±` sample SD across 3 generation runs. Native uses each benchmark’s criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. <span class="smallcaps">Agentic CogWriter</span> scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.
+Table 3. Document-quality scores, reported as mean `±` sample SD across generation runs. Native uses each benchmark’s criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. <span class="smallcaps">Agentic CogWriter</span> scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.
 
 ### Direct Comparison of Writing Systems
 
@@ -186,7 +186,7 @@ Table 4 reports a system-level separation in direct same-prompt comparisons. <sp
 | vs. `Staged` | 80.9% | 62.8% | 55.9% | 67.3% |
 | vs. `Task-planning` | 65.5% | 63.0% | 75.7% | 68.5% |
 
-Table 4. Three-run mean same-prompt win rates; above 50% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks; benchmark rates exceed 50%, with the largest mean margin over `Single-pass`.
+Table 4. Run-averaged same-prompt win rates; above 50% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks; benchmark rates exceed 50%, with the largest mean margin over `Single-pass`.
 
 The direct-comparison result supports the tested system as a whole because our system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the `Monitor`. The ablations below test whether explicit goals or adaptive process order explain these differences.
 
@@ -202,7 +202,7 @@ Table 5 places the two pre-specified ablations much closer to <span class="small
 | `Fixed-order` | 56.8% | 57.4% | 54.7% | 56.3% |
 | `Single-writer` | 68.5% | 83.4% | 67.8% | 73.5% |
 
-Table 5. Three-run <span class="smallcaps">Agentic CogWriter</span> win rates; above 50% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks. `No-goals` and `Fixed-order` stay near parity; `Single-writer` shows a larger gap.
+Table 5. Run-averaged <span class="smallcaps">Agentic CogWriter</span> win rates; above 50% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks. `No-goals` and `Fixed-order` stay near parity; `Single-writer` shows a larger gap.
 
 Execution changes produce a larger but less easily isolated difference. `Single-writer` removes subagent delegation, changes role context and decision granularity, and alters output length at the same time. Within the tighter and wider pre-specified output-length bands, `Single-writer` still wins only 35.1% (`p=0.0141`) and 30.6% (`p=2.32 x 10^-5`), respectively, against our system, so output length alone does not explain the gap. The narrower post-hoc `Single-context` check shows no significant difference from our system in the exploratory generation run (47.4% win rate for `Single-context`, `p=0.5161`, unadjusted).[^9]
 
@@ -219,7 +219,7 @@ Table 6 shows a mostly simple writing loop after repeat collapsing and leading-P
 | Review followed by renewed Planning    |     0.3% |
 | Runs with an accepted goal replacement |     0.5% |
 
-Table 6. Three-run writing-loop behavior after repeat collapsing and leading-Planning reconstruction. Rows 1–2 partition complete process paths; rows 3–5 are non-exclusive indicators.
+Table 6. Writing-loop behavior of <span class="smallcaps">Agentic CogWriter</span> after repeat collapsing and leading-Planning reconstruction. Rows 1–2 partition complete process paths; rows 3–5 are non-exclusive indicators.
 
 Figure 2 shows the same concentration: the forward planning–drafting–reviewing progression is most frequent, making our system visually close to `Fixed-order`. Because the demanding subsets increase input or requested output length or procedural burden without guaranteeing a need to replan, the traces show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing.
 
@@ -234,7 +234,7 @@ Table 7 shows similar pairwise win rates against `Fixed-order` and `Single-writ
 | Plan`->`draft`->`review | 57.5% | 72.6% |
 | Other path | 54.7% | 74.7% |
 
-Table 7. Planning–drafting–reviewing and other-path runs have similar win rates against `Fixed-order` and `Single-writer`. Rates use wins/losses summed across benchmarks and three runs for each path group and comparison; the split is observational, not causal.
+Table 7. Planning–drafting–reviewing and other-path runs have similar win rates against `Fixed-order` and `Single-writer`. Rates use wins/losses summed across benchmarks and runs for each path group and comparison; the split is observational, not causal.
 
 ## Discussion
 
@@ -1823,7 +1823,7 @@ Table 16 reports benchmark-level results for three cross-family robustness contr
 | <span class="smallcaps">Agentic CogWriter</span> vs `No-goals` | HelloBench | 96 | 4/5/87 | 9.38% | 44.44% | 43/96 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `No-goals` | DoLoMiTes | 96 | 24/15/57 | 40.62% | 61.54% | 46/96 |
 
-Table 16. Cross-family judge robustness using `claude-sonnet-5 medium`. Within each selected contrast, W/L/T counts are summed over benchmarks before computing `W/(W+L)`; all three contrasts favor our system, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.
+Table 16. Cross-family judge robustness using `claude-sonnet-5 medium`. Within each selected contrast, wins, losses, and ties are summed over benchmarks before computing the win rate; all three contrasts favor our system, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.
 
 ## Consensus-Writing Evaluation on Habermas Machine Data
 
