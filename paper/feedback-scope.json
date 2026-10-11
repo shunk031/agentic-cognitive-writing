@@ -1,41 +1,47 @@
 {
-  "baseline_sha": "6f162bc0116d23f4bc9c0664b7493fc61ac9afcc",
+  "baseline_sha": "1573fb92f7b676533b5aa15ea5a0f12433c317de",
   "replacements": [
     {
-      "path": "paper/sec/03_method.tex",
-      "instruction": "Shorten the termination sentence so its rendered final line is not a runt.",
-      "before": "After reviewing, the \\texttt{Monitor} may instead terminate the loop and return the current draft as the completed document $D_{\\mathrm{final}}$.",
-      "after": "After reviewing, the \\texttt{Monitor} may instead stop and return the current draft as the final document $D_{\\mathrm{final}}$."
+      "path": "paper/sec/04_experiments.tex",
+      "instruction": "State once that main-result tables summarize the three generation runs, so captions need not repeat the run count.",
+      "before": "Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration.",
+      "after": "Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration; main-result tables summarize these runs unless noted otherwise."
     },
     {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Shorten the Figure 2 caption and the observational-split sentence so neither rendered final line is a runt, keeping the caption takeaway phrases.",
-      "before": "\\caption{Observed writing-process trajectories: (a) frequent complete paths; (b,c) transition counts for \\condAgenticCogWriter\\ and \\condFixedOrder.",
-      "after": "\\caption{Process trajectories: (a) frequent complete paths; (b,c) transition counts per system."
+      "path": "paper/tab/main-results.tex",
+      "instruction": "Drop the run count from the Table 3 caption but keep that the SD is across generation runs.",
+      "before": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across \\ThreeRunCount\\ generation runs. Native uses each benchmark's criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}",
+      "after": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across generation runs. Native uses each benchmark's criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}"
     },
     {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Shorten the Figure 2 caption and the observational-split sentence so neither rendered final line is a runt, keeping the caption takeaway phrases.",
-      "before": "Because the split is observational, it cannot establish whether path choice affects output quality.\\footnote{See Appendix~\\ref{app:process-behavior} for process, goal, and resource statistics.}",
-      "after": "Because the split is observational, it cannot show whether path choice affects quality.\\footnote{See Appendix~\\ref{app:process-behavior} for process, goal, and resource statistics.}"
+      "path": "paper/tab/pairwise-results.tex",
+      "instruction": "Replace the repeated three-run label with run-averaged.",
+      "before": "\\caption{Three-run mean same-prompt win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks; benchmark rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}",
+      "after": "\\caption{Run-averaged same-prompt win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks; benchmark rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}"
     },
     {
-      "path": "paper/sec/06_discussion.tex",
-      "instruction": "Shorten the process-control paragraph so its rendered final line is not a runt.",
-      "before": "Figure~\\ref{fig:process-sequences} and Table~\\ref{tab:process-dynamics} show that \\condAgenticCogWriter\\ usually follows planning--drafting--reviewing and departs selectively, so process-level control should not be equated with continual replanning.",
-      "after": "Figure~\\ref{fig:process-sequences} and Table~\\ref{tab:process-dynamics} show that \\condAgenticCogWriter\\ usually follows planning--drafting--reviewing and departs selectively, so process-level control is not the same as continual replanning."
+      "path": "paper/tab/ablation-results.tex",
+      "instruction": "Replace the repeated three-run label with run-averaged.",
+      "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}",
+      "after": "\\caption{Run-averaged \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}"
     },
     {
-      "path": "paper/sec/06_discussion.tex",
-      "instruction": "Shorten the process-control paragraph so its rendered final line is not a runt.",
-      "before": "This complements systems that adapt task decomposition or structural reasoning during generation~\\citep{xiong2025beyond,wan2025cognitive,sun2026cot}: another design axis is what writing action a controller selects, not only how dynamically it replans.",
-      "after": "This complements systems that adapt task decomposition or structural reasoning during generation~\\citep{xiong2025beyond,wan2025cognitive,sun2026cot}: a second axis is which process a controller selects, not only how dynamically it replans."
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Drop the repeated three-run label and name the system the table describes.",
+      "before": "\\caption{Three-run writing-loop behavior after repeat collapsing and leading-Planning reconstruction. Rows 1--2 partition complete process paths; rows 3--5 are non-exclusive indicators.}",
+      "after": "\\caption{Writing-loop behavior of \\condAgenticCogWriter\\ after repeat collapsing and leading-Planning reconstruction. Rows 1--2 partition complete process paths; rows 3--5 are non-exclusive indicators.}"
     },
     {
-      "path": "paper/sec/08_conclusion.tex",
-      "instruction": "Shorten the closing sentence so its rendered final line is not a runt.",
-      "before": "These results support process-level control for long-form writing agents and show how cognitive writing theory can yield executable, falsifiable system hypotheses.",
-      "after": "These results support process-level control for long-form writing agents and show how cognitive writing theory yields executable, falsifiable hypotheses."
+      "path": "paper/tab/trace-outcome.tex",
+      "instruction": "Drop the repeated run count from the Table 7 caption.",
+      "before": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins/losses summed across benchmarks and three runs for each path group and comparison; the split is observational, not causal.}",
+      "after": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins/losses summed across benchmarks and runs for each path group and comparison; the split is observational, not causal.}"
+    },
+    {
+      "path": "paper/tab/appendix-cross-family.tex",
+      "instruction": "Refer to the win rate by name instead of repeating the W/(W+L) formula defined in Experimental Design.",
+      "before": "\\caption{Cross-family judge robustness using \\modelCross. Within each selected contrast, W/L/T counts are summed over benchmarks before computing $W/(W+L)$; all three contrasts favor our system, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.}",
+      "after": "\\caption{Cross-family judge robustness using \\modelCross. Within each selected contrast, wins, losses, and ties are summed over benchmarks before computing the win rate; all three contrasts favor our system, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.}"
     }
   ],
   "created_files": []
