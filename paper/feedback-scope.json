@@ -21,13 +21,13 @@
     },
     {
       "path": "paper/tab/pairwise-results.tex",
-      "instruction": "Remove the shared three-run count from the pairwise-results caption; retain the table-specific mean, Across aggregation, threshold interpretation, and result takeaway.",
+      "instruction": "Remove the shared three-run count from the pairwise-results caption; retain the table-specific mean, Across computation, threshold interpretation, and result takeaway.",
       "before": "\\caption{Three-run mean same-prompt win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks; benchmark rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}",
       "after": "\\caption{Mean same-prompt win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks; benchmark rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}"
     },
     {
       "path": "paper/tab/ablation-results.tex",
-      "instruction": "Remove the shared three-run count from the ablation-results caption; retain the table-specific Across aggregation, threshold interpretation, and comparison takeaway.",
+      "instruction": "Remove the shared three-run count from the ablation-results caption; retain the table-specific Across computation, threshold interpretation, and comparison takeaway.",
       "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}",
       "after": "\\caption{\\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}"
     },
@@ -39,7 +39,7 @@
     },
     {
       "path": "paper/tab/trace-outcome.tex",
-      "instruction": "Keep Table 7 aligned with the centralized replication convention: omit the common three-run count, state the process-path quantity, say explicitly that wins and losses are summed across benchmarks and runs within each path group and comparison, and give the observational interpretation without vague pooling or aggregation wording and without repeating the win-rate formula.",
+      "instruction": "Keep Table 7 aligned with the centralized replication convention: omit the common three-run count, state the process-path quantity, say explicitly that wins and losses are summed across benchmarks and runs within each path group and comparison, and give the observational interpretation without replacing the actual operation with an umbrella term and without repeating the win-rate formula.",
       "before": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins/losses summed across benchmarks and three runs for each path group and comparison; the split is observational, not causal.}",
       "after": "\\caption{\\condAgenticCogWriter\\ win rates by observed process path against \\condFixedOrder\\ and \\condSingleWriter. Wins and losses are summed across benchmarks and runs within each path group and comparison. The two path groups show similar rates; the split is observational, not causal.}"
     }
