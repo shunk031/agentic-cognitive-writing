@@ -30,7 +30,7 @@ The platform-specific subagent wrappers only dispatch the corresponding role ski
 Configuration files pin the skill or stage prompt for every system and record hashes for fixed stage prompts.
 
 All experiment-authored generation and evaluation prompts are reproduced verbatim below.
-Provider-level defaults that are not authored by the experiment are controlled through the runtime configuration in Appendix~\ref{app:runtime}.
+Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix~\ref{app:runtime}.
 
 \subsection{Generation Prompts}
 
@@ -77,7 +77,7 @@ The \condStaged\ prompts follow the planning--drafting--revision decomposition u
 WritingBench retains five query-specific criteria for each prompt; the evaluator scores each criterion from 1 to 10 and the native score is their unweighted mean.
 HelloBench retains 5--7 checklist items per prompt; the evaluator scores each item on its five-level scale and the native score is the item mean.
 DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark.
-Published leaderboard values should not be compared directly with these scores because we use a shared evaluator and our own generated outputs.
+Published leaderboard values are not comparable with these scores because we use a shared evaluator and our own outputs.
 
 \promptinput{PromptEvaluator}{Common Pointwise Rubric}{../experiments/prompts/judges/pointwise-v1.md}
 

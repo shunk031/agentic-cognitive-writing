@@ -290,7 +290,7 @@ The 100-prompt count per benchmark was fixed before scoring. Under the realized 
 
 Every pre-specified system receives the same assignment, supplied context, requested output constraints, generator, attempt budget, and information policy. External retrieval is disabled by the coding-agent sandbox and by the experiment prompts. <span class="smallcaps">Agentic CogWriter</span> runs as an agent skill under a top-level `Monitor`; the `Planner`, `Translator`, and `Reviewer` subagents execute the role skills reproduced below. The platform-specific subagent wrappers only dispatch the corresponding role skills and add no separate writing policy. Configuration files pin the skill or stage prompt for every system and record hashes for fixed stage prompts.
 
-All experiment-authored generation and evaluation prompts are reproduced verbatim below. Provider-level defaults that are not authored by the experiment are controlled through the runtime configuration in Appendix B.
+All experiment-authored generation and evaluation prompts are reproduced verbatim below. Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix B.
 
 ### Generation Prompts
 
@@ -1385,7 +1385,7 @@ The `Staged` prompts follow the planning–drafting–revision decomposition us
 
 ##### Benchmark-native evaluation.
 
-WritingBench retains five query-specific criteria for each prompt; the evaluator scores each criterion from 1 to 10 and the native score is their unweighted mean. HelloBench retains 5–7 checklist items per prompt; the evaluator scores each item on its five-level scale and the native score is the item mean. DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark. Published leaderboard values should not be compared directly with these scores because we use a shared evaluator and our own generated outputs.
+WritingBench retains five query-specific criteria for each prompt; the evaluator scores each criterion from 1 to 10 and the native score is their unweighted mean. HelloBench retains 5–7 checklist items per prompt; the evaluator scores each item on its five-level scale and the native score is the item mean. DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark. Published leaderboard values are not comparable with these scores because we use a shared evaluator and our own outputs.
 
 **Common Pointwise Rubric**
 
