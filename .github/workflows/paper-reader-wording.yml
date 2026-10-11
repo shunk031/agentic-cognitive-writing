@@ -24,5 +24,5 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Ban win-rate formulas in manuscript text
+      - name: Enforce one canonical win-rate definition
         run: python3 paper/tools/check-win-rate-notation.py
