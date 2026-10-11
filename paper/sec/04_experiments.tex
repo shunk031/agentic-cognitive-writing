@@ -13,11 +13,11 @@ The alternatives therefore advance a whole document, a fixed writing stage, or a
 
 \paragraph{Ablations of \condAgenticCogWriter.}
 Two pre-specified ablations change one control mechanism while retaining the rest of the loop.
-(4) \condNoGoals\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \condFixedOrder\ keeps the shared draft, goals, process history, and subagents but replaces the \texttt{Monitor}'s adaptive decision with a repeated Planning--Translating--Reviewing cycle.
+(4) \condNoGoals\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \condFixedOrder\ keeps the shared draft, goals, process history, and subagents but replaces the \texttt{Monitor}'s adaptive decision with a repeated \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle.
 The comparison tests whether explicit goals or adaptive ordering explain the full-system gain.
 
 \paragraph{Execution variant and full system.}
-(6) \condSingleWriter\ retains the goal representation and adaptive process loop but performs planning, drafting, and reviewing in one writer context without subagent delegation; it also limits each \texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.
+(6) \condSingleWriter\ retains the goal representation and adaptive process loop but performs \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} in one writer context without subagent delegation; it also limits each \texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.
 (7) \condAgenticCogWriter\ is the full system described in Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.
 This is our focal system.
 
@@ -87,5 +87,5 @@ We therefore test whether the pairwise direction persists within pre-specified o
 Output length and realized compute are consequences of execution, so the first two analyses are descriptive sensitivity checks rather than causal adjustments.
 
 We analyze observable traces of process transitions, goal creation and development, goal replacement, and subagent invocations to characterize how the writing loop is actually used.
-We also compare runs that complete one planning--drafting--reviewing cycle with runs that take another process path.
+We also compare runs that complete one \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle with runs that take another process path.
 The trace-defined split is observational rather than randomized, so it describes behavior without identifying a causal mechanism.

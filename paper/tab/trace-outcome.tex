@@ -11,7 +11,7 @@
 & \textbf{\condFixedOrder}
 & \textbf{\condSingleWriter} \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}
-Plan$\rightarrow$draft$\rightarrow$review
+\lcell{\texttt{Planning}$\rightarrow$\\\texttt{Translating}$\rightarrow$\texttt{Reviewing}}
 & \AfourExactCycleFixedOrderWinRate
 & \AfourExactCycleSingleWriterWinRate \\
 Other path
@@ -21,6 +21,6 @@ Other path
 \bottomrule
 \end{tabular}%
 }
-\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \condFixedOrder\ and \condSingleWriter. Rates use wins/losses summed across benchmarks and runs for each path group and comparison; the split is observational, not causal.}
+\caption{\texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} and other-path runs have similar win rates against \condFixedOrder\ and \condSingleWriter. Each rate sums wins/losses over benchmarks and runs; the split is observational, not causal.}
 \label{tab:trace-outcome}
 \end{table}

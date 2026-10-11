@@ -21,7 +21,7 @@ def read(path: str) -> str:
 
 
 def expand_inputs(text: str) -> str:
-    """Recursively expand manuscript \input files from the paper root."""
+    r"""Recursively expand manuscript \input files from the paper root."""
 
     def include(match: re.Match[str]) -> str:
         relative = match.group(1)
@@ -46,7 +46,9 @@ def check_appendix_sections(acl: str) -> None:
         ):
             continue
         start = match.end()
-        end = headings[index + 1].start() if index + 1 < len(headings) else len(appendix)
+        end = (
+            headings[index + 1].start() if index + 1 < len(headings) else len(appendix)
+        )
         body = appendix[start:end]
         if title == "Prompt and Experiment Configuration":
             body += "\n" + read("sec/09_prompt_configuration.tex")
@@ -120,7 +122,10 @@ def check_caption_takeaways() -> None:
     require_concepts(
         "tab/pairwise-results.tex",
         (
-            ("all benchmark rates exceed 50%", ("benchmark-level rates exceed 50\\%", "benchmark rates exceed 50\\%")),
+            (
+                "all benchmark rates exceed 50%",
+                ("benchmark-level rates exceed 50\\%", "benchmark rates exceed 50\\%"),
+            ),
             ("largest mean margin", ("largest mean margin",)),
             ("largest margin is against Single-pass", (r"\condSinglePass",)),
         ),
@@ -141,7 +146,10 @@ def check_caption_takeaways() -> None:
         (
             ("the process-path win rates are similar", ("win rates", "Win rates")),
             ("similarity conclusion", ("similar", "Similar")),
-            ("planning--drafting--reviewing path group", ("Planning--drafting--reviewing",)),
+            (
+                "Planning--Translating--Reviewing path group",
+                (r"\texttt{Planning}--\texttt{Translating}--\texttt{Reviewing}",),
+            ),
             ("other-path group", ("other-path runs",)),
             ("Fixed-order comparison", (r"\condFixedOrder",)),
             ("Single-writer comparison", (r"\condSingleWriter",)),
@@ -162,6 +170,36 @@ def check_caption_takeaways() -> None:
         "process-dynamics table must show both sides of the complete-path partition",
         "tab/process-dynamics.tex",
     )
+
+
+def check_trace_process_names() -> None:
+    """Trace analyses name system processes in typewriter font.
+
+    Reader-level sections keep lowercase planning/drafting/reviewing, so the
+    rule covers only Experimental Design, Results, and the tables.
+    """
+
+    paths = ["sec/04_experiments.tex", "sec/05_results.tex"]
+    paths += sorted(str(p.relative_to(PAPER)) for p in (PAPER / "tab").glob("*.tex"))
+    for path in paths:
+        for number, line in enumerate(read(path).splitlines(), 1):
+            line = re.sub(r"(?<!\\)%.*", "", line)
+            for match in re.finditer(
+                r"(?<![\\A-Za-z])(Planning|Translating|Reviewing)\b", line
+            ):
+                before = line[: match.start()]
+                # One sentence per source line, so line start is sentence start.
+                if before.endswith(r"\texttt{") or not before.strip():
+                    continue
+                if re.search(r"[.!?]\s+$", before):
+                    continue
+                raise AssertionError(
+                    (
+                        r"write system process names in trace analyses as \texttt{...}",
+                        f"{path}:{number}",
+                        match.group(1),
+                    )
+                )
 
 
 def check():
@@ -196,9 +234,9 @@ def check():
     assert r"action space $A$" in method, (
         "name the Monitor action space A before defining it"
     )
-    assert r"A=\{\texttt{Planning},\texttt{Translating},\texttt{Reviewing}\}" in method, (
-        "define action space A explicitly"
-    )
+    assert (
+        r"A=\{\texttt{Planning},\texttt{Translating},\texttt{Reviewing}\}" in method
+    ), "define action space A explicitly"
     assert r"a_t\in A" in method, "keep the selected action tied to action space A"
     assert r"$D_0$" in method and r"$G_0$" in method, (
         "preserve the initial draft and initial goal state"
@@ -271,16 +309,19 @@ def check():
         "We first reserve any prompts used while developing or debugging the evaluation protocol and never score those prompts."
         in experiments
     ), "explain development-prompt exclusion before describing subset selection"
-    assert "benchmark authors' original criteria rather than our shared rubric" in experiments, (
-        "define benchmark-native scoring in plain language when the term is introduced"
-    )
+    assert (
+        "benchmark authors' original criteria rather than our shared rubric"
+        in experiments
+    ), "define benchmark-native scoring in plain language when the term is introduced"
     assert experiments.count(r"\modelCross") == 1, (
         "name the cross-family evaluator once in Experimental Design",
         experiments.count(r"\modelCross"),
     )
 
     # Preserve the substance of the model-choice rationale without freezing its prose.
-    implementation = experiments.split(r"\subsection{Implementation}", 1)[1].split(r"\subsection{Evaluation}", 1)[0]
+    implementation = experiments.split(r"\subsection{Implementation}", 1)[1].split(
+        r"\subsection{Evaluation}", 1
+    )[0]
     assert r"\modelGenBare\ as the generator" in implementation, (
         "identify the generator model in Implementation"
     )
@@ -298,12 +339,13 @@ def check():
     assert "high-volume long-form generation" in implementation, (
         "explain why Luna is used for high-volume generation"
     )
-    assert "higher-capability tier" in implementation and "evaluation" in implementation, (
-        "explain why the higher-capability model tier is assigned to evaluation"
-    )
-    assert "shared model family" in implementation and "cross-family check" in implementation, (
-        "connect the model-choice rationale to the cross-family robustness check"
-    )
+    assert (
+        "higher-capability tier" in implementation and "evaluation" in implementation
+    ), "explain why the higher-capability model tier is assigned to evaluation"
+    assert (
+        "shared model family" in implementation
+        and "cross-family check" in implementation
+    ), "connect the model-choice rationale to the cross-family robustness check"
 
     pointwise = (
         results.split(r"\label{sec:results-pointwise}", 1)[1]
@@ -313,7 +355,9 @@ def check():
     assert pointwise.startswith(r"Table~\ref{tab:main-results}"), (
         "start the pointwise Results subsection from the table the reader is about to interpret"
     )
-    assert "shows that no" not in results, "avoid awkward 'Table X shows that no ...' constructions"
+    assert "shows that no" not in results, (
+        "avoid awkward 'Table X shows that no ...' constructions"
+    )
     for label in (
         "app:record-pooled",
         "app:length-control",
@@ -330,10 +374,11 @@ def check():
     )
 
     check_caption_takeaways()
+    check_trace_process_names()
 
-    assert conclusion.startswith(r"\condAgenticCogWriter\ reframes long-form writing for AI agents"), (
-        "keep the conclusion contribution-first rather than opening with 'We use'"
-    )
+    assert conclusion.startswith(
+        r"\condAgenticCogWriter\ reframes long-form writing for AI agents"
+    ), "keep the conclusion contribution-first rather than opening with 'We use'"
 
     # Appendix organization and terminology are reader-facing constraints.
     assert r"\section{Prompt and Experiment Configuration}" in acl, (
@@ -353,13 +398,16 @@ def check():
     assert r"\twocolumn" not in appendix, (
         "keep the entire appendix in the intentional one-column layout"
     )
-    assert "The Habermas table" not in acl, "describe the Habermas evaluation directly rather than referring to 'the Habermas table'"
+    assert "The Habermas table" not in acl, (
+        "describe the Habermas evaluation directly rather than referring to 'the Habermas table'"
+    )
     check_appendix_sections(acl)
 
     runtime_table = read("tab/appendix-runtime-settings.tex")
-    assert "Generator sandbox" not in runtime_table and "workspace-write" not in runtime_table, (
-        "omit the redundant generator sandbox row from the runtime table"
-    )
+    assert (
+        "Generator sandbox" not in runtime_table
+        and "workspace-write" not in runtime_table
+    ), "omit the redundant generator sandbox row from the runtime table"
 
     single_context = read("tab/appendix-single-context.tex")
     assert r"\condSingleContext\\vs.~\condAgenticCogWriter" in single_context, (
