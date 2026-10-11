@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Check rendered caption length and report sparse paragraph endings.
+"""Check rendered caption length and sparse paragraph endings.
 
-Captions remain a hard CI guard. Paragraph density is report-only for now. The
-PDF text extractor may merge adjacent paragraphs into one block, so prose blocks
-are split at rendered first-line indents before checking their final lines.
-Rendered footnote markers are ignored when recognizing paragraph endings and
-counting words on a final line.
+Captions and paragraph density are hard CI guards. The PDF text extractor may
+merge adjacent paragraphs into one block, so prose blocks are split at rendered
+first-line indents before checking their final lines. Rendered footnote markers
+are ignored when recognizing paragraph endings and counting words on a final
+line.
 """
 
 from __future__ import annotations
@@ -253,22 +253,27 @@ def main() -> None:
 
     print(
         f"Layout density report: {len(prose)} prose-like paragraphs; "
-        f"{len(runts)} potential runt endings; {len(caption_runts)} caption runt endings."
+        f"{len(runts)} runt endings; {len(caption_runts)} caption runt endings."
     )
     for block in runts:
         print(
-            f"  WARN {block.location}: "
+            f"  ERROR {block.location}: "
             f"lines={block.line_count}, last_words={block.last_words}, "
             f"last_fill={block.last_fill:.0%}, last='{block.lines[-1][:70]}'"
         )
     for block in caption_runts:
         label = CAPTION_RE.match(block.text).group(0).strip()
         print(
-            f"  WARN {label}: lines={block.line_count}, "
+            f"  ERROR {label}: lines={block.line_count}, "
             f"last_words={block.last_words}, last_fill={block.last_fill:.0%}, "
             f"last='{block.lines[-1][:70]}'"
         )
     print(f"Full layout report: {report_path}")
+    if runts or caption_runts:
+        raise SystemExit(
+            "rendered runt endings are not allowed: "
+            f"{len(runts)} prose, {len(caption_runts)} caption"
+        )
 
 
 if __name__ == "__main__":
