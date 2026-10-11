@@ -1,5 +1,42 @@
 {
-  "baseline_sha": "443c541d6fd99dc24ebf9db26c34790104cec77d",
-  "replacements": [],
+  "baseline_sha": "6f162bc0116d23f4bc9c0664b7493fc61ac9afcc",
+  "replacements": [
+    {
+      "path": "paper/sec/03_method.tex",
+      "instruction": "Shorten the termination sentence so its rendered final line is not a runt.",
+      "before": "After reviewing, the \\texttt{Monitor} may instead terminate the loop and return the current draft as the completed document $D_{\\mathrm{final}}$.",
+      "after": "After reviewing, the \\texttt{Monitor} may instead stop and return the current draft as the final document $D_{\\mathrm{final}}$."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Shorten the Figure 2 caption and the observational-split sentence so neither rendered final line is a runt, keeping the caption takeaway phrases.",
+      "before": "\\caption{Observed writing-process trajectories: (a) frequent complete paths; (b,c) transition counts for \\condAgenticCogWriter\\ and \\condFixedOrder.",
+      "after": "\\caption{Process trajectories: (a) frequent complete paths; (b,c) transition counts per system."
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Shorten the Figure 2 caption and the observational-split sentence so neither rendered final line is a runt, keeping the caption takeaway phrases.",
+      "before": "Because the split is observational, it cannot establish whether path choice affects output quality.\\footnote{See Appendix~\\ref{app:process-behavior} for process, goal, and resource statistics.}",
+      "after": "Because the split is observational, it cannot show whether path choice affects quality.\\footnote{See Appendix~\\ref{app:process-behavior} for process, goal, and resource statistics.}"
+    },
+    {
+      "path": "paper/sec/06_discussion.tex",
+      "instruction": "Shorten the process-control paragraph so its rendered final line is not a runt.",
+      "before": "Figure~\\ref{fig:process-sequences} and Table~\\ref{tab:process-dynamics} show that \\condAgenticCogWriter\\ usually follows planning--drafting--reviewing and departs selectively, so process-level control should not be equated with continual replanning.",
+      "after": "Figure~\\ref{fig:process-sequences} and Table~\\ref{tab:process-dynamics} show that \\condAgenticCogWriter\\ usually follows planning--drafting--reviewing and departs selectively, so process-level control is not the same as continual replanning."
+    },
+    {
+      "path": "paper/sec/06_discussion.tex",
+      "instruction": "Shorten the process-control paragraph so its rendered final line is not a runt.",
+      "before": "This complements systems that adapt task decomposition or structural reasoning during generation~\\citep{xiong2025beyond,wan2025cognitive,sun2026cot}: another design axis is what writing action a controller selects, not only how dynamically it replans.",
+      "after": "This complements systems that adapt task decomposition or structural reasoning during generation~\\citep{xiong2025beyond,wan2025cognitive,sun2026cot}: a second axis is which process a controller selects, not only how dynamically it replans."
+    },
+    {
+      "path": "paper/sec/08_conclusion.tex",
+      "instruction": "Shorten the closing sentence so its rendered final line is not a runt.",
+      "before": "These results support process-level control for long-form writing agents and show how cognitive writing theory can yield executable, falsifiable system hypotheses.",
+      "after": "These results support process-level control for long-form writing agents and show how cognitive writing theory yields executable, falsifiable hypotheses."
+    }
+  ],
   "created_files": []
 }
