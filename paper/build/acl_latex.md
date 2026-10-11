@@ -264,13 +264,21 @@ The component analyses constrain mechanism claims without establishing equivalen
 
 ##### Descriptive execution analyses.
 
-The length- and compute-matched analyses are descriptive because both variables are consequences of execution. Process traces likewise record implemented state transitions and agent actions; they characterize how <span class="smallcaps">Agentic CogWriter</span> behaves on these tasks but do not measure human cognition or validate cognitive process theory as a model of language-agent internals.
+The length- and compute-matched analyses are descriptive because both variables are consequences of execution. Process traces likewise record state transitions and agent actions; they characterize how <span class="smallcaps">Agentic CogWriter</span> behaves on these tasks but do not measure human cognition or validate cognitive process theory as a model of language-agent internals.
+
+## Ethical Considerations
+
+Agentic long-form writing can support the organization and revision of complex documents, but the same capability can also scale persuasive or misleading text and amplify unsupported claims or biases inherited from the underlying model. Process decomposition and reviewing do not provide factuality or safety guarantees, and the system should not be treated as an autonomous authority for high-stakes writing. Our experiments disable external retrieval and study benchmark tasks rather than deployment; downstream use should retain human verification and domain-appropriate safeguards. Multi-step agent execution also makes additional model calls and can increase computational cost relative to one-pass generation, so we report token and runtime statistics to make this tradeoff visible. We recruited no human annotators or participants and collected no new personal data; the study reuses published benchmark artifacts under their released terms (Appendix A).
 
 ## Prompt and Experiment Configuration
 
 ##### Prompt selection and provenance.
 
 The scored study uses the committed `hard100` subset generated from the pinned WritingBench (Wu et al., 2026b), HelloBench (Que et al., 2024), and DoLoMiTes (Malaviya et al., 2025) manifests before generation. Prompts used while developing the protocol are removed first. Each remaining prompt is ranked by prompt word count plus the largest requested output length stated in the prompt or structured output constraints, subject to fixed maximum-length gates; ties are resolved by prompt word count, requested length, and prompt identifier. The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts. Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.
+
+##### Artifact provenance and terms.
+
+We use pinned snapshots of WritingBench (Apache-2.0), HelloBench (MIT), and DoLoMiTes (CC BY 4.0 for the benchmark materials); the exploratory Habermas Machine analysis likewise uses CC BY 4.0 materials. The corresponding source commits or archives, content hashes, and transformation notes are recorded in the experiment provenance manifest. We use these artifacts only for research evaluation under their released terms and redistribute only the derived prompt manifests described by that provenance record rather than hidden reference outputs or additional source data. For the Habermas Machine tasks, the materialized prompts omit source participant identifiers. We did not conduct an independent audit of the source benchmarks for offensive content or latent personal information beyond the transformations used to construct the evaluation prompts.
 
 The three selected subsets stress different properties of long-form writing. WritingBench combines long inputs with explicit long-output requirements, HelloBench contributes primarily very long-input summarization and continuation tasks, and DoLoMiTes contributes methodical expert tasks with structured procedural constraints. The `hard100` name identifies the deterministic length-and-demand rule rather than a claim that every prompt has the same source of semantic difficulty.
 
@@ -282,7 +290,7 @@ The 100-prompt count per benchmark was fixed before scoring. Under the realized 
 
 Every pre-specified system receives the same assignment, supplied context, requested output constraints, generator, attempt budget, and information policy. External retrieval is disabled by the coding-agent sandbox and by the experiment prompts. <span class="smallcaps">Agentic CogWriter</span> runs as an agent skill under a top-level `Monitor`; the `Planner`, `Translator`, and `Reviewer` subagents execute the role skills reproduced below. The platform-specific subagent wrappers only dispatch the corresponding role skills and add no separate writing policy. Configuration files pin the skill or stage prompt for every system and record hashes for fixed stage prompts.
 
-All experiment-authored generation and evaluation prompts are reproduced verbatim below. Provider-level defaults that are not authored by the experiment are controlled through the runtime configuration in Appendix B.
+All experiment-authored generation and evaluation prompts are reproduced verbatim below. Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix B.
 
 ### Generation Prompts
 
@@ -1377,7 +1385,7 @@ The `Staged` prompts follow the planning–drafting–revision decomposition us
 
 ##### Benchmark-native evaluation.
 
-WritingBench retains five query-specific criteria for each prompt; the evaluator scores each criterion from 1 to 10 and the native score is their unweighted mean. HelloBench retains 5–7 checklist items per prompt; the evaluator scores each item on its five-level scale and the native score is the item mean. DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark. Published leaderboard values should not be compared directly with these scores because we use a shared evaluator and our own generated outputs.
+WritingBench retains five query-specific criteria for each prompt; the evaluator scores each criterion from 1 to 10 and the native score is their unweighted mean. HelloBench retains 5–7 checklist items per prompt; the evaluator scores each item on its five-level scale and the native score is the item mean. DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark. Published leaderboard values are not comparable with these scores because we use a shared evaluator and our own outputs.
 
 **Common Pointwise Rubric**
 
@@ -1611,6 +1619,10 @@ The runtime was designed to isolate writing-process organization rather than inf
 ##### Model roles.
 
 The study uses `gpt-5.6-luna` for generation because the experiment requires high-volume long-form generation across many systems, prompts, and replications; the model is positioned for fast, cost-sensitive workloads within the GPT-5.6 family (OpenAI, 2026b; OpenAI, 2026a). `gpt-5.6-sol` is used as the higher-capability primary evaluator, consistent with its positioning for more demanding professional work (OpenAI, 2026c; OpenAI, 2026a). Medium reasoning effort is held fixed rather than tuned within the reported study. For the primary judge, the first main run inherited the documented medium default, and later runs pin medium explicitly to reproduce the same reasoning level.
+
+##### Compute reporting.
+
+The generator and both judges are hosted closed models whose parameter counts and provider-side accelerator configurations are not disclosed to us, so we cannot report model parameter counts or GPU-hours. Instead, we report the model identifiers and roles, reasoning effort, output-token budget, retry policy, available token accounting, and wall-clock statistics recorded by the harness; these quantify observable consumption rather than provider-side compute. No model weights are trained or fine-tuned in this study.
 
 ##### Evaluation controls.
 

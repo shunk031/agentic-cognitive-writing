@@ -34,5 +34,14 @@ class RuntTests(unittest.TestCase):
         self.assertFalse(check.is_runt(block("0.5%", 20.0, last_start=160.0)))
 
 
+class MainBodyTests(unittest.TestCase):
+    def test_body_runs_through_unnumbered_sections_and_stops_at_references(self):
+        texts = ["Introduction", "Limitations", "Ethical Considerations", "References", "Bai et al. 2025."]
+        blocks = [block(text, 100.0) for text in texts]
+        for item, text in zip(blocks, texts):
+            item.text = text
+        self.assertEqual([item.text for item in check.main_body(blocks)], texts[:3])
+
+
 if __name__ == "__main__":
     unittest.main()
