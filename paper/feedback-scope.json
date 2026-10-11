@@ -1,48 +1,30 @@
 {
-  "baseline_sha": "1573fb92f7b676533b5aa15ea5a0f12433c317de",
+  "baseline_sha": "3809f41d9508ebe26664d57f0cc9af9362221df3",
   "replacements": [
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "State once that main-result tables summarize the three generation runs, so captions need not repeat the run count.",
-      "before": "Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration.",
-      "after": "Each prompt--system pair is generated in three runs with the same generator, prompt set, and runtime configuration; main-result tables summarize these runs unless noted otherwise."
+      "path": "paper/acl_latex.tex",
+      "instruction": "ARR October 2026 submission preparationとして、Limitationsの後かつReferencesの前にEthical considerationsを追加する",
+      "before": "\\input{sec/07_limitations}\n\n\\bibliography{custom,agentic}",
+      "after": "\\input{sec/07_limitations}\n\n\\input{sec/08_ethical_considerations}\n\n\\bibliography{custom,agentic}"
     },
     {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Drop the run count from the Table 3 caption but keep that the SD is across generation runs.",
-      "before": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across \\ThreeRunCount\\ generation runs. Native uses each benchmark's criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}",
-      "after": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across generation runs. Native uses each benchmark's criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}"
+      "path": "paper/sec/09_prompt_configuration.tex",
+      "instruction": "Responsible NLP Checklistに答えられるよう、利用benchmarkのlicense、pinned provenance、intended use、再配布方針、PII/offensive-content監査の範囲を明記する",
+      "before": "Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.\n\nThe three selected subsets stress different properties of long-form writing.",
+      "after": "Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.\n\n\\paragraph{Artifact provenance and terms.}\nWe use pinned snapshots of WritingBench (Apache-2.0), HelloBench (MIT), and DoLoMiTes (CC BY 4.0 for the benchmark materials); the exploratory Habermas Machine analysis likewise uses CC BY 4.0 materials.\nThe corresponding source commits or archives, content hashes, and transformation notes are recorded in the experiment provenance manifest.\nWe use these artifacts only for research evaluation under their released terms and redistribute only the derived prompt manifests described by that provenance record rather than hidden reference outputs or additional source data.\nFor the Habermas Machine tasks, the materialized prompts omit source participant identifiers.\nWe did not conduct an independent audit of the source benchmarks for offensive content or latent personal information beyond the transformations used to construct the evaluation prompts.\n\nThe three selected subsets stress different properties of long-form writing."
     },
     {
-      "path": "paper/tab/pairwise-results.tex",
-      "instruction": "Replace the repeated three-run label with run-averaged.",
-      "before": "\\caption{Three-run mean same-prompt win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks; benchmark rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}",
-      "after": "\\caption{Run-averaged same-prompt win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks; benchmark rates exceed 50\\%, with the largest mean margin over \\condSinglePass.}"
-    },
-    {
-      "path": "paper/tab/ablation-results.tex",
-      "instruction": "Replace the repeated three-run label with run-averaged.",
-      "before": "\\caption{Three-run \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}",
-      "after": "\\caption{Run-averaged \\condAgenticCogWriter\\ win rates; above 50\\% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks. \\condNoGoals\\ and \\condFixedOrder\\ stay near parity; \\condSingleWriter\\ shows a larger gap.}"
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Drop the repeated three-run label and name the system the table describes.",
-      "before": "\\caption{Three-run writing-loop behavior after repeat collapsing and leading-Planning reconstruction. Rows 1--2 partition complete process paths; rows 3--5 are non-exclusive indicators.}",
-      "after": "\\caption{Writing-loop behavior of \\condAgenticCogWriter\\ after repeat collapsing and leading-Planning reconstruction. Rows 1--2 partition complete process paths; rows 3--5 are non-exclusive indicators.}"
-    },
-    {
-      "path": "paper/tab/trace-outcome.tex",
-      "instruction": "Drop the repeated run count from the Table 7 caption.",
-      "before": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins/losses summed across benchmarks and three runs for each path group and comparison; the split is observational, not causal.}",
-      "after": "\\caption{Planning--drafting--reviewing and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Rates use wins/losses summed across benchmarks and runs for each path group and comparison; the split is observational, not causal.}"
-    },
-    {
-      "path": "paper/tab/appendix-cross-family.tex",
-      "instruction": "Refer to the win rate by name instead of repeating the W/(W+L) formula defined in Experimental Design.",
-      "before": "\\caption{Cross-family judge robustness using \\modelCross. Within each selected contrast, W/L/T counts are summed over benchmarks before computing $W/(W+L)$; all three contrasts favor our system, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.}",
-      "after": "\\caption{Cross-family judge robustness using \\modelCross. Within each selected contrast, wins, losses, and ties are summed over benchmarks before computing the win rate; all three contrasts favor our system, but 3 of 9 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.}"
+      "path": "paper/tab/appendix-runtime-settings.tex",
+      "instruction": "Responsible NLP Checklistのcompute項目に対して、closed hosted modelsではparameter countとprovider-side hardware/GPU-hoursが取得不能であることと、代わりに報告するobservable computeを明記する",
+      "before": "Medium reasoning effort is held fixed rather than tuned within the reported study. For the primary judge, the first main run inherited the documented medium default, and later runs pin medium explicitly to reproduce the same reasoning level.\n\n\\paragraph{Evaluation controls.}",
+      "after": "Medium reasoning effort is held fixed rather than tuned within the reported study. For the primary judge, the first main run inherited the documented medium default, and later runs pin medium explicitly to reproduce the same reasoning level.\n\n\\paragraph{Compute reporting.}\nThe generator and both judges are hosted closed models whose parameter counts and provider-side accelerator configurations are not disclosed to us, so we cannot report model parameter counts or GPU-hours.\nInstead, we report the model identifiers and roles, reasoning effort, output-token budget, retry policy, available token accounting, and wall-clock statistics recorded by the harness; these quantify observable consumption rather than provider-side compute.\nNo model weights are trained or fine-tuned in this study.\n\n\\paragraph{Evaluation controls.}"
     }
   ],
-  "created_files": []
+  "created_files": [
+    {
+      "path": "paper/sec/08_ethical_considerations.tex",
+      "instruction": "ARR October 2026 submission preparationとして、長文writing agentのdual-use、factuality/bias、high-stakes use、compute cost、人間参加者の有無を簡潔に議論するEthical considerationsを追加する",
+      "content": "\\section*{Ethical Considerations}\n\\label{sec:ethical-considerations}\n\nAgentic long-form writing can support the organization and revision of complex documents, but the same capability can also scale persuasive or misleading text and amplify unsupported claims or biases inherited from the underlying model.\nProcess decomposition and reviewing do not provide factuality or safety guarantees, and the system should not be treated as an autonomous authority for high-stakes writing.\nOur experiments disable external retrieval and study benchmark tasks rather than deployment; downstream use should retain human verification and domain-appropriate safeguards.\nMulti-step agent execution also makes additional model calls and can increase computational cost relative to one-pass generation, so we report token and runtime statistics to make this tradeoff visible.\nWe recruited no human annotators or participants and collected no new personal data; the study reuses published benchmark artifacts under their released terms, as documented in Appendix~\\ref{app:prompts}.\n"
+    }
+  ]
 }
