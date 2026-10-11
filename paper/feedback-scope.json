@@ -1,5 +1,12 @@
 {
-  "baseline_sha": "324bc1407d0b04a5f8d5de69a7cd91e48f79a2a2",
-  "replacements": [],
+  "baseline_sha": "9e3aaf4939ad809d9fd0d3b588b189f546afc64c",
+  "replacements": [
+    {
+      "path": "paper/acl_latex.tex",
+      "instruction": "Make the gray of the Table 3 entries whose lead is within the paired intervals one step lighter.",
+      "before": "\\usepackage{threeparttable}\n\\definecolor{tiedgray}{gray}{0.45}\n\\usepackage{amssymb}",
+      "after": "\\usepackage{threeparttable}\n\\definecolor{tiedgray}{gray}{0.6}\n\\usepackage{amssymb}"
+    }
+  ],
   "created_files": []
 }
