@@ -18,12 +18,6 @@
       "instruction": "Conclusion でも normalized cycle-compliance を exact one-cycle と誤読させない",
       "before": "Across three long-form writing benchmarks, our system is preferred to single-pass generation, fixed writing stages, and adaptive task planning in same-prompt comparisons; neither explicit goals nor adaptive process ordering alone explains the advantage, and most traces follow one planning--drafting--reviewing cycle.",
       "after": "Across three long-form writing benchmarks, our system is preferred to single-pass generation, fixed writing stages, and adaptive task planning in same-prompt comparisons; neither explicit goals nor adaptive process ordering alone explains the advantage, and most traces follow a simple planning--drafting--reviewing path."
-    },
-    {
-      "path": "paper/DESIGN-RATIONALE.md",
-      "instruction": "Table 6 の normalized process diagnostic とより厳しい path grouping を今後混同しないため、査読者向けの表現方針を記録する",
-      "before": "- **Rare looping is not explained by easy prompts.**",
-      "after": "- **Process-trace classification wording.** Table 6 reports process behavior after repeat collapsing and leading-Planning reconstruction, so its 74.6 percent cycle-compliant rate must not be paraphrased as an exact one-cycle rate. The observational outcome analysis uses a stricter planning--drafting--reviewing versus other-path grouping. High-level Abstract and Conclusion summaries therefore describe a simple planning--drafting--reviewing path rather than attributing the Table 6 rate to exactly one cycle; this prevents readers from conflating the two process classifications.\n- **Rare looping is not explained by easy prompts.**"
     }
   ],
   "created_files": []
