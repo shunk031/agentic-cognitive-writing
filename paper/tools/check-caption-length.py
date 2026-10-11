@@ -8,6 +8,7 @@ from pathlib import Path
 
 PAPER = Path(__file__).resolve().parents[1]
 MAX_CAPTION_WORDS = 70
+ANAPHORIC_CAPTION_START_RE = re.compile(r"^(?:Both|This|These|Those)\b", re.IGNORECASE)
 
 
 def strip_comments(text: str) -> str:
@@ -112,25 +113,33 @@ def check_semantic_caption_guards() -> None:
 
 def main() -> None:
     offenders = []
+    anaphoric_openers = []
     checked = 0
     for path in manuscript_sources():
         text = path.read_text(encoding="utf-8")
         for caption, line, _ in captions(text):
             checked += 1
+            normalized = re.sub(r"\s+", " ", caption).strip()
             words = visible_word_count(caption)
             if words > MAX_CAPTION_WORDS:
-                preview = re.sub(r"\s+", " ", caption).strip()[:120]
-                offenders.append((path.relative_to(PAPER), line, words, preview))
+                offenders.append((path.relative_to(PAPER), line, words, normalized[:120]))
+            if ANAPHORIC_CAPTION_START_RE.match(normalized):
+                anaphoric_openers.append((path.relative_to(PAPER), line, normalized[:160]))
 
     assert checked > 0, "no compiled-manuscript captions found"
     assert not offenders, (
         f"captions must be <= {MAX_CAPTION_WORDS} words",
         offenders,
     )
+    assert not anaphoric_openers, (
+        "captions must be standalone: do not begin with anaphoric openers such as "
+        "'Both', 'This', 'These', or 'Those'; name the subject explicitly",
+        anaphoric_openers,
+    )
     check_semantic_caption_guards()
     print(
         f"Caption guard: {checked} compiled captions <= {MAX_CAPTION_WORDS} words; "
-        "Figure 1 overview lead and Table 1 generic comparison preserved"
+        "captions avoid anaphoric openers; Figure 1 overview lead and Table 1 generic comparison preserved"
     )
 
 
