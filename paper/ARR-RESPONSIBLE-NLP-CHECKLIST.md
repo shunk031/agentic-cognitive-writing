@@ -18,9 +18,13 @@ LLM agents for NLP
 
 ### Research area keywords
 
-LLM-based controllers, multi-agent systems, planning in agents, agent memory, agent evaluation
+LLM-based controllers, multi-agent systems, planning in agents, agent memory, agent evaluation, automatic evaluation, text-to-text generation
 
-These are taken verbatim from the LLM agents list on the [ARR areas page](https://aclrollingreview.org/areas).
+These are taken verbatim from the LLM agents and Generation lists on the [ARR areas page](https://aclrollingreview.org/areas).
+
+### Contribution types
+
+Primary: NLP engineering experiment. Also: Publicly available software and/or pre-trained models, for the released agent skills and experiment code.
 
 ## A. For every submission
 
