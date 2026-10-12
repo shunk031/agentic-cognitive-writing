@@ -94,6 +94,8 @@ HelloBench retains 5--7 checklist items per prompt; the evaluator scores each it
 DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark.
 Published leaderboard values are not comparable with these scores because we use a shared evaluator and our own outputs.
 
+In the judge templates below, \texttt{\{condition\_id\}} is filled with an opaque hash of the condition name, \texttt{\{platform\}} with the harness name, \texttt{codex}, and \texttt{\{presentation\}} with \texttt{A|B} or \texttt{B|A}, which gives the order of the two responses, so no field names the system that wrote a response.
+
 \promptinput{PromptEvaluator}{Common Pointwise Rubric}{build/prompt-display/experiments/prompts/judges/pointwise-v1.md}
 
 \promptinput{PromptEvaluator}{Pairwise Comparison}{build/prompt-display/experiments/prompts/judges/pairwise-v1.md}

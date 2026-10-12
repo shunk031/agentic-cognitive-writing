@@ -47,11 +47,10 @@ Contrast & Band or bin & W/L/T & Rate & $p$ \\
 \condSingleWriter\ vs. \condAgenticCogWriter & 1.25--1.50 & \ComputeSingleWriterFullBinOneTwentyFiveToOneFiftyWLT & \ComputeSingleWriterFullBinOneTwentyFiveToOneFiftyRate & $\ComputeSingleWriterFullBinOneTwentyFiveToOneFiftyP$ \\
 \condSingleWriter\ vs. \condAgenticCogWriter & 1.50--2.00 & \ComputeSingleWriterFullBinOneFiftyToTwoWLT & \ComputeSingleWriterFullBinOneFiftyToTwoRate & $\ComputeSingleWriterFullBinOneFiftyToTwoP$ \\
 \condSingleWriter\ vs. \condAgenticCogWriter & 2.00+ & \ComputeSingleWriterFullBinTwoPlusWLT & \ComputeSingleWriterFullBinTwoPlusRate & $\ComputeSingleWriterFullBinTwoPlusP$ \\
-\condAgenticCogWriter\ vs. \condSinglePass & 1.25--1.50 & \ComputeFullSinglePassBinOneTwentyFiveToOneFiftyWLT & \ComputeFullSinglePassBinOneTwentyFiveToOneFiftyRate & $\ComputeFullSinglePassBinOneTwentyFiveToOneFiftyP$ \\
 \condAgenticCogWriter\ vs. \condSinglePass & 1.50--2.00 & \ComputeFullSinglePassBinOneFiftyToTwoWLT & \ComputeFullSinglePassBinOneFiftyToTwoRate & $\ComputeFullSinglePassBinOneFiftyToTwoP$ \\
 \condAgenticCogWriter\ vs. \condSinglePass & 2.00+ & \ComputeFullSinglePassBinTwoPlusWLT & \ComputeFullSinglePassBinTwoPlusRate & $\ComputeFullSinglePassBinTwoPlusP$ \\
 \bottomrule
 \end{tabular}
-\caption{Compute-matched pairwise outcomes. Ratios divide the first-named system's output-plus-reasoning tokens by the second's; the 1.25 and 1.50 bands keep pairs whose larger-to-smaller ratio is at most that value. Within the 1.25 band, \condAgenticCogWriter\ remains favored over \condStaged\ and \condTaskPlanning; no pairs with \condSinglePass\ fall there (N/A). W/L/T counts pairs across the three generation runs; unadjusted sign-test $p$-values count prompts and are not confirmatory.}
+\caption{Compute-matched outcomes. Ratios divide the first-named system's output-plus-reasoning tokens by the second's; the 1.25 and 1.50 bands keep pairs whose larger-to-smaller ratio is at most that value. No \condSinglePass\ pairs fall within 1.25 (N/A), so its 1.50 band equals its unrepeated 1.25--1.50 bin. W/L/T counts pairs across generation runs; unadjusted sign-test $p$-values count prompts and are not confirmatory.}
 \label{tab:appendix-compute-control}
 \end{table*}

@@ -1,8 +1,8 @@
 Recent coding agents run tool-using, stateful workflows, increasingly for knowledge work that ends in long-form documents.
 Yet long-form writing systems usually advance an outline, task graph, or fixed stage sequence rather than deciding which writing process is needed next.
 Drawing on cognitive process theory, we propose \condAgenticCogWriter, in which a Monitor agent keeps a shared draft, goals, and process history and delegates planning, drafting, or reviewing.
-We evaluate our system on three long-form writing benchmarks with pointwise rubric scores and pairwise preference judgments.
+We evaluate our system on three long-form writing benchmarks with pointwise rubric scores and pairwise preferences.
 In pre-specified pairwise tests, our system is preferred to one-shot generation in most per-benchmark tests, but to a fixed planning--drafting--revision workflow and adaptive task planning in fewer than half; a post-hoc prompt-level summary favors it over all three.
 Paired pointwise differences also favor it over all three on WritingBench and on HelloBench's native rubric.
-Ablations without explicit goals or with a fixed process order keep most of this advantage, while the fixed workflow given our role instructions does not reproduce it.
-Process traces show that \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure and only \AfourReviewingToPlanningRate\ of runs return to planning.
+Ablations without explicit goals or with a fixed process order keep most of this advantage, while a post-hoc fixed workflow given our role instructions does not reproduce it.
+Process traces show that \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure and \AfourReviewingToPlanningRate\ of runs return to planning.

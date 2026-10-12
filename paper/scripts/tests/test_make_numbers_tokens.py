@@ -14,6 +14,7 @@ from make_numbers import (
     _staged_roles_entries,
     _trace_endings_entries,
     _revision_tasks_entries,
+    _delegation_fallback_entries,
     _cross_family_percent,
     _length_control_entries,
     emit_numbers,
@@ -565,6 +566,12 @@ class TokenMacroTests(unittest.TestCase):
         output = dict((name, value) for name, value, _ in _trace_endings_entries(report))
         self.assertEqual(output[r"\AfourEndBeforeReviewingRuns"], "88")
         self.assertEqual(output[r"\AfourFallbackRuns"], "218")
+
+    def test_delegation_fallback_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/process-sequences/delegation-fallback.json").read_text())
+        output = dict((name, value) for name, value, _ in _delegation_fallback_entries(report))
+        self.assertEqual(output[r"\AfiveFallbackRuns"], "355")
+        self.assertEqual(output[r"\NoFallbackFullStagedRate"], "65.5\\%")
 
     def test_revision_tasks_macros_are_source_backed(self):
         report = json.loads((Path(__file__).resolve().parents[2] / "results/revision-tasks/results.json").read_text())

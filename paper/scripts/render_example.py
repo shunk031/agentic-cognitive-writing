@@ -33,7 +33,7 @@ def to_tex(text: str) -> str:
 def render(example: dict) -> str:
     path = r"$\rightarrow$".join(rf"\texttt{{{step.capitalize()}}}" for step in example["full_process_path"])
     rows = [
-        ("Assignment (opening)", to_tex(example["assignment_opening"])),
+        ("Assignment as restated by our Monitor (opening)", to_tex(example["assignment_opening"])),
         ("Logged process path of our system", path),
         ("Our system (opening)", to_tex(example["full_opening"])),
         (r"\condStaged\ (opening)", to_tex(example["staged_opening"])),

@@ -174,6 +174,9 @@ STAGED_ROLES_MARKER = "% Staged role-instruction (A9) macros."
 TRACE_ENDINGS_MARKER = "% Trace-ending macros."
 REVISION_TASKS_MARKER = "% Revision-request pilot macros."
 QUALITATIVE_EXAMPLE_MARKER = "% Illustrative-example macros."
+DELEGATION_FALLBACK_MARKER = "% Delegation-fallback macros."
+FALLBACK_CONDITIONS = {"A5": "Afive", "A6": "Asix"}
+FALLBACK_CONTRASTS = {"A4:A1": "FullSinglePass", "A4:A2": "FullStaged", "A4:A3": "FullTaskPlanning", "A4:A5": "FullNoGoals", "A4:A6": "FullFixedOrder"}
 REVISION_CONTRASTS = {"A4:A6": "FullFixedOrder", "A4:A2": "FullStaged", "A4:A1": "FullSinglePass"}
 RAW_RUBRIC_DIMENSIONS = {
     "instruction_fulfillment": "Instruction",
@@ -1360,7 +1363,7 @@ def _emit_cross_family_macros(add: Any, report: dict[str, Any]) -> None:
         add(prefix + "WLT", _wlt(pooled_contrast), f"cross-family JSON contrasts.{contrast} W/L/T")
         add(prefix + "CommitRate", _cross_family_percent(pooled_contrast["commit_rate"]["rate"]), f"cross-family JSON contrasts.{contrast}.commit_rate.rate")
         add(prefix + "WinRate", _cross_family_percent(pooled_contrast["win_rate"]["rate"]), f"cross-family JSON contrasts.{contrast}.win_rate.rate")
-        add(prefix + "Interval", f"{_percent_fixed(pooled_contrast['win_rate']['wilson_low'], 2)}--{_percent_fixed(pooled_contrast['win_rate']['wilson_high'], 2)}", f"cross-family JSON contrasts.{contrast}.win_rate Wilson interval")
+        add(prefix + "Interval", f"{_percent_fixed(pooled_contrast['win_rate']['wilson_low'], 1)}--{_percent_fixed(pooled_contrast['win_rate']['wilson_high'], 1)}", f"cross-family JSON contrasts.{contrast}.win_rate Wilson interval")
         add(prefix + "P", _pvalue(pooled_contrast["sign_test_p"]), f"cross-family JSON contrasts.{contrast}.sign_test_p")
         add(prefix + "Conflicts", str(pooled_contrast["direction_conflicts"]), f"cross-family JSON contrasts.{contrast}.direction_conflicts")
         for benchmark, benchmark_word in ROBUSTNESS_BENCHMARKS.items():
@@ -1368,8 +1371,8 @@ def _emit_cross_family_macros(add: Any, report: dict[str, Any]) -> None:
             benchmark_prefix = "\\CrossFamily" + benchmark_word + contrast_word
             add(benchmark_prefix + "N", str(result["n"]), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.n")
             add(benchmark_prefix + "WLT", _wlt(result), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark} W/L/T")
-            add(benchmark_prefix + "CommitRate", _percent_fixed(result["commit_rate"]["rate"], 2), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.commit_rate.rate")
-            add(benchmark_prefix + "WinRate", _percent_fixed(result["win_rate"]["rate"], 2), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.win_rate.rate")
+            add(benchmark_prefix + "CommitRate", _percent_fixed(result["commit_rate"]["rate"], 1), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.commit_rate.rate")
+            add(benchmark_prefix + "WinRate", _percent_fixed(result["win_rate"]["rate"], 1), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.win_rate.rate")
             agreement = result["prompt_collapsed_agreement"]
             add(benchmark_prefix + "Agreement", f"{agreement['numerator']}/{agreement['denominator']}", f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.prompt_collapsed_agreement numerator/denominator")
 
@@ -1525,6 +1528,25 @@ def _qualitative_example_entries(report: dict[str, Any]) -> list[tuple[str, str,
         ("\\ExampleEligiblePrompts", str(report["eligible_prompts"]), source + " eligible_prompts"),
         ("\\ExamplePrompt", report["example"]["prompt"], source + " example.prompt"),
     ]
+
+
+def _delegation_fallback_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Monitor delegation fallback by condition and pairwise rates without fallback runs."""
+    source = "delegation-fallback JSON"
+    counts = report["fallback_by_condition"]
+    entries = []
+    for condition, word in FALLBACK_CONDITIONS.items():
+        entries += [
+            (f"\\{word}FallbackRuns", str(counts[condition]["fallback_runs"]), f"{source} fallback_by_condition.{condition}.fallback_runs"),
+            (f"\\{word}FallbackCompleted", str(counts[condition]["completed_runs"]), f"{source} fallback_by_condition.{condition}.completed_runs"),
+        ]
+    for contrast, word in FALLBACK_CONTRASTS.items():
+        kept = report["contrasts"][contrast]["without_fallback"]
+        entries += [
+            (f"\\NoFallback{word}Rate", _percent_fixed(kept["rate_mean_over_runs"], 1), f"{source} contrasts.{contrast}.without_fallback.rate_mean_over_runs"),
+            (f"\\NoFallback{word}Pairs", f"{kept['pairs']:,}", f"{source} contrasts.{contrast}.without_fallback.pairs"),
+        ]
+    return entries
 
 
 def _validate_single_context_pair(data: dict[str, Any], source: str) -> None:
@@ -2378,6 +2400,7 @@ def main() -> None:
     parser.add_argument("--trace-endings", type=Path, help="trace-endings JSON; appends its own block")
     parser.add_argument("--revision-tasks", type=Path, help="revision-task results JSON; appends its own block")
     parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
+    parser.add_argument("--delegation-fallback", type=Path, help="delegation-fallback JSON; appends its own block")
     parser.add_argument("--three-run-quality", nargs=2, type=Path, metavar=("SUMMARY", "PAIRED"))
     parser.add_argument("--prompt-languages", nargs=2, type=Path, metavar=("PROMPT_SETS", "MANIFEST_DIR"))
     parser.add_argument(
@@ -2399,6 +2422,7 @@ def main() -> None:
         (args.trace_endings, "trace-endings", TRACE_ENDINGS_MARKER, _trace_endings_entries),
         (args.revision_tasks, "revision-tasks", REVISION_TASKS_MARKER, _revision_tasks_entries),
         (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),
+        (args.delegation_fallback, "delegation-fallback", DELEGATION_FALLBACK_MARKER, _delegation_fallback_entries),
     ):
         if path is not None:
             if args.aggregations:

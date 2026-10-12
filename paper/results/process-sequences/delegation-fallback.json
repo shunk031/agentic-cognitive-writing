@@ -1,0 +1,104 @@
+{
+  "contrasts": {
+    "A4:A1": {
+      "all": {
+        "losses": 135,
+        "pairs": 873,
+        "rate_mean_over_runs": 0.808527863439554,
+        "ties": 170,
+        "wins": 568
+      },
+      "without_fallback": {
+        "losses": 106,
+        "pairs": 659,
+        "rate_mean_over_runs": 0.7968476747424117,
+        "ties": 138,
+        "wins": 415
+      }
+    },
+    "A4:A2": {
+      "all": {
+        "losses": 204,
+        "pairs": 886,
+        "rate_mean_over_runs": 0.672756226837131,
+        "ties": 263,
+        "wins": 419
+      },
+      "without_fallback": {
+        "losses": 162,
+        "pairs": 668,
+        "rate_mean_over_runs": 0.6550389095031952,
+        "ties": 196,
+        "wins": 310
+      }
+    },
+    "A4:A3": {
+      "all": {
+        "losses": 206,
+        "pairs": 878,
+        "rate_mean_over_runs": 0.684556127623818,
+        "ties": 225,
+        "wins": 447
+      },
+      "without_fallback": {
+        "losses": 158,
+        "pairs": 663,
+        "rate_mean_over_runs": 0.6817502550639563,
+        "ties": 166,
+        "wins": 339
+      }
+    },
+    "A4:A5": {
+      "all": {
+        "losses": 269,
+        "pairs": 878,
+        "rate_mean_over_runs": 0.5337011093097033,
+        "ties": 301,
+        "wins": 308
+      },
+      "without_fallback": {
+        "losses": 113,
+        "pairs": 398,
+        "rate_mean_over_runs": 0.5782981694708499,
+        "ties": 128,
+        "wins": 157
+      }
+    },
+    "A4:A6": {
+      "all": {
+        "losses": 242,
+        "pairs": 860,
+        "rate_mean_over_runs": 0.5631135149263262,
+        "ties": 306,
+        "wins": 312
+      },
+      "without_fallback": {
+        "losses": 137,
+        "pairs": 506,
+        "rate_mean_over_runs": 0.5673754506719109,
+        "ties": 189,
+        "wins": 180
+      }
+    }
+  },
+  "fallback_by_condition": {
+    "A3": {
+      "completed_runs": 892,
+      "fallback_runs": 1
+    },
+    "A4": {
+      "completed_runs": 886,
+      "fallback_runs": 218
+    },
+    "A5": {
+      "completed_runs": 891,
+      "fallback_runs": 355
+    },
+    "A6": {
+      "completed_runs": 874,
+      "fallback_runs": 191
+    }
+  },
+  "judge_id": "gpt-5.6-sol-pairwise-v1",
+  "measure": "a trace event decision mentions 'fallback'"
+}
