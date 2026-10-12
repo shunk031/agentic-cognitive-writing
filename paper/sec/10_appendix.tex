@@ -14,6 +14,7 @@ Primary pairwise evaluation uses the same judge for every condition, presents ea
 \label{app:pairwise-detail}
 The following figure shows the prompt-level pairwise estimates for each benchmark and generation run, including the ablation contrasts.
 The Holm family of each benchmark contains 24 tests: eight pre-specified contrasts in each of the three generation runs.
+The pre-specified protocol that fixes these contrasts and the correction is included in the supplementary material.
 The contrasts compare \condAgenticCogWriter\ with \condSinglePass, \condStaged, \condTaskPlanning, \condNoGoals, and \condFixedOrder, and \condSingleWriter\ with \condSinglePass, \condAgenticCogWriter, and \condNoGoals.
 For \condAgenticCogWriter\ versus \condSinglePass, the descriptive mean win rates across generation runs are \DoLoFourOneRateMean\ on DoLoMiTes, \HelloFourOneRateMean\ on HelloBench, and \WritingFourOneRateMean\ on WritingBench.
 \begin{figure}
@@ -35,6 +36,10 @@ Table~\ref{tab:paired-ablation} applies the same paired comparison to the two ab
 Across the \PairedSeparationMeasureCount\ WritingBench and HelloBench native and pointwise contrasts with the three alternatives, the interval excludes zero for \PairedSeparatedFull\ with \condAgenticCogWriter, \PairedSeparatedNoGoals\ with \condNoGoals, and \PairedSeparatedFixedOrder\ with \condFixedOrder.
 Removing explicit goals therefore leaves the full system's advantage intact, and fixing the process order keeps it on every WritingBench native comparison and on most HelloBench native comparisons; on DoLoMiTes, all three systems separate only from \condTaskPlanning.
 \input{tab/appendix-paired-ablation}
+
+Table~\ref{tab:appendix-raw-rubric} reports the raw rubric means behind the standardized pointwise scores.
+Every mean is at least \RawRubricMin\ on the five-point scale, so the raw ratings concentrate near the upper end and leave little room to separate systems, which is why Section~\ref{sec:evaluation} standardizes each dimension before averaging.
+\input{tab/appendix-raw-rubric}
 
 \section{Additional Process and Resource Statistics}
 \label{app:process-behavior}
@@ -112,6 +117,26 @@ The \condStaged\ and \condFixedOrder\ contrasts cover \CrossFamilyFullStagedN\ a
 Across all five contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
 Cohen's kappa between the two judges is \JudgeAgreementKappa\ over these outcomes, most of which are cross-family ties, and \JudgeAgreementDecidedKappa\ over the \JudgeAgreementDecidedPairs\ pairs both judges decide, of which \JudgeAgreementDecidedAgreeing\ agree.
 \input{tab/appendix-cross-family}
+
+\subsection{Revision-Request Experiment}
+\label{app:revision-requests}
+This exploratory experiment, specified before generation, tests whether adaptive process selection matters when a finished document must be revised.
+It draws \RevisionPrompts\ prompts evenly from the three benchmark subsets; each system first completes the assignment and then, in the same session, receives one change request that adds a constraint, supplies new evidence, or conflicts with part of the assignment.
+The change requests were written once by \modelJudgeBare\ and frozen before any system ran; the generator is \modelGen, and the pairwise judge, \modelJudge\ with a revision-specific template, compares the revised documents in both presentation orders and counts an order-inconsistent outcome as a tie.
+Each contrast covers the \RevisionFullFixedOrderN\ prompts on which our system completed both turns.
+Table~\ref{tab:appendix-revision} shows that our system is not separable from \condFixedOrder\ and is favored over \condStaged\ without a significant difference; the \condSinglePass\ contrast was added outside the plan.
+The \texttt{Monitor} responds to the request: its second turn switches to \texttt{Planning} in \RevisionAfourPlanning\ of \RevisionAfourCompleted\ runs and regenerates goals in \RevisionAfourRegenerated, whereas \condFixedOrder\ regenerates goals in \RevisionAsixRegenerated\ of \RevisionAsixCompleted.
+
+The experiment cannot separate adaptive selection from a fixed cycle, because every request arrives after a complete document and calls for replanning, which a fixed order also performs.
+The change requests are written by a model and were not validated by people, and the generator, change writer, and judge all belong to the GPT family.
+Each system ran once per prompt, and the $p$-values carry no multiplicity correction.
+\input{tab/appendix-revision}
+
+\section{Illustrative Example}
+\label{app:example}
+The example below was chosen at random with a fixed seed from the \ExampleEligiblePrompts\ generation-run-1 prompts on which the primary judge preferred our system over \condStaged\ in both presentation orders and both outputs are in English, so it illustrates a win and does not represent typical outputs.
+The prompt is \texttt{\ExamplePrompt}; the excerpts give the opening words of each document, and the judge's reason is quoted from the presentation in which our system is response A.
+\input{tab/appendix-example}
 
 \section{Consensus-Writing Evaluation on Habermas Machine Data}
 \label{app:habermas}

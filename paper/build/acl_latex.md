@@ -247,11 +247,11 @@ Tables 4 and 5 suggest why <span class="smallcaps">Agentic CogWriter</span> win
 
 ##### Scope and external validity.
 
-Our conclusions concern one generator family, one coding-agent-style harness, and deterministic subsets of three long-form benchmarks. The subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent measure of difficulty or of the need to revise. The results therefore do not establish transfer to shorter tasks, other model families or runtimes, interactive human–AI writing, or end-to-end agents with retrieval. A direct next step is a task set that changes objectives, introduces new evidence, or adds rhetorical constraints during writing, so that process selection is required rather than only available.
+Our conclusions concern one generator family, one coding-agent-style harness, and deterministic subsets of three long-form benchmarks. The subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent measure of difficulty or of the need to revise. The results therefore do not establish transfer to shorter tasks, other model families or runtimes, interactive human–AI writing, or end-to-end agents with retrieval. In an exploratory revision-request experiment, our system replans and, in most runs, regenerates goals after the request but is not separable from `Fixed-order`, because both rerun the cycle; tasks whose correct next process is not `Planning`, or that change during drafting, are the next test.[^14]
 
 ##### Comparison design.
 
-The alternative writing systems are reimplementations under the shared setup of Section 4.3, not executions of the published systems. `Task-planning` also delegates its task nodes to subagents, so delegation is present on both sides of that comparison. `Staged-roles` was added post-hoc, uses one generation run and one judge family, and differs from our system in the `Monitor`, goals, shared state, and delegation together, so it isolates the role-instruction content and no single component. CogWriter-style and STORM-style adaptations (`Exploratory-1`, `Exploratory-2`) run only on ten consensus-writing tasks, and running them on the three benchmarks is the next comparison.[^14] The compute-matched analysis selects pairs with similar realized token use after generation; a Self-Refine baseline (Madaan et al., 2023) given our system’s token budget before generation would test budget-matched iterative revision directly.
+The alternative writing systems are reimplementations under the shared setup of Section 4.3, not executions of the published systems. `Task-planning` also delegates its task nodes to subagents, so delegation is present on both sides of that comparison. Its prompt forbids rewriting already-composed text, so `Task-planning` has no revision pass over the assembled draft. `Staged-roles` was added post-hoc, uses one generation run and one judge family, and differs from our system in the `Monitor`, goals, shared state, and delegation together, so it isolates the role-instruction content and no single component. CogWriter-style and STORM-style adaptations (`Exploratory-1`, `Exploratory-2`) run only on ten consensus-writing tasks, and running them on the three benchmarks is the next comparison.[^15] The compute-matched analysis selects pairs with similar realized token use after generation; a Self-Refine baseline (Madaan et al., 2023) given our system’s token budget before generation would test budget-matched iterative revision directly.
 
 ##### Evaluator dependence.
 
@@ -259,7 +259,7 @@ The primary evaluator belongs to the same model family as the generator, and rel
 
 ##### Component attribution.
 
-The ablations constrain explicit goals and adaptive ordering to modest contributions without establishing equivalence. Neither ablation differs from the full system in any benchmark–run test after Holm correction, each such test reaches 80% power (Card et al., 2020) at a true preference of about 73%, and the post-hoc prompt-level estimate does not compare the two components.[^15] `Fixed-order` enforces its cycle through the `Monitor`’s instructions so that it shares our system’s agent runtime and differs only in the selection rule, and 89.8% of its paths are cycle-compliant.[^16] Next steps are a runner-enforced cycle and a combined ablation that removes goals, fixes the order, and runs the roles without subagents together, which would test whether these mechanisms substitute for each other and whether the remaining `Monitor`-run loop over a persistent draft carries the advantage, as the Discussion suggests.
+The ablations constrain explicit goals and adaptive ordering to modest contributions without establishing equivalence. Neither ablation differs from the full system in any benchmark–run test after Holm correction, each such test reaches 80% power (Card et al., 2020) at a true preference of about 73%, and the post-hoc prompt-level estimate does not compare the two components.[^16] `Fixed-order` enforces its cycle through the `Monitor`’s instructions so that it shares our system’s agent runtime and differs only in the selection rule, and 89.8% of its paths are cycle-compliant.[^17] Next steps are a runner-enforced cycle and a combined ablation that removes goals, fixes the order, and runs the roles without subagents together, which would test whether these mechanisms substitute for each other and whether the remaining `Monitor`-run loop over a persistent draft carries the advantage, as the Discussion suggests.
 
 ##### Execution variants.
 
@@ -267,7 +267,7 @@ The ablations constrain explicit goals and adaptive ordering to modest contribut
 
 ##### Descriptive execution analyses.
 
-The primary evaluator favors longer outputs overall, and the length- and compute-matched analyses are descriptive because both variables result from execution. Process traces likewise record state transitions and agent actions; they characterize how <span class="smallcaps">Agentic CogWriter</span> behaves on these tasks but do not measure human cognition or validate cognitive process theory as a model of language-agent internals.
+The primary evaluator favors longer outputs overall, and the length- and compute-matched analyses are descriptive because both variables result from execution. Our system also costs more time: it averages 331 wall-clock seconds per document against 53 for `Single-pass`, while `No-goals` (276 seconds) and `Single-context` (123 against 426 on its generation run) stay near parity with it at lower cost.[^18] Process traces likewise record state transitions and agent actions; they characterize how <span class="smallcaps">Agentic CogWriter</span> behaves on these tasks but do not measure human cognition or validate cognitive process theory as a model of language-agent internals.
 
 ## Ethical Considerations
 
@@ -1789,7 +1789,7 @@ Table 7. Frozen runtime and evaluation settings used for the reported generation
 
 ## Generation-Run-Level Pairwise Outcomes
 
-The following figure shows the prompt-level pairwise estimates for each benchmark and generation run, including the ablation contrasts. The Holm family of each benchmark contains 24 tests: eight pre-specified contrasts in each of the three generation runs. The contrasts compare <span class="smallcaps">Agentic CogWriter</span> with `Single-pass`, `Staged`, `Task-planning`, `No-goals`, and `Fixed-order`, and `Single-writer` with `Single-pass`, <span class="smallcaps">Agentic CogWriter</span>, and `No-goals`. For <span class="smallcaps">Agentic CogWriter</span> versus `Single-pass`, the descriptive mean win rates across generation runs are 72% on DoLoMiTes, 85.7% on HelloBench, and 84.3% on WritingBench.
+The following figure shows the prompt-level pairwise estimates for each benchmark and generation run, including the ablation contrasts. The Holm family of each benchmark contains 24 tests: eight pre-specified contrasts in each of the three generation runs. The pre-specified protocol that fixes these contrasts and the correction is included in the supplementary material. The contrasts compare <span class="smallcaps">Agentic CogWriter</span> with `Single-pass`, `Staged`, `Task-planning`, `No-goals`, and `Fixed-order`, and `Single-writer` with `Single-pass`, <span class="smallcaps">Agentic CogWriter</span>, and `No-goals`. For <span class="smallcaps">Agentic CogWriter</span> versus `Single-pass`, the descriptive mean win rates across generation runs are 72% on DoLoMiTes, 85.7% on HelloBench, and 84.3% on WritingBench.
 
 Figure 3. Generation-run-level pairwise estimates separate the large system comparisons from the ablations. <span class="smallcaps">Agentic CogWriter</span> is consistently favored over `Single-pass` and `Task-planning` and usually over `Staged`, whereas `No-goals` and `Fixed-order` remain near parity and do not survive the within-benchmark Holm correction. Points show 95% Wilson intervals; filled circles survive correction, open circles do not, and diamonds are descriptive means across generation runs.
 
@@ -1824,9 +1824,38 @@ Table 9 applies the same paired comparison to the two ablations against the exte
 
 Table 9. Paired differences in document quality, ablation minus external alternative, with 95% bootstrap intervals in brackets, computed as in Table 8. Both ablations keep most of the full system’s advantage over the alternatives on WritingBench and HelloBench.
 
+Table 10 reports the raw rubric means behind the standardized pointwise scores. Every mean is at least 4.09 on the five-point scale, so the raw ratings concentrate near the upper end and leave little room to separate systems, which is why Section 4.4 standardizes each dimension before averaging.
+
+|  |  |  |  |  |  |  |
+|:---|:---|---:|---:|---:|---:|---:|
+| **Benchmark** | **System** | **Instruction** | **Organization** | **Content** | **Style** | **Factuality** |
+| WritingBench | `Single-pass` | 4.15 | 4.96 | 4.36 | 4.87 | 4.42 |
+|  | `Staged` | 4.14 | 4.97 | 4.29 | 4.89 | 4.62 |
+|  | `Task-planning` | 4.21 | 4.96 | 4.45 | 4.83 | 4.58 |
+|  | <span class="smallcaps">Agentic CogWriter</span> | 4.38 | 4.98 | 4.58 | 4.90 | 4.51 |
+|  | `No-goals` | 4.35 | 4.99 | 4.52 | 4.88 | 4.48 |
+|  | `Fixed-order` | 4.38 | 4.95 | 4.55 | 4.88 | 4.50 |
+|  | `Single-writer` | 4.45 | 4.89 | 4.66 | 4.92 | 4.09 |
+| HelloBench | `Single-pass` | 4.94 | 4.96 | 4.96 | 4.97 | 4.63 |
+|  | `Staged` | 4.95 | 4.96 | 4.98 | 5.00 | 4.74 |
+|  | `Task-planning` | 4.95 | 4.97 | 4.98 | 4.95 | 4.77 |
+|  | <span class="smallcaps">Agentic CogWriter</span> | 4.98 | 4.98 | 4.99 | 4.94 | 4.78 |
+|  | `No-goals` | 4.98 | 4.98 | 4.99 | 4.98 | 4.81 |
+|  | `Fixed-order` | 4.96 | 4.97 | 4.99 | 4.98 | 4.80 |
+|  | `Single-writer` | 4.95 | 4.95 | 4.98 | 4.98 | 4.70 |
+| DoLoMiTes | `Single-pass` | 4.34 | 4.87 | 4.34 | 4.80 | 4.61 |
+|  | `Staged` | 4.43 | 4.90 | 4.40 | 4.80 | 4.68 |
+|  | `Task-planning` | 4.24 | 4.78 | 4.25 | 4.64 | 4.55 |
+|  | <span class="smallcaps">Agentic CogWriter</span> | 4.42 | 4.87 | 4.43 | 4.69 | 4.71 |
+|  | `No-goals` | 4.37 | 4.87 | 4.39 | 4.71 | 4.65 |
+|  | `Fixed-order` | 4.42 | 4.88 | 4.44 | 4.70 | 4.74 |
+|  | `Single-writer` | 4.46 | 4.84 | 4.53 | 4.73 | 4.63 |
+
+Table 10. Raw 1–5 rubric means per dimension, averaged over the three generation runs. Columns are instruction fulfillment, organization and global coherence, content adequacy and depth, style, voice, and audience fit, and factuality and constraint fidelity.
+
 ## Additional Process and Resource Statistics
 
-Table 10 reports output size, delegated invocations, goal events, token accounting, and wall-clock time, each averaged across the three generation runs. For <span class="smallcaps">Agentic CogWriter</span>, a generation run averages 1,101.3 goal-creation events and 1,915.3 goal-development events. The post-`Reviewing` ledger is the `Monitor`’s first process-switch decision after each `Reviewing` pass, which lists every regeneration proposal from the `Reviewer` with its acceptance or rejection, or states that none was made. A generation run averages 353.7 ledger entries, 3.7 of which contain a regeneration proposal, and the trace records 2.3 accepted goal regenerations (Table 10).
+Table 11 reports output size, delegated invocations, goal events, token accounting, and wall-clock time, each averaged across the three generation runs. For <span class="smallcaps">Agentic CogWriter</span>, a generation run averages 1,101.3 goal-creation events and 1,915.3 goal-development events. The post-`Reviewing` ledger is the `Monitor`’s first process-switch decision after each `Reviewing` pass, which lists every regeneration proposal from the `Reviewer` with its acceptance or rejection, or states that none was made. A generation run averages 353.7 ledger entries, 3.7 of which contain a regeneration proposal, and the trace records 2.3 accepted goal regenerations (Table 11).
 
 |  |  |  |  |  |  |  |
 |:---|---:|---:|---:|---:|---:|---:|
@@ -1839,7 +1868,7 @@ Table 10 reports output size, delegated invocations, goal events, token accounti
 | `Fixed-order` | 1,815 | 3.38 | 288/1,176.7/3.7 | 11,420 | 43,665 | 243 |
 | `Single-writer` | 1,159 | 0 | 1,679.3/171.7/0.3 | 15,377 | 31,008 | 120 |
 
-Table 10. Process and resource use, averaged across the three generation runs. Goal counts are totals per generation run (regenerated: accepted goal replacements); spawns, tokens, and seconds are means per document (one system on one prompt); words are medians, counting each CJK character as one word. The systems differ substantially in delegated invocations and token use, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses.
+Table 11. Process and resource use, averaged across the three generation runs. Goal counts are totals per generation run (regenerated: accepted goal replacements); spawns, tokens, and seconds are means per document (one system on one prompt); words are medians, counting each CJK character as one word. The systems differ substantially in delegated invocations and token use, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses.
 
 ##### Trace processing.
 
@@ -1849,7 +1878,7 @@ Process paths are read from the `Monitor`’s `process_switch` events in trace o
 
 ### Record-Pooled Sensitivity
 
-Table 11 reports a sensitivity analysis that treats the two presentation records for each prompt as independent observations; the retained disagreements show how much presentation order can affect the descriptive rates. The retained presentation disagreements were 22.7% on WritingBench, 29.4% on HelloBench, and 21.4% on DoLoMiTes across the three generation runs.
+Table 12 reports a sensitivity analysis that treats the two presentation records for each prompt as independent observations; the retained disagreements show how much presentation order can affect the descriptive rates. The retained presentation disagreements were 22.7% on WritingBench, 29.4% on HelloBench, and 21.4% on DoLoMiTes across the three generation runs.
 
 |  |  |  |  |  |
 |:---|---:|---:|---:|---:|
@@ -1863,11 +1892,11 @@ Table 11 reports a sensitivity analysis that treats the two presentation records
 | `Single-writer` vs <span class="smallcaps">Agentic CogWriter</span> | 35.5% (2.1%) | 20.5% (1.4%) | 35.4% (3.3%) | 30.4% (2%) |
 | `Single-writer` vs `No-goals` | 37.2% (3.3%) | 21.5% (4%) | 43% (7.1%) | 33.8% (2.5%) |
 
-Table 11. Sensitivity analysis that treats the two presentation orders as separate records. The broad preference pattern remains similar, while presentation-order disagreements show why the headline analysis requires both orders to agree before retaining a winner. Values are mean win rates across generation runs with sample SD in parentheses; this analysis is descriptive.
+Table 12. Sensitivity analysis that treats the two presentation orders as separate records. The broad preference pattern remains similar, while presentation-order disagreements show why the headline analysis requires both orders to agree before retaining a winner. Values are mean win rates across generation runs with sample SD in parentheses; this analysis is descriptive.
 
 ### Output-Length Sensitivity
 
-Table 12 reports matched-length win rates for our system separately in each of the three generation runs. Within the tighter pre-specified matching band, our system is favored over `Single-pass` in every run, stays above parity in every run against `Staged` and `Fixed-order`, remains above parity against `Task-planning` while narrowing toward parity, and changes direction across runs against `No-goals`. The wider pre-specified band shows the same qualitative pattern. These matching-band results are descriptive sensitivity checks; ties are excluded from the win-rate denominator, and generation runs are reported separately because they reuse the same prompts. The `Single-writer` length-band tests in Section 5.3, in which `Single-writer` wins 35.1% and 30.6%, instead combine the three runs, so their sign tests take the prompt as the unit: a prompt counts as a win or a loss when its outcomes in the band, averaged across runs, favor one system.
+Table 13 reports matched-length win rates for our system separately in each of the three generation runs. Within the tighter pre-specified matching band, our system is favored over `Single-pass` in every run, stays above parity in every run against `Staged` and `Fixed-order`, remains above parity against `Task-planning` while narrowing toward parity, and changes direction across runs against `No-goals`. The wider pre-specified band shows the same qualitative pattern. These matching-band results are descriptive sensitivity checks; ties are excluded from the win-rate denominator, and generation runs are reported separately because they reuse the same prompts. The `Single-writer` length-band tests in Section 5.3, in which `Single-writer` wins 35.1% and 30.6%, instead combine the three runs, so their sign tests take the prompt as the unit: a prompt counts as a win or a loss when its outcomes in the band, averaged across runs, favor one system.
 
 |  |  |  |  |  |
 |:---|:---|---:|---:|---:|
@@ -1885,11 +1914,11 @@ Table 12 reports matched-length win rates for our system separately in each of t
 | `Fixed-order` | Wider | 63.1% (65) | 59.4% (69) | 53.4% (73) |
 | `Single-writer` | Wider | 76.3% (38) | 69.0% (42) | 63.4% (41) |
 
-Table 12. Matched-length win rates for our system in each of the three generation runs, with non-tied comparisons (the denominator) in parentheses. The tighter and wider pre-specified bands keep pairs whose longer output is at most 5% and 10% longer than the shorter one. A rate above parity favors our system. Reporting runs separately preserves the repeated-run design because the same prompts are reused across runs.
+Table 13. Matched-length win rates for our system in each of the three generation runs, with non-tied comparisons (the denominator) in parentheses. The tighter and wider pre-specified bands keep pairs whose longer output is at most 5% and 10% longer than the shorter one. A rate above parity favors our system. Reporting runs separately preserves the repeated-run design because the same prompts are reused across runs.
 
 ### Prompt-Level and Length-Controlled Summaries
 
-Table 13 reports the post-hoc prompt-level estimate for each alternative and benchmark. Across benchmarks, it separates our system from all three alternatives; against `Staged`, the separation holds on WritingBench and HelloBench (`p=0.0395`, unadjusted) but not on DoLoMiTes (`p=0.1654`). On WritingBench the judge returns almost no tie for a single presentation order, so each pair’s tie-as-half score equals its share of won records and these rates match the record-level rates of Table 11. Table 14 fits a logistic model of the decided outcome on the log length ratio, following the length-controlled evaluation of Dubois et al. (2024). At equal length, our system keeps its preference over the three alternatives, and its preference is 50.8% against `No-goals` and 54.7% against `Fixed-order`; every slope is positive, so the judge favors the longer output in each contrast.
+Table 14 reports the post-hoc prompt-level estimate for each alternative and benchmark. Across benchmarks, it separates our system from all three alternatives; against `Staged`, the separation holds on WritingBench and HelloBench (`p=0.0395`, unadjusted) but not on DoLoMiTes (`p=0.1654`). On WritingBench the judge returns almost no tie for a single presentation order, so each pair’s tie-as-half score equals its share of won records and these rates match the record-level rates of Table 12. Table 15 fits a logistic model of the decided outcome on the log length ratio, following the length-controlled evaluation of Dubois et al. (2024). At equal length, our system keeps its preference over the three alternatives, and its preference is 50.8% against `No-goals` and 54.7% against `Fixed-order`; every slope is positive, so the judge favors the longer output in each contrast.
 
 |  |  |  |  |  |  |
 |:---|:---|---:|---:|---:|---:|
@@ -1907,7 +1936,7 @@ Table 13 reports the post-hoc prompt-level estimate for each alternative and ben
 |  | Prompt W/L/T | 57/28/15 | 50/25/25 | 76/12/12 | 183/65/52 |
 |  | `p` | `0.0022` | `0.0052` | `1.57 x 10^-12` | `3.53 x 10^-14` |
 
-Table 13. Prompt-level summary of <span class="smallcaps">Agentic CogWriter</span> against each alternative, which complements the pre-specified tests. Each prompt’s outcomes (win 1, tie 0.5, loss 0) are averaged over the three generation runs; the rate is the mean over prompts with a prompt bootstrap interval, and the exact sign test counts a prompt as a win above 0.5 and a loss below 0.5. `p`-values are unadjusted.
+Table 14. Prompt-level summary of <span class="smallcaps">Agentic CogWriter</span> against each alternative, which complements the pre-specified tests. Each prompt’s outcomes (win 1, tie 0.5, loss 0) are averaged over the three generation runs; the rate is the mean over prompts with a prompt bootstrap interval, and the exact sign test counts a prompt as a win above 0.5 and a loss below 0.5. `p`-values are unadjusted.
 
 |  |  |  |  |
 |:---|---:|---:|---:|
@@ -1918,11 +1947,11 @@ Table 13. Prompt-level summary of <span class="smallcaps">Agentic CogWriter</spa
 | `No-goals` | 577 | 50.8% \[46.2%–55.0%\] | 2.95 \[2.19–3.84\] |
 | `Fixed-order` | 554 | 54.7% \[50.5%–59.1%\] | 2.73 \[1.91–3.77\] |
 
-Table 14. Logistic model of the order-consistent decided outcome on the log ratio of <span class="smallcaps">Agentic CogWriter</span>’s output length to the compared system’s, over the three generation runs. The preference at equal length is the fitted win probability at a ratio of one, and the slope is per unit log ratio; 95% intervals in brackets come from a prompt-cluster bootstrap.
+Table 15. Logistic model of the order-consistent decided outcome on the log ratio of <span class="smallcaps">Agentic CogWriter</span>’s output length to the compared system’s, over the three generation runs. The preference at equal length is the fitted win probability at a ratio of one, and the slope is per unit log ratio; 95% intervals in brackets come from a prompt-cluster bootstrap.
 
 ### Compute-Stratified Sensitivity
 
-Compute matching asks whether the pairwise direction persists when the compared systems use similar realized output-plus-reasoning token budgets. Table 15 reports outcomes within the pre-specified 1.25`x` and 1.50`x` matching bands and across descriptive ratio bins. Because realized compute is determined by execution, this analysis is a sensitivity check rather than a causal adjustment. Each row combines the three generation runs, so the sign tests take the prompt as the unit, as in the `Single-writer` length-band tests. Where our system used under 0.80 of `Staged`’s output-plus-reasoning tokens, the three ratio bins hold 18/16/15 W/L/T, close to parity, whereas every bin from 0.80 to 2.00 favors our system.
+Compute matching asks whether the pairwise direction persists when the compared systems use similar realized output-plus-reasoning token budgets. Table 16 reports outcomes within the pre-specified 1.25`x` and 1.50`x` matching bands and across descriptive ratio bins. Because realized compute is determined by execution, this analysis is a sensitivity check rather than a causal adjustment. Each row combines the three generation runs, so the sign tests take the prompt as the unit, as in the `Single-writer` length-band tests. Where our system used under 0.80 of `Staged`’s output-plus-reasoning tokens, the three ratio bins hold 18/16/15 W/L/T, close to parity, whereas every bin from 0.80 to 2.00 favors our system.
 
 |  |  |  |  |  |
 |:---|:---|---:|---:|---:|
@@ -1972,7 +2001,7 @@ Compute matching asks whether the pairwise direction persists when the compared 
 | <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | 1.50–2.00 | 91/15/17 | 85.8% | `4.47 x 10^-9` |
 | <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | 2.00+ | 464/114/150 | 80.3% | `1.82 x 10^-32` |
 
-Table 15. Compute-matched pairwise outcomes. Ratios divide the first-named system’s output-plus-reasoning tokens by the second’s; the 1.25 and 1.50 bands keep pairs whose larger-to-smaller ratio is at most that value. Within the 1.25 band, <span class="smallcaps">Agentic CogWriter</span> remains favored over `Staged` and `Task-planning`; no pairs with `Single-pass` fall there (N/A). W/L/T counts pairs across the three generation runs; unadjusted sign-test `p`-values count prompts and are not confirmatory.
+Table 16. Compute-matched pairwise outcomes. Ratios divide the first-named system’s output-plus-reasoning tokens by the second’s; the 1.25 and 1.50 bands keep pairs whose larger-to-smaller ratio is at most that value. Within the 1.25 band, <span class="smallcaps">Agentic CogWriter</span> remains favored over `Staged` and `Task-planning`; no pairs with `Single-pass` fall there (N/A). W/L/T counts pairs across the three generation runs; unadjusted sign-test `p`-values count prompts and are not confirmatory.
 
 ### Single-Context Exploratory Check
 
@@ -1998,7 +2027,7 @@ The `Single-context` condition was added after the main results had been observ
 | `Single-context` |  |  |  |  |  |  |
 | vs. `Single-pass` | Pooled | 289 | 11 | 179/30/80 | 85.6% | 80.2%–89.8%; `4.96 x 10^-27` |
 
-Table 16. Exploratory comparison of `Single-context` with matched primary-condition outputs. In its single generation run, `Single-context` does not show a reliable difference from <span class="smallcaps">Agentic CogWriter</span>, so separate subagent contexts alone are not isolated as the source of the full system’s advantage. Wilson intervals are descriptive and sign-test `p`-values are unadjusted.
+Table 17. Exploratory comparison of `Single-context` with matched primary-condition outputs. In its single generation run, `Single-context` does not show a reliable difference from <span class="smallcaps">Agentic CogWriter</span>, so separate subagent contexts alone are not isolated as the source of the full system’s advantage. Wilson intervals are descriptive and sign-test `p`-values are unadjusted.
 
 |  |  |  |  |
 |:---|---:|---:|---:|
@@ -2011,11 +2040,11 @@ Table 16. Exploratory comparison of `Single-context` with matched primary-condi
 | Ledger entries with proposal | 0 | 3 | 0 |
 | Spawns per attempted document | 0 | 3.22 | 0 |
 
-Table 17. Process and resource profiles for the matched `Single-pass`, <span class="smallcaps">Agentic CogWriter</span>, and `Single-context` documents in one generation run. `Single-context` preserves the process loop and shared state without separate subagent contexts, making it a narrower execution check than `Single-writer`.
+Table 18. Process and resource profiles for the matched `Single-pass`, <span class="smallcaps">Agentic CogWriter</span>, and `Single-context` documents in one generation run. `Single-context` preserves the process loop and shared state without separate subagent contexts, making it a narrower execution check than `Single-writer`.
 
 ### Staged with Role Instructions
 
-The `Staged-roles` condition was added after the main results had been observed, to test whether the role instructions of our subagents explain the advantage over `Staged`. It reuses the `Staged` harness, stage order, and trace format, and adds to the `Pre-Write`, `Write`, and `Re-Write` prompts the `Planner`, `Translator`, and `Reviewer` role instructions, without the text that refers to the `Monitor`, goals, trace, shared files, or delegation. It was generated once on generation run 1 and judged with the run-1 pairwise setup, so the <span class="smallcaps">Agentic CogWriter</span> comparison covers the 293 prompts with a completed run-1 output. Table 18 reports both contrasts: our system is preferred on WritingBench and HelloBench but not significantly on DoLoMiTes, and `Staged-roles` loses to `Staged` on HelloBench and is near parity elsewhere.
+The `Staged-roles` condition was added after the main results had been observed, to test whether the role instructions of our subagents explain the advantage over `Staged`. It reuses the `Staged` harness, stage order, and trace format, and adds to the `Pre-Write`, `Write`, and `Re-Write` prompts the `Planner`, `Translator`, and `Reviewer` role instructions, without the text that refers to the `Monitor`, goals, trace, shared files, or delegation. It was generated once on generation run 1 and judged with the run-1 pairwise setup, so the <span class="smallcaps">Agentic CogWriter</span> comparison covers the 293 prompts with a completed run-1 output. Table 19 reports both contrasts: our system is preferred on WritingBench and HelloBench but not significantly on DoLoMiTes, and `Staged-roles` loses to `Staged` on HelloBench and is near parity elsewhere.
 
 |  |  |  |  |  |  |
 |:---|:---|---:|---:|---:|---:|
@@ -2029,11 +2058,11 @@ The `Staged-roles` condition was added after the main results had been observed
 |  | W/L/T | 32/34/34 | 20/37/43 | 33/29/38 | 85/100/115 |
 |  | `p` | `0.9022` | `0.0331` | `0.7035` | `0.3033` |
 
-Table 18. Exploratory `Staged-roles` comparisons on generation run 1. The win rate belongs to the first-named system and counts order-consistent outcomes; Across sums wins and losses over the three benchmarks. Sign-test `p`-values are unadjusted and outside the Holm family.
+Table 19. Exploratory `Staged-roles` comparisons on generation run 1. The win rate belongs to the first-named system and counts order-consistent outcomes; Across sums wins and losses over the three benchmarks. Sign-test `p`-values are unadjusted and outside the Holm family.
 
 ### Cross-Family Judge Robustness
 
-Table 19 reports benchmark-level results for the five cross-family contrasts between our system and an alternative or ablation, all on generation run 1. Within each contrast, summing W/L/T counts over the three benchmarks gives 67/44/171 versus `Single-pass`, 60/34/198 versus `Staged`, 76/25/184 versus `Task-planning`, 39/27/221 versus `No-goals`, and 38/33/204 versus `Fixed-order`. The corresponding Wilson intervals are 51.06%–68.97%, 53.75%–72.82%, 66.01%–82.64%, 47.05%–70.13%, and 42.04%–64.64%, with sign-test `p=0.0095` against `Staged` and `p=0.6353` against `Fixed-order`. The `Staged` and `Fixed-order` contrasts cover 292 and 275 pairs; one further pair, a HelloBench comparison with `Staged`, failed the judge’s structured-output check after all retries and has no cross-family outcome. Across all five contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on 31.2% of 1421 eligible pairs, with 280/163/978 W/L/T; 670/1421 prompt-level outcomes agree with the same-family judge. Cohen’s kappa between the two judges is 0.25 over these outcomes, most of which are cross-family ties, and 0.76 over the 380 pairs both judges decide, of which 333 agree.
+Table 20 reports benchmark-level results for the five cross-family contrasts between our system and an alternative or ablation, all on generation run 1. Within each contrast, summing W/L/T counts over the three benchmarks gives 67/44/171 versus `Single-pass`, 60/34/198 versus `Staged`, 76/25/184 versus `Task-planning`, 39/27/221 versus `No-goals`, and 38/33/204 versus `Fixed-order`. The corresponding Wilson intervals are 51.06%–68.97%, 53.75%–72.82%, 66.01%–82.64%, 47.05%–70.13%, and 42.04%–64.64%, with sign-test `p=0.0095` against `Staged` and `p=0.6353` against `Fixed-order`. The `Staged` and `Fixed-order` contrasts cover 292 and 275 pairs; one further pair, a HelloBench comparison with `Staged`, failed the judge’s structured-output check after all retries and has no cross-family outcome. Across all five contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on 31.2% of 1421 eligible pairs, with 280/163/978 W/L/T; 670/1421 prompt-level outcomes agree with the same-family judge. Cohen’s kappa between the two judges is 0.25 over these outcomes, most of which are cross-family ties, and 0.76 over the 380 pairs both judges decide, of which 333 agree.
 
 |  |  |  |  |  |  |  |
 |:---|:---|---:|---:|---:|---:|---:|
@@ -2054,11 +2083,43 @@ Table 19 reports benchmark-level results for the five cross-family contrasts bet
 | <span class="smallcaps">Agentic CogWriter</span> vs `Fixed-order` | HelloBench | 93 | 7/8/78 | 16.13% | 46.67% | 48/93 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `Fixed-order` | DoLoMiTes | 92 | 19/17/56 | 39.13% | 52.78% | 52/92 |
 
-Table 19. Cross-family judge robustness using `claude-sonnet-5 medium`. Within each selected contrast, wins, losses, and ties are summed over benchmarks before computing the win rate; every contrast’s summed win rate exceeds 50%, but 5 of 15 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.
+Table 20. Cross-family judge robustness using `claude-sonnet-5 medium`. Within each selected contrast, wins, losses, and ties are summed over benchmarks before computing the win rate; every contrast’s summed win rate exceeds 50%, but 5 of 15 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.
+
+### Revision-Request Experiment
+
+This exploratory experiment, specified before generation, tests whether adaptive process selection matters when a finished document must be revised. It draws 60 prompts evenly from the three benchmark subsets; each system first completes the assignment and then, in the same session, receives one change request that adds a constraint, supplies new evidence, or conflicts with part of the assignment. The change requests were written once by `gpt-5.6-sol` and frozen before any system ran; the generator is `gpt-5.6-luna medium`, and the pairwise judge, `gpt-5.6-sol medium` with a revision-specific template, compares the revised documents in both presentation orders and counts an order-inconsistent outcome as a tie. Each contrast covers the 59 prompts on which our system completed both turns. Table 21 shows that our system is not separable from `Fixed-order` and is favored over `Staged` without a significant difference; the `Single-pass` contrast was added outside the plan. The `Monitor` responds to the request: its second turn switches to `Planning` in 57 of 59 runs and regenerates goals in 33, whereas `Fixed-order` regenerates goals in 7 of 60.
+
+The experiment cannot separate adaptive selection from a fixed cycle, because every request arrives after a complete document and calls for replanning, which a fixed order also performs. The change requests are written by a model and were not validated by people, and the generator, change writer, and judge all belong to the GPT family. Each system ran once per prompt, and the `p`-values carry no multiplicity correction.
+
+|  |  |  |  |  |
+|:---|---:|---:|---:|---:|
+| **Contrast** | **Prompts** | **W/L/T** | **Win rate** | **`p`** |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Fixed-order` | 59 | 18/19/22 | 48.6% | `1` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 59 | 27/16/16 | 62.8% | `0.1263` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | 59 | 33/14/12 | 70.2% | `0.0079` |
+| **Second turn** | **Runs** | **To `Planning`** | **Goals regenerated** |  |
+| <span class="smallcaps">Agentic CogWriter</span> | 59 | 57 | 33 |  |
+| `Fixed-order` | 60 | 52 | 7 |  |
+
+Table 21. Exploratory revision-request experiment. The upper block gives order-consistent pairwise outcomes on the revised documents from our system’s side, with unadjusted exact sign-test `p`-values; the `Single-pass` contrast was added outside the plan. The lower block counts second turns that switch to `Planning` or record a goal regeneration.
+
+## Illustrative Example
+
+The example below was chosen at random with a fixed seed from the 97 generation-run-1 prompts on which the primary judge preferred our system over `Staged` in both presentation orders and both outputs are in English, so it illustrates a win and does not represent typical outputs. The prompt is `dolomites-532`; the excerpts give the opening words of each document, and the judge’s reason is quoted from the presentation in which our system is response A.
+
+> **Assignment (opening).** Topic: Cell-culturing protocol for Saccharomyces cerevisiae B3945 thermal-adaptation experiments. Audience: Laboratory researchers implementing and reviewing a yeast culture experiment. Exigency: Convert the supplied experimental context into a usable protocol while preserving the stated research question, conditions, safety requirements, and source limitations. Writer’s goals: Provide a complete, quality-controlled protocol from initial culture through post-culture handling. Genre: ...
+>
+> **Logged process path of our system.** `Planning``->``Translating``->``Reviewing``->``Translating``->``Reviewing`
+>
+> **Our system (opening).** *Protocol Overview.* This protocol describes a comparative culture experiment using Saccharomyces cerevisiae B3945 to investigate thermal adaptation. It compares a 30C control culture with a 37C heat-stress culture, focusing on changes in gene expression and protein abundance and on the role of the PK (protein kinase) pathway in thermal tolerance. YPD broth, a shaking incubator with constant aeration, and the laboratory’s standard yeast-culture equipment are used. The workflow covers ...
+>
+> **`Staged` (opening).** *Protocol Overview.* This protocol is designed to culture Saccharomyces cerevisiae B3945 in YPD broth and compare cells maintained at 30C (control) with cells exposed to 37C (heat stress). The experiment examines thermal adaptation, with downstream attention to changes in gene expression and protein abundance and to the role of the PK (protein kinase) pathway in thermal tolerance. The workflow covers preparation, sterile culture initiation, aerated shaking growth, temperature treatment, ...
+>
+> **Judge’s reason (response A is our system).** Both responses are coherent, safety-conscious, and appropriately avoid inventing unspecified culture parameters. A is stronger because its numbered workflow more fully covers planning, initiation, matched handling, sampling, post-culture processing, documentation, acceptance criteria, and responses to failed quality checks. It also handles the thin literature information more carefully by explicitly declining to attribute unsupported details to the cited source. B is sound but somewhat less detailed in experimental planning and quality-control decision-making.
 
 ## Consensus-Writing Evaluation on Habermas Machine Data
 
-We additionally evaluate the writing systems on ten short consensus-writing tasks constructed from the Habermas Machine data (Tessler et al., 2024). Each task provides one deliberation question and the five participants’ original opinions, and asks the system to write a statement the group could endorse. The ten tasks are drawn from the `OOD_TEST` split after requiring complete, distinct participant opinions and disagreement ratings on both sides of the scale midpoint. Across eight conditions, this produces 80 attempted runs; 78 complete successfully. Table 20 summarizes pointwise quality and the available process statistics.
+We additionally evaluate the writing systems on ten short consensus-writing tasks constructed from the Habermas Machine data (Tessler et al., 2024). Each task provides one deliberation question and the five participants’ original opinions, and asks the system to write a statement the group could endorse. The ten tasks are drawn from the `OOD_TEST` split after requiring complete, distinct participant opinions and disagreement ratings on both sides of the scale midpoint. Across eight conditions, this produces 80 attempted runs; 78 complete successfully. Table 22 summarizes pointwise quality and the available process statistics.
 
 |  |  |  |  |  |  |
 |:---|---:|---:|---:|---:|---:|
@@ -2072,7 +2133,7 @@ We additionally evaluate the writing systems on ten short consensus-writing task
 | `Exploratory-1` | 0 | 0 | 0 | 0/0 | -0.1605 |
 | `Exploratory-2` | 0 | 0 | 0 | 0/0 | -0.1023 |
 
-Table 20. Additional consensus-writing evaluation on ten tasks derived from Habermas Machine data. Unlike the long-form benchmarks, <span class="smallcaps">Agentic CogWriter</span> does not achieve the highest pointwise score: `Single-pass` and `Staged` are stronger in this short consensus-writing setting. The result shows that the advantage observed on the long-form benchmarks does not automatically transfer to a substantially shorter writing task; 78 of 80 attempted runs completed.
+Table 22. Additional consensus-writing evaluation on ten tasks derived from Habermas Machine data. Unlike the long-form benchmarks, <span class="smallcaps">Agentic CogWriter</span> does not achieve the highest pointwise score: `Single-pass` and `Staged` are stronger in this short consensus-writing setting. The result shows that the advantage observed on the long-form benchmarks does not automatically transfer to a substantially shorter writing task; 78 of 80 attempted runs completed.
 
 `Exploratory-1` is the exploratory CogWriter-style (Wan et al., 2025) baseline, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; `Exploratory-2` is the exploratory STORM-style (Shao et al., 2024) baseline, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval. On these short consensus-writing tasks, <span class="smallcaps">Agentic CogWriter</span> does not achieve the highest pointwise composite; in particular, it scores below `Single-pass` and `Staged`. Our system and `Fixed-order` record 0 and 0 regeneration events, respectively; their ledgers contain 15/0 and 11/0 no/proposal outcomes, respectively.
 
@@ -2202,8 +2263,12 @@ Wangchunshu Zhou, Yuchen Eleanor Jiang, Peng Cui, Tiannan Wang, Zhenxin Xiao, Yi
 
 [^13]: See Appendix E for process, goal, and resource statistics.
 
-[^14]: See Appendix G for the consensus-writing results.
+[^14]: See Appendix F for its design and results.
 
-[^15]: See Appendix A for the power calculation.
+[^15]: See Appendix H for the consensus-writing results.
 
-[^16]: See Appendix E for the trace classification.
+[^16]: See Appendix A for the power calculation.
+
+[^17]: See Appendix E for the trace classification.
+
+[^18]: See Appendices E and F for the time and token accounting.

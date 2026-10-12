@@ -1,0 +1,19 @@
+{
+  "selection": "random.Random(20260908).choice over generation-run-1 prompts where A4 beat A2 in both presentation orders and both outputs are English",
+  "eligible_prompts": 97,
+  "example": {
+    "benchmark": "DoLoMiTes",
+    "prompt": "dolomites-532",
+    "assignment_opening": "- Topic: Cell-culturing protocol for Saccharomyces cerevisiae B3945 thermal-adaptation experiments.\n- Audience: Laboratory researchers implementing and reviewing a yeast culture experiment.\n- Exigency: Convert the supplied experimental context into a usable protocol while preserving the stated research question, conditions, safety requirements, and source limitations.\n- Writer's goals: Provide a complete, quality-controlled protocol from initial culture through post-culture handling.\n- Genre: ...",
+    "full_process_path": [
+      "planning",
+      "translating",
+      "reviewing",
+      "translating",
+      "reviewing"
+    ],
+    "full_opening": "# Protocol Overview\nThis protocol describes a comparative culture experiment using *Saccharomyces cerevisiae* B3945 to investigate thermal adaptation. It compares a 30°C control culture with a 37°C heat-stress culture, focusing on changes in gene expression and protein abundance and on the role of the PK (protein kinase) pathway in thermal tolerance. YPD broth, a shaking incubator with constant aeration, and the laboratory’s standard yeast-culture equipment are used.\nThe workflow covers ...",
+    "staged_opening": "## Protocol Overview\nThis protocol is designed to culture *Saccharomyces cerevisiae* B3945 in YPD broth and compare cells maintained at 30°C (control) with cells exposed to 37°C (heat stress). The experiment examines thermal adaptation, with downstream attention to changes in gene expression and protein abundance and to the role of the PK (protein kinase) pathway in thermal tolerance.\nThe workflow covers preparation, sterile culture initiation, aerated shaking growth, temperature treatment, ...",
+    "judge_reason": "Both responses are coherent, safety-conscious, and appropriately avoid inventing unspecified culture parameters. A is stronger because its numbered workflow more fully covers planning, initiation, matched handling, sampling, post-culture processing, documentation, acceptance criteria, and responses to failed quality checks. It also handles the thin literature information more carefully by explicitly declining to attribute unsupported details to the cited source. B is sound but somewhat less detailed in experimental planning and quality-control decision-making."
+  }
+}

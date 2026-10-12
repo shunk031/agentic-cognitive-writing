@@ -172,6 +172,16 @@ COMPUTE_STRATIFIED_MARKER = "% Compute-stratified macros."
 PAIRWISE_ROBUSTNESS_MARKER = "% Pairwise-robustness macros."
 STAGED_ROLES_MARKER = "% Staged role-instruction (A9) macros."
 TRACE_ENDINGS_MARKER = "% Trace-ending macros."
+REVISION_TASKS_MARKER = "% Revision-request pilot macros."
+QUALITATIVE_EXAMPLE_MARKER = "% Illustrative-example macros."
+REVISION_CONTRASTS = {"A4:A6": "FullFixedOrder", "A4:A2": "FullStaged", "A4:A1": "FullSinglePass"}
+RAW_RUBRIC_DIMENSIONS = {
+    "instruction_fulfillment": "Instruction",
+    "organization_global_coherence": "Organization",
+    "content_adequacy_depth": "Content",
+    "style_voice_audience_fit": "Style",
+    "factuality_constraint_fidelity": "Factuality",
+}
 STAGED_ROLES_CONTRASTS = {"A4:A9": "FullStagedRoles", "A9:A2": "StagedRolesStaged"}
 PAIRWISE_ROBUSTNESS_CONTRASTS = {
     "A4:A1": "FullSinglePass",
@@ -1483,6 +1493,40 @@ def _trace_endings_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]
     ]
 
 
+def _revision_tasks_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory revision-request pilot: pairwise outcomes and turn-2 behavior."""
+    source = "revision-task results JSON"
+    entries = [("\\RevisionPrompts", str(report["sample"]["prompts"]), source + " sample.prompts")]
+    for contrast, word in REVISION_CONTRASTS.items():
+        block = report["contrasts"][contrast]
+        stats = block["overall"]
+        prefix = f"\\Revision{word}"
+        entries += [
+            (prefix + "N", str(block["scored_prompts"]), f"{source} contrasts.{contrast}.scored_prompts"),
+            (prefix + "WLT", f"{stats['wins']}/{stats['losses']}/{stats['ties']}", f"{source} contrasts.{contrast}.overall W/L/T"),
+            (prefix + "Rate", _percent_fixed(stats["win_rate_excluding_ties"], 1), f"{source} contrasts.{contrast}.overall.win_rate_excluding_ties"),
+            (prefix + "P", _pvalue(stats["sign_test_p_two_sided"]), f"{source} contrasts.{contrast}.overall.sign_test_p_two_sided"),
+        ]
+    for condition, word in (("A4", "Afour"), ("A6", "Asix")):
+        turn2 = report["turn2_process"][condition]
+        prefix = f"\\Revision{word}"
+        entries += [
+            (prefix + "Completed", str(turn2["completed_runs"]), f"{source} turn2_process.{condition}.completed_runs"),
+            (prefix + "Planning", str(turn2["turn2_planning"]["count"]), f"{source} turn2_process.{condition}.turn2_planning.count"),
+            (prefix + "Regenerated", str(turn2["turn2_goal_regenerated"]["count"]), f"{source} turn2_process.{condition}.turn2_goal_regenerated.count"),
+        ]
+    return entries
+
+
+def _qualitative_example_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Seeded illustrative example: eligible pool size and the selected prompt ID."""
+    source = "qualitative-example JSON"
+    return [
+        ("\\ExampleEligiblePrompts", str(report["eligible_prompts"]), source + " eligible_prompts"),
+        ("\\ExamplePrompt", report["example"]["prompt"], source + " example.prompt"),
+    ]
+
+
 def _validate_single_context_pair(data: dict[str, Any], source: str) -> None:
     for key in SINGLE_CONTEXT_PAIR_FIELDS:
         value = _required_int(data, key, source)
@@ -2172,6 +2216,12 @@ def _three_run_quality_entries(report: dict[str, Any]) -> list[tuple[str, str, s
                 (prefix + "PointwiseMean", f"{mean:.3f}", source + ".composite.mean"),
                 (prefix + "PointwiseSD", f"{sd:.3f}", source + ".composite.sample_sd"),
             ]
+            raw = cell.get("raw_dimension_means")
+            if not isinstance(raw, dict):
+                raise ValueError(f"{source}.raw_dimension_means is missing")
+            for dimension, dimension_word in RAW_RUBRIC_DIMENSIONS.items():
+                mean, _ = _three_run_stat(raw.get(dimension), source + f".raw_dimension_means.{dimension}")
+                entries.append((f"\\RawRubric{benchmark_word}{condition_word}{dimension_word}", f"{mean:.2f}", source + f".raw_dimension_means.{dimension}.mean"))
             if benchmark in THREE_RUN_NATIVE_SCALE:
                 scale = THREE_RUN_NATIVE_SCALE[benchmark]
                 mean, sd = _three_run_stat(cell.get("native_mean"), source + ".native_mean")
@@ -2192,6 +2242,8 @@ def _three_run_quality_entries(report: dict[str, Any]) -> list[tuple[str, str, s
         ("\\ThreeRunDoLoStagedExceedsFullRuns", str(sum(exceeds)), "three-run quality JSON dolomites_staged_vs_agentic_cogwriter"),
         ("\\ThreeRunCount", str(len(exceeds)), "three-run quality JSON dolomites_staged_vs_agentic_cogwriter"),
     ]
+    raw_means = [value for name, value, _ in entries if name.startswith("\\RawRubric")]
+    entries.append(("\\RawRubricMin", min(raw_means, key=float), "three-run quality JSON minimum of raw_dimension_means.*.mean"))
     return entries
 
 
@@ -2324,6 +2376,8 @@ def main() -> None:
     parser.add_argument("--pairwise-robustness", type=Path, help="pairwise-robustness JSON; appends its own block")
     parser.add_argument("--staged-roles", type=Path, help="A9 pairwise JSON; appends its own block")
     parser.add_argument("--trace-endings", type=Path, help="trace-endings JSON; appends its own block")
+    parser.add_argument("--revision-tasks", type=Path, help="revision-task results JSON; appends its own block")
+    parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
     parser.add_argument("--three-run-quality", nargs=2, type=Path, metavar=("SUMMARY", "PAIRED"))
     parser.add_argument("--prompt-languages", nargs=2, type=Path, metavar=("PROMPT_SETS", "MANIFEST_DIR"))
     parser.add_argument(
@@ -2343,6 +2397,8 @@ def main() -> None:
         (args.pairwise_robustness, "pairwise-robustness", PAIRWISE_ROBUSTNESS_MARKER, _pairwise_robustness_entries),
         (args.staged_roles, "staged-roles", STAGED_ROLES_MARKER, _staged_roles_entries),
         (args.trace_endings, "trace-endings", TRACE_ENDINGS_MARKER, _trace_endings_entries),
+        (args.revision_tasks, "revision-tasks", REVISION_TASKS_MARKER, _revision_tasks_entries),
+        (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),
     ):
         if path is not None:
             if args.aggregations:

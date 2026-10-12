@@ -1,0 +1,20 @@
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Contrast} & \textbf{Prompts} & \textbf{W/L/T} & \textbf{Win rate} & \textbf{$p$} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
+\condAgenticCogWriter\ vs.~\condFixedOrder & \RevisionFullFixedOrderN & \RevisionFullFixedOrderWLT & \RevisionFullFixedOrderRate & $\RevisionFullFixedOrderP$ \\
+\condAgenticCogWriter\ vs.~\condStaged & \RevisionFullStagedN & \RevisionFullStagedWLT & \RevisionFullStagedRate & $\RevisionFullStagedP$ \\
+\condAgenticCogWriter\ vs.~\condSinglePass & \RevisionFullSinglePassN & \RevisionFullSinglePassWLT & \RevisionFullSinglePassRate & $\RevisionFullSinglePassP$ \\
+\midrule
+\textbf{Second turn} & \textbf{Runs} & \textbf{To \texttt{Planning}} & \textbf{Goals regenerated} & \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}
+\condAgenticCogWriter & \RevisionAfourCompleted & \RevisionAfourPlanning & \RevisionAfourRegenerated & \\
+\condFixedOrder & \RevisionAsixCompleted & \RevisionAsixPlanning & \RevisionAsixRegenerated & \\
+\bottomrule
+\end{tabular}
+\caption{Exploratory revision-request experiment. The upper block gives order-consistent pairwise outcomes on the revised documents from our system's side, with unadjusted exact sign-test $p$-values; the \condSinglePass\ contrast was added outside the plan. The lower block counts second turns that switch to \texttt{Planning} or record a goal regeneration.}
+\label{tab:appendix-revision}
+\end{table}

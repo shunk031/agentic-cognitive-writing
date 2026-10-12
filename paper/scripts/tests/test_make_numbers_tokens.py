@@ -13,6 +13,7 @@ from make_numbers import (
     _pairwise_robustness_entries,
     _staged_roles_entries,
     _trace_endings_entries,
+    _revision_tasks_entries,
     _cross_family_percent,
     _length_control_entries,
     emit_numbers,
@@ -564,6 +565,13 @@ class TokenMacroTests(unittest.TestCase):
         output = dict((name, value) for name, value, _ in _trace_endings_entries(report))
         self.assertEqual(output[r"\AfourEndBeforeReviewingRuns"], "88")
         self.assertEqual(output[r"\AfourFallbackRuns"], "218")
+
+    def test_revision_tasks_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/revision-tasks/results.json").read_text())
+        output = dict((name, value) for name, value, _ in _revision_tasks_entries(report))
+        self.assertEqual(output[r"\RevisionFullFixedOrderWLT"], "18/19/22")
+        self.assertEqual(output[r"\RevisionAfourRegenerated"], "33")
+        self.assertEqual(output[r"\RevisionAsixRegenerated"], "7")
 
     def test_compute_stratified_empty_band_is_not_available(self):
         summary = _compute_summary()
