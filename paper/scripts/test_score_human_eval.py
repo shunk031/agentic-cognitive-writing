@@ -106,10 +106,96 @@ class ScoreHumanEvalTests(unittest.TestCase):
             report = json.loads(score(answers, key))
             self.assertAlmostEqual(report["overall"]["human"]["raw_agreement"], 4 / 6)
             self.assertAlmostEqual(report["overall"]["human"]["fleiss_kappa"], 5 / 11)
-            self.assertAlmostEqual(report["overall"]["human"]["krippendorff_alpha"], 6 / 11)
-            self.assertEqual(report["overall"]["automatic_judge_agreement"]["same-family"]["matches"], 2)
-            self.assertEqual(report["overall"]["automatic_judge_agreement"]["cross-family"]["comparisons"], 1)
-            self.assertEqual(set(report["breakdowns"]), {"benchmark", "contrast", "output_length_gap", "automatic_decision_margin"})
+            self.assertAlmostEqual(
+                report["overall"]["human"]["krippendorff_alpha"], 6 / 11
+            )
+            self.assertEqual(
+                report["overall"]["automatic_judge_agreement"]["same-family"][
+                    "majority"
+                ]["agreement"],
+                1.0,
+            )
+            self.assertEqual(
+                report["overall"]["automatic_judge_agreement"]["cross-family"][
+                    "majority"
+                ]["comparisons"],
+                1,
+            )
+            self.assertEqual(
+                set(report["breakdowns"]),
+                {
+                    "benchmark",
+                    "contrast",
+                    "output_length_gap",
+                    "automatic_decision_margin",
+                },
+            )
+
+    def test_two_annotator_staged_preference_and_judge_agreement(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            key = root / "key.csv"
+            judge = {
+                "staged-001": "A4",
+                "staged-002": "A4",
+                "staged-003": "A2",
+                "staged-004": "A2",
+            }
+            with key.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.writer(handle)
+                writer.writerow(
+                    [
+                        "comparison_id",
+                        "benchmark",
+                        "contrast",
+                        "same_family_decision",
+                        "condition_a_1",
+                        "condition_a_2",
+                    ]
+                )
+                for comparison_id, decision in judge.items():
+                    writer.writerow(
+                        [comparison_id, "DoLoMiTes", "A4:A2", decision, "A4", "A2"]
+                    )
+            answers = []
+            for annotator, preferences in (
+                ("annotator-1", "A A B tie"),
+                ("annotator-2", "B A A tie"),
+            ):
+                path = root / f"answers-{annotator}.csv"
+                answers.append(path)
+                with path.open("w", newline="", encoding="utf-8") as handle:
+                    writer = csv.writer(handle)
+                    writer.writerow(
+                        ["comparison_id", "annotator_id", "preference", "reason"]
+                    )
+                    for comparison_id, value in zip(judge, preferences.split()):
+                        writer.writerow(
+                            [comparison_id, annotator, value, "a, quoted\nreason"]
+                        )
+            overall = json.loads(score(answers, key))["overall"]
+            pair = overall["human"]["annotator_pairs"]["annotator-1|annotator-2"]
+            self.assertAlmostEqual(pair["agreement"], 3 / 4)
+            self.assertAlmostEqual(pair["cohen_kappa"], 7 / 11)
+            primary = overall["automatic_judge_agreement"]["same-family"]
+            self.assertAlmostEqual(
+                primary["annotators"]["annotator-1"]["agreement"], 3 / 4
+            )
+            self.assertAlmostEqual(
+                primary["annotators"]["annotator-1"]["cohen_kappa"], 0.6
+            )
+            self.assertAlmostEqual(primary["majority"]["agreement"], 2 / 4)
+            preference = overall["preference"]["A4:A2"]
+            first = preference["annotators"]["annotator-1"]
+            self.assertEqual((first["wins"], first["losses"], first["ties"]), (2, 1, 1))
+            self.assertAlmostEqual(first["win_rate"], 2 / 3)
+            self.assertAlmostEqual(first["wilson_95"][0], 0.2077, places=3)
+            self.assertAlmostEqual(first["wilson_95"][1], 0.9385, places=3)
+            majority = preference["majority"]
+            self.assertEqual(
+                (majority["wins"], majority["losses"], majority["ties"]), (1, 1, 2)
+            )
+            self.assertEqual(preference["judges"]["same-family"]["wins"], 2)
 
 
 if __name__ == "__main__":

@@ -6,9 +6,10 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 
 def parse_contrast(value: str) -> tuple[str, str]:
@@ -18,7 +19,9 @@ def parse_contrast(value: str) -> tuple[str, str]:
     return left, right
 
 
-def human_to_condition(preference: str, key: dict[str, str], condition_a: str | None = None) -> str:
+def human_to_condition(
+    preference: str, key: dict[str, str], condition_a: str | None = None
+) -> str:
     if preference == "tie":
         return "tie"
     if preference not in {"A", "B"}:
@@ -27,7 +30,9 @@ def human_to_condition(preference: str, key: dict[str, str], condition_a: str | 
     if not condition_a:
         raise ValueError("condition_a is required to map a human preference")
     left, right = parse_contrast(key["contrast"])
-    return condition_a if preference == "A" else (right if left == condition_a else left)
+    return (
+        condition_a if preference == "A" else (right if left == condition_a else left)
+    )
 
 
 def cohen_kappa(first: list[str], second: list[str]) -> float:
@@ -36,7 +41,9 @@ def cohen_kappa(first: list[str], second: list[str]) -> float:
     observed = sum(a == b for a, b in zip(first, second)) / len(first)
     left = Counter(first)
     right = Counter(second)
-    expected = sum(left[c] * right[c] for c in set(left) | set(right)) / (len(first) ** 2)
+    expected = sum(left[c] * right[c] for c in set(left) | set(right)) / (
+        len(first) ** 2
+    )
     return 1.0 if expected == 1.0 else (observed - expected) / (1 - expected)
 
 
@@ -61,7 +68,8 @@ def krippendorff_alpha(ratings: dict[str, list[str]]) -> float | None:
     observed = observed_disagreement / total_pairs
     expected_pairs = total_values * (total_values - 1)
     expected = (
-        sum(count * (total_values - count) for count in overall.values()) / expected_pairs
+        sum(count * (total_values - count) for count in overall.values())
+        / expected_pairs
         if expected_pairs
         else 0.0
     )
@@ -124,7 +132,7 @@ def _read_key(path: Path) -> dict[str, dict[str, str]]:
 def _read_answers(paths: Iterable[Path]) -> dict[tuple[str, str], dict[str, str]]:
     answers: dict[tuple[str, str], dict[str, str]] = {}
     for path in paths:
-        with path.open(newline="", encoding="utf-8") as handle:
+        with path.open(newline="", encoding="utf-8-sig") as handle:
             for row in csv.DictReader(handle):
                 comparison_id = (row.get("comparison_id") or "").strip()
                 preference = (row.get("preference") or "").strip()
@@ -140,13 +148,17 @@ def _read_answers(paths: Iterable[Path]) -> dict[tuple[str, str], dict[str, str]
                     raise ValueError(f"{path}: presentation_seed must be an integer")
                 key = (annotator, comparison_id)
                 if key in answers:
-                    raise ValueError(f"duplicate answer for {annotator!r}, {comparison_id!r}")
+                    raise ValueError(
+                        f"duplicate answer for {annotator!r}, {comparison_id!r}"
+                    )
                 answers[key] = {
                     "annotator_id": annotator,
                     "comparison_id": comparison_id,
                     "preference": preference,
                     "presentation_seed": seed,
-                    "adjudication_status": (row.get("adjudication_status") or "").strip(),
+                    "adjudication_status": (
+                        row.get("adjudication_status") or ""
+                    ).strip(),
                 }
     return answers
 
@@ -170,36 +182,141 @@ def _metric_report(ratings: dict[str, list[str]]) -> dict[str, float | int]:
     return report
 
 
-def _automatic_agreement(
-    ratings: dict[str, list[str]], keys: dict[str, dict[str, str]]
-) -> dict[str, dict[str, float | int]]:
-    result: dict[str, dict[str, float | int]] = {}
-    for family, field in (("same-family", "same_family_decision"), ("cross-family", "cross_family_decision")):
-        matches = total = 0
-        for comparison_id, values in ratings.items():
-            decision = keys[comparison_id].get(field, "")
-            human = majority(values)
-            if decision and human is not None:
-                total += 1
-                matches += decision == human
-        result[family] = {
-            "matches": matches,
-            "comparisons": total,
-        "agreement": matches / total if total else None,
-        }
-    return result
+def _wilson(wins: int, losses: int) -> tuple[float | None, float | None]:
+    experiments_src = Path(__file__).resolve().parents[2] / "experiments" / "src"
+    if str(experiments_src) not in sys.path:
+        sys.path.insert(0, str(experiments_src))
+    from agentic_cogwriter.analysis.aggregate import wilson_interval
+
+    return wilson_interval(wins, losses)
 
 
-def _subset_report(
-    ratings: dict[str, list[str]], keys: dict[str, dict[str, str]]
-) -> dict[str, object]:
+def preference(values: Iterable[str], left: str, right: str) -> dict[str, object]:
+    """W/L/T for the left condition, with the win rate W/(W+L) and its Wilson interval."""
+    counts = Counter(values)
+    wins, losses, ties = counts[left], counts[right], counts["tie"]
     return {
-        "human": _metric_report(ratings),
-        "automatic_judge_agreement": _automatic_agreement(ratings, keys),
+        "wins": wins,
+        "losses": losses,
+        "ties": ties,
+        "win_rate": wins / (wins + losses) if wins + losses else None,
+        "wilson_95": list(_wilson(wins, losses)),
     }
 
 
-def score(answer_paths: list[Path], key_path: Path, judge_paths: list[Path] | None = None) -> str:
+def _agreement(first: list[str], second: list[str]) -> dict[str, object]:
+    return {
+        "comparisons": len(first),
+        "agreement": sum(a == b for a, b in zip(first, second)) / len(first)
+        if first
+        else None,
+        "cohen_kappa": cohen_kappa(first, second) if first else None,
+    }
+
+
+def _paired(left: dict[str, str], right: dict[str, str]) -> tuple[list[str], list[str]]:
+    shared = sorted(set(left) & set(right))
+    return [left[item] for item in shared], [right[item] for item in shared]
+
+
+def _mean(values: list[float | None]) -> float | None:
+    present = [value for value in values if value is not None]
+    return sum(present) / len(present) if present else None
+
+
+def _subset_report(
+    by_annotator: dict[str, dict[str, str]], keys: dict[str, dict[str, str]]
+) -> dict[str, object]:
+    ratings: dict[str, list[str]] = {}
+    for comparison_id in keys:
+        values = [
+            rows[comparison_id]
+            for _, rows in sorted(by_annotator.items())
+            if comparison_id in rows
+        ]
+        if values:
+            ratings[comparison_id] = values
+    majority_votes = {
+        comparison_id: majority(values) or "tie"
+        for comparison_id, values in ratings.items()
+    }
+
+    pairs: dict[str, dict[str, object]] = {}
+    annotators = sorted(by_annotator)
+    for index, first in enumerate(annotators):
+        for second in annotators[index + 1 :]:
+            pairs[f"{first}|{second}"] = _agreement(
+                *_paired(by_annotator[first], by_annotator[second])
+            )
+    human = _metric_report(ratings)
+    human["annotator_pairs"] = pairs
+    human["mean_pairwise_agreement"] = _mean(
+        [pair["agreement"] for pair in pairs.values()]
+    )
+    human["mean_pairwise_cohen_kappa"] = _mean(
+        [pair["cohen_kappa"] for pair in pairs.values()]
+    )
+
+    judges: dict[str, dict[str, object]] = {}
+    for family, field in (
+        ("same-family", "same_family_decision"),
+        ("cross-family", "cross_family_decision"),
+    ):
+        decisions = {
+            item: keys[item][field] for item in ratings if keys[item].get(field)
+        }
+        per_annotator = {
+            annotator: _agreement(*_paired(decisions, rows))
+            for annotator, rows in sorted(by_annotator.items())
+        }
+        judges[family] = {
+            "annotators": per_annotator,
+            "mean_agreement": _mean(
+                [value["agreement"] for value in per_annotator.values()]
+            ),
+            "mean_cohen_kappa": _mean(
+                [value["cohen_kappa"] for value in per_annotator.values()]
+            ),
+            "majority": _agreement(*_paired(decisions, majority_votes)),
+        }
+
+    preferences: dict[str, dict[str, object]] = {}
+    for contrast in sorted({keys[item]["contrast"] for item in ratings}):
+        left, right = parse_contrast(contrast)
+        ids = [item for item in ratings if keys[item]["contrast"] == contrast]
+        preferences[contrast] = {
+            "annotators": {
+                annotator: preference(
+                    (rows[item] for item in ids if item in rows), left, right
+                )
+                for annotator, rows in sorted(by_annotator.items())
+            },
+            "pooled_judgments": preference(
+                (value for item in ids for value in ratings[item]), left, right
+            ),
+            "majority": preference((majority_votes[item] for item in ids), left, right),
+            "judges": {
+                family: preference(
+                    (keys[item][field] for item in ids if keys[item].get(field)),
+                    left,
+                    right,
+                )
+                for family, field in (
+                    ("same-family", "same_family_decision"),
+                    ("cross-family", "cross_family_decision"),
+                )
+            },
+        }
+    return {
+        "human": human,
+        "automatic_judge_agreement": judges,
+        "preference": preferences,
+    }
+
+
+def score(
+    answer_paths: list[Path], key_path: Path, judge_paths: list[Path] | None = None
+) -> str:
     del judge_paths  # Automatic decisions are frozen in key.csv with the packet.
     keys = _read_key(key_path)
     answers = _read_answers(answer_paths)
@@ -209,30 +326,38 @@ def score(answer_paths: list[Path], key_path: Path, judge_paths: list[Path] | No
         if comparison_id not in keys:
             continue
         key = keys[comparison_id]
-        condition = human_to_condition(answer["preference"], key, _condition_a(key, answer["annotator_id"]))
+        condition = human_to_condition(
+            answer["preference"], key, _condition_a(key, answer["annotator_id"])
+        )
         by_annotator[answer["annotator_id"]][comparison_id] = condition
 
-    ratings: dict[str, list[str]] = {}
-    for comparison_id in keys:
-        values = [by_annotator[annotator][comparison_id] for annotator in sorted(by_annotator) if comparison_id in by_annotator[annotator]]
-        if values:
-            ratings[comparison_id] = values
-
     report: dict[str, object] = {
-        "overall": _subset_report(ratings, keys),
+        "overall": _subset_report(by_annotator, keys),
         "breakdowns": {},
         "annotators": sorted(by_annotator),
     }
-    dimensions = ("benchmark", "contrast", "output_length_gap", "automatic_decision_margin")
+    dimensions = (
+        "benchmark",
+        "mixed_language",
+        "contrast",
+        "output_length_gap",
+        "automatic_decision_margin",
+    )
     breakdowns: dict[str, dict[str, object]] = {}
-    for dimension in dimensions:
-        groups: dict[str, dict[str, list[str]]] = defaultdict(dict)
-        for comparison_id, values in ratings.items():
-            group = keys[comparison_id].get(dimension, "unknown")
-            groups[group][comparison_id] = values
+    for dimension in (
+        name for name in dimensions if any(name in key for key in keys.values())
+    ):
+        groups: dict[str, dict[str, dict[str, str]]] = defaultdict(
+            lambda: defaultdict(dict)
+        )
+        for annotator, rows in by_annotator.items():
+            for comparison_id, value in rows.items():
+                groups[keys[comparison_id].get(dimension, "unknown")][annotator][
+                    comparison_id
+                ] = value
         breakdowns[dimension] = {
-            group: _subset_report(group_ratings, keys)
-            for group, group_ratings in sorted(groups.items())
+            group: _subset_report(group_rows, keys)
+            for group, group_rows in sorted(groups.items())
         }
     report["breakdowns"] = breakdowns
     return json.dumps(report, indent=2, sort_keys=True) + "\n"

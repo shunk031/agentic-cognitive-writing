@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Writing comparison: __ANNOTATOR__</title>
+<style>
+  :root { --accent: #673ab7; --accent-soft: #ede7f6; --ground: #f0ebf8; --text: #202124; --muted: #5f6368; --line: #dadce0; --warn: #d93025; --warn-soft: #fce8e6; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 16px 48px; background: var(--ground); color: var(--text); font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif; }
+  main { max-width: 1280px; margin: 0 auto; }
+  .narrow { max-width: 780px; margin: 0 auto; }
+  .topbar { position: sticky; top: 0; z-index: 2; background: var(--ground); padding: 10px 0 8px; display: flex; align-items: center; gap: 12px; }
+  .bar { flex: 1; height: 8px; background: #fff; border-radius: 4px; overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .count { font-weight: 600; min-width: 4.5em; text-align: right; }
+  .saved { font-size: 13px; color: var(--muted); min-width: 7em; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 20px 24px; margin: 12px 0; }
+  .card.head { border-top: 10px solid var(--accent); }
+  h1 { font-size: 28px; font-weight: 500; margin: 0 0 8px; }
+  h2 { font-size: 20px; font-weight: 500; margin: 0 0 8px; }
+  h3 { font-size: 16px; margin: 0 0 8px; color: var(--accent); }
+  .assignment { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 45vh; overflow: auto; background: #fafafa; border: 1px solid var(--line); border-radius: 6px; padding: 12px 16px; font-size: 16px; }
+  .responses { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 1000px) { .responses { grid-template-columns: 1fr 1fr; } }
+  .response { margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; }
+  .response h3 { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--accent-soft); border-radius: 8px 8px 0 0; font-size: 18px; }
+  .response .md { padding: 4px 20px 12px; max-height: 70vh; overflow: auto; overflow-wrap: anywhere; }
+  .md table { border-collapse: collapse; display: block; overflow-x: auto; }
+  .md th, .md td { border: 1px solid var(--line); padding: 4px 8px; vertical-align: top; }
+  .md pre { overflow-x: auto; background: #f6f8fa; padding: 8px; }
+  .md h1 { font-size: 22px; } .md h2 { font-size: 19px; } .md h3 { font-size: 17px; color: var(--text); }
+  .label { font-weight: 500; margin: 0 0 12px; display: block; }
+  .required { color: var(--warn); }
+  .choice { display: flex; align-items: center; gap: 12px; padding: 8px 4px; font-size: 18px; cursor: pointer; }
+  .choice input { width: 20px; height: 20px; accent-color: var(--accent); }
+  textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1px solid var(--line); border-radius: 4px; }
+  .nav { display: flex; justify-content: space-between; gap: 12px; margin: 16px 0; }
+  button { font: inherit; font-size: 16px; padding: 10px 24px; border-radius: 4px; border: 1px solid var(--line); background: #fff; color: var(--accent); cursor: pointer; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .hint { color: var(--muted); font-size: 14px; }
+  .review { list-style: none; padding: 0; margin: 0; }
+  .review li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .review li.missing { background: var(--warn-soft); color: var(--warn); font-weight: 600; }
+  .review .reason { color: var(--muted); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
+  #csv { font-family: ui-monospace, monospace; font-size: 13px; }
+  .notice { background: var(--warn-soft); color: var(--warn); border-radius: 6px; padding: 8px 12px; }
+</style>
+</head>
+<body>
+<main>
+<div class="topbar" id="topbar" hidden>
+  <div class="bar"><span id="bar"></span></div>
+  <span class="count" id="count"></span>
+  <span class="saved" id="saved"></span>
+</div>
+
+<section class="page intro narrow">
+<div class="card head">
+<h1>Writing comparison / 文章比較の評価</h1>
+<p class="hint">Annotator: __ANNOTATOR__ · __COUNT__ pairs · about __HOURS__ hours / 全__COUNT__組・約__HOURS__時間</p>
+</div>
+<div class="card">
+<h2>English</h2>
+<p>Each of the __COUNT__ pages shows one writing assignment and two anonymized responses, A and B. Read the assignment and both responses, then choose the response with the better overall quality for the assignment. Consider correctness, relevance, completeness, clarity, and usefulness together. Choose <strong>Tie</strong> only when neither response is better overall.</p>
+<ul>
+<li>Do not prefer a response for being longer or shorter. Length matters only when it makes a response more or less useful for the assignment.</li>
+<li>A response written in a language other than the assignment's language fails the assignment's language requirement. Judge it accordingly; you do not need to read the foreign-language text.</li>
+<li>When the assignment includes a source text, such as an article to summarize, use it to check the responses. Skimming the source is acceptable.</li>
+<li>Work independently. Do not discuss the pairs with anyone, and do not use AI tools or search engines to judge them.</li>
+<li>The reason field is optional; one sentence helps the analysis.</li>
+<li>The estimated time is about __HOURS__ hours in total. Your answers are saved automatically in this browser, so you can close the tab and resume later on the same computer and browser.</li>
+<li>On the last page, press <strong>Submit</strong> to download your answer file, and send that file to the author.</li>
+</ul>
+<h2>日本語</h2>
+<p>全__COUNT__ページの各ページに、文章作成の課題が1つと、匿名化された回答AとBがあります。課題と両方の回答を読み、課題に対して総合的に優れている回答を選んでください。正確さ、課題への適合、網羅性、明瞭さ、有用性をあわせて判断してください。どちらも総合的に優れていない場合に限り<strong>同等</strong>を選んでください。</p>
+<ul>
+<li>長さだけを理由にどちらかを選ばないでください。長さは、課題に対する有用性を高めたり下げたりする場合にのみ考慮してください。</li>
+<li>課題と異なる言語で書かれた回答は、課題の言語要件を満たしていません。そのように判断してください。外国語の本文を読む必要はありません。</li>
+<li>要約対象の記事など、課題に元の文章が含まれる場合は、回答の確認に使ってください。元の文章は流し読みでもかまいません。</li>
+<li>他の人と相談せず、一人で判断してください。AIツールや検索エンジンも判断に使わないでください。</li>
+<li>理由の記入は任意です。一文程度あると分析に役立ちます。</li>
+<li>所要時間は合計で約__HOURS__時間の見込みです。回答はこのブラウザに自動保存されるため、タブを閉じても同じパソコンの同じブラウザで再開できます。</li>
+<li>最後のページで<strong>Submit</strong>を押すと回答ファイルがダウンロードされます。そのファイルを著者に送ってください。</li>
+</ul>
+</div>
+<p class="notice" id="storage-warning" hidden>This browser cannot save progress. Keep this tab open until you submit. / このブラウザでは途中保存ができません。提出までこのタブを閉じないでください。</p>
+<div class="nav"><span></span><button type="button" class="primary" id="start">Start / 開始</button></div>
+</section>
+
+__PAIRS__
+
+<section class="page final narrow" hidden>
+<div class="card head">
+<h1>Review and submit / 確認と提出</h1>
+<p id="status"></p>
+<p class="hint">Click a row to change that answer. / 行をクリックすると回答を修正できます。</p>
+</div>
+<div class="card"><ul class="review" id="review"></ul></div>
+<div class="card">
+<p>Press <strong>Submit</strong> to download <code>answers-__ANNOTATOR__.csv</code>, then send that file to the author.<br>
+<strong>Submit</strong>を押すと <code>answers-__ANNOTATOR__.csv</code> がダウンロードされます。そのファイルを著者に送ってください。</p>
+<p class="hint">If the download does not start, copy all text in the box below and send it instead. / ダウンロードされない場合は、下の枠内のテキストをすべてコピーして送ってください。</p>
+<textarea id="csv" rows="8" readonly></textarea>
+<div class="nav"><button type="button" id="copy">Copy text / コピー</button><button type="button" class="primary" id="submit">Submit / 提出</button></div>
+</div>
+</section>
+
+<div class="nav" id="pager" hidden>
+  <button type="button" id="back">&larr; Back / 戻る</button>
+  <button type="button" class="primary" id="next">Next / 次へ &rarr;</button>
+</div>
+</main>
+<script>
+(function () {
+  var annotator = "__ANNOTATOR__";
+  var storageKey = "human-eval-staged-" + annotator;
+  var pages = Array.prototype.slice.call(document.querySelectorAll("section.page"));
+  var pairs = pages.filter(function (page) { return page.classList.contains("pair"); });
+  var finalIndex = pages.length - 1;
+  var answers = {};
+  var storageWorks = true;
+  try { answers = JSON.parse(localStorage.getItem(storageKey) || "{}") || {}; } catch (error) { storageWorks = false; answers = {}; }
+  var current = 0;
+
+  function byId(id) { return document.getElementById(id); }
+  function answer(id) { return answers[id] || {}; }
+  function save() {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(answers));
+      byId("saved").textContent = "✓ Saved / 保存済み";
+    } catch (error) {
+      storageWorks = false;
+      byId("saved").textContent = "Not saved: keep tab open";
+    }
+  }
+  function cell(value) {
+    value = String(value || "");
+    return /[",\r\n]/.test(value) ? '"' + value.replace(/"/g, '""') + '"' : value;
+  }
+  function csvText() {
+    var lines = ["comparison_id,annotator_id,preference,reason"];
+    pairs.forEach(function (pair) {
+      var item = answer(pair.dataset.id);
+      lines.push([pair.dataset.id, annotator, item.preference, item.reason].map(cell).join(","));
+    });
+    return lines.join("\r\n") + "\r\n";
+  }
+  function answeredCount() {
+    return pairs.filter(function (pair) { return answer(pair.dataset.id).preference; }).length;
+  }
+  function label(value) { return value === "tie" ? "Tie / 同等" : value; }
+  function renderReview() {
+    var list = byId("review");
+    list.textContent = "";
+    pairs.forEach(function (pair, index) {
+      var item = answer(pair.dataset.id);
+      var row = document.createElement("li");
+      var left = document.createElement("span");
+      left.textContent = "Pair " + (index + 1) + ": " + (item.preference ? label(item.preference) : "unanswered / 未回答");
+      var right = document.createElement("span");
+      right.className = "reason";
+      right.textContent = item.reason || "";
+      row.appendChild(left);
+      row.appendChild(right);
+      if (!item.preference) { row.className = "missing"; }
+      row.addEventListener("click", function () { show(index + 1); });
+      list.appendChild(row);
+    });
+    var missing = pairs.length - answeredCount();
+    byId("status").textContent = missing === 0
+      ? "All " + pairs.length + " pairs are answered. / 全" + pairs.length + "組に回答済みです。"
+      : missing + " pairs are unanswered (highlighted). / 未回答が" + missing + "組あります（強調表示）。";
+    byId("csv").value = csvText();
+  }
+  function show(index) {
+    current = Math.max(0, Math.min(finalIndex, index));
+    pages.forEach(function (page, position) { page.hidden = position !== current; });
+    var onPair = current > 0 && current < finalIndex;
+    byId("topbar").hidden = current === 0;
+    byId("pager").hidden = !onPair;
+    var shown = Math.min(current, pairs.length);
+    byId("bar").style.width = (100 * answeredCount() / pairs.length) + "%";
+    byId("count").textContent = current === finalIndex ? answeredCount() + " / " + pairs.length : shown + " / " + pairs.length;
+    if (onPair) {
+      byId("next").disabled = !answer(pages[current].dataset.id).preference;
+      byId("next").textContent = current === finalIndex - 1 ? "Review / 確認 →" : "Next / 次へ →";
+    }
+    if (current === finalIndex) { renderReview(); }
+    window.scrollTo(0, 0);
+  }
+
+  pairs.forEach(function (pair) {
+    var id = pair.dataset.id;
+    pair.querySelectorAll('input[type="radio"]').forEach(function (radio) {
+      radio.checked = radio.value === answer(id).preference;
+      radio.addEventListener("change", function () {
+        answers[id] = Object.assign({}, answers[id], { preference: radio.value });
+        save();
+        show(current);
+      });
+    });
+    var reason = pair.querySelector("textarea");
+    reason.value = answer(id).reason || "";
+    reason.addEventListener("input", function () {
+      answers[id] = Object.assign({}, answers[id], { reason: reason.value });
+      save();
+    });
+  });
+
+  byId("storage-warning").hidden = storageWorks;
+  if (answeredCount() > 0) { byId("start").textContent = "Resume / 再開"; }
+  byId("start").addEventListener("click", function () {
+    var firstOpen = pairs.findIndex(function (pair) { return !answer(pair.dataset.id).preference; });
+    show(firstOpen === -1 ? finalIndex : firstOpen + 1);
+  });
+  byId("back").addEventListener("click", function () { show(current - 1); });
+  byId("next").addEventListener("click", function () { show(current + 1); });
+  byId("copy").addEventListener("click", function () {
+    var box = byId("csv");
+    box.focus();
+    box.select();
+    var copied = false;
+    try { copied = document.execCommand("copy"); } catch (error) { copied = false; }
+    if (!copied && navigator.clipboard) { navigator.clipboard.writeText(box.value).catch(function () {}); }
+  });
+  byId("submit").addEventListener("click", function () {
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob(["﻿" + csvText()], { type: "text/csv;charset=utf-8" }));
+    link.download = "answers-" + annotator + ".csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  });
+  show(0);
+})();
+</script>
+</body>
+</html>

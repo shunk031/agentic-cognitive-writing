@@ -5,13 +5,14 @@ from __future__ import annotations
 
 import argparse
 import csv
+import html
 import json
 import random
+import re
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
-
 
 CONTRASTS = (("A4", "A1"), ("A7", "A4"), ("A4", "A3"))
 BENCHMARKS = ("DoLoMiTes", "HelloBench", "WritingBench")
@@ -20,6 +21,10 @@ SAME_FAMILY = "same-family"
 CROSS_FAMILY = "cross-family"
 PROMPT_LENGTHS = ("short", "medium", "long")
 RATIO_BINS = (1.05, 1.10, 1.25, 1.50, 2.00)
+HAN = re.compile(r"[\u4e00-\u9fff]")
+KANA = re.compile(r"[\u3040-\u30ff]")
+LATIN = re.compile(r"[A-Za-z]")
+PAGE_TEMPLATE = Path(__file__).with_name("human_eval_page.html")
 
 
 def _source_modules() -> None:
@@ -58,7 +63,13 @@ def _canonical_runs(root: Path) -> dict[tuple[str, str, str], Any]:
 def _manifest_rows(project_root: Path) -> dict[tuple[str, str], dict[str, Any]]:
     rows: dict[tuple[str, str], dict[str, Any]] = {}
     for benchmark in BENCHMARKS:
-        path = project_root / "experiments" / "prompts" / "manifests" / f"{benchmark.lower()}.jsonl"
+        path = (
+            project_root
+            / "experiments"
+            / "prompts"
+            / "manifests"
+            / f"{benchmark.lower()}.jsonl"
+        )
         with path.open(encoding="utf-8") as handle:
             for line in handle:
                 if line.strip():
@@ -78,8 +89,12 @@ def _read_json(path: Path) -> dict[str, Any]:
 def _judge_paths(first: Any, second: Any, prompt_id: str) -> list[Path]:
     paths: list[Path] = []
     for source, other in ((first, second.condition), (second, first.condition)):
-        paths.extend(source.path.glob(f"scores/pairwise/*/{prompt_id}-{other}/scores.jsonl"))
-    return sorted(set(paths), key=lambda path: ("gpt-5.6-sol" not in str(path), str(path)))
+        paths.extend(
+            source.path.glob(f"scores/pairwise/*/{prompt_id}-{other}/scores.jsonl")
+        )
+    return sorted(
+        set(paths), key=lambda path: ("gpt-5.6-sol" not in str(path), str(path))
+    )
 
 
 def _order_mapping(manifest: dict[str, Any]) -> dict[str, tuple[int, int]]:
@@ -144,11 +159,17 @@ def _decision(
     judge = manifest.get("judge")
     judge_id = str(judge.get("judge_id", "")) if isinstance(judge, dict) else ""
     mode = manifest.get("family_audit", {}).get("mode")
-    family = SAME_FAMILY if mode == "exploratory-same-family" or "gpt-5.6-sol" in judge_id else CROSS_FAMILY
+    family = (
+        SAME_FAMILY
+        if mode == "exploratory-same-family" or "gpt-5.6-sol" in judge_id
+        else CROSS_FAMILY
+    )
     return family, collapsed, list(values)
 
 
-def _judge_decisions(first: Any, second: Any, prompt_id: str, left: str, right: str) -> dict[str, dict[str, Any]]:
+def _judge_decisions(
+    first: Any, second: Any, prompt_id: str, left: str, right: str
+) -> dict[str, dict[str, Any]]:
     decisions: dict[str, dict[str, Any]] = {}
     for path in _judge_paths(first, second, prompt_id):
         value = _decision(path, first, second, left, right)
@@ -158,18 +179,28 @@ def _judge_decisions(first: Any, second: Any, prompt_id: str, left: str, right: 
 
 
 def _assign_prompt_strata(rows: list[dict[str, Any]]) -> None:
-    ordered = sorted(rows, key=lambda row: (row["prompt_length_units"], row["prompt_id"]))
+    ordered = sorted(
+        rows, key=lambda row: (row["prompt_length_units"], row["prompt_id"])
+    )
     for index, row in enumerate(ordered):
         row["prompt_length"] = PROMPT_LENGTHS[min(2, index * 3 // len(ordered))]
 
 
-def _candidates(root: Path, manifests: dict[tuple[str, str], dict[str, Any]]) -> list[dict[str, Any]]:
+def _candidates(
+    root: Path,
+    manifests: dict[tuple[str, str], dict[str, Any]],
+    contrasts: tuple[tuple[str, str], ...] = CONTRASTS,
+) -> list[dict[str, Any]]:
     canonical = _canonical_runs(root)
     result: list[dict[str, Any]] = []
     for benchmark in BENCHMARKS:
-        for left, right in CONTRASTS:
+        for left, right in contrasts:
             rows: list[dict[str, Any]] = []
-            for (candidate_benchmark, condition, prompt_id), left_run in canonical.items():
+            for (
+                candidate_benchmark,
+                condition,
+                prompt_id,
+            ), left_run in canonical.items():
                 if candidate_benchmark != benchmark or condition != left:
                     continue
                 right_run = canonical.get((benchmark, right, prompt_id))
@@ -182,14 +213,25 @@ def _candidates(root: Path, manifests: dict[tuple[str, str], dict[str, Any]]) ->
                 }
                 if not all(path.is_file() for path in output_paths.values()):
                     continue
-                decisions = _judge_decisions(left_run, right_run, prompt_id, left, right)
+                decisions = _judge_decisions(
+                    left_run, right_run, prompt_id, left, right
+                )
                 if SAME_FAMILY not in decisions:
                     continue
                 lengths = {
-                    condition_name: int(run.manifest.get("output_units_used") or _output_units(output_paths[condition_name].read_text(encoding="utf-8")))
+                    condition_name: int(
+                        run.manifest.get("output_units_used")
+                        or _output_units(
+                            output_paths[condition_name].read_text(encoding="utf-8")
+                        )
+                    )
                     for condition_name, run in ((left, left_run), (right, right_run))
                 }
-                ratio = max(lengths.values()) / min(lengths.values()) if min(lengths.values()) > 0 else 0
+                ratio = (
+                    max(lengths.values()) / min(lengths.values())
+                    if min(lengths.values()) > 0
+                    else 0
+                )
                 if ratio <= 0:
                     continue
                 decisions_for_margin = list(decisions[SAME_FAMILY]["votes"])
@@ -213,7 +255,9 @@ def _candidates(root: Path, manifests: dict[tuple[str, str], dict[str, Any]]) ->
                         "output_length_right": lengths[right],
                         "output_length_gap": _ratio_bin(ratio),
                         "same_family_decision": decisions[SAME_FAMILY]["decision"],
-                        "cross_family_decision": decisions.get(CROSS_FAMILY, {}).get("decision", ""),
+                        "cross_family_decision": decisions.get(CROSS_FAMILY, {}).get(
+                            "decision", ""
+                        ),
                         "automatic_decision_margin": str(margin),
                     }
                 )
@@ -223,18 +267,25 @@ def _candidates(root: Path, manifests: dict[tuple[str, str], dict[str, Any]]) ->
     return result
 
 
-def _stratified_pick(rows: list[dict[str, Any]], count: int, rng: random.Random) -> list[dict[str, Any]]:
+def _stratified_pick(
+    rows: list[dict[str, Any]], count: int, rng: random.Random
+) -> list[dict[str, Any]]:
     if len(rows) < count:
         raise RuntimeError(f"only {len(rows)} eligible candidates, need {count}")
     groups: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
         groups[(row["output_length_gap"], row["automatic_decision_margin"])].append(row)
     total = len(rows)
-    quotas = {group: int(count * len(values) / total) for group, values in groups.items()}
+    quotas = {
+        group: int(count * len(values) / total) for group, values in groups.items()
+    }
     remaining = count - sum(quotas.values())
     ranked = sorted(
         groups,
-        key=lambda group: (-(count * len(groups[group]) / total - quotas[group]), group),
+        key=lambda group: (
+            -(count * len(groups[group]) / total - quotas[group]),
+            group,
+        ),
     )
     for group in ranked[:remaining]:
         quotas[group] += 1
@@ -247,27 +298,47 @@ def _stratified_pick(rows: list[dict[str, Any]], count: int, rng: random.Random)
     return selected
 
 
-def _select_candidates(candidates: list[dict[str, Any]], rng: random.Random) -> dict[str, list[dict[str, Any]]]:
+def _select_candidates(
+    candidates: list[dict[str, Any]], rng: random.Random
+) -> dict[str, list[dict[str, Any]]]:
     selected: dict[str, list[dict[str, Any]]] = {}
     used: set[tuple[str, str]] = set()
-    per_benchmark = 24
     for left, right in CONTRASTS:
         contrast = f"{left}:{right}"
         selected_rows: list[dict[str, Any]] = []
         for benchmark in BENCHMARKS:
-            pool = [row for row in candidates if row["contrast"] == contrast and row["benchmark"] == benchmark]
+            pool = [
+                row
+                for row in candidates
+                if row["contrast"] == contrast and row["benchmark"] == benchmark
+            ]
             benchmark_rows: list[dict[str, Any]] = []
             for prompt_length in PROMPT_LENGTHS:
-                prompt_pool = [row for row in pool if row["prompt_length"] == prompt_length]
-                fresh = [row for row in prompt_pool if (benchmark, row["prompt_id"]) not in used]
-                benchmark_rows.extend(_stratified_pick(fresh if len(fresh) >= 8 else prompt_pool, 8, rng))
+                prompt_pool = [
+                    row for row in pool if row["prompt_length"] == prompt_length
+                ]
+                fresh = [
+                    row
+                    for row in prompt_pool
+                    if (benchmark, row["prompt_id"]) not in used
+                ]
+                benchmark_rows.extend(
+                    _stratified_pick(fresh if len(fresh) >= 8 else prompt_pool, 8, rng)
+                )
             selected_rows.extend(benchmark_rows)
         selected[contrast] = selected_rows
         used.update((row["benchmark"], row["prompt_id"]) for row in selected_rows)
     return selected
 
 
-def _write_pair(path: Path, comparison_id: str, row: dict[str, Any], manifest: dict[str, Any], condition_a: str, presentation_seed: int) -> None:
+def _write_pair(
+    path: Path,
+    comparison_id: str,
+    row: dict[str, Any],
+    manifest: dict[str, Any],
+    condition_a: str,
+    presentation_seed: int,
+) -> None:
     left = row["left"]
     right = row["right"]
     outputs = {
@@ -309,10 +380,19 @@ def _write_pair(path: Path, comparison_id: str, row: dict[str, Any], manifest: d
 
 
 def _answer_fields() -> list[str]:
-    return ["comparison_id", "annotator_id", "preference", "reason", "presentation_seed", "adjudication_status"]
+    return [
+        "comparison_id",
+        "annotator_id",
+        "preference",
+        "reason",
+        "presentation_seed",
+        "adjudication_status",
+    ]
 
 
-def generate(runs_root: Path, seed: int, output_root: Path) -> dict[str, dict[str, int]]:
+def generate(
+    runs_root: Path, seed: int, output_root: Path
+) -> dict[str, dict[str, int]]:
     project_root = Path(__file__).resolve().parents[2]
     manifests = _manifest_rows(project_root)
     rng = random.Random(seed)
@@ -329,8 +409,13 @@ def generate(runs_root: Path, seed: int, output_root: Path) -> dict[str, dict[st
             old_pair.unlink()
 
     key_rows: list[dict[str, str]] = []
-    answer_rows: dict[str, list[dict[str, str]]] = {annotator: [] for annotator in ANNOTATORS}
-    summary = {f"{left}:{right}": {benchmark: 0 for benchmark in BENCHMARKS} for left, right in CONTRASTS}
+    answer_rows: dict[str, list[dict[str, str]]] = {
+        annotator: [] for annotator in ANNOTATORS
+    }
+    summary = {
+        f"{left}:{right}": {benchmark: 0 for benchmark in BENCHMARKS}
+        for left, right in CONTRASTS
+    }
     comparison_number = 1
     for left, right in CONTRASTS:
         contrast = f"{left}:{right}"
@@ -384,12 +469,20 @@ def generate(runs_root: Path, seed: int, output_root: Path) -> dict[str, dict[st
         writer.writeheader()
         writer.writerows(key_rows)
     for annotator, rows in answer_rows.items():
-        with (output_root / f"answers-{annotator}.csv").open("w", newline="", encoding="utf-8") as handle:
-            writer = csv.DictWriter(handle, fieldnames=_answer_fields(), lineterminator="\n")
+        with (output_root / f"answers-{annotator}.csv").open(
+            "w", newline="", encoding="utf-8"
+        ) as handle:
+            writer = csv.DictWriter(
+                handle, fieldnames=_answer_fields(), lineterminator="\n"
+            )
             writer.writeheader()
             writer.writerows(rows)
-    with (output_root / "answers-template.csv").open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=_answer_fields(), lineterminator="\n")
+    with (output_root / "answers-template.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(
+            handle, fieldnames=_answer_fields(), lineterminator="\n"
+        )
         writer.writeheader()
     (output_root / "INSTRUCTIONS.md").write_text(
         """# Human evaluation
@@ -403,13 +496,233 @@ Record `A`, `B`, or `tie` in the assigned answer sheet. Add an optional short re
     return summary
 
 
+def mainly_chinese(text: str) -> bool:
+    """Han characters at least match Latin letters, with too little kana for Japanese."""
+    han = len(HAN.findall(text))
+    return (
+        han > 0
+        and han >= len(LATIN.findall(text))
+        and len(KANA.findall(text)) < 0.1 * han
+    )
+
+
+def assignment_chinese(text: str) -> bool:
+    """Mainly Chinese overall, or a Chinese instruction line ahead of non-Chinese material."""
+    lines = [line for line in text.splitlines() if line.strip()]
+    return mainly_chinese(text) or bool(lines and mainly_chinese(lines[0]))
+
+
+def reading_minutes(assignment_words: int, response_words: int) -> float:
+    """Planning estimate: assignment at 300 wpm, both responses at 250 wpm, 2 minutes to decide."""
+    return assignment_words / 300 + response_words / 250 + 2
+
+
+def _select_per_benchmark(
+    rows: list[dict[str, Any]], per_benchmark: int, rng: random.Random
+) -> list[dict[str, Any]]:
+    selected: list[dict[str, Any]] = []
+    for benchmark in BENCHMARKS:
+        pool = sorted(
+            (row for row in rows if row["benchmark"] == benchmark),
+            key=lambda row: row["prompt_id"],
+        )
+        if len(pool) < per_benchmark:
+            raise RuntimeError(
+                f"{benchmark}: only {len(pool)} eligible pairs, need {per_benchmark}"
+            )
+        selected.extend(rng.sample(pool, per_benchmark))
+    return selected
+
+
+def _render_markdown(text: str) -> str:
+    from markdown_it import MarkdownIt
+
+    return (
+        MarkdownIt("commonmark", {"html": False})
+        .enable(["table", "strikethrough"])
+        .render(text)
+    )
+
+
+def _html_page(annotator: str, pairs: list[dict[str, str]], hours: float) -> str:
+    sections = []
+    for number, pair in enumerate(pairs, start=1):
+        name = f"pref-{pair['comparison_id']}"
+        responses = "".join(
+            f'<article class="card response"><h3>Response {side}</h3>'
+            f'<div class="md">{_render_markdown(pair[side]) or "<p>(empty response)</p>"}</div></article>'
+            for side in ("A", "B")
+        )
+        choices = "".join(
+            f'<label class="choice"><input type="radio" name="{name}" value="{value}"> {label}</label>'
+            for value, label in (("A", "A"), ("B", "B"), ("tie", "Tie / 同等"))
+        )
+        sections.append(
+            f"""<section class="page pair" data-id="{pair["comparison_id"]}" data-number="{number}" hidden>
+<div class="card"><h2>Pair {number} / {len(pairs)}</h2><h3>Assignment / 課題</h3><div class="assignment">{html.escape(pair["assignment"])}</div></div>
+<div class="responses">{responses}</div>
+<div class="card question"><p class="label">Which response is better overall for the assignment? <span class="required">*</span><br>課題に対して総合的に優れているのはどちらですか？ <span class="required">*</span></p>{choices}</div>
+<div class="card question"><label class="label" for="reason-{pair["comparison_id"]}">Reason (optional) / 理由（任意）</label><textarea id="reason-{pair["comparison_id"]}" rows="3"></textarea></div>
+</section>"""
+        )
+    page = PAGE_TEMPLATE.read_text(encoding="utf-8")
+    for token, value in (
+        ("__ANNOTATOR__", annotator),
+        ("__COUNT__", str(len(pairs))),
+        ("__HOURS__", f"{hours:.1f}"),
+        ("__PAIRS__", "\n".join(sections)),
+    ):
+        page = page.replace(token, value)
+    return page
+
+
+def generate_html_packet(
+    runs_root: Path,
+    seed: int,
+    output_root: Path,
+    contrast: tuple[str, str],
+    per_benchmark: int,
+) -> dict[str, Any]:
+    """Blinded one-contrast packet: one offline HTML page per annotator, key.csv kept apart."""
+    project_root = Path(__file__).resolve().parents[2]
+    manifests = _manifest_rows(project_root)
+    left, right = contrast
+    eligible: list[dict[str, Any]] = []
+    excluded: Counter[str] = Counter()
+    for row in _candidates(runs_root, manifests, (contrast,)):
+        assignment = str(
+            manifests[(row["benchmark"], row["prompt_id"])].get("prompt_text", "")
+        )
+        texts = {
+            "assignment": assignment,
+            left: row["left_output"].read_text(encoding="utf-8"),
+            right: row["right_output"].read_text(encoding="utf-8"),
+        }
+        if not texts[left].strip() or not texts[right].strip():
+            excluded[f"{row['benchmark']}: empty response"] += 1
+            continue
+        if assignment_chinese(assignment):
+            excluded[f"{row['benchmark']}: Chinese assignment"] += 1
+            continue
+        languages = {
+            name: "zh" if mainly_chinese(texts[name]) else "en"
+            for name in (left, right)
+        }
+        if set(languages.values()) == {"zh"}:
+            excluded[f"{row['benchmark']}: both responses Chinese"] += 1
+            continue
+        words = {name: len(text.split()) for name, text in texts.items()}
+        eligible.append(
+            {
+                **row,
+                "texts": texts,
+                "languages": languages,
+                "words": words,
+                "minutes": reading_minutes(
+                    words["assignment"], words[left] + words[right]
+                ),
+            }
+        )
+
+    rng = random.Random(seed)
+    selected = _select_per_benchmark(eligible, per_benchmark, rng)
+    rng.shuffle(selected)
+    pages: dict[str, list[dict[str, str]]] = {annotator: [] for annotator in ANNOTATORS}
+    key_rows: list[dict[str, str]] = []
+    for number, row in enumerate(selected, start=1):
+        comparison_id = f"pair-{number:03d}"
+        key_row = {
+            "comparison_id": comparison_id,
+            "prompt_id": row["prompt_id"],
+            "benchmark": row["benchmark"],
+            "contrast": f"{left}:{right}",
+            "assignment_words": str(row["words"]["assignment"]),
+            "response_words_left": str(row["words"][left]),
+            "response_words_right": str(row["words"][right]),
+            "estimated_minutes": f"{row['minutes']:.1f}",
+            "response_language_left": row["languages"][left],
+            "response_language_right": row["languages"][right],
+            "mixed_language": "yes"
+            if len(set(row["languages"].values())) > 1
+            else "no",
+            "same_family_decision": row["same_family_decision"],
+            "cross_family_decision": row["cross_family_decision"],
+        }
+        for index, annotator in enumerate(ANNOTATORS, start=1):
+            presentation_seed = rng.randrange(1, 2**31)
+            condition_a = left if presentation_seed % 2 == 0 else right
+            condition_b = right if condition_a == left else left
+            key_row[f"condition_a_{index}"] = condition_a
+            key_row[f"presentation_seed_{index}"] = str(presentation_seed)
+            pages[annotator].append(
+                {
+                    "comparison_id": comparison_id,
+                    "assignment": row["texts"]["assignment"],
+                    "A": row["texts"][condition_a],
+                    "B": row["texts"][condition_b],
+                }
+            )
+        key_rows.append(key_row)
+
+    output_root.mkdir(parents=True, exist_ok=True)
+    hours = sum(row["minutes"] for row in selected) / 60
+    order_seeds: dict[str, int] = {}
+    for index, annotator in enumerate(ANNOTATORS, start=1):
+        order_seeds[annotator] = rng.randrange(1, 2**31)
+        pairs = pages[annotator]
+        random.Random(order_seeds[annotator]).shuffle(pairs)
+        positions = {
+            pair["comparison_id"]: position
+            for position, pair in enumerate(pairs, start=1)
+        }
+        for key_row in key_rows:
+            key_row[f"position_{index}"] = str(positions[key_row["comparison_id"]])
+        (output_root / f"{annotator}.html").write_text(
+            _html_page(annotator, pairs, hours), encoding="utf-8"
+        )
+    with (output_root / "key.csv").open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(
+            handle, fieldnames=list(key_rows[0]), lineterminator="\n"
+        )
+        writer.writeheader()
+        writer.writerows(key_rows)
+    return {
+        "eligible": dict(Counter(row["benchmark"] for row in eligible)),
+        "excluded": dict(excluded),
+        "eligible_mixed_language": sum(
+            len(set(row["languages"].values())) > 1 for row in eligible
+        ),
+        "selected": dict(Counter(row["benchmark"] for row in selected)),
+        "selected_mixed_language": sum(
+            len(set(row["languages"].values())) > 1 for row in selected
+        ),
+        "estimated_hours_per_annotator": round(hours, 1),
+        "order_seeds": order_seeds,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("runs_root", type=Path)
     parser.add_argument("--seed", type=int, default=20260929)
-    parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[1] / "human-eval")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path(__file__).resolve().parents[1] / "human-eval",
+    )
+    parser.add_argument(
+        "--html-contrast", help="LEFT:RIGHT; write the one-contrast HTML packet instead"
+    )
+    parser.add_argument("--per-benchmark", type=int, default=10)
     args = parser.parse_args()
-    print(json.dumps(generate(args.runs_root, args.seed, args.output), indent=2, sort_keys=True))
+    if args.html_contrast:
+        left, _, right = args.html_contrast.partition(":")
+        summary = generate_html_packet(
+            args.runs_root, args.seed, args.output, (left, right), args.per_benchmark
+        )
+    else:
+        summary = generate(args.runs_root, args.seed, args.output)
+    print(json.dumps(summary, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":
