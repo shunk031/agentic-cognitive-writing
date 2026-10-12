@@ -1,29 +1,107 @@
 {
-  "baseline_sha": "251500df5360b22b41cc9a05b27d7f88804b8457",
+  "baseline_sha": "cee07da11659f26e669dd3baabf749122c716c37",
   "replacements": [
     {
       "path": "paper/numbers.tex",
-      "instruction": "State in Appendix A how many scored prompts are in Chinese and that the rest are English, citing a macro generated from the prompt manifests, and keep the appendix tables in numbered order.",
-      "before": "\\newcommand{\\PairedQualityDoLoPointwiseTaskPlanningHigh}{+0.281}\n",
-      "after": "\\newcommand{\\PairedQualityDoLoPointwiseTaskPlanningHigh}{+0.281}\n\n% Prompt-language macros.\n% source: prompt manifests writingbench.jsonl hard100 prompts with more Han characters than Latin letters\n\\newcommand{\\WritingChinesePromptCount}{32}\n% source: prompt manifests hellobench.jsonl hard100 prompts with more Han characters than Latin letters\n\\newcommand{\\HelloChinesePromptCount}{0}\n% source: prompt manifests dolomites.jsonl hard100 prompts with more Han characters than Latin letters\n\\newcommand{\\DoLoChinesePromptCount}{0}\n% source: sum of the per-benchmark Chinese prompt counts\n\\newcommand{\\ChinesePromptCount}{32}\n"
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "% source: process-sequences JSON conditions.A4.summary.after_reviewing.per_run.translating.rate\n\\newcommand{\\AfourReviewingToTranslatingRate}{14.8\\%}\n% source: process-sequences JSON conditions.A4.summary.after_reviewing.per_run.planning.rate",
+      "after": "% source: process-sequences JSON conditions.A4.summary.after_reviewing.per_run.translating.rate\n\\newcommand{\\AfourReviewingToTranslatingRate}{16.5\\%}\n% source: process-sequences JSON conditions.A4.summary.after_reviewing.per_run.planning.rate"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "% source: process-sequences JSON conditions.A4.summary.after_reviewing.per_run.planning.rate\n\\newcommand{\\AfourReviewingToPlanningRate}{0.3\\%}\n% source: process-sequences JSON conditions.A4.summary.regeneration.runs.count",
+      "after": "% source: process-sequences JSON conditions.A4.summary.after_reviewing.per_run.planning.rate\n\\newcommand{\\AfourReviewingToPlanningRate}{4.1\\%}\n% source: process-sequences JSON conditions.A4.summary.regeneration.runs.count"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "% source: process-sequences JSON run_sets.*.conditions.A4.runs: share with no reviewing-to-translating, reviewing-to-planning, or regeneration event\n\\newcommand{\\AfourNoLoopEventRate}{84.9\\%}\n% source: process-sequences JSON conditions.A6.summary.run_count",
+      "after": "% source: process-sequences JSON run_sets.*.conditions.A4.runs: share with no reviewing-to-translating, reviewing-to-planning, or regeneration event\n\\newcommand{\\AfourNoLoopEventRate}{79.8\\%}\n% source: process-sequences JSON conditions.A6.summary.run_count"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "% source: process-sequences JSON conditions.A6.summary.after_reviewing.per_run.translating.rate\n\\newcommand{\\AsixReviewingToTranslatingRate}{1.0\\%}\n% source: process-sequences JSON conditions.A6.summary.after_reviewing.per_run.planning.rate",
+      "after": "% source: process-sequences JSON conditions.A6.summary.after_reviewing.per_run.translating.rate\n\\newcommand{\\AsixReviewingToTranslatingRate}{6.4\\%}\n% source: process-sequences JSON conditions.A6.summary.after_reviewing.per_run.planning.rate"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "% source: process-sequences JSON conditions.A6.summary.after_reviewing.per_run.planning.rate\n\\newcommand{\\AsixReviewingToPlanningRate}{9.7\\%}\n% source: process-sequences JSON conditions.A6.summary.regeneration.runs.count",
+      "after": "% source: process-sequences JSON conditions.A6.summary.after_reviewing.per_run.planning.rate\n\\newcommand{\\AsixReviewingToPlanningRate}{11.4\\%}\n% source: process-sequences JSON conditions.A6.summary.regeneration.runs.count"
+    },
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "% source: process-sequences JSON run_sets.*.conditions.A6.runs: share with no reviewing-to-translating, reviewing-to-planning, or regeneration event\n\\newcommand{\\AsixNoLoopEventRate}{88.7\\%}\n% source: process-sequences JSON prompt_association.combined.A4_vs_A6.splits.single_cycle_exact.win_rate",
+      "after": "% source: process-sequences JSON run_sets.*.conditions.A6.runs: share with no reviewing-to-translating, reviewing-to-planning, or regeneration event\n\\newcommand{\\AsixNoLoopEventRate}{82.7\\%}\n% source: process-sequences JSON prompt_association.combined.A4_vs_A6.splits.single_cycle_exact.win_rate"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "\nTable~\\ref{tab:process-dynamics} shows a mostly simple writing loop after repeat collapsing and leading-\\texttt{Planning} reconstruction: 74.6\\% of complete paths conform to the \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} cycle structure, while 14.8\\% of runs return from \\texttt{Reviewing} to \\texttt{Translating}.\nFull replanning (0.3\\%) and goal replacement (\\AfourRegenerationRate) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over \\condFixedOrder\\ because ordering can matter only when the controller departs from the common path.\n",
+      "after": "\nTable~\\ref{tab:process-dynamics} shows a mostly simple writing loop after repeat collapsing and leading-\\texttt{Planning} reconstruction: \\AfourCycleCompliantRate\\ of complete paths conform to the \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} cycle structure, while \\AfourReviewingToTranslatingRate\\ of runs return from \\texttt{Reviewing} to \\texttt{Translating}.\nFull replanning (\\AfourReviewingToPlanningRate) and goal replacement (\\AfourRegenerationRate) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over \\condFixedOrder\\ because ordering can matter only when the controller departs from the common path.\n"
+    },
+    {
+      "path": "paper/sec/05_results.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "\\end{minipage}\n\\caption{Process trajectories: (a) frequent complete paths; (b,c) transition counts per system.\nOur system mostly follows the same forward \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} progression as \\condFixedOrder; more returns to \\texttt{Translating} than \\texttt{Planning} are consistent with the small exploratory advantage of adaptive ordering.}",
+      "after": "\\end{minipage}\n\\caption{Process trajectories: (a) frequent complete paths; (b,c) transition counts per system (E: run end).\nOur system mostly follows the same forward \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} progression as \\condFixedOrder; more returns to \\texttt{Translating} than \\texttt{Planning} are consistent with the small exploratory advantage of adaptive ordering.}"
     },
     {
       "path": "paper/sec/09_prompt_configuration.tex",
-      "instruction": "State in Appendix A how many scored prompts are in Chinese and that the rest are English, citing a macro generated from the prompt manifests, and keep the appendix tables in numbered order.",
-      "before": "The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts.\nGeneration reads the committed manifests and identifiers, so system output quality cannot affect selection.",
-      "after": "The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts.\nOf these, \\WritingChinesePromptCount\\ WritingBench prompts are written mainly in Chinese and the rest are in English; systems and evaluators receive each prompt in its original language.\nGeneration reads the committed manifests and identifiers, so system output quality cannot affect selection."
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "\nAll experiment-authored generation and evaluation prompts are reproduced verbatim below.\nProvider-level defaults not authored by the experiment are set by the runtime configuration in Appendix~\\ref{app:runtime}.",
+      "after": "\nAll experiment-authored generation and evaluation prompts are reproduced below as used; passages that address an interactive user or local resources absent from the non-interactive, isolated runs are elided and marked [\\ldots].\nPrompt headers use the internal condition codes A1 \\condSinglePass, A2 \\condStaged, A3 \\condTaskPlanning, A4 \\condAgenticCogWriter, A5 \\condNoGoals, A6 \\condFixedOrder, A7 \\condSingleWriter, and A8 \\condSingleContext.\nProvider-level defaults not authored by the experiment are set by the runtime configuration in Appendix~\\ref{app:runtime}."
     },
     {
-      "path": "paper/tab/appendix-paired-quality.tex",
-      "instruction": "State in Appendix A how many scored prompts are in Chinese and that the rest are English, citing a macro generated from the prompt manifests, and keep the appendix tables in numbered order.",
-      "before": "\\begin{table*}[t]\n\\centering",
-      "after": "\\begin{table}[H]\n\\centering"
+      "path": "paper/sec/09_prompt_configuration.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "\\subsubsection{\\condAgenticCogWriter}\n\\promptinput{PromptMonitor}{Top-level Agent Skill}{../plugin/skills/agentic-cog-writer/SKILL.md}\n",
+      "after": "\\subsubsection{\\condAgenticCogWriter}\n\\promptinput{PromptMonitor}{Top-level Agent Skill}{build/prompt-display/plugin/skills/agentic-cog-writer/SKILL.md}\n\n\\promptinput{PromptMonitor}{Goal Notation Reference}{../plugin/skills/agentic-cog-writer/references/goals-format.md}\n\n\\promptinput{PromptMonitor}{Trace Schema Reference}{../plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md}\n"
     },
     {
-      "path": "paper/tab/appendix-paired-quality.tex",
-      "instruction": "State in Appendix A how many scored prompts are in Chinese and that the rest are English, citing a macro generated from the prompt manifests, and keep the appendix tables in numbered order.",
-      "before": "\\label{tab:paired-quality}\n\\end{table*}\n",
-      "after": "\\label{tab:paired-quality}\n\\end{table}\n"
+      "path": "paper/sec/09_prompt_configuration.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "\n\\promptinput{PromptAblation}{\\condSingleWriter}{../experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md}\n",
+      "after": "\n\\promptinput{PromptAblation}{\\condSingleWriter}{build/prompt-display/experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md}\n"
+    },
+    {
+      "path": "paper/sec/10_appendix.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "\\label{app:paired-quality}\nTable~\\ref{tab:paired-quality} reports paired differences behind Table~\\ref{tab:main-results}\nEach prompt's three generation runs are averaged per system before differencing, so the prompt is the resampling unit, and the intervals come from 10,000 prompt-level bootstrap resamples.",
+      "after": "\\label{app:paired-quality}\nTable~\\ref{tab:paired-quality} reports paired differences behind Table~\\ref{tab:main-results}.\nEach prompt's three generation runs are averaged per system before differencing, so the prompt is the resampling unit, and the intervals come from 10,000 prompt-level bootstrap resamples."
+    },
+    {
+      "path": "paper/sec/10_appendix.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "\\input{tab/appendix-process}\n",
+      "after": "\\input{tab/appendix-process}\n\n\\paragraph{Trace processing.}\nProcess paths are read from the \\texttt{Monitor}'s \\texttt{process\\_switch} events in trace order: each event's destination process is one step, and a run ends once, after its last step (E in Figure~\\ref{fig:process-sequences}).\nFigure~\\ref{fig:process-sequences}(a) counts these paths as logged, and Figure~\\ref{fig:process-sequences}(b,c) counts step-to-step transitions.\nFor Table~\\ref{tab:process-dynamics}, immediate repeats of a process are merged (\\emph{repeat collapsing}), and when the first delegated role is \\texttt{Planning} but the first logged switch names a later process, a leading \\texttt{Planning} step is restored (\\emph{leading-\\texttt{Planning} reconstruction}; \\AfourLeadingReconstruction\\ such runs for \\condAgenticCogWriter).\nA path is \\emph{cycle-compliant} when the result consists of one or more complete \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} passes, and returns after \\texttt{Reviewing} are counted from this observed order.\n\\condFixedOrder\\ enforces its order through its prompt only, and \\AsixCycleCompliantRate\\ of its paths are cycle-compliant; the rest skip or repeat a process, for example \\texttt{Translating}--\\texttt{Reviewing} without \\texttt{Planning}.\n"
+    },
+    {
+      "path": "paper/tab/appendix-process.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "\\textbf{Condition}\n& \\shortstack{\\textbf{Median}\\\\\\textbf{units}}\n& \\shortstack{\\textbf{Spawns}\\\\\\textbf{/run}}",
+      "after": "\\textbf{Condition}\n& \\shortstack{\\textbf{Median}\\\\\\textbf{words}}\n& \\shortstack{\\textbf{Spawns}\\\\\\textbf{/run}}"
+    },
+    {
+      "path": "paper/tab/appendix-process.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "\\end{tabular}\n\\caption{Realized process and resource use across all three generation runs. Each entry is the mean of its run-level statistic; output size averages the run-level medians. The systems differ substantially in delegated invocations and token use in addition to their control logic, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses.}\n\\label{tab:process-summary}",
+      "after": "\\end{tabular}\n\\caption{Realized process and resource use across all three generation runs. Each entry is the mean of its run-level statistic; output size averages the run-level medians, counting each CJK character as one word. The systems differ substantially in delegated invocations and token use in addition to their control logic, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses.}\n\\label{tab:process-summary}"
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "\\texttt{Reviewing} followed by renewed \\texttt{Translating}\n& 14.8\\% \\\\\n\\texttt{Reviewing} followed by renewed \\texttt{Planning}",
+      "after": "\\texttt{Reviewing} followed by renewed \\texttt{Translating}\n& 16.5\\% \\\\\n\\texttt{Reviewing} followed by renewed \\texttt{Planning}"
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Fix review-reported defects: count trace returns after Reviewing from the observed process order and cite the macros in Table 6 and Section 5.4, mark run end (E) in Figure 2, define the trace processing and report Fixed-order compliance in Appendix E, elide prompt passages that address an interactive user or unavailable local resources with a marked [...], map condition codes and add the reference prompts in Appendix A, define the output-size unit, and fix a missing period.",
+      "before": "\\texttt{Reviewing} followed by renewed \\texttt{Planning}\n& 0.3\\% \\\\\nRuns with an accepted goal replacement",
+      "after": "\\texttt{Reviewing} followed by renewed \\texttt{Planning}\n& 4.1\\% \\\\\nRuns with an accepted goal replacement"
     }
   ],
   "created_files": []
