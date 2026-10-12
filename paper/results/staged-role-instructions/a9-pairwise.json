@@ -1,0 +1,168 @@
+{
+  "analysis_family": "exploratory",
+  "benchmarks": {
+    "DoLoMiTes": {
+      "A4:A9": {
+        "dropped_prompts": 2,
+        "eligible_prompts": 100,
+        "losses": 28,
+        "non_ties": 65,
+        "scored_prompts": 98,
+        "sign_test_p_exact_two_sided": 0.3210841356849956,
+        "tie_as_half_score": 0.5459183673469388,
+        "ties": 33,
+        "wilson_95_high": 0.6824054258436073,
+        "wilson_95_low": 0.4483297467424586,
+        "win_rate": 0.5692307692307692,
+        "wins": 37
+      },
+      "A9:A2": {
+        "dropped_prompts": 0,
+        "eligible_prompts": 100,
+        "losses": 29,
+        "non_ties": 62,
+        "scored_prompts": 100,
+        "sign_test_p_exact_two_sided": 0.7035366713552734,
+        "tie_as_half_score": 0.52,
+        "ties": 38,
+        "wilson_95_high": 0.6509116702666583,
+        "wilson_95_low": 0.40984032508164014,
+        "win_rate": 0.532258064516129,
+        "wins": 33
+      }
+    },
+    "HelloBench": {
+      "A4:A9": {
+        "dropped_prompts": 1,
+        "eligible_prompts": 100,
+        "losses": 22,
+        "non_ties": 71,
+        "scored_prompts": 99,
+        "sign_test_p_exact_two_sided": 0.0018204049356112858,
+        "tie_as_half_score": 0.6363636363636364,
+        "ties": 28,
+        "wilson_95_high": 0.7856027354373607,
+        "wilson_95_low": 0.5751598742905824,
+        "win_rate": 0.6901408450704225,
+        "wins": 49
+      },
+      "A9:A2": {
+        "dropped_prompts": 0,
+        "eligible_prompts": 100,
+        "losses": 37,
+        "non_ties": 57,
+        "scored_prompts": 100,
+        "sign_test_p_exact_two_sided": 0.033143967787505446,
+        "tie_as_half_score": 0.415,
+        "ties": 43,
+        "wilson_95_high": 0.480581046443498,
+        "wilson_95_low": 0.2400042200916009,
+        "win_rate": 0.3508771929824561,
+        "wins": 20
+      }
+    },
+    "WritingBench": {
+      "A4:A9": {
+        "dropped_prompts": 4,
+        "eligible_prompts": 100,
+        "losses": 16,
+        "non_ties": 71,
+        "scored_prompts": 96,
+        "sign_test_p_exact_two_sided": 3.7532376885930504e-06,
+        "tie_as_half_score": 0.703125,
+        "ties": 25,
+        "wilson_95_high": 0.8562533033647951,
+        "wilson_95_low": 0.6648482440200115,
+        "win_rate": 0.7746478873239436,
+        "wins": 55
+      },
+      "A9:A2": {
+        "dropped_prompts": 0,
+        "eligible_prompts": 100,
+        "losses": 34,
+        "non_ties": 66,
+        "scored_prompts": 100,
+        "sign_test_p_exact_two_sided": 0.9021585000966993,
+        "tie_as_half_score": 0.49,
+        "ties": 34,
+        "wilson_95_high": 0.6028940871428276,
+        "wilson_95_low": 0.3684696267060676,
+        "win_rate": 0.48484848484848486,
+        "wins": 32
+      }
+    }
+  },
+  "completion": {
+    "A2": {
+      "attempted": 300,
+      "completed": 300
+    },
+    "A4": {
+      "attempted": 300,
+      "completed": 293
+    },
+    "A9": {
+      "attempted": 300,
+      "completed": 300
+    }
+  },
+  "condition": "A9 Staged + role instructions",
+  "contrasts": [
+    "A4:A9",
+    "A9:A2"
+  ],
+  "estimand": "prompt-collapsed outcome; both presentation orders must agree, otherwise tie",
+  "generation_run": "run-1",
+  "median_output_words": {
+    "A2": {
+      "DoLoMiTes": 669.0,
+      "HelloBench": 1439.0,
+      "WritingBench": 4046.5,
+      "pooled": 1510.0
+    },
+    "A4": {
+      "DoLoMiTes": 734.0,
+      "HelloBench": 1753,
+      "WritingBench": 4690.0,
+      "pooled": 1835
+    },
+    "A9": {
+      "DoLoMiTes": 687.0,
+      "HelloBench": 1337.0,
+      "WritingBench": 4267.0,
+      "pooled": 1514.5
+    }
+  },
+  "pooled": {
+    "A4:A9": {
+      "dropped_prompts": 7,
+      "eligible_prompts": 300,
+      "losses": 66,
+      "non_ties": 207,
+      "scored_prompts": 293,
+      "sign_test_p_exact_two_sided": 2.0072394484950716e-07,
+      "tie_as_half_score": 0.6279863481228669,
+      "ties": 86,
+      "wilson_95_high": 0.7408497277371265,
+      "wilson_95_low": 0.6148677882556947,
+      "win_rate": 0.6811594202898551,
+      "wins": 141
+    },
+    "A9:A2": {
+      "dropped_prompts": 0,
+      "eligible_prompts": 300,
+      "losses": 100,
+      "non_ties": 185,
+      "scored_prompts": 300,
+      "sign_test_p_exact_two_sided": 0.3033270526398913,
+      "tie_as_half_score": 0.475,
+      "ties": 115,
+      "wilson_95_high": 0.5313672486614723,
+      "wilson_95_low": 0.3892010413015778,
+      "win_rate": 0.4594594594594595,
+      "wins": 85
+    }
+  },
+  "schema_version": 1,
+  "test": "exact two-sided sign test on non-tied prompts"
+}
