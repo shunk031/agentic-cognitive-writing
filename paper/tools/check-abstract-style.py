@@ -73,6 +73,9 @@ def main() -> None:
     assert re.search(r"\brecent coding agents\b", abstract, re.IGNORECASE), (
         "Open the Abstract from the contemporary coding-agent context"
     )
+    assert not re.search(r"\bdemanding\s+subsets?\b", abstract, re.IGNORECASE), (
+        "Do not call the evaluation sets demanding subsets in the Abstract"
+    )
     assert not re.search(
         r"\bcoding agents\b[^.]*,\s+and\s+AI agents\b",
         abstract,

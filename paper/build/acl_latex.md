@@ -18,7 +18,7 @@ The cognitive process theory of writing (Flower and Hayes, 1981; Hayes, 1996; Ha
 
 Building on Flower and Hayes (1981), we propose <span class="smallcaps">Agentic CogWriter</span>, a long-form writing system that implements this process-level control on top of a coding-agent-style harness with persistent state and subagent delegation (Figure 1). A top-level Monitor agent observes the evolving draft, goals, and process history, chooses whether the next activity should be planning, drafting, or reviewing, and delegates that activity to a corresponding subagent. The resulting process order is chosen during writing rather than fixed in advance. We call the system *agentic* for this combination: online selection of the next writing process, a persistent state shared across steps, and delegation of each selected process to a subagent.
 
-We evaluate our system on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production (Wu et al., 2025; Que et al., 2024; Malaviya et al., 2025). We hold the generator and task information constant across the compared conditions so that differences reflect how writing is organized. Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives. In pairwise evaluation, our system is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning. The component analyses support a system-level interpretation of this advantage rather than attributing it to explicit goals or adaptive ordering alone under the pre-specified tests. Process traces show that most runs follow a simple planning–drafting–reviewing path, indicating that adaptive ordering is available but used selectively.
+We evaluate our system on three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production (Wu et al., 2025; Que et al., 2024; Malaviya et al., 2025). We hold the generator and task information constant across the compared conditions so that differences reflect how writing is organized. Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives. In pairwise evaluation, our system is preferred to one-shot generation, a fixed writing pipeline, and adaptive task planning. The component analyses support a system-level interpretation of this advantage rather than attributing it to explicit goals or adaptive ordering alone under the pre-specified tests. Process traces show that most runs follow a simple planning–drafting–reviewing path, indicating that adaptive ordering is available but used selectively.
 
 Our contributions are threefold. (1) we formulate long-form writing for general-purpose agents as a process-level control problem and introduce a concrete system that chooses among planning, drafting, and reviewing during composition; (2) we compare our system with one-shot, fixed-stage, and adaptive task-planning alternatives across complementary long-form benchmarks; and (3) we use ablations and process analyses to test which proposed components explain the observed advantage and characterize the writing loop in practice.
 
@@ -79,7 +79,7 @@ We retain Flower and Hayes (1981)’s term `Translating` for the drafting activi
 
 If `Planning` is selected, the `Planner` reads the task and current draft, organizes relevant material for the intended audience, and creates or develops writing goals. If `Translating` is selected, the `Translator` reads the current draft and active goals and writes prose within the delegated draft scope. If `Reviewing` is selected, the `Reviewer` checks the draft against the task and active goals, revises within the delegated scope, and reports whether further planning, drafting, or review is needed.
 
-Each subagent writes its changes to the shared workspace before control returns to the `Monitor`, yielding the next state `S_(t+1)`. Review feedback can recommend replacing a goal, but the `Monitor` decides whether to accept that change and records the decision in `H_t`. Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass. After reviewing, the `Monitor` may instead stop and return the current draft as the final document `D_final`.
+Each subagent writes its changes to the shared workspace before control returns to the `Monitor`, yielding the next state `S_(t+1)`. Review feedback can recommend replacing a goal, but the `Monitor` decides whether to accept that change and records the decision in `H_t`. Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass. For example, if `Reviewing` finds that the draft omits a section the task requires, the `Monitor` can select `Planning` to add a goal for that section before further `Translating`. After reviewing, the `Monitor` may instead stop and return the current draft as the final document `D_final`.
 
 ## Experimental Design
 
@@ -87,7 +87,7 @@ We compare the writing systems under the same task inputs and information policy
 
 ### Systems Compared
 
-We consider seven pre-specified systems under the same generation setup. The systems are numbered below so that the alternatives, ablations, execution variant, and full system can be distinguished throughout the analysis.
+We consider seven pre-specified systems under the same generation setup. Their numbers below are used throughout the analysis.
 
 ##### Alternative writing systems.
 
@@ -99,7 +99,7 @@ Two pre-specified ablations change one control mechanism while retaining the res
 
 ##### Execution variant and full system.
 
-\(6\) `Single-writer` retains the goal representation and adaptive process loop but performs `Planning`, `Translating`, and `Reviewing` in one writer context without subagent delegation; it also limits each `Translating` step to one paragraph, so the condition is diagnostic rather than a clean ablation. (7) <span class="smallcaps">Agentic CogWriter</span> is the full system described in Section 3.2, with adaptive process selection, explicit goals, and role-specific subagents. This is our focal system.
+\(6\) `Single-writer` retains the goal representation and adaptive process loop but performs `Planning`, `Translating`, and `Reviewing` in one writer context without subagent delegation; it also limits each `Translating` step to one paragraph, so the condition is diagnostic rather than a clean ablation. (7) <span class="smallcaps">Agentic CogWriter</span> is the full system of Section 3.2, with adaptive process selection, explicit goals, and role-specific subagents.
 
 ##### Post-hoc execution check.
 
@@ -127,7 +127,7 @@ We evaluate fixed demanding subsets because short or lightly constrained tasks m
 
 ### Implementation
 
-All systems run in Codex CLI as the coding-agent harness with `gpt-5.6-luna` as the generator; API-based scoring uses `gpt-5.6-sol` as the primary evaluator.[^2] Holding the generator fixed across systems isolates writing organization rather than base-model capability. For a cross-family robustness check, we rescore selected system comparisons with `claude-sonnet-5 medium`. Our system is packaged as an agent skill: the top-level `Monitor` invokes `Planner`, `Translator`, and `Reviewer` as harness subagents.[^3]
+All systems run in Codex CLI as the coding-agent harness with `gpt-5.6-luna` as the generator; API-based scoring uses `gpt-5.6-sol` as the primary evaluator.[^2] Holding the generator fixed across systems isolates writing organization rather than base-model capability. Our system is an agent skill: its `Monitor` invokes `Planner`, `Translator`, and `Reviewer` as subagents.[^3]
 
 Every generation run uses the same generator, prompt set, and runtime configuration; main-result tables summarize the three runs unless noted otherwise. Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
 
@@ -145,7 +145,7 @@ We also apply a common five-dimension rubric across all three benchmarks: instru
 
 The judge uses the same quality dimensions and records a preference or a tie. LLM judges can exhibit position bias (Zheng et al., 2023; Wang et al., 2024), so every pair is evaluated in both presentation orders. We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie. For a contrast written as “A vs. B”, we report wins/losses/ties (W/L/T) for A and compute its win rate over non-tied order-consistent comparisons as `W/(W+L)`.
 
-The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). We therefore report the cross-family rescoring described above as a separate descriptive robustness check rather than averaging results from the two evaluators.
+The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). We therefore rescore selected system comparisons with `claude-sonnet-5 medium` as a separate descriptive robustness check rather than averaging results from the two evaluators.
 
 ##### Pre-specified statistical testing.
 
@@ -169,12 +169,12 @@ Table 3 reports document-quality scores for benchmark-native and common-rubric e
 |:---|---:|---:|---:|---:|---:|---:|
 | **System** | **WritingBench** | **WritingBench** | **HelloBench** | **HelloBench** | **DoLoMiTes** | **DoLoMiTes** |
 |  | **Native `↑`** | **Pointwise `↑`** | **Native `↑`** | **Pointwise `↑`** | **Native `↑`** | **Pointwise `↑`** |
-| `Single-pass` | 0.697 `±` 0.006 | -0.090 `±` 0.009 | 0.773 `±` 0.005 | -0.112 `±` 0.018 | N/A | -0.006 `±` 0.018 |
-| `Staged` (Yang et al., 2022; Wan et al., 2025) | 0.702 `±` 0.005 | -0.041 `±` 0.012 | 0.781 `±` 0.004 | 0.003 `±` 0.016 | N/A | <span style="color: tiedgray">**0.064** `±` 0.036</span> |
-| `Task-planning` (Xiong et al., 2025) | 0.722 `±` 0.004 | -0.033 `±` 0.033 | 0.781 `±` 0.003 | -0.016 `±` 0.061 | N/A | -0.164 `±` 0.015 |
-| **<span class="smallcaps">Agentic CogWriter</span>** | **0.747** `±` 0.006 | **0.102** `±` 0.040 | **0.791** `±` 0.005 | <span style="color: tiedgray">**0.013** `±` 0.060</span> | N/A | 0.031 `±` 0.035 |
+| `Single-pass` | 0.697 `±` 0.006 | -0.090 `±` 0.009 | 0.773 `±` 0.005 | -0.112 `±` 0.018 | <span style="color: nagray">N/A</span> | -0.006 `±` 0.018 |
+| `Staged` (Yang et al., 2022; Wan et al., 2025) | 0.702 `±` 0.005 | -0.041 `±` 0.012 | 0.781 `±` 0.004 | 0.003 `±` 0.016 | <span style="color: nagray">N/A</span> | <span style="color: tiedgray">**0.064** `±` 0.036</span> |
+| `Task-planning` (Xiong et al., 2025) | 0.722 `±` 0.004 | -0.033 `±` 0.033 | 0.781 `±` 0.003 | -0.016 `±` 0.061 | <span style="color: nagray">N/A</span> | -0.164 `±` 0.015 |
+| **<span class="smallcaps">Agentic CogWriter</span>** | **0.747** `±` 0.006 | **0.102** `±` 0.040 | **0.791** `±` 0.005 | <span style="color: tiedgray">**0.013** `±` 0.060</span> | <span style="color: nagray">N/A</span> | 0.031 `±` 0.035 |
 
-Table 3. Document-quality scores, reported as mean `±` sample SD across generation runs. Native uses each benchmark’s criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. <span class="smallcaps">Agentic CogWriter</span> scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.
+Table 3. Document-quality scores, reported as mean `±` sample SD across generation runs. *Native* uses each benchmark’s criteria; *Pointwise* uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. <span class="smallcaps">Agentic CogWriter</span> scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.
 
 ### Direct Comparison of Writing Systems
 
@@ -212,16 +212,18 @@ Execution changes produce a larger but less easily isolated difference. `Single-
 
 Table 6 shows a mostly simple writing loop after repeat collapsing and leading-`Planning` reconstruction: 74.6% of complete paths conform to the `Planning`–`Translating`–`Reviewing` cycle structure, while 14.8% of runs return from `Reviewing` to `Translating`. Full replanning (0.3%) and goal replacement (0.5%) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over `Fixed-order` because ordering can matter only when the controller departs from the common path.
 
-|                                               |          |
-|:----------------------------------------------|---------:|
-| **Observed writing-loop behavior**            | **Rate** |
-| Cycle-compliant path                          |    74.6% |
-| Any other complete path                       |    25.4% |
-| `Reviewing` followed by renewed `Translating` |    14.8% |
-| `Reviewing` followed by renewed `Planning`    |     0.3% |
-| Runs with an accepted goal replacement        |     0.5% |
+|                                               |                            |
+|:----------------------------------------------|---------------------------:|
+| **Observed writing-loop behavior**            |                   **Rate** |
+| *Complete process paths*                      |   *Complete process paths* |
+| Cycle-compliant path                          |                      74.6% |
+| Any other complete path                       |                      25.4% |
+| *Non-exclusive indicators*                    | *Non-exclusive indicators* |
+| `Reviewing` followed by renewed `Translating` |                      14.8% |
+| `Reviewing` followed by renewed `Planning`    |                       0.3% |
+| Runs with an accepted goal replacement        |                       0.5% |
 
-Table 6. Writing-loop behavior of <span class="smallcaps">Agentic CogWriter</span> after repeat collapsing and leading-`Planning` reconstruction. Rows 1–2 partition complete process paths; rows 3–5 are non-exclusive indicators.
+Table 6. Writing-loop behavior of <span class="smallcaps">Agentic CogWriter</span> after repeat collapsing and leading-`Planning` reconstruction; most paths are cycle-compliant.
 
 Figure 2 shows the same concentration: the forward `Planning`–`Translating`–`Reviewing` progression is most frequent, so our system looks close to `Fixed-order`. Because the demanding subsets increase input or requested output length or procedural burden without guaranteeing a need to replan, the traces show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing.
 
@@ -236,7 +238,7 @@ Table 7 shows similar pairwise win rates against `Fixed-order` and `Single-writ
 | `Planning``->``Translating``->``Reviewing` | 57.5% | 72.6% |
 | Other path | 54.7% | 74.7% |
 
-Table 7. `Planning`–`Translating`–`Reviewing` and other-path runs have similar win rates against `Fixed-order` and `Single-writer`. Each rate sums wins/losses over benchmarks and runs; the split is observational, not causal.
+Table 7. <span class="smallcaps">Agentic CogWriter</span> win rates against `Fixed-order` and `Single-writer` are similar for one-cycle `Planning`–`Translating`–`Reviewing` runs and other-path runs. Rates sum wins and losses over benchmarks and runs; the split is observational, not causal.
 
 ## Discussion
 
@@ -1939,7 +1941,7 @@ Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Z
 
 [^1]: See Appendix A for the exact selection rule, sample sizes, and sensitivity analysis.
 
-[^2]: We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work. Assigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check (OpenAI, 2026b; OpenAI, 2026c; OpenAI, 2026a).
+[^2]: We use Luna, which OpenAI positions for fast, cost-sensitive workloads, for high-volume long-form generation and the higher-capability tier, Sol, for evaluation; the shared model family motivates the cross-family check (OpenAI, 2026b; OpenAI, 2026c; OpenAI, 2026a).
 
 [^3]: See Appendix A for the complete prompts and Appendix B for the runtime settings.
 

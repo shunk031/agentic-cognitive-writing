@@ -6,7 +6,7 @@ Because agent execution is stochastic, every prompt--system pair is generated in
 \label{sec:baselines}
 
 We consider seven pre-specified systems under the same generation setup.
-The systems are numbered below so that the alternatives, ablations, execution variant, and full system can be distinguished throughout the analysis.
+Their numbers below are used throughout the analysis.
 
 \paragraph{Alternative writing systems.}
 We compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ produces the complete document in one generation call; (2) \condStaged\ executes \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write}, following the common separation of planning, drafting, and revision~\citep{yang2022re3,wan2025cognitive}; and (3) \condTaskPlanning\ follows a WriteHERE-style adaptive task graph~\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes.
@@ -19,8 +19,7 @@ The comparison tests whether explicit goals or adaptive ordering explain the ful
 
 \paragraph{Execution variant and full system.}
 (6) \condSingleWriter\ retains the goal representation and adaptive process loop but performs \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} in one writer context without subagent delegation; it also limits each \texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.
-(7) \condAgenticCogWriter\ is the full system described in Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.
-This is our focal system.
+(7) \condAgenticCogWriter\ is the full system of Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.
 
 \paragraph{Post-hoc execution check.}
 \condSingleContext\ was added after the main results as a narrower exploratory check and is not one of the seven pre-specified systems.
@@ -42,11 +41,9 @@ This produces a different demanding subset for each benchmark: WritingBench emph
 \subsection{Implementation}
 \label{sec:implementation}
 
-All systems run in Codex CLI as the coding-agent harness with \modelGenBare\ as the generator; API-based scoring uses \modelJudgeBare\ as the primary evaluator.\footnote{We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work.
-Assigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.}
+All systems run in Codex CLI as the coding-agent harness with \modelGenBare\ as the generator; API-based scoring uses \modelJudgeBare\ as the primary evaluator.\footnote{We use Luna, which OpenAI positions for fast, cost-sensitive workloads, for high-volume long-form generation and the higher-capability tier, Sol, for evaluation; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.}
 Holding the generator fixed across systems isolates writing organization rather than base-model capability.
-For a cross-family robustness check, we rescore selected system comparisons with \modelCross.
-Our system is packaged as an agent skill: the top-level \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} as harness subagents.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
+Our system is an agent skill: its \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} as subagents.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
 
 Every generation run uses the same generator, prompt set, and runtime configuration; main-result tables summarize the three runs unless noted otherwise.
 Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
@@ -72,7 +69,7 @@ We count a preference only when both orders select the same semantic response; a
 For a contrast written as ``A vs.\ B'', we report wins/losses/ties (W/L/T) for A and compute its win rate over non-tied order-consistent comparisons as $W/(W+L)$.
 
 The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
-We therefore report the cross-family rescoring described above as a separate descriptive robustness check rather than averaging results from the two evaluators.
+We therefore rescore selected system comparisons with \modelCross\ as a separate descriptive robustness check rather than averaging results from the two evaluators.
 
 \paragraph{Pre-specified statistical testing.}
 We fixed the confirmatory comparisons before scoring to avoid choosing favorable tests after observing results.
