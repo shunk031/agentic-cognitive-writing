@@ -1,48 +1,5 @@
 {
-  "baseline_sha": "d6b6d16d05402d82f2f2aca7e35677d5f38be5e4",
-  "replacements": [
-    {
-      "path": "paper/sec/05_results.tex",
-      "instruction": "Make Table 6's two row groups self-explanatory (one complete path per run vs. events that can overlap) and cite the goal-replacement rate through its numbers macro in the table and Results.",
-      "before": "Table~\\ref{tab:process-dynamics} shows a mostly simple writing loop after repeat collapsing and leading-\\texttt{Planning} reconstruction: 74.6\\% of complete paths conform to the \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} cycle structure, while 14.8\\% of runs return from \\texttt{Reviewing} to \\texttt{Translating}.\nFull replanning (0.3\\%) and goal replacement (0.5\\%) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over \\condFixedOrder\\ because ordering can matter only when the controller departs from the common path.\n",
-      "after": "Table~\\ref{tab:process-dynamics} shows a mostly simple writing loop after repeat collapsing and leading-\\texttt{Planning} reconstruction: 74.6\\% of complete paths conform to the \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} cycle structure, while 14.8\\% of runs return from \\texttt{Reviewing} to \\texttt{Translating}.\nFull replanning (0.3\\%) and goal replacement (\\AfourRegenerationRate) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over \\condFixedOrder\\ because ordering can matter only when the controller departs from the common path.\n"
-    },
-    {
-      "path": "paper/numbers.tex",
-      "instruction": "Make Table 6's two row groups self-explanatory, add the share of runs with none of the indicator events, and cite the goal-replacement and no-event rates through numbers macros.",
-      "before": "\\newcommand{\\AfourRegenerationRuns}{4}\n% source: process-sequences JSON conditions.A6.summary.run_count",
-      "after": "\\newcommand{\\AfourRegenerationRuns}{4}\n% source: process-sequences JSON conditions.A4.summary.regeneration.runs.rate\n\\newcommand{\\AfourRegenerationRate}{0.5\\%}\n% source: process-sequences JSON run_sets.*.conditions.A4.runs: share with no reviewing-to-translating, reviewing-to-planning, or regeneration event\n\\newcommand{\\AfourNoLoopEventRate}{84.9\\%}\n% source: process-sequences JSON conditions.A6.summary.run_count"
-    },
-    {
-      "path": "paper/numbers.tex",
-      "instruction": "Make Table 6's two row groups self-explanatory, add the share of runs with none of the indicator events, and cite the goal-replacement and no-event rates through numbers macros.",
-      "before": "\\newcommand{\\AsixRegenerationRuns}{10}\n% source: process-sequences JSON prompt_association.combined.A4_vs_A6.splits.single_cycle_exact.win_rate",
-      "after": "\\newcommand{\\AsixRegenerationRuns}{10}\n% source: process-sequences JSON conditions.A6.summary.regeneration.runs.rate\n\\newcommand{\\AsixRegenerationRate}{1.1\\%}\n% source: process-sequences JSON run_sets.*.conditions.A6.runs: share with no reviewing-to-translating, reviewing-to-planning, or regeneration event\n\\newcommand{\\AsixNoLoopEventRate}{88.7\\%}\n% source: process-sequences JSON prompt_association.combined.A4_vs_A6.splits.single_cycle_exact.win_rate"
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Make Table 6's two row groups self-explanatory, add the share of runs with none of the indicator events in the same gray as Table 3's muted cells, and cite the goal-replacement and no-event rates through numbers macros.",
-      "before": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\\nCycle-compliant path",
-      "after": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Complete path (one per run)}} \\\\\nCycle-compliant path"
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Make Table 6's two row groups self-explanatory, add the share of runs with none of the indicator events in the same gray as Table 3's muted cells, and cite the goal-replacement and no-event rates through numbers macros.",
-      "before": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\\n\\texttt{Reviewing} followed by renewed \\texttt{Translating}",
-      "after": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Runs with each event (can overlap)}} \\\\\n\\texttt{Reviewing} followed by renewed \\texttt{Translating}"
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Make Table 6's two row groups self-explanatory, add the share of runs with none of the indicator events in the same gray as Table 3's muted cells, and cite the goal-replacement and no-event rates through numbers macros.",
-      "before": "Runs with an accepted goal replacement\n& 0.5\\% \\\\\n\\bottomrule",
-      "after": "Runs with an accepted goal replacement\n& \\AfourRegenerationRate \\\\\n\\textcolor{residualgray}{Runs with none of these events}\n& \\textcolor{residualgray}{\\AfourNoLoopEventRate} \\\\\n\\bottomrule"
-    },
-    {
-      "path": "paper/acl_latex.tex",
-      "instruction": "Define residualgray as the same gray as tiedgray for the Table 6 residual row.",
-      "before": "\\colorlet{nagray}{tiedgray}\n\\usepackage{amssymb}",
-      "after": "\\colorlet{nagray}{tiedgray}\n\\colorlet{residualgray}{tiedgray}\n\\usepackage{amssymb}"
-    }
-  ],
+  "baseline_sha": "fd4ad1a6cb0ad476d5603d4a3fae4fb64a9894d4",
+  "replacements": [],
   "created_files": []
 }
