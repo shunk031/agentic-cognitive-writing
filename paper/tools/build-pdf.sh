@@ -146,6 +146,8 @@ undefined_citation_count=$(grep -Eic 'LaTeX Warning: Citation .* undefined on in
 undefined_macro_count=$(grep -Eic 'Undefined control sequence' "$diagnostic_log" || true)
 # TeX wraps log lines at 79 columns, so a long label can push "on input line" onto the next line and escape the pattern above; LaTeX's end-of-run summary still reports it.
 if ((undefined_reference_count == 0)) && grep -q 'There were undefined references' "$diagnostic_log"; then undefined_reference_count=1; fi
+# The same wrapping affects citations, and natbib (loaded by acl.sty) prefixes them "Package natbib Warning:", which the citation pattern above never matches; its end-of-run summary catches both.
+if ((undefined_citation_count == 0)) && grep -q 'There were undefined citations' "$diagnostic_log"; then undefined_citation_count=1; fi
 
 printf '\nBuild summary\n'
 if [[ -f "$pdf_path" ]]; then
