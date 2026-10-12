@@ -4,7 +4,7 @@ Anonymous ACL submission
 
 ## Abstract
 
-Recent coding agents increasingly produce long-form documents, yet how such an agent should organize its writing is an open question. Long-form writing systems fix each step’s unit in advance (an outline section, task node, or stage), so the writer does not choose the next writing process. Motivated by cognitive process theory, we propose <span class="smallcaps">Agentic CogWriter</span>, an agent skill whose Monitor agent keeps a shared draft, goals, and process history and delegates planning, drafting, or reviewing to subagents. We evaluate our system on three long-form writing benchmarks with pointwise rubric scores and pairwise preferences under a matched generator, harness, and budget. Pre-specified pairwise tests prefer it to one-shot generation in most tests, but to a fixed planning–drafting–revision workflow and adaptive task planning in fewer than half; a post-hoc prompt-level summary favors it over all three, as do paired pointwise differences on WritingBench and HelloBench’s native rubric. Adding our role instructions to the fixed workflow post hoc does not reproduce this advantage. Removing explicit goals or fixing the process order keeps most of it, and process traces show that 74.6% of complete paths conform to the planning–drafting–reviewing cycle structure and 4.1% of runs return to planning, so adaptive control is seldom exercised.
+Recent coding agents increasingly produce long-form documents, yet how such an agent should organize writing is an open question. Long-form writing systems fix each step’s unit in advance (an outline section, task node, or stage), so the writer does not choose the next writing process. Motivated by cognitive process theory, we propose <span class="smallcaps">Agentic CogWriter</span>, an agent skill whose Monitor agent keeps a shared draft, goals, and process history and delegates planning, drafting, or reviewing to subagents. We evaluate our system on three long-form writing benchmarks with pointwise rubric scores and pairwise preferences under a matched generator, harness, and budget. Pre-specified pairwise tests prefer it to one-shot generation in most tests, but to a fixed planning–drafting–revision workflow and adaptive task planning in fewer than half; a post-hoc prompt-level summary favors it over all three, as do paired pointwise differences on WritingBench and on HelloBench’s native rubric. Adding our role instructions to the fixed workflow post hoc does not reproduce this advantage. Removing explicit goals or fixing the process order keeps most of it, and process traces show that 74.6% of complete paths conform to the planning–drafting–reviewing cycle structure and 4.1% of runs return to planning, so adaptive control is seldom exercised.
 
 ## Introduction
 
@@ -257,11 +257,7 @@ The alternative writing systems are reimplementations under the shared setup of 
 
 ##### Evaluator dependence.
 
-The primary evaluator belongs to the same model family as the generator, and related generator–judge models can exhibit preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). The cross-family judge rescored one generation run for every contrast between our system and an alternative or ablation; summing W/L/T counts over the three benchmarks favors our system over `Staged` (63.8%, `p=0.0095`) and leaves `Fixed-order` near parity (53.5%, `p=0.6353`), as under the primary judge. The judge produces many ties and reverses 5 of 15 benchmark-level comparisons, and its agreement with the primary judge is `kappa=0.25` over all 1421 prompt-level outcomes and `kappa=0.76` over the 380 pairs both judges decide; extending it to all three generation runs is the next step.
-
-##### Human agreement.
-
-HelloBench native scores rest on a checklist evaluator whose reported correlation with human ratings is modest (Que et al., 2024), which is why the pairwise results carry the claims. Model-judge preference is not human preference; a blinded human comparison of same-prompt outputs, stratified by benchmark, contrast, and prompt length, would measure judge agreement with human readers.
+The primary evaluator belongs to the same model family as the generator, and related generator–judge models can exhibit preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). The cross-family judge rescored one generation run for every contrast between our system and an alternative or ablation; summing W/L/T counts over the three benchmarks favors our system over `Staged` (63.8%, `p=0.0095`) and leaves `Fixed-order` near parity (53.5%, `p=0.6353`), as under the primary judge. The judge produces many ties and reverses 5 of 15 benchmark-level comparisons, and its agreement with the primary judge is `kappa=0.25` over all 1421 prompt-level outcomes and `kappa=0.76` over the 380 pairs both judges decide; extending it to all three generation runs is the next step. Model-judge preference is not human preference; a blinded human comparison of same-prompt outputs, stratified by benchmark, contrast, and prompt length, would measure judge agreement with human readers.
 
 ##### Component attribution.
 
@@ -2284,6 +2280,6 @@ Wangchunshu Zhou, Yuchen Eleanor Jiang, Peng Cui, Tiannan Wang, Zhenxin Xiao, Yi
 
 [^18]: See Appendix E for the fallback analysis.
 
-[^19]: See Appendix F for the per-benchmark agreement with a longer-output rule.
+[^19]: See Appendix F for the rate per benchmark.
 
 [^20]: See Appendices E and F for the time and token accounting.
