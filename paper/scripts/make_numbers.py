@@ -175,6 +175,7 @@ PLAIN_AGENT_MARKER = "% Plain-agent (A11) macros."
 COGWRITER_STYLE_MARKER = "% CogWriter-style (B1) main-benchmark macros."
 COGWRITER_SPAWNS_MARKER = "% CogWriter-style (B1) spawn macros."
 SELF_REFINE_MARKER = "% Budget-matched Self-Refine (A10) macros."
+LOOP_ONLY_MARKER = "% Loop-only (A12) macros."
 TRACE_ENDINGS_MARKER = "% Trace-ending macros."
 REVISION_TASKS_MARKER = "% Revision-request pilot macros."
 QUALITATIVE_EXAMPLE_MARKER = "% Illustrative-example macros."
@@ -197,6 +198,7 @@ STAGED_ROLES_CONTRASTS = {"A4:A9": "FullStagedRoles", "A9:A2": "StagedRolesStage
 PLAIN_AGENT_CONTRASTS = {"A4:A11": "FullPlainAgent"}
 COGWRITER_STYLE_CONTRASTS = {"A4:B1": "FullCogWriterStyle"}
 SELF_REFINE_CONTRASTS = {"A4:A10": "FullSelfRefine"}
+LOOP_ONLY_CONTRASTS = {"A4:A12": "FullLoopOnly", "A12:A2": "LoopOnlyStaged"}
 PAIRWISE_ROBUSTNESS_CONTRASTS = {
     "A4:A1": "FullSinglePass",
     "A4:A2": "FullStaged",
@@ -1480,6 +1482,21 @@ def _staged_roles_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
     return _exploratory_pairwise_entries(report, STAGED_ROLES_CONTRASTS, "A9 pairwise JSON")
 
 
+def _loop_only_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory A12 pairwise outcomes, process paths, and token means."""
+    source = "A12 pairwise JSON"
+    process = report["a12_process"]
+    tokens = report["token_means"]["A12"]
+    return [
+        *_exploratory_pairwise_entries(report, LOOP_ONLY_CONTRASTS, source),
+        ("\\LoopOnlyCompleted", str(report["completion"]["A12"]["completed"]), source + " completion.A12.completed"),
+        ("\\LoopOnlyOnePassRuns", str(process["single_cycle_exact"]["count"]), source + " a12_process.single_cycle_exact.count"),
+        ("\\LoopOnlyReturnPlanningRuns", str(process["after_reviewing"]["planning"]["count"]), source + " a12_process.after_reviewing.planning.count"),
+        ("\\LoopOnlyOutputTokens", _format_process(tokens["mean_output_plus_reasoning_tokens"], 0), source + " token_means.A12.mean_output_plus_reasoning_tokens"),
+        ("\\LoopOnlyInputTokens", _format_process(tokens["mean_uncached_input_tokens"], 0), source + " token_means.A12.mean_uncached_input_tokens"),
+    ]
+
+
 def _plain_agent_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
     """Exploratory A11 pairwise outcomes and how often the plain agent revised a draft file."""
     source = "A11 pairwise JSON"
@@ -2498,6 +2515,7 @@ def main() -> None:
     parser.add_argument("--cogwriter-style", type=Path, help="B1 pairwise JSON; appends its own block")
     parser.add_argument("--cogwriter-spawns", type=Path, help="B1 spawn summary JSON; appends its own block")
     parser.add_argument("--self-refine", type=Path, help="A10 pairwise JSON; appends its own block")
+    parser.add_argument("--loop-only", type=Path, help="A12 pairwise JSON; appends its own block")
     parser.add_argument("--trace-endings", type=Path, help="trace-endings JSON; appends its own block")
     parser.add_argument("--revision-tasks", type=Path, help="revision-task results JSON; appends its own block")
     parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
@@ -2526,6 +2544,7 @@ def main() -> None:
         (args.cogwriter_style, "cogwriter-style", COGWRITER_STYLE_MARKER, _cogwriter_style_entries),
         (args.cogwriter_spawns, "cogwriter-spawns", COGWRITER_SPAWNS_MARKER, _cogwriter_spawn_entries),
         (args.self_refine, "self-refine", SELF_REFINE_MARKER, _self_refine_entries),
+        (args.loop_only, "loop-only", LOOP_ONLY_MARKER, _loop_only_entries),
         (args.trace_endings, "trace-endings", TRACE_ENDINGS_MARKER, _trace_endings_entries),
         (args.revision_tasks, "revision-tasks", REVISION_TASKS_MARKER, _revision_tasks_entries),
         (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),

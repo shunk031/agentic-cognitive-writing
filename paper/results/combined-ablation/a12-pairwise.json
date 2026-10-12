@@ -1,0 +1,407 @@
+{
+  "a12_process": {
+    "after_reviewing": {
+      "per_run": {
+        "categories_overlap": true,
+        "planning": {
+          "count": 0,
+          "rate": 0.0,
+          "total": 299
+        },
+        "reviewing": {
+          "count": 1,
+          "rate": 0.0033444816053511705,
+          "total": 299
+        },
+        "termination": {
+          "count": 297,
+          "rate": 0.9933110367892977,
+          "total": 299
+        },
+        "total": 299,
+        "translating": {
+          "count": 1,
+          "rate": 0.0033444816053511705,
+          "total": 299
+        }
+      },
+      "planning": {
+        "count": 0,
+        "rate": 0.0,
+        "total": 299
+      },
+      "reviewing": {
+        "count": 1,
+        "rate": 0.0033444816053511705,
+        "total": 299
+      },
+      "termination": {
+        "count": 297,
+        "rate": 0.9933110367892977,
+        "total": 299
+      },
+      "total": 299,
+      "translating": {
+        "count": 1,
+        "rate": 0.0033444816053511705,
+        "total": 299
+      }
+    },
+    "cycle_compliance": {
+      "count": 290,
+      "rate": 0.9698996655518395,
+      "total": 299
+    },
+    "cycle_pass_distribution": [
+      {
+        "count": 290,
+        "passes": 1,
+        "rate": 1.0,
+        "total": 290
+      }
+    ],
+    "distinct_sequences": 7,
+    "event_types": {
+      "process_switch": 954
+    },
+    "goal_events": {},
+    "mean_spawns_per_attempted_run": 0.0,
+    "process_event_counts": {
+      "process_switch": {
+        "planning": 432,
+        "reviewing": 233,
+        "translating": 289
+      }
+    },
+    "process_values": {
+      "planning": 432,
+      "reviewing": 233,
+      "translating": 289
+    },
+    "regeneration": {
+      "events": 0,
+      "locations": [],
+      "runs": {
+        "count": 0,
+        "rate": 0.0,
+        "total": 299
+      }
+    },
+    "reviewing_to_translating_runs": {
+      "count": 1,
+      "rate": 0.0033444816053511705,
+      "total": 299
+    },
+    "run_count": 299,
+    "sequence_length_distribution": [
+      {
+        "count": 8,
+        "length": 2,
+        "rate": 0.026755852842809364,
+        "total": 299
+      },
+      {
+        "count": 289,
+        "length": 3,
+        "rate": 0.9665551839464883,
+        "total": 299
+      },
+      {
+        "count": 1,
+        "length": 4,
+        "rate": 0.0033444816053511705,
+        "total": 299
+      },
+      {
+        "count": 1,
+        "length": 5,
+        "rate": 0.0033444816053511705,
+        "total": 299
+      }
+    ],
+    "single_cycle_exact": {
+      "count": 288,
+      "rate": 0.9632107023411371,
+      "total": 299
+    },
+    "single_process_repetition": {
+      "count": 289,
+      "rate": 0.9665551839464883,
+      "total": 299
+    },
+    "top_sequences": [
+      {
+        "count": 288,
+        "rate": 0.9632107023411371,
+        "sequence": [
+          "planning",
+          "translating",
+          "reviewing"
+        ],
+        "total": 299
+      },
+      {
+        "count": 5,
+        "rate": 0.016722408026755852,
+        "sequence": [
+          "translating",
+          "reviewing"
+        ],
+        "total": 299
+      },
+      {
+        "count": 2,
+        "rate": 0.006688963210702341,
+        "sequence": [
+          "planning",
+          "reviewing"
+        ],
+        "total": 299
+      },
+      {
+        "count": 1,
+        "rate": 0.0033444816053511705,
+        "sequence": [
+          "planning",
+          "translating"
+        ],
+        "total": 299
+      },
+      {
+        "count": 1,
+        "rate": 0.0033444816053511705,
+        "sequence": [
+          "planning",
+          "reviewing",
+          "translating"
+        ],
+        "total": 299
+      },
+      {
+        "count": 1,
+        "rate": 0.0033444816053511705,
+        "sequence": [
+          "planning",
+          "planning",
+          "translating",
+          "reviewing"
+        ],
+        "total": 299
+      },
+      {
+        "count": 1,
+        "rate": 0.0033444816053511705,
+        "sequence": [
+          "planning",
+          "planning",
+          "translating",
+          "reviewing",
+          "reviewing"
+        ],
+        "total": 299
+      }
+    ],
+    "transition_states": [
+      "START",
+      "planning",
+      "translating",
+      "reviewing",
+      "END"
+    ],
+    "transitions": {
+      "START->planning": 294,
+      "START->translating": 5,
+      "planning->planning": 2,
+      "planning->reviewing": 3,
+      "planning->translating": 291,
+      "reviewing->END": 297,
+      "reviewing->reviewing": 1,
+      "reviewing->translating": 1,
+      "translating->END": 2,
+      "translating->reviewing": 295
+    }
+  },
+  "analysis_family": "exploratory",
+  "benchmarks": {
+    "DoLoMiTes": {
+      "A12:A2": {
+        "dropped_prompts": 0,
+        "eligible_prompts": 100,
+        "losses": 23,
+        "non_ties": 67,
+        "scored_prompts": 100,
+        "sign_test_p_exact_two_sided": 0.013933875024287792,
+        "tie_as_half_score": 0.605,
+        "ties": 33,
+        "wilson_95_high": 0.7591099372723709,
+        "wilson_95_low": 0.5373266459034898,
+        "win_rate": 0.6567164179104478,
+        "wins": 44
+      },
+      "A4:A12": {
+        "dropped_prompts": 2,
+        "eligible_prompts": 100,
+        "losses": 36,
+        "non_ties": 69,
+        "scored_prompts": 98,
+        "sign_test_p_exact_two_sided": 0.8099490529189247,
+        "tie_as_half_score": 0.4846938775510204,
+        "ties": 29,
+        "wilson_95_high": 0.5941274512638886,
+        "wilson_95_low": 0.36468721213563554,
+        "win_rate": 0.4782608695652174,
+        "wins": 33
+      }
+    },
+    "HelloBench": {
+      "A12:A2": {
+        "dropped_prompts": 0,
+        "eligible_prompts": 100,
+        "losses": 24,
+        "non_ties": 53,
+        "scored_prompts": 100,
+        "sign_test_p_exact_two_sided": 0.5831321542611763,
+        "tie_as_half_score": 0.525,
+        "ties": 47,
+        "wilson_95_high": 0.6734242084707774,
+        "wilson_95_low": 0.414539754871058,
+        "win_rate": 0.5471698113207547,
+        "wins": 29
+      },
+      "A4:A12": {
+        "dropped_prompts": 1,
+        "eligible_prompts": 100,
+        "losses": 22,
+        "non_ties": 53,
+        "scored_prompts": 99,
+        "sign_test_p_exact_two_sided": 0.27167916606550335,
+        "tie_as_half_score": 0.5454545454545454,
+        "ties": 46,
+        "wilson_95_high": 0.7073909122018601,
+        "wilson_95_low": 0.45094422181344374,
+        "win_rate": 0.5849056603773585,
+        "wins": 31
+      }
+    },
+    "WritingBench": {
+      "A12:A2": {
+        "dropped_prompts": 1,
+        "eligible_prompts": 100,
+        "losses": 15,
+        "non_ties": 83,
+        "scored_prompts": 99,
+        "sign_test_p_exact_two_sided": 3.1961254620309685e-09,
+        "tie_as_half_score": 0.7676767676767676,
+        "ties": 16,
+        "wilson_95_high": 0.8873063417048004,
+        "wilson_95_low": 0.7230012316563488,
+        "win_rate": 0.8192771084337349,
+        "wins": 68
+      },
+      "A4:A12": {
+        "dropped_prompts": 5,
+        "eligible_prompts": 100,
+        "losses": 34,
+        "non_ties": 66,
+        "scored_prompts": 95,
+        "sign_test_p_exact_two_sided": 0.9021585000966993,
+        "tie_as_half_score": 0.48947368421052634,
+        "ties": 29,
+        "wilson_95_high": 0.6028940871428276,
+        "wilson_95_low": 0.3684696267060676,
+        "win_rate": 0.48484848484848486,
+        "wins": 32
+      }
+    }
+  },
+  "completion": {
+    "A12": {
+      "attempted": 300,
+      "completed": 299
+    },
+    "A2": {
+      "attempted": 300,
+      "completed": 300
+    },
+    "A4": {
+      "attempted": 300,
+      "completed": 293
+    }
+  },
+  "condition": "A12 Loop-only",
+  "contrasts": [
+    "A4:A12",
+    "A12:A2"
+  ],
+  "estimand": "prompt-collapsed outcome; both presentation orders must agree, otherwise tie",
+  "generation_run": "run-1",
+  "median_output_words": {
+    "A12": {
+      "DoLoMiTes": 774.0,
+      "HelloBench": 1511.5,
+      "WritingBench": 4716,
+      "pooled": 1671
+    },
+    "A2": {
+      "DoLoMiTes": 669.0,
+      "HelloBench": 1439.0,
+      "WritingBench": 4046.5,
+      "pooled": 1510.0
+    },
+    "A4": {
+      "DoLoMiTes": 734.0,
+      "HelloBench": 1753,
+      "WritingBench": 4690.0,
+      "pooled": 1835
+    }
+  },
+  "pooled": {
+    "A12:A2": {
+      "dropped_prompts": 1,
+      "eligible_prompts": 300,
+      "losses": 62,
+      "non_ties": 203,
+      "scored_prompts": 299,
+      "sign_test_p_exact_two_sided": 2.9666702983630954e-08,
+      "tie_as_half_score": 0.6321070234113713,
+      "ties": 96,
+      "wilson_95_high": 0.7538395130716112,
+      "wilson_95_low": 0.6280955228269859,
+      "win_rate": 0.6945812807881774,
+      "wins": 141
+    },
+    "A4:A12": {
+      "dropped_prompts": 8,
+      "eligible_prompts": 300,
+      "losses": 92,
+      "non_ties": 188,
+      "scored_prompts": 292,
+      "sign_test_p_exact_two_sided": 0.8268803160573738,
+      "tie_as_half_score": 0.5068493150684932,
+      "ties": 104,
+      "wilson_95_high": 0.5811629055117232,
+      "wilson_95_low": 0.4396876448572595,
+      "win_rate": 0.5106382978723404,
+      "wins": 96
+    }
+  },
+  "schema_version": 1,
+  "test": "exact two-sided sign test on non-tied prompts",
+  "token_means": {
+    "A12": {
+      "mean_output_plus_reasoning_tokens": 11071.243333333334,
+      "mean_uncached_input_tokens": 24244.013333333332,
+      "runs": 300
+    },
+    "A2": {
+      "mean_output_plus_reasoning_tokens": 10727.54,
+      "mean_uncached_input_tokens": 21821.716666666667,
+      "runs": 300
+    },
+    "A4": {
+      "mean_output_plus_reasoning_tokens": 13373.8,
+      "mean_uncached_input_tokens": 46860.43,
+      "runs": 300
+    }
+  }
+}
