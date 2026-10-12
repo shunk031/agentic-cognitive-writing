@@ -8,7 +8,7 @@ Recent coding agents increasingly write long-form documents, yet in our runs a p
 
 ## Introduction
 
-Large language model agents (Yao et al., 2023; Shinn et al., 2023; Sumers et al., 2024; Luo et al., 2025) increasingly combine reasoning, tool use, memory, and delegation to carry out multi-step knowledge work. Recent coding agents have made this interactive, tool-mediated style of execution especially prominent (Yang et al., 2024; Wang et al., 2025), while similar agentic workflows increasingly produce reports or scientific manuscripts (Schmidgall et al., 2025; Lu et al., 2024). For agents that produce documents, long-form writing requires more than final text generation: the agent must organize the document, turn partial plans into prose, inspect what has been written, and decide when revision is needed. On its own, a coding agent may not organize them: in our harness, a plain agent allowed to plan, draft, and revise a workspace file wrote the document once in 244 of 300 runs, and most other runs rewrote it only to adjust length.
+Large language model agents (Yao et al., 2023; Shinn et al., 2023; Sumers et al., 2024; Luo et al., 2025) increasingly combine reasoning, tool use, memory, and delegation to carry out multi-step knowledge work. Recent coding agents have made this interactive, tool-mediated style of execution especially prominent (Yang et al., 2024; Wang et al., 2025), while similar agentic workflows increasingly produce reports or scientific manuscripts (Schmidgall et al., 2025; Lu et al., 2024). For agents that produce documents, long-form writing requires more than final text generation: the agent must organize the document, turn partial plans into prose, inspect what has been written, and decide when revision is needed. On its own, a coding agent may not organize them: in our harness, a plain agent allowed to plan, draft, and revise a draft file wrote it once in 244 of 300 runs, and most others only adjusted length.
 
 Figure 1. Overview of <span class="smallcaps">Agentic CogWriter</span>. Inspired by the cognitive process theory of writing, a coding-agent-style control loop turns the task into a document via Planning, Translating, or Reviewing, selected online from the evolving document state.
 
@@ -16,11 +16,11 @@ Existing long-form writing systems impose different forms of structure on genera
 
 The cognitive process theory of writing (Flower and Hayes, 1981; Hayes, 1996; Hayes, 2012) motivates a different unit of control. Flower and Hayes (1981) characterize writing as coordination among planning, translating, and reviewing, with a monitor deciding which process to invoke as the document develops. Building on Flower and Hayes (1981), we propose <span class="smallcaps">Agentic CogWriter</span>, a long-form writing system that implements this process-level control as a writing skill that a coding agent loads, with persistent workspace state and subagent delegation (Figure 1). A top-level Monitor agent observes the evolving draft, goals, and process history, chooses whether the next activity should be planning, drafting, or reviewing, and delegates that activity to a corresponding subagent. We call the system *agentic* for this combination: online selection of the next writing process, a persistent state shared across steps, and delegation of each selected process to a subagent.
 
-We evaluate our system on three long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production (Wu et al., 2025; Que et al., 2024; Malaviya et al., 2025). We hold the generator, harness, output budget, and task information constant across conditions. Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives. In pre-specified per-benchmark pairwise tests, our system is preferred to one-shot generation in 8 of 9 tests and to a fixed writing pipeline and adaptive task planning in 3 and 4, while a post-hoc prompt-level summary favors it over all three. Adding our role instructions to the fixed pipeline post hoc does not reproduce this advantage, a second judge family also prefers our system to that pipeline in one generation run, and a post-hoc comparison favors it over the plain agent except on DoLoMiTes.
+We evaluate our system on three long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production (Wu et al., 2025; Que et al., 2024; Malaviya et al., 2025). We hold the generator, harness, output budget, and task information constant across conditions. Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives. In pre-specified per-benchmark pairwise tests, our system is preferred to one-shot generation in 8 of 9 tests and to a fixed writing pipeline and adaptive task planning in 3 and 4, while a post-hoc prompt-level summary favors it over all three. Adding our role instructions to the fixed pipeline post hoc does not reproduce this advantage, a second judge family prefers our system to that pipeline on one run, and a post-hoc test favors it over the plain agent except on DoLoMiTes.
 
 The component analyses show that the improvement does not rest mainly on adaptive process selection: dropping explicit goals or fixing the process order stays near parity with our system, as does a post-hoc variant without subagents, though the pre-specified single-writer variant trails it. Process traces show 74.6% of complete paths conform to the planning–drafting–reviewing cycle structure and 4.1% of runs replan.
 
-Our contributions are threefold. (1) We propose a process-level writing skill for coding agents, and we compare our system with the plain agent and with one-shot, fixed-stage, and task-planning alternatives; (2) a component analysis shows that the improvement does not rest mainly on adaptive process selection, so benchmarks requiring it are the next step; and (3) we release the skill, prompts, protocol, and code.
+Our contributions are threefold. (1) We propose a writing skill for coding agents, and we compare our system with the plain agent and one-shot, fixed-stage, and task-planning alternatives; (2) a component analysis shows that the improvement does not rest mainly on adaptive process selection, so benchmarks requiring it are the next step; and (3) we release the skill, prompts, protocol, and code.
 
 ## Related Work
 
@@ -34,7 +34,7 @@ Long-form generation becomes harder to control and evaluate as outputs grow in l
 
 ##### Iteration and cognitive models of writing.
 
-Iterative generation methods improve text through repeated feedback and revision (Madaan et al., 2023; Du et al., 2022), and PEER (Schick et al., 2023) trains a model to imitate the writing process by proposing and explaining edits, while cognitive writing research offers a process-level account of how planning, drafting, and reviewing interact (Flower and Hayes, 1981; Hayes, 1996; Hayes, 2012). Gero et al. (2022) use those processes to organize writing-support systems, and CogWriter (Wan et al., 2025) likewise draws on cognitive writing theory to structure planning, generation, and revision. Relative to CogWriter, we add matched alternatives, a component analysis, and process traces. Table 1 summarizes the distinction alongside other capabilities of representative systems.
+Iterative generation methods improve text through repeated feedback and revision (Madaan et al., 2023; Du et al., 2022), and PEER (Schick et al., 2023) trains a model to imitate the writing process by proposing and explaining edits, while cognitive writing research offers a process-level account of how planning, drafting, and reviewing interact (Flower and Hayes, 1981; Hayes, 1996; Hayes, 2012). Gero et al. (2022) use those processes to organize writing-support systems, and CogWriter (Wan et al., 2025) likewise draws on cognitive writing theory to structure planning, generation, and revision. Relative to CogWriter, we add a component analysis and process traces, and our adaptation of it under the same harness loses to our system in a post-hoc comparison (Section 5.2). Table 1 summarizes the distinction across representative systems.
 
 |  |  |  |  |  |
 |:---|:--:|:--:|:--:|:--:|
@@ -102,9 +102,9 @@ Two pre-specified ablations change one control mechanism while retaining the res
 
 \(6\) `Single-writer` retains the goal representation and adaptive process loop but performs `Planning`, `Translating`, and `Reviewing` in one writer context without subagent delegation; it also limits each `Translating` step to one paragraph, so the condition is diagnostic rather than a clean ablation. Its prompt also asks the writer to follow the repository’s writing guidance and remove filler and AI-pattern phrasing, an instruction the other systems’ prompts do not contain. (7) <span class="smallcaps">Agentic CogWriter</span> is the full system of Section 3.2, with adaptive process selection, explicit goals, and role-specific subagents.
 
-##### Post-hoc execution check.
+##### Post-hoc conditions.
 
-`Single-context` was added after the main results as a narrower exploratory check and is not one of the seven pre-specified systems. It runs each selected process in the `Monitor`’s context instead of a subagent, to test whether separate role contexts matter. `Plain-agent`, also post hoc, gives the same harness the task and one neutral instruction to plan, draft, and revise a workspace draft.
+`Single-context` was added after the main results as a narrower exploratory check outside the seven pre-specified systems. It runs each selected process in the `Monitor`’s context instead of a subagent, to test whether separate role contexts matter. `Plain-agent`, also post hoc, gives the same harness the task and one neutral instruction to plan, draft, and revise a workspace draft, and `CogWriter-style` is our post-hoc adaptation of CogWriter (Wan et al., 2025).
 
 |  |  |  |  |  |
 |:---|:---|:---|:---|:---|
@@ -183,7 +183,7 @@ Table 3. Document quality (higher is better): mean `±` sample SD of the three g
 
 ### Direct Comparison of Writing Systems
 
-Table 4 reports a system-level separation in direct same-prompt comparisons. <span class="smallcaps">Agentic CogWriter</span> is preferred to `Single-pass`, `Staged`, and `Task-planning`, with win rates of 80.9%, 67.3%, and 68.5%, respectively, when order-consistent wins and losses are summed over benchmarks in each generation run and averaged over runs. The direction holds in every benchmark–run test against `Single-pass` and `Task-planning` and in all but one against `Staged`. The last row, a post-hoc comparison with `Plain-agent` on one generation run, also favors our system (57.2%, `p=0.0441`, unadjusted) except on DoLoMiTes, at parity.
+Table 4 reports a system-level separation in direct same-prompt comparisons. <span class="smallcaps">Agentic CogWriter</span> is preferred to `Single-pass`, `Staged`, and `Task-planning`, with win rates of 80.9%, 67.3%, and 68.5%, respectively, when order-consistent wins and losses are summed over benchmarks in each generation run and averaged over runs. The direction holds in every benchmark–run test against `Single-pass` and `Task-planning` and in all but one against `Staged`. The last rows, post-hoc comparisons on one generation run, also favor our system over `Plain-agent` (57.2%, `p=0.0441`, unadjusted) except on DoLoMiTes, at parity, and over `CogWriter-style` on every benchmark (84.9%), whose 34 failed prompts are excluded.
 
 Under the pre-specified within-benchmark Holm correction, 8, 3, and 4 of the nine benchmark–run tests separate our system from `Single-pass`, `Staged`, and `Task-planning`, respectively.[^7] The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of 63.1% (`Single-pass`), 46.6% (`Staged`), and 49.7% (`Task-planning`), and assigning every missing pair against our system still leaves win rates of at least 74.9% (`Single-pass`), 61.9% (`Staged`), and 66.1% (`Task-planning`). The post-hoc prompt-level estimate separates our system from all three alternatives across benchmarks (largest `p=8.54 x 10^-10`), and a logistic length model keeps the preference at equal length, at 60.0% against `Staged` and 64.8% against `Task-planning`.[^8]
 
@@ -195,8 +195,9 @@ Under the pre-specified within-benchmark Holm correction, 8, 3, and 4 of the ni
 | vs. `Staged` | 80.9% | 62.8% | 55.9% | 67.3% |
 | vs. `Task-planning` | 65.5% | 63.0% | 75.7% | 68.5% |
 | vs. `Plain-agent` | 62.2% | 62.9% | 47.2% | 57.2% |
+| vs. `CogWriter-style` | 92.6% | 77.4% | 84.3% | 84.9% |
 
-Table 4. Same-prompt win rates averaged over generation runs (`Plain-agent`: one post-hoc run); above 50% favors our system. Across sums outcomes over benchmarks; benchmark rates exceed 50% for the alternatives, with the largest mean margin over `Single-pass`.
+Table 4. Same-prompt win rates averaged over generation runs (last two rows: one post-hoc run); above 50% favors our system. Across sums outcomes over benchmarks; benchmark rates exceed 50% for the alternatives, with the largest mean margin over `Single-pass`.
 
 ### Ablations and Execution Diagnostics
 
@@ -240,7 +241,7 @@ Table 6. Writing-loop behavior of <span class="smallcaps">Agentic CogWriter</spa
 
 ## Discussion
 
-Our system’s gain does not rest mainly on adaptive process selection: no single ablation in Section 5.3 removes most of our system’s advantage, and selection adds only a small post-hoc advantage over `Fixed-order`, as the `Monitor` usually ends after one pass and, after a revision request, a fixed cycle also returns to planning (Section 5.4). Benchmarks whose correct next process is not always planning, or whose requirements change during drafting, are the next step, and the combined ablation in the Limitations would test whether a shared component carries the gain.
+Our system’s gain does not rest mainly on adaptive process selection: no single ablation in Section 5.3 removes most of our system’s advantage, and selection adds only a small post-hoc advantage over `Fixed-order`, as the `Monitor` usually ends after one pass and, after a revision request, a fixed cycle also returns to planning (Section 5.4). Benchmarks whose correct next process is not always planning, or whose requirements change during drafting, are the next step, and the combined ablation named in the Limitations would test whether a shared component carries the gain.
 
 ## Conclusion
 
@@ -254,11 +255,11 @@ Our conclusions concern one generator family, one coding-agent-style harness, an
 
 ##### Comparison design.
 
-The alternative writing systems are reimplementations under the shared setup of Section 4.3, not executions of the published systems. `Task-planning` also delegates its task nodes to subagents, so delegation is present on both sides of that comparison. Its prompt forbids rewriting already-composed text, so `Task-planning` has no revision pass over the assembled draft. The `CogWriter-style` and `STORM-style` adaptations run only on ten consensus-writing tasks, and running them on the three benchmarks is the next comparison.[^15] The compute-matched analysis selects pairs with similar realized token use after generation; a Self-Refine baseline (Madaan et al., 2023) given our system’s token budget before generation would test budget-matched iterative revision.
+The alternative writing systems are reimplementations under the shared setup of Section 4.3, not executions of the published systems. `Task-planning` also delegates its task nodes to subagents, so delegation is present on both sides of that comparison. Its prompt forbids rewriting already-composed text, so `Task-planning` has no revision pass over the assembled draft. The `STORM-style` adaptation runs only on ten consensus-writing tasks, and running it on the three benchmarks is the next comparison.[^15] The compute-matched analysis selects pairs with similar realized token use after generation; a Self-Refine baseline (Madaan et al., 2023) given our system’s token budget before generation would test budget-matched iterative revision.
 
 ##### Post-hoc conditions.
 
-`Staged-roles` was added post-hoc, uses one generation run and one judge family, and differs from our system in the `Monitor`, goals, shared state, and delegation together, so it isolates the role-instruction content and no single component. `Plain-agent` was also added post hoc on one generation run; it shares our harness and generator but no skill content.
+`Staged-roles` was added post-hoc, uses one generation run and one judge family, and differs from our system in the `Monitor`, goals, shared state, and delegation together, so it isolates the role-instruction content and no single component. `Plain-agent` was also added post hoc on one generation run; it shares our harness and generator but no skill content. `CogWriter-style` on the three benchmarks is our adaptation of CogWriter, run once post hoc: it completed 266 of 300 prompts, mostly failing its final-product gate for lack of a draft file, only 21 of its 46 first-pass failures were retried before a cost guard stopped retries, and it used more compute than our system (12.6 against 3.22 subagent spawns per run).
 
 ##### Output language.
 
@@ -2107,9 +2108,23 @@ The `Plain-agent` condition was added after the main results had been observed,
 
 Table 20. Exploratory comparison of <span class="smallcaps">Agentic CogWriter</span> with `Plain-agent` on generation run 1. The win rate belongs to our system and counts order-consistent outcomes; Across sums wins and losses over the three benchmarks. Sign-test `p`-values are unadjusted and outside the Holm family.
 
+### CogWriter-Style on the Main Benchmarks
+
+The `CogWriter-style` condition of Appendix H was run after the main results on the three benchmarks of generation run 1, with the same generator, harness, output budget, and runner retry policy, and judged with the run-1 pairwise setup. It is our adaptation of CogWriter, not the published system, and its skill files are identical to the consensus-writing version. It completed 266 of 300 prompts: the other 34 failed its final-product gate, 29 of them for lack of a draft file, and only 21 of the 46 first-pass failures were retried before a cost guard stopped retries. A prompt counts only when both systems completed it, so the comparison covers 259 prompts. `CogWriter-style` uses more compute than our system, with 12.6 subagent spawns and 18,011 output-plus-reasoning tokens per attempted run against 3.22 and 13,374, and writes outputs of similar length (median 1,684.5 words). Table 21 reports the contrast, which favors our system on every benchmark.
+
+|  |  |  |  |  |
+|:---|---:|---:|---:|---:|
+| **Statistic** | **WritingBench** | **HelloBench** | **DoLoMiTes** | **Across benchmarks** |
+| Win rate | 92.6% | 77.4% | 84.3% | 84.9% |
+| 95% Wilson interval | 83.9%–96.8% | 65.6%–86.0% | 75.3%–90.4% | 79.6%–89.1% |
+| W/L/T | 63/5/8 | 48/14/23 | 75/14/9 | 186/33/40 |
+| `p` | `7.65 x 10^-14` | `1.74 x 10^-5` | `3.01 x 10^-11` | `4.49 x 10^-27` |
+
+Table 21. Exploratory comparison of <span class="smallcaps">Agentic CogWriter</span> with `CogWriter-style` on generation run 1, over prompts both systems completed. The win rate belongs to our system and counts order-consistent outcomes; Across sums wins and losses over the three benchmarks. Sign-test `p`-values are unadjusted and outside the Holm family.
+
 ### Output-Language Drift
 
-Some English assignments are answered mainly in Chinese, counted as outputs whose Chinese characters outnumber their Latin letters, the rule that also classifies prompt language. The drift occurs only on WritingBench and in every condition; HelloBench and DoLoMiTes show 0 and 0 such outputs. Table 21 reports generation run 1, where our system drifts more often than `Staged`. 7 prompts drift in every condition; their topics concern China, and 2 of them give their instructions in Chinese, one requesting a Chinese report, while attaching English material, so the script rule counts them as English assignments.
+Some English assignments are answered mainly in Chinese, counted as outputs whose Chinese characters outnumber their Latin letters, the rule that also classifies prompt language. The drift occurs only on WritingBench and in every condition; HelloBench and DoLoMiTes show 0 and 0 such outputs. Table 22 reports generation run 1, where our system drifts more often than `Staged`. 7 prompts drift in every condition; their topics concern China, and 2 of them give their instructions in Chinese, one requesting a Chinese report, while attaching English material, so the script rule counts them as English assignments.
 
 |  |  |  |
 |:---|---:|---:|
@@ -2124,11 +2139,11 @@ Some English assignments are answered mainly in Chinese, counted as outputs whos
 | `Single-context` | 24 | 68 |
 | `Staged-roles` | 18 | 68 |
 
-Table 21. WritingBench outputs of English assignments that are mainly Chinese, per condition, on generation run 1, out of the completed English assignments.
+Table 22. WritingBench outputs of English assignments that are mainly Chinese, per condition, on generation run 1, out of the completed English assignments.
 
 ### Cross-Family Judge Robustness
 
-Table 22 reports benchmark-level results for the five cross-family contrasts between our system and an alternative or ablation, all on generation run 1. Within each contrast, summing W/L/T counts over the three benchmarks gives 67/44/171 versus `Single-pass`, 60/34/198 versus `Staged`, 76/25/184 versus `Task-planning`, 39/27/221 versus `No-goals`, and 38/33/204 versus `Fixed-order`. The corresponding Wilson intervals are 51.1%–69.0%, 53.8%–72.8%, 66.0%–82.6%, 47.0%–70.1%, and 42.0%–64.6%, with sign-test `p=0.0095` against `Staged` and `p=0.6353` against `Fixed-order`. The `Staged` and `Fixed-order` contrasts cover 292 and 275 pairs; one further pair, a HelloBench comparison with `Staged`, failed the judge’s structured-output check after all retries and has no cross-family outcome. Across all five contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on 31.2% of 1421 eligible pairs, with 280/163/978 W/L/T; 670/1421 prompt-level outcomes agree with the same-family judge. Cohen’s kappa between the two judges is 0.25 over these outcomes, most of which are cross-family ties, and 0.76 over the 380 pairs both judges decide, of which 333 agree.
+Table 23 reports benchmark-level results for the five cross-family contrasts between our system and an alternative or ablation, all on generation run 1. Within each contrast, summing W/L/T counts over the three benchmarks gives 67/44/171 versus `Single-pass`, 60/34/198 versus `Staged`, 76/25/184 versus `Task-planning`, 39/27/221 versus `No-goals`, and 38/33/204 versus `Fixed-order`. The corresponding Wilson intervals are 51.1%–69.0%, 53.8%–72.8%, 66.0%–82.6%, 47.0%–70.1%, and 42.0%–64.6%, with sign-test `p=0.0095` against `Staged` and `p=0.6353` against `Fixed-order`. The `Staged` and `Fixed-order` contrasts cover 292 and 275 pairs; one further pair, a HelloBench comparison with `Staged`, failed the judge’s structured-output check after all retries and has no cross-family outcome. Across all five contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on 31.2% of 1421 eligible pairs, with 280/163/978 W/L/T; 670/1421 prompt-level outcomes agree with the same-family judge. Cohen’s kappa between the two judges is 0.25 over these outcomes, most of which are cross-family ties, and 0.76 over the 380 pairs both judges decide, of which 333 agree.
 
 |  |  |  |  |  |  |  |
 |:---|:---|---:|---:|---:|---:|---:|
@@ -2149,11 +2164,11 @@ Table 22 reports benchmark-level results for the five cross-family contrasts bet
 | <span class="smallcaps">Agentic CogWriter</span> vs `Fixed-order` | HelloBench | 93 | 7/8/78 | 16.1% | 46.7% | 48/93 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `Fixed-order` | DoLoMiTes | 92 | 19/17/56 | 39.1% | 52.8% | 52/92 |
 
-Table 22. Cross-family judge robustness using `claude-sonnet-5 medium`. Within each selected contrast, wins, losses, and ties are summed over benchmarks before computing the win rate; every contrast’s summed win rate exceeds 50%, but 5 of 15 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.
+Table 23. Cross-family judge robustness using `claude-sonnet-5 medium`. Within each selected contrast, wins, losses, and ties are summed over benchmarks before computing the win rate; every contrast’s summed win rate exceeds 50%, but 5 of 15 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.
 
 ### Revision-Request Experiment
 
-This exploratory experiment, specified before generation, tests whether adaptive process selection matters when a finished document must be revised. It draws 60 prompts evenly from the three benchmark subsets; each system first completes the assignment and then, in the same session, receives one change request that adds a constraint, supplies new evidence, or conflicts with part of the assignment. The change requests were written once by `gpt-5.6-sol` and frozen before any system ran; the generator is `gpt-5.6-luna medium`, and the pairwise judge, `gpt-5.6-sol medium` with a revision-specific template, compares the revised documents in both presentation orders and counts an order-inconsistent outcome as a tie. Each contrast covers the 59 prompts on which our system completed both turns. Table 23 shows that our system is not separable from `Fixed-order` and is favored over `Staged` without a significant difference; the `Single-pass` contrast was added outside the plan. The `Monitor` responds to the request: its second turn switches to `Planning` in 57 of 59 runs and regenerates goals in 33, whereas `Fixed-order` regenerates goals in 7 of 60.
+This exploratory experiment, specified before generation, tests whether adaptive process selection matters when a finished document must be revised. It draws 60 prompts evenly from the three benchmark subsets; each system first completes the assignment and then, in the same session, receives one change request that adds a constraint, supplies new evidence, or conflicts with part of the assignment. The change requests were written once by `gpt-5.6-sol` and frozen before any system ran; the generator is `gpt-5.6-luna medium`, and the pairwise judge, `gpt-5.6-sol medium` with a revision-specific template, compares the revised documents in both presentation orders and counts an order-inconsistent outcome as a tie. Each contrast covers the 59 prompts on which our system completed both turns. Table 24 shows that our system is not separable from `Fixed-order` and is favored over `Staged` without a significant difference; the `Single-pass` contrast was added outside the plan. The `Monitor` responds to the request: its second turn switches to `Planning` in 57 of 59 runs and regenerates goals in 33, whereas `Fixed-order` regenerates goals in 7 of 60.
 
 The experiment cannot separate adaptive selection from a fixed cycle, because every request arrives after a complete document and calls for replanning, which a fixed order also performs. The change requests are written by a model and were not validated by people, and the generator, change writer, and judge all belong to the GPT family. Each system ran once per prompt, and the `p`-values carry no multiplicity correction.
 
@@ -2167,7 +2182,7 @@ The experiment cannot separate adaptive selection from a fixed cycle, because ev
 | <span class="smallcaps">Agentic CogWriter</span> | 59 | 57 | 33 |  |
 | `Fixed-order` | 60 | 52 | 7 |  |
 
-Table 23. Exploratory revision-request experiment. The upper block gives order-consistent pairwise outcomes on the revised documents from our system’s side, with unadjusted exact sign-test `p`-values; the `Single-pass` contrast was added outside the plan. The lower block counts second turns that switch to `Planning` or record a goal regeneration.
+Table 24. Exploratory revision-request experiment. The upper block gives order-consistent pairwise outcomes on the revised documents from our system’s side, with unadjusted exact sign-test `p`-values; the `Single-pass` contrast was added outside the plan. The lower block counts second turns that switch to `Planning` or record a goal regeneration.
 
 ## Illustrative Example
 
@@ -2185,7 +2200,7 @@ The example below was chosen at random with a fixed seed from the 97 generation
 
 ## Consensus-Writing Evaluation on Habermas Machine Data
 
-We additionally evaluate the writing systems on ten short consensus-writing tasks constructed from the Habermas Machine data (Tessler et al., 2024). Each task provides one deliberation question and the five participants’ original opinions, and asks the system to write a statement the group could endorse. The ten tasks are drawn from the `OOD_TEST` split after requiring complete, distinct participant opinions and disagreement ratings on both sides of the scale midpoint. Across eight conditions, this produces 80 attempted runs; 78 complete successfully. Table 24 summarizes pointwise quality and the available process statistics.
+We additionally evaluate the writing systems on ten short consensus-writing tasks constructed from the Habermas Machine data (Tessler et al., 2024). Each task provides one deliberation question and the five participants’ original opinions, and asks the system to write a statement the group could endorse. The ten tasks are drawn from the `OOD_TEST` split after requiring complete, distinct participant opinions and disagreement ratings on both sides of the scale midpoint. Across eight conditions, this produces 80 attempted runs; 78 complete successfully. Table 25 summarizes pointwise quality and the available process statistics.
 
 |  |  |  |  |  |  |
 |:---|---:|---:|---:|---:|---:|
@@ -2199,7 +2214,7 @@ We additionally evaluate the writing systems on ten short consensus-writing task
 | `CogWriter-style` | 0 | 0 | 0 | 0/0 | -0.1605 |
 | `STORM-style` | 0 | 0 | 0 | 0/0 | -0.1023 |
 
-Table 24. Additional consensus-writing evaluation on ten tasks derived from Habermas Machine data. Unlike the long-form benchmarks, <span class="smallcaps">Agentic CogWriter</span> does not achieve the highest pointwise score: `Single-pass` and `Staged` are stronger in this short consensus-writing setting. The result shows that the advantage observed on the long-form benchmarks does not automatically transfer to a substantially shorter writing task; 78 of 80 attempted runs completed.
+Table 25. Additional consensus-writing evaluation on ten tasks derived from Habermas Machine data. Unlike the long-form benchmarks, <span class="smallcaps">Agentic CogWriter</span> does not achieve the highest pointwise score: `Single-pass` and `Staged` are stronger in this short consensus-writing setting. The result shows that the advantage observed on the long-form benchmarks does not automatically transfer to a substantially shorter writing task; 78 of 80 attempted runs completed.
 
 `CogWriter-style` (Wan et al., 2025) is the exploratory adaptation of CogWriter, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; `STORM-style` (Shao et al., 2024) is the exploratory adaptation of STORM, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval. On these short consensus-writing tasks, <span class="smallcaps">Agentic CogWriter</span> does not achieve the highest pointwise composite; in particular, it scores below `Single-pass` and `Staged`. Neither our system nor `Fixed-order` regenerates a goal on these tasks, and their post-`Reviewing` ledgers record 15/0 and 11/0 no/proposal outcomes.
 

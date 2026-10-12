@@ -180,7 +180,7 @@ def check() -> None:
 
     # Win-rate tables use one decimal place, including values that round to an integer.
     for path, text, count in (
-        ("tab/pairwise-results.tex", pairwise, 16),
+        ("tab/pairwise-results.tex", pairwise, 20),
         ("tab/ablation-results.tex", ablation, 12),
         ("tab/process-dynamics.tex", process, 4),
     ):
@@ -198,9 +198,11 @@ def check() -> None:
             f"PooledFour{suffix}RateMean",
         )
     ]
-    # The post-hoc plain-agent row follows the three pre-specified alternatives.
+    # The post-hoc plain-agent and CogWriter-style rows follow the three
+    # pre-specified alternatives.
     expected_pairwise += [
-        f"{percent_macro(numbers, f'FullPlainAgent{scope}Rate'):.1f}"
+        f"{percent_macro(numbers, f'{prefix}{scope}Rate'):.1f}"
+        for prefix in ("FullPlainAgent", "FullCogWriterStyle")
         for scope in ("Writing", "Hello", "DoLo", "Across")
     ]
     assert percentages(tabular_body(pairwise)) == expected_pairwise, (

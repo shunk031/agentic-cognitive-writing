@@ -173,6 +173,7 @@ PAIRWISE_ROBUSTNESS_MARKER = "% Pairwise-robustness macros."
 STAGED_ROLES_MARKER = "% Staged role-instruction (A9) macros."
 PLAIN_AGENT_MARKER = "% Plain-agent (A11) macros."
 COGWRITER_STYLE_MARKER = "% CogWriter-style (B1) main-benchmark macros."
+COGWRITER_SPAWNS_MARKER = "% CogWriter-style (B1) spawn macros."
 TRACE_ENDINGS_MARKER = "% Trace-ending macros."
 REVISION_TASKS_MARKER = "% Revision-request pilot macros."
 QUALITATIVE_EXAMPLE_MARKER = "% Illustrative-example macros."
@@ -1512,12 +1513,18 @@ def _cogwriter_style_entries(report: dict[str, Any]) -> list[tuple[str, str, str
     """Exploratory B1 pairwise outcomes, completions, length, and tokens on the main benchmarks."""
     source = "B1 pairwise JSON"
     tokens = report["mean_tokens_per_attempted_run"]["B1"]
+    attempts = report["generation_attempts"]
     return [
         *_exploratory_pairwise_entries(report, COGWRITER_STYLE_CONTRASTS, source),
         ("\\CogWriterStyleCompleted", str(report["completion"]["B1"]["completed"]), source + " completion.B1.completed"),
         ("\\CogWriterStyleMedianOutput", _format_process(report["median_output_words"]["B1"]["pooled"]), source + " median_output_words.B1.pooled"),
         ("\\CogWriterStyleOutputTokens", _format_process(tokens["mean_output_plus_reasoning_tokens"], 0), source + " mean_tokens_per_attempted_run.B1.mean_output_plus_reasoning_tokens"),
         ("\\CogWriterStyleInputTokens", _format_process(tokens["mean_uncached_input_tokens"], 0), source + " mean_tokens_per_attempted_run.B1.mean_uncached_input_tokens"),
+        ("\\CogWriterStyleAttempted", str(report["completion"]["B1"]["attempted"]), source + " completion.B1.attempted"),
+        ("\\CogWriterStyleFirstPassFailed", str(attempts["first_pass_failed"]), source + " generation_attempts.first_pass_failed"),
+        ("\\CogWriterStyleRetried", str(attempts["retried_failures"]), source + " generation_attempts.retried_failures"),
+        ("\\CogWriterStyleNoDraftFailed", str(attempts["final_failed_by_reason"]["no_draft_file"]), source + " generation_attempts.final_failed_by_reason.no_draft_file"),
+        ("\\CogWriterStyleFailed", str(report["completion"]["B1"]["attempted"] - report["completion"]["B1"]["completed"]), source + " completion.B1 attempted - completed"),
     ]
 
 
@@ -1618,6 +1625,11 @@ def _language_drift_entries(report: dict[str, Any]) -> list[tuple[str, str, str]
         total = sum(v["drifted"] for v in report["benchmarks"][benchmark]["by_condition"].values())
         entries.append((f"\\{word}DriftTotal", str(total), f"language-drift JSON benchmarks.{benchmark} drifted summed over conditions"))
     return entries
+
+
+def _cogwriter_spawn_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Mean subagent spawns per attempted generation-run-1 run for B1."""
+    return [("\\CogWriterStyleSpawns", _format_process(report["B1"]["mean_spawns"], 1), "B1 spawn summary JSON B1.mean_spawns")]
 
 
 def _validate_single_context_pair(data: dict[str, Any], source: str) -> None:
@@ -2470,6 +2482,7 @@ def main() -> None:
     parser.add_argument("--staged-roles", type=Path, help="A9 pairwise JSON; appends its own block")
     parser.add_argument("--plain-agent", type=Path, help="A11 pairwise JSON; appends its own block")
     parser.add_argument("--cogwriter-style", type=Path, help="B1 pairwise JSON; appends its own block")
+    parser.add_argument("--cogwriter-spawns", type=Path, help="B1 spawn summary JSON; appends its own block")
     parser.add_argument("--trace-endings", type=Path, help="trace-endings JSON; appends its own block")
     parser.add_argument("--revision-tasks", type=Path, help="revision-task results JSON; appends its own block")
     parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
@@ -2496,6 +2509,7 @@ def main() -> None:
         (args.staged_roles, "staged-roles", STAGED_ROLES_MARKER, _staged_roles_entries),
         (args.plain_agent, "plain-agent", PLAIN_AGENT_MARKER, _plain_agent_entries),
         (args.cogwriter_style, "cogwriter-style", COGWRITER_STYLE_MARKER, _cogwriter_style_entries),
+        (args.cogwriter_spawns, "cogwriter-spawns", COGWRITER_SPAWNS_MARKER, _cogwriter_spawn_entries),
         (args.trace_endings, "trace-endings", TRACE_ENDINGS_MARKER, _trace_endings_entries),
         (args.revision_tasks, "revision-tasks", REVISION_TASKS_MARKER, _revision_tasks_entries),
         (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),

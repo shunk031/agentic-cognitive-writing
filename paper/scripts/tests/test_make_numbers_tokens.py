@@ -14,6 +14,7 @@ from make_numbers import (
     _staged_roles_entries,
     _plain_agent_entries,
     _cogwriter_style_entries,
+    _cogwriter_spawn_entries,
     _trace_endings_entries,
     _revision_tasks_entries,
     _delegation_fallback_entries,
@@ -581,6 +582,8 @@ class TokenMacroTests(unittest.TestCase):
         self.assertEqual(output[r"\CogWriterStyleCompleted"], "266")
         self.assertEqual(output[r"\CogWriterStyleOutputTokens"], "18,011")
         self.assertEqual(output[r"\CogWriterStyleMedianOutput"], "1,684.5")
+        spawns = json.loads((Path(__file__).resolve().parents[2] / "results/cogwriter-main/b1-spawns.json").read_text())
+        self.assertEqual(dict((n, v) for n, v, _ in _cogwriter_spawn_entries(spawns))[r"\CogWriterStyleSpawns"], "12.6")
 
     def test_trace_endings_macros_are_source_backed(self):
         report = json.loads((Path(__file__).resolve().parents[2] / "results/process-sequences/trace-endings.json").read_text())

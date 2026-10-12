@@ -1,7 +1,7 @@
 Large language model agents~\citep{yao2023react,shinn2023reflexion,sumers2024cognitive,luo2025llmagent} increasingly combine reasoning, tool use, memory, and delegation to carry out multi-step knowledge work.
 Recent coding agents have made this interactive, tool-mediated style of execution especially prominent~\citep{yang2024sweagent,wang2024openhands}, while similar agentic workflows increasingly produce reports or scientific manuscripts~\citep{schmidgall2025agentlab,lu2024aiscientist}.
 For agents that produce documents, long-form writing requires more than final text generation: the agent must organize the document, turn partial plans into prose, inspect what has been written, and decide when revision is needed.
-On its own, a coding agent may not organize them: in our harness, a plain agent allowed to plan, draft, and revise a workspace file wrote the document once in \PlainAgentWrittenOnceRuns\ of \PlainAgentCompletedRuns\ runs, and most other runs rewrote it only to adjust length.
+On its own, a coding agent may not organize them: in our harness, a plain agent allowed to plan, draft, and revise a draft file wrote it once in \PlainAgentWrittenOnceRuns\ of \PlainAgentCompletedRuns\ runs, and most others only adjusted length.
 
 \input{fig/tex/overview}
 
@@ -19,10 +19,10 @@ We evaluate our system on three long-form writing benchmarks spanning broad inst
 We hold the generator, harness, output budget, and task information constant across conditions.
 Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives.
 In pre-specified per-benchmark pairwise tests, our system is preferred to one-shot generation in \PooledFourOneHolmCellsTotal\ of 9 tests and to a fixed writing pipeline and adaptive task planning in \PooledFourTwoHolmCellsTotal\ and \PooledFourThreeHolmCellsTotal, while a post-hoc prompt-level summary favors it over all three.
-Adding our role instructions to the fixed pipeline post hoc does not reproduce this advantage, a second judge family also prefers our system to that pipeline in one generation run, and a post-hoc comparison favors it over the plain agent except on DoLoMiTes.
+Adding our role instructions to the fixed pipeline post hoc does not reproduce this advantage, a second judge family prefers our system to that pipeline on one run, and a post-hoc test favors it over the plain agent except on DoLoMiTes.
 
 The component analyses show that the improvement does not rest mainly on adaptive process selection: dropping explicit goals or fixing the process order stays near parity with our system, as does a post-hoc variant without subagents, though the pre-specified single-writer variant trails it.
 Process traces show \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure and \AfourReviewingToPlanningRate\ of runs replan.
 
 Our contributions are threefold.
-(1) We propose a process-level writing skill for coding agents, and we compare our system with the plain agent and with one-shot, fixed-stage, and task-planning alternatives; (2) a component analysis shows that the improvement does not rest mainly on adaptive process selection, so benchmarks requiring it are the next step; and (3) we release the skill, prompts, protocol, and code.
+(1) We propose a writing skill for coding agents, and we compare our system with the plain agent and one-shot, fixed-stage, and task-planning alternatives; (2) a component analysis shows that the improvement does not rest mainly on adaptive process selection, so benchmarks requiring it are the next step; and (3) we release the skill, prompts, protocol, and code.

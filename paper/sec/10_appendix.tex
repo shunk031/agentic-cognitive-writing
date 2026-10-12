@@ -124,6 +124,16 @@ Table~\ref{tab:appendix-plain-agent} reports the contrast: our system is preferr
 All \PlainAgentCompletedRuns\ runs wrote the document to a workspace file, \PlainAgentWrittenOnceRuns\ wrote it once and returned it, and the other \PlainAgentRevisedRuns\ wrote it again, mostly to adjust length after counting words or characters.
 \input{tab/appendix-plain-agent}
 
+\subsection{CogWriter-Style on the Main Benchmarks}
+\label{app:cogwriter-main}
+The \condExploratoryOne\ condition of Appendix~\ref{app:habermas} was run after the main results on the three benchmarks of generation run 1, with the same generator, harness, output budget, and runner retry policy, and judged with the run-1 pairwise setup.
+It is our adaptation of CogWriter, not the published system, and its skill files are identical to the consensus-writing version.
+It completed \CogWriterStyleCompleted\ of \CogWriterStyleAttempted\ prompts: the other \CogWriterStyleFailed\ failed its final-product gate, \CogWriterStyleNoDraftFailed\ of them for lack of a draft file, and only \CogWriterStyleRetried\ of the \CogWriterStyleFirstPassFailed\ first-pass failures were retried before a cost guard stopped retries.
+A prompt counts only when both systems completed it, so the comparison covers \FullCogWriterStyleAcrossN\ prompts.
+\condExploratoryOne\ uses more compute than our system, with \CogWriterStyleSpawns\ subagent spawns and \CogWriterStyleOutputTokens\ output-plus-reasoning tokens per attempted run against \AfourSpawns\ and \AfourOutputTokens, and writes outputs of similar length (median \CogWriterStyleMedianOutput\ words).
+Table~\ref{tab:appendix-cogwriter-main} reports the contrast, which favors our system on every benchmark.
+\input{tab/appendix-cogwriter-main}
+
 \subsection{Output-Language Drift}
 \label{app:language-drift}
 Some English assignments are answered mainly in Chinese, counted as outputs whose Chinese characters outnumber their Latin letters, the rule that also classifies prompt language.

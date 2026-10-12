@@ -20,10 +20,10 @@ Two pre-specified ablations change one control mechanism while retaining the res
 Its prompt also asks the writer to follow the repository's writing guidance and remove filler and AI-pattern phrasing, an instruction the other systems' prompts do not contain.
 (7) \condAgenticCogWriter\ is the full system of Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.
 
-\paragraph{Post-hoc execution check.}
-\condSingleContext\ was added after the main results as a narrower exploratory check and is not one of the seven pre-specified systems.
+\paragraph{Post-hoc conditions.}
+\condSingleContext\ was added after the main results as a narrower exploratory check outside the seven pre-specified systems.
 It runs each selected process in the \texttt{Monitor}'s context instead of a subagent, to test whether separate role contexts matter.
-\condPlainAgent, also post hoc, gives the same harness the task and one neutral instruction to plan, draft, and revise a workspace draft.
+\condPlainAgent, also post hoc, gives the same harness the task and one neutral instruction to plan, draft, and revise a workspace draft, and \condExploratoryOne\ is our post-hoc adaptation of CogWriter~\citep{wan2025cognitive}.
 
 \input{tab/experiments-architecture-comparison}
 
