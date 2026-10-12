@@ -1,0 +1,48 @@
+condition_id = "A9"
+skill = "writing-linear"
+analysis_family = "exploratory"
+product_requires_draft = true
+
+[package]
+name = "cognitive-writing-baselines"
+
+[plugins]
+paths = ["experiments/baselines"]
+
+[adapters]
+codex = "codex_exec"
+claude_code = "claude_print"
+
+[invocation]
+codex = """Read the skill file at {codex_plugin_root}/skills/writing-linear/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact."""
+
+claude_code = """/cognitive-writing-baselines:writing-linear"""
+
+[install]
+claude_code = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
+
+[trace]
+retrieval = "not_applicable"
+evidence = "plugin_recorded"
+citation = "plugin_recorded"
+goal_events = "forbidden"
+event_types = ["process_switch"]
+min_events = 3
+max_events = 3
+process_order = ["pre-write", "write", "re-write"]
+processes = ["pre-write", "write", "re-write"]
+
+[[stages]]
+id = "pre_write"
+path = "prompts/a9_pre_write.md"
+sha256 = "f26ab2106f52e6570ba94aaaccf89777cd63dc039155fdb8f16b30b0ae3c909c"
+
+[[stages]]
+id = "write"
+path = "prompts/a9_write.md"
+sha256 = "7ee45eefed9aee3e90fe9b5bcdaefdaeec77cb3ab905afec068215e74b79d633"
+
+[[stages]]
+id = "re_write"
+path = "prompts/a9_re_write.md"
+sha256 = "5bf140350fdf5ecf4fb36c8999ef4aff783eeb22369c8c3b55cac0868b7fecda"
