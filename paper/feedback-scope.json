@@ -54,6 +54,36 @@
       "instruction": "Italicize the column names Native and Pointwise where the Table 3 caption defines them.",
       "before": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across generation runs. Native uses each benchmark's criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}",
       "after": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across generation runs. \\textit{Native} uses each benchmark's criteria; \\textit{Pointwise} uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}"
+    },
+    {
+      "path": "paper/tab/main-results.tex",
+      "instruction": "Render the Table 3 N/A cells in the same gray as the dagger-marked leaders.",
+      "before": "& N/A & -0.006\\,{\\scriptsize $\\pm$ 0.018} \\\\",
+      "after": "& \\textcolor{nagray}{N/A} & -0.006\\,{\\scriptsize $\\pm$ 0.018} \\\\"
+    },
+    {
+      "path": "paper/tab/main-results.tex",
+      "instruction": "Render the Table 3 N/A cells in the same gray as the dagger-marked leaders.",
+      "before": "& N/A & \\textcolor{tiedgray}{\\textbf{0.064}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}} \\\\",
+      "after": "& \\textcolor{nagray}{N/A} & \\textcolor{tiedgray}{\\textbf{0.064}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}} \\\\"
+    },
+    {
+      "path": "paper/tab/main-results.tex",
+      "instruction": "Render the Table 3 N/A cells in the same gray as the dagger-marked leaders.",
+      "before": "& N/A & -0.164\\,{\\scriptsize $\\pm$ 0.015} \\\\",
+      "after": "& \\textcolor{nagray}{N/A} & -0.164\\,{\\scriptsize $\\pm$ 0.015} \\\\"
+    },
+    {
+      "path": "paper/tab/main-results.tex",
+      "instruction": "Render the Table 3 N/A cells in the same gray as the dagger-marked leaders.",
+      "before": "& N/A & 0.031\\,{\\scriptsize $\\pm$ 0.035} \\\\",
+      "after": "& \\textcolor{nagray}{N/A} & 0.031\\,{\\scriptsize $\\pm$ 0.035} \\\\"
+    },
+    {
+      "path": "paper/acl_latex.tex",
+      "instruction": "Define nagray as the same gray as tiedgray for unavailable Table 3 cells.",
+      "before": "\\definecolor{tiedgray}{gray}{0.6}",
+      "after": "\\definecolor{tiedgray}{gray}{0.6}\n\\colorlet{nagray}{tiedgray}"
     }
   ],
   "created_files": []
