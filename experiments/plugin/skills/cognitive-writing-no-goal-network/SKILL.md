@@ -9,19 +9,17 @@ Run a comparison that uses the assignment as one implicit objective while preser
 
 ## When this skill runs
 
-Use this skill only when the user explicitly requests a controlled no-goal-network comparison. Do not use it as the default writing workflow.
+Use this skill only for the A5 no-goal-network comparison. Do not use it as the default writing workflow.
 
 ## `Monitor` responsibilities
 
 - Keep rhetorical intent, factual authority, final wording, and publication decisions under the user's control.
 - Coordinate process switches and record the evidence for each switch.
-- Ask the user when a choice changes the rhetorical problem or a claim.
 - Reconcile each returned role report with the assignment before continuing.
-- Report proposals that affect intent or factual claims. Let the user override an agent decision.
 
 ## Read the state first
 
-Create missing files and directories without overwriting existing content. Do not create or modify `.writing/goals.md`. Treat these files as the user's externalized task environment and long-term memory:
+Create missing files and directories without overwriting existing content. Do not create or modify `.writing/goals.md`. Treat these files as the externalized task environment and long-term memory:
 
 ```text
 .writing/
@@ -41,18 +39,9 @@ Read these before choosing a process:
 
 Do not create or modify `.writing/goals.md`, whether it exists or not.
 
-Treat the assignment as the single implicit objective. Do not use a hierarchical goal to fill missing user intent.
+Treat the assignment as the single implicit objective. Do not use a hierarchical goal to fill missing intent.
 
-If `assignment.md` is missing or underspecified, ask for:
-
-- topic
-- audience
-- exigency
-- writer's goals
-- genre
-- constraints
-
-Do not silently invent a rhetorical problem.
+Treat `assignment.md` as the fixed task specification for the run.
 
 Read the trace field contract below before writing the first entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
 
@@ -64,15 +53,7 @@ At each turn, the `Monitor` must:
 2. Before every process switch, append a `process_switch` event naming the responsible process or agent, its decision, its evidence, and open uncertainty. The no-goal-network variant records no goal-created, goal-developed, or goal-regenerated events.
 3. Delegate the selected role using the Delegation section.
 4. For a `Planning` delegation, request problem representation, Generate, and Organize. Do not request Goal-setting or ask the agent to write `goals.md`. If the agent proposes a hierarchical goal, report it as an observation without changing the file.
-5. Re-read changed state and reconcile the role's work with the assignment. Update `draft.md` or `memory/` as appropriate. Keep user-authored text and uncertain claims visible.
-6. Tell the user:
-
-   - what changed
-   - that the assignment remains the implicit objective
-   - what remains uncertain
-   - which process the `Monitor` recommends next
-
-   Ask for a decision when the next move depends on user intent or factual authority.
+5. Re-read changed state and reconcile the role's work with the assignment. Update `draft.md` or `memory/` as appropriate. Keep supplied text and uncertain claims visible.
 
 Before sending the final response, write the complete current document to `.writing/draft.md`. The run is `INVALID` unless `.writing/draft.md` exists before the final response and the final response contains the complete final text. The final response cannot substitute for the required draft.
 

@@ -92,7 +92,6 @@ ensure_image() {
 
 mkdir -p -- "$build_dir"
 mkdir -p -- "$build_dir/.home"
-python3 "$script_dir/elide-prompts.py"
 ensure_image
 
 set +e

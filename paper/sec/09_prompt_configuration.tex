@@ -30,7 +30,8 @@ External retrieval is disabled by the coding-agent sandbox and by the experiment
 The platform-specific subagent wrappers only dispatch the corresponding role skills and add no separate writing policy.
 Configuration files pin the skill or stage prompt for every system and record hashes for fixed stage prompts.
 
-All experiment-authored generation and evaluation prompts are reproduced below as used; passages that address an interactive user or local resources absent from the non-interactive, isolated runs are elided and marked [\ldots].
+The experiment-authored generation and evaluation prompt configurations are reproduced below.
+Generation is non-interactive: the runner supplies the assignment, context, and output constraints before each run, so the skill prompts omit interactive user-handoff instructions.
 Prompt headers use the internal condition codes A1 \condSinglePass, A2 \condStaged, A3 \condTaskPlanning, A4 \condAgenticCogWriter, A5 \condNoGoals, A6 \condFixedOrder, A7 \condSingleWriter, and A8 \condSingleContext.
 Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix~\ref{app:runtime}.
 
@@ -50,7 +51,7 @@ The \condStaged\ prompts follow the planning--drafting--revision decomposition u
 \promptinput{PromptBaseline}{\condTaskPlanning}{../experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md}
 
 \subsubsection{\condAgenticCogWriter}
-\promptinput{PromptMonitor}{Top-level Agent Skill}{build/prompt-display/plugin/skills/agentic-cog-writer/SKILL.md}
+\promptinput{PromptMonitor}{Top-level Agent Skill}{../plugin/skills/agentic-cog-writer/SKILL.md}
 
 \promptinput{PromptMonitor}{Goal Notation Reference}{../plugin/skills/agentic-cog-writer/references/goals-format.md}
 
@@ -73,7 +74,7 @@ The \condStaged\ prompts follow the planning--drafting--revision decomposition u
 
 \promptinput{PromptAblation}{\condFixedOrder}{../experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md}
 
-\promptinput{PromptAblation}{\condSingleWriter}{build/prompt-display/experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md}
+\promptinput{PromptAblation}{\condSingleWriter}{../experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md}
 
 \promptinput{PromptAblation}{\condSingleContext}{../experiments/plugin/skills/cognitive-writing-single-context/SKILL.md}
 
