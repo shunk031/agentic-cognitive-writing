@@ -12,7 +12,7 @@ Large language model agents (Yao et al., 2023; Shinn et al., 2023; Sumers et al.
 
 Figure 1. Overview of <span class="smallcaps">Agentic CogWriter</span>. Inspired by the cognitive process theory of writing, a coding-agent-style control loop turns the task into a document via Planning, Translating, or Reviewing, selected online from the evolving document state.
 
-Existing long-form writing systems impose different forms of structure on generation (Yao et al., 2019; Yang et al., 2022; Shao et al., 2024; Bai et al., 2025; Xiong et al., 2025; Sun et al., 2026). Some build an outline before drafting (Yao et al., 2019; Yang et al., 2022), some generate a document section by section (Shao et al., 2024; Bai et al., 2025), some recursively decompose the document into tasks (Xiong et al., 2025), and some adapt plans or structural reasoning during generation (Wan et al., 2025; Sun et al., 2026). Across these systems, the next step is usually defined by a content unit, task node, or prescribed stage. A complementary design question remains comparatively underexplored: should the writer decide which kind of writing process is needed next?
+Existing long-form writing systems impose different forms of structure on generation (Yao et al., 2019; Yang et al., 2022; Shao et al., 2024; Bai et al., 2025; Xiong et al., 2025; Sun et al., 2026). Some build an outline before drafting (Yao et al., 2019; Yang et al., 2022), some generate a document section by section (Shao et al., 2024; Bai et al., 2025; Huot et al., 2025), some recursively decompose the document into tasks (Xiong et al., 2025), and some adapt plans or structural reasoning during generation (Wan et al., 2025; Sun et al., 2026). Across these systems, the next step is usually defined by a content unit, task node, or prescribed stage. A complementary design question remains comparatively underexplored: should the writer decide which kind of writing process is needed next?
 
 The cognitive process theory of writing (Flower and Hayes, 1981; Hayes, 1996; Hayes, 2012) provides a useful abstraction for process-level control. Flower and Hayes (1981) characterize writing as coordination among planning, translating, and reviewing, with a monitor deciding which process to invoke as the document develops. This view suggests choosing the next writing process rather than the next section or task node.
 
@@ -26,21 +26,22 @@ Our contributions are threefold. (1) We formulate long-form writing for general-
 
 ##### Language agents and document production.
 
-Language-agent research studies systems that interleave reasoning with actions, tools, memory, and feedback (Yao et al., 2023; Shinn et al., 2023; Sumers et al., 2024), while writing-support systems assist planning, drafting, and revision (Gero et al., 2022). Autonomous research systems increasingly connect those capabilities to report or paper generation after literature review and experimentation (Schmidgall et al., 2025; Lu et al., 2024). We focus on how a general-purpose agent organizes that writing stage. Better control of document production can improve not only standalone writing systems but also larger autonomous workflows whose final value depends on the quality of the report or manuscript they produce.
+Language-agent research studies systems that interleave reasoning with actions, tools, memory, and feedback (Yao et al., 2023; Shinn et al., 2023; Sumers et al., 2024), while writing-support systems assist planning, drafting, and revision (Gero et al., 2022). Multi-agent frameworks divide work among role-specialized agents that converse (Wu et al., 2024) or follow standardized operating procedures (Hong et al., 2024). Autonomous research systems increasingly connect those capabilities to report or paper generation after literature review and experimentation (Schmidgall et al., 2025; Lu et al., 2024). We focus on how a general-purpose agent organizes that writing stage.
 
 ##### Long-form generation and planning.
 
-Long-form generation becomes harder to control and evaluate as outputs grow in length (Tan et al., 2024; Wu et al., 2026), motivating explicit planning and decomposition (Yao et al., 2019; Yang et al., 2022; Shao et al., 2024; Bai et al., 2025; Wan et al., 2025; Xiong et al., 2025; Sun et al., 2026). Plan-and-Write (Yao et al., 2019), Re`^3` (Yang et al., 2022), STORM (Shao et al., 2024), and LongWriter (Bai et al., 2025) organize generation around plans, revisions, sections, or manageable content units. CogWriter (Wan et al., 2025), WriteHERE (Xiong et al., 2025), IS-CoT (Sun et al., 2026), and SuperWriter (Wu et al., 2026) make structure or refinement increasingly adaptive. CogWriter conditionally revises plans and generated segments within a planning-and-generation workflow, whereas WriteHERE schedules nodes in an evolving heterogeneous task graph. Our <span class="smallcaps">Agentic CogWriter</span> instead makes planning, drafting, or reviewing the document-level control decision.
+Long-form generation becomes harder to control and evaluate as outputs grow in length (Tan et al., 2024; Wu et al., 2026), motivating explicit planning and decomposition. Plan-and-Write (Yao et al., 2019), Re`^3` (Yang et al., 2022), DOC (Yang et al., 2023), STORM (Shao et al., 2024), RecurrentGPT (Zhou et al., 2023), and LongWriter (Bai et al., 2025) organize generation around plans, revisions, outlines, sections, or paragraph-level content units. CogWriter (Wan et al., 2025), WriteHERE (Xiong et al., 2025), IS-CoT (Sun et al., 2026), and SuperWriter (Wu et al., 2026) make structure or refinement increasingly adaptive. CogWriter conditionally revises plans and generated segments within a planning-and-generation workflow, whereas WriteHERE schedules nodes in an evolving heterogeneous task graph. Agents’ Room (Huot et al., 2025) lets an orchestrator choose which planning or writing agent to call next from a shared scratchpad, but its agents specialize in story elements and its experiments fix their order, with no reviewing agent. Our <span class="smallcaps">Agentic CogWriter</span> instead makes the choice among planning, drafting, and reviewing the document-level control decision.
 
 ##### Iteration and cognitive models of writing.
 
-Iterative generation methods improve text through repeated feedback and revision (Madaan et al., 2023; Du et al., 2022), while cognitive writing research offers a process-level account of how planning, drafting, and reviewing interact (Flower and Hayes, 1981; Hayes, 1996; Hayes, 2012). Gero et al. (2022) use those processes to organize writing-support systems, and CogWriter (Wan et al., 2025) likewise draws on cognitive writing theory to structure planning, generation, and revision. Our <span class="smallcaps">Agentic CogWriter</span> differs by making the writing process itself the online action chosen by a shared document-level controller and by testing that control choice with matched alternatives, ablations, and analyses of observed writing behavior. Table 1 summarizes the distinction alongside other explicit capabilities of representative long-form writing systems.
+Iterative generation methods improve text through repeated feedback and revision (Madaan et al., 2023; Du et al., 2022), and PEER (Schick et al., 2023) trains a model to imitate the writing process by proposing and explaining edits, while cognitive writing research offers a process-level account of how planning, drafting, and reviewing interact (Flower and Hayes, 1981; Hayes, 1996; Hayes, 2012). Gero et al. (2022) use those processes to organize writing-support systems, and CogWriter (Wan et al., 2025) likewise draws on cognitive writing theory to structure planning, generation, and revision. Our <span class="smallcaps">Agentic CogWriter</span> tests this process-level account directly with matched alternatives, ablations, and analyses of observed writing behavior. Table 1 summarizes the distinction alongside other explicit capabilities of representative long-form writing systems.
 
 |  |  |  |  |  |
 |:---|:--:|:--:|:--:|:--:|
 | **Method** | **Unit of**; **progress** | **Adaptive**; **next step** | **Evolving**; **structure** | **Online process**; **selection** |
 | Re`^3` (Yang et al., 2022) | Passage | – | – | – |
 | STORM (Shao et al., 2024) | Section | – | – | – |
+| Agents’ Room (Huot et al., 2025) | Story element | – | – | – |
 | CogWriter (Wan et al., 2025) | Plan / segment | yes | Plan | – |
 | WriteHERE (Xiong et al., 2025) | Task node | yes | Task graph | – |
 | **<span class="smallcaps">Agentic CogWriter</span> (ours)** | **Writing process** | yes | **Goal network** | yes |
@@ -151,7 +152,7 @@ The primary generator and evaluator come from the same model family, which can i
 
 We fixed the confirmatory comparisons before scoring to avoid choosing favorable tests after observing results. For each benchmark and generation run, an exact two-sided sign test compares the non-tied prompt-level wins and losses for every pre-specified contrast (Dixon and Mood, 1946). Testing several related contrasts increases the chance of at least one false positive, so we apply Holm’s step-down correction (Holm, 1979) across the pre-specified tests within each benchmark. Generation runs remain separate because they repeat the same prompts rather than provide new independent samples.[^5]
 
-To summarize the two ablation contrasts across generation runs, we compute an exploratory post-hoc prompt-level estimate. For each prompt, win, tie, and loss outcomes are mapped to `1`, `1/2`, and `0`, averaged across the three generation runs, and summarized across benchmarks with a bootstrap interval and sign test.
+To summarize the two ablation contrasts across generation runs, we compute an exploratory post-hoc prompt-level estimate. For each prompt, win, tie, and loss outcomes are mapped to `1`, `1/2`, and `0`, averaged across the three generation runs, and summarized across benchmarks with a bootstrap interval (Efron, 1979) and sign test.
 
 ##### Robustness and behavioral analysis.
 
@@ -194,7 +195,7 @@ Table 4. Run-averaged same-prompt win rates; above 50% favors our system. Across
 
 ### Ablations and Execution Diagnostics
 
-Table 5 places the two pre-specified ablations much closer to <span class="smallcaps">Agentic CogWriter</span> than the alternative writing systems in Table 4. After the within-benchmark Holm correction, all benchmark–run tests comparing our system with `No-goals` or `Fixed-order` remain above the corrected significance threshold. An exploratory prompt-level summary defined after the main results places our system slightly ahead of both ablations, at 53.7% \[51.0%–56.4%\], `p=0.004`, against `Fixed-order` and 52.3% \[49.6%–55.0%\], `p=0.056`, against `No-goals`; the two intervals overlap, so the summary does not rank the components. The ablations nonetheless keep the full system’s advantage over the alternatives: of 12 paired native and pointwise contrasts with them on WritingBench and HelloBench, intervals exclude zero for 11 with `No-goals` and 7 with `Fixed-order`, against 10 with our system.[^9]
+Table 5 places the two pre-specified ablations much closer to <span class="smallcaps">Agentic CogWriter</span> than the alternative writing systems in Table 4. After the within-benchmark Holm correction, all benchmark–run tests comparing our system with `No-goals` or `Fixed-order` remain above the corrected significance threshold. An exploratory prompt-level summary defined after the main results places our system slightly ahead of both ablations, at 53.7% \[51.0%–56.4%\], `p=0.004`, against `Fixed-order` and 52.3% \[49.6%–55.0%\], `p=0.056`, against `No-goals`; the two intervals overlap, so the summary does not rank the components. The ablations nonetheless keep the full system’s advantage over the alternatives: of 12 paired native and pointwise contrasts with them on WritingBench and HelloBench, intervals exclude zero for 11 with `No-goals` and 7 with `Fixed-order`, against 10 with the full system.[^9]
 
 |  |  |  |  |  |
 |:---|---:|---:|---:|---:|
@@ -245,9 +246,7 @@ Table 7. <span class="smallcaps">Agentic CogWriter</span> win rates against `Fi
 
 Tables 3 and 4 show that <span class="smallcaps">Agentic CogWriter</span> is distinguished by consistent same-prompt preference rather than uniform pointwise dominance, supporting process-level control without requiring every benchmark-specific metric to peak. Because the ablations keep most of that advantage, it resides in the process-level loop shared with the full system; goals and adaptive ordering appear partly redundant on tasks that seldom require revision.
 
-Figure 2 and Table 6 show that <span class="smallcaps">Agentic CogWriter</span> usually follows planning–drafting–reviewing and departs selectively, so process-level control is not the same as continual replanning. This complements systems that adapt task decomposition or structural reasoning during generation (Xiong et al., 2025; Wan et al., 2025; Sun et al., 2026): a second axis is which process a controller selects, not only how dynamically it replans.
-
-The process findings motivate benchmarks that directly induce revision: long inputs and, where stated, long requested outputs, together with procedural constraints, can be demanding without requiring earlier decisions to be revisited. Such benchmarks could change objectives, introduce new evidence, or impose rhetorical constraints; more broadly, cognitive writing theory provides executable control abstractions rather than claims that language agents reproduce human cognition, making alternative writing processes explicit enough to implement, compare, and falsify.
+Figure 2 and Table 6 show that <span class="smallcaps">Agentic CogWriter</span> usually follows planning–drafting–reviewing and departs selectively, so process-level control is not the same as continual replanning. This complements systems that adapt task decomposition or structural reasoning during generation (Xiong et al., 2025; Wan et al., 2025; Sun et al., 2026): a second axis is which process a controller selects, not only how dynamically it replans. More broadly, cognitive writing theory provides executable control abstractions rather than claims that language agents reproduce human cognition, making alternative writing processes explicit enough to implement, compare, and falsify.
 
 ## Conclusion
 
@@ -257,19 +256,27 @@ The process findings motivate benchmarks that directly induce revision: long inp
 
 ##### Scope and external validity.
 
-Our conclusions concern one generator family, one coding-agent-style harness, and deterministic subsets of three long-form benchmarks. The subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent semantic measure of difficulty. The results therefore do not establish transfer to shorter tasks, objectives that change during writing, other model families or runtimes, interactive human–AI writing, or end-to-end agents with retrieval. The alternative writing systems are matched implementations under our common generator and harness, not executions of the published systems.
+Our conclusions concern one generator family, one coding-agent-style harness, and deterministic subsets of three long-form benchmarks. The subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent measure of difficulty or of the need to revise. The results therefore do not establish transfer to shorter tasks, other model families or runtimes, interactive human–AI writing, or end-to-end agents with retrieval. A direct next step is a task set that changes objectives, introduces new evidence, or adds rhetorical constraints during writing, so that process selection is required rather than only available.
+
+##### Comparison design.
+
+The alternative writing systems are reimplemented under our generator, harness, tools, output budget, and no-retrieval policy, so each comparison changes the unit of control rather than model access or information; they are not executions of the published systems. `Task-planning` also delegates its task nodes to subagents, so delegation is present on both sides of that comparison. CogWriter-style and STORM-style adaptations (`Exploratory-1`, `Exploratory-2`) run only on ten consensus-writing tasks, and running them on the three benchmarks is the next comparison.[^12] The compute-matched analysis selects pairs with similar realized token use after generation; a Self-Refine baseline (Madaan et al., 2023) given our system’s token budget before generation would test budget-matched iterative revision directly.
 
 ##### Evaluator dependence.
 
-The primary evaluation also leaves uncertainty about judge dependence. Pairwise win rates are computed over order-consistent comparisons, where both presentation orders select the same response; Section 5.2 also reports unconditional and worst-case missing-output views. The primary evaluator belongs to the same model family as the generator, and related generator–judge models can exhibit preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). In the single-run cross-family check, summing W/L/T counts over the three benchmarks within each selected contrast leaves all three contrasts favoring our system, but the cross-family judge produces many ties and reverses 3 of 9 benchmark-level comparisons; we also did not collect human judgments, so model-judge preference should not be treated as human preference. The primary evaluator also favors longer outputs overall.
+Section 5.2 complements the order-consistent win rates with unconditional and worst-case missing-output views. The primary evaluator belongs to the same model family as the generator, and related generator–judge models can exhibit preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). The cross-family judge rescored one generation run for the contrasts with `Single-pass`, `Task-planning`, and `No-goals`; summing W/L/T counts over the three benchmarks leaves all three favoring our system, but the judge produces many ties and reverses 3 of 9 benchmark-level comparisons. Extending the check to `Staged` and `Fixed-order` and to all three generation runs would cover every contrast between our system and an alternative or ablation. Model-judge preference is not human preference: a blinded packet of same-prompt comparisons, stratified by benchmark, contrast, and prompt length for three annotators, is prepared, and collecting those judgments would measure how closely the judges agree with human readers.
 
 ##### Component attribution.
 
-The component analyses constrain mechanism claims without establishing equivalence. Removing the explicit goal representation or fixing process order produces no reliable difference from the full system in the pre-specified multiple-comparison-corrected tests, which were not powered for differences this small, and the exploratory prompt-level summary does not rank the two components. `Single-writer` changes delegation, role context, decision granularity, and output length together; `Single-context` is narrower but was added post-hoc, uses one exploratory generation run, and differs in execution interface and transport. The current evidence therefore cannot attribute the remaining system-level advantage to any single shared execution feature.
+The ablations constrain explicit goals and adaptive ordering to modest contributions without establishing equivalence. Neither ablation differs from the full system in any benchmark–run test after Holm correction, each such test reaches 80% power at a true preference of about 73%, and the exploratory prompt-level summary does not rank the two components.[^13] `Fixed-order` enforces its cycle through the `Monitor`’s instructions so that it shares our system’s agent runtime and differs only in the selection rule, and 89.8% of its paths are cycle-compliant.[^14] Next steps are a runner-enforced cycle and a combined ablation that removes goals and fixes the order together, which would test whether the two mechanisms substitute for each other.
+
+##### Execution variants.
+
+`Single-writer` changes delegation, role context, decision granularity, and output length together; `Single-context` is narrower but was added post-hoc, uses one exploratory generation run, and differs in execution interface and transport. The current evidence therefore does not attribute the remaining system-level advantage to any single shared execution feature.
 
 ##### Descriptive execution analyses.
 
-The length- and compute-matched analyses are descriptive because both variables are consequences of execution. Process traces likewise record state transitions and agent actions; they characterize how <span class="smallcaps">Agentic CogWriter</span> behaves on these tasks but do not measure human cognition or validate cognitive process theory as a model of language-agent internals.
+The primary evaluator favors longer outputs overall, and the length- and compute-matched analyses are descriptive because both variables result from execution. Process traces likewise record state transitions and agent actions; they characterize how <span class="smallcaps">Agentic CogWriter</span> behaves on these tasks but do not measure human cognition or validate cognitive process theory as a model of language-agent internals.
 
 ## Ethical Considerations
 
@@ -1897,6 +1904,8 @@ Wanyu Du, Vipul Raheja, Dhruv Kumar, Zae Myung Kim, Melissa Lopez, and Dongyeop 
 
 Yann Dubois, Percy Liang, and Tatsunori Hashimoto. 2024. [Length-controlled AlpacaEval: A simple debiasing of automatic evaluators](https://openreview.net/forum?id=CybBmzWBX0). In *First Conference on Language Modeling*.
 
+Bradley Efron. 1979. [Bootstrap methods: Another look at the jackknife](https://doi.org/10.1214/aos/1176344552). *The Annals of Statistics*, 7(1):1–26.
+
 Linda Flower and John R Hayes. 1981. [A cognitive process theory of writing](https://doi.org/10.58680/ccc198115885). *College Composition & Communication*, 32(4):365–387.
 
 Katy Gero, Alex Calderwood, Charlotte Li, and Lydia Chilton. 2022. [A design space for writing support tools using a cognitive process model of writing](https://doi.org/10.18653/v1/2022.in2writing-1.2). In *Proceedings of the First Workshop on Intelligent and Interactive Writing Assistants (In2Writing 2022)*, pages 11–24. Association for Computational Linguistics.
@@ -1906,6 +1915,10 @@ John R Hayes. 1996. A new framework for understanding cognition and affect in wr
 John R Hayes. 2012. [Modeling and remodeling writing](https://doi.org/10.1177/0741088312451260). *Written Communication*, 29(3):369–388.
 
 Sture Holm. 1979. [A simple sequentially rejective multiple test procedure](https://www.jstor.org/stable/4615733). *Scandinavian Journal of Statistics*, 6(2):65–70.
+
+Sirui Hong, Mingchen Zhuge, Jonathan Chen, Xiawu Zheng, Yuheng Cheng, Ceyao Zhang, Jinlin Wang, Zili Wang, Steven Ka Shing Yau, Zijuan Lin, Liyang Zhou, Chenyu Ran, Lingfeng Xiao, Chenglin Wu, and Jürgen Schmidhuber. 2024. [MetaGPT: Meta programming for a multi-agent collaborative framework](https://openreview.net/forum?id=VtmBAGCN7o). In *The Twelfth International Conference on Learning Representations*.
+
+Fantine Huot, Reinald Kim Amplayo, Jennimaria Palomaki, Alice Shoshana Jakobovits, Elizabeth Clark, and Mirella Lapata. 2025. [Agents’ Room: Narrative generation through multi-step collaboration](https://openreview.net/forum?id=HfWcFs7XLR). In *The Thirteenth International Conference on Learning Representations*.
 
 Dawei Li, Renliang Sun, Yue Huang, Ming Zhong, Bohan Jiang, Jiawei Han, Xiangliang Zhang, Wei Wang, and Huan Liu. 2026. [Preference leakage: A contamination problem in LLM-as-a-judge](https://openreview.net/forum?id=grIvSXVJ65). In *International Conference on Learning Representations*, volume 2026, pages 60486–60511.
 
@@ -1926,6 +1939,8 @@ OpenAI. 2026. GPT-5.6 Sol model. <https://developers.openai.com/api/docs/models/
 Arjun Panickssery, Samuel R. Bowman, and Shi Feng. 2024. [LLM evaluators recognize and favor their own generations](https://doi.org/10.52202/079017-2197). In *Advances in Neural Information Processing Systems*, volume 37, pages 68772–68802.
 
 Haoran Que, Feiyu Duan, Liqun He, Yutao Mou, Wangchunshu Zhou, Jiaheng Liu, Wenge Rong, Zekun Moore Wang, Jian Yang, Ge Zhang, et al. 2024. [HelloBench: Evaluating long text generation capabilities of large language models](https://doi.org/10.48550/arXiv.2409.16191). *arXiv preprint arXiv:2409.16191*.
+
+Timo Schick, Jane Dwivedi-Yu, Zhengbao Jiang, Fabio Petroni, Patrick Lewis, Gautier Izacard, Qingfei You, Christoforos Nalmpantis, Edouard Grave, and Sebastian Riedel. 2023. [PEER: A collaborative language model](https://openreview.net/forum?id=KbYevcLjnc). In *The Eleventh International Conference on Learning Representations*.
 
 Samuel Schmidgall, Yusheng Su, Ze Wang, Ximeng Sun, Jialian Wu, Xiaodong Yu, Jiang Liu, Michael Moor, Zicheng Liu, and Emad Barsoum. 2025. [Agent Laboratory: Using LLM agents as research assistants](https://doi.org/10.18653/v1/2025.findings-emnlp.320). In *Findings of the Association for Computational Linguistics: EMNLP 2025*, pages 5977–6043. Association for Computational Linguistics.
 
@@ -1949,6 +1964,8 @@ Xingyao Wang, Boxuan Li, Yufan Song, Frank F. Xu, Xiangru Tang, Mingchen Zhuge, 
 
 Edwin B. Wilson. 1927. [Probable inference, the law of succession, and statistical inference](https://doi.org/10.1080/01621459.1927.10502953). *Journal of the American Statistical Association*, 22(158):209–212.
 
+Qingyun Wu, Gagan Bansal, Jieyu Zhang, Yiran Wu, Beibin Li, Erkang Zhu, Li Jiang, Xiaoyun Zhang, Shaokun Zhang, Jiale Liu, Ahmed Hassan Awadallah, Ryen W. White, Doug Burger, and Chi Wang. 2024. [AutoGen: Enabling next-gen LLM applications via multi-agent conversations](https://openreview.net/forum?id=BAakY1hNKS). In *First Conference on Language Modeling*.
+
 Yuhao Wu, Yushi Bai, Zhiqiang Hu, Juanzi Li, and Roy Ka-Wei Lee. 2026. [SuperWriter: Reflection-driven long-form generation with large language models](https://doi.org/10.18653/v1/2026.findings-acl.428). In *Findings of the Association for Computational Linguistics: ACL 2026*, pages 8790–8812. Association for Computational Linguistics.
 
 Yuning Wu, Jiahao Mei, Ming Yan, Chenliang Li, Shaopeng Lai, Yuran Ren, Zijia Wang, Ji Zhang, Mengyue Wu, Qin Jin, et al. 2025. [WritingBench: A comprehensive benchmark for generative writing](https://doi.org/10.52202/085713-1737). In *Advances in Neural Information Processing Systems*, volume 38, pages 58018–58051.
@@ -1957,6 +1974,8 @@ Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmi
 
 John Yang, Carlos E. Jimenez, Alexander Wettig, Kilian Lieret, Shunyu Yao, Karthik R. Narasimhan, and Ofir Press. 2024. [SWE-agent: Agent-computer interfaces enable automated software engineering](https://doi.org/10.52202/079017-1601). In *Advances in Neural Information Processing Systems*, volume 37, pages 50528–50652.
 
+Kevin Yang, Dan Klein, Nanyun Peng, and Yuandong Tian. 2023. [DOC: Improving long story coherence with detailed outline control](https://doi.org/10.18653/v1/2023.acl-long.190). In *Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)*, pages 3378–3465. Association for Computational Linguistics.
+
 Kevin Yang, Yuandong Tian, Nanyun Peng, and Dan Klein. 2022. [Re3: Generating longer stories with recursive reprompting and revision](https://doi.org/10.18653/v1/2022.emnlp-main.296). In *Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing*, pages 4393–4479. Association for Computational Linguistics.
 
 Lili Yao, Nanyun Peng, Ralph Weischedel, Kevin Knight, Dongyan Zhao, and Rui Yan. 2019. [Plan-and-write: Towards better automatic storytelling](https://doi.org/10.1609/aaai.v33i01.33017378). In *Proceedings of the AAAI Conference on Artificial Intelligence*, volume 33, pages 7378–7385. AAAI.
@@ -1964,6 +1983,8 @@ Lili Yao, Nanyun Peng, Ralph Weischedel, Kevin Knight, Dongyan Zhao, and Rui Yan
 Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik R Narasimhan, and Yuan Cao. 2023. [ReAct: Synergizing reasoning and acting in language models](https://openreview.net/forum?id=WE_vluYUL-X). In *The Eleventh International Conference on Learning Representations*.
 
 Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica. 2023. [Judging LLM-as-a-judge with MT-Bench and Chatbot Arena](https://doi.org/10.52202/075280-2020). In *Advances in Neural Information Processing Systems*, volume 36, pages 46595–46623.
+
+Wangchunshu Zhou, Yuchen Eleanor Jiang, Peng Cui, Tiannan Wang, Zhenxin Xiao, Yifan Hou, Ryan Cotterell, and Mrinmaya Sachan. 2023. [RecurrentGPT: Interactive generation of (arbitrarily) long text](https://doi.org/10.48550/arXiv.2305.13304). *arXiv preprint arXiv:2305.13304*.
 
 [^1]: See Appendix A for the exact selection rule, sample sizes, and sensitivity analysis.
 
@@ -1986,3 +2007,9 @@ Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Z
 [^10]: See Appendix F for the benchmark-level diagnostic and the remaining execution differences.
 
 [^11]: See Appendix E for process, goal, and resource statistics.
+
+[^12]: See Appendix G for the consensus-writing results.
+
+[^13]: See Appendix A for the power calculation.
+
+[^14]: See Appendix E for the trace classification.
