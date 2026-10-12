@@ -212,16 +212,18 @@ Execution changes produce a larger but less easily isolated difference. `Single-
 
 Table 6 shows a mostly simple writing loop after repeat collapsing and leading-`Planning` reconstruction: 74.6% of complete paths conform to the `Planning`–`Translating`–`Reviewing` cycle structure, while 14.8% of runs return from `Reviewing` to `Translating`. Full replanning (0.3%) and goal replacement (0.5%) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over `Fixed-order` because ordering can matter only when the controller departs from the common path.
 
-|                                               |          |
-|:----------------------------------------------|---------:|
-| **Observed writing-loop behavior**            | **Rate** |
-| Cycle-compliant path                          |    74.6% |
-| Any other complete path                       |    25.4% |
-| `Reviewing` followed by renewed `Translating` |    14.8% |
-| `Reviewing` followed by renewed `Planning`    |     0.3% |
-| Runs with an accepted goal replacement        |     0.5% |
+|                                               |                            |
+|:----------------------------------------------|---------------------------:|
+| **Observed writing-loop behavior**            |                   **Rate** |
+| *Complete process paths*                      |   *Complete process paths* |
+| Cycle-compliant path                          |                      74.6% |
+| Any other complete path                       |                      25.4% |
+| *Non-exclusive indicators*                    | *Non-exclusive indicators* |
+| `Reviewing` followed by renewed `Translating` |                      14.8% |
+| `Reviewing` followed by renewed `Planning`    |                       0.3% |
+| Runs with an accepted goal replacement        |                       0.5% |
 
-Table 6. Writing-loop behavior of <span class="smallcaps">Agentic CogWriter</span> after repeat collapsing and leading-`Planning` reconstruction. Rows 1–2 partition complete process paths; rows 3–5 are non-exclusive indicators.
+Table 6. Writing-loop behavior of <span class="smallcaps">Agentic CogWriter</span> after repeat collapsing and leading-`Planning` reconstruction; most paths are cycle-compliant.
 
 Figure 2 shows the same concentration: the forward `Planning`–`Translating`–`Reviewing` progression is most frequent, so our system looks close to `Fixed-order`. Because the demanding subsets increase input or requested output length or procedural burden without guaranteeing a need to replan, the traces show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing.
 

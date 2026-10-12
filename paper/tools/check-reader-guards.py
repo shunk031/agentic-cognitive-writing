@@ -107,8 +107,8 @@ def check_caption_takeaways() -> None:
             ("HelloBench result", ("HelloBench",)),
         ),
         "tab/process-dynamics.tex": (
-            ("rows 1-2 partition complete paths", ("partition",)),
-            ("rows 3-5 are non-exclusive", ("non-exclusive",)),
+            ("the first group partitions complete paths", ("partition", "Complete process paths")),
+            ("rows 3-5 are non-exclusive", ("non-exclusive", "Non-exclusive")),
         ),
         "sec/05_results.tex": (
             ("our system mostly follows the forward progression", ("mostly follows",)),
