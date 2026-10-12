@@ -48,6 +48,12 @@
       "instruction": "Rewrite the Table 7 caption so it says whose win rates these are, that the first group is runs with exactly one Planning-Translating-Reviewing cycle, and spell out wins and losses, within five rendered lines.",
       "before": "\\caption{\\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Each rate sums wins/losses over benchmarks and runs; the split is observational, not causal.}",
       "after": "\\caption{\\condAgenticCogWriter\\ win rates against \\condFixedOrder\\ and \\condSingleWriter\\ are similar for one-cycle \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} runs and other-path runs. Rates sum wins and losses over benchmarks and runs; the split is observational, not causal.}"
+    },
+    {
+      "path": "paper/tab/main-results.tex",
+      "instruction": "Italicize the column names Native and Pointwise where the Table 3 caption defines them.",
+      "before": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across generation runs. Native uses each benchmark's criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}",
+      "after": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across generation runs. \\textit{Native} uses each benchmark's criteria; \\textit{Pointwise} uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}"
     }
   ],
   "created_files": []
