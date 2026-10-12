@@ -1540,6 +1540,7 @@ class ExperimentRunner:
         "cognitive-writing-no-goal-network": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-single-context": _CODEX_ROLE_SKILL_DIRECTORIES,
+        "cognitive-writing-loop-only": _CODEX_ROLE_SKILL_DIRECTORIES,
     }
 
     def _stage_codex_plugin(

@@ -1217,7 +1217,7 @@ def test_composed_prompt_omits_the_stage_chain_header_without_frozen_paths() -> 
 
 @pytest.mark.parametrize(
     "condition_id",
-    ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "B1", "B2"),
+    ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A12", "B1", "B2"),
 )
 @pytest.mark.parametrize("platform", PLATFORMS)
 def test_composed_prompt_has_one_rendered_shared_input_block(
@@ -1454,6 +1454,7 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         ("A5", "cognitive-writing-no-goal-network"),
         ("A6", "cognitive-writing-fixed-order"),
         ("A8", "cognitive-writing-single-context"),
+        ("A12", "cognitive-writing-loop-only"),
     ),
 )
 def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6_a8(
