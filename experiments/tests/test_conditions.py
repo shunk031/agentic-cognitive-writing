@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from agentic_cogwriter.paths import EXPERIMENTS_ROOT
+from agentic_cogwriter.paths import EXPERIMENTS_ROOT, REPOSITORY_ROOT
 from agentic_cogwriter.runner.conditions import CONDITION_IDS, load_condition_registry
 from agentic_cogwriter.runner.errors import ConfigurationError
 
@@ -55,6 +55,60 @@ def test_registry_parses_stages_from_condition_wrappers() -> None:
         assert stages[0].sha256 is None
 
 
+def test_a9_keeps_the_a2_harness_and_adds_role_guidance() -> None:
+    registry = load_condition_registry()
+    a2, a9 = registry["A2"], registry["A9"]
+
+    for field in (
+        "skill_name",
+        "package_name",
+        "trace_processes",
+        "goal_events",
+        "event_types",
+        "min_events",
+        "max_events",
+        "process_order",
+        "require_goal_events",
+        "require_delegation",
+        "product_requires_draft",
+    ):
+        assert getattr(a9, field) == getattr(a2, field), field
+    assert [stage.stage_id for stage in a9.stages] == [
+        stage.stage_id for stage in a2.stages
+    ]
+
+    roles = ("planning", "translating", "reviewing")
+    kept_role_sentences = {
+        "planning": (
+            "Do not replace missing user intent with a guess.",
+            "Separate known material, plausible ideas, and unsupported claims.",
+            "The organizing work makes meaning rather than merely rearranging "
+            "bullets.",
+        ),
+        "translating": (
+            "do not let fluent wording override the rhetorical purpose.",
+            "Do not invent sources, quotations, statistics, or facts.",
+        ),
+        "reviewing": (
+            "Distinguish goal and evidence failures from organization and "
+            "sentence failures.",
+            "Do not invent citations or claims.",
+        ),
+    }
+    for a2_stage, a9_stage, role in zip(a2.stages, a9.stages, roles, strict=True):
+        a2_text = a2_stage.path.read_text(encoding="utf-8")
+        a9_text = a9_stage.path.read_text(encoding="utf-8")
+        role_text = (
+            REPOSITORY_ROOT / "plugin" / "skills" / role / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        assert a2_text.split("\n\n")[1] in a9_text
+        for sentence in kept_role_sentences[role]:
+            assert sentence in role_text
+            assert sentence in a9_text
+        for excluded in ("Monitor", "goal network", "goals.md", "trace", "delegat"):
+            assert excluded not in a9_text
+
+
 def test_registry_keeps_wrapper_paths_and_families() -> None:
     registry = load_condition_registry()
 
@@ -71,6 +125,7 @@ def test_registry_keeps_wrapper_paths_and_families() -> None:
         "A6": "confirmatory",
         "A7": "confirmatory",
         "A8": "exploratory",
+        "A9": "exploratory",
         "B1": "exploratory",
         "B2": "exploratory",
     }
@@ -109,7 +164,7 @@ def test_missing_condition_wrapper_is_an_error(tmp_path: Path) -> None:
     conditions_dir = _copy_conditions(tmp_path)
     (conditions_dir / "a4_plugin.toml").unlink()
 
-    with pytest.raises(ConfigurationError, match="exactly A1 through A8"):
+    with pytest.raises(ConfigurationError, match="exactly A1 through A9"):
         load_condition_registry(conditions_dir)
 
 
@@ -121,7 +176,7 @@ def test_stray_condition_wrapper_is_an_error(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    with pytest.raises(ConfigurationError, match="exactly A1 through A8"):
+    with pytest.raises(ConfigurationError, match="exactly A1 through A9"):
         load_condition_registry(conditions_dir)
 
 
