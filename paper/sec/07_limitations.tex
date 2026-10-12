@@ -23,7 +23,7 @@ Model-judge preference is not human preference; a blinded human comparison of sa
 
 \paragraph{Component attribution.}
 The ablations constrain explicit goals and adaptive ordering to modest contributions without establishing equivalence.
-Neither ablation differs from the full system in any benchmark--run test after Holm correction, each such test reaches 80\% power~\citep{card2020little} at a true preference of about \PowerCellDetectablePreference, and the exploratory prompt-level summary does not rank the two components.\footnote{See Appendix~\ref{app:prompts} for the power calculation.}
+Neither ablation differs from the full system in any benchmark--run test after Holm correction, each such test reaches 80\% power~\citep{card2020little} at a true preference of about \PowerCellDetectablePreference, and the post-hoc prompt-level estimate does not compare the two components.\footnote{See Appendix~\ref{app:prompts} for the power calculation.}
 \condFixedOrder\ enforces its cycle through the \texttt{Monitor}'s instructions so that it shares our system's agent runtime and differs only in the selection rule, and \AsixCycleCompliantRate\ of its paths are cycle-compliant.\footnote{See Appendix~\ref{app:process-behavior} for the trace classification.}
 Next steps are a runner-enforced cycle and a combined ablation that removes goals and fixes the order together, which would test whether the two mechanisms substitute for each other.
 

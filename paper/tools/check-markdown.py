@@ -151,7 +151,8 @@ def check():
     abstract_commands = [
         command
         for command in re.findall(r"\\[A-Za-z]+", abstract)
-        if command != r"\condAgenticCogWriter"
+        # Trace frequencies come from numbers.tex; see check-abstract-style.py.
+        if command != r"\condAgenticCogWriter" and not re.fullmatch(r"\\Afour[A-Za-z]+Rate", command)
     ]
     assert len(abstract_words) <= 200, len(abstract_words)
     assert not abstract_commands, ("LaTeX command in abstract", abstract_commands)

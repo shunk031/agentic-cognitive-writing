@@ -87,8 +87,12 @@ def main() -> None:
     assert "system-level interpretation" in lowered, (
         "Frame the ablations at the system level rather than as a failed mechanism search"
     )
-    assert re.search(r"adaptive ordering[^.]*used selectively", intro, re.IGNORECASE), (
-        "Explain that adaptive ordering is available but used selectively"
+    # State trace behavior as observed frequencies, not as a purpose ("selectively").
+    assert re.search(r"Process traces[^.]*\\Afour[A-Za-z]+Rate", intro), (
+        "State the trace result as an observed frequency from numbers.tex"
+    )
+    assert not re.search(r"\bselectively\b", intro, re.IGNORECASE), (
+        "Do not attribute purpose to trace departures"
     )
 
     assert "we compare our system" in lowered, (

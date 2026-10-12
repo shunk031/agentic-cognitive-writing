@@ -39,7 +39,9 @@ Removing explicit goals therefore leaves the full system's advantage intact, and
 \section{Additional Process and Resource Statistics}
 \label{app:process-behavior}
 Table~\ref{tab:process-summary} reports output size, delegated invocations, goal events, token accounting, and wall-clock time, each averaged across the three generation runs.
-For \condAgenticCogWriter, a generation run averages \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while its post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ regeneration proposals, while its trace records \AfourGoalRegeneratedMean\ goal regenerations (Table~\ref{tab:process-summary}).
+For \condAgenticCogWriter, a generation run averages \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events.
+The post-\texttt{Reviewing} ledger is the \texttt{Monitor}'s first process-switch decision after each \texttt{Reviewing} pass, which lists every regeneration proposal from the \texttt{Reviewer} with its acceptance or rejection, or states that none was made.
+A generation run averages \AfourLedgerEntriesMean\ ledger entries, \AfourLedgerWithProposalMean\ of which contain a regeneration proposal, and the trace records \AfourGoalRegeneratedMean\ accepted goal regenerations (Table~\ref{tab:process-summary}).
 \input{tab/appendix-process}
 
 \paragraph{Trace processing.}
@@ -63,13 +65,14 @@ Table~\ref{tab:appendix-length-control} reports matched-length win rates for our
 Within the tighter pre-specified matching band, our system is favored over \condSinglePass\ in every run, stays above parity in every run against \condStaged\ and \condFixedOrder, remains above parity against \condTaskPlanning\ while narrowing toward parity, and changes direction across runs against \condNoGoals.
 The wider pre-specified band shows the same qualitative pattern.
 These matching-band results are descriptive sensitivity checks; ties are excluded from the win-rate denominator, and generation runs are reported separately because they reuse the same prompts.
-The \condSingleWriter\ length-band tests in Section~\ref{sec:results-mechanism} instead combine the three runs, so their sign tests take the prompt as the unit: a prompt counts as a win or a loss when its outcomes in the band, averaged across runs, favor one system.
+The \condSingleWriter\ length-band tests in Section~\ref{sec:results-mechanism}, in which \condSingleWriter\ wins \SingleWriterLengthFiveRate\ and \SingleWriterLengthTenRate, instead combine the three runs, so their sign tests take the prompt as the unit: a prompt counts as a win or a loss when its outcomes in the band, averaged across runs, favor one system.
 \input{tab/appendix-length-control}
 
 \subsection{Prompt-Level and Length-Controlled Summaries}
 \label{app:prompt-level}
 Table~\ref{tab:appendix-prompt-level} reports the post-hoc prompt-level estimate for each alternative and benchmark.
 Across benchmarks, it separates our system from all three alternatives; against \condStaged, the separation holds on WritingBench and HelloBench ($p=\PromptLevelHelloFullStagedP$, unadjusted) but not on DoLoMiTes ($p=\PromptLevelDoLoFullStagedP$).
+On WritingBench the judge returns almost no tie for a single presentation order, so each pair's tie-as-half score equals its share of won records and these rates match the record-level rates of Table~\ref{tab:appendix-record-pooled-pairwise}.
 Table~\ref{tab:appendix-length-model} fits a logistic model of the decided outcome on the log length ratio, following the length-controlled evaluation of \citet{dubois2024length}.
 At equal length, our system keeps its preference over the three alternatives, and its preference is \LengthModelFullNoGoalsPreference\ against \condNoGoals\ and \LengthModelFullFixedOrderPreference\ against \condFixedOrder; every slope is positive, so the judge favors the longer output in each contrast.
 \input{tab/appendix-prompt-level}

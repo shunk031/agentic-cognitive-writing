@@ -873,6 +873,17 @@ def _length_control_entries(report: dict[str, Any]) -> list[tuple[str, str, str]
                     (prefix + "RateRun" + run_word, _percent_fixed(stats["win_rate"], 1), stats_source + ".win_rate"),
                     (prefix + "NRun" + run_word, str(stats["n_non_tie"]), stats_source + ".n_non_tie"),
                 ]
+    for band, band_word in LENGTH_BANDS.items():
+        prefix = f"\\LengthFullSingleWriter{band_word}"
+        for run, run_word in LENGTH_RUNS.items():
+            stats_source = f"{source} per_run.{run}.length_matched.{band}.A7:A4"
+            matched = _required_mapping(per_run[run], "length_matched", f"{source}.per_run.{run}")
+            stats = _required_mapping(_required_mapping(matched, band, stats_source), "A7:A4", stats_source)
+            _validate_outcome(stats, stats_source)
+            entries += [
+                (prefix + "RateRun" + run_word, _percent_fixed(stats["losses"] / stats["n_non_tie"], 1), stats_source + " losses / n_non_tie (Agentic CogWriter wins)"),
+                (prefix + "NRun" + run_word, str(stats["n_non_tie"]), stats_source + ".n_non_tie"),
+            ]
     across = _required_mapping(_required_mapping(report, "across_runs", source), "length_matched", f"{source}.across_runs")
     for band, band_word in LENGTH_BANDS.items():
         stats_source = f"{source} across_runs.length_matched.{band}.A7:A4"
@@ -1092,6 +1103,10 @@ def _review_analysis_entries(report: dict[str, Any]) -> list[tuple[str, str, str
     for contrast, contrast_word in REVIEW_UNCONDITIONAL_CONTRASTS.items():
         pooled = outcomes[contrast]["pooled_over_benchmarks"]
         unconditional_rates = [pooled[replication]["unconditional_over_attempted"]["win_share"] for replication in REVIEW_REPLICATIONS]
+        loss_shares = [
+            pooled[replication]["unconditional_over_attempted"]["losses"] / pooled[replication]["attempted_prompts"]
+            for replication in REVIEW_REPLICATIONS
+        ]
         worst_rates = [pooled[replication]["missing_pair_bounds"]["worst_case"]["focal_non_tie_win_rate"] for replication in REVIEW_REPLICATIONS]
         source = f"adversarial review-analysis JSON unconditional_outcomes_and_missing_output_bounds.{contrast}.pooled_over_benchmarks"
         entries.extend([
@@ -1104,6 +1119,11 @@ def _review_analysis_entries(report: dict[str, Any]) -> list[tuple[str, str, str
                 f"\\WorstCase{contrast_word}Rate",
                 _percent_fixed(min(worst_rates), 1),
                 source + ".*.missing_pair_bounds.worst_case.focal_non_tie_win_rate minimum",
+            ),
+            (
+                f"\\Uncond{contrast_word}LossShare",
+                _percent_fixed(statistics.mean(loss_shares), 1),
+                source + ".*.unconditional_over_attempted.losses / attempted_prompts mean",
             ),
         ])
 
@@ -1624,6 +1644,8 @@ def _emit_process_sequence_macros(add: Any, report: dict[str, Any]) -> None:
         splits = combined[contrast]["splits"]
         add("\\AfourExactCycle" + suffix + "WinRate", _percent_fixed(splits["single_cycle_exact"]["win_rate"], 1), f"process-sequences JSON prompt_association.combined.{contrast}.splits.single_cycle_exact.win_rate")
         add("\\AfourNonExact" + suffix + "WinRate", _percent_fixed(splits["not_single_cycle_exact"]["win_rate"], 1), f"process-sequences JSON prompt_association.combined.{contrast}.splits.not_single_cycle_exact.win_rate")
+        for split, word in (("single_cycle_exact", "ExactCycle"), ("not_single_cycle_exact", "NonExact")):
+            add("\\Afour" + word + suffix + "NonTie", str(splits[split]["n_non_tie"]), f"process-sequences JSON prompt_association.combined.{contrast}.splits.{split}.n_non_tie")
         add("\\Afour" + suffix + "CycleSplitP", _pvalue_two_decimals(combined[contrast]["fisher_exact_two_sided"]["p_value"]), f"process-sequences JSON prompt_association.combined.{contrast}.fisher_exact_two_sided.p_value")
     leading = report["provenance"]["leading_process_analysis"]["conditions"]
     for condition in PROCESS_SEQUENCE_CONDITIONS:

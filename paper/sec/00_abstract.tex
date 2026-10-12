@@ -3,6 +3,6 @@ The same execution style is increasingly used for knowledge work that ends in lo
 Yet long-form writing systems usually advance an outline, task graph, or fixed stage sequence rather than deciding which writing process is needed next.
 Drawing on cognitive process theory, we propose \condAgenticCogWriter, which maintains a shared draft, goals, and process history while a Monitor agent chooses and delegates planning, drafting, or reviewing.
 We evaluate our system across three long-form writing benchmarks using pointwise rubric scoring and pairwise same-prompt preference judgments.
-In prompt-level pairwise tests across benchmarks, our system is preferred to one-shot generation, a fixed planning--drafting--revision workflow, and adaptive task planning, although the pre-specified per-benchmark tests separate it from the fixed workflow only on WritingBench.
-On WritingBench and HelloBench, its mean pointwise scores exceed those of all three alternatives, and ablations that drop explicit goals or fix the process order keep most of this advantage.
-Process traces show that the Monitor mostly follows a planning--drafting--reviewing path, with departures used selectively rather than continually.
+Pre-specified per-benchmark pairwise tests separate our system from one-shot generation in most cases but from a fixed planning--drafting--revision workflow and adaptive task planning in fewer than half, and a post-hoc prompt-level summary across benchmarks favors it over all three.
+Its paired pointwise differences favor it over all three alternatives on WritingBench and on HelloBench's native rubric, and ablations that drop explicit goals or fix the process order keep most of this advantage.
+In process traces, \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure, and \AfourReviewingToTranslatingRate\ and \AfourReviewingToPlanningRate\ of runs return from reviewing to drafting and to planning, respectively.
