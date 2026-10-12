@@ -4,6 +4,8 @@ For each benchmark and score, every prompt's three generation runs are averaged 
 system first, so the prompt is the resampling unit. The interval is a percentile
 bootstrap over prompts of the mean paired difference for every ordered pair of the
 four systems in Table 3, using prompts scored for both systems in at least one run.
+The same interval is also reported for each ablation (No-goals, Fixed-order) minus each
+external alternative, to test whether the ablations keep the full system's advantage.
 
 Run with the experiments package on the path, for example:
     uv run --project ../experiments python scripts/paired_quality_ci.py RUN1 RUN2 RUN3
@@ -22,6 +24,8 @@ from agentic_cogwriter.analysis.common import select_canonical_runs
 SYSTEMS = ("A1", "A2", "A3", "A4", "A5", "A6", "A7")
 FOCAL = "A4"
 DISPLAYED = ("A1", "A2", "A3", "A4")
+ABLATIONS = ("A5", "A6")
+ALTERNATIVES = ("A1", "A2", "A3")
 DIMENSIONS = (
     "content_adequacy_depth",
     "factuality_constraint_fidelity",
@@ -109,6 +113,18 @@ def main() -> None:
                 }
                 for score, by_system in scores.items()
                 if all(system in by_system for system in DISPLAYED)
+            }
+            for benchmark, scores in sorted(data.items())
+        },
+        "ablation_contrasts": {
+            benchmark: {
+                score: {
+                    f"{ablation}-{alternative}": paired_ci(by_system[ablation], by_system[alternative], args.resamples, args.seed)
+                    for ablation in ABLATIONS
+                    for alternative in ALTERNATIVES
+                }
+                for score, by_system in scores.items()
+                if all(system in by_system for system in (*ABLATIONS, *ALTERNATIVES))
             }
             for benchmark, scores in sorted(data.items())
         },

@@ -165,5 +165,9 @@ checks every `\newcommand` in `numbers.tex`.
 | `\ThreeRun{DoLoStagedExceedsFullRuns,Count}` | Generation runs in which Staged exceeds Agentic CogWriter on the DoLoMiTes composite, and the number of runs | `results/pointwise-three-runs/three-run-summary.json` `dolomites_staged_vs_agentic_cogwriter` |
 | `\PairedQuality{Writing,Hello}Native{SinglePass,Staged,TaskPlanning}{Diff,Low,High}` | Paired prompt-level bootstrap mean difference and 95% interval, Agentic CogWriter minus the compared system; WritingBench divided by 10 | `results/pointwise-three-runs/paired-bootstrap.json` `contrasts.<benchmark>.native.A4-<system>` |
 | `\PairedQuality{Writing,Hello,DoLo}Pointwise{SinglePass,Staged,TaskPlanning}{Diff,Low,High}` | Paired prompt-level bootstrap mean difference and 95% interval of the seven-system composite, Agentic CogWriter minus the compared system | `results/pointwise-three-runs/paired-bootstrap.json` `contrasts.<benchmark>.pointwise.A4-<system>` |
+| `\PairedAblation{Writing,Hello}Native{NoGoals,FixedOrder}{SinglePass,Staged,TaskPlanning}{Diff,Low,High}` | Paired prompt-level bootstrap mean difference and 95% interval, ablation minus external alternative, native score |
+| `\PairedAblation{Writing,Hello,DoLo}Pointwise{NoGoals,FixedOrder}{SinglePass,Staged,TaskPlanning}{Diff,Low,High}` | Paired prompt-level bootstrap mean difference and 95% interval of the seven-system composite, ablation minus external alternative |
+| `\PairedSeparationMeasureCount` | WritingBench and HelloBench native and pointwise contrasts with the three alternatives |
+| `\PairedSeparated{Full,NoGoals,FixedOrder}` | Of those contrasts, how many have a displayed lower bound above zero |
 | `\{Writing,Hello,DoLo}ChinesePromptCount` | Scored hard100 prompts per benchmark written mainly in Chinese (more Han characters than Latin letters), from `make_numbers.py --prompt-languages` |
 | `\ChinesePromptCount` | Sum of the per-benchmark Chinese prompt counts |

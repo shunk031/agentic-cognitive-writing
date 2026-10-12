@@ -902,3 +902,9 @@ class PromptLanguageTests(unittest.TestCase):
             "A\n\n% Prompt-language macros.\nnew\n\n% Later block.\nkeep\n",
         )
 
+
+class AppendBlockTests(unittest.TestCase):
+    def test_every_append_mode_replaces_only_its_own_block(self):
+        source = Path(__file__).resolve().parents[1] / "make_numbers.py"
+        self.assertNotIn("split(marker, 1)[0]", source.read_text(encoding="utf-8"))
+

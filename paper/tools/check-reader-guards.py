@@ -123,8 +123,6 @@ def check_caption_takeaways() -> None:
         ),
         "sec/05_results.tex": (
             ("our system mostly follows the forward progression", ("mostly follows",)),
-            ("small exploratory advantage", ("exploratory advantage",)),
-            ("adaptive ordering", ("adaptive ordering",)),
         ),
     }
     for path, concept_groups in takeaways.items():

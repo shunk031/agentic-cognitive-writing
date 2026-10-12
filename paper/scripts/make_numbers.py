@@ -239,6 +239,8 @@ THREE_RUN_BENCHMARKS = {"WritingBench": "Writing", "HelloBench": "Hello", "DoLoM
 THREE_RUN_CONDITIONS = {"A1": "SinglePass", "A2": "Staged", "A3": "TaskPlanning", "A4": "Full"}
 # The manuscript reports WritingBench's 1-10 native scale divided by 10 so both native columns read 0-1.
 THREE_RUN_NATIVE_SCALE = {"WritingBench": 10.0, "HelloBench": 1.0}
+ABLATION_CONDITIONS = {"A5": "NoGoals", "A6": "FixedOrder"}
+ALTERNATIVE_CONDITIONS = {"A1": "SinglePass", "A2": "Staged", "A3": "TaskPlanning"}
 
 REVIEW_CLUSTERED_CONTRASTS = {
     "A4:A6": "FullFixedOrder",
@@ -2163,6 +2165,48 @@ def _paired_quality_entries(paired: dict[str, Any]) -> list[tuple[str, str, str]
     return entries
 
 
+def _displayed_lower_bound_positive(cell: dict[str, Any], scale: float) -> bool:
+    """Separation as the reader sees it: the lower bound printed at three decimals is above zero."""
+    return float(f"{cell['ci95'][0] / scale:.3f}") > 0
+
+
+def _paired_ablation_entries(paired: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Ablation minus external alternative differences, and how many native/pointwise measures separate."""
+    ablations = paired.get("ablation_contrasts")
+    contrasts = paired.get("contrasts")
+    if not isinstance(ablations, dict) or not isinstance(contrasts, dict):
+        raise ValueError("paired quality JSON is missing ablation_contrasts or contrasts")
+    entries = []
+    separated = {"Full": 0, **{word: 0 for word in ABLATION_CONDITIONS.values()}}
+    measures = 0
+    for benchmark, benchmark_word in THREE_RUN_BENCHMARKS.items():
+        scores = ("native", "pointwise") if benchmark in THREE_RUN_NATIVE_SCALE else ("pointwise",)
+        for score in scores:
+            scale = THREE_RUN_NATIVE_SCALE[benchmark] if score == "native" else 1.0
+            for alternative, alternative_word in ALTERNATIVE_CONDITIONS.items():
+                counted = benchmark in THREE_RUN_NATIVE_SCALE
+                measures += counted
+                full = contrasts.get(benchmark, {}).get(score, {}).get(f"A4-{alternative}")
+                if counted:
+                    separated["Full"] += _displayed_lower_bound_positive(full, scale)
+                for ablation, ablation_word in ABLATION_CONDITIONS.items():
+                    source = f"paired quality JSON ablation_contrasts.{benchmark}.{score}.{ablation}-{alternative}"
+                    cell = ablations.get(benchmark, {}).get(score, {}).get(f"{ablation}-{alternative}")
+                    if not isinstance(cell, dict) or not isinstance(cell.get("ci95"), list) or len(cell["ci95"]) != 2:
+                        raise ValueError(f"{source} is missing or lacks a two-sided ci95")
+                    prefix = f"\\PairedAblation{benchmark_word}{score.capitalize()}{ablation_word}{alternative_word}"
+                    values = [cell["mean_difference"], *cell["ci95"]]
+                    for suffix, value, field in zip(("Diff", "Low", "High"), values, ("mean_difference", "ci95[0]", "ci95[1]")):
+                        entries.append((prefix + suffix, f"{value / scale:+.3f}", source + f".{field}" + (f" / {scale:g}" if scale != 1 else "")))
+                    if counted:
+                        separated[ablation_word] += _displayed_lower_bound_positive(cell, scale)
+    rule = "WritingBench and HelloBench native and pointwise contrasts with the three alternatives whose displayed lower bound exceeds zero"
+    entries.append(("\\PairedSeparationMeasureCount", str(measures), "paired quality JSON: WritingBench and HelloBench native and pointwise contrasts with the three alternatives"))
+    for word, count in separated.items():
+        entries.append((f"\\PairedSeparated{word}", str(count), f"paired quality JSON: {rule}, {word}"))
+    return entries
+
+
 PROMPT_LANGUAGE_MARKER = "% Prompt-language macros."
 PROMPT_LANGUAGE_BENCHMARKS = (("writingbench", "Writing"), ("hellobench", "Hello"), ("dolomites", "DoLo"))
 
@@ -2201,7 +2245,7 @@ def _replace_block(existing_text: str, marker: str, block: str) -> str:
 
 def _render_three_run_quality_block(report: dict[str, Any], paired: dict[str, Any]) -> str:
     lines = ["% Three-run document-quality macros."]
-    for name, value, source in [*_three_run_quality_entries(report), *_paired_quality_entries(paired)]:
+    for name, value, source in [*_three_run_quality_entries(report), *_paired_quality_entries(paired), *_paired_ablation_entries(paired)]:
         lines.extend([_source_comment(source), f"\\newcommand{{{name}}}{{{value}}}"])
     return "\n".join(lines) + "\n"
 
@@ -2243,9 +2287,7 @@ def main() -> None:
         paired = _read_json_object(args.three_run_quality[1], "paired quality")
         existing_text = args.output.read_text(encoding="utf-8") if args.output.is_file() else ""
         marker = "% Three-run document-quality macros."
-        if marker in existing_text:
-            existing_text = existing_text.split(marker, 1)[0].rstrip() + "\n"
-        args.output.write_text(existing_text.rstrip() + "\n\n" + _render_three_run_quality_block(report, paired), encoding="utf-8")
+        args.output.write_text(_replace_block(existing_text, marker, _render_three_run_quality_block(report, paired)), encoding="utf-8")
         print(f"wrote {args.output}")
         return
     if not args.aggregations and args.a8_stage1 is None and args.adversarial_review_analysis is None:
@@ -2259,11 +2301,9 @@ def main() -> None:
             report = _read_json_object(args.adversarial_review_analysis, "adversarial review-analysis")
             existing_text = args.output.read_text(encoding="utf-8") if args.output.is_file() else ""
             marker = "% Adversarial review-analysis macros."
-            if marker in existing_text:
-                existing_text = existing_text.split(marker, 1)[0].rstrip() + "\n"
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(
-                existing_text.rstrip() + "\n\n" + _render_adversarial_review_block(report),
+                _replace_block(existing_text, marker, _render_adversarial_review_block(report)),
                 encoding="utf-8",
             )
             print(f"wrote {args.output}")
@@ -2274,11 +2314,9 @@ def main() -> None:
         )
         existing_text = args.output.read_text(encoding="utf-8") if args.output.is_file() else ""
         marker = "% A8 stage-1 exploratory macros."
-        if marker in existing_text:
-            existing_text = existing_text.split(marker, 1)[0].rstrip() + "\n"
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(
-            existing_text.rstrip() + "\n\n" + _render_single_context_stage1_block(aggregation, process_summary, audit),
+            _replace_block(existing_text, marker, _render_single_context_stage1_block(aggregation, process_summary, audit)),
             encoding="utf-8",
         )
         print(f"wrote {args.output}")
