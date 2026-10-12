@@ -13,6 +13,7 @@ from make_numbers import (
     _pairwise_robustness_entries,
     _staged_roles_entries,
     _plain_agent_entries,
+    _cogwriter_style_entries,
     _trace_endings_entries,
     _revision_tasks_entries,
     _delegation_fallback_entries,
@@ -571,6 +572,15 @@ class TokenMacroTests(unittest.TestCase):
         self.assertEqual(output[r"\FullPlainAgentAcrossRate"], r"57.2\%")
         self.assertEqual(output[r"\FullPlainAgentDoLoP"], "0.7239")
         self.assertEqual(output[r"\PlainAgentRevisedRuns"], "56")
+
+    def test_cogwriter_style_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/cogwriter-main/b1-pairwise.json").read_text())
+        output = dict((name, value) for name, value, _ in _cogwriter_style_entries(report))
+        self.assertEqual(output[r"\FullCogWriterStyleAcrossWLT"], "186/33/40")
+        self.assertEqual(output[r"\FullCogWriterStyleAcrossN"], "259")
+        self.assertEqual(output[r"\CogWriterStyleCompleted"], "266")
+        self.assertEqual(output[r"\CogWriterStyleOutputTokens"], "18,011")
+        self.assertEqual(output[r"\CogWriterStyleMedianOutput"], "1,684.5")
 
     def test_trace_endings_macros_are_source_backed(self):
         report = json.loads((Path(__file__).resolve().parents[2] / "results/process-sequences/trace-endings.json").read_text())

@@ -172,6 +172,7 @@ COMPUTE_STRATIFIED_MARKER = "% Compute-stratified macros."
 PAIRWISE_ROBUSTNESS_MARKER = "% Pairwise-robustness macros."
 STAGED_ROLES_MARKER = "% Staged role-instruction (A9) macros."
 PLAIN_AGENT_MARKER = "% Plain-agent (A11) macros."
+COGWRITER_STYLE_MARKER = "% CogWriter-style (B1) main-benchmark macros."
 TRACE_ENDINGS_MARKER = "% Trace-ending macros."
 REVISION_TASKS_MARKER = "% Revision-request pilot macros."
 QUALITATIVE_EXAMPLE_MARKER = "% Illustrative-example macros."
@@ -192,6 +193,7 @@ RAW_RUBRIC_DIMENSIONS = {
 }
 STAGED_ROLES_CONTRASTS = {"A4:A9": "FullStagedRoles", "A9:A2": "StagedRolesStaged"}
 PLAIN_AGENT_CONTRASTS = {"A4:A11": "FullPlainAgent"}
+COGWRITER_STYLE_CONTRASTS = {"A4:B1": "FullCogWriterStyle"}
 PAIRWISE_ROBUSTNESS_CONTRASTS = {
     "A4:A1": "FullSinglePass",
     "A4:A2": "FullStaged",
@@ -1506,6 +1508,19 @@ def _exploratory_pairwise_entries(report: dict[str, Any], contrasts: dict[str, s
     return entries
 
 
+def _cogwriter_style_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory B1 pairwise outcomes, completions, length, and tokens on the main benchmarks."""
+    source = "B1 pairwise JSON"
+    tokens = report["mean_tokens_per_attempted_run"]["B1"]
+    return [
+        *_exploratory_pairwise_entries(report, COGWRITER_STYLE_CONTRASTS, source),
+        ("\\CogWriterStyleCompleted", str(report["completion"]["B1"]["completed"]), source + " completion.B1.completed"),
+        ("\\CogWriterStyleMedianOutput", _format_process(report["median_output_words"]["B1"]["pooled"]), source + " median_output_words.B1.pooled"),
+        ("\\CogWriterStyleOutputTokens", _format_process(tokens["mean_output_plus_reasoning_tokens"], 0), source + " mean_tokens_per_attempted_run.B1.mean_output_plus_reasoning_tokens"),
+        ("\\CogWriterStyleInputTokens", _format_process(tokens["mean_uncached_input_tokens"], 0), source + " mean_tokens_per_attempted_run.B1.mean_uncached_input_tokens"),
+    ]
+
+
 def _trace_endings_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
     """How Agentic CogWriter runs end and how often the Monitor fallback is recorded."""
     source = "trace-endings JSON"
@@ -2454,6 +2469,7 @@ def main() -> None:
     parser.add_argument("--pairwise-robustness", type=Path, help="pairwise-robustness JSON; appends its own block")
     parser.add_argument("--staged-roles", type=Path, help="A9 pairwise JSON; appends its own block")
     parser.add_argument("--plain-agent", type=Path, help="A11 pairwise JSON; appends its own block")
+    parser.add_argument("--cogwriter-style", type=Path, help="B1 pairwise JSON; appends its own block")
     parser.add_argument("--trace-endings", type=Path, help="trace-endings JSON; appends its own block")
     parser.add_argument("--revision-tasks", type=Path, help="revision-task results JSON; appends its own block")
     parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
@@ -2479,6 +2495,7 @@ def main() -> None:
         (args.pairwise_robustness, "pairwise-robustness", PAIRWISE_ROBUSTNESS_MARKER, _pairwise_robustness_entries),
         (args.staged_roles, "staged-roles", STAGED_ROLES_MARKER, _staged_roles_entries),
         (args.plain_agent, "plain-agent", PLAIN_AGENT_MARKER, _plain_agent_entries),
+        (args.cogwriter_style, "cogwriter-style", COGWRITER_STYLE_MARKER, _cogwriter_style_entries),
         (args.trace_endings, "trace-endings", TRACE_ENDINGS_MARKER, _trace_endings_entries),
         (args.revision_tasks, "revision-tasks", REVISION_TASKS_MARKER, _revision_tasks_entries),
         (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),
