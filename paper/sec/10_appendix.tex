@@ -115,6 +115,23 @@ It was generated once on generation run 1 and judged with the run-1 pairwise set
 Table~\ref{tab:appendix-staged-roles} reports both contrasts: our system is preferred on WritingBench and HelloBench but not significantly on DoLoMiTes, and \condStagedRoles\ loses to \condStaged\ on HelloBench and is near parity elsewhere.
 \input{tab/appendix-staged-roles}
 
+\subsection{Plain Coding Agent}
+\label{app:plain-agent}
+The \condPlainAgent\ condition was added after the main results had been observed, to test whether the harness alone organizes writing as our system does.
+It gives the same Codex harness, generator, output budget, and retry policy the task prompt and one neutral instruction to keep a working draft in a workspace file that it may plan, draft, and revise, with no skill content.
+It was generated once on generation run 1 and judged with the run-1 pairwise setup, so the comparison covers the \FullPlainAgentAcrossN\ prompts with a completed run-1 output of our system.
+Table~\ref{tab:appendix-plain-agent} reports the contrast: our system is preferred on WritingBench and HelloBench and is at parity on DoLoMiTes.
+All \PlainAgentCompletedRuns\ runs wrote the document to a workspace file, \PlainAgentWrittenOnceRuns\ wrote it once and returned it, and the other \PlainAgentRevisedRuns\ wrote it again, mostly to adjust length after counting words or characters.
+\input{tab/appendix-plain-agent}
+
+\subsection{Output-Language Drift}
+\label{app:language-drift}
+Some English assignments are answered mainly in Chinese, counted as outputs whose Chinese characters outnumber their Latin letters, the rule that also classifies prompt language.
+The drift occurs only on WritingBench and in every condition; HelloBench and DoLoMiTes show \HelloDriftTotal\ and \DoLoDriftTotal\ such outputs.
+Table~\ref{tab:appendix-language-drift} reports generation run 1, where our system drifts more often than \condStaged.
+\DriftEveryConditionPrompts\ prompts drift in every condition; their topics concern China, and \DriftEveryConditionHanPrompts\ of them give their instructions in Chinese, one requesting a Chinese report, while attaching English material, so the script rule counts them as English assignments.
+\input{tab/appendix-language-drift}
+
 \subsection{Cross-Family Judge Robustness}
 \label{app:cross-family}
 Table~\ref{tab:appendix-cross-family} reports benchmark-level results for the five cross-family contrasts between our system and an alternative or ablation, all on generation run 1.

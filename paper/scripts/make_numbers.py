@@ -177,6 +177,8 @@ REVISION_TASKS_MARKER = "% Revision-request pilot macros."
 QUALITATIVE_EXAMPLE_MARKER = "% Illustrative-example macros."
 DELEGATION_FALLBACK_MARKER = "% Delegation-fallback macros."
 LENGTH_RULE_MARKER = "% Length-rule agreement macros."
+LANGUAGE_DRIFT_MARKER = "% Language-drift macros."
+DRIFT_CONDITIONS = {"A1": "Aone", "A2": "Atwo", "A3": "Athree", "A4": "Afour", "A5": "Afive", "A6": "Asix", "A7": "Aseven", "A8": "Aeight", "A9": "Anine"}
 LENGTH_RULE_SCOPES = {"WritingBench": "Writing", "HelloBench": "Hello", "DoLoMiTes": "DoLo", "all_benchmarks": "Across"}
 FALLBACK_CONDITIONS = {"A5": "Afive", "A6": "Asix"}
 FALLBACK_CONTRASTS = {"A4:A1": "FullSinglePass", "A4:A2": "FullStaged", "A4:A3": "FullTaskPlanning", "A4:A5": "FullNoGoals", "A4:A6": "FullFixedOrder"}
@@ -1481,6 +1483,7 @@ def _plain_agent_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
         ("\\PlainAgentCompletedRuns", str(behavior["completed_runs"]), source + " a11_draft_behavior.pooled.completed_runs"),
         ("\\PlainAgentDraftFileRuns", str(behavior["wrote_a_draft_file"]), source + " a11_draft_behavior.pooled.wrote_a_draft_file"),
         ("\\PlainAgentRevisedRuns", str(behavior["revised_a_draft_file"]), source + " a11_draft_behavior.pooled.revised_a_draft_file"),
+        ("\\PlainAgentWrittenOnceRuns", str(behavior["completed_runs"] - behavior["revised_a_draft_file"]), source + " a11_draft_behavior.pooled completed_runs - revised_a_draft_file"),
     ]
 
 
@@ -1578,6 +1581,27 @@ def _length_rule_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
             (f"\\LengthRule{word}Rate", _percent_fixed(stats["rate"], 1), f"{source}.{scope}.rate"),
             (f"\\LengthRule{word}Pairs", f"{stats['decided_pairs']:,}", f"{source}.{scope}.decided_pairs"),
         ]
+    return entries
+
+
+def _language_drift_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """English WritingBench assignments answered mainly in Chinese on generation run 1."""
+    source = "language-drift JSON benchmarks.WritingBench"
+    writing = report["benchmarks"]["WritingBench"]
+    entries = []
+    for condition, word in DRIFT_CONDITIONS.items():
+        stats = writing["by_condition"][condition]
+        entries += [
+            (f"\\{word}DriftCount", str(stats["drifted"]), f"{source}.by_condition.{condition}.drifted"),
+            (f"\\{word}DriftEnglish", str(stats["english_completed"]), f"{source}.by_condition.{condition}.english_completed"),
+        ]
+    entries += [
+        ("\\DriftEveryConditionPrompts", str(len(writing["drifted_in_every_condition"])), source + ".drifted_in_every_condition"),
+        ("\\DriftEveryConditionHanPrompts", str(len(writing["every_condition_with_han_in_prompt"])), source + ".every_condition_with_han_in_prompt"),
+    ]
+    for benchmark, word in (("HelloBench", "Hello"), ("DoLoMiTes", "DoLo")):
+        total = sum(v["drifted"] for v in report["benchmarks"][benchmark]["by_condition"].values())
+        entries.append((f"\\{word}DriftTotal", str(total), f"language-drift JSON benchmarks.{benchmark} drifted summed over conditions"))
     return entries
 
 
@@ -2435,6 +2459,7 @@ def main() -> None:
     parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
     parser.add_argument("--delegation-fallback", type=Path, help="delegation-fallback JSON; appends its own block")
     parser.add_argument("--length-rule-agreement", type=Path, help="length-rule agreement JSON; appends its own block")
+    parser.add_argument("--language-drift", type=Path, help="language-drift JSON; appends its own block")
     parser.add_argument("--three-run-quality", nargs=2, type=Path, metavar=("SUMMARY", "PAIRED"))
     parser.add_argument("--prompt-languages", nargs=2, type=Path, metavar=("PROMPT_SETS", "MANIFEST_DIR"))
     parser.add_argument(
@@ -2459,6 +2484,7 @@ def main() -> None:
         (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),
         (args.delegation_fallback, "delegation-fallback", DELEGATION_FALLBACK_MARKER, _delegation_fallback_entries),
         (args.length_rule_agreement, "length-rule-agreement", LENGTH_RULE_MARKER, _length_rule_entries),
+        (args.language_drift, "language-drift", LANGUAGE_DRIFT_MARKER, _language_drift_entries),
     ):
         if path is not None:
             if args.aggregations:

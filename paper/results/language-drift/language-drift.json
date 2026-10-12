@@ -1,0 +1,142 @@
+{
+  "benchmarks": {
+    "DoLoMiTes": {
+      "by_condition": {
+        "A1": {
+          "drifted": 0,
+          "english_completed": 95
+        },
+        "A2": {
+          "drifted": 0,
+          "english_completed": 100
+        },
+        "A3": {
+          "drifted": 0,
+          "english_completed": 97
+        },
+        "A4": {
+          "drifted": 0,
+          "english_completed": 98
+        },
+        "A5": {
+          "drifted": 0,
+          "english_completed": 98
+        },
+        "A6": {
+          "drifted": 0,
+          "english_completed": 94
+        },
+        "A7": {
+          "drifted": 0,
+          "english_completed": 96
+        },
+        "A8": {
+          "drifted": 0,
+          "english_completed": 100
+        },
+        "A9": {
+          "drifted": 0,
+          "english_completed": 100
+        }
+      },
+      "drifted_in_every_condition": [],
+      "every_condition_with_han_in_prompt": []
+    },
+    "HelloBench": {
+      "by_condition": {
+        "A1": {
+          "drifted": 0,
+          "english_completed": 94
+        },
+        "A2": {
+          "drifted": 0,
+          "english_completed": 100
+        },
+        "A3": {
+          "drifted": 0,
+          "english_completed": 98
+        },
+        "A4": {
+          "drifted": 0,
+          "english_completed": 99
+        },
+        "A5": {
+          "drifted": 0,
+          "english_completed": 97
+        },
+        "A6": {
+          "drifted": 0,
+          "english_completed": 94
+        },
+        "A7": {
+          "drifted": 0,
+          "english_completed": 95
+        },
+        "A8": {
+          "drifted": 0,
+          "english_completed": 100
+        },
+        "A9": {
+          "drifted": 0,
+          "english_completed": 100
+        }
+      },
+      "drifted_in_every_condition": [],
+      "every_condition_with_han_in_prompt": []
+    },
+    "WritingBench": {
+      "by_condition": {
+        "A1": {
+          "drifted": 22,
+          "english_completed": 68
+        },
+        "A2": {
+          "drifted": 16,
+          "english_completed": 68
+        },
+        "A3": {
+          "drifted": 26,
+          "english_completed": 67
+        },
+        "A4": {
+          "drifted": 29,
+          "english_completed": 64
+        },
+        "A5": {
+          "drifted": 38,
+          "english_completed": 67
+        },
+        "A6": {
+          "drifted": 29,
+          "english_completed": 63
+        },
+        "A7": {
+          "drifted": 22,
+          "english_completed": 60
+        },
+        "A8": {
+          "drifted": 24,
+          "english_completed": 68
+        },
+        "A9": {
+          "drifted": 18,
+          "english_completed": 68
+        }
+      },
+      "drifted_in_every_condition": [
+        "writingbench-0037",
+        "writingbench-0068",
+        "writingbench-0089",
+        "writingbench-0516",
+        "writingbench-0677",
+        "writingbench-0727",
+        "writingbench-0906"
+      ],
+      "every_condition_with_han_in_prompt": [
+        "writingbench-0037",
+        "writingbench-0068"
+      ]
+    }
+  },
+  "rule": "Han characters outnumber Latin letters"
+}

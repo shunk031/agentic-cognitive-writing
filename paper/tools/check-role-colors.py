@@ -46,6 +46,7 @@ EXPECTED_PROMPTS = {
     "build/prompt-display/experiments/conditions/prompts/a9_write.md": "PromptBaseline",
     "build/prompt-display/experiments/conditions/prompts/a9_re_write.md": "PromptBaseline",
     "build/prompt-display/experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md": "PromptBaseline",
+    "build/prompt-display/experiments/baselines/skills/writing-plain-agent/SKILL.md": "PromptBaseline",
     "build/prompt-display/plugin/skills/agentic-cog-writer/SKILL.md": "PromptMonitor",
     "build/prompt-display/plugin/skills/agentic-cog-writer/references/goals-format.md": "PromptMonitor",
     "build/prompt-display/plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md": "PromptMonitor",

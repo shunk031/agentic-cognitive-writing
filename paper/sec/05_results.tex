@@ -14,6 +14,7 @@ Among the ablations and the execution variant, \condSingleWriter\ and \condNoGoa
 Table~\ref{tab:pairwise-results} reports a system-level separation in direct same-prompt comparisons.
 \condAgenticCogWriter\ is preferred to \condSinglePass, \condStaged, and \condTaskPlanning, with win rates of \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean, respectively, when order-consistent wins and losses are summed over benchmarks in each generation run and averaged over runs.
 The direction holds in every benchmark--run test against \condSinglePass\ and \condTaskPlanning\ and in all but one against \condStaged.
+The last row, a post-hoc comparison with \condPlainAgent\ on one generation run, also favors our system (\FullPlainAgentAcrossRate, $p=\FullPlainAgentAcrossP$, unadjusted) except on DoLoMiTes, at parity.
 
 Under the pre-specified within-benchmark Holm correction, \PooledFourOneHolmCellsTotal, \PooledFourTwoHolmCellsTotal, and \PooledFourThreeHolmCellsTotal\ of the nine benchmark--run tests separate our system from \condSinglePass, \condStaged, and \condTaskPlanning, respectively.\footnote{See Appendix~\ref{app:pairwise-detail} for run-level intervals and corrected results.}
 The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare\ (\condSinglePass), \UncondFullStagedWinShare\ (\condStaged), and \UncondFullTaskPlanningWinShare\ (\condTaskPlanning), and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate\ (\condSinglePass), \WorstCaseFullStagedRate\ (\condStaged), and \WorstCaseFullTaskPlanningRate\ (\condTaskPlanning).
@@ -56,7 +57,7 @@ Our system mostly follows the same forward \texttt{Planning}--\texttt{Translatin
 
 Execution changes produce a larger but less easily isolated difference.
 Within the tighter and wider pre-specified output-length bands, \condSingleWriter\ still wins only \SingleWriterLengthFiveRate\ ($p=\SingleWriterLengthFiveP$) and \SingleWriterLengthTenRate\ ($p=\SingleWriterLengthTenP$), respectively, against our system, so output length alone does not explain the gap.
-The post-hoc \condSingleContext\ check shows no significant difference from our system in the exploratory generation run (\SingleContextFullRate, $p=\SingleContextFullP$), although it loses on HelloBench (\SingleContextHelloFullRate, $p=\SingleContextHelloFullP$; both unadjusted).\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level diagnostic and the remaining execution differences.}
+The post-hoc \condSingleContext\ check shows no significant difference from our system in the exploratory generation run (\SingleContextFullRate, $p=\SingleContextFullP$), although it loses on HelloBench (\SingleContextHelloFullRate, $p=\SingleContextHelloFullP$; both unadjusted).\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level diagnostic.}
 
 \subsection{Observed Writing-Process Behavior}
 \label{sec:results-process-dynamics}
