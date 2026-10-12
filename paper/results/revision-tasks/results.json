@@ -1,0 +1,2990 @@
+{
+  "changes": "experiments/revision-tasks/changes.jsonl",
+  "completion": {
+    "A1": {
+      "completed": 60
+    },
+    "A2": {
+      "completed": 60
+    },
+    "A4": {
+      "completed": 59,
+      "failed": 1
+    },
+    "A6": {
+      "completed": 60
+    }
+  },
+  "contrasts": {
+    "A4:A1": {
+      "by_benchmark": {
+        "DoLoMiTes": {
+          "losses": 7,
+          "sign_test_p_two_sided": 0.480682373046875,
+          "ties": 2,
+          "win_rate_excluding_ties": 0.6111111111111112,
+          "wins": 11
+        },
+        "HelloBench": {
+          "losses": 3,
+          "sign_test_p_two_sided": 0.057373046875,
+          "ties": 6,
+          "win_rate_excluding_ties": 0.7857142857142857,
+          "wins": 11
+        },
+        "WritingBench": {
+          "losses": 4,
+          "sign_test_p_two_sided": 0.11846923828125,
+          "ties": 4,
+          "win_rate_excluding_ties": 0.7333333333333333,
+          "wins": 11
+        }
+      },
+      "by_change_type": {
+        "conflict": {
+          "losses": 6,
+          "sign_test_p_two_sided": 0.454498291015625,
+          "ties": 2,
+          "win_rate_excluding_ties": 0.625,
+          "wins": 10
+        },
+        "constraint": {
+          "losses": 4,
+          "sign_test_p_two_sided": 0.049041748046875,
+          "ties": 3,
+          "win_rate_excluding_ties": 0.7647058823529411,
+          "wins": 13
+        },
+        "evidence": {
+          "losses": 4,
+          "sign_test_p_two_sided": 0.1795654296875,
+          "ties": 7,
+          "win_rate_excluding_ties": 0.7142857142857143,
+          "wins": 10
+        }
+      },
+      "overall": {
+        "losses": 14,
+        "sign_test_p_two_sided": 0.007942726509483578,
+        "ties": 12,
+        "win_rate_excluding_ties": 0.7021276595744681,
+        "wins": 33
+      },
+      "prompt_outcomes": {
+        "dolomites-1066": "A4",
+        "dolomites-107": "A4",
+        "dolomites-119": "A4",
+        "dolomites-1278": "A1",
+        "dolomites-133": "A1",
+        "dolomites-1423": "tie",
+        "dolomites-1496": "A4",
+        "dolomites-1629": "A1",
+        "dolomites-1830": "A4",
+        "dolomites-1846": "A4",
+        "dolomites-1848": "A4",
+        "dolomites-319": "A4",
+        "dolomites-415": "A1",
+        "dolomites-470": "A1",
+        "dolomites-570": "tie",
+        "dolomites-657": "A1",
+        "dolomites-716": "A4",
+        "dolomites-779": "A4",
+        "dolomites-84": "A1",
+        "dolomites-924": "A4",
+        "hellobench-chat_021": "A4",
+        "hellobench-summarization_000": "A4",
+        "hellobench-summarization_008": "A4",
+        "hellobench-summarization_011": "tie",
+        "hellobench-summarization_019": "tie",
+        "hellobench-summarization_025": "tie",
+        "hellobench-summarization_026": "tie",
+        "hellobench-summarization_029": "tie",
+        "hellobench-summarization_032": "A4",
+        "hellobench-summarization_036": "A4",
+        "hellobench-summarization_038": "A4",
+        "hellobench-summarization_040": "A1",
+        "hellobench-summarization_051": "A4",
+        "hellobench-summarization_052": "A1",
+        "hellobench-summarization_053": "A4",
+        "hellobench-summarization_054": "tie",
+        "hellobench-summarization_078": "A4",
+        "hellobench-text_completion_045": "A4",
+        "hellobench-text_completion_056": "A1",
+        "hellobench-text_completion_057": "A4",
+        "writingbench-0016": "A4",
+        "writingbench-0184": "tie",
+        "writingbench-0262": "A4",
+        "writingbench-0322": "A4",
+        "writingbench-0339": "A1",
+        "writingbench-0340": "tie",
+        "writingbench-0375": "A1",
+        "writingbench-0379": "A1",
+        "writingbench-0480": "tie",
+        "writingbench-0490": "A4",
+        "writingbench-0560": "tie",
+        "writingbench-0610": "A1",
+        "writingbench-0639": "A4",
+        "writingbench-0673": "A4",
+        "writingbench-0680": "A4",
+        "writingbench-0691": "A4",
+        "writingbench-0774": "A4",
+        "writingbench-0825": "A4",
+        "writingbench-0982": "A4"
+      },
+      "scored_prompts": 59
+    },
+    "A4:A2": {
+      "by_benchmark": {
+        "DoLoMiTes": {
+          "losses": 6,
+          "sign_test_p_two_sided": 0.79052734375,
+          "ties": 6,
+          "win_rate_excluding_ties": 0.5714285714285714,
+          "wins": 8
+        },
+        "HelloBench": {
+          "losses": 6,
+          "sign_test_p_two_sided": 0.454498291015625,
+          "ties": 4,
+          "win_rate_excluding_ties": 0.625,
+          "wins": 10
+        },
+        "WritingBench": {
+          "losses": 4,
+          "sign_test_p_two_sided": 0.266845703125,
+          "ties": 6,
+          "win_rate_excluding_ties": 0.6923076923076923,
+          "wins": 9
+        }
+      },
+      "by_change_type": {
+        "conflict": {
+          "losses": 4,
+          "sign_test_p_two_sided": 0.266845703125,
+          "ties": 5,
+          "win_rate_excluding_ties": 0.6923076923076923,
+          "wins": 9
+        },
+        "constraint": {
+          "losses": 6,
+          "sign_test_p_two_sided": 0.60723876953125,
+          "ties": 5,
+          "win_rate_excluding_ties": 0.6,
+          "wins": 9
+        },
+        "evidence": {
+          "losses": 6,
+          "sign_test_p_two_sided": 0.60723876953125,
+          "ties": 6,
+          "win_rate_excluding_ties": 0.6,
+          "wins": 9
+        }
+      },
+      "overall": {
+        "losses": 16,
+        "sign_test_p_two_sided": 0.12628947438543037,
+        "ties": 16,
+        "win_rate_excluding_ties": 0.627906976744186,
+        "wins": 27
+      },
+      "prompt_outcomes": {
+        "dolomites-1066": "tie",
+        "dolomites-107": "tie",
+        "dolomites-119": "A4",
+        "dolomites-1278": "A2",
+        "dolomites-133": "A2",
+        "dolomites-1423": "tie",
+        "dolomites-1496": "tie",
+        "dolomites-1629": "A4",
+        "dolomites-1830": "A4",
+        "dolomites-1846": "tie",
+        "dolomites-1848": "tie",
+        "dolomites-319": "A4",
+        "dolomites-415": "A4",
+        "dolomites-470": "A2",
+        "dolomites-570": "A2",
+        "dolomites-657": "A2",
+        "dolomites-716": "A4",
+        "dolomites-779": "A4",
+        "dolomites-84": "A2",
+        "dolomites-924": "A4",
+        "hellobench-chat_021": "A4",
+        "hellobench-summarization_000": "A4",
+        "hellobench-summarization_008": "A4",
+        "hellobench-summarization_011": "A2",
+        "hellobench-summarization_019": "A2",
+        "hellobench-summarization_025": "A2",
+        "hellobench-summarization_026": "A4",
+        "hellobench-summarization_029": "tie",
+        "hellobench-summarization_032": "A4",
+        "hellobench-summarization_036": "A4",
+        "hellobench-summarization_038": "tie",
+        "hellobench-summarization_040": "A2",
+        "hellobench-summarization_051": "A4",
+        "hellobench-summarization_052": "A2",
+        "hellobench-summarization_053": "tie",
+        "hellobench-summarization_054": "A4",
+        "hellobench-summarization_078": "A4",
+        "hellobench-text_completion_045": "tie",
+        "hellobench-text_completion_056": "A2",
+        "hellobench-text_completion_057": "A4",
+        "writingbench-0016": "A4",
+        "writingbench-0184": "tie",
+        "writingbench-0262": "A4",
+        "writingbench-0322": "A4",
+        "writingbench-0339": "A2",
+        "writingbench-0340": "tie",
+        "writingbench-0375": "A2",
+        "writingbench-0379": "A2",
+        "writingbench-0480": "tie",
+        "writingbench-0490": "tie",
+        "writingbench-0560": "tie",
+        "writingbench-0610": "A2",
+        "writingbench-0639": "A4",
+        "writingbench-0673": "A4",
+        "writingbench-0680": "A4",
+        "writingbench-0691": "tie",
+        "writingbench-0774": "A4",
+        "writingbench-0825": "A4",
+        "writingbench-0982": "A4"
+      },
+      "scored_prompts": 59
+    },
+    "A4:A6": {
+      "by_benchmark": {
+        "DoLoMiTes": {
+          "losses": 6,
+          "sign_test_p_two_sided": 0.60723876953125,
+          "ties": 5,
+          "win_rate_excluding_ties": 0.6,
+          "wins": 9
+        },
+        "HelloBench": {
+          "losses": 8,
+          "sign_test_p_two_sided": 0.109375,
+          "ties": 10,
+          "win_rate_excluding_ties": 0.2,
+          "wins": 2
+        },
+        "WritingBench": {
+          "losses": 5,
+          "sign_test_p_two_sided": 0.7744140625,
+          "ties": 7,
+          "win_rate_excluding_ties": 0.5833333333333334,
+          "wins": 7
+        }
+      },
+      "by_change_type": {
+        "conflict": {
+          "losses": 5,
+          "sign_test_p_two_sided": 1.0,
+          "ties": 7,
+          "win_rate_excluding_ties": 0.5454545454545454,
+          "wins": 6
+        },
+        "constraint": {
+          "losses": 5,
+          "sign_test_p_two_sided": 0.7744140625,
+          "ties": 8,
+          "win_rate_excluding_ties": 0.5833333333333334,
+          "wins": 7
+        },
+        "evidence": {
+          "losses": 9,
+          "sign_test_p_two_sided": 0.4239501953125,
+          "ties": 7,
+          "win_rate_excluding_ties": 0.35714285714285715,
+          "wins": 5
+        }
+      },
+      "overall": {
+        "losses": 19,
+        "sign_test_p_two_sided": 1.0,
+        "ties": 22,
+        "win_rate_excluding_ties": 0.4864864864864865,
+        "wins": 18
+      },
+      "prompt_outcomes": {
+        "dolomites-1066": "A4",
+        "dolomites-107": "tie",
+        "dolomites-119": "A4",
+        "dolomites-1278": "A4",
+        "dolomites-133": "A6",
+        "dolomites-1423": "A4",
+        "dolomites-1496": "A4",
+        "dolomites-1629": "A4",
+        "dolomites-1830": "tie",
+        "dolomites-1846": "A4",
+        "dolomites-1848": "A6",
+        "dolomites-319": "A4",
+        "dolomites-415": "tie",
+        "dolomites-470": "A6",
+        "dolomites-570": "A4",
+        "dolomites-657": "A6",
+        "dolomites-716": "A6",
+        "dolomites-779": "tie",
+        "dolomites-84": "A6",
+        "dolomites-924": "tie",
+        "hellobench-chat_021": "tie",
+        "hellobench-summarization_000": "tie",
+        "hellobench-summarization_008": "A6",
+        "hellobench-summarization_011": "A6",
+        "hellobench-summarization_019": "tie",
+        "hellobench-summarization_025": "A6",
+        "hellobench-summarization_026": "A4",
+        "hellobench-summarization_029": "tie",
+        "hellobench-summarization_032": "A4",
+        "hellobench-summarization_036": "tie",
+        "hellobench-summarization_038": "A6",
+        "hellobench-summarization_040": "tie",
+        "hellobench-summarization_051": "A6",
+        "hellobench-summarization_052": "A6",
+        "hellobench-summarization_053": "tie",
+        "hellobench-summarization_054": "tie",
+        "hellobench-summarization_078": "tie",
+        "hellobench-text_completion_045": "A6",
+        "hellobench-text_completion_056": "A6",
+        "hellobench-text_completion_057": "tie",
+        "writingbench-0016": "A4",
+        "writingbench-0184": "A6",
+        "writingbench-0262": "A4",
+        "writingbench-0322": "A4",
+        "writingbench-0339": "A6",
+        "writingbench-0340": "tie",
+        "writingbench-0375": "A4",
+        "writingbench-0379": "A6",
+        "writingbench-0480": "tie",
+        "writingbench-0490": "A4",
+        "writingbench-0560": "A6",
+        "writingbench-0610": "A6",
+        "writingbench-0639": "tie",
+        "writingbench-0673": "A4",
+        "writingbench-0680": "A4",
+        "writingbench-0691": "tie",
+        "writingbench-0774": "tie",
+        "writingbench-0825": "tie",
+        "writingbench-0982": "tie"
+      },
+      "scored_prompts": 59
+    }
+  },
+  "design": "experiments/revision-tasks/README.md",
+  "experiment": "revision-tasks",
+  "generator": {
+    "model": "gpt-5.6-luna",
+    "platform": "codex",
+    "reasoning_effort": "medium"
+  },
+  "judge": {
+    "collapse": "both presentations agree, otherwise tie",
+    "model": "gpt-5.6-sol",
+    "presentation_seed": 20260908,
+    "seed": 20260908,
+    "template": "experiments/prompts/judges/pairwise-revision-v1.md"
+  },
+  "sample": {
+    "by_benchmark": {
+      "DoLoMiTes": 20,
+      "HelloBench": 20,
+      "WritingBench": 20
+    },
+    "by_change_type": {
+      "conflict": 18,
+      "constraint": 21,
+      "evidence": 21
+    },
+    "prompts": 60
+  },
+  "token_usage": {
+    "generation_by_condition": {
+      "A1": {
+        "cache_write_input_tokens": 1816462,
+        "cached_input_tokens": 8625875,
+        "input_tokens": 10444794,
+        "output_tokens": 754048,
+        "reasoning_output_tokens": 70621
+      },
+      "A2": {
+        "cache_write_input_tokens": 3328584,
+        "cached_input_tokens": 34261268,
+        "input_tokens": 37595357,
+        "output_tokens": 1699639,
+        "reasoning_output_tokens": 137604
+      },
+      "A4": {
+        "cache_write_input_tokens": 7349708,
+        "cached_input_tokens": 193108916,
+        "input_tokens": 200473207,
+        "output_tokens": 2046829,
+        "reasoning_output_tokens": 163237
+      },
+      "A6": {
+        "cache_write_input_tokens": 6518164,
+        "cached_input_tokens": 156301495,
+        "input_tokens": 162833417,
+        "output_tokens": 1876973,
+        "reasoning_output_tokens": 136728
+      }
+    },
+    "judge": {
+      "cache_write_tokens": 3154898,
+      "cached_tokens": 141846,
+      "completion_tokens": 258826,
+      "prompt_tokens": 3411887,
+      "reasoning_tokens": 148652,
+      "total_tokens": 3670713
+    }
+  },
+  "turn2_process": {
+    "A4": {
+      "completed_runs": 59,
+      "per_prompt": {
+        "dolomites-1066": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 13,
+          "turn2_goal_events": {
+            "goal_created": 3,
+            "goal_developed": 5,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-107": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 5,
+          "turn2_goal_events": {
+            "goal_developed": 1
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-119": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 11,
+          "turn2_goal_events": {
+            "goal_developed": 6,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1278": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 13,
+          "turn2_goal_events": {
+            "goal_developed": 8,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-133": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 18,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 13
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1423": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 13,
+          "turn2_goal_events": {
+            "goal_created": 2,
+            "goal_developed": 7
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1496": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 1
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1629": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 18,
+          "turn2_goal_events": {
+            "goal_created": 6,
+            "goal_developed": 7,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1830": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 18,
+          "turn2_goal_events": {
+            "goal_created": 2,
+            "goal_developed": 10
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1846": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 14,
+          "turn2_goal_events": {
+            "goal_created": 4,
+            "goal_developed": 5,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1848": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 9,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 3,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-319": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 7,
+          "turn2_goal_events": {
+            "goal_developed": 3
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-415": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 12,
+          "turn2_goal_events": {
+            "goal_created": 3,
+            "goal_developed": 4,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-470": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 7,
+          "turn2_goal_events": {
+            "goal_developed": 3
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-570": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 11,
+          "turn2_goal_events": {
+            "goal_developed": 7
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-657": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing",
+            "reviewing",
+            "reviewing"
+          ],
+          "turn2_event_count": 17,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 5,
+            "goal_regenerated": 2
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "planning",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-716": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 13,
+          "turn2_goal_events": {
+            "goal_developed": 8,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-779": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 14,
+          "turn2_goal_events": {
+            "goal_created": 3,
+            "goal_developed": 6,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-84": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 14,
+          "turn2_goal_events": {
+            "goal_created": 4,
+            "goal_developed": 5,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-924": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 18,
+          "turn2_goal_events": {
+            "goal_developed": 10
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "reviewing",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-chat_021": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 18,
+          "turn2_goal_events": {
+            "goal_created": 3,
+            "goal_developed": 9
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "planning",
+            "translating",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_000": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_developed": 2
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_008": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 7,
+          "turn2_goal_events": {
+            "goal_developed": 3
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_011": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_developed": 1,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_019": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 14,
+          "turn2_goal_events": {
+            "goal_created": 2,
+            "goal_developed": 3,
+            "goal_regenerated": 2
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_025": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 4,
+          "turn2_goal_events": {},
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_026": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 5,
+          "turn2_goal_events": {
+            "goal_developed": 1
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_029": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 9,
+          "turn2_goal_events": {
+            "goal_developed": 6
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": false,
+          "turn2_sequence": [
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_032": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 8,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 2,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_036": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 8,
+          "turn2_goal_events": {
+            "goal_developed": 3,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_038": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 11,
+          "turn2_goal_events": {
+            "goal_developed": 6,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_040": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_developed": 1,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_051": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 10,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 4,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_052": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 8,
+          "turn2_goal_events": {
+            "goal_created": 3,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_053": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "translating",
+            "reviewing",
+            "planning"
+          ],
+          "turn2_event_count": 14,
+          "turn2_goal_events": {
+            "goal_developed": 7
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "reviewing",
+            "translating",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_054": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 16,
+          "turn2_goal_events": {
+            "goal_created": 2,
+            "goal_developed": 10
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_078": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 18,
+          "turn2_goal_events": {
+            "goal_created": 2,
+            "goal_developed": 9,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "reviewing"
+          ]
+        },
+        "hellobench-text_completion_045": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 10,
+          "turn2_goal_events": {
+            "goal_developed": 5,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-text_completion_056": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 18,
+          "turn2_goal_events": {
+            "goal_created": 2,
+            "goal_developed": 12
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-text_completion_057": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 10,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 4,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0016": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 14,
+          "turn2_goal_events": {
+            "goal_developed": 5,
+            "goal_regenerated": 5
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0184": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 20,
+          "turn2_goal_events": {
+            "goal_developed": 15
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0262": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 12,
+          "turn2_goal_events": {
+            "goal_developed": 7,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0322": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 5,
+          "turn2_goal_events": {
+            "goal_developed": 1,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "reviewing"
+          ]
+        },
+        "writingbench-0339": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 15,
+          "turn2_goal_events": {
+            "goal_created": 3,
+            "goal_developed": 7,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0340": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 15,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 9
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "reviewing",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0375": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 20,
+          "turn2_goal_events": {
+            "goal_developed": 14,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0379": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 10,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 2,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0480": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 13,
+          "turn2_goal_events": {
+            "goal_created": 2,
+            "goal_developed": 4,
+            "goal_regenerated": 2
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "translating"
+          ]
+        },
+        "writingbench-0490": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 14,
+          "turn2_goal_events": {
+            "goal_created": 4,
+            "goal_developed": 5,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0560": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_developed": 4
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": false,
+          "turn2_sequence": [
+            "translating"
+          ]
+        },
+        "writingbench-0610": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 11,
+          "turn2_goal_events": {
+            "goal_developed": 6
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0639": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 19,
+          "turn2_goal_events": {
+            "goal_developed": 15
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0673": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": false,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing",
+            "reviewing",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 27,
+          "turn2_goal_events": {
+            "goal_developed": 17
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0680": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": false,
+          "turn2_delegated_roles": [
+            "translating",
+            "planning",
+            "reviewing"
+          ],
+          "turn2_event_count": 13,
+          "turn2_goal_events": {
+            "goal_developed": 8
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "planning"
+          ]
+        },
+        "writingbench-0691": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 14,
+          "turn2_goal_events": {
+            "goal_created": 4,
+            "goal_developed": 5,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0774": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 13,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 5
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "reviewing"
+          ]
+        },
+        "writingbench-0825": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 11,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 5,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0982": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 27,
+          "turn2_goal_events": {
+            "goal_created": 3,
+            "goal_developed": 17,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing"
+          ]
+        }
+      },
+      "turn1_events_retained": {
+        "count": 59,
+        "rate": 1.0,
+        "total": 59
+      },
+      "turn1_prefix_preserved": {
+        "count": 57,
+        "rate": 0.9661016949152542,
+        "total": 59
+      },
+      "turn2_delegated_planning": {
+        "count": 57,
+        "total": 59
+      },
+      "turn2_goal_regenerated": {
+        "count": 33,
+        "rate": 0.559322033898305,
+        "total": 59
+      },
+      "turn2_no_process_events": {
+        "count": 0,
+        "total": 59
+      },
+      "turn2_planning": {
+        "count": 57,
+        "rate": 0.9661016949152542,
+        "total": 59
+      },
+      "turn2_sequences": {
+        "planning->planning->translating->reviewing": 2,
+        "planning->planning->translating->reviewing->translating->reviewing->translating->reviewing": 1,
+        "planning->planning->translating->translating->reviewing": 1,
+        "planning->reviewing": 1,
+        "planning->reviewing->translating->reviewing": 1,
+        "planning->reviewing->translating->translating->reviewing": 1,
+        "planning->translating->reviewing": 41,
+        "planning->translating->reviewing->planning": 1,
+        "planning->translating->reviewing->reviewing": 3,
+        "planning->translating->reviewing->reviewing->translating->reviewing": 1,
+        "planning->translating->reviewing->translating": 1,
+        "planning->translating->reviewing->translating->reviewing": 2,
+        "planning->translating->reviewing->translating->reviewing->translating->reviewing->translating->reviewing": 1,
+        "translating": 1,
+        "translating->reviewing": 1
+      }
+    },
+    "A6": {
+      "completed_runs": 60,
+      "per_prompt": {
+        "dolomites-1066": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_developed": 2
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-107": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 9,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 4
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-119": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 20,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 11
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1278": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 18,
+          "turn2_goal_events": {
+            "goal_developed": 14
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-133": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 14,
+          "turn2_goal_events": {
+            "goal_created": 2,
+            "goal_developed": 8
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1423": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 14,
+          "turn2_goal_events": {
+            "goal_developed": 11
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": false,
+          "turn2_sequence": [
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1496": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [],
+          "turn2_event_count": 1,
+          "turn2_goal_events": {
+            "goal_developed": 1
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": false,
+          "turn2_sequence": []
+        },
+        "dolomites-1629": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 11,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 6
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1830": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing",
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 9,
+          "turn2_goal_events": {
+            "goal_developed": 2
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1846": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 9,
+          "turn2_goal_events": {
+            "goal_developed": 4,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-1848": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 15,
+          "turn2_goal_events": {
+            "goal_developed": 10
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "reviewing"
+          ]
+        },
+        "dolomites-319": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 4,
+          "turn2_goal_events": {},
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-415": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 15,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 10
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-470": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 9,
+          "turn2_goal_events": {
+            "goal_developed": 5
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-570": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 9,
+          "turn2_goal_events": {
+            "goal_developed": 5
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-657": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [],
+          "turn2_event_count": 0,
+          "turn2_goal_events": {},
+          "turn2_goal_regenerated": false,
+          "turn2_planning": false,
+          "turn2_sequence": []
+        },
+        "dolomites-716": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [],
+          "turn2_event_count": 0,
+          "turn2_goal_events": {},
+          "turn2_goal_regenerated": false,
+          "turn2_planning": false,
+          "turn2_sequence": []
+        },
+        "dolomites-779": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_developed": 2
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-84": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 12,
+          "turn2_goal_events": {
+            "goal_created": 2,
+            "goal_developed": 6
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "dolomites-924": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 9,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 4
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-chat_021": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 15,
+          "turn2_goal_events": {
+            "goal_developed": 10
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "reviewing",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_000": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 11,
+          "turn2_goal_events": {
+            "goal_developed": 7
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_008": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 8,
+          "turn2_goal_events": {
+            "goal_developed": 4
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_011": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [],
+          "turn2_event_count": 0,
+          "turn2_goal_events": {},
+          "turn2_goal_regenerated": false,
+          "turn2_planning": false,
+          "turn2_sequence": []
+        },
+        "hellobench-summarization_019": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [],
+          "turn2_event_count": 0,
+          "turn2_goal_events": {},
+          "turn2_goal_regenerated": false,
+          "turn2_planning": false,
+          "turn2_sequence": []
+        },
+        "hellobench-summarization_025": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 5,
+          "turn2_goal_events": {
+            "goal_developed": 2
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_026": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 10,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 5
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_029": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [],
+          "turn2_event_count": 0,
+          "turn2_goal_events": {},
+          "turn2_goal_regenerated": false,
+          "turn2_planning": false,
+          "turn2_sequence": []
+        },
+        "hellobench-summarization_032": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 4,
+          "turn2_goal_events": {},
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_036": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": false,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_developed": 1,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_038": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 12,
+          "turn2_goal_events": {
+            "goal_developed": 7,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_040": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 18,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 10
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_051": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 5,
+          "turn2_goal_events": {
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_052": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 10,
+          "turn2_goal_events": {
+            "goal_developed": 6
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_053": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 9,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 4
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_054": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 15,
+          "turn2_goal_events": {
+            "goal_developed": 10
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-summarization_078": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [],
+          "turn2_event_count": 0,
+          "turn2_goal_events": {},
+          "turn2_goal_regenerated": false,
+          "turn2_planning": false,
+          "turn2_sequence": []
+        },
+        "hellobench-text_completion_045": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 15,
+          "turn2_goal_events": {
+            "goal_developed": 9
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-text_completion_056": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 11,
+          "turn2_goal_events": {
+            "goal_created": 3,
+            "goal_developed": 4
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "hellobench-text_completion_057": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 8,
+          "turn2_goal_events": {
+            "goal_developed": 4
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "reviewing"
+          ]
+        },
+        "writingbench-0016": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 5,
+          "turn2_goal_events": {
+            "goal_developed": 1
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0184": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 16,
+          "turn2_goal_events": {
+            "goal_developed": 8,
+            "goal_regenerated": 4
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0262": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 5,
+          "turn2_goal_events": {
+            "goal_developed": 1
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0322": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing",
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 14,
+          "turn2_goal_events": {
+            "goal_developed": 8
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "translating",
+            "reviewing",
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0339": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 15,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 9
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0340": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": false,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_developed": 2
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "reviewing"
+          ]
+        },
+        "writingbench-0375": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 8,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 3
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0379": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 10,
+          "turn2_goal_events": {
+            "goal_developed": 6
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0480": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing",
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 12,
+          "turn2_goal_events": {
+            "goal_developed": 4,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0490": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 13,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 5
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0559": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": false,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_developed": 2
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0560": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 10,
+          "turn2_goal_events": {
+            "goal_developed": 5
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0610": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_developed": 2
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0639": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 7,
+          "turn2_goal_events": {
+            "goal_developed": 2
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0673": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 17,
+          "turn2_goal_events": {
+            "goal_developed": 11
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "translating"
+          ]
+        },
+        "writingbench-0680": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing",
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 11,
+          "turn2_goal_events": {
+            "goal_developed": 4
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing",
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0691": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 25,
+          "turn2_goal_events": {
+            "goal_developed": 18,
+            "goal_regenerated": 1
+          },
+          "turn2_goal_regenerated": true,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "translating",
+            "reviewing",
+            "reviewing"
+          ]
+        },
+        "writingbench-0774": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 8,
+          "turn2_goal_events": {
+            "goal_developed": 4
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0825": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 15,
+          "turn2_goal_events": {
+            "goal_developed": 11
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        },
+        "writingbench-0982": {
+          "turn1_events_retained": true,
+          "turn1_prefix_preserved": true,
+          "turn2_delegated_roles": [
+            "planning",
+            "translating",
+            "reviewing"
+          ],
+          "turn2_event_count": 6,
+          "turn2_goal_events": {
+            "goal_created": 1,
+            "goal_developed": 1
+          },
+          "turn2_goal_regenerated": false,
+          "turn2_planning": true,
+          "turn2_sequence": [
+            "planning",
+            "translating",
+            "reviewing"
+          ]
+        }
+      },
+      "turn1_events_retained": {
+        "count": 60,
+        "rate": 1.0,
+        "total": 60
+      },
+      "turn1_prefix_preserved": {
+        "count": 57,
+        "rate": 0.95,
+        "total": 60
+      },
+      "turn2_delegated_planning": {
+        "count": 53,
+        "total": 60
+      },
+      "turn2_goal_regenerated": {
+        "count": 7,
+        "rate": 0.11666666666666667,
+        "total": 60
+      },
+      "turn2_no_process_events": {
+        "count": 6,
+        "total": 60
+      },
+      "turn2_planning": {
+        "count": 52,
+        "rate": 0.8666666666666667,
+        "total": 60
+      },
+      "turn2_sequences": {
+        "(none)": 7,
+        "planning->planning->translating->reviewing": 1,
+        "planning->reviewing": 3,
+        "planning->reviewing->reviewing": 1,
+        "planning->translating->reviewing": 37,
+        "planning->translating->reviewing->planning->translating->reviewing": 3,
+        "planning->translating->reviewing->reviewing": 2,
+        "planning->translating->reviewing->translating": 1,
+        "planning->translating->reviewing->translating->reviewing": 2,
+        "planning->translating->translating->reviewing->reviewing": 1,
+        "translating->reviewing": 1,
+        "translating->reviewing->planning->translating->reviewing": 1
+      }
+    }
+  }
+}
