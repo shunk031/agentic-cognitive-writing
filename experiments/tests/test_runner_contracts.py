@@ -1087,8 +1087,8 @@ def test_a8_keeps_a4_trace_contract_and_removes_delegation(
     assert "## Delegation briefs" not in a8_text
     assert "## In-context process execution" in a8_text
     assert "spawn a native Codex subagent" not in a8_text
-    assert "Tell the user about proposals that affect intent" in a8_text
-    assert "Let the user override any agent decision." in a8_text
+    assert "Tell the user about proposals that affect intent" not in a8_text
+    assert "Let the user override any agent decision." not in a8_text
     assert "every active goal with its ID plus the parent goal ID" in a8_text
     assert "Cite the files or draft passages that support decisions." in a8_text
 
