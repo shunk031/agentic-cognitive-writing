@@ -30,7 +30,9 @@ External retrieval is disabled by the coding-agent sandbox and by the experiment
 The platform-specific subagent wrappers only dispatch the corresponding role skills and add no separate writing policy.
 Configuration files pin the skill or stage prompt for every system and record hashes for fixed stage prompts.
 
-All experiment-authored generation and evaluation prompts are reproduced verbatim below.
+The experiment-authored generation and evaluation prompt configurations are reproduced below.
+Generation is non-interactive: the runner supplies the assignment, context, and output constraints before each run, so the skill prompts omit interactive user-handoff instructions.
+Prompt headers use the internal condition codes A1 \condSinglePass, A2 \condStaged, A3 \condTaskPlanning, A4 \condAgenticCogWriter, A5 \condNoGoals, A6 \condFixedOrder, A7 \condSingleWriter, and A8 \condSingleContext.
 Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix~\ref{app:runtime}.
 
 \subsection{Generation Prompts}
@@ -50,6 +52,10 @@ The \condStaged\ prompts follow the planning--drafting--revision decomposition u
 
 \subsubsection{\condAgenticCogWriter}
 \promptinput{PromptMonitor}{Top-level Agent Skill}{../plugin/skills/agentic-cog-writer/SKILL.md}
+
+\promptinput{PromptMonitor}{Goal Notation Reference}{../plugin/skills/agentic-cog-writer/references/goals-format.md}
+
+\promptinput{PromptMonitor}{Trace Schema Reference}{../plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md}
 
 \promptinput{PromptPlanner}{\texttt{Planner} Subagent Wrapper}{../plugin/agents/planner.md}
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Fail when Figure 2 geometry drifts from the approved historical layout.
 
-The canonical geometry is the last coherent pre-page-fit layout from commit
-bd971d13e5aa6080da475f27cd1cb83392de2a94.  Keep the generated panel sizes and
+The panel heights are the author-approved 2.2 in / 0.94 in that the submitted
+figure uses; widths and placement follow commit bd971d13e5aa6080da475f27cd1cb83392de2a94.
+Keep the generated panel sizes and
 the manuscript placement coupled so page-budget work cannot distort or detach
 Figure 2 again.
 """
@@ -20,9 +21,9 @@ RESULTS_SOURCE = ROOT / "paper" / "sec" / "05_results.tex"
 EXPECTED_ASSIGNMENTS = {
     "ACL_TEXTWIDTH_IN": "16 / 2.54",
     "PROCESS_SEQUENCE_A_WIDTH_IN": "0.60 * ACL_TEXTWIDTH_IN",
-    "PROCESS_SEQUENCE_A_HEIGHT_IN": "2.6",
+    "PROCESS_SEQUENCE_A_HEIGHT_IN": "2.2",
     "PROCESS_SEQUENCE_MATRIX_WIDTH_IN": "0.37 * ACL_TEXTWIDTH_IN",
-    "PROCESS_SEQUENCE_MATRIX_HEIGHT_IN": "1.13",
+    "PROCESS_SEQUENCE_MATRIX_HEIGHT_IN": "0.94",
 }
 
 
@@ -75,7 +76,7 @@ def main() -> None:
     check_manuscript_geometry()
     print(
         "Figure 2 layout guard: passed "
-        "(generated 0.60x2.6 / 0.37x1.13; placement 0.60/0.37; b-c gap 0.5em)"
+        "(generated 0.60x2.2 / 0.37x0.94; placement 0.60/0.37; b-c gap 0.5em)"
     )
 
 

@@ -5,7 +5,7 @@ description: Use this skill for exploratory A8 comparisons. It keeps the Agentic
 
 # Cognitive writing single context
 
-Use this skill in the user's writing project. The project root is the current working directory unless the user names another project.
+Use this skill for the A8 single-context comparison. Work in the session's current project root.
 
 The `Monitor` is the main agent running this skill. The `Monitor` chooses the next writing process from the project state and open uncertainty. The `Monitor` does not impose a fixed stage sequence.
 
@@ -16,9 +16,9 @@ The `Monitor` is the main agent running this skill. The `Monitor` chooses the ne
   - factual authority
   - final wording
   - publication decision
-- Coordinate process switches as the main agent. Record the evidence for each switch and ask the user when a choice materially changes the rhetorical problem or a claim.
+- Coordinate process switches as the main agent. Record the evidence for each switch.
 - Perform the selected process in the host agent's own context. Do not delegate it to a role agent or subagent.
-- Re-read the changed state and reconcile the selected process with the active goal. Tell the user about proposals that affect intent, factual claims, or a major goal. Let the user override any agent decision.
+- Re-read the changed state and reconcile the selected process with the active goal before continuing.
 
 ## Start by establishing the writing state
 
@@ -41,16 +41,7 @@ The `Monitor` is the main agent running this skill. The `Monitor` chooses the ne
    - relevant files in `.writing/memory/`
    - the latest entries in `.writing/trace/process.jsonl`
 
-   If `.writing/assignment.md` is missing or underspecified, ask the user for:
-
-   - topic
-   - audience
-   - exigency
-   - writer's goals
-   - genre
-   - constraints
-
-   Do not silently invent a rhetorical problem.
+   Treat `.writing/assignment.md` as the fixed rhetorical problem and constraints for the run.
 
 3. Keep `goals.md` in the notation described in [`references/goals-format.md`](references/goals-format.md). Update it whenever a goal is created, developed, or regenerated. Preserve the history instead of replacing an earlier goal without recording what changed.
 4. Read [`references/trace-jsonl-schema.md`](references/trace-jsonl-schema.md) before writing the first trace entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
@@ -86,16 +77,7 @@ At each turn, the `Monitor` should:
    - `draft.md`
    - `memory/`
 
-   Keep user-authored text and uncertain claims visible rather than silently normalizing them.
-
-6. Tell the user:
-
-   - what changed
-   - which goal is active
-   - what remains uncertain
-   - which process the `Monitor` recommends next
-
-   Ask for a decision when the next move depends on the user's intent or factual authority.
+   Keep supplied text and uncertain claims visible rather than silently normalizing them.
 
 Before sending the final response, complete this non-skippable checklist:
 

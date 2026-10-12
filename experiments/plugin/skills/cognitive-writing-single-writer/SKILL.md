@@ -46,7 +46,7 @@ EOF
 printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"goal_created\",\"responsible_agent\":\"Writer\",\"process\":\"goal-setting\",\"decision\":\"Create G1 for the task purpose.\",\"evidence\":[\".writing/goals.md\"],\"open_uncertainty\":[],\"goal_id\":\"G1\",\"parent_goal_id\":null}" >> .writing/trace/process.jsonl
 ```
 
-Follow the repository writing contract for structure, links, claims, and plain English. Apply the `unslop` skill before finishing. Remove filler, AI-pattern phrasing, vague claims, and unnecessary headings without changing the task's meaning.
+Follow the repository writing contract for structure, links, claims, and plain English. Before finishing, remove filler, AI-pattern phrasing, vague claims, and unnecessary headings without changing the task's meaning.
 
 ## Keep a working goal network
 

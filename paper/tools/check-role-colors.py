@@ -44,6 +44,8 @@ EXPECTED_PROMPTS = {
     "../experiments/conditions/prompts/a2_re_write.md": "PromptBaseline",
     "../experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md": "PromptBaseline",
     "../plugin/skills/agentic-cog-writer/SKILL.md": "PromptMonitor",
+    "../plugin/skills/agentic-cog-writer/references/goals-format.md": "PromptMonitor",
+    "../plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md": "PromptMonitor",
     "../plugin/agents/planner.md": "PromptPlanner",
     "../plugin/skills/planning/SKILL.md": "PromptPlanner",
     "../plugin/agents/translator.md": "PromptTranslator",

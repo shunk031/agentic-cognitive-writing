@@ -63,6 +63,54 @@ def test_trace_observation_keeps_process_switch_destinations_and_locations() -> 
     assert observed["regeneration"]["count"] == 0
 
 
+def test_repeated_termination_events_end_a_run_once() -> None:
+    events = [
+        _switch("planning", None, "planning"),
+        _switch("translating", "planning", "translating"),
+        _switch("reviewing", "translating", "reviewing"),
+        _switch("reviewing", "reviewing", None),
+        _switch("reviewing", "reviewing", None),
+        _switch("reviewing", "reviewing", None),
+    ]
+    observed = analyze_trace_events(
+        events, fixed_order=("planning", "translating", "reviewing")
+    )
+
+    assert observed["transitions"]["reviewing->END"] == 1
+    assert observed["after_reviewing"]["termination"] == 1
+
+
+def test_after_reviewing_follows_observed_order_not_from_process() -> None:
+    events = [
+        _switch("planning", None, "planning"),
+        _switch("translating", "planning", "translating"),
+        _switch("reviewing", "translating", "reviewing"),
+        _switch("planning", None, "planning"),
+        _switch("translating", "planning", "translating"),
+        _switch("reviewing", "translating", "reviewing"),
+        _switch("reviewing", "reviewing", None),
+    ]
+    observed = analyze_trace_events(
+        events, fixed_order=("planning", "translating", "reviewing")
+    )
+
+    assert observed["after_reviewing"]["planning"] == 1
+    assert observed["transitions"]["reviewing->planning"] == 1
+
+
+def test_run_without_termination_event_still_ends_once() -> None:
+    events = [
+        _switch("planning", None, "planning"),
+        _switch("translating", "planning", "translating"),
+    ]
+    observed = analyze_trace_events(
+        events, fixed_order=("planning", "translating", "reviewing")
+    )
+
+    assert observed["transitions"]["translating->END"] == 1
+    assert observed["after_reviewing"]["termination"] == 0
+
+
 def test_summary_distinguishes_non_linear_return_and_regeneration() -> None:
     non_linear = [
         _switch("planning", None, "planning"),

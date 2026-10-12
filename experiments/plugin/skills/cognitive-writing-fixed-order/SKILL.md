@@ -9,19 +9,17 @@ Run a comparison with a fixed `Planning`, `Translating`, then `Reviewing` order 
 
 ## When this skill runs
 
-Use this skill only when the user explicitly requests a controlled fixed-order comparison. Do not use it as the default writing workflow.
+Use this skill only for the A6 fixed-order comparison. Do not use it as the default writing workflow.
 
 ## `Monitor` responsibilities
 
 - Keep rhetorical intent, factual authority, final wording, and publication decisions under the user's control.
 - Coordinate the prescribed order and record the evidence for each process switch.
-- Ask the user when a choice changes the rhetorical problem, a claim, or a major goal.
 - Reconcile each returned role report with the active goal before continuing.
-- Report proposals that affect intent, factual claims, or a major goal. Let the user override any agent decision.
 
 ## Read the state first
 
-Create missing files and directories without overwriting existing content. Treat these files as the user's externalized task environment and long-term memory:
+Create missing files and directories without overwriting existing content. Treat these files as the externalized task environment and long-term memory:
 
 ```text
 .writing/
@@ -40,16 +38,7 @@ Read these before the first process:
 - relevant files in `.writing/memory/`
 - the latest entries in `.writing/trace/process.jsonl`
 
-If `assignment.md` is missing or underspecified, ask for:
-
-- topic
-- audience
-- exigency
-- writer's goals
-- genre
-- constraints
-
-Do not invent a rhetorical problem.
+Treat `assignment.md` as the fixed rhetorical problem and constraints for the run.
 
 Keep `goals.md` in the project's hierarchical notation. Use stable goal identifiers (IDs). Put one goal on each line. Indent child goals beneath their parent. Keep a history section.
 
@@ -72,16 +61,7 @@ At each pass, the `Monitor` must:
    - `draft.md`
    - `memory/`
 
-   Keep user-authored text and uncertain claims visible.
-
-7. Tell the user:
-
-   - what changed
-   - which goal is active
-   - what remains uncertain
-   - which prescribed process comes next
-
-   Ask for a decision when the next move depends on user intent or factual authority.
+   Keep supplied text and uncertain claims visible.
 
 Before sending the final response, write the complete current document to `.writing/draft.md`. The run is `INVALID` unless `.writing/draft.md` exists before the final response and the final response contains the complete final text. The final response cannot substitute for the required draft.
 
