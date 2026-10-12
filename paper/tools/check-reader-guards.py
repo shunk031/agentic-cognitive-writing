@@ -117,9 +117,9 @@ def check_caption_takeaways() -> None:
         "tab/process-dynamics.tex": (
             (
                 "the first group partitions complete paths",
-                ("partition", "Complete process paths"),
+                ("partition", "Complete process paths", "one per run"),
             ),
-            ("rows 3-5 are non-exclusive", ("non-exclusive", "Non-exclusive")),
+            ("rows 3-5 are non-exclusive", ("non-exclusive", "Non-exclusive", "can overlap")),
         ),
         "sec/05_results.tex": (
             ("our system mostly follows the forward progression", ("mostly follows",)),
