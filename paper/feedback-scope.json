@@ -84,6 +84,24 @@
       "instruction": "Define nagray as the same gray as tiedgray for unavailable Table 3 cells.",
       "before": "\\definecolor{tiedgray}{gray}{0.6}",
       "after": "\\definecolor{tiedgray}{gray}{0.6}\n\\colorlet{nagray}{tiedgray}"
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Restore the in-table group labels 'Complete process paths' and 'Non-exclusive indicators' in Table 6, drop the caption sentence they replace, and state the takeaway in the caption.",
+      "before": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\nCycle-compliant path",
+      "after": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\\nCycle-compliant path"
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Restore the in-table group labels 'Complete process paths' and 'Non-exclusive indicators' in Table 6, drop the caption sentence they replace, and state the takeaway in the caption.",
+      "before": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\texttt{Reviewing} followed by renewed \\texttt{Translating}",
+      "after": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\\n\\texttt{Reviewing} followed by renewed \\texttt{Translating}"
+    },
+    {
+      "path": "paper/tab/process-dynamics.tex",
+      "instruction": "Restore the in-table group labels 'Complete process paths' and 'Non-exclusive indicators' in Table 6, drop the caption sentence they replace, and state the takeaway in the caption.",
+      "before": "\\end{tabular}\n\\caption{Writing-loop behavior of \\condAgenticCogWriter\\ after repeat collapsing and leading-\\texttt{Planning} reconstruction. Rows 1--2 partition complete process paths; rows 3--5 are non-exclusive indicators.}\n\\label{tab:process-dynamics}",
+      "after": "\\end{tabular}\n\\caption{Writing-loop behavior of \\condAgenticCogWriter\\ after repeat collapsing and leading-\\texttt{Planning} reconstruction; most paths are cycle-compliant.}\n\\label{tab:process-dynamics}"
     }
   ],
   "created_files": []
