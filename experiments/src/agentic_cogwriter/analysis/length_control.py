@@ -96,6 +96,30 @@ def _exact_two_sided_sign_test(wins: int, losses: int) -> float:
     return min(1.0, 2.0 * tail)
 
 
+def prompt_clustered_sign_test(
+    rows: Sequence[Any], outcomes: Sequence[str]
+) -> dict[str, Any]:
+    """Exact sign test with the prompt as the unit.
+
+    Each prompt's outcomes (win 1, tie 0.5, loss 0) are averaged over all of its
+    pairs, so a prompt that recurs across generation runs counts once: as a win
+    above 0.5, a loss below 0.5, and a tie at 0.5.
+    """
+    net: dict[tuple[str, str], int] = {}
+    for row, outcome in zip(rows, outcomes, strict=True):
+        key = (row.benchmark, row.prompt)
+        net[key] = net.get(key, 0) + {"win": 1, "loss": -1, "tie": 0}[outcome]
+    wins = sum(value > 0 for value in net.values())
+    losses = sum(value < 0 for value in net.values())
+    return {
+        "prompts": len(net),
+        "prompt_wins": wins,
+        "prompt_losses": losses,
+        "prompt_ties": len(net) - wins - losses,
+        "prompt_sign_test_p": _exact_two_sided_sign_test(wins, losses),
+    }
+
+
 def summarize_outcomes(
     rows: Sequence[PairObservation],
     *,
@@ -114,11 +138,12 @@ def summarize_outcomes(
         selected_for_outcomes = selected
         condition = focal_condition
 
+    outcomes = [
+        row.longer_verdict if longer_side else _condition_outcome(row, condition)  # type: ignore[arg-type]
+        for row in selected_for_outcomes
+    ]
     counts = {"wins": 0, "losses": 0, "ties": 0}
-    for row in selected_for_outcomes:
-        outcome = (
-            row.longer_verdict if longer_side else _condition_outcome(row, condition)  # type: ignore[arg-type]
-        )
+    for outcome in outcomes:
         counts[{"win": "wins", "loss": "losses", "tie": "ties"}[outcome]] += 1
     non_ties = counts["wins"] + counts["losses"]
     low, high = wilson_interval(counts["wins"], counts["losses"])
@@ -132,6 +157,7 @@ def summarize_outcomes(
         "wilson_low": low,
         "wilson_high": high,
         "sign_test_p": _exact_two_sided_sign_test(counts["wins"], counts["losses"]),
+        **prompt_clustered_sign_test(selected_for_outcomes, outcomes),
     }
 
 
@@ -379,25 +405,48 @@ def _process_summary(path: Path) -> dict[str, Any]:
     }
 
 
+def analyze_runs(runs: Mapping[str, Sequence[PairObservation]]) -> dict[str, Any]:
+    """Analyze each generation run and all runs together.
+
+    The across-run report keeps pair-level counts and rates, while its
+    prompt-clustered sign tests count each recurring prompt once. Its pair list is
+    dropped because the per-run reports already carry every pair.
+    """
+    across_runs = analyze_pairs([row for rows in runs.values() for row in rows])
+    del across_runs["pairs"]
+    return {
+        "across_runs": across_runs,
+        "per_run": {label: analyze_pairs(rows) for label, rows in runs.items()},
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Analyze pairwise verdicts conditional on output length."
     )
-    parser.add_argument("--runs-root", type=Path, required=True)
+    parser.add_argument("--runs-root", type=Path, action="append", required=True)
     parser.add_argument("--judge-id", required=True)
-    parser.add_argument("--run-label", required=True)
+    parser.add_argument("--run-label", action="append", required=True)
     parser.add_argument("--process-summary", type=Path, action="append", default=[])
     parser.add_argument("--output", type=Path)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
-    rows = load_judged_pairs(args.runs_root, judge_id=args.judge_id)
-    report = analyze_pairs(rows)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if len(args.run_label) != len(args.runs_root):
+        parser.error("each --runs-root needs one --run-label")
+    if len(set(args.run_label)) != len(args.run_label):
+        parser.error("run labels must be unique")
+    report = analyze_runs(
+        {
+            label: load_judged_pairs(root, judge_id=args.judge_id)
+            for label, root in zip(args.run_label, args.runs_root, strict=True)
+        }
+    )
     report.update(
         {
-            "run_label": args.run_label,
             "judge_id": args.judge_id,
             "length_unit": (
                 "output units from run-manifest.json output_units_used; "

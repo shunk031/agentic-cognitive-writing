@@ -207,7 +207,7 @@ Table 5 places the two pre-specified ablations much closer to <span class="small
 
 Table 5. Run-averaged <span class="smallcaps">Agentic CogWriter</span> win rates; above 50% favors our system. Across averages run-level win rates computed after summing wins and losses across benchmarks. `No-goals` and `Fixed-order` stay near parity; `Single-writer` shows a larger gap.
 
-Execution changes produce a larger but less easily isolated difference. `Single-writer` removes subagent delegation, changes role context and decision granularity, and alters output length at the same time. Within the tighter and wider pre-specified output-length bands, `Single-writer` still wins only 35.1% (`p=0.0141`) and 30.6% (`p=2.32 x 10^-5`), respectively, against our system, so output length alone does not explain the gap. The narrower post-hoc `Single-context` check shows no significant difference from our system in the exploratory generation run (47.4% win rate for `Single-context`, `p=0.5161`, unadjusted).[^10]
+Execution changes produce a larger but less easily isolated difference. `Single-writer` removes subagent delegation, changes role context and decision granularity, and alters output length at the same time. Within the tighter and wider pre-specified output-length bands, `Single-writer` still wins only 35.1% (`p=0.0479`) and 30.6% (`p=5.24 x 10^-4`), respectively, against our system, so output length alone does not explain the gap. The narrower post-hoc `Single-context` check shows no significant difference from our system in the exploratory generation run (47.4% win rate for `Single-context`, `p=0.5161`, unadjusted).[^10]
 
 ### Observed Writing-Process Behavior
 
@@ -1748,73 +1748,77 @@ Table 12. Sensitivity analysis that treats the two presentation orders as separa
 
 ### Output-Length Sensitivity
 
-Table 13 reports matched-length win rates for our system separately in each of the three generation runs. Within the tighter pre-specified matching band, our system is favored over `Single-pass` in every run, remains above parity against `Task-planning` while narrowing toward parity, and changes direction across runs against `No-goals`. The wider pre-specified band shows the same qualitative pattern. These matching-band results are descriptive sensitivity checks; ties are excluded from the win-rate denominator, and generation runs are reported separately because they reuse the same prompts.
+Table 13 reports matched-length win rates for our system separately in each of the three generation runs. Within the tighter pre-specified matching band, our system is favored over `Single-pass` in every run, stays above parity in every run against `Staged` and `Fixed-order`, remains above parity against `Task-planning` while narrowing toward parity, and changes direction across runs against `No-goals`. The wider pre-specified band shows the same qualitative pattern. These matching-band results are descriptive sensitivity checks; ties are excluded from the win-rate denominator, and generation runs are reported separately because they reuse the same prompts. The `Single-writer` length-band tests in Section 5.3 instead combine the three runs, so their sign tests take the prompt as the unit: a prompt counts as a win or a loss when its outcomes in the band, averaged across runs, favor one system.
 
 |                 |          |               |                |               |
 |:----------------|:---------|--------------:|---------------:|--------------:|
 | **Comparison**  | **Band** | **First run** | **Second run** | **Third run** |
-| `Single-pass`   | Tighter  |         89.3% |          80.0% |         82.9% |
-| `Task-planning` | Tighter  |         63.4% |          57.1% |         51.9% |
-| `No-goals`      | Tighter  |         50.0% |          46.7% |         59.5% |
-| `Single-pass`   | Wider    |         78.4% |          82.7% |         80.7% |
-| `Task-planning` | Wider    |         68.4% |          58.5% |         50.9% |
-| `No-goals`      | Wider    |         55.9% |          45.7% |         47.8% |
+| `Single-pass`   | Tighter  |    89.3% (28) |     80.0% (25) |    82.9% (35) |
+| `Staged`        | Tighter  |    56.0% (25) |     78.8% (33) |    52.8% (36) |
+| `Task-planning` | Tighter  |    63.4% (41) |     57.1% (35) |    51.9% (27) |
+| `No-goals`      | Tighter  |    50.0% (36) |     46.7% (45) |    59.5% (42) |
+| `Fixed-order`   | Tighter  |    55.9% (34) |     61.5% (39) |    57.1% (42) |
+| `Single-pass`   | Wider    |    78.4% (51) |     82.7% (52) |    80.7% (57) |
+| `Staged`        | Wider    |    64.0% (50) |     68.8% (64) |    56.1% (57) |
+| `Task-planning` | Wider    |    68.4% (57) |     58.5% (65) |    50.9% (55) |
+| `No-goals`      | Wider    |    55.9% (68) |     45.7% (70) |    47.8% (69) |
+| `Fixed-order`   | Wider    |    63.1% (65) |     59.4% (69) |    53.4% (73) |
 
-Table 13. Matched-length win rates for our system in each of the three generation runs. Tighter and wider denote the two pre-specified output-length bands. A rate above parity favors our system; ties are excluded from the denominator. Reporting runs separately preserves the repeated-run design because the same prompts are reused across runs.
+Table 13. Matched-length win rates for our system in each of the three generation runs, with non-tied comparisons (the denominator) in parentheses. The tighter and wider pre-specified bands keep pairs whose longer output is at most 5% and 10% longer than the shorter one. A rate above parity favors our system. Reporting runs separately preserves the repeated-run design because the same prompts are reused across runs.
 
 ### Compute-Stratified Sensitivity
 
-Compute matching asks whether the pairwise direction persists when the compared systems use similar realized output-plus-reasoning token budgets. Table 14 reports outcomes within the pre-specified 1.25`x` and 1.50`x` matching bands and across descriptive ratio bins. Because realized compute is determined by execution, this analysis is a sensitivity check rather than a causal adjustment.
+Compute matching asks whether the pairwise direction persists when the compared systems use similar realized output-plus-reasoning token budgets. Table 14 reports outcomes within the pre-specified 1.25`x` and 1.50`x` matching bands and across descriptive ratio bins. Because realized compute is determined by execution, this analysis is a sensitivity check rather than a causal adjustment. Each row combines the three generation runs, so the sign tests take the prompt as the unit, as in the `Single-writer` length-band tests.
 
 |  |  |  |  |  |
 |:---|:---|---:|---:|---:|
 | Contrast | Band or bin | W/L/T | Rate | `p` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | within 1.25 | 197/66/98 | 74.9% | `2.55 x 10^-16` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | within 1.50 | 281/114/168 | 71.1% | `2.21 x 10^-17` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | within 1.25 | 163/63/78 | 72.1% | `2.14 x 10^-11` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | within 1.50 | 276/128/140 | 68.3% | `1.40 x 10^-13` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | within 1.25 | 87/267/83 | 24.6% | `2.13 x 10^-22` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | within 1.50 | 140/404/140 | 25.7% | `1.11 x 10^-30` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | within 1.25 | 197/66/98 | 74.9% | `6.78 x 10^-10` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | within 1.50 | 281/114/168 | 71.1% | `3.23 x 10^-10` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | within 1.25 | 163/63/78 | 72.1% | `1.93 x 10^-8` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | within 1.50 | 276/128/140 | 68.3% | `4.62 x 10^-9` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | within 1.25 | 87/267/83 | 24.6% | `1.97 x 10^-18` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | within 1.50 | 140/404/140 | 25.7% | `6.67 x 10^-19` |
 | <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | within 1.25 | 0/0/0 |  | `1` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | within 1.50 | 13/6/3 | 68.4% | `0.1671` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | within 1.50 | 13/6/3 | 68.4% | `0.2101` |
 | <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 0.00–0.50 | 1/0/0 | 100.0% | `1` |
 | <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 0.50–0.67 | 4/4/3 | 50.0% | `1` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 0.67–0.80 | 13/12/12 | 52.0% | `1` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 0.80–0.91 | 42/10/21 | 80.8% | `9.06 x 10^-6` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 0.91–0.95 | 21/7/3 | 75.0% | `0.0125` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 0.95–1.05 | 49/20/21 | 71.0% | `6.36 x 10^-4` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 1.05–1.10 | 23/6/20 | 79.3% | `0.0023` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 1.10–1.25 | 62/23/33 | 72.9% | `2.77 x 10^-5` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 1.25–1.50 | 71/36/58 | 66.4% | `9.23 x 10^-4` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 1.50–2.00 | 95/57/53 | 62.5% | `0.0026` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 2.00+ | 38/29/39 | 56.7% | `0.3284` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 0.00–0.50 | 44/26/23 | 62.9% | `0.0414` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 0.50–0.67 | 119/48/55 | 71.3% | `3.83 x 10^-8` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 0.67–0.80 | 99/58/54 | 63.1% | `0.0013` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 0.80–0.91 | 69/25/34 | 73.4% | `6.34 x 10^-6` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 0.67–0.80 | 13/12/12 | 52.0% | `0.8388` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 0.80–0.91 | 42/10/21 | 80.8% | `3.85 x 10^-5` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 0.91–0.95 | 21/7/3 | 75.0% | `0.0059` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 0.95–1.05 | 49/20/21 | 71.0% | `0.0019` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 1.05–1.10 | 23/6/20 | 79.3% | `0.0037` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 1.10–1.25 | 62/23/33 | 72.9% | `1.94 x 10^-4` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 1.25–1.50 | 71/36/58 | 66.4% | `5.24 x 10^-4` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 1.50–2.00 | 95/57/53 | 62.5% | `6.41 x 10^-4` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Staged` | 2.00+ | 38/29/39 | 56.7% | `0.4011` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 0.00–0.50 | 44/26/23 | 62.9% | `0.0365` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 0.50–0.67 | 119/48/55 | 71.3% | `8.46 x 10^-8` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 0.67–0.80 | 99/58/54 | 63.1% | `0.0045` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 0.80–0.91 | 69/25/34 | 73.4% | `8.22 x 10^-5` |
 | <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 0.91–0.95 | 22/11/11 | 66.7% | `0.0801` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 0.95–1.05 | 33/16/16 | 67.3% | `0.0213` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 1.05–1.10 | 13/5/5 | 72.2% | `0.0963` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 1.10–1.25 | 26/6/12 | 81.2% | `5.35 x 10^-4` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 0.95–1.05 | 33/16/16 | 67.3% | `0.0226` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 1.05–1.10 | 13/5/5 | 72.2% | `0.1185` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 1.10–1.25 | 26/6/12 | 81.2% | `9.12 x 10^-4` |
 | <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 1.25–1.50 | 14/7/8 | 66.7% | `0.1892` |
 | <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 1.50–2.00 | 7/3/5 | 70.0% | `0.3438` |
 | <span class="smallcaps">Agentic CogWriter</span> vs. `Task-planning` | 2.00+ | 1/1/2 | 50.0% | `1` |
 | `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 0.00–0.50 | 1/5/0 | 16.7% | `0.2188` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 0.50–0.67 | 9/12/9 | 42.9% | `0.6636` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 0.67–0.80 | 15/43/20 | 25.9% | `3.07 x 10^-4` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 0.80–0.91 | 19/62/17 | 23.5% | `1.77 x 10^-6` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 0.91–0.95 | 12/20/8 | 37.5% | `0.2153` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 0.95–1.05 | 25/69/22 | 26.6% | `6.34 x 10^-6` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 1.05–1.10 | 8/39/9 | 17.0% | `5.54 x 10^-6` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 1.10–1.25 | 23/77/27 | 23.0% | `5.51 x 10^-8` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 1.25–1.50 | 38/94/37 | 28.8% | `1.19 x 10^-6` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 1.50–2.00 | 24/68/25 | 26.1% | `4.94 x 10^-6` |
-| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 2.00+ | 7/13/6 | 35.0% | `0.2632` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | 1.25–1.50 | 13/6/3 | 68.4% | `0.1671` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | 1.50–2.00 | 91/15/17 | 85.8% | `1.90 x 10^-14` |
-| <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | 2.00+ | 464/114/150 | 80.3% | `4.90 x 10^-51` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 0.50–0.67 | 9/12/9 | 42.9% | `0.5034` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 0.67–0.80 | 15/43/20 | 25.9% | `0.001` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 0.80–0.91 | 19/62/17 | 23.5% | `9.10 x 10^-6` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 0.91–0.95 | 12/20/8 | 37.5% | `0.2005` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 0.95–1.05 | 25/69/22 | 26.6% | `4.77 x 10^-5` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 1.05–1.10 | 8/39/9 | 17.0% | `8.96 x 10^-6` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 1.10–1.25 | 23/77/27 | 23.0% | `1.62 x 10^-7` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 1.25–1.50 | 38/94/37 | 28.8% | `2.02 x 10^-6` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 1.50–2.00 | 24/68/25 | 26.1% | `6.49 x 10^-5` |
+| `Single-writer` vs. <span class="smallcaps">Agentic CogWriter</span> | 2.00+ | 7/13/6 | 35.0% | `0.3593` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | 1.25–1.50 | 13/6/3 | 68.4% | `0.2101` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | 1.50–2.00 | 91/15/17 | 85.8% | `4.47 x 10^-9` |
+| <span class="smallcaps">Agentic CogWriter</span> vs. `Single-pass` | 2.00+ | 464/114/150 | 80.3% | `1.82 x 10^-32` |
 
-Table 14. Compute-matched pairwise outcomes. Within the tightest available 1.25`x` band, <span class="smallcaps">Agentic CogWriter</span> remains favored over `Staged` and `Task-planning`; no <span class="smallcaps">Agentic CogWriter</span>–`Single-pass` pairs fall in that band, so the same comparison cannot be made there. The remaining rows show descriptive compute-ratio bins; sign-test `p`-values are unadjusted and do not enter the confirmatory analysis.
+Table 14. Compute-matched pairwise outcomes. Within the tightest available 1.25`x` band, <span class="smallcaps">Agentic CogWriter</span> remains favored over `Staged` and `Task-planning`; no <span class="smallcaps">Agentic CogWriter</span>–`Single-pass` pairs fall in that band, so the same comparison cannot be made there. The remaining rows show descriptive compute-ratio bins. W/L/T counts pairs across the three runs; sign-test `p`-values count prompts, are unadjusted, and do not enter the confirmatory analysis.
 
 ### Single-Context Exploratory Check
 

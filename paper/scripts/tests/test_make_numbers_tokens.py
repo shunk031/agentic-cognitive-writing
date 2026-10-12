@@ -9,7 +9,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from make_numbers import (
+    _compute_stratified_entries,
     _cross_family_percent,
+    _length_control_entries,
     emit_numbers,
     exact_sign_test_power,
     holm_adjust,
@@ -97,25 +99,27 @@ def _length_stats() -> dict:
         "wilson_low": 0.1,
         "wilson_high": 0.9,
         "sign_test_p": 1.0,
+        "prompts": 3,
+        "prompt_wins": 1,
+        "prompt_losses": 1,
+        "prompt_ties": 1,
+        "prompt_sign_test_p": 1.0,
     }
 
 
 def _length_summary() -> dict:
-    contrasts = {"A4:A1": "x", "A4:A3": "x", "A4:A5": "x"}
-    bands = {
-        band: {contrast: _length_stats() for contrast in contrasts}
-        for band in ("5_percent", "10_percent")
-    }
-    ratio_bins = {
-        ratio_bin: _length_stats()
-        for ratio_bin in ("1.00-1.05", "1.05-1.10", "1.10-1.25", "1.25-1.50", "1.50-2.00", "2.00+")
-    }
+    contrasts = ("A4:A1", "A4:A2", "A4:A3", "A4:A5", "A4:A6", "A7:A4")
+
+    def matched() -> dict:
+        return {band: {contrast: _length_stats() for contrast in contrasts} for band in ("5_percent", "10_percent")}
+
+    across = matched()
+    across["5_percent"]["A7:A4"].update(
+        {"wins": 26, "losses": 48, "ties": 27, "n_non_tie": 74, "win_rate": 26 / 74, "sign_test_p": 0.0141, "prompt_sign_test_p": 0.04794}
+    )
     return {
-        "pair_count": 6,
-        "all_pairs_longer_side": _length_stats(),
-        "length_matched": bands,
-        "ratio_bins": ratio_bins,
-        "single_writer_at_least_10_percent_shorter": _length_stats(),
+        "across_runs": {"length_matched": across},
+        "per_run": {run: {"length_matched": matched()} for run in ("run-1", "run-2", "run-3")},
     }
 
 
@@ -149,20 +153,6 @@ def _review_analysis() -> dict:
             "missing_pair_bounds": {"worst_case": {"focal_non_tie_win_rate": 0.800}},
         },
     }
-    length_result = {
-        "focal_condition": "A7",
-        "pairs": 101,
-        "selected_pairs": 101,
-        "equal_length_pairs": 1,
-        "wins": 26,
-        "losses": 48,
-        "ties": 27,
-        "n_non_tie": 74,
-        "win_rate": 26 / 74,
-        "wilson_low": 0.25,
-        "wilson_high": 0.46,
-        "sign_test_p": 0.0140799814,
-    }
     return {
         "pooling_and_equivalence": {
             "A4:A6": {"prompt_clustered": clustered},
@@ -171,20 +161,6 @@ def _review_analysis() -> dict:
         "unconditional_outcomes_and_missing_output_bounds": {
             contrast: {"pooled_over_benchmarks": deepcopy(replications)}
             for contrast in ("A4:A1", "A4:A2", "A4:A3")
-        },
-        "single_writer_length_control_A7_vs_A4": {
-            "pooled_over_replications": {
-                "five_percent": length_result,
-                "ten_percent": {
-                    **length_result,
-                    "wins": 37,
-                    "losses": 84,
-                    "ties": 48,
-                    "n_non_tie": 121,
-                    "win_rate": 37 / 121,
-                    "sign_test_p": 0.0000231643033,
-                },
-            }
         },
     }
 
@@ -200,6 +176,11 @@ def _compute_outcome() -> dict:
         "wilson_low": 0.2,
         "wilson_high": 0.9,
         "sign_test_p": 0.25,
+        "prompts": 3,
+        "prompt_wins": 2,
+        "prompt_losses": 0,
+        "prompt_ties": 1,
+        "prompt_sign_test_p": 0.5,
     }
 
 
@@ -242,7 +223,7 @@ def _compute_summary() -> dict:
                     for contrast in contrasts
                 },
             }
-            for replication in ("run-1", "replication-2", "replication-3")
+            for replication in ("run-1", "run-2", "run-3")
         },
     }
 
@@ -531,46 +512,50 @@ class TokenMacroTests(unittest.TestCase):
 
     def test_length_control_macros_fail_closed_on_missing_fields(self):
         summary = _length_summary()
-        del summary["ratio_bins"]["2.00+"]["win_rate"]
-        with self.assertRaisesRegex(ValueError, r"ratio_bins\.2\.00\+.*win_rate"):
-            emit_numbers(
-                [_aggregation()],
-                [("A4", "A1")],
-                length_control_summaries=[summary, _length_summary(), _length_summary()],
-            )
+        del summary["per_run"]["run-2"]["length_matched"]["10_percent"]["A4:A6"]["win_rate"]
+        with self.assertRaisesRegex(ValueError, r"run-2\.length_matched\.10_percent\.A4:A6.*win_rate"):
+            _length_control_entries(summary)
+
+    def test_length_control_macros_cover_five_contrasts_and_cluster_single_writer_p(self):
+        entries = {name: value for name, value, _ in _length_control_entries(_length_summary())}
+        self.assertEqual(entries[r"\LengthFullStagedFiveRateRunOne"], r"50.0\%")
+        self.assertEqual(entries[r"\LengthFullFixedOrderTenNRunThree"], "2")
+        self.assertEqual(entries[r"\SingleWriterLengthFiveRate"], r"35.1\%")
+        self.assertEqual(entries[r"\SingleWriterLengthFiveP"], "0.0479")
+
+    def test_length_control_macros_require_prompt_clustered_test(self):
+        summary = _length_summary()
+        del summary["across_runs"]["length_matched"]["10_percent"]["A7:A4"]["prompt_sign_test_p"]
+        with self.assertRaisesRegex(ValueError, r"10_percent\.A7:A4.*prompt_sign_test_p"):
+            _length_control_entries(summary)
 
     def test_compute_stratified_macros_are_source_backed(self):
-        output = emit_numbers(
-            [_aggregation()],
-            [("A4", "A1")],
-            compute_stratified_sensitivity=_compute_summary(),
-        )
-        self.assertIn(r"\newcommand{\ComputePooledEligible}{16}", output)
-        self.assertIn(r"\newcommand{\ComputeFullStagedWithinOneTwentyFiveWLT}{2/1/1}", output)
-        self.assertIn(r"\newcommand{\ComputeFullStagedWithinOneTwentyFiveRate}{66.7\%}", output)
-        self.assertIn(r"\newcommand{\ComputeFullStagedWithinOneTwentyFiveRateReplicationThree}{66.7\%}", output)
-        self.assertIn(r"\newcommand{\ComputeFullStagedSpearmanRho}{0.1250}", output)
-        self.assertIn(r"\newcommand{\ComputeFullSinglePassBinTwoPlusP}{0.25}", output)
+        output = "\n".join(f"{name}={value}" for name, value, _ in _compute_stratified_entries(_compute_summary()))
+        self.assertIn(r"\ComputePooledEligible=16", output)
+        self.assertIn(r"\ComputeFullStagedWithinOneTwentyFiveWLT=2/1/1", output)
+        self.assertIn(r"\ComputeFullStagedWithinOneTwentyFiveRate=66.7\%", output)
+        self.assertIn(r"\ComputeFullStagedWithinOneTwentyFiveRateReplicationThree=66.7\%", output)
+        self.assertIn(r"\ComputeFullStagedSpearmanRho=0.1250", output)
+        # The p-value counts prompts, not pairs repeated across generation runs.
+        self.assertIn(r"\ComputeFullSinglePassBinTwoPlusP=0.5", output)
 
     def test_compute_stratified_macros_fail_closed_on_missing_fields(self):
         summary = _compute_summary()
         del summary["pooled"]["by_contrast"]["A4:A2"]["spearman"]["rho"]
         with self.assertRaisesRegex(ValueError, r"pooled\.A4:A2\.spearman.*rho"):
-            emit_numbers(
-                [_aggregation()],
-                [("A4", "A1")],
-                compute_stratified_sensitivity=summary,
-            )
+            _compute_stratified_entries(summary)
 
-    def test_compute_stratified_macros_fail_closed_on_missing_ratio_bin(self):
+    def test_compute_stratified_macros_fail_closed_on_unknown_ratio_bin(self):
         summary = _compute_summary()
-        del summary["pooled"]["by_contrast"]["A4:A2"]["ratio_bins"]["2.00+"]
-        with self.assertRaisesRegex(ValueError, r"ratio_bins must contain the locked bins"):
-            emit_numbers(
-                [_aggregation()],
-                [("A4", "A1")],
-                compute_stratified_sensitivity=summary,
-            )
+        summary["pooled"]["by_contrast"]["A4:A2"]["ratio_bins"]["9.00+"] = _compute_outcome()
+        with self.assertRaisesRegex(ValueError, r"ratio_bins must use only the locked bins"):
+            _compute_stratified_entries(summary)
+
+    def test_compute_stratified_macros_require_prompt_clustered_test(self):
+        summary = _compute_summary()
+        del summary["pooled"]["by_contrast"]["A7:A4"]["compute_matched"]["within_1.25"]["prompt_sign_test_p"]
+        with self.assertRaisesRegex(ValueError, r"A7:A4\.compute_matched\.within_1\.25.*prompt_sign_test_p"):
+            _compute_stratified_entries(summary)
 
     def test_adversarial_review_macros_are_source_backed(self):
         output = emit_numbers(
@@ -584,10 +569,6 @@ class TokenMacroTests(unittest.TestCase):
         self.assertIn(r"\newcommand{\UncondFullSinglePassWinShare}{63.1\%}", output)
         self.assertNotIn(r"\newcommand{\UncondFullSinglePassWinShare}{64.3\%}", output)
         self.assertIn(r"\newcommand{\WorstCaseFullSinglePassRate}{74.9\%}", output)
-        self.assertIn(r"\newcommand{\SingleWriterLengthFiveRate}{35.1\%}", output)
-        self.assertIn(r"\newcommand{\SingleWriterLengthFiveP}{0.0141}", output)
-        self.assertIn(r"\newcommand{\SingleWriterLengthTenRate}{30.6\%}", output)
-        self.assertIn(r"\newcommand{\SingleWriterLengthTenP}{2.32\times 10^{-5}}", output)
 
     def test_adversarial_review_macros_fail_closed_on_missing_fields(self):
         summary = _review_analysis()
@@ -644,25 +625,10 @@ class TokenMacroTests(unittest.TestCase):
         output = emit_numbers(
             [_aggregation()],
             [("A4", "A1")],
-            length_control_summaries=[_length_summary(), _length_summary(), _length_summary()],
             cross_family_summary=_cross_family_summary(),
         )
-        self.assertIn(r"% source: length-control JSON run 1 all_pairs_longer_side.win_rate", output)
-        self.assertIn(r"\newcommand{\LengthLongerRate}{50.00\%}", output)
         self.assertIn(r"% source: cross-family JSON pooled.commit_rate.rate", output)
         self.assertIn(r"\newcommand{\CrossFamilyPooledCommitRate}{50.0\%}", output)
-
-    def test_length_control_macros_do_not_use_existing_fallback_values(self):
-        output = emit_numbers(
-            [_aggregation()],
-            [("A4", "A1")],
-            existing={r"\LengthLongerNonTie": "999", r"\LengthLongerRate": r"99\%"},
-            length_control_summaries=[_length_summary(), _length_summary(), _length_summary()],
-        )
-        self.assertIn(r"% source: length-control JSON run 1 all_pairs_longer_side.n_non_tie", output)
-        self.assertIn(r"\newcommand{\LengthLongerNonTie}{2}", output)
-        self.assertIn(r"\newcommand{\LengthLongerRate}{50.00\%}", output)
-        self.assertNotIn(r"\newcommand{\LengthLongerRate}{99\%}", output)
 
     def test_cross_family_macros_do_not_use_existing_fallback_values(self):
         output = emit_numbers(
