@@ -1,5 +1,5 @@
 {
-  "method": "For each benchmark and score, every prompt's three generation runs are averaged per system first, so the prompt is the resampling unit. The interval is a percentile bootstrap over prompts of the mean paired difference for every ordered pair of the four systems in Table 3, using prompts scored for both systems in at least one run.",
+  "method": "For each benchmark and score, every prompt's three generation runs are averaged per system first, so the prompt is the resampling unit. The interval is a percentile bootstrap over prompts of the mean paired difference for every ordered pair of the four systems in Table 3, using prompts scored for both systems in at least one run. The same interval is also reported for each ablation (No-goals, Fixed-order) minus each external alternative, to test whether the ablations keep the full system's advantage.",
   "focal_system": "A4",
   "resamples": 10000,
   "seed": 20260908,
@@ -496,6 +496,264 @@
           "ci95": [
             0.04769930917422092,
             0.20906551192349607
+          ]
+        }
+      }
+    }
+  },
+  "ablation_contrasts": {
+    "DoLoMiTes": {
+      "pointwise": {
+        "A5-A1": {
+          "n_prompts": 100,
+          "mean_difference": 0.006918639266066126,
+          "ci95": [
+            -0.05132551147181665,
+            0.06753466170051914
+          ]
+        },
+        "A5-A2": {
+          "n_prompts": 100,
+          "mean_difference": -0.061939766133947236,
+          "ci95": [
+            -0.12717206736603365,
+            0.004733793859039978
+          ]
+        },
+        "A5-A3": {
+          "n_prompts": 100,
+          "mean_difference": 0.17724505612946456,
+          "ci95": [
+            0.10341304015328533,
+            0.25262757197540375
+          ]
+        },
+        "A6-A1": {
+          "n_prompts": 99,
+          "mean_difference": 0.05372890532081272,
+          "ci95": [
+            -0.005795968034585374,
+            0.11265888149080716
+          ]
+        },
+        "A6-A2": {
+          "n_prompts": 99,
+          "mean_difference": -0.029479365530486915,
+          "ci95": [
+            -0.0906169843302331,
+            0.03064298681708866
+          ]
+        },
+        "A6-A3": {
+          "n_prompts": 99,
+          "mean_difference": 0.21801903929121216,
+          "ci95": [
+            0.1392060204892132,
+            0.295371324091595
+          ]
+        }
+      }
+    },
+    "HelloBench": {
+      "native": {
+        "A5-A1": {
+          "n_prompts": 100,
+          "mean_difference": 0.015648809523809534,
+          "ci95": [
+            0.010057539682539694,
+            0.02135119047619048
+          ]
+        },
+        "A5-A2": {
+          "n_prompts": 100,
+          "mean_difference": 0.00741269841269843,
+          "ci95": [
+            0.0009444444444444577,
+            0.014051587301587318
+          ]
+        },
+        "A5-A3": {
+          "n_prompts": 100,
+          "mean_difference": 0.00826984126984127,
+          "ci95": [
+            0.0026388888888888894,
+            0.014142857142857155
+          ]
+        },
+        "A6-A1": {
+          "n_prompts": 100,
+          "mean_difference": 0.01414484126984128,
+          "ci95": [
+            0.008430555555555563,
+            0.02002182539682542
+          ]
+        },
+        "A6-A2": {
+          "n_prompts": 100,
+          "mean_difference": 0.005908730158730177,
+          "ci95": [
+            -0.0004801587301587018,
+            0.01266468253968255
+          ]
+        },
+        "A6-A3": {
+          "n_prompts": 100,
+          "mean_difference": 0.006765873015873018,
+          "ci95": [
+            0.0010515873015873045,
+            0.012478174603174614
+          ]
+        }
+      },
+      "pointwise": {
+        "A5-A1": {
+          "n_prompts": 100,
+          "mean_difference": 0.21074108494811214,
+          "ci95": [
+            0.12185519689977302,
+            0.31170362846119304
+          ]
+        },
+        "A5-A2": {
+          "n_prompts": 100,
+          "mean_difference": 0.09470238731023697,
+          "ci95": [
+            0.0014953188948563182,
+            0.2087352140407195
+          ]
+        },
+        "A5-A3": {
+          "n_prompts": 100,
+          "mean_difference": 0.12883797486725498,
+          "ci95": [
+            0.03384856831871161,
+            0.24042839151288703
+          ]
+        },
+        "A6-A1": {
+          "n_prompts": 100,
+          "mean_difference": 0.17111230711802544,
+          "ci95": [
+            0.06976608902813351,
+            0.2832955973275146
+          ]
+        },
+        "A6-A2": {
+          "n_prompts": 100,
+          "mean_difference": 0.055073609480150276,
+          "ci95": [
+            -0.05004222248284904,
+            0.17967363143383508
+          ]
+        },
+        "A6-A3": {
+          "n_prompts": 100,
+          "mean_difference": 0.0892091970371683,
+          "ci95": [
+            -0.01333781014930332,
+            0.19838161195549453
+          ]
+        }
+      }
+    },
+    "WritingBench": {
+      "native": {
+        "A5-A1": {
+          "n_prompts": 100,
+          "mean_difference": 0.43133333333333324,
+          "ci95": [
+            0.3286666666666666,
+            0.5399999999999998
+          ]
+        },
+        "A5-A2": {
+          "n_prompts": 100,
+          "mean_difference": 0.3853333333333333,
+          "ci95": [
+            0.27666666666666667,
+            0.5026666666666667
+          ]
+        },
+        "A5-A3": {
+          "n_prompts": 100,
+          "mean_difference": 0.19333333333333327,
+          "ci95": [
+            0.11333333333333333,
+            0.2773333333333332
+          ]
+        },
+        "A6-A1": {
+          "n_prompts": 100,
+          "mean_difference": 0.4863333333333333,
+          "ci95": [
+            0.3876666666666666,
+            0.5916666666666665
+          ]
+        },
+        "A6-A2": {
+          "n_prompts": 100,
+          "mean_difference": 0.4403333333333333,
+          "ci95": [
+            0.3299999999999999,
+            0.5586666666666666
+          ]
+        },
+        "A6-A3": {
+          "n_prompts": 100,
+          "mean_difference": 0.24833333333333324,
+          "ci95": [
+            0.16299999999999992,
+            0.3389999999999999
+          ]
+        }
+      },
+      "pointwise": {
+        "A5-A1": {
+          "n_prompts": 100,
+          "mean_difference": 0.14721437735064355,
+          "ci95": [
+            0.07179588840258892,
+            0.22701845827285969
+          ]
+        },
+        "A5-A2": {
+          "n_prompts": 100,
+          "mean_difference": 0.0979304022066612,
+          "ci95": [
+            0.01135255079818244,
+            0.18910671836750012
+          ]
+        },
+        "A5-A3": {
+          "n_prompts": 100,
+          "mean_difference": 0.08376798247459512,
+          "ci95": [
+            1.6730104636293597e-06,
+            0.16839517102383464
+          ]
+        },
+        "A6-A1": {
+          "n_prompts": 100,
+          "mean_difference": 0.12940851361206454,
+          "ci95": [
+            0.06339587561589584,
+            0.19693413096894571
+          ]
+        },
+        "A6-A2": {
+          "n_prompts": 100,
+          "mean_difference": 0.0801245384680822,
+          "ci95": [
+            -0.004458321001490959,
+            0.17143577456873518
+          ]
+        },
+        "A6-A3": {
+          "n_prompts": 100,
+          "mean_difference": 0.06596211873601611,
+          "ci95": [
+            -0.014331225114652863,
+            0.15071330124414617
           ]
         }
       }
