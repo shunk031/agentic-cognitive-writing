@@ -222,7 +222,7 @@ Table 6 shows a mostly simple writing loop after repeat collapsing and leading-`
 | `Reviewing` followed by renewed `Translating` | 14.8% |
 | `Reviewing` followed by renewed `Planning` | 0.3% |
 | Runs with an accepted goal replacement | 0.5% |
-| Runs with none of these events | 84.9% |
+| <span style="color: residualgray">Runs with none of these events</span> | <span style="color: residualgray">84.9%</span> |
 
 Table 6. Writing-loop behavior of <span class="smallcaps">Agentic CogWriter</span> after repeat collapsing and leading-`Planning` reconstruction; most paths are cycle-compliant.
 
