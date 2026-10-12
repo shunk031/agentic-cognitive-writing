@@ -72,7 +72,6 @@ def check() -> None:
         "tab/appendix-habermas.tex": [6],
         "tab/appendix-length-control.tex": [5],
         "tab/appendix-process.tex": [7],
-        "tab/appendix-quality-scores.tex": [8],
         "tab/appendix-record-pooled-pairwise.tex": [5],
         "tab/appendix-runtime-settings.tex": [2],
         "tab/appendix-single-context.tex": [7, 4],
@@ -85,7 +84,6 @@ def check() -> None:
     }
     allowed_group_spans = {
         "tab/main-results.tex": {(2, 3), (4, 5), (6, 7)},
-        "tab/appendix-quality-scores.tex": {(4, 8)},
         "tab/pairwise-results.tex": {(2, 5)},
         "tab/ablation-results.tex": {(2, 5)},
         "tab/trace-outcome.tex": {(2, 3)},

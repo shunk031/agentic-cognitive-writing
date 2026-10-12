@@ -12,7 +12,6 @@ from make_numbers import (
     _compute_stratified_entries,
     _cross_family_percent,
     _length_control_entries,
-    _three_run_quality_entries,
     emit_numbers,
     exact_sign_test_power,
     holm_adjust,
@@ -851,16 +850,6 @@ class TokenMacroTests(unittest.TestCase):
         }
         covered = _schema_patterns(numbers_path.with_name("numbers-schema.md"))
         self.assertTrue(macros <= covered, sorted(macros - covered))
-
-
-class ThreeRunQualityTests(unittest.TestCase):
-    def test_variant_scores_and_raw_rubric_means_come_from_the_three_run_summary(self):
-        summary = Path(__file__).resolve().parents[2] / "results/pointwise-three-runs/three-run-summary.json"
-        entries = {name: value for name, value, _ in _three_run_quality_entries(json.loads(summary.read_text(encoding="utf-8")))}
-        self.assertEqual(entries[r"\ThreeRunWritingNoGoalsNativeMean"], "0.740")
-        self.assertEqual(entries[r"\ThreeRunHelloFixedOrderPointwiseMean"], "0.055")
-        self.assertEqual(entries[r"\ThreeRunWritingSingleWriterDimFidelity"], "4.09")
-        self.assertNotIn(r"\ThreeRunDoLoNoGoalsNativeMean", entries)
 
 
 class PromptLanguageTests(unittest.TestCase):

@@ -232,15 +232,6 @@ SINGLE_CONTEXT_PAIR_FIELDS = (
 
 THREE_RUN_BENCHMARKS = {"WritingBench": "Writing", "HelloBench": "Hello", "DoLoMiTes": "DoLo"}
 THREE_RUN_CONDITIONS = {"A1": "SinglePass", "A2": "Staged", "A3": "TaskPlanning", "A4": "Full"}
-# The ablations and Single-writer appear only in the appendix score table.
-THREE_RUN_VARIANT_CONDITIONS = {"A5": "NoGoals", "A6": "FixedOrder", "A7": "SingleWriter"}
-THREE_RUN_DIMENSIONS = {
-    "instruction_fulfillment": "Instruction",
-    "organization_global_coherence": "Coherence",
-    "content_adequacy_depth": "Content",
-    "style_voice_audience_fit": "Style",
-    "factuality_constraint_fidelity": "Fidelity",
-}
 # The manuscript reports WritingBench's 1-10 native scale divided by 10 so both native columns read 0-1.
 THREE_RUN_NATIVE_SCALE = {"WritingBench": 10.0, "HelloBench": 1.0}
 ABLATION_CONDITIONS = {"A5": "NoGoals", "A6": "FixedOrder"}
@@ -2034,13 +2025,13 @@ def _three_run_stat(cell: Any, source: str) -> tuple[float, float]:
 
 
 def _three_run_quality_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
-    """Macros for the three-run native and pointwise scores, mean and SD, and the raw rubric dimension means."""
+    """Macros for the three-run native and four-condition pointwise table, mean and SD."""
     across = report.get("across_runs")
     if not isinstance(across, dict):
         raise ValueError("three-run quality JSON is missing across_runs")
     entries = []
     for benchmark, benchmark_word in THREE_RUN_BENCHMARKS.items():
-        for condition, condition_word in {**THREE_RUN_CONDITIONS, **THREE_RUN_VARIANT_CONDITIONS}.items():
+        for condition, condition_word in THREE_RUN_CONDITIONS.items():
             source = f"three-run quality JSON across_runs.{benchmark}.{condition}"
             cell = across.get(benchmark, {}).get(condition) if isinstance(across.get(benchmark), dict) else None
             if not isinstance(cell, dict):
@@ -2051,12 +2042,6 @@ def _three_run_quality_entries(report: dict[str, Any]) -> list[tuple[str, str, s
                 (prefix + "PointwiseMean", f"{mean:.3f}", source + ".composite.mean"),
                 (prefix + "PointwiseSD", f"{sd:.3f}", source + ".composite.sample_sd"),
             ]
-            dimensions = cell.get("raw_dimension_means")
-            if not isinstance(dimensions, dict):
-                raise ValueError(f"{source}.raw_dimension_means is missing")
-            for dimension, dimension_word in THREE_RUN_DIMENSIONS.items():
-                mean, _ = _three_run_stat(dimensions.get(dimension), source + f".raw_dimension_means.{dimension}")
-                entries.append((prefix + "Dim" + dimension_word, f"{mean:.2f}", source + f".raw_dimension_means.{dimension}.mean"))
             if benchmark in THREE_RUN_NATIVE_SCALE:
                 scale = THREE_RUN_NATIVE_SCALE[benchmark]
                 mean, sd = _three_run_stat(cell.get("native_mean"), source + ".native_mean")
