@@ -22,9 +22,13 @@ LLM-based controllers, multi-agent systems, planning in agents, agent memory, ag
 
 These are taken verbatim from the LLM agents and Generation lists on the [ARR areas page](https://aclrollingreview.org/areas).
 
+### Languages studied
+
+English; Chinese (Mandarin, `cmn`, or Chinese, `zho`, if Mandarin is not listed). Other Languages: leave empty. Of the 300 scored prompts, the 32 Chinese ones are all from WritingBench; HelloBench, DoLoMiTes, and the Habermas Machine tasks are English.
+
 ### Contribution types
 
-Primary: NLP engineering experiment. Also: Publicly available software and/or pre-trained models, for the released agent skills and experiment code.
+NLP engineering experiment.
 
 ## A. For every submission
 
