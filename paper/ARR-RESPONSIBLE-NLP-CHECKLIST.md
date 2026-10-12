@@ -12,6 +12,16 @@ We build a long-form writing agent whose Monitor chooses online whether to plan,
 
 long-form text generation, LLM agents, writing agents, cognitive process theory of writing, process-level control, multi-agent delegation, LLM-as-a-judge, pairwise evaluation
 
+### Research area
+
+LLM agents for NLP
+
+### Research area keywords
+
+LLM-based controllers, multi-agent systems, planning in agents, agent memory, agent evaluation
+
+These are taken verbatim from the LLM agents list on the [ARR areas page](https://aclrollingreview.org/areas).
+
 ## A. For every submission
 
 ### A1. Did you describe the limitations of your work?
