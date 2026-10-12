@@ -422,7 +422,13 @@ def _process_sequences() -> dict:
             "transition_matrix": matrix,
         }
 
+    def runs(total: int, with_event: int) -> list[dict]:
+        quiet = {"after_reviewing": {"translating": 0, "planning": 0}, "regeneration": {"count": 0}}
+        event = {"after_reviewing": {"translating": 1, "planning": 0}, "regeneration": {"count": 0}}
+        return [event] * with_event + [quiet] * (total - with_event)
+
     return {
+        "run_sets": [{"conditions": {"A4": {"runs": runs(886, 134)}, "A6": {"runs": runs(874, 99)}}}],
         "conditions": {
             "A4": {"summary": summary(886, 0.564, 0.746, 0.148, 0.003, 4, [{"passes": 1, "count": 1, "total": 1, "rate": 0.992}, {"passes": 2, "count": 1, "total": 1, "rate": 0.008}])},
             "A6": {"summary": summary(874, 0.508, 0.898, 0.010, 0.097, 10, [{"passes": 1, "count": 1, "total": 1, "rate": 0.915}, {"passes": 2, "count": 1, "total": 1, "rate": 0.073}, {"passes": 3, "count": 1, "total": 1, "rate": 0.012}])},
@@ -732,6 +738,7 @@ class TokenMacroTests(unittest.TestCase):
         self.assertIn(r"\newcommand{\AfourExactCycleFixedOrderWinRate}{57.4\%}", output)
         self.assertIn(r"\newcommand{\AfourSingleWriterCycleSplitP}{0.43}", output)
         self.assertIn(r"\newcommand{\AfourLeadingReconstruction}{23/39}", output)
+        self.assertIn(r"\newcommand{\AfourNoLoopEventRate}{84.9\%}", output)
 
     def test_process_sequences_fail_closed_on_missing_fields(self):
         source = _process_sequences()

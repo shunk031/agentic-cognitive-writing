@@ -1604,7 +1604,9 @@ def _emit_process_sequence_macros(add: Any, report: dict[str, Any]) -> None:
         add(prefix + "ReviewingToPlanningRate", _percent_fixed(after_reviewing["planning"]["rate"], 1), f"process-sequences JSON conditions.{condition}.summary.after_reviewing.per_run.planning.rate")
         add(prefix + "RegenerationRuns", str(summary["regeneration"]["runs"]["count"]), f"process-sequences JSON conditions.{condition}.summary.regeneration.runs.count")
         add(prefix + "RegenerationRate", _percent_fixed(summary["regeneration"]["runs"]["rate"], 1), f"process-sequences JSON conditions.{condition}.summary.regeneration.runs.rate")
-        runs = [run for run_set in report["run_sets"] for run in run_set["conditions"][condition]["runs"]]
+        runs = [run for run_set in report.get("run_sets", []) for run in run_set["conditions"][condition]["runs"]]
+        if len(runs) != summary["run_count"]:
+            raise ValueError(f"process-sequences JSON run_sets.*.conditions.{condition}.runs: expected {summary['run_count']} runs, found {len(runs)}")
         no_event = sum(
             1
             for run in runs
