@@ -14,16 +14,21 @@ The alternative writing systems are reimplementations under the shared setup of 
 \condTaskPlanning\ also delegates its task nodes to subagents, so delegation is present on both sides of that comparison.
 Its prompt forbids rewriting already-composed text, so \condTaskPlanning\ has no revision pass over the assembled draft.
 The \condExploratoryTwo\ adaptation runs only on ten consensus-writing tasks, and running it on the three benchmarks is the next comparison.\footnote{See Appendix~\ref{app:habermas} for the consensus-writing results.}
-The compute-matched analysis selects pairs with similar realized token use after generation; a Self-Refine baseline~\citep{madaan2023self} given our system's token budget before generation would test budget-matched iterative revision.
+The compute-matched analysis selects pairs with similar realized token use after generation, and the post-hoc \condSelfRefine\ baseline, budgeted before generation on unscored prompts, received \SelfRefineTokenExcess\ more output-plus-reasoning tokens per document than our system (\SelfRefineOutputTokens\ against \SelfRefineAfourOutputTokens).
 
 \paragraph{Post-hoc conditions.}
 \condStagedRoles\ was added post-hoc, uses one generation run and one judge family, and differs from our system in the \texttt{Monitor}, goals, shared state, and delegation together, so it isolates the role-instruction content and no single component.
 \condPlainAgent\ was also added post hoc on one generation run; it shares our harness and generator but no skill content.
 \condExploratoryOne\ on the three benchmarks is our adaptation of CogWriter, run once post hoc: it completed \CogWriterStyleCompleted\ of \CogWriterStyleAttempted\ prompts, mostly failing its final-product gate for lack of a draft file, only \CogWriterStyleRetried\ of its \CogWriterStyleFirstPassFailed\ first-pass failures were retried before a cost guard stopped retries, and it used more compute than our system (\CogWriterStyleSpawns\ against \AfourSpawns\ subagent spawns per run).
+\condSelfRefine\ and \condLoopOnly\ also ran once post hoc, completing \SelfRefineCompleted\ and \LoopOnlyCompleted\ of \CogWriterStyleAttempted\ prompts; \condLoopOnly\ is built from the skill texts that \condNoGoals, \condFixedOrder, and \condSingleContext\ executed in generation run 1.
 
 \paragraph{Output language.}
 On WritingBench, some English assignments are answered mainly in Chinese in every condition, from \AtwoDriftCount\ of \AtwoDriftEnglish\ for \condStaged\ to \AfiveDriftCount\ of \AfiveDriftEnglish\ for \condNoGoals\ in generation run 1, with \AfourDriftCount\ of \AfourDriftEnglish\ for our system.
 The drift follows prompts with Chinese topics or instructions.\footnote{See Appendix~\ref{app:sensitivity-analyses} for every condition.}
+
+\paragraph{Missing outputs.}
+Headline win rates exclude prompts without a completed output, but the preference persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare\ (\condSinglePass), \UncondFullStagedWinShare\ (\condStaged), and \UncondFullTaskPlanningWinShare\ (\condTaskPlanning), and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate\ (\condSinglePass), \WorstCaseFullStagedRate\ (\condStaged), and \WorstCaseFullTaskPlanningRate\ (\condTaskPlanning).
+Some systems fail more prompts than others, so this accounting bounds how much the excluded pairs could change the headline contrasts.
 
 \paragraph{Evaluator dependence.}
 The primary evaluator belongs to the same model family as the generator, and related generator--judge models can exhibit preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
@@ -35,7 +40,7 @@ Model-judge preference is not human preference; a blinded human comparison of sa
 The ablations constrain explicit goals and adaptive ordering to modest contributions without establishing equivalence.
 Neither ablation differs from the full system in any benchmark--run test after Holm correction, each such test reaches 80\% power~\citep{card2020little} at a true preference of about \PowerCellDetectablePreference, and the post-hoc prompt-level estimate compares each ablation only with the full system.\footnote{See Appendix~\ref{app:prompts} for the power calculation.}
 \condFixedOrder\ enforces its cycle through the \texttt{Monitor}'s instructions so that it shares our system's agent runtime and differs only in the selection rule, and \AsixCycleCompliantRate\ of its paths are cycle-compliant.\footnote{See Appendix~\ref{app:process-behavior} for the trace classification.}
-Next steps are a runner-enforced cycle and a combined ablation that removes goals, fixes the order, and runs the roles without subagents, which would test whether these mechanisms substitute for each other.
+The combined \condLoopOnly\ ablation is post hoc and from one generation run, and its parity with our system comes without an equivalence test; it does not separate the \texttt{Monitor}, the workspace files, in-place editing, and the role guidance, which are the next ablations, together with a runner-enforced cycle.
 
 \paragraph{Execution variants.}
 \condSingleWriter\ changes delegation, role context, decision granularity, and output length together; \condSingleContext\ is narrower but was added post-hoc, uses one exploratory generation run, and differs in execution interface and transport.

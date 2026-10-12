@@ -32,7 +32,7 @@ Configuration files pin the skill or stage prompt for every system and record ha
 
 The experiment-authored generation and evaluation prompt configurations are listed below.
 Generation is non-interactive: the runner supplies the assignment, context, and output constraints before each run, so the skill prompts omit interactive user-handoff instructions.
-Prompt headers use the internal condition codes A1 \condSinglePass, A2 \condStaged, A3 \condTaskPlanning, A4 \condAgenticCogWriter, A5 \condNoGoals, A6 \condFixedOrder, A7 \condSingleWriter, A8 \condSingleContext, A9 \condStagedRoles, and A11 \condPlainAgent.
+Prompt headers use the internal condition codes A1 \condSinglePass, A2 \condStaged, A3 \condTaskPlanning, A4 \condAgenticCogWriter, A5 \condNoGoals, A6 \condFixedOrder, A7 \condSingleWriter, A8 \condSingleContext, A9 \condStagedRoles, A10 \condSelfRefine, A11 \condPlainAgent, and A12 \condLoopOnly.
 Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix~\ref{app:runtime}.
 
 \subsection{Generation Prompts}
@@ -57,6 +57,12 @@ The \condStaged\ prompts follow the Pre-Write/Write/Re-Write stage model~\citep{
 \promptinput{PromptBaseline}{\condTaskPlanning}{build/prompt-display/experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md}
 
 \promptinput{PromptBaseline}{\condPlainAgent}{build/prompt-display/experiments/baselines/skills/writing-plain-agent/SKILL.md}
+
+\promptinput{PromptBaseline}{\condSelfRefine: Draft}{build/prompt-display/experiments/conditions/prompts/a10_draft.md}
+
+\promptinput{PromptBaseline}{\condSelfRefine: Feedback}{build/prompt-display/experiments/conditions/prompts/a10_feedback.md}
+
+\promptinput{PromptBaseline}{\condSelfRefine: Refine}{build/prompt-display/experiments/conditions/prompts/a10_refine.md}
 
 \subsubsection{\condAgenticCogWriter}
 \promptinput{PromptMonitor}{Top-level Agent Skill}{build/prompt-display/plugin/skills/agentic-cog-writer/SKILL.md}
@@ -87,6 +93,8 @@ Across the three generation runs, no \condNoGoals\ workspace contains a goals fi
 \promptinput{PromptAblation}{\condSingleWriter}{build/prompt-display/experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md}
 
 \promptinput{PromptAblation}{\condSingleContext}{build/prompt-display/experiments/plugin/skills/cognitive-writing-single-context/SKILL.md}
+
+\promptinput{PromptAblation}{\condLoopOnly}{build/prompt-display/experiments/plugin/skills/cognitive-writing-loop-only/SKILL.md}
 
 \subsection{Evaluation Prompts}
 

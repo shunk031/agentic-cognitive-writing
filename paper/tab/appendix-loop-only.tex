@@ -1,0 +1,22 @@
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llrrrr}
+\toprule
+\textbf{Contrast} & \textbf{Statistic} & \textbf{WritingBench} & \textbf{HelloBench} & \textbf{DoLoMiTes} & \textbf{Across benchmarks} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+\lcell{\condAgenticCogWriter\\vs \condLoopOnly} & Win rate & \FullLoopOnlyWritingRate & \FullLoopOnlyHelloRate & \FullLoopOnlyDoLoRate & \FullLoopOnlyAcrossRate \\
+ & 95\% Wilson interval & \FullLoopOnlyWritingInterval & \FullLoopOnlyHelloInterval & \FullLoopOnlyDoLoInterval & \FullLoopOnlyAcrossInterval \\
+ & W/L/T & \FullLoopOnlyWritingWLT & \FullLoopOnlyHelloWLT & \FullLoopOnlyDoLoWLT & \FullLoopOnlyAcrossWLT \\
+ & $p$ & $\FullLoopOnlyWritingP$ & $\FullLoopOnlyHelloP$ & $\FullLoopOnlyDoLoP$ & $\FullLoopOnlyAcrossP$ \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+\lcell{\condLoopOnly\\vs \condStaged} & Win rate & \LoopOnlyStagedWritingRate & \LoopOnlyStagedHelloRate & \LoopOnlyStagedDoLoRate & \LoopOnlyStagedAcrossRate \\
+ & 95\% Wilson interval & \LoopOnlyStagedWritingInterval & \LoopOnlyStagedHelloInterval & \LoopOnlyStagedDoLoInterval & \LoopOnlyStagedAcrossInterval \\
+ & W/L/T & \LoopOnlyStagedWritingWLT & \LoopOnlyStagedHelloWLT & \LoopOnlyStagedDoLoWLT & \LoopOnlyStagedAcrossWLT \\
+ & $p$ & $\LoopOnlyStagedWritingP$ & $\LoopOnlyStagedHelloP$ & $\LoopOnlyStagedDoLoP$ & $\LoopOnlyStagedAcrossP$ \\
+\bottomrule
+\end{tabular}
+\caption{Exploratory \condLoopOnly\ comparisons on generation run 1. The win rate belongs to the first-named system and counts order-consistent outcomes; Across sums wins and losses over the three benchmarks. Sign-test $p$-values are unadjusted and outside the Holm family.}
+\label{tab:appendix-loop-only}
+\end{table}

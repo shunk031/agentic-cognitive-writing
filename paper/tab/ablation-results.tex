@@ -23,6 +23,11 @@ vs. \condFixedOrder
 & 57.4\%
 & 54.7\%
 & 56.3\% \\
+vs. \condLoopOnly
+& 48.5\%
+& 58.5\%
+& 47.8\%
+& 51.1\% \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
 vs. \condSingleWriter
 & 68.5\%
@@ -32,6 +37,6 @@ vs. \condSingleWriter
 \bottomrule
 \end{tabular}%
 }
-\caption{\condAgenticCogWriter\ win rates averaged over generation runs; above 50\% favors our system. Across sums wins and losses over benchmarks. The ablations stay near parity; the diagnostic execution variant \condSingleWriter\ shows a larger gap.}
+\caption{\condAgenticCogWriter\ win rates averaged over runs; above 50\% favors our system; Across sums over benchmarks. The ablations, including \condLoopOnly\ (one post-hoc run), stay near parity; the execution variant \condSingleWriter\ shows a larger gap.}
 \label{tab:ablation-results}
 \end{table}

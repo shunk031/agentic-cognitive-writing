@@ -21,9 +21,8 @@ Its prompt also asks the writer to follow the repository's writing guidance and 
 (7) \condAgenticCogWriter\ is the full system of Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.
 
 \paragraph{Post-hoc conditions.}
-\condSingleContext\ was added after the main results as a narrower exploratory check outside the seven pre-specified systems.
-It runs each selected process in the \texttt{Monitor}'s context instead of a subagent, to test whether separate role contexts matter.
-\condPlainAgent, also post hoc, gives the same harness the task and one neutral instruction to plan, draft, and revise a workspace draft, and \condExploratoryOne\ is our post-hoc adaptation of CogWriter~\citep{wan2025cognitive}.
+Further conditions were added after the main results, outside the seven pre-specified systems.
+\condSingleContext\ runs each selected process in the \texttt{Monitor}'s context instead of a subagent; \condPlainAgent\ gives the same harness the task and one neutral instruction to plan, draft, and revise a workspace draft; \condExploratoryOne\ is our adaptation of CogWriter~\citep{wan2025cognitive}; \condSelfRefine\ follows Self-Refine~\citep{madaan2023self} with \SelfRefineRounds\ feedback rounds chosen on unscored prompts to match our token use; and \condLoopOnly\ removes goals, adaptive ordering, and subagents together while keeping the \texttt{Monitor}, the persistent workspace draft, and the role skills.
 
 \input{tab/experiments-architecture-comparison}
 
@@ -83,6 +82,4 @@ For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, 
 \paragraph{Robustness and behavioral analysis.}
 Pairwise LLM evaluation can favor longer outputs and can change with judge identity~\citep{zheng2023judging,dubois2024length,saito2023verbosity,li2026preference,panickssery2024selfpreference}.
 We therefore test whether the pairwise direction persists within pre-specified output-length bands, at equal length under a logistic model on the log length ratio~\citep{dubois2024length}, under a tight compute match, and under the cross-family evaluator.
-
-We analyze observable traces of process transitions, goal creation and development, goal replacement, and subagent invocations to characterize how the writing loop is used.
-We also compare runs that complete one \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle with runs on other paths.
+We analyze observable traces of process transitions, goal creation and development, goal replacement, and subagent invocations to characterize how the loop is used.

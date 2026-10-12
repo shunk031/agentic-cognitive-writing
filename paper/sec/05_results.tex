@@ -4,7 +4,7 @@
 Table~\ref{tab:main-results} reports document-quality scores for benchmark-native and common-rubric evaluation across the three benchmarks.
 \condAgenticCogWriter\ exceeds every alternative's mean on every WritingBench and HelloBench measure, and its paired prompt-level differences exclude zero against each on both WritingBench measures and HelloBench native scores.
 Its lead over \condStaged\ and \condTaskPlanning\ on HelloBench pointwise scores lies within the paired intervals, as does the higher DoLoMiTes pointwise mean of \condStaged.\footnote{See Appendix~\ref{app:paired-quality} for the paired differences and intervals.}
-Among the ablations and the execution variant, \condSingleWriter\ and \condNoGoals\ have the highest WritingBench native and HelloBench pointwise means; Section~\ref{sec:results-mechanism} compares them pairwise.
+\condSingleWriter\ and \condNoGoals\ have the highest WritingBench native and HelloBench pointwise means among the other rows, which Section~\ref{sec:results-mechanism} compares pairwise.
 
 \input{tab/main-results}
 
@@ -14,11 +14,10 @@ Among the ablations and the execution variant, \condSingleWriter\ and \condNoGoa
 Table~\ref{tab:pairwise-results} reports a system-level separation in direct same-prompt comparisons.
 \condAgenticCogWriter\ is preferred to \condSinglePass, \condStaged, and \condTaskPlanning, with win rates of \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean, respectively, when order-consistent wins and losses are summed over benchmarks in each generation run and averaged over runs.
 The direction holds in every benchmark--run test against \condSinglePass\ and \condTaskPlanning\ and in all but one against \condStaged.
-The last rows, post-hoc comparisons on one generation run, also favor our system over \condPlainAgent\ (\FullPlainAgentAcrossRate, $p=\FullPlainAgentAcrossP$, unadjusted) except on DoLoMiTes, at parity, and over \condExploratoryOne\ on every benchmark (\FullCogWriterStyleAcrossRate), whose \CogWriterStyleFailed\ failed prompts are excluded.
+The last three rows, post-hoc comparisons on one generation run with unadjusted tests, also favor our system over \condPlainAgent\ (\FullPlainAgentAcrossRate) and \condSelfRefine\ (\FullSelfRefineAcrossRate, with \SelfRefineTokenExcess\ more tokens) except on DoLoMiTes, at parity, and over \condExploratoryOne\ on every benchmark (\FullCogWriterStyleAcrossRate), excluding its \CogWriterStyleFailed\ failed prompts.
 
 Under the pre-specified within-benchmark Holm correction, \PooledFourOneHolmCellsTotal, \PooledFourTwoHolmCellsTotal, and \PooledFourThreeHolmCellsTotal\ of the nine benchmark--run tests separate our system from \condSinglePass, \condStaged, and \condTaskPlanning, respectively.\footnote{See Appendix~\ref{app:pairwise-detail} for run-level intervals and corrected results.}
-The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare\ (\condSinglePass), \UncondFullStagedWinShare\ (\condStaged), and \UncondFullTaskPlanningWinShare\ (\condTaskPlanning), and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate\ (\condSinglePass), \WorstCaseFullStagedRate\ (\condStaged), and \WorstCaseFullTaskPlanningRate\ (\condTaskPlanning).
-The post-hoc prompt-level estimate separates our system from all three alternatives across benchmarks (largest $p=\PromptLevelAcrossFullStagedP$), and a logistic length model keeps the preference at equal length, at \LengthModelFullStagedPreference\ against \condStaged\ and \LengthModelFullTaskPlanningPreference\ against \condTaskPlanning.\footnote{See Appendix~\ref{app:sensitivity-analyses} for both analyses, the resource-matched comparisons, which largely preserve the direction, and cross-family rescoring, which is less stable.}
+The post-hoc prompt-level estimate separates our system from all three alternatives across benchmarks (largest $p=\PromptLevelAcrossFullStagedP$), and a logistic length model keeps it at equal length, at \LengthModelFullStagedPreference\ against \condStaged\ and \LengthModelFullTaskPlanningPreference\ against \condTaskPlanning.\footnote{See Appendix~\ref{app:sensitivity-analyses} for both analyses, the resource-matched comparisons, which largely preserve the direction, and cross-family rescoring, which is less stable.}
 
 \input{tab/pairwise-results}
 
@@ -28,11 +27,12 @@ The post-hoc prompt-level estimate separates our system from all three alternati
 Table~\ref{tab:ablation-results} places the two pre-specified ablations much closer to \condAgenticCogWriter\ than the alternatives in Table~\ref{tab:pairwise-results}.
 No benchmark--run test comparing our system with \condNoGoals\ or \condFixedOrder\ is significant after the within-benchmark Holm correction.
 The post-hoc prompt-level estimate, which counts ties as half, places our system slightly ahead of both ablations, at \ClusteredFullFixedOrderRate\ [\ClusteredFullFixedOrderInterval], $p=\ClusteredFullFixedOrderP$, against \condFixedOrder\ and \ClusteredFullNoGoalsRate\ [\ClusteredFullNoGoalsInterval], $p=\ClusteredFullNoGoalsP$, against \condNoGoals.
-Table~\ref{tab:ablation-results} instead averages generation-run win rates over non-tied order-consistent comparisons.\footnote{See Appendix~\ref{app:sensitivity-analyses} for record-level rates, which count the two presentation orders as separate records.}
+Table~\ref{tab:ablation-results} instead averages generation-run win rates over non-tied order-consistent comparisons.\footnote{See Appendix~\ref{app:sensitivity-analyses} for record-level rates.}
 The ablations nonetheless keep the full system's advantage over the alternatives: of \PairedSeparationMeasureCount\ paired native and pointwise contrasts with them on WritingBench and HelloBench, intervals exclude zero for \PairedSeparatedNoGoals\ with \condNoGoals\ and \PairedSeparatedFixedOrder\ with \condFixedOrder, against \PairedSeparatedFull\ with the full system.\footnote{See Appendix~\ref{app:paired-quality} for these paired differences.}
 
-The post-hoc \condStagedRoles\ condition adds the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} role instructions to the three \condStaged\ stage prompts, without a \texttt{Monitor}, goals, or subagents.
-Our system still wins \FullStagedRolesAcrossRate\ [\FullStagedRolesAcrossInterval] of order-consistent comparisons against it ($p=\FullStagedRolesAcrossP$), and \condStagedRoles\ wins \StagedRolesStagedAcrossRate\ against \condStaged\ ($p=\StagedRolesStagedAcrossP$; one generation run, unadjusted), so role instructions alone do not reproduce it.\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level results.}
+Two post-hoc conditions, each from one generation run with unadjusted tests, bear on what our system adds over \condStaged.
+\condStagedRoles\ adds the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} role instructions to the three \condStaged\ stage prompts without a \texttt{Monitor}, goals, or subagents; our system wins \FullStagedRolesAcrossRate\ against it ($p=\FullStagedRolesAcrossP$), and it wins only \StagedRolesStagedAcrossRate\ against \condStaged\ ($p=\StagedRolesStagedAcrossP$).
+\condLoopOnly\ in Table~\ref{tab:ablation-results} stays at parity with our system (\FullLoopOnlyAcrossRate, $p=\FullLoopOnlyAcrossP$) yet beats \condStaged\ (\LoopOnlyStagedAcrossRate, $p=\LoopOnlyStagedAcrossP$), and \LoopOnlyOnePassRuns\ of its \LoopOnlyCompleted\ runs make exactly one pass.\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level results.}
 
 \input{tab/ablation-results}
 
@@ -57,7 +57,7 @@ Our system mostly follows the same forward \texttt{Planning}--\texttt{Translatin
 
 Execution changes produce a larger but less easily isolated difference.
 Within the tighter and wider pre-specified output-length bands, \condSingleWriter\ still wins only \SingleWriterLengthFiveRate\ ($p=\SingleWriterLengthFiveP$) and \SingleWriterLengthTenRate\ ($p=\SingleWriterLengthTenP$), respectively, against our system, so output length alone does not explain the gap.
-The post-hoc \condSingleContext\ check shows no significant difference from our system in the exploratory generation run (\SingleContextFullRate, $p=\SingleContextFullP$), although it loses on HelloBench (\SingleContextHelloFullRate, $p=\SingleContextHelloFullP$; both unadjusted).\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level diagnostic.}
+The post-hoc \condSingleContext\ check shows no significant difference from our system (\SingleContextFullRate, $p=\SingleContextFullP$), although it loses on HelloBench (\SingleContextHelloFullRate, $p=\SingleContextHelloFullP$; both unadjusted).\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level diagnostic.}
 
 \subsection{Observed Writing-Process Behavior}
 \label{sec:results-process-dynamics}
@@ -68,7 +68,7 @@ Figure~\ref{fig:process-sequences} shows the same concentration.
 The lower panel of Table~\ref{tab:process-dynamics} shows similar win rates against \condFixedOrder\ and \condSingleWriter\ for one-cycle runs and runs with other paths, so departures yield no larger quality advantage in this observational split.\footnote{See Appendix~\ref{app:process-behavior} for process, goal, and resource statistics.}
 
 After a change request to a finished version, the \texttt{Monitor} returns to \texttt{Planning} in \RevisionAfourPlanning\ of \RevisionAfourCompleted\ runs and regenerates goals in \RevisionAfourRegenerated.
-\condFixedOrder\ also reruns the cycle and is not separable from our system (\RevisionFullFixedOrderWLT\ W/L/T, $p=\RevisionFullFixedOrderP$).\footnote{See Appendix~\ref{app:sensitivity-analyses} for this exploratory experiment.}
+\condFixedOrder\ also reruns the cycle and is not separable from our system (\RevisionFullFixedOrderWLT\ W/L/T, $p=\RevisionFullFixedOrderP$).
 
 \input{tab/process-dynamics}
 

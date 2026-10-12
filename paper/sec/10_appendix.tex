@@ -134,6 +134,24 @@ A prompt counts only when both systems completed it, so the comparison covers \F
 Table~\ref{tab:appendix-cogwriter-main} reports the contrast, which favors our system on every benchmark.
 \input{tab/appendix-cogwriter-main}
 
+\subsection{Budget-Matched Self-Refine}
+\label{app:self-refine}
+The \condSelfRefine\ condition follows Self-Refine~\citep{madaan2023self} in one session: it drafts the document, then gives feedback on it and refines it for \SelfRefineRounds\ rounds, with generic prompts rather than our role instructions.
+The round count was fixed before the scored run by matching our system's run-1 token use on unscored calibration prompts, and in the scored run \condSelfRefine\ received \SelfRefineTokenExcess\ more output-plus-reasoning tokens per document than our system (\SelfRefineOutputTokens\ against \SelfRefineAfourOutputTokens), so the budget favors \condSelfRefine.
+It completed \SelfRefineCompleted\ of \CogWriterStyleAttempted\ prompts, wrote shorter outputs (median \SelfRefineMedianOutput\ words), and covers \FullSelfRefineAcrossN\ prompts in the comparison.
+Table~\ref{tab:appendix-self-refine} shows that our system is preferred on WritingBench and HelloBench and is at parity on DoLoMiTes.
+\input{tab/appendix-self-refine}
+
+\subsection{Combined Loop-Only Ablation}
+\label{app:loop-only}
+The \condLoopOnly\ condition removes explicit goals, adaptive ordering, and subagents together: it has no goals file or goal events, its \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} order is fixed by its prompt, and its \texttt{Monitor} performs every role in its own context, with any subagent spawn failing the run.
+It keeps the \texttt{Monitor}, the persistent \texttt{.writing/} workspace draft, and the writing guidance of the role skills, and it is built from the skill texts that \condNoGoals, \condFixedOrder, and \condSingleContext\ executed in generation run 1.
+It completed \LoopOnlyCompleted\ of \CogWriterStyleAttempted\ prompts; \LoopOnlyOnePassRuns\ of those runs make exactly one pass and \LoopOnlyReturnPlanningRuns\ return to \texttt{Planning}.
+It used \LoopOnlyOutputTokens\ output-plus-reasoning and \LoopOnlyInputTokens\ uncached input tokens per run, against \AfourOutputTokens\ and \AfourInputTokens\ for our system.
+Table~\ref{tab:appendix-loop-only} reports both contrasts: \condLoopOnly\ is at parity with our system on every benchmark and beats \condStaged\ across benchmarks, significantly on WritingBench and DoLoMiTes.
+The result is post hoc, from one generation run, and a parity result without an equivalence test.
+\input{tab/appendix-loop-only}
+
 \subsection{Output-Language Drift}
 \label{app:language-drift}
 Some English assignments are answered mainly in Chinese, counted as outputs whose Chinese characters outnumber their Latin letters, the rule that also classifies prompt language.

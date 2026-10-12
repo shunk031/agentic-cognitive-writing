@@ -1,7 +1,8 @@
 Recent coding agents increasingly write long-form documents, yet in our runs a plain agent allowed to revise its workspace draft usually wrote it once.
-Long-form writing systems instead fix each step's unit in advance, so the writer does not choose the next writing process.
-Motivated by cognitive process theory, we propose \condAgenticCogWriter, a writing skill whose Monitor agent keeps a shared draft, goals, and process history and delegates planning, drafting, or reviewing.
+Long-form systems instead fix each step's unit in advance, so the writer does not choose the next writing process.
+Motivated by cognitive process theory, we propose \condAgenticCogWriter, a writing skill whose Monitor agent keeps a shared draft and goals and delegates planning, drafting, or reviewing.
 We evaluate our system on three long-form writing benchmarks with pointwise rubric scores and pairwise preferences.
-Pre-specified tests prefer it to one-shot generation in most tests but to a fixed workflow and adaptive task planning in fewer than half; post-hoc analyses favor it over all three and, except on one benchmark, over the plain agent, as do paired pointwise differences on WritingBench and on HelloBench's native rubric.
+Pre-specified tests prefer it to one-shot generation in most tests but to a fixed workflow and task planning in fewer than half; post-hoc analyses favor it over all three and, except on one benchmark, over the plain agent, as do paired pointwise differences on WritingBench and on HelloBench's native rubric.
 Adding our role instructions to the fixed workflow post hoc does not reproduce this advantage.
-The advantage does not rest mainly on adaptive selection: removing explicit goals or fixing the process order keeps most of it, and process traces show that \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure, so benchmarks requiring adaptive selection are the next step.
+A post-hoc ablation removing goals, adaptive ordering, and subagents stays at parity and beats the fixed workflow, tying the advantage on these tasks to the Monitor's pass over a persistent draft.
+Process traces show \AfourCycleCompliantRate\ of complete paths follow the planning--drafting--reviewing cycle, so benchmarks requiring adaptive selection are next.

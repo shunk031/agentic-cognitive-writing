@@ -1556,6 +1556,9 @@ def _self_refine_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
         ("\\SelfRefineOutputTokens", f"{tokens['A10']:,.0f}", source + " output_plus_reasoning_tokens_mean.A10"),
         ("\\SelfRefineAfourOutputTokens", f"{tokens['A4']:,.0f}", source + " output_plus_reasoning_tokens_mean.A4"),
         *_exploratory_pairwise_entries(report, SELF_REFINE_CONTRASTS, source),
+        ("\\SelfRefineTokenExcess", _percent_fixed(tokens["A10"] / tokens["A4"] - 1, 1), source + " output_plus_reasoning_tokens_mean A10 / A4 - 1"),
+        ("\\SelfRefineCompleted", str(report["completion"]["A10"]["completed"]), source + " completion.A10.completed"),
+        ("\\SelfRefineMedianOutput", _format_process(report["median_output_words"]["A10"]["pooled"]), source + " median_output_words.A10.pooled"),
     ]
 
 
