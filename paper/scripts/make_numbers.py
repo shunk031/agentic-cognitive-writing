@@ -171,6 +171,7 @@ LENGTH_CONTROL_MARKER = "% Length-control macros."
 COMPUTE_STRATIFIED_MARKER = "% Compute-stratified macros."
 PAIRWISE_ROBUSTNESS_MARKER = "% Pairwise-robustness macros."
 STAGED_ROLES_MARKER = "% Staged role-instruction (A9) macros."
+COGWRITER_STYLE_MARKER = "% CogWriter-style (B1) main-benchmark macros."
 TRACE_ENDINGS_MARKER = "% Trace-ending macros."
 REVISION_TASKS_MARKER = "% Revision-request pilot macros."
 QUALITATIVE_EXAMPLE_MARKER = "% Illustrative-example macros."
@@ -186,6 +187,7 @@ RAW_RUBRIC_DIMENSIONS = {
     "factuality_constraint_fidelity": "Factuality",
 }
 STAGED_ROLES_CONTRASTS = {"A4:A9": "FullStagedRoles", "A9:A2": "StagedRolesStaged"}
+COGWRITER_STYLE_CONTRASTS = {"A4:B1": "FullCogWriterStyle"}
 PAIRWISE_ROBUSTNESS_CONTRASTS = {
     "A4:A1": "FullSinglePass",
     "A4:A2": "FullStaged",
@@ -1464,11 +1466,12 @@ def _pairwise_robustness_entries(report: dict[str, Any]) -> list[tuple[str, str,
     return entries
 
 
-def _staged_roles_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
-    """Exploratory A9 pairwise outcomes, per benchmark and over the three benchmarks."""
-    source = "A9 pairwise JSON"
+def _exploratory_pairwise_entries(
+    report: dict[str, Any], contrasts: dict[str, str], source: str
+) -> list[tuple[str, str, str]]:
+    """Exploratory pairwise outcomes, per benchmark and over the three benchmarks."""
     entries = []
-    for contrast, contrast_word in STAGED_ROLES_CONTRASTS.items():
+    for contrast, contrast_word in contrasts.items():
         scopes = {"Across": ("pooled", report["pooled"][contrast])}
         scopes.update({word: (f"benchmarks.{name}", report["benchmarks"][name][contrast]) for name, word in ROBUSTNESS_BENCHMARKS.items()})
         for scope_word, (field, stats) in scopes.items():
@@ -1482,6 +1485,24 @@ def _staged_roles_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
                 (prefix + "N", str(stats["scored_prompts"]), stats_source + ".scored_prompts"),
             ]
     return entries
+
+
+def _staged_roles_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory A9 pairwise outcomes."""
+    return _exploratory_pairwise_entries(report, STAGED_ROLES_CONTRASTS, "A9 pairwise JSON")
+
+
+def _cogwriter_style_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory B1 pairwise outcomes, completions, length, and tokens on the main benchmarks."""
+    source = "B1 pairwise JSON"
+    tokens = report["mean_tokens_per_attempted_run"]["B1"]
+    return [
+        *_exploratory_pairwise_entries(report, COGWRITER_STYLE_CONTRASTS, source),
+        ("\\CogWriterStyleCompleted", str(report["completion"]["B1"]["completed"]), source + " completion.B1.completed"),
+        ("\\CogWriterStyleMedianOutput", _format_process(report["median_output_words"]["B1"]["pooled"]), source + " median_output_words.B1.pooled"),
+        ("\\CogWriterStyleOutputTokens", _format_process(tokens["mean_output_plus_reasoning_tokens"], 0), source + " mean_tokens_per_attempted_run.B1.mean_output_plus_reasoning_tokens"),
+        ("\\CogWriterStyleInputTokens", _format_process(tokens["mean_uncached_input_tokens"], 0), source + " mean_tokens_per_attempted_run.B1.mean_uncached_input_tokens"),
+    ]
 
 
 def _trace_endings_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
@@ -2397,6 +2418,7 @@ def main() -> None:
     parser.add_argument("--adversarial-review-analysis", type=Path)
     parser.add_argument("--pairwise-robustness", type=Path, help="pairwise-robustness JSON; appends its own block")
     parser.add_argument("--staged-roles", type=Path, help="A9 pairwise JSON; appends its own block")
+    parser.add_argument("--cogwriter-style", type=Path, help="B1 pairwise JSON; appends its own block")
     parser.add_argument("--trace-endings", type=Path, help="trace-endings JSON; appends its own block")
     parser.add_argument("--revision-tasks", type=Path, help="revision-task results JSON; appends its own block")
     parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
@@ -2419,6 +2441,7 @@ def main() -> None:
         (args.compute_stratified_sensitivity, "compute-stratified", COMPUTE_STRATIFIED_MARKER, _compute_stratified_entries),
         (args.pairwise_robustness, "pairwise-robustness", PAIRWISE_ROBUSTNESS_MARKER, _pairwise_robustness_entries),
         (args.staged_roles, "staged-roles", STAGED_ROLES_MARKER, _staged_roles_entries),
+        (args.cogwriter_style, "cogwriter-style", COGWRITER_STYLE_MARKER, _cogwriter_style_entries),
         (args.trace_endings, "trace-endings", TRACE_ENDINGS_MARKER, _trace_endings_entries),
         (args.revision_tasks, "revision-tasks", REVISION_TASKS_MARKER, _revision_tasks_entries),
         (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),

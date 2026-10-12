@@ -1,0 +1,131 @@
+{
+  "analysis_family": "exploratory",
+  "benchmarks": {
+    "DoLoMiTes": {
+      "A4:B1": {
+        "dropped_prompts": 2,
+        "eligible_prompts": 100,
+        "losses": 14,
+        "non_ties": 89,
+        "scored_prompts": 98,
+        "sign_test_p_exact_two_sided": 3.0109103586376684e-11,
+        "tie_as_half_score": 0.8112244897959183,
+        "ties": 9,
+        "wilson_95_high": 0.9039219033337944,
+        "wilson_95_low": 0.7531121499312459,
+        "win_rate": 0.8426966292134831,
+        "wins": 75
+      }
+    },
+    "HelloBench": {
+      "A4:B1": {
+        "dropped_prompts": 15,
+        "eligible_prompts": 100,
+        "losses": 14,
+        "non_ties": 62,
+        "scored_prompts": 85,
+        "sign_test_p_exact_two_sided": 1.7428522601631996e-05,
+        "tie_as_half_score": 0.7,
+        "ties": 23,
+        "wilson_95_high": 0.8604481696141172,
+        "wilson_95_low": 0.6559437908464204,
+        "win_rate": 0.7741935483870968,
+        "wins": 48
+      }
+    },
+    "WritingBench": {
+      "A4:B1": {
+        "dropped_prompts": 24,
+        "eligible_prompts": 100,
+        "losses": 5,
+        "non_ties": 68,
+        "scored_prompts": 76,
+        "sign_test_p_exact_two_sided": 7.651062942926057e-14,
+        "tie_as_half_score": 0.881578947368421,
+        "ties": 8,
+        "wilson_95_high": 0.9681851557488821,
+        "wilson_95_low": 0.8391481160428227,
+        "win_rate": 0.9264705882352942,
+        "wins": 63
+      }
+    }
+  },
+  "completion": {
+    "A4": {
+      "attempted": 300,
+      "completed": 293
+    },
+    "B1": {
+      "attempted": 300,
+      "by_benchmark": {
+        "DoLoMiTes": 100,
+        "HelloBench": 86,
+        "WritingBench": 80
+      },
+      "completed": 266
+    }
+  },
+  "condition": "B1 CogWriter-style",
+  "contrasts": [
+    "A4:B1"
+  ],
+  "estimand": "prompt-collapsed outcome; both presentation orders must agree, otherwise tie",
+  "generation_attempts": {
+    "failures_not_retried": 25,
+    "final_failed_by_reason": {
+      "empty_final_response": 2,
+      "final_response_under_half_of_draft": 3,
+      "no_draft_file": 29
+    },
+    "first_pass_failed": 46,
+    "first_pass_runs": 300,
+    "retried_failures": 21,
+    "retry_completed": 12,
+    "retry_selection": "failed prompts in seeded random order (seed 20260908); retries stopped when the cost cap was reached"
+  },
+  "generation_run": "run-1",
+  "mean_tokens_per_attempted_run": {
+    "A4": {
+      "mean_output_plus_reasoning_tokens": 13373.8,
+      "mean_uncached_input_tokens": 46860.43,
+      "token_usage_records": 300
+    },
+    "B1": {
+      "mean_output_plus_reasoning_tokens": 18011.356666666667,
+      "mean_uncached_input_tokens": 55214.83666666667,
+      "token_usage_records": 300
+    }
+  },
+  "median_output_words": {
+    "A4": {
+      "DoLoMiTes": 734.0,
+      "HelloBench": 1753,
+      "WritingBench": 4690.0,
+      "pooled": 1835
+    },
+    "B1": {
+      "DoLoMiTes": 829.0,
+      "HelloBench": 1705.5,
+      "WritingBench": 4282.0,
+      "pooled": 1684.5
+    }
+  },
+  "pooled": {
+    "A4:B1": {
+      "dropped_prompts": 41,
+      "eligible_prompts": 300,
+      "losses": 33,
+      "non_ties": 219,
+      "scored_prompts": 259,
+      "sign_test_p_exact_two_sided": 4.487200831703022e-27,
+      "tie_as_half_score": 0.7953667953667953,
+      "ties": 40,
+      "wilson_95_high": 0.8906476929578665,
+      "wilson_95_low": 0.7959390885579959,
+      "win_rate": 0.8493150684931506,
+      "wins": 186
+    }
+  },
+  "schema_version": 1,
+  "test": "exact two-sided sign test on non-tied prompts"
+}
