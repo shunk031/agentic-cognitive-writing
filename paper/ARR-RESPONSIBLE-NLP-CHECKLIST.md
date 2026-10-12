@@ -2,6 +2,16 @@
 
 Draft answers for the October 2026 ARR submission form. Transfer these into OpenReview after the final PDF is frozen and update section labels if pagination or appendix lettering changes.
 
+## Submission form fields
+
+### TL;DR
+
+We build a long-form writing agent whose Monitor chooses online whether to plan, draft, or review and delegates each step to a subagent; it is preferred over single-pass, staged, and task-planning baselines in same-prompt comparisons.
+
+### Keywords
+
+long-form text generation, LLM agents, writing agents, cognitive process theory of writing, process-level control, multi-agent delegation, LLM-as-a-judge, pairwise evaluation
+
 ## A. For every submission
 
 ### A1. Did you describe the limitations of your work?
