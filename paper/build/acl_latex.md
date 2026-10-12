@@ -256,7 +256,7 @@ The process findings motivate benchmarks that directly induce revision: long inp
 
 ##### Scope and external validity.
 
-Our conclusions concern one generator family, one coding-agent-style harness, and deterministic demanding subsets of three long-form benchmarks. The subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent semantic measure of difficulty. The results therefore do not establish transfer to shorter tasks, objectives that change during writing, other model families or runtimes, interactive human–AI writing, or end-to-end agents with retrieval. The alternative writing systems are matched implementations under our common generator and harness, not executions of the published systems.
+Our conclusions concern one generator family, one coding-agent-style harness, and deterministic subsets of three long-form benchmarks. The subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent semantic measure of difficulty. The results therefore do not establish transfer to shorter tasks, objectives that change during writing, other model families or runtimes, interactive human–AI writing, or end-to-end agents with retrieval. The alternative writing systems are matched implementations under our common generator and harness, not executions of the published systems.
 
 ##### Evaluator dependence.
 
