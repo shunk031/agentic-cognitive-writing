@@ -5,23 +5,32 @@
 
 \paragraph{Scope and external validity.}
 Our conclusions concern one generator family, one coding-agent-style harness, and deterministic subsets of three long-form benchmarks.
-The subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent semantic measure of difficulty.
-The results therefore do not establish transfer to shorter tasks, objectives that change during writing, other model families or runtimes, interactive human--AI writing, or end-to-end agents with retrieval.
-The alternative writing systems are matched implementations under our common generator and harness, not executions of the published systems.
+The subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent measure of difficulty or of the need to revise.
+The results therefore do not establish transfer to shorter tasks, other model families or runtimes, interactive human--AI writing, or end-to-end agents with retrieval.
+A direct next step is a task set that changes objectives, introduces new evidence, or adds rhetorical constraints during writing, so that process selection is required rather than only available.
+
+\paragraph{Comparison design.}
+The alternative writing systems are reimplementations under the shared setup of Section~\ref{sec:implementation}, not executions of the published systems.
+\condTaskPlanning\ also delegates its task nodes to subagents, so delegation is present on both sides of that comparison.
+CogWriter-style and STORM-style adaptations (\condExploratoryOne, \condExploratoryTwo) run only on ten consensus-writing tasks, and running them on the three benchmarks is the next comparison.\footnote{See Appendix~\ref{app:habermas} for the consensus-writing results.}
+The compute-matched analysis selects pairs with similar realized token use after generation; a Self-Refine baseline~\citep{madaan2023self} given our system's token budget before generation would test budget-matched iterative revision directly.
 
 \paragraph{Evaluator dependence.}
-The primary evaluation also leaves uncertainty about judge dependence.
-Pairwise win rates are computed over order-consistent comparisons, where both presentation orders select the same response; Section~\ref{sec:results-effectiveness} also reports unconditional and worst-case missing-output views.
 The primary evaluator belongs to the same model family as the generator, and related generator--judge models can exhibit preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
-In the single-run cross-family check, summing W/L/T counts over the three benchmarks within each selected contrast leaves all three contrasts favoring our system, but the cross-family judge produces many ties and reverses 3 of 9 benchmark-level comparisons; we also did not collect human judgments, so model-judge preference should not be treated as human preference.
-The primary evaluator also favors longer outputs overall.
+The cross-family judge rescored one generation run for the contrasts with \condSinglePass, \condTaskPlanning, and \condNoGoals; summing W/L/T counts over the three benchmarks leaves all three favoring our system, but the judge produces many ties and reverses 3 of 9 benchmark-level comparisons, and its agreement with the primary judge is $\kappa=\JudgeAgreementKappa$ over all \JudgeAgreementPairs\ prompt-level outcomes and $\kappa=\JudgeAgreementDecidedKappa$ over the \JudgeAgreementDecidedPairs\ pairs both judges decide.
+Extending the check to \condStaged\ and \condFixedOrder\ and to all three generation runs would cover every contrast between our system and an alternative or ablation.
+Model-judge preference is not human preference; a blinded human comparison of same-prompt outputs, stratified by benchmark, contrast, and prompt length, would measure judge agreement with human readers.
 
 \paragraph{Component attribution.}
-The component analyses constrain mechanism claims without establishing equivalence.
-Removing the explicit goal representation or fixing process order produces no reliable difference from the full system in the pre-specified multiple-comparison-corrected tests, which were not powered for differences this small, and the exploratory prompt-level summary does not rank the two components.
+The ablations constrain explicit goals and adaptive ordering to modest contributions without establishing equivalence.
+Neither ablation differs from the full system in any benchmark--run test after Holm correction, each such test reaches 80\% power~\citep{card2020little} at a true preference of about \PowerCellDetectablePreference, and the post-hoc prompt-level estimate does not compare the two components.\footnote{See Appendix~\ref{app:prompts} for the power calculation.}
+\condFixedOrder\ enforces its cycle through the \texttt{Monitor}'s instructions so that it shares our system's agent runtime and differs only in the selection rule, and \AsixCycleCompliantRate\ of its paths are cycle-compliant.\footnote{See Appendix~\ref{app:process-behavior} for the trace classification.}
+Next steps are a runner-enforced cycle and a combined ablation that removes goals and fixes the order together, which would test whether the two mechanisms substitute for each other.
+
+\paragraph{Execution variants.}
 \condSingleWriter\ changes delegation, role context, decision granularity, and output length together; \condSingleContext\ is narrower but was added post-hoc, uses one exploratory generation run, and differs in execution interface and transport.
-The current evidence therefore cannot attribute the remaining system-level advantage to any single shared execution feature.
+The current evidence therefore does not attribute the remaining system-level advantage to any single shared execution feature.
 
 \paragraph{Descriptive execution analyses.}
-The length- and compute-matched analyses are descriptive because both variables are consequences of execution.
+The primary evaluator favors longer outputs overall, and the length- and compute-matched analyses are descriptive because both variables result from execution.
 Process traces likewise record state transitions and agent actions; they characterize how \condAgenticCogWriter\ behaves on these tasks but do not measure human cognition or validate cognitive process theory as a model of language-agent internals.

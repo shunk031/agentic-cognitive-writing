@@ -11,7 +11,7 @@ Contrast & Band or bin & W/L/T & Rate & $p$ \\
 \condAgenticCogWriter\ vs. \condTaskPlanning & within 1.50 & \ComputeFullTaskPlanningWithinOneFiftyWLT & \ComputeFullTaskPlanningWithinOneFiftyRate & $\ComputeFullTaskPlanningWithinOneFiftyP$ \\
 \condSingleWriter\ vs. \condAgenticCogWriter & within 1.25 & \ComputeSingleWriterFullWithinOneTwentyFiveWLT & \ComputeSingleWriterFullWithinOneTwentyFiveRate & $\ComputeSingleWriterFullWithinOneTwentyFiveP$ \\
 \condSingleWriter\ vs. \condAgenticCogWriter & within 1.50 & \ComputeSingleWriterFullWithinOneFiftyWLT & \ComputeSingleWriterFullWithinOneFiftyRate & $\ComputeSingleWriterFullWithinOneFiftyP$ \\
-\condAgenticCogWriter\ vs. \condSinglePass & within 1.25 & \ComputeFullSinglePassWithinOneTwentyFiveWLT & \ComputeFullSinglePassWithinOneTwentyFiveRate & $\ComputeFullSinglePassWithinOneTwentyFiveP$ \\
+\condAgenticCogWriter\ vs. \condSinglePass & within 1.25 & \ComputeFullSinglePassWithinOneTwentyFiveWLT & \ComputeFullSinglePassWithinOneTwentyFiveRate & \ComputeFullSinglePassWithinOneTwentyFiveP \\
 \condAgenticCogWriter\ vs. \condSinglePass & within 1.50 & \ComputeFullSinglePassWithinOneFiftyWLT & \ComputeFullSinglePassWithinOneFiftyRate & $\ComputeFullSinglePassWithinOneFiftyP$ \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
 \condAgenticCogWriter\ vs. \condStaged & 0.00--0.50 & \ComputeFullStagedBinZeroToFiftyWLT & \ComputeFullStagedBinZeroToFiftyRate & $\ComputeFullStagedBinZeroToFiftyP$ \\
@@ -52,6 +52,6 @@ Contrast & Band or bin & W/L/T & Rate & $p$ \\
 \condAgenticCogWriter\ vs. \condSinglePass & 2.00+ & \ComputeFullSinglePassBinTwoPlusWLT & \ComputeFullSinglePassBinTwoPlusRate & $\ComputeFullSinglePassBinTwoPlusP$ \\
 \bottomrule
 \end{tabular}
-\caption{Compute-matched pairwise outcomes. Within the tightest available 1.25$\times$ band, \condAgenticCogWriter\ remains favored over \condStaged\ and \condTaskPlanning; no \condAgenticCogWriter--\condSinglePass\ pairs fall in that band, so the same comparison cannot be made there. The remaining rows show descriptive compute-ratio bins; sign-test $p$-values are unadjusted and do not enter the confirmatory analysis.}
+\caption{Compute-matched pairwise outcomes. Ratios divide the first-named system's output-plus-reasoning tokens by the second's; the 1.25 and 1.50 bands keep pairs whose larger-to-smaller ratio is at most that value. Within the 1.25 band, \condAgenticCogWriter\ remains favored over \condStaged\ and \condTaskPlanning; no pairs with \condSinglePass\ fall there (N/A). W/L/T counts pairs across the three generation runs; unadjusted sign-test $p$-values count prompts and are not confirmatory.}
 \label{tab:appendix-compute-control}
 \end{table*}

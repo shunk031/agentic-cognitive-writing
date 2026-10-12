@@ -8,7 +8,7 @@ Run one command from `paper/`:
 ./tools/build-pdf.sh
 ```
 
-The script writes the PDF and the `latexmk` log under `build/`, passes `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` from the environment to the image build and container, and prints page and warning counts. Remove generated files with:
+The script first runs the [prompt display script](./prepare-prompt-displays.py), which copies every prompt the appendix lists to `build/prompt-display/` without repository-internal file paths and fails when a removal target no longer matches its source exactly once. The script then writes the PDF and the `latexmk` log under `build/`, passes `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` from the environment to the image build and container, and prints page and warning counts. Remove generated files with:
 
 ```bash
 ./tools/build-pdf.sh --clean

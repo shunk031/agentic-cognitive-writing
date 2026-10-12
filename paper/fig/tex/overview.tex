@@ -35,7 +35,7 @@
 \draw[flow] (translator) -- (state);
 \draw[flow] (reviewer) -- (state);
 \draw[loop] (state.west) -- ++(-7mm,0) |- (monitor.west);
-\draw[flow, dashed] (state) -- node[right, font=\scriptsize]{terminate after review} (output);
+\draw[flow, dashed] (state) -- node[right, font=\scriptsize]{terminate} (output);
 
 \end{tikzpicture}
 \caption{Overview of \condAgenticCogWriter. Inspired by the cognitive process theory of writing, a coding-agent-style control loop turns the task into a document via Planning, Translating, or Reviewing, selected online from the evolving document state.}

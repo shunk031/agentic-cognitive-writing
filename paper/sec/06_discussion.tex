@@ -1,8 +1,3 @@
-Tables~\ref{tab:main-results} and~\ref{tab:pairwise-results} show that \condAgenticCogWriter\ is distinguished by consistent same-prompt preference rather than uniform pointwise dominance, supporting process-level control without requiring every benchmark-specific metric to peak.
-Because the ablations keep most of that advantage, it resides in the process-level loop shared with the full system; goals and adaptive ordering appear partly redundant on tasks that seldom require revision.
-
-Figure~\ref{fig:process-sequences} and Table~\ref{tab:process-dynamics} show that \condAgenticCogWriter\ usually follows planning--drafting--reviewing and departs selectively, so process-level control is not the same as continual replanning.
-This complements systems that adapt task decomposition or structural reasoning during generation~\citep{xiong2025beyond,wan2025cognitive,sun2026cot}: a second axis is which process a controller selects, not only how dynamically it replans.
-
-The process findings motivate benchmarks that directly induce revision: long inputs and, where stated, long requested outputs, together with procedural constraints, can be demanding without requiring earlier decisions to be revisited.
-Such benchmarks could change objectives, introduce new evidence, or impose rhetorical constraints; more broadly, cognitive writing theory provides executable control abstractions rather than claims that language agents reproduce human cognition, making alternative writing processes explicit enough to implement, compare, and falsify.
+Tables~\ref{tab:main-results} and~\ref{tab:pairwise-results} show that \condAgenticCogWriter\ is distinguished by consistent same-prompt preference over the three alternatives rather than uniform pointwise dominance.
+The ablations keep most of that advantage over the alternatives, and the traces show little replanning on these tasks.
+Figure~\ref{fig:process-sequences} and Table~\ref{tab:process-dynamics} show that our system usually follows planning--drafting--reviewing, so its adaptive ordering is seldom used on these tasks.

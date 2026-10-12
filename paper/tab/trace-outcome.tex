@@ -5,22 +5,22 @@
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lrr}
 \toprule
-& \multicolumn{2}{c}{\textbf{\condAgenticCogWriter\ win rate (\%)}} \\
+& \multicolumn{2}{c}{\textbf{\condAgenticCogWriter\ win rate (\%) (non-tied $n$)}} \\
 \cmidrule(lr){2-3}
 \textbf{Process path}
 & \textbf{\condFixedOrder}
 & \textbf{\condSingleWriter} \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}
 \lcell{\texttt{Planning}$\rightarrow$\\\texttt{Translating}$\rightarrow$\texttt{Reviewing}}
-& \AfourExactCycleFixedOrderWinRate
-& \AfourExactCycleSingleWriterWinRate \\
+& \AfourExactCycleFixedOrderWinRate\,{\scriptsize(\AfourExactCycleFixedOrderNonTie)}
+& \AfourExactCycleSingleWriterWinRate\,{\scriptsize(\AfourExactCycleSingleWriterNonTie)} \\
 Other path
-& \AfourNonExactFixedOrderWinRate
-& \AfourNonExactSingleWriterWinRate \\
+& \AfourNonExactFixedOrderWinRate\,{\scriptsize(\AfourNonExactFixedOrderNonTie)}
+& \AfourNonExactSingleWriterWinRate\,{\scriptsize(\AfourNonExactSingleWriterNonTie)} \\
 
 \bottomrule
 \end{tabular}%
 }
-\caption{\condAgenticCogWriter\ win rates against \condFixedOrder\ and \condSingleWriter\ are similar for one-cycle \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} runs and other-path runs. Rates sum wins and losses over benchmarks and runs; the split is observational, not causal.}
+\caption{\condAgenticCogWriter\ win rates against \condFixedOrder\ and \condSingleWriter\ are similar for one-cycle \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} paths and other paths, summing outcomes over benchmarks and generation runs; the split is observational, not causal.}
 \label{tab:trace-outcome}
 \end{table}

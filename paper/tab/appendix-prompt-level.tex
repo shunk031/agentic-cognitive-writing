@@ -1,0 +1,46 @@
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llrrrr}
+\toprule
+\textbf{Compared system} & \textbf{Statistic} & \textbf{WritingBench} & \textbf{HelloBench} & \textbf{DoLoMiTes} & \textbf{Across benchmarks} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+\condSinglePass & Rate & \PromptLevelWritingFullSinglePassRate & \PromptLevelHelloFullSinglePassRate & \PromptLevelDoLoFullSinglePassRate & \PromptLevelAcrossFullSinglePassRate \\
+ & 95\% interval & \PromptLevelWritingFullSinglePassInterval & \PromptLevelHelloFullSinglePassInterval & \PromptLevelDoLoFullSinglePassInterval & \PromptLevelAcrossFullSinglePassInterval \\
+ & Prompt W/L/T & \PromptLevelWritingFullSinglePassWLT & \PromptLevelHelloFullSinglePassWLT & \PromptLevelDoLoFullSinglePassWLT & \PromptLevelAcrossFullSinglePassWLT \\
+ & $p$ & $\PromptLevelWritingFullSinglePassP$ & $\PromptLevelHelloFullSinglePassP$ & $\PromptLevelDoLoFullSinglePassP$ & $\PromptLevelAcrossFullSinglePassP$ \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+\condStaged & Rate & \PromptLevelWritingFullStagedRate & \PromptLevelHelloFullStagedRate & \PromptLevelDoLoFullStagedRate & \PromptLevelAcrossFullStagedRate \\
+ & 95\% interval & \PromptLevelWritingFullStagedInterval & \PromptLevelHelloFullStagedInterval & \PromptLevelDoLoFullStagedInterval & \PromptLevelAcrossFullStagedInterval \\
+ & Prompt W/L/T & \PromptLevelWritingFullStagedWLT & \PromptLevelHelloFullStagedWLT & \PromptLevelDoLoFullStagedWLT & \PromptLevelAcrossFullStagedWLT \\
+ & $p$ & $\PromptLevelWritingFullStagedP$ & $\PromptLevelHelloFullStagedP$ & $\PromptLevelDoLoFullStagedP$ & $\PromptLevelAcrossFullStagedP$ \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+\condTaskPlanning & Rate & \PromptLevelWritingFullTaskPlanningRate & \PromptLevelHelloFullTaskPlanningRate & \PromptLevelDoLoFullTaskPlanningRate & \PromptLevelAcrossFullTaskPlanningRate \\
+ & 95\% interval & \PromptLevelWritingFullTaskPlanningInterval & \PromptLevelHelloFullTaskPlanningInterval & \PromptLevelDoLoFullTaskPlanningInterval & \PromptLevelAcrossFullTaskPlanningInterval \\
+ & Prompt W/L/T & \PromptLevelWritingFullTaskPlanningWLT & \PromptLevelHelloFullTaskPlanningWLT & \PromptLevelDoLoFullTaskPlanningWLT & \PromptLevelAcrossFullTaskPlanningWLT \\
+ & $p$ & $\PromptLevelWritingFullTaskPlanningP$ & $\PromptLevelHelloFullTaskPlanningP$ & $\PromptLevelDoLoFullTaskPlanningP$ & $\PromptLevelAcrossFullTaskPlanningP$ \\
+\bottomrule
+\end{tabular}
+\caption{Prompt-level summary of \condAgenticCogWriter\ against each alternative, which complements the pre-specified tests. Each prompt's outcomes (win 1, tie 0.5, loss 0) are averaged over the three generation runs; the rate is the mean over prompts with a prompt bootstrap interval, and the exact sign test counts a prompt as a win above 0.5 and a loss below 0.5. $p$-values are unadjusted.}
+\label{tab:appendix-prompt-level}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Compared system} & \textbf{Decided pairs} & \textbf{Preference at equal length} & \textbf{Length slope} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}
+\condSinglePass & \LengthModelFullSinglePassDecided & \LengthModelFullSinglePassPreference\,{\scriptsize[\LengthModelFullSinglePassInterval]} & \LengthModelFullSinglePassSlope\,{\scriptsize[\LengthModelFullSinglePassSlopeInterval]} \\
+\condStaged & \LengthModelFullStagedDecided & \LengthModelFullStagedPreference\,{\scriptsize[\LengthModelFullStagedInterval]} & \LengthModelFullStagedSlope\,{\scriptsize[\LengthModelFullStagedSlopeInterval]} \\
+\condTaskPlanning & \LengthModelFullTaskPlanningDecided & \LengthModelFullTaskPlanningPreference\,{\scriptsize[\LengthModelFullTaskPlanningInterval]} & \LengthModelFullTaskPlanningSlope\,{\scriptsize[\LengthModelFullTaskPlanningSlopeInterval]} \\
+\condNoGoals & \LengthModelFullNoGoalsDecided & \LengthModelFullNoGoalsPreference\,{\scriptsize[\LengthModelFullNoGoalsInterval]} & \LengthModelFullNoGoalsSlope\,{\scriptsize[\LengthModelFullNoGoalsSlopeInterval]} \\
+\condFixedOrder & \LengthModelFullFixedOrderDecided & \LengthModelFullFixedOrderPreference\,{\scriptsize[\LengthModelFullFixedOrderInterval]} & \LengthModelFullFixedOrderSlope\,{\scriptsize[\LengthModelFullFixedOrderSlopeInterval]} \\
+\bottomrule
+\end{tabular}
+\caption{Logistic model of the order-consistent decided outcome on the log ratio of \condAgenticCogWriter's output length to the compared system's, over the three generation runs. The preference at equal length is the fitted win probability at a ratio of one, and the slope is per unit log ratio; 95\% intervals in brackets come from a prompt-cluster bootstrap.}
+\label{tab:appendix-length-model}
+\end{table}

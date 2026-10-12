@@ -40,8 +40,11 @@ def main() -> None:
     raw_abstract = re.sub(r"\s+", " ", match.group(1)).strip()
 
     commands = re.findall(r"\\[A-Za-z]+", raw_abstract)
+    # Trace frequencies come from numbers.tex so the Abstract never hard-codes them.
     unexpected_commands = [
-        command for command in commands if command != r"\condAgenticCogWriter"
+        command
+        for command in commands
+        if command != r"\condAgenticCogWriter" and not re.fullmatch(r"\\Afour[A-Za-z]+Rate", command)
     ]
     assert not unexpected_commands, ("Unexpected LaTeX command in Abstract", unexpected_commands)
 
@@ -108,11 +111,14 @@ def main() -> None:
     assert re.search(r"\bProcess traces\b", abstract, re.IGNORECASE), (
         "Introduce the trace result as process evidence, not as undefined 'trajectories'"
     )
-    assert re.search(
-        r"\bdepartures?\b[^.]*\bselectively\b",
-        abstract,
-        re.IGNORECASE,
-    ), "Explain that adaptive departures are used selectively on the evaluated tasks"
+    # Reviewers read "departures used selectively" as an unsupported claim of
+    # purpose, so the trace result is stated as observed frequencies.
+    assert re.search(r"\bProcess traces\b[^.]*\\Afour[A-Za-z]+Rate", abstract, re.IGNORECASE), (
+        "State the trace result as an observed frequency from numbers.tex"
+    )
+    assert not re.search(r"\bselectively\b", abstract, re.IGNORECASE), (
+        "Do not attribute purpose to trace departures"
+    )
 
     words = re.findall(r"\b[\w'-]+\b", abstract)
     assert len(words) <= 200, f"Abstract exceeds 200 words: {len(words)}"

@@ -1,5 +1,4 @@
 We compare the writing systems under the same task inputs and information policy to study three questions: whether process-level organization improves document quality, which components contribute to any advantage, and how the writing loop behaves in practice.
-We also use one post-hoc execution variant as a diagnostic.
 Because agent execution is stochastic, every prompt--system pair is generated in three runs, so differences between systems can be judged against run-to-run variation.
 
 \subsection{Systems Compared}
@@ -9,21 +8,22 @@ We consider seven pre-specified systems under the same generation setup.
 Their numbers below are used throughout the analysis.
 
 \paragraph{Alternative writing systems.}
-We compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ produces the complete document in one generation call; (2) \condStaged\ executes \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write}, following the common separation of planning, drafting, and revision~\citep{yang2022re3,wan2025cognitive}; and (3) \condTaskPlanning\ follows a WriteHERE-style adaptive task graph~\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes.
+We compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ produces the complete document in one generation call; (2) \condStaged\ executes the \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write} stage model~\citep{rohman1965pre}, with which \citet{flower1981cognitive} contrast their process model; and (3) \condTaskPlanning\ follows a WriteHERE-style adaptive task graph~\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes.
 The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas our system advances a writing process.
 
 \paragraph{Ablations of \condAgenticCogWriter.}
 Two pre-specified ablations change one control mechanism while retaining the rest of the loop.
-(4) \condNoGoals\ removes the explicit goal representation but keeps adaptive process selection and the three subagents, while (5) \condFixedOrder\ keeps the shared draft, goals, process history, and subagents but replaces the \texttt{Monitor}'s adaptive decision with a repeated \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle.
+(4) \condNoGoals\ forbids the goals file and goal events but keeps adaptive process selection and the three subagents, whose \texttt{Planner} loads the shared planning skill but receives no goal-setting request, while (5) \condFixedOrder\ keeps the shared draft, goals, process history, and subagents but replaces the \texttt{Monitor}'s adaptive decision with a repeated \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle.
 The comparison tests whether explicit goals or adaptive ordering explain the full-system gain.
 
 \paragraph{Execution variant and full system.}
 (6) \condSingleWriter\ retains the goal representation and adaptive process loop but performs \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} in one writer context without subagent delegation; it also limits each \texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.
+Its prompt also asks the writer to follow the repository's writing guidance and remove filler and AI-pattern phrasing, an instruction the other systems' prompts do not contain.
 (7) \condAgenticCogWriter\ is the full system of Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.
 
 \paragraph{Post-hoc execution check.}
 \condSingleContext\ was added after the main results as a narrower exploratory check and is not one of the seven pre-specified systems.
-The condition preserves the full process loop and shared state but executes each selected process in the \texttt{Monitor}'s context rather than a separate subagent context, serving only as a diagnostic of whether separate role contexts are necessary to explain the observed difference.
+It runs each selected process in the \texttt{Monitor}'s context instead of a subagent, as a diagnostic of whether separate role contexts explain the observed difference.
 
 \input{tab/experiments-architecture-comparison}
 
@@ -42,10 +42,11 @@ This produces a different demanding subset for each benchmark: WritingBench emph
 \label{sec:implementation}
 
 All systems run in Codex CLI as the coding-agent harness with \modelGenBare\ as the generator; API-based scoring uses \modelJudgeBare\ as the primary evaluator.\footnote{We use Luna, which OpenAI positions for fast, cost-sensitive workloads, for high-volume long-form generation and the higher-capability tier, Sol, for evaluation; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.}
-Holding the generator fixed across systems isolates writing organization rather than base-model capability.
-Our system is an agent skill: its \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} as subagents.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
+The comparison holds the generator, harness, workspace tools, output budget, and task information constant across systems.
+Each system's control design and prompts differ together: the alternatives use prompts reimplemented from published designs, and only our system and its ablations and execution variants receive the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} role instructions.
+Our system is an agent skill: its \texttt{Monitor} invokes the three roles as subagents.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
 
-Every generation run uses the same generator, prompt set, and runtime configuration; main-result tables summarize the three runs unless noted otherwise.
+Main-result tables summarize the three generation runs unless noted otherwise.
 Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
 
 \subsection{Evaluation}
@@ -68,7 +69,7 @@ LLM judges can exhibit position bias~\citep{zheng2023judging,wang2024fair}, so e
 We count a preference only when both orders select the same semantic response; any disagreement, including preference versus tie, is recorded as a tie.
 For a contrast written as ``A vs.\ B'', we report wins/losses/ties (W/L/T) for A and compute its win rate over non-tied order-consistent comparisons as $W/(W+L)$.
 
-The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
+The primary generator and evaluator come from the same model family, a deviation from the pre-specified plan for a different-family judge, and related models can show preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
 We therefore rescore selected system comparisons with \modelCross\ as a separate descriptive robustness check rather than averaging results from the two evaluators.
 
 \paragraph{Pre-specified statistical testing.}
@@ -77,14 +78,13 @@ For each benchmark and generation run, an exact two-sided sign test compares the
 Testing several related contrasts increases the chance of at least one false positive, so we apply Holm's step-down correction~\citep{holm1979} across the pre-specified tests within each benchmark.
 Generation runs remain separate because they repeat the same prompts rather than provide new independent samples.\footnote{See Appendix~\ref{app:pairwise-detail} for the generation-run estimates, Wilson intervals~\citep{wilson1927}, and corrected test decisions.}
 
-To summarize the two ablation contrasts across generation runs, we compute an exploratory post-hoc prompt-level estimate.
-For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and summarized across benchmarks with a bootstrap interval and sign test.
+To summarize each contrast across generation runs, we compute a post-hoc prompt-level estimate that complements the pre-specified tests.
+For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, averaged across the three generation runs, and summarized per benchmark and across benchmarks with a bootstrap interval~\citep{efron1979bootstrap} and an exact sign test over prompts.
 
 \paragraph{Robustness and behavioral analysis.}
-Pairwise LLM evaluation can favor longer outputs and can change with judge identity~\citep{zheng2023judging,dubois2024length,li2026preference,panickssery2024selfpreference}.
-We therefore test whether the pairwise direction persists within pre-specified output-length bands, under a tight compute match, and under the cross-family evaluator.
-Output length and realized compute are consequences of execution, so the first two analyses are descriptive sensitivity checks rather than causal adjustments.
+Pairwise LLM evaluation can favor longer outputs and can change with judge identity~\citep{zheng2023judging,dubois2024length,saito2023verbosity,li2026preference,panickssery2024selfpreference}.
+We therefore test whether the pairwise direction persists within pre-specified output-length bands, at equal length under a logistic model on the log length ratio~\citep{dubois2024length}, under a tight compute match, and under the cross-family evaluator.
+Output length and realized compute are consequences of execution, so the length and compute analyses are descriptive sensitivity checks rather than causal adjustments.
 
-We analyze observable traces of process transitions, goal creation and development, goal replacement, and subagent invocations to characterize how the writing loop is actually used.
-We also compare runs that complete one \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle with runs that take another process path.
-The trace-defined split is observational rather than randomized, so it describes behavior without identifying a causal mechanism.
+We analyze observable traces of process transitions, goal creation and development, goal replacement, and subagent invocations to characterize how the writing loop is used.
+We also compare runs that complete one \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle with runs on other paths.

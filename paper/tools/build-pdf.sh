@@ -4,8 +4,9 @@
 # @brief Build the ACL manuscript PDF in a container.
 # @description
 #   The first build creates a local TeX Live image from the official small
-#   image and adds the manuscript's required TeX packages. The repository root
-#   is mounted so appendix prompt listings can read experiment and plugin files.
+#   image and adds the manuscript's required TeX packages. Appendix prompt
+#   listings read the display copies that prepare-prompt-displays.py writes
+#   under build/prompt-display/ from the experiment and plugin files.
 # @option --clean Remove generated files under build/ and exit.
 # @example
 #   ./tools/build-pdf.sh
@@ -92,6 +93,7 @@ ensure_image() {
 
 mkdir -p -- "$build_dir"
 mkdir -p -- "$build_dir/.home"
+python3 "$script_dir/prepare-prompt-displays.py"
 ensure_image
 
 set +e

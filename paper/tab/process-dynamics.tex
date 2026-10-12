@@ -7,24 +7,24 @@
 \textbf{Observed writing-loop behavior}
 & \textbf{Rate} \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}
-\multicolumn{2}{l}{\textit{Complete path (one per run)}} \\
+\multicolumn{2}{l}{\textit{Complete path (one per document)}} \\
 Cycle-compliant path
 & 74.6\% \\
 Any other complete path
 & 25.4\% \\
 \addlinespace[2pt]
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}
-\multicolumn{2}{l}{\textit{Runs with each event (can overlap)}} \\
+\multicolumn{2}{l}{\textit{Documents with each event (can overlap)}} \\
 \texttt{Reviewing} followed by renewed \texttt{Translating}
 & 16.5\% \\
 \texttt{Reviewing} followed by renewed \texttt{Planning}
 & 4.1\% \\
-Runs with an accepted goal replacement
+Documents with an accepted goal replacement
 & \AfourRegenerationRate \\
-\textcolor{residualgray}{Runs with none of these events}
+\textcolor{residualgray}{Documents with none of these events}
 & \textcolor{residualgray}{\AfourNoLoopEventRate} \\
 \bottomrule
 \end{tabular}
-\caption{Writing-loop behavior of \condAgenticCogWriter\ after repeat collapsing and leading-\texttt{Planning} reconstruction; most paths are cycle-compliant.}
+\caption{Writing-loop behavior of \condAgenticCogWriter\ after repeat collapsing and leading-\texttt{Planning} reconstruction, over \AfourRunCount\ complete paths (one per document); most paths are cycle-compliant.}
 \label{tab:process-dynamics}
 \end{table}

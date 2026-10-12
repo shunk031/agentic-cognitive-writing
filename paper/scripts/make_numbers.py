@@ -154,21 +154,28 @@ ROBUSTNESS_BENCHMARKS = {
     "WritingBench": "Writing",
 }
 LENGTH_BANDS = {"5_percent": "Five", "10_percent": "Ten"}
-LENGTH_RATIO_BINS = {
-    "1.00-1.05": "OneToOneZeroFive",
-    "1.05-1.10": "OneZeroFiveToOneTen",
-    "1.10-1.25": "OneTenToOneTwentyFive",
-    "1.25-1.50": "OneTwentyFiveToOneFifty",
-    "1.50-2.00": "OneFiftyToTwo",
-    "2.00+": "TwoPlus",
+LENGTH_CONTRASTS = {
+    "A4:A1": "FullSinglePass",
+    "A4:A2": "FullStaged",
+    "A4:A3": "FullTaskPlanning",
+    "A4:A5": "FullNoGoals",
+    "A4:A6": "FullFixedOrder",
 }
-LENGTH_SOURCE_FIELDS = {
-    "pair_count": "pair_count",
-    "longer_side": "all_pairs_longer_side",
-    "matched": "length_matched",
-    "ratio_bins": "ratio_bins",
-    "single_writer": "single_writer_at_least_10_percent_shorter",
+LENGTH_RUNS = {"run-1": "One", "run-2": "Two", "run-3": "Three"}
+LENGTH_CONTROL_MARKER = "% Length-control macros."
+COMPUTE_STRATIFIED_MARKER = "% Compute-stratified macros."
+PAIRWISE_ROBUSTNESS_MARKER = "% Pairwise-robustness macros."
+PAIRWISE_ROBUSTNESS_CONTRASTS = {
+    "A4:A1": "FullSinglePass",
+    "A4:A2": "FullStaged",
+    "A4:A3": "FullTaskPlanning",
+    "A4:A5": "FullNoGoals",
+    "A4:A6": "FullFixedOrder",
 }
+# Bins in which our system used under 0.80 of Staged's output-plus-reasoning tokens.
+COMPUTE_LOW_RATIO_BINS = ("0.00-0.50", "0.50-0.67", "0.67-0.80")
+# Gray N/A for a band without pairs; its table cell is text, not math.
+NOT_AVAILABLE = r"\textcolor{nagray}{N/A}"
 CROSS_FAMILY_SOURCE_FIELDS = {
     "contrasts": "contrasts",
     "pooled": "pooled",
@@ -187,8 +194,8 @@ COMPUTE_BANDS = {
 }
 COMPUTE_REPLICATIONS = {
     "run-1": "One",
-    "replication-2": "Two",
-    "replication-3": "Three",
+    "run-2": "Two",
+    "run-3": "Three",
 }
 COMPUTE_BIN_WORDS = {
     "0.00-0.50": "ZeroToFifty",
@@ -236,7 +243,15 @@ SINGLE_CONTEXT_PAIR_FIELDS = (
 )
 
 THREE_RUN_BENCHMARKS = {"WritingBench": "Writing", "HelloBench": "Hello", "DoLoMiTes": "DoLo"}
-THREE_RUN_CONDITIONS = {"A1": "SinglePass", "A2": "Staged", "A3": "TaskPlanning", "A4": "Full"}
+THREE_RUN_CONDITIONS = {
+    "A1": "SinglePass",
+    "A2": "Staged",
+    "A3": "TaskPlanning",
+    "A4": "Full",
+    "A5": "NoGoals",
+    "A6": "FixedOrder",
+    "A7": "SingleWriter",
+}
 # The manuscript reports WritingBench's 1-10 native scale divided by 10 so both native columns read 0-1.
 THREE_RUN_NATIVE_SCALE = {"WritingBench": 10.0, "HelloBench": 1.0}
 ABLATION_CONDITIONS = {"A5": "NoGoals", "A6": "FixedOrder"}
@@ -252,7 +267,6 @@ REVIEW_UNCONDITIONAL_CONTRASTS = {
     "A4:A3": "FullTaskPlanning",
 }
 REVIEW_REPLICATIONS = ("replication-1", "replication-2", "replication-3")
-REVIEW_LENGTH_BANDS = {"five_percent": "Five", "ten_percent": "Ten"}
 
 
 def _word(value: object) -> str:
@@ -830,30 +844,57 @@ def _validate_count_block(data: dict[str, Any], source: str) -> None:
         _required_int(data, key, source)
 
 
-def _validate_length_report(report: dict[str, Any], run_label: str) -> dict[str, Any]:
-    source = f"length-control JSON {run_label}"
-    _required_int(report, LENGTH_SOURCE_FIELDS["pair_count"], source)
-    longer = _required_mapping(report, LENGTH_SOURCE_FIELDS["longer_side"], source)
-    _validate_outcome(longer, f"{source}.{LENGTH_SOURCE_FIELDS['longer_side']}")
-    matched = _required_mapping(report, LENGTH_SOURCE_FIELDS["matched"], source)
-    for band in LENGTH_BANDS:
-        band_values = matched.get(band)
-        if not isinstance(band_values, dict):
-            raise ValueError(f"{source}.{LENGTH_SOURCE_FIELDS['matched']} is missing {band}")
-        for contrast in ROBUSTNESS_CONTRASTS:
-            stats = band_values.get(contrast)
-            if not isinstance(stats, dict):
-                raise ValueError(f"{source}.{band} is missing {contrast}")
-            _validate_outcome(stats, f"{source}.{LENGTH_SOURCE_FIELDS['matched']}.{band}.{contrast}")
-    ratio_bins = _required_mapping(report, LENGTH_SOURCE_FIELDS["ratio_bins"], source)
-    for ratio_bin in LENGTH_RATIO_BINS:
-        stats = ratio_bins.get(ratio_bin)
-        if not isinstance(stats, dict):
-            raise ValueError(f"{source}.{LENGTH_SOURCE_FIELDS['ratio_bins']} is missing {ratio_bin}")
-        _validate_outcome(stats, f"{source}.{LENGTH_SOURCE_FIELDS['ratio_bins']}.{ratio_bin}")
-    single_writer = _required_mapping(report, LENGTH_SOURCE_FIELDS["single_writer"], source)
-    _validate_outcome(single_writer, f"{source}.{LENGTH_SOURCE_FIELDS['single_writer']}")
-    return report
+def _validate_prompt_clustered(data: dict[str, Any], source: str) -> None:
+    for key in ("prompts", "prompt_wins", "prompt_losses", "prompt_ties"):
+        if _required_int(data, key, source) < 0:
+            raise ValueError(f"{source}.{key} must be non-negative")
+    if data["prompt_wins"] + data["prompt_losses"] + data["prompt_ties"] != data["prompts"]:
+        raise ValueError(f"{source} has inconsistent prompt counts")
+    if not 0.0 <= _required_number(data, "prompt_sign_test_p", source) <= 1.0:
+        raise ValueError(f"{source}.prompt_sign_test_p is outside [0, 1]")
+
+
+def _length_control_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Per-run matched-length rates and denominators, and across-run Single-writer tests."""
+    source = "length-control JSON"
+    per_run = _required_mapping(report, "per_run", source)
+    if set(per_run) != set(LENGTH_RUNS):
+        raise ValueError(f"{source}.per_run must contain exactly {', '.join(LENGTH_RUNS)}")
+    entries = []
+    for contrast, contrast_word in LENGTH_CONTRASTS.items():
+        for band, band_word in LENGTH_BANDS.items():
+            prefix = f"\\Length{contrast_word}{band_word}"
+            for run, run_word in LENGTH_RUNS.items():
+                stats_source = f"{source} per_run.{run}.length_matched.{band}.{contrast}"
+                matched = _required_mapping(per_run[run], "length_matched", f"{source}.per_run.{run}")
+                stats = _required_mapping(_required_mapping(matched, band, stats_source), contrast, stats_source)
+                _validate_outcome(stats, stats_source)
+                entries += [
+                    (prefix + "RateRun" + run_word, _percent_fixed(stats["win_rate"], 1), stats_source + ".win_rate"),
+                    (prefix + "NRun" + run_word, str(stats["n_non_tie"]), stats_source + ".n_non_tie"),
+                ]
+    for band, band_word in LENGTH_BANDS.items():
+        prefix = f"\\LengthFullSingleWriter{band_word}"
+        for run, run_word in LENGTH_RUNS.items():
+            stats_source = f"{source} per_run.{run}.length_matched.{band}.A7:A4"
+            matched = _required_mapping(per_run[run], "length_matched", f"{source}.per_run.{run}")
+            stats = _required_mapping(_required_mapping(matched, band, stats_source), "A7:A4", stats_source)
+            _validate_outcome(stats, stats_source)
+            entries += [
+                (prefix + "RateRun" + run_word, _percent_fixed(stats["losses"] / stats["n_non_tie"], 1), stats_source + " losses / n_non_tie (Agentic CogWriter wins)"),
+                (prefix + "NRun" + run_word, str(stats["n_non_tie"]), stats_source + ".n_non_tie"),
+            ]
+    across = _required_mapping(_required_mapping(report, "across_runs", source), "length_matched", f"{source}.across_runs")
+    for band, band_word in LENGTH_BANDS.items():
+        stats_source = f"{source} across_runs.length_matched.{band}.A7:A4"
+        stats = _required_mapping(_required_mapping(across, band, stats_source), "A7:A4", stats_source)
+        _validate_outcome(stats, stats_source)
+        _validate_prompt_clustered(stats, stats_source)
+        entries += [
+            (f"\\SingleWriterLength{band_word}Rate", _percent_fixed(stats["win_rate"], 1), stats_source + ".win_rate"),
+            (f"\\SingleWriterLength{band_word}P", _pvalue(stats["prompt_sign_test_p"]), stats_source + ".prompt_sign_test_p"),
+        ]
+    return entries
 
 
 def _validate_cross_family(report: dict[str, Any]) -> dict[str, Any]:
@@ -909,7 +950,7 @@ def _validate_compute_outcome(data: dict[str, Any], source: str) -> None:
         raise ValueError(f"{source} has inconsistent non-tie count")
     if data["n_non_tie"] + data["ties"] != data["pairs"]:
         raise ValueError(f"{source} has inconsistent pair count")
-    _required_number(data, "sign_test_p", source)
+    _validate_prompt_clustered(data, source)
     for key in ("win_rate", "wilson_low", "wilson_high"):
         value = data.get(key)
         if value is None:
@@ -944,8 +985,9 @@ def _validate_compute_report(report: dict[str, Any]) -> dict[str, Any]:
                 raise ValueError(f"{source}.pooled.{contrast}.compute_matched is missing {band}")
             _validate_compute_outcome(stats, f"{source}.pooled.{contrast}.compute_matched.{band}")
         bins = _required_mapping(contrast_data, "ratio_bins", f"{source}.pooled.by_contrast.{contrast}")
-        if set(bins) != set(COMPUTE_BIN_WORDS):
-            raise ValueError(f"{source}.pooled.{contrast}.ratio_bins must contain the locked bins")
+        # The analysis lists only bins that hold pairs; Agentic CogWriter always uses more compute than Single-pass.
+        if not bins or not set(bins) <= set(COMPUTE_BIN_WORDS):
+            raise ValueError(f"{source}.pooled.{contrast}.ratio_bins must use only the locked bins")
         for ratio_bin, stats in bins.items():
             if not isinstance(stats, dict):
                 raise ValueError(f"{source}.pooled.{contrast}.ratio_bins.{ratio_bin} is not an object")
@@ -1014,12 +1056,6 @@ def _validate_review_replication(data: dict[str, Any], source: str) -> None:
         raise ValueError(f"{source}.missing_pair_bounds.worst_case.focal_non_tie_win_rate is outside [0, 1]")
 
 
-def _validate_review_length_result(data: dict[str, Any], source: str) -> None:
-    _validate_outcome(data, source)
-    if data.get("focal_condition") != "A7":
-        raise ValueError(f"{source}.focal_condition must be A7")
-
-
 def _validate_review_analysis(report: dict[str, Any]) -> dict[str, Any]:
     source = "adversarial review-analysis JSON"
     pooling = _required_mapping(report, "pooling_and_equivalence", source)
@@ -1035,12 +1071,6 @@ def _validate_review_analysis(report: dict[str, Any]) -> dict[str, Any]:
         for replication in REVIEW_REPLICATIONS:
             data = _required_mapping(pooled, replication, f"{source}.unconditional_outcomes_and_missing_output_bounds.{contrast}.pooled_over_benchmarks")
             _validate_review_replication(data, f"{source}.unconditional_outcomes_and_missing_output_bounds.{contrast}.pooled_over_benchmarks.{replication}")
-
-    length = _required_mapping(report, "single_writer_length_control_A7_vs_A4", source)
-    pooled_length = _required_mapping(length, "pooled_over_replications", f"{source}.single_writer_length_control_A7_vs_A4")
-    for band in REVIEW_LENGTH_BANDS:
-        result = _required_mapping(pooled_length, band, f"{source}.single_writer_length_control_A7_vs_A4.pooled_over_replications")
-        _validate_review_length_result(result, f"{source}.single_writer_length_control_A7_vs_A4.pooled_over_replications.{band}")
     return report
 
 
@@ -1073,6 +1103,10 @@ def _review_analysis_entries(report: dict[str, Any]) -> list[tuple[str, str, str
     for contrast, contrast_word in REVIEW_UNCONDITIONAL_CONTRASTS.items():
         pooled = outcomes[contrast]["pooled_over_benchmarks"]
         unconditional_rates = [pooled[replication]["unconditional_over_attempted"]["win_share"] for replication in REVIEW_REPLICATIONS]
+        loss_shares = [
+            pooled[replication]["unconditional_over_attempted"]["losses"] / pooled[replication]["attempted_prompts"]
+            for replication in REVIEW_REPLICATIONS
+        ]
         worst_rates = [pooled[replication]["missing_pair_bounds"]["worst_case"]["focal_non_tie_win_rate"] for replication in REVIEW_REPLICATIONS]
         source = f"adversarial review-analysis JSON unconditional_outcomes_and_missing_output_bounds.{contrast}.pooled_over_benchmarks"
         entries.extend([
@@ -1086,24 +1120,13 @@ def _review_analysis_entries(report: dict[str, Any]) -> list[tuple[str, str, str
                 _percent_fixed(min(worst_rates), 1),
                 source + ".*.missing_pair_bounds.worst_case.focal_non_tie_win_rate minimum",
             ),
+            (
+                f"\\Uncond{contrast_word}LossShare",
+                _percent_fixed(statistics.mean(loss_shares), 1),
+                source + ".*.unconditional_over_attempted.losses / attempted_prompts mean",
+            ),
         ])
 
-    pooled_length = report["single_writer_length_control_A7_vs_A4"]["pooled_over_replications"]
-    for band, band_word in REVIEW_LENGTH_BANDS.items():
-        result = pooled_length[band]
-        source = f"adversarial review-analysis JSON single_writer_length_control_A7_vs_A4.pooled_over_replications.{band}"
-        entries.extend([
-            (
-                f"\\SingleWriterLength{band_word}Rate",
-                _percent_fixed(result["win_rate"], 1),
-                source + ".win_rate",
-            ),
-            (
-                f"\\SingleWriterLength{band_word}P",
-                _pvalue(result["sign_test_p"]),
-                source + ".sign_test_p",
-            ),
-        ])
     return entries
 
 
@@ -1301,57 +1324,6 @@ def _wlt(stats: dict[str, Any]) -> str:
     return f"{stats['wins']}/{stats['losses']}/{stats['ties']}"
 
 
-def _emit_length_control_macros(
-    add: Any,
-    reports: list[dict[str, Any]],
-) -> None:
-    validated = [
-        _validate_length_report(report, f"run {index}")
-        for index, report in enumerate(reports, 1)
-    ]
-    first = validated[0]
-    longer = first[LENGTH_SOURCE_FIELDS["longer_side"]]
-    add("\\LengthPairCount", str(first[LENGTH_SOURCE_FIELDS["pair_count"]]), "length-control JSON run 1 pair_count")
-    add("\\LengthLongerNonTie", str(longer["n_non_tie"]), "length-control JSON run 1 all_pairs_longer_side.n_non_tie")
-    add("\\LengthLongerWLT", _wlt(longer), "length-control JSON run 1 all_pairs_longer_side W/L/T")
-    add("\\LengthLongerRate", _percent_fixed(longer["win_rate"], 2), "length-control JSON run 1 all_pairs_longer_side.win_rate")
-    add(
-        "\\LengthLongerInterval",
-        f"{_percent_fixed(longer['wilson_low'], 2)}--{_percent_fixed(longer['wilson_high'], 2)}",
-        "length-control JSON run 1 all_pairs_longer_side Wilson interval",
-    )
-    for contrast, contrast_word in ROBUSTNESS_CONTRASTS.items():
-        for band, band_word in LENGTH_BANDS.items():
-            first_stats = first[LENGTH_SOURCE_FIELDS["matched"]][band][contrast]
-            prefix = f"\\Length{contrast_word}{band_word}"
-            add(prefix + "WLT", _wlt(first_stats), f"length-control JSON run 1 {band}.{contrast} W/L/T")
-            add(prefix + "Rate", _percent_fixed(first_stats["win_rate"], 2), f"length-control JSON run 1 {band}.{contrast}.win_rate")
-            add(prefix + "P", _pvalue(first_stats["sign_test_p"]), f"length-control JSON run 1 {band}.{contrast}.sign_test_p")
-            for run_index, report in enumerate(validated, 1):
-                stats = report[LENGTH_SOURCE_FIELDS["matched"]][band][contrast]
-                add(
-                    prefix + "RateRun" + RUN_WORDS[run_index],
-                    _percent_fixed(stats["win_rate"], 1),
-                    f"length-control JSON run {run_index} {band}.{contrast}.win_rate",
-                )
-    for ratio_bin, ratio_word in LENGTH_RATIO_BINS.items():
-        stats = first[LENGTH_SOURCE_FIELDS["ratio_bins"]][ratio_bin]
-        prefix = "\\LengthRatio" + ratio_word
-        add(prefix + "WLT", _wlt(stats), f"length-control JSON run 1 ratio_bins.{ratio_bin} W/L/T")
-        add(prefix + "Rate", _percent_fixed(stats["win_rate"], 2), f"length-control JSON run 1 ratio_bins.{ratio_bin}.win_rate")
-    single_writer = first[LENGTH_SOURCE_FIELDS["single_writer"]]
-    add("\\LengthSingleWriterShortWLT", _wlt(single_writer), "length-control JSON run 1 single_writer_at_least_10_percent_shorter W/L/T")
-    add("\\LengthSingleWriterShortRate", _percent_fixed(single_writer["win_rate"], 2), "length-control JSON run 1 single_writer_at_least_10_percent_shorter.win_rate")
-    add("\\LengthSingleWriterShortP", _pvalue(single_writer["sign_test_p"]), "length-control JSON run 1 single_writer_at_least_10_percent_shorter.sign_test_p")
-    for run_index, report in enumerate(validated, 1):
-        stats = report[LENGTH_SOURCE_FIELDS["single_writer"]]
-        add(
-            "\\LengthSingleWriterShortRateRun" + RUN_WORDS[run_index],
-            _percent_fixed(stats["win_rate"], 1),
-            f"length-control JSON run {run_index} single_writer_at_least_10_percent_shorter.win_rate",
-        )
-
-
 def _emit_cross_family_macros(add: Any, report: dict[str, Any]) -> None:
     report = _validate_cross_family(report)
     provenance = report[CROSS_FAMILY_SOURCE_FIELDS["provenance"]]
@@ -1384,41 +1356,91 @@ def _emit_cross_family_macros(add: Any, report: dict[str, Any]) -> None:
             add(benchmark_prefix + "Agreement", f"{agreement['numerator']}/{agreement['denominator']}", f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.prompt_collapsed_agreement numerator/denominator")
 
 
-def _emit_compute_stratified_macros(add: Any, report: dict[str, Any]) -> None:
+def _compute_stratified_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Compute-matched outcomes; p-values treat the prompt as the unit across generation runs."""
     report = _validate_compute_report(report)
     pooled = report["pooled"]
-    add("\\ComputePooledEligible", str(pooled["pair_count"]), "compute-stratified JSON pooled.pair_count")
-    pooled_contrasts = pooled["by_contrast"]
+    entries = [("\\ComputePooledEligible", str(pooled["pair_count"]), "compute-stratified JSON pooled.pair_count")]
     replications = report["per_replication"]
     for contrast, contrast_word in COMPUTE_CONTRASTS.items():
-        pooled_data = pooled_contrasts[contrast]
+        pooled_data = pooled["by_contrast"][contrast]
+        groups = [
+            (f"Within{band_word}", f"compute_matched.{band}", pooled_data["compute_matched"][band])
+            for band, band_word in COMPUTE_BANDS.items()
+        ] + [
+            (f"Bin{COMPUTE_BIN_WORDS[ratio_bin]}", f"ratio_bins.{ratio_bin}", stats)
+            for ratio_bin, stats in pooled_data["ratio_bins"].items()
+        ]
+        for word, field, stats in groups:
+            prefix = f"\\Compute{contrast_word}{word}"
+            source = f"compute-stratified JSON pooled.by_contrast.{contrast}.{field}"
+            # A band without pairs has no rate and no test; the JSON's p = 1 is a placeholder.
+            empty = stats["wins"] + stats["losses"] + stats["ties"] == 0
+            entries += [
+                (prefix + "WLT", _wlt(stats), source + " W/L/T"),
+                (prefix + "Rate", NOT_AVAILABLE if empty else _optional_percent(stats["win_rate"], 1), source + ".win_rate"),
+                (prefix + "P", NOT_AVAILABLE if empty else _pvalue(stats["prompt_sign_test_p"]), source + ".prompt_sign_test_p"),
+            ]
         for band, band_word in COMPUTE_BANDS.items():
-            stats = pooled_data["compute_matched"][band]
-            prefix = f"\\Compute{contrast_word}Within{band_word}"
-            source = f"compute-stratified JSON pooled.by_contrast.{contrast}.compute_matched.{band}"
-            add(prefix + "WLT", _wlt(stats), source + " W/L/T")
-            add(prefix + "Rate", _optional_percent(stats["win_rate"], 1), source + ".win_rate")
-            add(prefix + "P", _pvalue(stats["sign_test_p"]), source + ".sign_test_p")
             for replication, replication_word in COMPUTE_REPLICATIONS.items():
-                replication_stats = replications[replication]["by_contrast"][contrast]["compute_matched"][band]
-                add(
-                    prefix + "RateReplication" + replication_word,
-                    _optional_percent(replication_stats["win_rate"], 1),
+                stats = replications[replication]["by_contrast"][contrast]["compute_matched"][band]
+                entries.append((
+                    f"\\Compute{contrast_word}Within{band_word}RateReplication{replication_word}",
+                    _optional_percent(stats["win_rate"], 1),
                     f"compute-stratified JSON per_replication.{replication}.by_contrast.{contrast}.compute_matched.{band}.win_rate",
-                )
-        rho = pooled_data["spearman"]["rho"]
-        add(
+                ))
+        if contrast == "A4:A2":
+            low = [pooled_data["ratio_bins"][ratio_bin] for ratio_bin in COMPUTE_LOW_RATIO_BINS]
+            entries.append((
+                "\\ComputeFullStagedBelowEightyWLT",
+                "/".join(str(sum(stats[key] for stats in low)) for key in ("wins", "losses", "ties")),
+                "compute-stratified JSON pooled.by_contrast.A4:A2.ratio_bins below 0.80, summed W/L/T",
+            ))
+        entries.append((
             f"\\Compute{contrast_word}SpearmanRho",
-            f"{rho:.4f}",
+            f"{pooled_data['spearman']['rho']:.4f}",
             f"compute-stratified JSON pooled.by_contrast.{contrast}.spearman.rho",
-        )
-        for ratio_bin, stats in pooled_data["ratio_bins"].items():
-            bin_word = COMPUTE_BIN_WORDS[ratio_bin]
-            prefix = f"\\Compute{contrast_word}Bin{bin_word}"
-            source = f"compute-stratified JSON pooled.by_contrast.{contrast}.ratio_bins.{ratio_bin}"
-            add(prefix + "WLT", _wlt(stats), source + " W/L/T")
-            add(prefix + "Rate", _optional_percent(stats["win_rate"], 1), source + ".win_rate")
-            add(prefix + "P", _pvalue(stats["sign_test_p"]), source + ".sign_test_p")
+        ))
+    return entries
+
+
+def _pairwise_robustness_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Prompt-level tests, length-controlled preference, and judge agreement."""
+    entries = []
+    for contrast, contrast_word in PAIRWISE_ROBUSTNESS_CONTRASTS.items():
+        if contrast in report["prompt_level"]:
+            block = report["prompt_level"][contrast]
+            scopes = {"Across": block["across_benchmarks"]}
+            scopes.update({word: block["benchmarks"][name] for name, word in ROBUSTNESS_BENCHMARKS.items()})
+            for scope_word, stats in scopes.items():
+                prefix = f"\\PromptLevel{scope_word}{contrast_word}"
+                source = f"pairwise-robustness JSON prompt_level.{contrast}.{scope_word}"
+                entries += [
+                    (prefix + "Rate", _percent_fixed(stats["rate"], 1), source + ".rate"),
+                    (prefix + "Interval", f"{_percent_fixed(stats['bootstrap_low'], 1)}--{_percent_fixed(stats['bootstrap_high'], 1)}", source + " bootstrap interval"),
+                    (prefix + "WLT", f"{stats['prompt_wins']}/{stats['prompt_losses']}/{stats['prompt_ties']}", source + " prompt W/L/T"),
+                    (prefix + "P", _pvalue(stats["sign_test_p"]), source + ".sign_test_p"),
+                ]
+        stats = report["length_logistic"][contrast]
+        prefix = f"\\LengthModel{contrast_word}"
+        source = f"pairwise-robustness JSON length_logistic.{contrast}"
+        entries += [
+            (prefix + "Decided", f"{stats['decided_pairs']:,}", source + ".decided_pairs"),
+            (prefix + "Preference", _percent_fixed(stats["equal_length_preference"], 1), source + ".equal_length_preference"),
+            (prefix + "Interval", f"{_percent_fixed(stats['equal_length_preference_low'], 1)}--{_percent_fixed(stats['equal_length_preference_high'], 1)}", source + " bootstrap interval"),
+            (prefix + "Slope", f"{stats['slope']:.2f}", source + ".slope"),
+            (prefix + "SlopeInterval", f"{stats['slope_low']:.2f}--{stats['slope_high']:.2f}", source + " slope bootstrap interval"),
+        ]
+    agreement = report["judge_agreement"]["all_contrasts"]
+    source = "pairwise-robustness JSON judge_agreement.all_contrasts"
+    entries += [
+        ("\\JudgeAgreementPairs", str(agreement["pairs"]), source + ".pairs"),
+        ("\\JudgeAgreementKappa", f"{agreement['kappa']:.2f}", source + ".kappa"),
+        ("\\JudgeAgreementDecidedPairs", str(agreement["both_decided_pairs"]), source + ".both_decided_pairs"),
+        ("\\JudgeAgreementDecidedAgreeing", str(agreement["both_decided_agreeing_pairs"]), source + ".both_decided_agreeing_pairs"),
+        ("\\JudgeAgreementDecidedKappa", f"{agreement['both_decided_kappa']:.2f}", source + ".both_decided_kappa"),
+    ]
+    return entries
 
 
 def _validate_single_context_pair(data: dict[str, Any], source: str) -> None:
@@ -1545,7 +1567,7 @@ def _single_context_stage1_entries(
             ("\\SingleContextCompleted", f"{a8['completed']}/{a8['attempted']}", process_source + ".completed/attempted"),
             ("\\SingleContextOutputTokens", _format_process(a8["mean_output_plus_reasoning_tokens"], 0), process_source + ".mean_output_plus_reasoning_tokens"),
             ("\\SingleContextMeanSeconds", _format_process(a8["mean_wall_clock_seconds_completed"], 0), process_source + ".mean_wall_clock_seconds_completed"),
-            ("\\SingleContextGoals", "/".join(str(a8[field]) for field in PROCESS_GOAL_FIELDS), process_source + ".goal_created/goal_developed/goal_regenerated"),
+            ("\\SingleContextGoals", "/".join(_format_process(a8[field], 0) for field in PROCESS_GOAL_FIELDS), process_source + ".goal_created/goal_developed/goal_regenerated"),
             ("\\SingleContextLedgerEntries", str(a8["ledger_entries_contract"]), process_source + ".ledger_entries_contract"),
             ("\\SingleContextLedgerWithProposal", str(a8["ledger_entries_with_proposal"]), process_source + ".ledger_entries_with_proposal"),
             ("\\SingleContextSpawns", _format_process(a8["mean_spawns_per_attempted_run"], 2), process_source + ".mean_spawns_per_attempted_run"),
@@ -1622,6 +1644,8 @@ def _emit_process_sequence_macros(add: Any, report: dict[str, Any]) -> None:
         splits = combined[contrast]["splits"]
         add("\\AfourExactCycle" + suffix + "WinRate", _percent_fixed(splits["single_cycle_exact"]["win_rate"], 1), f"process-sequences JSON prompt_association.combined.{contrast}.splits.single_cycle_exact.win_rate")
         add("\\AfourNonExact" + suffix + "WinRate", _percent_fixed(splits["not_single_cycle_exact"]["win_rate"], 1), f"process-sequences JSON prompt_association.combined.{contrast}.splits.not_single_cycle_exact.win_rate")
+        for split, word in (("single_cycle_exact", "ExactCycle"), ("not_single_cycle_exact", "NonExact")):
+            add("\\Afour" + word + suffix + "NonTie", str(splits[split]["n_non_tie"]), f"process-sequences JSON prompt_association.combined.{contrast}.splits.{split}.n_non_tie")
         add("\\Afour" + suffix + "CycleSplitP", _pvalue_two_decimals(combined[contrast]["fisher_exact_two_sided"]["p_value"]), f"process-sequences JSON prompt_association.combined.{contrast}.fisher_exact_two_sided.p_value")
     leading = report["provenance"]["leading_process_analysis"]["conditions"]
     for condition in PROCESS_SEQUENCE_CONDITIONS:
@@ -1635,10 +1659,8 @@ def emit_numbers(
     existing: dict[str, str] | None = None,
     process_summaries: list[dict[str, Any]] | None = None,
     public_prices: dict[str, float] | None = None,
-    length_control_summaries: list[dict[str, Any]] | None = None,
     cross_family_summary: dict[str, Any] | None = None,
     process_sequences: dict[str, Any] | None = None,
-    compute_stratified_sensitivity: dict[str, Any] | None = None,
     single_context_stage1: tuple[dict[str, Any], dict[str, Any], dict[str, Any]] | None = None,
     adversarial_review_analysis: dict[str, Any] | None = None,
 ) -> str:
@@ -1999,16 +2021,10 @@ def emit_numbers(
             name = "\\" + prefix + suffix
             add(name, preserved_or(name, value), "issue 56 Habermas pilot summary")
 
-    if length_control_summaries is not None:
-        if len(length_control_summaries) != 3:
-            raise ValueError("length-control summaries must contain exactly three runs")
-        _emit_length_control_macros(add, length_control_summaries)
     if cross_family_summary is not None:
         _emit_cross_family_macros(add, cross_family_summary)
     if process_sequences is not None:
         _emit_process_sequence_macros(add, process_sequences)
-    if compute_stratified_sensitivity is not None:
-        _emit_compute_stratified_macros(add, compute_stratified_sensitivity)
     if single_context_stage1 is not None:
         _emit_single_context_stage1_macros(add, *single_context_stage1)
     if adversarial_review_analysis is not None:
@@ -2099,7 +2115,7 @@ def _three_run_stat(cell: Any, source: str) -> tuple[float, float]:
 
 
 def _three_run_quality_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
-    """Macros for the three-run native and four-condition pointwise table, mean and SD."""
+    """Macros for the three-run native and pointwise table of all seven systems, mean and SD."""
     across = report.get("across_runs")
     if not isinstance(across, dict):
         raise ValueError("three-run quality JSON is missing across_runs")
@@ -2148,9 +2164,7 @@ def _paired_quality_entries(paired: dict[str, Any]) -> list[tuple[str, str, str]
     for benchmark, benchmark_word in THREE_RUN_BENCHMARKS.items():
         scores = ("native", "pointwise") if benchmark in THREE_RUN_NATIVE_SCALE else ("pointwise",)
         for score in scores:
-            for condition, condition_word in THREE_RUN_CONDITIONS.items():
-                if condition == "A4":
-                    continue
+            for condition, condition_word in ALTERNATIVE_CONDITIONS.items():
                 source = f"paired quality JSON contrasts.{benchmark}.{score}.A4-{condition}"
                 cell = contrasts.get(benchmark, {}).get(score, {}).get(f"A4-{condition}") if isinstance(contrasts.get(benchmark), dict) else None
                 if not isinstance(cell, dict) or not isinstance(cell.get("ci95"), list) or len(cell["ci95"]) != 2:
@@ -2243,6 +2257,13 @@ def _replace_block(existing_text: str, marker: str, block: str) -> str:
     return head + block.rstrip("\n") + after.rstrip() + "\n"
 
 
+def _render_block(marker: str, entries: list[tuple[str, str, str]]) -> str:
+    lines = [marker]
+    for name, value, source in entries:
+        lines.extend([_source_comment(source), f"\\newcommand{{{name}}}{{{value}}}"])
+    return "\n".join(lines) + "\n"
+
+
 def _render_three_run_quality_block(report: dict[str, Any], paired: dict[str, Any]) -> str:
     lines = ["% Three-run document-quality macros."]
     for name, value, source in [*_three_run_quality_entries(report), *_paired_quality_entries(paired), *_paired_ablation_entries(paired)]:
@@ -2255,11 +2276,12 @@ def main() -> None:
     parser.add_argument("aggregations", nargs="*", type=Path)
     parser.add_argument("--contrasts", type=parse_contrasts)
     parser.add_argument("--process-summaries", nargs="+", type=Path, default=[])
-    parser.add_argument("--length-control-summaries", nargs="+", type=Path, default=[])
+    parser.add_argument("--length-control", type=Path, help="three-run length-control JSON; appends its own block")
     parser.add_argument("--cross-family-summary", type=Path)
     parser.add_argument("--process-sequences", type=Path)
-    parser.add_argument("--compute-stratified-sensitivity", type=Path)
+    parser.add_argument("--compute-stratified-sensitivity", type=Path, help="compute-stratified JSON; appends its own block")
     parser.add_argument("--adversarial-review-analysis", type=Path)
+    parser.add_argument("--pairwise-robustness", type=Path, help="pairwise-robustness JSON; appends its own block")
     parser.add_argument("--three-run-quality", nargs=2, type=Path, metavar=("SUMMARY", "PAIRED"))
     parser.add_argument("--prompt-languages", nargs=2, type=Path, metavar=("PROMPT_SETS", "MANIFEST_DIR"))
     parser.add_argument(
@@ -2273,6 +2295,19 @@ def main() -> None:
     cost_group.add_argument("--public-prices", type=Path)
     cost_group.add_argument("--no-cost", action="store_true")
     args = parser.parse_args()
+    for path, label, marker, entries in (
+        (args.length_control, "length-control", LENGTH_CONTROL_MARKER, _length_control_entries),
+        (args.compute_stratified_sensitivity, "compute-stratified", COMPUTE_STRATIFIED_MARKER, _compute_stratified_entries),
+        (args.pairwise_robustness, "pairwise-robustness", PAIRWISE_ROBUSTNESS_MARKER, _pairwise_robustness_entries),
+    ):
+        if path is not None:
+            if args.aggregations:
+                parser.error(f"--{label} runs on its own and appends to the existing numbers.tex")
+            existing_text = args.output.read_text(encoding="utf-8") if args.output.is_file() else ""
+            block = _render_block(marker, entries(_read_json_object(path, label)))
+            args.output.write_text(_replace_block(existing_text, marker, block), encoding="utf-8")
+            print(f"wrote {args.output}")
+            return
     if args.prompt_languages is not None:
         prompt_sets = _read_json_object(args.prompt_languages[0], "prompt sets")
         existing_text = args.output.read_text(encoding="utf-8") if args.output.is_file() else ""
@@ -2324,7 +2359,6 @@ def main() -> None:
     aggregations = [_read_json_object(path, "aggregation") for path in args.aggregations]
     existing = _existing_definitions(args.output)
     process_summaries = [_read_json_object(path, "process summary") for path in args.process_summaries]
-    length_control_summaries = [_read_json_object(path, "length-control") for path in args.length_control_summaries]
     cross_family_summary = (
         _read_json_object(args.cross_family_summary, "cross-family")
         if args.cross_family_summary is not None
@@ -2333,11 +2367,6 @@ def main() -> None:
     process_sequences = (
         _read_json_object(args.process_sequences, "process-sequences")
         if args.process_sequences is not None
-        else None
-    )
-    compute_stratified_sensitivity = (
-        _read_json_object(args.compute_stratified_sensitivity, "compute-stratified sensitivity")
-        if args.compute_stratified_sensitivity is not None
         else None
     )
     single_context_stage1 = (
@@ -2362,10 +2391,8 @@ def main() -> None:
             existing,
             process_summaries,
             public_prices,
-            length_control_summaries or None,
             cross_family_summary,
             process_sequences,
-            compute_stratified_sensitivity,
             single_context_stage1,
             adversarial_review_analysis,
         ),

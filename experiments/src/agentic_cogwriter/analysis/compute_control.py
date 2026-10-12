@@ -15,6 +15,7 @@ from .length_control import (
     _records,
     _run_index,
     collapse_verdict,
+    prompt_clustered_sign_test,
 )
 
 COMPUTE_CONTRASTS = (
@@ -105,9 +106,9 @@ def summarize_outcomes(
         for row in rows
         if max_ratio is None or row.relative_compute_ratio <= max_ratio
     ]
+    outcomes = [_condition_outcome(row, focal_condition) for row in selected]
     counts = {"wins": 0, "losses": 0, "ties": 0}
-    for row in selected:
-        outcome = _condition_outcome(row, focal_condition)
+    for outcome in outcomes:
         counts[{"win": "wins", "loss": "losses", "tie": "ties"}[outcome]] += 1
     non_ties = counts["wins"] + counts["losses"]
     low, high = wilson_interval(counts["wins"], counts["losses"])
@@ -119,6 +120,7 @@ def summarize_outcomes(
         "wilson_low": low,
         "wilson_high": high,
         "sign_test_p": _exact_two_sided_sign_test(counts["wins"], counts["losses"]),
+        **prompt_clustered_sign_test(selected, outcomes),
     }
 
 

@@ -28,14 +28,14 @@ Contrast & Scope & $n$ & Dropped & W/L/T & Rate & 95\% Wilson / exact $p$ \\
 Metric & \condSinglePass & \condAgenticCogWriter & \condSingleContext \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}
 Completed & \AoneCompleted & \AfourCompleted & \SingleContextCompleted \\
-Output-plus-reasoning tokens per run & \AoneOutputTokens & \AfourOutputTokens & \SingleContextOutputTokens \\
-Wall-clock seconds per completed run & \AoneMeanSeconds & \AfourMeanSeconds & \SingleContextMeanSeconds \\
+Output-plus-reasoning tokens per document & \AoneOutputTokens & \AfourOutputTokens & \SingleContextOutputTokens \\
+Wall-clock seconds per completed document & \AoneMeanSeconds & \AfourMeanSeconds & \SingleContextMeanSeconds \\
 Goals created/developed/regenerated & \AoneGoals & \AfourGoals & \SingleContextGoals \\
 Ledger entries & \SingleContextAoneLedgerEntries & \SingleContextAfourLedgerEntries & \SingleContextLedgerEntries \\
 Ledger entries with proposal & \SingleContextAoneLedgerWithProposal & \SingleContextAfourLedgerWithProposal & \SingleContextLedgerWithProposal \\
-Spawns per attempted run & \AoneSpawns & \AfourSpawns & \SingleContextSpawns \\
+Spawns per attempted document & \AoneSpawns & \AfourSpawns & \SingleContextSpawns \\
 \bottomrule
 \end{tabular}
-\caption{Process and resource profiles for the matched \condSinglePass, \condAgenticCogWriter, and \condSingleContext\ runs. \condSingleContext\ preserves the process loop and shared state without separate subagent contexts, making it a narrower execution check than \condSingleWriter.}
+\caption{Process and resource profiles for the matched \condSinglePass, \condAgenticCogWriter, and \condSingleContext\ documents in one generation run. \condSingleContext\ preserves the process loop and shared state without separate subagent contexts, making it a narrower execution check than \condSingleWriter.}
 \label{tab:appendix-single-context-process}
 \end{table}

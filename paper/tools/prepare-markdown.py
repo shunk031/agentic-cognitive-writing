@@ -77,6 +77,7 @@ def math_ascii(text):
     replacements = {
         "pi": "pi",
         "sigma": "sigma",
+        "kappa": "kappa",
         "rightarrow": " -> ",
         "uparrow": "↑",
         "pm": "±",
