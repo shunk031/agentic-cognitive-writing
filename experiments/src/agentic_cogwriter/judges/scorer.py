@@ -196,6 +196,11 @@ def load_run_artifacts(run_dir: Path) -> RunArtifacts:
     if not isinstance(inputs, Mapping):
         raise RunArtifactError("run manifest needs an inputs object")
     prompt_id, assignment, context = _prompt_inputs(inputs)
+    followup_path = run_dir / "followup.txt"
+    if followup_path.is_file():
+        # A two-turn run is judged against the task as changed by turn 2.
+        followup = followup_path.read_text(encoding="utf-8")
+        assignment = f"{assignment}\n\n[Turn-2 change message]\n{followup}"
     condition_id = _required_text(inputs.get("condition_id"), "condition_id")
     try:
         output = output_path.read_text(encoding="utf-8")

@@ -1,0 +1,54 @@
+<!--
+Agentic CogWriter pairwise judge prompt for two-turn revision runs
+Version: pairwise-revision-v1
+Adapted from: pairwise-v1, with the assignment shown as the original task followed by the turn-2 change message
+Protocol source: docs/experiments/protocol.md, Balanced pairwise tournament
+FastChat source path: fastchat/llm_judge/data/judge_prompts.jsonl
+FastChat source sha256: fd283293406d024f44c174b094ef48031d0687a4682fd3a56b29b138f80281b6
+FastChat adaptation: pair-v2 position-bias and length-bias controls, adapted to the protocol JSON contract.
+-->
+Please act as an impartial judge comparing two writing responses to the assignment. The assignment ends with a change message that the writer received after delivering a first version, and each response is the writer's final revised document. Choose the response that better satisfies the assignment as changed. Where the change conflicts with the original assignment, the change takes precedence. Consider instruction fulfillment, organization and global coherence, content adequacy and depth, style, voice and audience fit, and factuality and constraint fidelity.
+
+Compare both responses before deciding. Avoid position bias. The order in which the responses appear must not influence the decision. Do not let response length influence the decision. Do not favor a response because of a name or label. Judge only the assignment and supplied context. Do not reward outside research or facts that are not supported by the assignment or supplied context.
+
+Return exactly one valid JSON object. Do not use Markdown fences or add explanation outside the JSON object. Choose winner A, B, or tie. Include at least one short exact evidence quote for each response. Each quote must be copied verbatim from the displayed response for that letter or the supplied context. Do not quote the assignment or any other prompt text. Keep every quote no longer than needed to identify the evidence. Write a brief comparison grounded in the rubric.
+Return the literal `runtime-verified` marker for `judge_family`; the judge engine in `experiments/src/agentic_cogwriter/judges/engine.py` replaces that marker with the serving response's mapped family before the scorer writes the protocol record.
+
+[Prompt ID]
+{prompt_id}
+
+[Opaque pair ID]
+{pair_id}
+
+[Derived presentation order]
+{presentation}
+
+[Assignment]
+{assignment}
+
+[Supplied context]
+{context}
+
+[Start of response A]
+{answer_a}
+[End of response A]
+
+[Start of response B]
+{answer_b}
+[End of response B]
+
+Return this JSON shape with the metadata values unchanged:
+{{
+  "prompt_id": "{prompt_id}",
+  "platform": "{platform}",
+  "judge_id": "{judge_id}",
+  "judge_family": "{judge_family}",
+  "pair_id": "{pair_id}",
+  "presentation": "{presentation}",
+  "winner": "tie",
+  "evidence_quotes": {{
+    "A": ["<short exact quote from response A or supplied context>"],
+    "B": ["<short exact quote from response B or supplied context>"]
+  }},
+  "reason": "<brief comparison grounded in the rubric>"
+}}

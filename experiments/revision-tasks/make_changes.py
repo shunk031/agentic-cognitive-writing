@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Sample the revision-task prompts and write one frozen mid-task change each.
 
 Usage (the endpoint and credential come from the named environment variables):

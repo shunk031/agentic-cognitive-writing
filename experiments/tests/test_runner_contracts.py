@@ -2490,6 +2490,28 @@ def test_retry_reuses_the_returned_session_id(
     assert "session-1" in executor.calls[1]
 
 
+def test_followup_resumes_the_session_and_replaces_the_output(tmp_path: Path) -> None:
+    executor = _RetryExecutor([_result(output="first " * 10), _result()])
+    runner = _runner(tmp_path, executor=executor)
+
+    result = runner.run_prompt(
+        _prompt(), condition_id="A1", platform="codex", followup="Change it."
+    )
+
+    assert executor.calls[1][0:4] == ["codex", "exec", "resume", "session-1"]
+    assert 'sandbox_mode="workspace-write"' in executor.calls[1]
+    assert executor.calls[1][-1] == "Change it."
+    assert result.output_path.read_text() == "final output " * 10
+    assert (result.run_dir / "turn1.output.normalized.txt").read_text() == (
+        "first " * 10
+    )
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["status"] == "completed"
+    assert manifest["followup"]["turn1_trace_events"] == 1
+    assert manifest["followup"]["turn1_attempts"] == 1
+    assert manifest["attempts"] == 2
+
+
 def test_retry_exhaustion_fails_after_fixed_attempt_count(tmp_path: Path) -> None:
     executor = _RetryExecutor([_result(returncode=1), _result(returncode=1)])
     runner = _runner(tmp_path, _config(retry_policy=1), executor=executor)

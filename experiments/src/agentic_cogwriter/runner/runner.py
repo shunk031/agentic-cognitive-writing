@@ -286,6 +286,18 @@ def _synthesized_codex_config(
     return "\n".join(lines) + "\n"
 
 
+def _read_draft(workspace: Path) -> str | None:
+    draft_path = workspace / ".writing" / "draft.md"
+    if not draft_path.is_file():
+        return None
+    try:
+        return draft_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise ExecutionError(
+            f"Cannot read workspace draft {draft_path}: {exc}"
+        ) from exc
+
+
 def _validate_final_product(
     output: str,
     draft: str | None,
@@ -619,8 +631,13 @@ class ExperimentRunner:
         condition_id: str,
         platform: str,
         run_id: str | None = None,
+        followup: str | None = None,
     ) -> RunResult:
-        """Run one top-level skill session and copy its plugin-owned trace."""
+        """Run one top-level skill session and copy its plugin-owned trace.
+
+        A ``followup`` message resumes the validated session for a second turn
+        whose response becomes the run output.
+        """
 
         self.runtime_config.require_scored_run()
         condition = self.conditions.get(condition_id)
@@ -680,6 +697,7 @@ class ExperimentRunner:
             token_usage: dict[str, int] | None = None
             token_accounting_error: str | None = None
             trace_timestamps: Mapping[str, Any] | None = None
+            followup_record: dict[str, Any] | None = None
             subagent_spawn_ids: set[str] = set()
             rollout_collection: dict[str, Any] = {
                 "status": "absent",
@@ -951,22 +969,13 @@ class ExperimentRunner:
                 ),
             )
             output = extract_output(result.stdout)
-            draft_path = workspace / ".writing" / "draft.md"
-            draft = None
-            if draft_path.is_file():
-                try:
-                    draft = draft_path.read_text(encoding="utf-8")
-                except (OSError, UnicodeError) as exc:
-                    raise ExecutionError(
-                        f"Cannot read workspace draft {draft_path}: {exc}"
-                    ) from exc
             reject_retrieval(output.encode("utf-8"), b"")
             budget.consume(
                 self.runtime_config.count_output_units(output), stage="final_output"
             )
             _validate_final_product(
                 output,
-                draft,
+                _read_draft(workspace),
                 condition_id=condition.condition_id,
                 requires_draft=condition.product_requires_draft,
             )
@@ -1016,6 +1025,60 @@ class ExperimentRunner:
                     f"execution; {len(subagent_spawn_ids)} spawn_agent event(s) "
                     "were observed"
                 )
+            if followup is not None:
+                if not result.session_id:
+                    raise ExecutionError("Cannot resume a turn without its session_id")
+                turn1_output = run_dir / "turn1.output.normalized.txt"
+                turn1_output.write_text(output, encoding="utf-8")
+                turn1_trace = run_dir / "turn1.process.jsonl"
+                shutil.copyfile(copied_trace, turn1_trace)
+                followup_path = run_dir / "followup.txt"
+                followup_path.write_text(followup, encoding="utf-8")
+                followup_record = {
+                    "message_hash": f"sha256:{sha256_file(followup_path)}",
+                    "turn1_output_hash": f"sha256:{sha256_file(turn1_output)}",
+                    "turn1_trace_hash": f"sha256:{sha256_file(turn1_trace)}",
+                    "turn1_trace_events": sum(
+                        1
+                        for line in turn1_trace.read_text(encoding="utf-8").splitlines()
+                        if line.strip()
+                    ),
+                    "turn1_attempts": attempts,
+                }
+                result, attempts = self._run_turn_with_retry(
+                    adapter,
+                    model_id=self.runtime_config.model_for(platform),
+                    prompt=followup,
+                    session_id=result.session_id,
+                    cwd=workspace,
+                    env=generator_environment,
+                    attempts=attempts,
+                    plugin_dirs=(
+                        self._plugin_dirs(condition) if platform != "codex" else ()
+                    ),
+                    record_attempt=record_attempt,
+                    snapshot_sessions=(
+                        (lambda: self._snapshot_codex_sessions(generator_config_dir))
+                        if platform == "codex"
+                        else None
+                    ),
+                )
+                output = extract_output(result.stdout)
+                reject_retrieval(output.encode("utf-8"), b"")
+                budget.consume(
+                    self.runtime_config.count_output_units(output),
+                    stage="followup_output",
+                )
+                _validate_final_product(
+                    output,
+                    _read_draft(workspace),
+                    condition_id=condition.condition_id,
+                    requires_draft=condition.product_requires_draft,
+                )
+                # The turn-1 trace contract describes one turn, so turn-2 events
+                # are collected for analysis without that contract.
+                collect_plugin_trace(workspace, run_dir)
+                reject_retrieval(copied_trace.read_bytes(), b"")
             output_path.write_bytes(output.encode("utf-8"))
             normalized_path.write_text(output, encoding="utf-8")
             self._write_json(
@@ -1046,6 +1109,7 @@ class ExperimentRunner:
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
+                    followup=followup_record,
                 ),
             )
             return RunResult(
@@ -1122,6 +1186,7 @@ class ExperimentRunner:
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
+                    followup=followup_record,
                     failure=failure,
                 ),
             )
@@ -1154,6 +1219,7 @@ class ExperimentRunner:
         cwd: Path,
         env: Mapping[str, str],
         attempts: int,
+        session_id: str | None = None,
         plugin_dirs: tuple[str, ...] = (),
         record_attempt: Callable[
             [int, ExecutionResult | None, SessionSnapshot | None], None
@@ -1165,7 +1231,6 @@ class ExperimentRunner:
 
         max_attempts = self.runtime_config.retry_count + 1
         local_attempts = 0
-        session_id: str | None = None
         while local_attempts < max_attempts:
             local_attempts += 1
             attempts += 1
@@ -1553,6 +1618,7 @@ class ExperimentRunner:
         rollout_collection: Mapping[str, Any] | None = None,
         spawn_extraction: Mapping[str, Any] | None = None,
         trace_timestamps: Mapping[str, Any] | None = None,
+        followup: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         if platform == "codex":
@@ -1762,6 +1828,8 @@ class ExperimentRunner:
             manifest["inputs"]["native_payload"] = prompt.native_payload
         if trace_timestamps is not None:
             manifest["trace_timestamps"] = dict(trace_timestamps)
+        if followup is not None:
+            manifest["followup"] = dict(followup)
         if output_hash is not None:
             manifest["output_hash"] = output_hash
         if trace_hash is not None:
