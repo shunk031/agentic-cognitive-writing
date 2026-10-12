@@ -1,3 +1,4 @@
-The component results of Section~\ref{sec:results-mechanism} suggest why \condAgenticCogWriter\ wins: \condNoGoals, \condFixedOrder, and \condSingleContext\ keep its \texttt{Monitor}-run loop over a persistent draft and stay near parity, whereas \condStagedRoles\ receives the same role instructions but rewrites the whole response once and does not.
-The advantage is therefore more consistent with that loop than with goals, subagent contexts, or instruction content alone, and it stays above parity in the logistic length model and the descriptive compute-matched subsets.
-Adaptive ordering adds only a small post-hoc advantage over \condFixedOrder, and the loop seldom uses it on these tasks, where most traces show one cycle.
+In Section~\ref{sec:results-mechanism}, \condNoGoals, \condFixedOrder, and \condSingleContext\ stay near parity with \condAgenticCogWriter, whereas \condStagedRoles, which adds the same role instructions to the fixed pipeline, does not reproduce its advantage.
+The advantage over the alternatives stays above parity in the logistic length model and in the descriptive compute-matched subsets.
+Adaptive ordering adds only the small advantage over \condFixedOrder\ seen in the post-hoc prompt-level summary, and our system seldom uses it on these tasks, where most traces show one planning--drafting--reviewing cycle.
+Which shared component, if any, carries the advantage is untested; the combined ablation named in the Limitations, which removes goals, fixes the order, and drops subagents together, is that test.

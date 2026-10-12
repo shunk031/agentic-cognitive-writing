@@ -84,12 +84,13 @@ def main() -> None:
 
     # Reviewers called "a system-level interpretation" unfalsifiable, so the
     # Introduction names the component evidence itself: the ablations and the
-    # role-instruction check, each tied to what it removes or adds.
+    # role-instruction check, each tied to what it removes or adds. It states
+    # no explanation of the advantage, because attributing it by elimination to
+    # an untested shared mechanism is not allowed.
     for phrase, reason in (
         ("explicit goals", "name the goal ablation"),
         ("process order", "name the order ablation"),
         ("role instructions", "name the role-instruction check"),
-        ("consistent with", "state the explanation as consistent with the evidence, not as established"),
     ):
         assert phrase in lowered, (reason, phrase)
     # State trace behavior as observed frequencies, not as a purpose ("selectively").

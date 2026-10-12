@@ -16,14 +16,12 @@ Building on \citet{flower1981cognitive}, we propose \condAgenticCogWriter, a lon
 A top-level Monitor agent observes the evolving draft, goals, and process history, chooses whether the next activity should be planning, drafting, or reviewing, and delegates that activity to a corresponding subagent.
 We call the system \textit{agentic} for this combination: online selection of the next writing process, a persistent state shared across steps, and delegation of each selected process to a subagent.
 
-We evaluate our system on three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.
+We evaluate our system on three long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.
 We hold the generator and task information constant across conditions.
 Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives.
 In pre-specified per-benchmark pairwise tests, our system is preferred to one-shot generation in \PooledFourOneHolmCellsTotal\ of 9 tests and to a fixed writing pipeline and adaptive task planning in \PooledFourTwoHolmCellsTotal\ and \PooledFourThreeHolmCellsTotal, while a post-hoc prompt-level summary favors it over all three.
 In the component analyses, dropping explicit goals or fixing the process order stays near parity with our system, as does a post-hoc variant without subagents, though the pre-specified single-writer variant trails it; adding our role instructions to the fixed pipeline post hoc does not reproduce its advantage.
-
-The component evidence is consistent with the advantage coming from what these variants share and the fixed pipeline lacks, a loop run by the Monitor agent over a persistent draft that is revised in place.
-Process traces show that \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure, and \AfourReviewingToPlanningRate\ of runs replan.
+Process traces show \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure, and \AfourReviewingToPlanningRate\ of runs replan.
 
 Our contributions are threefold.
 (1) We formulate long-form writing for general-purpose agents as a process-level control problem and introduce a concrete system that chooses among planning, drafting, and reviewing during composition; (2) we compare our system with one-shot, fixed-stage, and adaptive task-planning alternatives across complementary long-form benchmarks; and (3) we use ablations and process analyses to test which components the advantage requires and characterize how the loop is used in practice.
