@@ -884,3 +884,21 @@ class TokenMacroTests(unittest.TestCase):
         }
         covered = _schema_patterns(numbers_path.with_name("numbers-schema.md"))
         self.assertTrue(macros <= covered, sorted(macros - covered))
+
+
+class PromptLanguageTests(unittest.TestCase):
+    def test_chinese_prompt_needs_more_han_than_latin(self):
+        from make_numbers import _is_chinese_prompt
+
+        self.assertTrue(_is_chinese_prompt("请根据以下论文撰写 3000 字的报告 PDF"))
+        self.assertFalse(_is_chinese_prompt("Summarize the report on 贵州茅台 revenue"))
+
+    def test_replace_block_keeps_later_blocks(self):
+        from make_numbers import _replace_block
+
+        text = "A\n\n% Prompt-language macros.\nold\n\n% Later block.\nkeep\n"
+        self.assertEqual(
+            _replace_block(text, "% Prompt-language macros.", "% Prompt-language macros.\nnew\n"),
+            "A\n\n% Prompt-language macros.\nnew\n\n% Later block.\nkeep\n",
+        )
+
