@@ -227,6 +227,9 @@ def check() -> None:
     assert r"\AfourRegenerationRate" in tabular_body(process), (
         "tab/process-dynamics.tex: cite the goal-replacement rate macro"
     )
+    assert r"\AfourNoLoopEventRate" in tabular_body(process), (
+        "tab/process-dynamics.tex: cite the no-event rate macro"
+    )
 
     # Table 7 cites the process-sequence macros directly, in row order.
     trace_macros = re.findall(r"\\(Afour(?:ExactCycle|NonExact)(?:FixedOrder|SingleWriter)WinRate)", tabular_body(trace))

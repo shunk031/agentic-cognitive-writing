@@ -1604,6 +1604,15 @@ def _emit_process_sequence_macros(add: Any, report: dict[str, Any]) -> None:
         add(prefix + "ReviewingToPlanningRate", _percent_fixed(after_reviewing["planning"]["rate"], 1), f"process-sequences JSON conditions.{condition}.summary.after_reviewing.per_run.planning.rate")
         add(prefix + "RegenerationRuns", str(summary["regeneration"]["runs"]["count"]), f"process-sequences JSON conditions.{condition}.summary.regeneration.runs.count")
         add(prefix + "RegenerationRate", _percent_fixed(summary["regeneration"]["runs"]["rate"], 1), f"process-sequences JSON conditions.{condition}.summary.regeneration.runs.rate")
+        runs = [run for run_set in report["run_sets"] for run in run_set["conditions"][condition]["runs"]]
+        no_event = sum(
+            1
+            for run in runs
+            if not (run["after_reviewing"] or {}).get("translating")
+            and not (run["after_reviewing"] or {}).get("planning")
+            and not run["regeneration"]["count"]
+        )
+        add(prefix + "NoLoopEventRate", _percent_fixed(no_event / len(runs), 1), f"process-sequences JSON run_sets.*.conditions.{condition}.runs: share with no reviewing-to-translating, reviewing-to-planning, or regeneration event")
     combined = report["prompt_association"]["combined"]
     for contrast, suffix in (("A4_vs_A6", "FixedOrder"), ("A4_vs_A7", "SingleWriter")):
         splits = combined[contrast]["splits"]
