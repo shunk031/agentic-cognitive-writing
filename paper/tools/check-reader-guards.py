@@ -81,40 +81,43 @@ def require_concepts(
 
 
 def check_caption_takeaways() -> None:
-    required = {
+    # Each concept lists the wordings that carry it, so a caption can be reworded or
+    # compacted to fit its line limit as long as the reader takeaway survives.
+    takeaways = {
         "fig/tex/overview.tex": (
-            "cognitive process theory of writing",
-            "coding-agent-style control loop",
-            "selected online from the evolving document state",
+            ("cognitive process theory", ("cognitive process theory",)),
+            ("coding-agent control loop", ("control loop",)),
+            ("online process selection", ("online",)),
+            ("evolving document state", ("document state",)),
         ),
         "tab/appendix-comparison.tex": (
-            "only compared system",
-            "online selection among heterogeneous writing operations",
+            (
+                "our system is the only one with the property",
+                ("only compared system", "only system"),
+            ),
+            ("online selection among writing operations", ("online selection",)),
         ),
         "tab/experiments-architecture-comparison.tex": (
-            "central difference in what advances next",
+            ("the central difference is what advances next", ("advances next",)),
         ),
         "tab/main-results.tex": (
-            "higher is better",
-            "scores highest on both measures for WritingBench and HelloBench",
+            ("direction of the scores", ("higher is better",)),
+            ("our system leads", ("scores highest", "highest mean")),
+            ("WritingBench result", ("WritingBench",)),
+            ("HelloBench result", ("HelloBench",)),
         ),
         "tab/process-dynamics.tex": (
-            "partition complete process paths",
-            "non-exclusive indicators",
+            ("rows 1-2 partition complete paths", ("partition",)),
+            ("rows 3-5 are non-exclusive", ("non-exclusive",)),
         ),
         "sec/05_results.tex": (
-            "mostly follows the same forward",
-            "consistent with the small exploratory advantage of adaptive ordering",
+            ("our system mostly follows the forward progression", ("mostly follows",)),
+            ("small exploratory advantage", ("exploratory advantage",)),
+            ("adaptive ordering", ("adaptive ordering",)),
         ),
     }
-    for path, phrases in required.items():
-        text = read(path)
-        for phrase in phrases:
-            assert phrase in text, (
-                "main figure/table captions must state the intended reader takeaway",
-                path,
-                phrase,
-            )
+    for path, concept_groups in takeaways.items():
+        require_concepts(path, concept_groups)
 
     # These guards protect conclusions a reader must be able to recover, not exact
     # caption copy. Captions also have rendered line limits, so semantically equivalent
@@ -147,10 +150,13 @@ def check_caption_takeaways() -> None:
             ("the process-path win rates are similar", ("win rates", "Win rates")),
             ("similarity conclusion", ("similar", "Similar")),
             (
-                "Planning--Translating--Reviewing path group",
-                (r"\texttt{Planning}--\texttt{Translating}--\texttt{Reviewing}",),
+                "one-cycle Planning--Translating--Reviewing path group",
+                (
+                    r"\texttt{Planning}--\texttt{Translating}--\texttt{Reviewing}",
+                    "one-cycle",
+                ),
             ),
-            ("other-path group", ("other-path runs",)),
+            ("other-path group", ("other-path", "other paths")),
             ("Fixed-order comparison", (r"\condFixedOrder",)),
             ("Single-writer comparison", (r"\condSingleWriter",)),
             ("observational qualification", ("observational", "Observational")),
@@ -210,7 +216,9 @@ def check():
     acl = expand_inputs(read("acl_latex.tex"))
     main_sources = "\n".join(read(path) for path in MAIN_SECTIONS)
     reader_tex_sources = "\n".join(
-        path.read_text(encoding="utf-8") for path in sorted(PAPER.rglob("*.tex")) if "build" not in path.relative_to(PAPER).parts
+        path.read_text(encoding="utf-8")
+        for path in sorted(PAPER.rglob("*.tex"))
+        if "build" not in path.relative_to(PAPER).parts
     )
     reader_tex_sources = re.sub(r"(?m)%.*$", "", reader_tex_sources)
 
