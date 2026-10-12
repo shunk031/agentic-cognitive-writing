@@ -29,6 +29,11 @@ Table~\ref{tab:paired-quality} reports paired differences behind Table~\ref{tab:
 Each prompt's three generation runs are averaged per system before differencing, so the prompt is the resampling unit, and the intervals come from 10,000 prompt-level bootstrap resamples.
 \input{tab/appendix-paired-quality}
 
+Table~\ref{tab:paired-ablation} applies the same paired comparison to the two ablations against the external alternatives.
+Across the \PairedSeparationMeasureCount\ WritingBench and HelloBench native and pointwise contrasts with the three alternatives, the interval excludes zero for \PairedSeparatedFull\ with \condAgenticCogWriter, \PairedSeparatedNoGoals\ with \condNoGoals, and \PairedSeparatedFixedOrder\ with \condFixedOrder.
+Removing explicit goals therefore leaves the full system's advantage intact, and fixing the process order keeps it on every WritingBench native comparison and on most HelloBench native comparisons; on DoLoMiTes, all three variants separate only from \condTaskPlanning.
+\input{tab/appendix-paired-ablation}
+
 \section{Additional Process and Resource Statistics}
 \label{app:process-behavior}
 Table~\ref{tab:process-summary} reports output size, delegated invocations, goal events, token accounting, and wall-clock time as run-level summaries across all three generation runs.

@@ -12,22 +12,24 @@ Its lead over \condStaged\ and \condTaskPlanning\ on HelloBench pointwise scores
 
 Table~\ref{tab:pairwise-results} reports a system-level separation in direct same-prompt comparisons.
 \condAgenticCogWriter\ is preferred to \condSinglePass, \condStaged, and \condTaskPlanning, with across-benchmark mean win rates of \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean, respectively, among order-consistent comparisons.
-The direction holds in every benchmark and generation run against \condSinglePass\ and \condTaskPlanning, and in all but one benchmark--run test against \condStaged.\footnote{See Appendix~\ref{app:pairwise-detail} for run-level intervals and corrected results.}
+The direction holds in every benchmark and generation run against \condSinglePass\ and \condTaskPlanning, and in all but one benchmark--run test against \condStaged.
+
+Under the pre-specified within-benchmark Holm correction, \PooledFourOneHolmCellsTotal, \PooledFourThreeHolmCellsTotal, and \PooledFourTwoHolmCellsTotal\ of the nine benchmark--run tests separate our system from \condSinglePass, \condTaskPlanning, and \condStaged, respectively.\footnote{See Appendix~\ref{app:pairwise-detail} for run-level intervals and corrected results.}
 The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare, \UncondFullStagedWinShare, and \UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate, \WorstCaseFullStagedRate, and \WorstCaseFullTaskPlanningRate\ among order-consistent comparisons.\footnote{See Appendix~\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \condSinglePass.}
 
 \input{tab/pairwise-results}
 
 The direct-comparison result supports the tested system as a whole because our system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \texttt{Monitor}.
-The ablations below test whether explicit goals or adaptive process order explain these differences.
+The ablations below ask whether the advantage depends on explicit goals or adaptive ordering.
 
 \subsection{Ablations and Execution Diagnostics}
 \label{sec:results-mechanism}
 
 Table~\ref{tab:ablation-results} places the two pre-specified ablations much closer to \condAgenticCogWriter\ than the alternative writing systems in Table~\ref{tab:pairwise-results}.
 After the within-benchmark Holm correction, all benchmark--run tests comparing our system with \condNoGoals\ or \condFixedOrder\ remain above the corrected significance threshold.
-In the exploratory prompt-level summary, our system is preferred to \condFixedOrder\ at \ClusteredFullFixedOrderRate\ [\ClusteredFullFixedOrderInterval], $p=\ClusteredFullFixedOrderP$, while the corresponding preference over \condNoGoals\ is \ClusteredFullNoGoalsRate\ [\ClusteredFullNoGoalsInterval], $p=\ClusteredFullNoGoalsP$.
-The first estimate suggests a small benefit from adaptive ordering; the second does not provide evidence for a comparable effect from the explicit goal representation.
-Because the summary was defined after the main results, both remain exploratory.
+An exploratory prompt-level summary defined after the main results places our system slightly ahead of both ablations, at \ClusteredFullFixedOrderRate\ [\ClusteredFullFixedOrderInterval], $p=\ClusteredFullFixedOrderP$, against \condFixedOrder\ and \ClusteredFullNoGoalsRate\ [\ClusteredFullNoGoalsInterval], $p=\ClusteredFullNoGoalsP$, against \condNoGoals; the two intervals overlap, so the summary does not rank the components.
+The ablations nonetheless keep the full system's advantage over the alternatives: of the \PairedSeparationMeasureCount\ paired WritingBench and HelloBench native and pointwise contrasts with the three alternatives, the interval excludes zero for \PairedSeparatedNoGoals\ with \condNoGoals\ and \PairedSeparatedFixedOrder\ with \condFixedOrder, against \PairedSeparatedFull\ with our system.\footnote{See Appendix~\ref{app:paired-quality} for these paired differences.}
+The advantage therefore does not hinge on either component; the process-level loop that all three variants share carries it.
 
 \input{tab/ablation-results}
 
@@ -40,7 +42,7 @@ The narrower post-hoc \condSingleContext\ check shows no significant difference 
 \label{sec:results-process-dynamics}
 
 Table~\ref{tab:process-dynamics} shows a mostly simple writing loop after repeat collapsing and leading-\texttt{Planning} reconstruction: \AfourCycleCompliantRate\ of complete paths conform to the \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle structure, while \AfourReviewingToTranslatingRate\ of runs return from \texttt{Reviewing} to \texttt{Translating}.
-Full replanning (\AfourReviewingToPlanningRate) and goal replacement (\AfourRegenerationRate) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over \condFixedOrder\ because ordering can matter only when the controller departs from the common path.
+Full replanning (\AfourReviewingToPlanningRate) and goal replacement (\AfourRegenerationRate) are rare, so adaptivity is used mainly for targeted redrafting.
 
 \input{tab/process-dynamics}
 
@@ -62,7 +64,7 @@ Because the demanding subsets increase input or requested output length or proce
 \small (c) \condFixedOrder
 \end{minipage}
 \caption{Process trajectories: (a) frequent complete paths; (b,c) transition counts per system (E: run end).
-Our system mostly follows the same forward \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} progression as \condFixedOrder; more returns to \texttt{Translating} than \texttt{Planning} are consistent with the small exploratory advantage of adaptive ordering.}
+Our system mostly follows the same forward \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} progression as \condFixedOrder.}
 \label{fig:process-sequences}
 \end{figure*}
 
