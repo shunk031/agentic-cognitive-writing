@@ -85,7 +85,8 @@ def generate(args: argparse.Namespace) -> None:
         raise SystemExit("GATEWAY_API_KEY is not set")
 
     def worker(index: int) -> None:
-        shard = root / f"w{index:02d}"
+        # Each shard holds the runner's output-root lock for one run at a time.
+        shard = root / f"w{index + args.shard_offset:02d}"
         shard.mkdir(exist_ok=True)
         for row, condition in jobs[index :: args.workers]:
             followup = followups / f"{row['prompt_id']}.txt"
@@ -434,6 +435,7 @@ def main() -> None:
         command.add_argument("--root", type=Path, required=True)
     sub.choices["generate"].add_argument("--conditions", default="A4,A6,A2")
     sub.choices["generate"].add_argument("--prompts", default="")
+    sub.choices["generate"].add_argument("--shard-offset", type=int, default=0)
     for name in ("generate", "score"):
         sub.choices[name].add_argument("--workers", type=int, default=8)
     for name in ("score", "report"):
