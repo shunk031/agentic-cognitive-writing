@@ -530,13 +530,14 @@ def generate(aggregations: list[dict[str, Any]], lengths: list[dict[str, Any]], 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--aggregations", nargs=3, type=Path, required=True)
-    parser.add_argument("--length-control", nargs=3, type=Path, required=True)
+    parser.add_argument("--length-control", type=Path, required=True, help="three-run length-control JSON")
     parser.add_argument("--cross-family", type=Path, required=True)
     parser.add_argument("--process-sequences", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parents[1] / "fig")
     args = parser.parse_args()
     aggregations = [read_json(path, f"aggregation replication {index}") for index, path in enumerate(args.aggregations, 1)]
-    lengths = [read_json(path, f"length-control replication {index}") for index, path in enumerate(args.length_control, 1)]
+    per_run = require_mapping(read_json(args.length_control, "length-control"), "per_run", "length-control JSON")
+    lengths = [require_mapping(per_run, run, "length-control JSON per_run") for run in ("run-1", "run-2", "run-3")]
     cross_family = read_json(args.cross_family, "cross-family")
     process_sequences = read_json(args.process_sequences, "process-sequences")
     for path in generate(aggregations, lengths, cross_family, process_sequences, args.output_dir):
