@@ -42,6 +42,12 @@
       "instruction": "Add one concrete example of an online Monitor decision after the sentence stating that the process order is not fixed.",
       "before": "Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass.",
       "after": "Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass.\nFor example, if \\texttt{Reviewing} finds that the draft omits a section the task requires, the \\texttt{Monitor} can select \\texttt{Planning} to add a goal for that section before further \\texttt{Translating}."
+    },
+    {
+      "path": "paper/tab/trace-outcome.tex",
+      "instruction": "Rewrite the Table 7 caption so it says whose win rates these are, that the first group is runs with exactly one Planning-Translating-Reviewing cycle, and spell out wins and losses, within five rendered lines.",
+      "before": "\\caption{\\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Each rate sums wins/losses over benchmarks and runs; the split is observational, not causal.}",
+      "after": "\\caption{\\condAgenticCogWriter\\ win rates against \\condFixedOrder\\ and \\condSingleWriter\\ are similar for one-cycle \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} runs and other-path runs. Rates sum wins and losses over benchmarks and runs; the split is observational, not causal.}"
     }
   ],
   "created_files": []
