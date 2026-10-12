@@ -1,107 +1,11 @@
 {
-  "baseline_sha": "3a0c3e1ceace7faba5b03bce86e97b3e32b601e6",
+  "baseline_sha": "cd81720bdbdc4227437da31fe3854f42bde0d014",
   "replacements": [
     {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Fit the main text within eight pages by removing redundancy in Experimental Design: shorten the numbering sentence, drop the trivial focal-system sentence, condense the model-choice footnote that Appendix B repeats, introduce the cross-family evaluator once where the robustness check is described, and keep paragraphs free of runt endings.",
-      "before": "We consider seven pre-specified systems under the same generation setup.\nThe systems are numbered below so that the alternatives, ablations, execution variant, and full system can be distinguished throughout the analysis.\n",
-      "after": "We consider seven pre-specified systems under the same generation setup.\nTheir numbers below are used throughout the analysis.\n"
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Fit the main text within eight pages by removing redundancy in Experimental Design: shorten the numbering sentence, drop the trivial focal-system sentence, condense the model-choice footnote that Appendix B repeats, introduce the cross-family evaluator once where the robustness check is described, and keep paragraphs free of runt endings.",
-      "before": "(6) \\condSingleWriter\\ retains the goal representation and adaptive process loop but performs \\texttt{Planning}, \\texttt{Translating}, and \\texttt{Reviewing} in one writer context without subagent delegation; it also limits each \\texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.\n(7) \\condAgenticCogWriter\\ is the full system described in Section~\\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.\nThis is our focal system.\n",
-      "after": "(6) \\condSingleWriter\\ retains the goal representation and adaptive process loop but performs \\texttt{Planning}, \\texttt{Translating}, and \\texttt{Reviewing} in one writer context without subagent delegation; it also limits each \\texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.\n(7) \\condAgenticCogWriter\\ is the full system of Section~\\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.\n"
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Fit the main text within eight pages by removing redundancy in Experimental Design: shorten the numbering sentence, drop the trivial focal-system sentence, condense the model-choice footnote that Appendix B repeats, introduce the cross-family evaluator once where the robustness check is described, and keep paragraphs free of runt endings.",
-      "before": "\nAll systems run in Codex CLI as the coding-agent harness with \\modelGenBare\\ as the generator; API-based scoring uses \\modelJudgeBare\\ as the primary evaluator.\\footnote{We choose Luna for high-volume long-form generation because OpenAI positions it for fast, cost-sensitive workloads, and Sol as the primary evaluator because it is the higher-capability tier for complex professional work.\nAssigning the higher-capability tier to evaluation keeps generation scalable; the shared model family motivates the cross-family check~\\citep{openai2026luna,openai2026sol,openai2026gpt56}.}\nHolding the generator fixed across systems isolates writing organization rather than base-model capability.",
-      "after": "\nAll systems run in Codex CLI as the coding-agent harness with \\modelGenBare\\ as the generator; API-based scoring uses \\modelJudgeBare\\ as the primary evaluator.\\footnote{We use Luna, which OpenAI positions for fast, cost-sensitive workloads, for high-volume long-form generation and the higher-capability tier, Sol, for evaluation; the shared model family motivates the cross-family check~\\citep{openai2026luna,openai2026sol,openai2026gpt56}.}\nHolding the generator fixed across systems isolates writing organization rather than base-model capability."
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Fit the main text within eight pages by removing redundancy in Experimental Design: shorten the numbering sentence, drop the trivial focal-system sentence, condense the model-choice footnote that Appendix B repeats, introduce the cross-family evaluator once where the robustness check is described, and keep paragraphs free of runt endings.",
-      "before": "Holding the generator fixed across systems isolates writing organization rather than base-model capability.\nFor a cross-family robustness check, we rescore selected system comparisons with \\modelCross.\nOur system is packaged as an agent skill: the top-level \\texttt{Monitor} invokes \\texttt{Planner}, \\texttt{Translator}, and \\texttt{Reviewer} as harness subagents.\\footnote{See Appendix~\\ref{app:prompts} for the complete prompts and Appendix~\\ref{app:runtime} for the runtime settings.}\n",
-      "after": "Holding the generator fixed across systems isolates writing organization rather than base-model capability.\nOur system is an agent skill: its \\texttt{Monitor} invokes \\texttt{Planner}, \\texttt{Translator}, and \\texttt{Reviewer} as subagents.\\footnote{See Appendix~\\ref{app:prompts} for the complete prompts and Appendix~\\ref{app:runtime} for the runtime settings.}\n"
-    },
-    {
-      "path": "paper/sec/04_experiments.tex",
-      "instruction": "Fit the main text within eight pages by removing redundancy in Experimental Design: shorten the numbering sentence, drop the trivial focal-system sentence, condense the model-choice footnote that Appendix B repeats, introduce the cross-family evaluator once where the robustness check is described, and keep paragraphs free of runt endings.",
-      "before": "The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference~\\citep{li2026preference,panickssery2024selfpreference}.\nWe therefore report the cross-family rescoring described above as a separate descriptive robustness check rather than averaging results from the two evaluators.\n",
-      "after": "The primary generator and evaluator come from the same model family, which can introduce systematic preference leakage or self-preference~\\citep{li2026preference,panickssery2024selfpreference}.\nWe therefore rescore selected system comparisons with \\modelCross\\ as a separate descriptive robustness check rather than averaging results from the two evaluators.\n"
-    },
-    {
-      "path": "paper/sec/01_introduction.tex",
-      "instruction": "Remove 'demanding subsets of' from the Introduction's evaluation sentence; the subset rule is described in Experimental Design.",
-      "before": "We evaluate our system on demanding subsets of three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.",
-      "after": "We evaluate our system on three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}."
-    },
-    {
-      "path": "paper/sec/03_method.tex",
-      "instruction": "Add one concrete example of an online Monitor decision after the sentence stating that the process order is not fixed.",
-      "before": "Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass.",
-      "after": "Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass.\nFor example, if \\texttt{Reviewing} finds that the draft omits a section the task requires, the \\texttt{Monitor} can select \\texttt{Planning} to add a goal for that section before further \\texttt{Translating}."
-    },
-    {
-      "path": "paper/tab/trace-outcome.tex",
-      "instruction": "Rewrite the Table 7 caption so it says whose win rates these are, that the first group is runs with exactly one Planning-Translating-Reviewing cycle, and spell out wins and losses, within five rendered lines.",
-      "before": "\\caption{\\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} and other-path runs have similar win rates against \\condFixedOrder\\ and \\condSingleWriter. Each rate sums wins/losses over benchmarks and runs; the split is observational, not causal.}",
-      "after": "\\caption{\\condAgenticCogWriter\\ win rates against \\condFixedOrder\\ and \\condSingleWriter\\ are similar for one-cycle \\texttt{Planning}--\\texttt{Translating}--\\texttt{Reviewing} runs and other-path runs. Rates sum wins and losses over benchmarks and runs; the split is observational, not causal.}"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Italicize the column names Native and Pointwise where the Table 3 caption defines them.",
-      "before": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across generation runs. Native uses each benchmark's criteria; Pointwise uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}",
-      "after": "\\caption{Document-quality scores, reported as mean $\\pm$ sample SD across generation runs. \\textit{Native} uses each benchmark's criteria; \\textit{Pointwise} uses a common five-dimension rubric, z-scored within each run and benchmark over all seven systems; higher is better, and DoLoMiTes has no native score. Bold marks the highest mean in each column. \\condAgenticCogWriter\\ scores highest on both measures for WritingBench and HelloBench, separated from every alternative except on HelloBench pointwise scores.}"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Render the Table 3 N/A cells in the same gray as the dagger-marked leaders.",
-      "before": "& N/A & -0.006\\,{\\scriptsize $\\pm$ 0.018} \\\\",
-      "after": "& \\textcolor{nagray}{N/A} & -0.006\\,{\\scriptsize $\\pm$ 0.018} \\\\"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Render the Table 3 N/A cells in the same gray as the dagger-marked leaders.",
-      "before": "& N/A & \\textcolor{tiedgray}{\\textbf{0.064}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}} \\\\",
-      "after": "& \\textcolor{nagray}{N/A} & \\textcolor{tiedgray}{\\textbf{0.064}\\tnote{\\dag}\\,{\\scriptsize $\\pm$ 0.036}} \\\\"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Render the Table 3 N/A cells in the same gray as the dagger-marked leaders.",
-      "before": "& N/A & -0.164\\,{\\scriptsize $\\pm$ 0.015} \\\\",
-      "after": "& \\textcolor{nagray}{N/A} & -0.164\\,{\\scriptsize $\\pm$ 0.015} \\\\"
-    },
-    {
-      "path": "paper/tab/main-results.tex",
-      "instruction": "Render the Table 3 N/A cells in the same gray as the dagger-marked leaders.",
-      "before": "& N/A & 0.031\\,{\\scriptsize $\\pm$ 0.035} \\\\",
-      "after": "& \\textcolor{nagray}{N/A} & 0.031\\,{\\scriptsize $\\pm$ 0.035} \\\\"
-    },
-    {
-      "path": "paper/acl_latex.tex",
-      "instruction": "Define nagray as the same gray as tiedgray for unavailable Table 3 cells.",
-      "before": "\\definecolor{tiedgray}{gray}{0.6}",
-      "after": "\\definecolor{tiedgray}{gray}{0.6}\n\\colorlet{nagray}{tiedgray}"
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Restore the in-table group labels 'Complete process paths' and 'Non-exclusive indicators' in Table 6, drop the caption sentence they replace, and state the takeaway in the caption.",
-      "before": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\nCycle-compliant path",
-      "after": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Complete process paths}} \\\\\nCycle-compliant path"
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Restore the in-table group labels 'Complete process paths' and 'Non-exclusive indicators' in Table 6, drop the caption sentence they replace, and state the takeaway in the caption.",
-      "before": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\texttt{Reviewing} followed by renewed \\texttt{Translating}",
-      "after": "\\cmidrule(lr){1-1}\\cmidrule(lr){2-2}\n\\multicolumn{2}{l}{\\textit{Non-exclusive indicators}} \\\\\n\\texttt{Reviewing} followed by renewed \\texttt{Translating}"
-    },
-    {
-      "path": "paper/tab/process-dynamics.tex",
-      "instruction": "Restore the in-table group labels 'Complete process paths' and 'Non-exclusive indicators' in Table 6, drop the caption sentence they replace, and state the takeaway in the caption.",
-      "before": "\\end{tabular}\n\\caption{Writing-loop behavior of \\condAgenticCogWriter\\ after repeat collapsing and leading-\\texttt{Planning} reconstruction. Rows 1--2 partition complete process paths; rows 3--5 are non-exclusive indicators.}\n\\label{tab:process-dynamics}",
-      "after": "\\end{tabular}\n\\caption{Writing-loop behavior of \\condAgenticCogWriter\\ after repeat collapsing and leading-\\texttt{Planning} reconstruction; most paths are cycle-compliant.}\n\\label{tab:process-dynamics}"
+      "path": "paper/sec/07_limitations.tex",
+      "instruction": "Drop 'demanding' from the Limitations scope sentence; the next sentence already says the subset rule is not a difficulty measure.",
+      "before": "\\paragraph{Scope and external validity.}\nOur conclusions concern one generator family, one coding-agent-style harness, and deterministic demanding subsets of three long-form benchmarks.\nThe subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent semantic measure of difficulty.",
+      "after": "\\paragraph{Scope and external validity.}\nOur conclusions concern one generator family, one coding-agent-style harness, and deterministic subsets of three long-form benchmarks.\nThe subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent semantic measure of difficulty."
     }
   ],
   "created_files": []
