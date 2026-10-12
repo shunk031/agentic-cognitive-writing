@@ -1,5 +1,30 @@
 {
-  "baseline_sha": "fd4ad1a6cb0ad476d5603d4a3fae4fb64a9894d4",
-  "replacements": [],
+  "baseline_sha": "251500df5360b22b41cc9a05b27d7f88804b8457",
+  "replacements": [
+    {
+      "path": "paper/numbers.tex",
+      "instruction": "State in Appendix A how many scored prompts are in Chinese and that the rest are English, citing a macro generated from the prompt manifests, and keep the appendix tables in numbered order.",
+      "before": "\\newcommand{\\PairedQualityDoLoPointwiseTaskPlanningHigh}{+0.281}\n",
+      "after": "\\newcommand{\\PairedQualityDoLoPointwiseTaskPlanningHigh}{+0.281}\n\n% Prompt-language macros.\n% source: prompt manifests writingbench.jsonl hard100 prompts with more Han characters than Latin letters\n\\newcommand{\\WritingChinesePromptCount}{32}\n% source: prompt manifests hellobench.jsonl hard100 prompts with more Han characters than Latin letters\n\\newcommand{\\HelloChinesePromptCount}{0}\n% source: prompt manifests dolomites.jsonl hard100 prompts with more Han characters than Latin letters\n\\newcommand{\\DoLoChinesePromptCount}{0}\n% source: sum of the per-benchmark Chinese prompt counts\n\\newcommand{\\ChinesePromptCount}{32}\n"
+    },
+    {
+      "path": "paper/sec/09_prompt_configuration.tex",
+      "instruction": "State in Appendix A how many scored prompts are in Chinese and that the rest are English, citing a macro generated from the prompt manifests, and keep the appendix tables in numbered order.",
+      "before": "The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts.\nGeneration reads the committed manifests and identifiers, so system output quality cannot affect selection.",
+      "after": "The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts.\nOf these, \\WritingChinesePromptCount\\ WritingBench prompts are written mainly in Chinese and the rest are in English; systems and evaluators receive each prompt in its original language.\nGeneration reads the committed manifests and identifiers, so system output quality cannot affect selection."
+    },
+    {
+      "path": "paper/tab/appendix-paired-quality.tex",
+      "instruction": "State in Appendix A how many scored prompts are in Chinese and that the rest are English, citing a macro generated from the prompt manifests, and keep the appendix tables in numbered order.",
+      "before": "\\begin{table*}[t]\n\\centering",
+      "after": "\\begin{table}[H]\n\\centering"
+    },
+    {
+      "path": "paper/tab/appendix-paired-quality.tex",
+      "instruction": "State in Appendix A how many scored prompts are in Chinese and that the rest are English, citing a macro generated from the prompt manifests, and keep the appendix tables in numbered order.",
+      "before": "\\label{tab:paired-quality}\n\\end{table*}\n",
+      "after": "\\label{tab:paired-quality}\n\\end{table}\n"
+    }
+  ],
   "created_files": []
 }
