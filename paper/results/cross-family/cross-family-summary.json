@@ -1,0 +1,671 @@
+{
+  "contrasts": {
+    "A4:A1": {
+      "benchmarks": {
+        "DoLoMiTes": {
+          "commit_rate": {
+            "denominator": 93,
+            "numerator": 46,
+            "rate": 0.4946236559139785,
+            "wilson_high": 0.5944149042780961,
+            "wilson_low": 0.39525893983600857
+          },
+          "direction_conflicts": 3,
+          "losses": 13,
+          "n": 93,
+          "presentation_agreement": {
+            "denominator": 186,
+            "numerator": 115
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 93,
+            "numerator": 55
+          },
+          "sign_test_p": 0.004533861582189047,
+          "ties": 47,
+          "win_rate": {
+            "denominator": 46,
+            "numerator": 33,
+            "rate": 0.717391304347826,
+            "wilson_high": 0.8267579761812937,
+            "wilson_low": 0.574514387694541
+          },
+          "wins": 33
+        },
+        "HelloBench": {
+          "commit_rate": {
+            "denominator": 93,
+            "numerator": 25,
+            "rate": 0.26881720430107525,
+            "wilson_high": 0.3667622156556944,
+            "wilson_low": 0.18921308125080688
+          },
+          "direction_conflicts": 4,
+          "losses": 10,
+          "n": 93,
+          "presentation_agreement": {
+            "denominator": 186,
+            "numerator": 78
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 93,
+            "numerator": 39
+          },
+          "sign_test_p": 0.42435622215270996,
+          "ties": 68,
+          "win_rate": {
+            "denominator": 25,
+            "numerator": 15,
+            "rate": 0.6,
+            "wilson_high": 0.7659669762225203,
+            "wilson_low": 0.40739457358967
+          },
+          "wins": 15
+        },
+        "WritingBench": {
+          "commit_rate": {
+            "denominator": 96,
+            "numerator": 40,
+            "rate": 0.4166666666666667,
+            "wilson_high": 0.5166303205963058,
+            "wilson_low": 0.32311561071330697
+          },
+          "direction_conflicts": 10,
+          "losses": 21,
+          "n": 96,
+          "presentation_agreement": {
+            "denominator": 192,
+            "numerator": 89
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 96,
+            "numerator": 31
+          },
+          "sign_test_p": 0.8746293123804207,
+          "ties": 56,
+          "win_rate": {
+            "denominator": 40,
+            "numerator": 19,
+            "rate": 0.475,
+            "wilson_high": 0.6250263789330753,
+            "wilson_low": 0.329354701126789
+          },
+          "wins": 19
+        }
+      },
+      "commit_rate": {
+        "denominator": 282,
+        "numerator": 111,
+        "rate": 0.39361702127659576,
+        "wilson_high": 0.4517011937302702,
+        "wilson_low": 0.3383922369164104
+      },
+      "direction_conflicts": 17,
+      "judge_routes": [
+        "gateway Bedrock"
+      ],
+      "losses": 44,
+      "n": 282,
+      "presentation_agreement": {
+        "denominator": 564,
+        "numerator": 282
+      },
+      "prompt_collapsed_agreement": {
+        "denominator": 282,
+        "numerator": 125
+      },
+      "sign_test_p": 0.03630649114131785,
+      "ties": 171,
+      "win_rate": {
+        "denominator": 111,
+        "numerator": 67,
+        "rate": 0.6036036036036037,
+        "wilson_high": 0.6896673357363275,
+        "wilson_low": 0.5106087686965733
+      },
+      "wins": 67
+    },
+    "A4:A2": {
+      "benchmarks": {
+        "DoLoMiTes": {
+          "commit_rate": {
+            "denominator": 97,
+            "numerator": 37,
+            "rate": 0.38144329896907214,
+            "wilson_high": 0.4808725606254558,
+            "wilson_low": 0.2910466453343049
+          },
+          "direction_conflicts": 2,
+          "losses": 12,
+          "n": 97,
+          "presentation_agreement": {
+            "denominator": 194,
+            "numerator": 110
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 97,
+            "numerator": 53
+          },
+          "sign_test_p": 0.04703102743951604,
+          "ties": 60,
+          "win_rate": {
+            "denominator": 37,
+            "numerator": 25,
+            "rate": 0.6756756756756757,
+            "wilson_high": 0.8036673347185581,
+            "wilson_low": 0.514636672419722
+          },
+          "wins": 25
+        },
+        "HelloBench": {
+          "commit_rate": {
+            "denominator": 97,
+            "numerator": 16,
+            "rate": 0.16494845360824742,
+            "wilson_high": 0.2512646039484451,
+            "wilson_low": 0.10415923898131364
+          },
+          "direction_conflicts": 2,
+          "losses": 10,
+          "n": 97,
+          "presentation_agreement": {
+            "denominator": 194,
+            "numerator": 70
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 97,
+            "numerator": 51
+          },
+          "sign_test_p": 0.454498291015625,
+          "ties": 81,
+          "win_rate": {
+            "denominator": 16,
+            "numerator": 6,
+            "rate": 0.375,
+            "wilson_high": 0.6135895945449727,
+            "wilson_low": 0.18481232558863633
+          },
+          "wins": 6
+        },
+        "WritingBench": {
+          "commit_rate": {
+            "denominator": 96,
+            "numerator": 41,
+            "rate": 0.4270833333333333,
+            "wilson_high": 0.5269568587558306,
+            "wilson_low": 0.33282083114008043
+          },
+          "direction_conflicts": 3,
+          "losses": 12,
+          "n": 96,
+          "presentation_agreement": {
+            "denominator": 192,
+            "numerator": 100
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 96,
+            "numerator": 41
+          },
+          "sign_test_p": 0.011507789735333063,
+          "ties": 55,
+          "win_rate": {
+            "denominator": 41,
+            "numerator": 29,
+            "rate": 0.7073170731707317,
+            "wilson_high": 0.8239081237388657,
+            "wilson_low": 0.5552053227700284
+          },
+          "wins": 29
+        }
+      },
+      "commit_rate": {
+        "denominator": 290,
+        "numerator": 94,
+        "rate": 0.32413793103448274,
+        "wilson_high": 0.38000261067352487,
+        "wilson_low": 0.2728714241567958
+      },
+      "direction_conflicts": 7,
+      "judge_routes": [
+        "direct Bedrock"
+      ],
+      "losses": 34,
+      "n": 290,
+      "presentation_agreement": {
+        "denominator": 580,
+        "numerator": 280
+      },
+      "prompt_collapsed_agreement": {
+        "denominator": 290,
+        "numerator": 145
+      },
+      "sign_test_p": 0.009547810466077418,
+      "ties": 196,
+      "win_rate": {
+        "denominator": 94,
+        "numerator": 60,
+        "rate": 0.6382978723404256,
+        "wilson_high": 0.7282308135452579,
+        "wilson_low": 0.5375052079060171
+      },
+      "wins": 60
+    },
+    "A4:A3": {
+      "benchmarks": {
+        "DoLoMiTes": {
+          "commit_rate": {
+            "denominator": 95,
+            "numerator": 52,
+            "rate": 0.5473684210526316,
+            "wilson_high": 0.6436722394728039,
+            "wilson_low": 0.44738266913924607
+          },
+          "direction_conflicts": 3,
+          "losses": 10,
+          "n": 95,
+          "presentation_agreement": {
+            "denominator": 190,
+            "numerator": 127
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 95,
+            "numerator": 56
+          },
+          "sign_test_p": 9.063271916964766e-06,
+          "ties": 43,
+          "win_rate": {
+            "denominator": 52,
+            "numerator": 42,
+            "rate": 0.8076923076923077,
+            "wilson_high": 0.8920395397526649,
+            "wilson_low": 0.6810113918634199
+          },
+          "wins": 42
+        },
+        "HelloBench": {
+          "commit_rate": {
+            "denominator": 97,
+            "numerator": 13,
+            "rate": 0.13402061855670103,
+            "wilson_high": 0.21589993854994483,
+            "wilson_low": 0.0800245668040993
+          },
+          "direction_conflicts": 3,
+          "losses": 7,
+          "n": 97,
+          "presentation_agreement": {
+            "denominator": 194,
+            "numerator": 71
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 97,
+            "numerator": 40
+          },
+          "sign_test_p": 1.0,
+          "ties": 84,
+          "win_rate": {
+            "denominator": 13,
+            "numerator": 6,
+            "rate": 0.46153846153846156,
+            "wilson_high": 0.7085620428549398,
+            "wilson_low": 0.23206067809538303
+          },
+          "wins": 6
+        },
+        "WritingBench": {
+          "commit_rate": {
+            "denominator": 93,
+            "numerator": 36,
+            "rate": 0.3870967741935484,
+            "wilson_high": 0.48869017291695915,
+            "wilson_low": 0.29446055347923916
+          },
+          "direction_conflicts": 1,
+          "losses": 8,
+          "n": 93,
+          "presentation_agreement": {
+            "denominator": 186,
+            "numerator": 91
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 93,
+            "numerator": 41
+          },
+          "sign_test_p": 0.0011932429624721408,
+          "ties": 57,
+          "win_rate": {
+            "denominator": 36,
+            "numerator": 28,
+            "rate": 0.7777777777777778,
+            "wilson_high": 0.8828366802420353,
+            "wilson_low": 0.6191529705388181
+          },
+          "wins": 28
+        }
+      },
+      "commit_rate": {
+        "denominator": 285,
+        "numerator": 101,
+        "rate": 0.3543859649122807,
+        "wilson_high": 0.41151893736248757,
+        "wilson_low": 0.3011261921183035
+      },
+      "direction_conflicts": 7,
+      "judge_routes": [
+        "gateway Bedrock"
+      ],
+      "losses": 25,
+      "n": 285,
+      "presentation_agreement": {
+        "denominator": 570,
+        "numerator": 289
+      },
+      "prompt_collapsed_agreement": {
+        "denominator": 285,
+        "numerator": 137
+      },
+      "sign_test_p": 3.723142327754164e-07,
+      "ties": 184,
+      "win_rate": {
+        "denominator": 101,
+        "numerator": 76,
+        "rate": 0.7524752475247525,
+        "wilson_high": 0.8263515692135885,
+        "wilson_low": 0.6600972132973753
+      },
+      "wins": 76
+    },
+    "A4:A5": {
+      "benchmarks": {
+        "DoLoMiTes": {
+          "commit_rate": {
+            "denominator": 96,
+            "numerator": 39,
+            "rate": 0.40625,
+            "wilson_high": 0.5062611510582975,
+            "wilson_low": 0.31345302166501676
+          },
+          "direction_conflicts": 3,
+          "losses": 15,
+          "n": 96,
+          "presentation_agreement": {
+            "denominator": 192,
+            "numerator": 104
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 96,
+            "numerator": 46
+          },
+          "sign_test_p": 0.19959086691960692,
+          "ties": 57,
+          "win_rate": {
+            "denominator": 39,
+            "numerator": 24,
+            "rate": 0.6153846153846154,
+            "wilson_high": 0.7510862653443866,
+            "wilson_low": 0.45899061456925083
+          },
+          "wins": 24
+        },
+        "HelloBench": {
+          "commit_rate": {
+            "denominator": 96,
+            "numerator": 9,
+            "rate": 0.09375,
+            "wilson_high": 0.1686533069222155,
+            "wilson_low": 0.050108108212146014
+          },
+          "direction_conflicts": 3,
+          "losses": 5,
+          "n": 96,
+          "presentation_agreement": {
+            "denominator": 192,
+            "numerator": 67
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 96,
+            "numerator": 43
+          },
+          "sign_test_p": 1.0,
+          "ties": 87,
+          "win_rate": {
+            "denominator": 9,
+            "numerator": 4,
+            "rate": 0.4444444444444444,
+            "wilson_high": 0.733348706504507,
+            "wilson_low": 0.18877852109766452
+          },
+          "wins": 4
+        },
+        "WritingBench": {
+          "commit_rate": {
+            "denominator": 95,
+            "numerator": 18,
+            "rate": 0.18947368421052632,
+            "wilson_high": 0.27973596569651077,
+            "wilson_low": 0.12334852229116193
+          },
+          "direction_conflicts": 2,
+          "losses": 7,
+          "n": 95,
+          "presentation_agreement": {
+            "denominator": 190,
+            "numerator": 71
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 95,
+            "numerator": 44
+          },
+          "sign_test_p": 0.480682373046875,
+          "ties": 77,
+          "win_rate": {
+            "denominator": 18,
+            "numerator": 11,
+            "rate": 0.6111111111111112,
+            "wilson_high": 0.7969475342783638,
+            "wilson_low": 0.3861904160223791
+          },
+          "wins": 11
+        }
+      },
+      "commit_rate": {
+        "denominator": 287,
+        "numerator": 66,
+        "rate": 0.22996515679442509,
+        "wilson_high": 0.28202534947366825,
+        "wilson_low": 0.18503825064546522
+      },
+      "direction_conflicts": 8,
+      "judge_routes": [
+        "gateway Bedrock"
+      ],
+      "losses": 27,
+      "n": 287,
+      "presentation_agreement": {
+        "denominator": 574,
+        "numerator": 242
+      },
+      "prompt_collapsed_agreement": {
+        "denominator": 287,
+        "numerator": 133
+      },
+      "sign_test_p": 0.1752857944430353,
+      "ties": 221,
+      "win_rate": {
+        "denominator": 66,
+        "numerator": 39,
+        "rate": 0.5909090909090909,
+        "wilson_high": 0.7013258199065963,
+        "wilson_low": 0.4704918970000326
+      },
+      "wins": 39
+    },
+    "A4:A6": {
+      "benchmarks": {
+        "DoLoMiTes": {
+          "commit_rate": {
+            "denominator": 92,
+            "numerator": 36,
+            "rate": 0.391304347826087,
+            "wilson_high": 0.49346580845907867,
+            "wilson_low": 0.29785623268996947
+          },
+          "direction_conflicts": 4,
+          "losses": 17,
+          "n": 92,
+          "presentation_agreement": {
+            "denominator": 184,
+            "numerator": 98
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 92,
+            "numerator": 52
+          },
+          "sign_test_p": 0.8679394004284404,
+          "ties": 56,
+          "win_rate": {
+            "denominator": 36,
+            "numerator": 19,
+            "rate": 0.5277777777777778,
+            "wilson_high": 0.6801395848482095,
+            "wilson_low": 0.37005938022987594
+          },
+          "wins": 19
+        },
+        "HelloBench": {
+          "commit_rate": {
+            "denominator": 92,
+            "numerator": 15,
+            "rate": 0.16304347826086957,
+            "wilson_high": 0.25172842984688054,
+            "wilson_low": 0.10136989771516887
+          },
+          "direction_conflicts": 2,
+          "losses": 8,
+          "n": 92,
+          "presentation_agreement": {
+            "denominator": 184,
+            "numerator": 64
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 92,
+            "numerator": 48
+          },
+          "sign_test_p": 1.0,
+          "ties": 77,
+          "win_rate": {
+            "denominator": 15,
+            "numerator": 7,
+            "rate": 0.4666666666666667,
+            "wilson_high": 0.698830199745016,
+            "wilson_low": 0.24809535365737387
+          },
+          "wins": 7
+        },
+        "WritingBench": {
+          "commit_rate": {
+            "denominator": 89,
+            "numerator": 20,
+            "rate": 0.2247191011235955,
+            "wilson_high": 0.32177359180337495,
+            "wilson_low": 0.15044495557388762
+          },
+          "direction_conflicts": 2,
+          "losses": 8,
+          "n": 89,
+          "presentation_agreement": {
+            "denominator": 178,
+            "numerator": 68
+          },
+          "prompt_collapsed_agreement": {
+            "denominator": 89,
+            "numerator": 28
+          },
+          "sign_test_p": 0.5034446716308594,
+          "ties": 69,
+          "win_rate": {
+            "denominator": 20,
+            "numerator": 12,
+            "rate": 0.6,
+            "wilson_high": 0.781193467627183,
+            "wilson_low": 0.3865815007622531
+          },
+          "wins": 12
+        }
+      },
+      "commit_rate": {
+        "denominator": 273,
+        "numerator": 71,
+        "rate": 0.2600732600732601,
+        "wilson_high": 0.315183940901176,
+        "wilson_low": 0.21162103781103841
+      },
+      "direction_conflicts": 8,
+      "judge_routes": [
+        "direct Bedrock"
+      ],
+      "losses": 33,
+      "n": 273,
+      "presentation_agreement": {
+        "denominator": 546,
+        "numerator": 230
+      },
+      "prompt_collapsed_agreement": {
+        "denominator": 273,
+        "numerator": 128
+      },
+      "sign_test_p": 0.6353076420876662,
+      "ties": 202,
+      "win_rate": {
+        "denominator": 71,
+        "numerator": 38,
+        "rate": 0.5352112676056338,
+        "wilson_high": 0.6464155215452013,
+        "wilson_low": 0.42039236914515843
+      },
+      "wins": 38
+    }
+  },
+  "eligible_pair_count": 1417,
+  "note": "No multiplicity correction is applied to this robustness check.",
+  "pooled": {
+    "commit_rate": {
+      "denominator": 1417,
+      "numerator": 443,
+      "rate": 0.31263232180663375,
+      "wilson_high": 0.33724809090946334,
+      "wilson_low": 0.2890297061638761
+    },
+    "direction_conflicts": 47,
+    "losses": 163,
+    "n": 1417,
+    "presentation_agreement": {
+      "denominator": 2834,
+      "numerator": 1323
+    },
+    "prompt_collapsed_agreement": {
+      "denominator": 1417,
+      "numerator": 668
+    },
+    "sign_test_p": 2.980780993585312e-08,
+    "ties": 974,
+    "win_rate": {
+      "denominator": 443,
+      "numerator": 280,
+      "rate": 0.6320541760722348,
+      "wilson_high": 0.6756470107162528,
+      "wilson_low": 0.5861908239125816
+    },
+    "wins": 280
+  },
+  "provenance": {
+    "cross_family_judge_id": "claude-sonnet-5-pairwise-v1-medium",
+    "cross_family_model_id": "us.anthropic.claude-sonnet-5",
+    "effort": "medium",
+    "eligible_pair_rule": "A pair is eligible only when both judges have one complete pairwise manifest with two valid presentation records for the same canonical, completed source runs and requested contrast.",
+    "maximum_output_tokens": 8192,
+    "reference_judge_id": "gpt-5.6-sol-pairwise-v1",
+    "seed": 20260908
+  },
+  "schema_version": 1
+}
