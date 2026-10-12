@@ -253,11 +253,21 @@ def _trace_turns(run: Any) -> dict[str, Any]:
     n = followup["turn1_trace_events"]
     full = _events(run.path / ".writing" / "trace" / "process.jsonl")
     turn1 = _events(run.path / "turn1.process.jsonl")
-    turn2 = full[n:] if full[:n] == turn1 else []
+    # A session can rewrite its trace file, so turn-2 events are the events
+    # absent from the turn-1 copy rather than a positional suffix.
+    remaining = Counter(json.dumps(event, sort_keys=True) for event in turn1)
+    turn2 = []
+    for event in full:
+        key = json.dumps(event, sort_keys=True)
+        if remaining[key]:
+            remaining[key] -= 1
+        else:
+            turn2.append(event)
     analysis = analyze_trace_events(turn2, fixed_order=FIXED_ORDER)
     usage, roles = _turn_usage(run.path, followup["turn1_attempts"] + 1)
     return {
         "turn1_prefix_preserved": full[:n] == turn1,
+        "turn1_events_retained": not +remaining,
         "turn2_event_count": len(turn2),
         "turn2_sequence": analysis["sequence"],
         "turn2_planning": "planning" in analysis["sequence"],
@@ -300,7 +310,7 @@ def report(args: argparse.Namespace) -> None:
                 continue
             per_prompt[left.prompt] = collapsed_winner(_events(path))
             manifest = json.loads((path.parent / "scores-manifest.json").read_text())
-            for result in manifest.get("results", [manifest]):
+            for result in manifest["records"]:
                 judge_usage.update(
                     {
                         k: v
@@ -346,6 +356,7 @@ def report(args: argparse.Namespace) -> None:
         process[condition] = {
             "completed_runs": total,
             "turn1_prefix_preserved": share("turn1_prefix_preserved"),
+            "turn1_events_retained": share("turn1_events_retained"),
             "turn2_planning": share("turn2_planning"),
             "turn2_goal_regenerated": share("turn2_goal_regenerated"),
             "turn2_no_process_events": {
