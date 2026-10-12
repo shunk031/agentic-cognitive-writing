@@ -34,6 +34,7 @@ from agentic_cogwriter.judges.scorer import score_run
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 RUNS_MOUNT = REPO / "runs"  # experiments/docker/run.sh mounts this at /run-output
+UV_ROOT = RUNS_MOUNT / "revtask-uv"
 BENCHMARK_NAMES = {
     "writingbench": "WritingBench",
     "hellobench": "HelloBench",
@@ -63,6 +64,7 @@ def generate(args: argparse.Namespace) -> None:
     root = args.root.resolve()
     followups = root / "followups"
     followups.mkdir(parents=True, exist_ok=True)
+    UV_ROOT.mkdir(exist_ok=True)
     rows = [
         row
         for row in _changes()
@@ -91,11 +93,16 @@ def generate(args: argparse.Namespace) -> None:
             command = [
                 "bash",
                 "-c",
-                # The credential reaches Docker through an anonymous pipe, never a file.
-                'exec experiments/docker/run.sh --env-file <(printf "GW_TOKEN=%s\\n" '
-                '"$GATEWAY_API_KEY") --auth-command genai-gateway-credential '
-                '--auth-env GW_TOKEN -- "$@"',
+                # The credential reaches Docker through an anonymous pipe, never a
+                # file. The uv environment lives on the run volume, not the image
+                # layer, so concurrent containers do not fill the root disk.
+                'exec experiments/docker/run.sh --env-file <(printf "GW_TOKEN=%s\\n'
+                'UV_CACHE_DIR=%s\\nUV_PROJECT_ENVIRONMENT=%s\\n" "$GATEWAY_API_KEY" '
+                '"$1" "$2") --auth-command genai-gateway-credential '
+                '--auth-env GW_TOKEN -- "${@:3}"',
                 "run.sh",
+                _container_path(UV_ROOT / "cache"),
+                _container_path(UV_ROOT / f"venv-w{index:02d}"),
                 "--manifest",
                 f"experiments/prompts/manifests/{row['benchmark']}.jsonl",
                 "--prompt-id",
