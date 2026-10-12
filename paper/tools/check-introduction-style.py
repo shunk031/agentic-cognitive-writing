@@ -29,6 +29,12 @@ def main() -> None:
     ):
         assert banned not in intro, (rationale, banned)
 
+    # "Demanding subsets" reads as a difficulty claim the deterministic selection rule
+    # does not establish; Experimental Design states the rule instead.
+    assert not re.search(r"\bdemanding\s+subsets?\b", intro, re.IGNORECASE), (
+        "say the system is evaluated on three benchmarks; leave the subset rule to Experimental Design"
+    )
+
     # Uppercase Monitor is reserved for our named agent role. Generic cognitive
     # theory uses lowercase monitor.
     for match in re.finditer(r"\bMonitor\b", intro):
