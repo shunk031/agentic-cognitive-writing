@@ -12,6 +12,7 @@ from make_numbers import (
     _compute_stratified_entries,
     _pairwise_robustness_entries,
     _staged_roles_entries,
+    _plain_agent_entries,
     _trace_endings_entries,
     _revision_tasks_entries,
     _delegation_fallback_entries,
@@ -561,6 +562,14 @@ class TokenMacroTests(unittest.TestCase):
         self.assertEqual(output[r"\FullStagedRolesAcrossRate"], r"68.1\%")
         self.assertEqual(output[r"\StagedRolesStagedAcrossRate"], r"45.9\%")
         self.assertEqual(output[r"\StagedRolesStagedHelloP"], "0.0331")
+
+    def test_plain_agent_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/plain-agent/a11-pairwise.json").read_text())
+        output = {name: value for name, value, _ in _plain_agent_entries(report)}
+        self.assertEqual(output[r"\FullPlainAgentAcrossWLT"], "119/89/85")
+        self.assertEqual(output[r"\FullPlainAgentAcrossRate"], r"57.2\%")
+        self.assertEqual(output[r"\FullPlainAgentDoLoP"], "0.7239")
+        self.assertEqual(output[r"\PlainAgentRevisedRuns"], "56")
 
     def test_trace_endings_macros_are_source_backed(self):
         report = json.loads((Path(__file__).resolve().parents[2] / "results/process-sequences/trace-endings.json").read_text())

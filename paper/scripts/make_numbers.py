@@ -171,6 +171,7 @@ LENGTH_CONTROL_MARKER = "% Length-control macros."
 COMPUTE_STRATIFIED_MARKER = "% Compute-stratified macros."
 PAIRWISE_ROBUSTNESS_MARKER = "% Pairwise-robustness macros."
 STAGED_ROLES_MARKER = "% Staged role-instruction (A9) macros."
+PLAIN_AGENT_MARKER = "% Plain-agent (A11) macros."
 TRACE_ENDINGS_MARKER = "% Trace-ending macros."
 REVISION_TASKS_MARKER = "% Revision-request pilot macros."
 QUALITATIVE_EXAMPLE_MARKER = "% Illustrative-example macros."
@@ -188,6 +189,7 @@ RAW_RUBRIC_DIMENSIONS = {
     "factuality_constraint_fidelity": "Factuality",
 }
 STAGED_ROLES_CONTRASTS = {"A4:A9": "FullStagedRoles", "A9:A2": "StagedRolesStaged"}
+PLAIN_AGENT_CONTRASTS = {"A4:A11": "FullPlainAgent"}
 PAIRWISE_ROBUSTNESS_CONTRASTS = {
     "A4:A1": "FullSinglePass",
     "A4:A2": "FullStaged",
@@ -1468,9 +1470,24 @@ def _pairwise_robustness_entries(report: dict[str, Any]) -> list[tuple[str, str,
 
 def _staged_roles_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
     """Exploratory A9 pairwise outcomes, per benchmark and over the three benchmarks."""
-    source = "A9 pairwise JSON"
+    return _exploratory_pairwise_entries(report, STAGED_ROLES_CONTRASTS, "A9 pairwise JSON")
+
+
+def _plain_agent_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory A11 pairwise outcomes and how often the plain agent revised a draft file."""
+    source = "A11 pairwise JSON"
+    behavior = report["a11_draft_behavior"]["pooled"]
+    return _exploratory_pairwise_entries(report, PLAIN_AGENT_CONTRASTS, source) + [
+        ("\\PlainAgentCompletedRuns", str(behavior["completed_runs"]), source + " a11_draft_behavior.pooled.completed_runs"),
+        ("\\PlainAgentDraftFileRuns", str(behavior["wrote_a_draft_file"]), source + " a11_draft_behavior.pooled.wrote_a_draft_file"),
+        ("\\PlainAgentRevisedRuns", str(behavior["revised_a_draft_file"]), source + " a11_draft_behavior.pooled.revised_a_draft_file"),
+    ]
+
+
+def _exploratory_pairwise_entries(report: dict[str, Any], contrasts: dict[str, str], source: str) -> list[tuple[str, str, str]]:
+    """Pairwise W/L/T, win rate, Wilson interval, sign-test p, and N per benchmark and pooled."""
     entries = []
-    for contrast, contrast_word in STAGED_ROLES_CONTRASTS.items():
+    for contrast, contrast_word in contrasts.items():
         scopes = {"Across": ("pooled", report["pooled"][contrast])}
         scopes.update({word: (f"benchmarks.{name}", report["benchmarks"][name][contrast]) for name, word in ROBUSTNESS_BENCHMARKS.items()})
         for scope_word, (field, stats) in scopes.items():
@@ -2412,6 +2429,7 @@ def main() -> None:
     parser.add_argument("--adversarial-review-analysis", type=Path)
     parser.add_argument("--pairwise-robustness", type=Path, help="pairwise-robustness JSON; appends its own block")
     parser.add_argument("--staged-roles", type=Path, help="A9 pairwise JSON; appends its own block")
+    parser.add_argument("--plain-agent", type=Path, help="A11 pairwise JSON; appends its own block")
     parser.add_argument("--trace-endings", type=Path, help="trace-endings JSON; appends its own block")
     parser.add_argument("--revision-tasks", type=Path, help="revision-task results JSON; appends its own block")
     parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
@@ -2435,6 +2453,7 @@ def main() -> None:
         (args.compute_stratified_sensitivity, "compute-stratified", COMPUTE_STRATIFIED_MARKER, _compute_stratified_entries),
         (args.pairwise_robustness, "pairwise-robustness", PAIRWISE_ROBUSTNESS_MARKER, _pairwise_robustness_entries),
         (args.staged_roles, "staged-roles", STAGED_ROLES_MARKER, _staged_roles_entries),
+        (args.plain_agent, "plain-agent", PLAIN_AGENT_MARKER, _plain_agent_entries),
         (args.trace_endings, "trace-endings", TRACE_ENDINGS_MARKER, _trace_endings_entries),
         (args.revision_tasks, "revision-tasks", REVISION_TASKS_MARKER, _revision_tasks_entries),
         (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),

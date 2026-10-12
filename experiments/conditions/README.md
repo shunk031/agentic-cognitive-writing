@@ -44,3 +44,17 @@ The role sections keep the writing guidance verbatim, including the rhetorical-p
 - Revise drops "in the delegated scope", "call out factual gaps", and "state whether the change is local or changes the goal network". "make only the requested or clearly authorized changes" and "Preserve the writer's intent." are kept.
 - The Boundaries sentences on interrupting other processes and telling the `Monitor`, and on recommending goal regeneration, are removed. "Do not invent citations or claims." is kept.
 - The report format, including the per-goal verdict line, is removed.
+
+## A11 plain agent
+
+A11 tests whether the Agentic CogWriter skill adds anything beyond what the coding-agent harness already provides. A11 is an exploratory condition added after the primary results were observed and sits outside the confirmatory family.
+
+A11 reuses the A1 harness: the same Codex invocation form and contracts, one session, the same generator, output budget, sandbox, and no-network policy, A1's `product_requires_draft = false` gate, and A1's fixed one-event `process_switch` trace contract with the single process `generate`. A11 has no stage prompt, so the composed prompt carries only the invocation, the single-turn contract, and the assignment, supplied context, and requested output constraints.
+
+The [`writing-plain-agent`](../baselines/skills/writing-plain-agent/SKILL.md) skill file holds the only condition-specific text. The writing instruction is this sentence pair, verbatim:
+
+> Write the requested document. Keep your working draft in a file in the workspace; you may plan, draft, and revise it as you see fit before returning the complete final document.
+
+The instruction names no cognitive process, review criterion, audience or goal guidance, or role-skill content. A11 has no `Monitor`, goal network, role instructions, subagents, or fixed draft path.
+
+The runner's validity gate requires a schema-valid trace, so the skill file also gives the one shell command that appends A1's fixed `generate` event to `.writing/trace/process.jsonl`, framed as a harness record outside the writing task. The trace therefore records only that the session ran and says nothing about the agent's drafting behavior; draft writes and revisions are measured from the Codex event stream instead.
