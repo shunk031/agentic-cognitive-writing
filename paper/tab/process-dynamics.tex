@@ -7,20 +7,20 @@
 \textbf{Observed writing-loop behavior}
 & \textbf{Rate} \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}
-\multicolumn{2}{l}{\textit{Complete process paths}} \\
+\multicolumn{2}{l}{\textit{Complete path (one per run)}} \\
 Cycle-compliant path
 & 74.6\% \\
 Any other complete path
 & 25.4\% \\
 \addlinespace[2pt]
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}
-\multicolumn{2}{l}{\textit{Non-exclusive indicators}} \\
+\multicolumn{2}{l}{\textit{Runs with each event (can overlap)}} \\
 \texttt{Reviewing} followed by renewed \texttt{Translating}
 & 14.8\% \\
 \texttt{Reviewing} followed by renewed \texttt{Planning}
 & 0.3\% \\
 Runs with an accepted goal replacement
-& 0.5\% \\
+& \AfourRegenerationRate \\
 \bottomrule
 \end{tabular}
 \caption{Writing-loop behavior of \condAgenticCogWriter\ after repeat collapsing and leading-\texttt{Planning} reconstruction; most paths are cycle-compliant.}

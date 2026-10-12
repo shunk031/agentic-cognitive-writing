@@ -180,7 +180,7 @@ def check() -> None:
     for path, text, count in (
         ("tab/pairwise-results.tex", pairwise, 12),
         ("tab/ablation-results.tex", ablation, 12),
-        ("tab/process-dynamics.tex", process, 5),
+        ("tab/process-dynamics.tex", process, 4),
     ):
         values = percentages(tabular_body(text))
         assert len(values) == count, (f"{path}: unexpected number of displayed percentages", len(values))
@@ -220,10 +220,12 @@ def check() -> None:
         f"{100.0 - cycle_rate:.1f}",
         f"{percent_macro(numbers, 'AfourReviewingToTranslatingRate'):.1f}",
         f"{percent_macro(numbers, 'AfourReviewingToPlanningRate'):.1f}",
-        f"{100 * numeric_macro(numbers, 'AfourRegenerationRuns') / numeric_macro(numbers, 'AfourRunCount'):.1f}",
     ]
     assert percentages(tabular_body(process)) == expected_process, (
         "tab/process-dynamics.tex: displayed rates are stale relative to numbers.tex"
+    )
+    assert r"\AfourRegenerationRate" in tabular_body(process), (
+        "tab/process-dynamics.tex: cite the goal-replacement rate macro"
     )
 
     # Table 7 cites the process-sequence macros directly, in row order.

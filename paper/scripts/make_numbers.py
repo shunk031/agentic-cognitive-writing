@@ -1603,6 +1603,7 @@ def _emit_process_sequence_macros(add: Any, report: dict[str, Any]) -> None:
         add(prefix + "ReviewingToTranslatingRate", _percent_fixed(after_reviewing["translating"]["rate"], 1), f"process-sequences JSON conditions.{condition}.summary.after_reviewing.per_run.translating.rate")
         add(prefix + "ReviewingToPlanningRate", _percent_fixed(after_reviewing["planning"]["rate"], 1), f"process-sequences JSON conditions.{condition}.summary.after_reviewing.per_run.planning.rate")
         add(prefix + "RegenerationRuns", str(summary["regeneration"]["runs"]["count"]), f"process-sequences JSON conditions.{condition}.summary.regeneration.runs.count")
+        add(prefix + "RegenerationRate", _percent_fixed(summary["regeneration"]["runs"]["rate"], 1), f"process-sequences JSON conditions.{condition}.summary.regeneration.runs.rate")
     combined = report["prompt_association"]["combined"]
     for contrast, suffix in (("A4_vs_A6", "FixedOrder"), ("A4_vs_A7", "SingleWriter")):
         splits = combined[contrast]["splits"]
