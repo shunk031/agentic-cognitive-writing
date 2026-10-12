@@ -23,6 +23,14 @@ Points show 95\% Wilson intervals; filled circles survive correction, open circl
 \label{fig:appendix-confirmatory-forest}
 \end{figure}
 
+\section{Document-Quality Scores for All Systems}
+\label{app:quality-scores}
+Table~\ref{tab:appendix-quality-scores} extends Table~\ref{tab:main-results} to the two ablations and \condSingleWriter\ and adds the raw mean of each rubric dimension.
+The ablations stay close to \condAgenticCogWriter\ on native scores, while \condSingleWriter\ has the highest WritingBench native mean and the lowest WritingBench fidelity mean.
+Raw rubric means cluster near the top of the 1--5 scale, which motivates z-scoring each dimension within benchmark for the pointwise composite.
+\input{tab/appendix-quality-scores}
+\clearpage
+
 \section{Paired Document-Quality Differences}
 \label{app:paired-quality}
 Table~\ref{tab:paired-quality} reports paired differences behind Table~\ref{tab:main-results}.
@@ -59,9 +67,10 @@ The retained presentation disagreements were \WritingPresentationDisagreementRat
 \subsection{Output-Length Sensitivity}
 \label{app:length-control}
 Table~\ref{tab:appendix-length-control} reports matched-length win rates for our system separately in each of the three generation runs.
-Within the tighter pre-specified matching band, our system is favored over \condSinglePass\ in every run, remains above parity against \condTaskPlanning\ while narrowing toward parity, and changes direction across runs against \condNoGoals.
+Within the tighter pre-specified matching band, our system is favored over \condSinglePass\ in every run, stays above parity in every run against \condStaged\ and \condFixedOrder, remains above parity against \condTaskPlanning\ while narrowing toward parity, and changes direction across runs against \condNoGoals.
 The wider pre-specified band shows the same qualitative pattern.
 These matching-band results are descriptive sensitivity checks; ties are excluded from the win-rate denominator, and generation runs are reported separately because they reuse the same prompts.
+The \condSingleWriter\ length-band tests in Section~\ref{sec:results-mechanism} instead combine the three runs, so their sign tests take the prompt as the unit: a prompt counts as a win or a loss when its outcomes in the band, averaged across runs, favor one system.
 \input{tab/appendix-length-control}
 
 \subsection{Compute-Stratified Sensitivity}
@@ -69,6 +78,7 @@ These matching-band results are descriptive sensitivity checks; ties are exclude
 Compute matching asks whether the pairwise direction persists when the compared systems use similar realized output-plus-reasoning token budgets.
 Table~\ref{tab:appendix-compute-control} reports outcomes within the pre-specified 1.25$\times$ and 1.50$\times$ matching bands and across descriptive ratio bins.
 Because realized compute is determined by execution, this analysis is a sensitivity check rather than a causal adjustment.
+Each row combines the three generation runs, so the sign tests take the prompt as the unit, as in the \condSingleWriter\ length-band tests.
 \input{tab/appendix-compute-control}
 \clearpage
 

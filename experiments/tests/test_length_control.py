@@ -3,6 +3,7 @@ from __future__ import annotations
 from agentic_cogwriter.analysis.length_control import (
     PairObservation,
     analyze_pairs,
+    analyze_runs,
     collapse_verdict,
     length_ratio,
     ratio_bin,
@@ -17,10 +18,11 @@ def _pair(
     *,
     left: str = "A4",
     right: str = "A1",
+    prompt: str = "p1",
 ) -> PairObservation:
     return PairObservation(
         benchmark="WritingBench",
-        prompt="p1",
+        prompt=prompt,
         judge_id="judge",
         left_condition=left,
         right_condition=right,
@@ -92,3 +94,21 @@ def test_analysis_reports_single_writer_pairs_at_least_ten_percent_shorter() -> 
     assert summary["wins"] == 1
     assert summary["losses"] == 0
     assert summary["ties"] == 1
+
+
+def test_recurring_prompt_counts_once_in_the_clustered_sign_test() -> None:
+    def run(second_verdict: str) -> list[PairObservation]:
+        return [_pair(100, 101, "left"), _pair(100, 101, second_verdict, prompt="p2")]
+
+    report = analyze_runs(
+        {"run-1": run("right"), "run-2": run("tie"), "run-3": run("left")}
+    )
+    across = report["across_runs"]["length_matched"]["5_percent"]["A4:A1"]
+
+    assert (across["wins"], across["losses"], across["ties"]) == (4, 1, 1)
+    prompt_counts = ("prompt_wins", "prompt_losses", "prompt_ties")
+    assert tuple(across[key] for key in prompt_counts) == (1, 0, 1)
+    assert across["prompt_sign_test_p"] == 1.0
+    assert "pairs" not in report["across_runs"]
+    run_2 = report["per_run"]["run-2"]["length_matched"]["5_percent"]["A4:A1"]
+    assert run_2["ties"] == 1

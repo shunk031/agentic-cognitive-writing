@@ -6,15 +6,19 @@
 \toprule
 \textbf{Comparison} & \textbf{Band} & \textbf{First run} & \textbf{Second run} & \textbf{Third run} \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
-\condSinglePass & Tighter & \LengthFullSinglePassFiveRateRunOne & \LengthFullSinglePassFiveRateRunTwo & \LengthFullSinglePassFiveRateRunThree \\
-\condTaskPlanning & Tighter & \LengthFullTaskPlanningFiveRateRunOne & \LengthFullTaskPlanningFiveRateRunTwo & \LengthFullTaskPlanningFiveRateRunThree \\
-\condNoGoals & Tighter & \LengthFullNoGoalsFiveRateRunOne & \LengthFullNoGoalsFiveRateRunTwo & \LengthFullNoGoalsFiveRateRunThree \\
+\condSinglePass & Tighter & \LengthFullSinglePassFiveRateRunOne\,{\scriptsize(\LengthFullSinglePassFiveNRunOne)} & \LengthFullSinglePassFiveRateRunTwo\,{\scriptsize(\LengthFullSinglePassFiveNRunTwo)} & \LengthFullSinglePassFiveRateRunThree\,{\scriptsize(\LengthFullSinglePassFiveNRunThree)} \\
+\condStaged & Tighter & \LengthFullStagedFiveRateRunOne\,{\scriptsize(\LengthFullStagedFiveNRunOne)} & \LengthFullStagedFiveRateRunTwo\,{\scriptsize(\LengthFullStagedFiveNRunTwo)} & \LengthFullStagedFiveRateRunThree\,{\scriptsize(\LengthFullStagedFiveNRunThree)} \\
+\condTaskPlanning & Tighter & \LengthFullTaskPlanningFiveRateRunOne\,{\scriptsize(\LengthFullTaskPlanningFiveNRunOne)} & \LengthFullTaskPlanningFiveRateRunTwo\,{\scriptsize(\LengthFullTaskPlanningFiveNRunTwo)} & \LengthFullTaskPlanningFiveRateRunThree\,{\scriptsize(\LengthFullTaskPlanningFiveNRunThree)} \\
+\condNoGoals & Tighter & \LengthFullNoGoalsFiveRateRunOne\,{\scriptsize(\LengthFullNoGoalsFiveNRunOne)} & \LengthFullNoGoalsFiveRateRunTwo\,{\scriptsize(\LengthFullNoGoalsFiveNRunTwo)} & \LengthFullNoGoalsFiveRateRunThree\,{\scriptsize(\LengthFullNoGoalsFiveNRunThree)} \\
+\condFixedOrder & Tighter & \LengthFullFixedOrderFiveRateRunOne\,{\scriptsize(\LengthFullFixedOrderFiveNRunOne)} & \LengthFullFixedOrderFiveRateRunTwo\,{\scriptsize(\LengthFullFixedOrderFiveNRunTwo)} & \LengthFullFixedOrderFiveRateRunThree\,{\scriptsize(\LengthFullFixedOrderFiveNRunThree)} \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
-\condSinglePass & Wider & \LengthFullSinglePassTenRateRunOne & \LengthFullSinglePassTenRateRunTwo & \LengthFullSinglePassTenRateRunThree \\
-\condTaskPlanning & Wider & \LengthFullTaskPlanningTenRateRunOne & \LengthFullTaskPlanningTenRateRunTwo & \LengthFullTaskPlanningTenRateRunThree \\
-\condNoGoals & Wider & \LengthFullNoGoalsTenRateRunOne & \LengthFullNoGoalsTenRateRunTwo & \LengthFullNoGoalsTenRateRunThree \\
+\condSinglePass & Wider & \LengthFullSinglePassTenRateRunOne\,{\scriptsize(\LengthFullSinglePassTenNRunOne)} & \LengthFullSinglePassTenRateRunTwo\,{\scriptsize(\LengthFullSinglePassTenNRunTwo)} & \LengthFullSinglePassTenRateRunThree\,{\scriptsize(\LengthFullSinglePassTenNRunThree)} \\
+\condStaged & Wider & \LengthFullStagedTenRateRunOne\,{\scriptsize(\LengthFullStagedTenNRunOne)} & \LengthFullStagedTenRateRunTwo\,{\scriptsize(\LengthFullStagedTenNRunTwo)} & \LengthFullStagedTenRateRunThree\,{\scriptsize(\LengthFullStagedTenNRunThree)} \\
+\condTaskPlanning & Wider & \LengthFullTaskPlanningTenRateRunOne\,{\scriptsize(\LengthFullTaskPlanningTenNRunOne)} & \LengthFullTaskPlanningTenRateRunTwo\,{\scriptsize(\LengthFullTaskPlanningTenNRunTwo)} & \LengthFullTaskPlanningTenRateRunThree\,{\scriptsize(\LengthFullTaskPlanningTenNRunThree)} \\
+\condNoGoals & Wider & \LengthFullNoGoalsTenRateRunOne\,{\scriptsize(\LengthFullNoGoalsTenNRunOne)} & \LengthFullNoGoalsTenRateRunTwo\,{\scriptsize(\LengthFullNoGoalsTenNRunTwo)} & \LengthFullNoGoalsTenRateRunThree\,{\scriptsize(\LengthFullNoGoalsTenNRunThree)} \\
+\condFixedOrder & Wider & \LengthFullFixedOrderTenRateRunOne\,{\scriptsize(\LengthFullFixedOrderTenNRunOne)} & \LengthFullFixedOrderTenRateRunTwo\,{\scriptsize(\LengthFullFixedOrderTenNRunTwo)} & \LengthFullFixedOrderTenRateRunThree\,{\scriptsize(\LengthFullFixedOrderTenNRunThree)} \\
 \bottomrule
 \end{tabular}
-\caption{Matched-length win rates for our system in each of the three generation runs. Tighter and wider denote the two pre-specified output-length bands. A rate above parity favors our system; ties are excluded from the denominator. Reporting runs separately preserves the repeated-run design because the same prompts are reused across runs.}
+\caption{Matched-length win rates for our system in each of the three generation runs, with non-tied comparisons (the denominator) in parentheses. The tighter and wider pre-specified bands keep pairs whose longer output is at most 5\% and 10\% longer than the shorter one. A rate above parity favors our system. Reporting runs separately preserves the repeated-run design because the same prompts are reused across runs.}
 \label{tab:appendix-length-control}
 \end{table}
