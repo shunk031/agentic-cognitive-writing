@@ -80,6 +80,14 @@ def require_concepts(
         )
 
 
+def check_limitations_subset_wording() -> None:
+    """Limitations scopes the claim; "demanding" would assert a difficulty the rule does not measure."""
+    limitations = read("sec/07_limitations.tex")
+    assert not re.search(r"\bdemanding\s+subsets?\b", limitations, re.IGNORECASE), (
+        "describe the evaluation sets as deterministic subsets, not demanding subsets, in Limitations"
+    )
+
+
 def check_caption_takeaways() -> None:
     # Each concept lists the wordings that carry it, so a caption can be reworded or
     # compacted to fit its line limit as long as the reader takeaway survives.
@@ -107,7 +115,10 @@ def check_caption_takeaways() -> None:
             ("HelloBench result", ("HelloBench",)),
         ),
         "tab/process-dynamics.tex": (
-            ("the first group partitions complete paths", ("partition", "Complete process paths")),
+            (
+                "the first group partitions complete paths",
+                ("partition", "Complete process paths"),
+            ),
             ("rows 3-5 are non-exclusive", ("non-exclusive", "Non-exclusive")),
         ),
         "sec/05_results.tex": (
@@ -382,6 +393,7 @@ def check():
     )
 
     check_caption_takeaways()
+    check_limitations_subset_wording()
     check_trace_process_names()
 
     assert conclusion.startswith(
