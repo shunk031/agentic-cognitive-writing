@@ -160,19 +160,18 @@ def analyze_trace_events(
                 not isinstance(source, str) or not source.strip()
             ):
                 raise ValueError("process_switch from_process must be a string or null")
-            if source == "reviewing":
-                after_reviewing["termination" if target is None else str(target)] += 1
             if target is not None:
                 target = str(target)
                 previous = sequence[-1] if sequence else START
+                # Count what follows Reviewing from the observed process order;
+                # the self-reported from_process field is sometimes missing or wrong.
+                if previous == "reviewing":
+                    after_reviewing[target] += 1
                 transitions[f"{previous}->{target}"] += 1
                 sequence.append(target)
                 active_process = target
                 sequence_index += 1
                 process_occurrences[target] += 1
-            else:
-                previous = sequence[-1] if sequence else START
-                transitions[f"{previous}->{END}"] += 1
         elif event_type == REGENERATION:
             regeneration_locations.append(
                 {
@@ -182,6 +181,11 @@ def analyze_trace_events(
                 }
             )
 
+    # A run ends once. The Monitor may log several null-target switches while it
+    # wraps up, so termination is counted from the last process, not per event.
+    transitions[f"{sequence[-1] if sequence else START}->{END}"] += 1
+    if sequence and sequence[-1] == "reviewing":
+        after_reviewing["termination"] += 1
     regeneration_count = len(regeneration_locations)
     reconstructed_leading = bool(
         sequence
