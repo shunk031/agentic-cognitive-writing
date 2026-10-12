@@ -94,12 +94,21 @@ We registered it as an exploratory condition outside the Holm family before judg
 We therefore report the combined estimate with its interval and the benchmark-level results without adjustment.
 \input{tab/appendix-single-context}
 
+\subsection{Staged with Role Instructions}
+\label{app:staged-roles}
+The \condStagedRoles\ condition was added after the main results had been observed, to test whether the role instructions of our subagents explain the advantage over \condStaged.
+It reuses the \condStaged\ harness, stage order, and trace format, and adds to the \texttt{Pre-Write}, \texttt{Write}, and \texttt{Re-Write} prompts the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} role instructions, without the text that refers to the \texttt{Monitor}, goals, trace, shared files, or delegation.
+It was generated once on generation run 1 and judged with the run-1 pairwise setup, so the \condAgenticCogWriter\ comparison covers the \FullStagedRolesAcrossN\ prompts with a completed run-1 output.
+Table~\ref{tab:appendix-staged-roles} reports both contrasts: our system is preferred on WritingBench and HelloBench but not significantly on DoLoMiTes, and \condStagedRoles\ loses to \condStaged\ on HelloBench and is near parity elsewhere.
+\input{tab/appendix-staged-roles}
+
 \subsection{Cross-Family Judge Robustness}
 \label{app:cross-family}
-Table~\ref{tab:appendix-cross-family} reports benchmark-level results for three cross-family robustness contrasts involving our system.
-Within each contrast, summing W/L/T counts over the three benchmarks gives \CrossFamilyFullSinglePassWLT\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ versus \condNoGoals.
-The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval.
-Across all three selected contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
+Table~\ref{tab:appendix-cross-family} reports benchmark-level results for the five cross-family contrasts between our system and an alternative or ablation, all on generation run 1.
+Within each contrast, summing W/L/T counts over the three benchmarks gives \CrossFamilyFullSinglePassWLT\ versus \condSinglePass, \CrossFamilyFullStagedWLT\ versus \condStaged, \CrossFamilyFullTaskPlanningWLT\ versus \condTaskPlanning, \CrossFamilyFullNoGoalsWLT\ versus \condNoGoals, and \CrossFamilyFullFixedOrderWLT\ versus \condFixedOrder.
+The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullStagedInterval, \CrossFamilyFullTaskPlanningInterval, \CrossFamilyFullNoGoalsInterval, and \CrossFamilyFullFixedOrderInterval, with sign-test $p=\CrossFamilyFullStagedP$ against \condStaged\ and $p=\CrossFamilyFullFixedOrderP$ against \condFixedOrder.
+The \condStaged\ and \condFixedOrder\ contrasts cover \CrossFamilyFullStagedN\ and \CrossFamilyFullFixedOrderN\ pairs; five further pairs exceeded the judge's two output retries and have no cross-family outcome.
+Across all five contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
 Cohen's kappa between the two judges is \JudgeAgreementKappa\ over these outcomes, most of which are cross-family ties, and \JudgeAgreementDecidedKappa\ over the \JudgeAgreementDecidedPairs\ pairs both judges decide, of which \JudgeAgreementDecidedAgreeing\ agree.
 \input{tab/appendix-cross-family}
 

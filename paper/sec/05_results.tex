@@ -30,21 +30,10 @@ The post-hoc prompt-level estimate, which counts ties as half, places our system
 Table~\ref{tab:ablation-results} instead averages generation-run win rates over non-tied order-consistent comparisons.\footnote{See Appendix~\ref{app:sensitivity-analyses} for record-level rates, which count the two presentation orders as separate records.}
 The ablations nonetheless keep the full system's advantage over the alternatives: of \PairedSeparationMeasureCount\ paired native and pointwise contrasts with them on WritingBench and HelloBench, intervals exclude zero for \PairedSeparatedNoGoals\ with \condNoGoals\ and \PairedSeparatedFixedOrder\ with \condFixedOrder, against \PairedSeparatedFull\ with the full system.\footnote{See Appendix~\ref{app:paired-quality} for these paired differences.}
 
+The post-hoc \condStagedRoles\ condition adds the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} role instructions to the three \condStaged\ stage prompts, without a \texttt{Monitor}, goals, or subagents.
+Our system still wins \FullStagedRolesAcrossRate\ [\FullStagedRolesAcrossInterval] of order-consistent comparisons against it ($p=\FullStagedRolesAcrossP$), and \condStagedRoles\ wins \StagedRolesStagedAcrossRate\ against \condStaged\ ($p=\StagedRolesStagedAcrossP$; one generation run, unadjusted), so role instructions alone do not reproduce it.\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level results.}
+
 \input{tab/ablation-results}
-
-Execution changes produce a larger but less easily isolated difference.
-Within the tighter and wider pre-specified output-length bands, \condSingleWriter\ still wins only \SingleWriterLengthFiveRate\ ($p=\SingleWriterLengthFiveP$) and \SingleWriterLengthTenRate\ ($p=\SingleWriterLengthTenP$), respectively, against our system, so output length alone does not explain the gap.
-The post-hoc \condSingleContext\ check shows no significant difference from our system in the exploratory generation run (\SingleContextFullRate, $p=\SingleContextFullP$), although it loses on HelloBench (\SingleContextHelloFullRate, $p=\SingleContextHelloFullP$; both unadjusted).\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level diagnostic and the remaining execution differences.}
-
-\subsection{Observed Writing-Process Behavior}
-\label{sec:results-process-dynamics}
-
-Table~\ref{tab:process-dynamics} shows a mostly simple writing loop after repeat collapsing and leading-\texttt{Planning} reconstruction: \AfourCycleCompliantRate\ of complete paths conform to the \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle structure, while \AfourReviewingToTranslatingRate\ of runs return from \texttt{Reviewing} to \texttt{Translating}.
-Full replanning (\AfourReviewingToPlanningRate) and goal replacement (\AfourRegenerationRate) are rare, so adaptivity is used mainly for targeted redrafting.
-Figure~\ref{fig:process-sequences} shows the same concentration: the forward \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} progression is most frequent, so our system looks close to \condFixedOrder.
-Table~\ref{tab:trace-outcome} shows similar pairwise win rates against \condFixedOrder\ and \condSingleWriter\ for runs with one \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle and runs with other paths, so observed departures do not yield a larger quality advantage in this observational split.\footnote{See Appendix~\ref{app:process-behavior} for process, goal, and resource statistics.}
-
-\input{tab/process-dynamics}
 
 \begin{figure*}[t]
 \centering
@@ -65,4 +54,17 @@ Our system mostly follows the same forward \texttt{Planning}--\texttt{Translatin
 \label{fig:process-sequences}
 \end{figure*}
 
-\input{tab/trace-outcome}
+Execution changes produce a larger but less easily isolated difference.
+Within the tighter and wider pre-specified output-length bands, \condSingleWriter\ still wins only \SingleWriterLengthFiveRate\ ($p=\SingleWriterLengthFiveP$) and \SingleWriterLengthTenRate\ ($p=\SingleWriterLengthTenP$), respectively, against our system, so output length alone does not explain the gap.
+The post-hoc \condSingleContext\ check shows no significant difference from our system in the exploratory generation run (\SingleContextFullRate, $p=\SingleContextFullP$), although it loses on HelloBench (\SingleContextHelloFullRate, $p=\SingleContextHelloFullP$; both unadjusted).\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level diagnostic and the remaining execution differences.}
+
+\subsection{Observed Writing-Process Behavior}
+\label{sec:results-process-dynamics}
+
+Table~\ref{tab:process-dynamics} shows a mostly simple writing loop after repeat collapsing and leading-\texttt{Planning} reconstruction: \AfourCycleCompliantRate\ of complete paths conform to the \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle structure, while \AfourReviewingToTranslatingRate\ of runs return from \texttt{Reviewing} to \texttt{Translating}.
+Full replanning (\AfourReviewingToPlanningRate) and goal replacement (\AfourRegenerationRate) are rare, so adaptivity is used mainly for targeted redrafting.
+Figure~\ref{fig:process-sequences} shows the same concentration: the forward \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} progression is most frequent, so our system looks close to \condFixedOrder.
+The lower panel of Table~\ref{tab:process-dynamics} shows similar pairwise win rates against \condFixedOrder\ and \condSingleWriter\ for runs with one \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle and runs with other paths, so departures do not yield a larger quality advantage in this observational split.\footnote{See Appendix~\ref{app:process-behavior} for process, goal, and resource statistics.}
+
+\input{tab/process-dynamics}
+

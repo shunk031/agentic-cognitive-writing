@@ -28,7 +28,8 @@ from . import cross_family, length_control
 
 MAIN_CONTRASTS = (("A4", "A1"), ("A4", "A2"), ("A4", "A3"))
 LENGTH_CONTRASTS = MAIN_CONTRASTS + (("A4", "A5"), ("A4", "A6"))
-AGREEMENT_CONTRASTS = cross_family.DEFAULT_CONTRASTS
+# Every contrast the cross-family judge re-scored (run 1).
+AGREEMENT_CONTRASTS = (("A4", "A1"), ("A4", "A2"), ("A4", "A3"), ("A4", "A5"), ("A4", "A6"))
 SCORE = {"left": 1.0, "tie": 0.5, "right": 0.0}
 BOOTSTRAP_SEED = 20260908
 PROMPT_RESAMPLES = 10_000

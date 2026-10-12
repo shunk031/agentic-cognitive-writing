@@ -32,7 +32,7 @@ Configuration files pin the skill or stage prompt for every system and record ha
 
 The experiment-authored generation and evaluation prompt configurations are listed below.
 Generation is non-interactive: the runner supplies the assignment, context, and output constraints before each run, so the skill prompts omit interactive user-handoff instructions.
-Prompt headers use the internal condition codes A1 \condSinglePass, A2 \condStaged, A3 \condTaskPlanning, A4 \condAgenticCogWriter, A5 \condNoGoals, A6 \condFixedOrder, A7 \condSingleWriter, and A8 \condSingleContext.
+Prompt headers use the internal condition codes A1 \condSinglePass, A2 \condStaged, A3 \condTaskPlanning, A4 \condAgenticCogWriter, A5 \condNoGoals, A6 \condFixedOrder, A7 \condSingleWriter, A8 \condSingleContext, and A9 \condStagedRoles.
 Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix~\ref{app:runtime}.
 
 \subsection{Generation Prompts}
@@ -47,6 +47,12 @@ The \condStaged\ prompts follow the Pre-Write/Write/Re-Write stage model~\citep{
 \promptinput{PromptBaseline}{\condStaged: Write}{build/prompt-display/experiments/conditions/prompts/a2_write.md}
 
 \promptinput{PromptBaseline}{\condStaged: Re-Write}{build/prompt-display/experiments/conditions/prompts/a2_re_write.md}
+
+\promptinput{PromptBaseline}{\condStagedRoles: Pre-Write}{build/prompt-display/experiments/conditions/prompts/a9_pre_write.md}
+
+\promptinput{PromptBaseline}{\condStagedRoles: Write}{build/prompt-display/experiments/conditions/prompts/a9_write.md}
+
+\promptinput{PromptBaseline}{\condStagedRoles: Re-Write}{build/prompt-display/experiments/conditions/prompts/a9_re_write.md}
 
 \promptinput{PromptBaseline}{\condTaskPlanning}{build/prompt-display/experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md}
 

@@ -170,6 +170,8 @@ LENGTH_RUNS = {"run-1": "One", "run-2": "Two", "run-3": "Three"}
 LENGTH_CONTROL_MARKER = "% Length-control macros."
 COMPUTE_STRATIFIED_MARKER = "% Compute-stratified macros."
 PAIRWISE_ROBUSTNESS_MARKER = "% Pairwise-robustness macros."
+STAGED_ROLES_MARKER = "% Staged role-instruction (A9) macros."
+STAGED_ROLES_CONTRASTS = {"A4:A9": "FullStagedRoles", "A9:A2": "StagedRolesStaged"}
 PAIRWISE_ROBUSTNESS_CONTRASTS = {
     "A4:A1": "FullSinglePass",
     "A4:A2": "FullStaged",
@@ -1448,6 +1450,26 @@ def _pairwise_robustness_entries(report: dict[str, Any]) -> list[tuple[str, str,
     return entries
 
 
+def _staged_roles_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory A9 pairwise outcomes, per benchmark and over the three benchmarks."""
+    source = "A9 pairwise JSON"
+    entries = []
+    for contrast, contrast_word in STAGED_ROLES_CONTRASTS.items():
+        scopes = {"Across": ("pooled", report["pooled"][contrast])}
+        scopes.update({word: (f"benchmarks.{name}", report["benchmarks"][name][contrast]) for name, word in ROBUSTNESS_BENCHMARKS.items()})
+        for scope_word, (field, stats) in scopes.items():
+            prefix = f"\\{contrast_word}{scope_word}"
+            stats_source = f"{source} {field}.{contrast}"
+            entries += [
+                (prefix + "WLT", _wlt(stats), stats_source + " W/L/T"),
+                (prefix + "Rate", _percent_fixed(stats["win_rate"], 1), stats_source + ".win_rate"),
+                (prefix + "Interval", f"{_percent_fixed(stats['wilson_95_low'], 1)}--{_percent_fixed(stats['wilson_95_high'], 1)}", stats_source + " Wilson 95 percent interval"),
+                (prefix + "P", _pvalue(stats["sign_test_p_exact_two_sided"]), stats_source + ".sign_test_p_exact_two_sided"),
+                (prefix + "N", str(stats["scored_prompts"]), stats_source + ".scored_prompts"),
+            ]
+    return entries
+
+
 def _validate_single_context_pair(data: dict[str, Any], source: str) -> None:
     for key in SINGLE_CONTEXT_PAIR_FIELDS:
         value = _required_int(data, key, source)
@@ -2287,6 +2309,7 @@ def main() -> None:
     parser.add_argument("--compute-stratified-sensitivity", type=Path, help="compute-stratified JSON; appends its own block")
     parser.add_argument("--adversarial-review-analysis", type=Path)
     parser.add_argument("--pairwise-robustness", type=Path, help="pairwise-robustness JSON; appends its own block")
+    parser.add_argument("--staged-roles", type=Path, help="A9 pairwise JSON; appends its own block")
     parser.add_argument("--three-run-quality", nargs=2, type=Path, metavar=("SUMMARY", "PAIRED"))
     parser.add_argument("--prompt-languages", nargs=2, type=Path, metavar=("PROMPT_SETS", "MANIFEST_DIR"))
     parser.add_argument(
@@ -2304,6 +2327,7 @@ def main() -> None:
         (args.length_control, "length-control", LENGTH_CONTROL_MARKER, _length_control_entries),
         (args.compute_stratified_sensitivity, "compute-stratified", COMPUTE_STRATIFIED_MARKER, _compute_stratified_entries),
         (args.pairwise_robustness, "pairwise-robustness", PAIRWISE_ROBUSTNESS_MARKER, _pairwise_robustness_entries),
+        (args.staged_roles, "staged-roles", STAGED_ROLES_MARKER, _staged_roles_entries),
     ):
         if path is not None:
             if args.aggregations:

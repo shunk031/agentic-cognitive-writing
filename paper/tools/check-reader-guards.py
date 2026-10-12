@@ -153,8 +153,10 @@ def check_caption_takeaways() -> None:
             ("Single-writer gap", ("gap",)),
         ),
     )
+    # Tables 6 and 7 share one float and caption to save main-text space, so the
+    # process-path takeaways are checked in the merged caption.
     require_concepts(
-        "tab/trace-outcome.tex",
+        "tab/process-dynamics.tex",
         (
             ("the process-path win rates are similar", ("win rates", "Win rates")),
             ("similarity conclusion", ("similar", "Similar")),

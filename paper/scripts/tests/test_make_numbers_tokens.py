@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from make_numbers import (
     _compute_stratified_entries,
     _pairwise_robustness_entries,
+    _staged_roles_entries,
     _cross_family_percent,
     _length_control_entries,
     emit_numbers,
@@ -546,8 +547,16 @@ class TokenMacroTests(unittest.TestCase):
         self.assertEqual(output[r"\PromptLevelAcrossFullSinglePassRate"], r"74.8\%")
         self.assertEqual(output[r"\PromptLevelAcrossFullSinglePassWLT"], "234/37/29")
         self.assertEqual(output[r"\LengthModelFullStagedPreference"], r"60.0\%")
-        self.assertEqual(output[r"\JudgeAgreementPairs"], "854")
+        self.assertEqual(output[r"\JudgeAgreementPairs"], "1417")
         self.assertNotIn(r"\PromptLevelAcrossFullNoGoalsRate", output)
+
+    def test_staged_roles_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/staged-role-instructions/a9-pairwise.json").read_text())
+        output = dict((name, value) for name, value, _ in _staged_roles_entries(report))
+        self.assertEqual(output[r"\FullStagedRolesAcrossWLT"], "141/66/86")
+        self.assertEqual(output[r"\FullStagedRolesAcrossRate"], r"68.1\%")
+        self.assertEqual(output[r"\StagedRolesStagedAcrossRate"], r"45.9\%")
+        self.assertEqual(output[r"\StagedRolesStagedHelloP"], "0.0331")
 
     def test_compute_stratified_empty_band_is_not_available(self):
         summary = _compute_summary()

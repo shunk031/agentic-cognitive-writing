@@ -12,13 +12,14 @@ A direct next step is a task set that changes objectives, introduces new evidenc
 \paragraph{Comparison design.}
 The alternative writing systems are reimplementations under the shared setup of Section~\ref{sec:implementation}, not executions of the published systems.
 \condTaskPlanning\ also delegates its task nodes to subagents, so delegation is present on both sides of that comparison.
+\condStagedRoles\ was added post-hoc, uses one generation run and one judge family, and differs from our system in the \texttt{Monitor}, goals, shared state, and delegation together, so it isolates the role-instruction content and no single component.
 CogWriter-style and STORM-style adaptations (\condExploratoryOne, \condExploratoryTwo) run only on ten consensus-writing tasks, and running them on the three benchmarks is the next comparison.\footnote{See Appendix~\ref{app:habermas} for the consensus-writing results.}
 The compute-matched analysis selects pairs with similar realized token use after generation; a Self-Refine baseline~\citep{madaan2023self} given our system's token budget before generation would test budget-matched iterative revision directly.
 
 \paragraph{Evaluator dependence.}
 The primary evaluator belongs to the same model family as the generator, and related generator--judge models can exhibit preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
-The cross-family judge rescored one generation run for the contrasts with \condSinglePass, \condTaskPlanning, and \condNoGoals; summing W/L/T counts over the three benchmarks leaves all three favoring our system, but the judge produces many ties and reverses 3 of 9 benchmark-level comparisons, and its agreement with the primary judge is $\kappa=\JudgeAgreementKappa$ over all \JudgeAgreementPairs\ prompt-level outcomes and $\kappa=\JudgeAgreementDecidedKappa$ over the \JudgeAgreementDecidedPairs\ pairs both judges decide.
-Extending the check to \condStaged\ and \condFixedOrder\ and to all three generation runs would cover every contrast between our system and an alternative or ablation.
+The cross-family judge rescored one generation run for every contrast between our system and an alternative or ablation; summing W/L/T counts over the three benchmarks favors our system over \condStaged\ (\CrossFamilyFullStagedWinRate, $p=\CrossFamilyFullStagedP$) and leaves \condFixedOrder\ near parity (\CrossFamilyFullFixedOrderWinRate, $p=\CrossFamilyFullFixedOrderP$), as under the primary judge.
+The judge produces many ties and reverses 5 of 15 benchmark-level comparisons, and its agreement with the primary judge is $\kappa=\JudgeAgreementKappa$ over all \JudgeAgreementPairs\ prompt-level outcomes and $\kappa=\JudgeAgreementDecidedKappa$ over the \JudgeAgreementDecidedPairs\ pairs both judges decide; extending it to all three generation runs is the next step.
 Model-judge preference is not human preference; a blinded human comparison of same-prompt outputs, stratified by benchmark, contrast, and prompt length, would measure judge agreement with human readers.
 
 \paragraph{Component attribution.}
