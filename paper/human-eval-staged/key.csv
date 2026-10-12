@@ -1,0 +1,16 @@
+comparison_id,prompt_id,benchmark,contrast,assignment_words,response_words_left,response_words_right,estimated_minutes,response_language_left,response_language_right,mixed_language,same_family_decision,cross_family_decision,condition_a_1,presentation_seed_1,condition_a_2,presentation_seed_2,condition_a_3,presentation_seed_3,position_1,position_2,position_3
+pair-001,dolomites-1327,DoLoMiTes,A4:A2,157,473,1256,9.4,en,en,no,tie,tie,A2,1790121377,A2,591589083,A4,1063273158,10,13,14
+pair-002,hellobench-summarization_034,HelloBench,A4:A2,4125,1270,1021,24.9,en,en,no,tie,tie,A4,373228656,A2,1782401727,A4,1785354052,14,11,11
+pair-003,dolomites-167,DoLoMiTes,A4:A2,530,1740,827,14.0,en,en,no,A4,A4,A2,1080030933,A2,568687679,A4,112555556,11,2,1
+pair-004,hellobench-chat_017,HelloBench,A4:A2,70,5287,3807,38.6,en,en,no,A4,A4,A4,2084187704,A4,172688154,A2,254183077,4,9,12
+pair-005,hellobench-summarization_069,HelloBench,A4:A2,5040,2230,2082,36.0,en,en,no,tie,tie,A4,1931603374,A2,1838998001,A2,410430823,5,14,6
+pair-006,dolomites-1360,DoLoMiTes,A4:A2,2186,484,358,12.7,en,en,no,A4,tie,A4,1804065180,A4,783525962,A4,611160480,7,8,7
+pair-007,writingbench-0694,WritingBench,A4:A2,397,140,3582,18.2,zh,en,yes,tie,A2,A2,1697392431,A2,1637282507,A4,784035184,6,15,3
+pair-008,dolomites-657,DoLoMiTes,A4:A2,394,160,155,4.6,en,en,no,tie,tie,A4,514749910,A4,189050296,A2,2091330197,9,10,15
+pair-009,writingbench-0697,WritingBench,A4:A2,612,114,3887,20.0,zh,en,yes,A4,tie,A4,757759144,A2,1611922367,A4,1936481070,1,1,4
+pair-010,writingbench-0619,WritingBench,A4:A2,492,3526,3268,30.8,en,en,no,A4,tie,A4,1139010042,A2,2027034435,A2,734596265,12,3,2
+pair-011,writingbench-0298,WritingBench,A4:A2,865,718,5976,31.7,zh,en,yes,tie,A2,A2,1642146799,A2,1780931467,A4,731245874,13,12,9
+pair-012,dolomites-1278,DoLoMiTes,A4:A2,566,681,695,9.4,en,en,no,A2,A2,A4,744236418,A4,46999888,A4,242629914,2,4,8
+pair-013,hellobench-summarization_024,HelloBench,A4:A2,5432,1042,978,28.2,en,en,no,A4,A2,A4,424626408,A2,344924411,A4,1984879878,3,7,5
+pair-014,writingbench-0490,WritingBench,A4:A2,1059,6278,7219,59.5,en,en,no,tie,A2,A2,486084903,A2,586839511,A4,639564756,15,5,10
+pair-015,hellobench-summarization_052,HelloBench,A4:A2,4144,2033,1512,30.0,en,en,no,tie,tie,A4,1546888006,A4,80781982,A2,996923093,8,6,13

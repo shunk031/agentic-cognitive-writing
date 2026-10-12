@@ -23,6 +23,10 @@ A pair with an English assignment and exactly one Chinese response stays eligibl
 
 **Draw.** Within each benchmark, the generator sorts the eligible pairs by prompt identifier and draws a simple random sample with Python's `random.Random(20260908).sample`. The sample is stratified only by benchmark. It does not use judge outcomes, judge margins, lengths, or response languages.
 
+## Drawn sample
+
+The draw selected 15 pairs, 3 of them mixed-language WritingBench pairs. On the primary judge's order-consistent outcomes, the sample holds 6 `A4` wins, 1 `A2` win, and 8 ties; the selection did not use these outcomes. The planning estimate per annotator is 6.1 hours for a careful reader, using 300 words per minute for the assignment, 250 for both responses, and 2 minutes per decision. A brisk reader at 500 and 350 words per minute with 1.5 minutes per decision needs about 4.2 hours. Single pairs range from about 5 to 60 minutes. The pages state the careful estimate.
+
 ## Blinding and randomization
 
 The pages show the assignment, Response A, Response B, and a pair number. System names, judge outcomes, and lengths stay in [`key.csv`](./key.csv), which annotators must not receive. The generator derives every random choice from the master seed, in this order:
