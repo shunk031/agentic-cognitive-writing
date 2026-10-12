@@ -236,7 +236,7 @@ Table 7 shows similar pairwise win rates against `Fixed-order` and `Single-writ
 | `Planning``->``Translating``->``Reviewing` | 57.5% | 72.6% |
 | Other path | 54.7% | 74.7% |
 
-Table 7. `Planning`–`Translating`–`Reviewing` and other-path runs have similar win rates against `Fixed-order` and `Single-writer`. Each rate sums wins/losses over benchmarks and runs; the split is observational, not causal.
+Table 7. <span class="smallcaps">Agentic CogWriter</span> win rates against `Fixed-order` and `Single-writer` are similar for one-cycle `Planning`–`Translating`–`Reviewing` runs and other-path runs. Rates sum wins and losses over benchmarks and runs; the split is observational, not causal.
 
 ## Discussion
 
