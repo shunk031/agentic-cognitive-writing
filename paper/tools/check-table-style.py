@@ -77,14 +77,13 @@ def check() -> None:
         "tab/appendix-single-context.tex": [7, 4],
         "tab/architecture-comparison.tex": [5],
         "tab/experiments-architecture-comparison.tex": [5],
-        # DoLoMiTes has no native score, so Table 3 omits that all-N/A column.
-        "tab/main-results.tex": [6],
+        "tab/main-results.tex": [7],
         "tab/pairwise-results.tex": [5],
         "tab/process-dynamics.tex": [2],
         "tab/trace-outcome.tex": [3],
     }
     allowed_group_spans = {
-        "tab/main-results.tex": {(2, 3), (4, 5)},
+        "tab/main-results.tex": {(2, 3), (4, 5), (6, 7)},
         "tab/pairwise-results.tex": {(2, 5)},
         "tab/ablation-results.tex": {(2, 5)},
         "tab/trace-outcome.tex": {(2, 3)},
@@ -147,7 +146,7 @@ def check() -> None:
 
     # Numeric columns are right-aligned. Text columns remain left-aligned.
     expected_specs = {
-        "tab/main-results.tex": "lrrrrr",
+        "tab/main-results.tex": "lrrrrrr",
         "tab/pairwise-results.tex": "lrrrr",
         "tab/ablation-results.tex": "lrrrr",
         "tab/process-dynamics.tex": "lr",
@@ -176,7 +175,7 @@ def check() -> None:
     assert main_values == expected_main, ("tab/main-results.tex: displayed scores are stale relative to numbers.tex", main_values, expected_main)
     assert "Bold marks the highest mean in each column." in main
     assert tabular_body(main).count(r"\tnote{\dag}") == main.count(r"\textcolor{tiedgray}"), "tab/main-results.tex: every gray leader carries the dagger note"
-    assert main.count(r"\uparrow") == 5, "tab/main-results.tex: mark every score column as higher-is-better"
+    assert main.count(r"\uparrow") == 6, "tab/main-results.tex: mark every score column as higher-is-better"
     assert "divided by 10" not in main, "tab/main-results.tex: keep display-rescaling detail out of the caption"
 
     # Win-rate tables use one decimal place, including values that round to an integer.

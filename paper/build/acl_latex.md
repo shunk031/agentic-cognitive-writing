@@ -164,20 +164,20 @@ We analyze observable traces of process transitions, goal creation and developme
 
 Table 3 reports document-quality scores for benchmark-native and common-rubric evaluation across the three benchmarks. <span class="smallcaps">Agentic CogWriter</span> exceeds every alternative’s mean on every WritingBench and HelloBench measure, and its paired prompt-level differences exclude zero against each on both WritingBench measures and HelloBench native scores. Its lead over `Staged` and `Task-planning` on HelloBench pointwise scores lies within the paired intervals, as does the higher DoLoMiTes pointwise mean of `Staged`.[^6] Among the ablations and the execution variant, `Single-writer` and `No-goals` have the highest WritingBench native and HelloBench pointwise means; Section 5.3 compares them pairwise.
 
-|  |  |  |  |  |  |
-|:---|---:|---:|---:|---:|---:|
-| **System** | **WritingBench** | **WritingBench** | **HelloBench** | **HelloBench** | **DoLoMiTes** |
-|  | **Native `↑`** | **Pointwise `↑`** | **Native `↑`** | **Pointwise `↑`** | **Pointwise `↑`** |
-| `Single-pass` | 0.697 `±` 0.006 | -0.090 `±` 0.009 | 0.773 `±` 0.005 | -0.112 `±` 0.018 | -0.006 `±` 0.018 |
-| `Staged` (Rohman, 1965) | 0.702 `±` 0.005 | -0.041 `±` 0.012 | 0.781 `±` 0.004 | 0.003 `±` 0.016 | **0.064** `±` 0.036 |
-| `Task-planning` (Xiong et al., 2025) | 0.722 `±` 0.004 | -0.033 `±` 0.033 | 0.781 `±` 0.003 | -0.016 `±` 0.061 | -0.164 `±` 0.015 |
-| **<span class="smallcaps">Agentic CogWriter</span>** | 0.747 `±` 0.006 | **0.102** `±` 0.040 | **0.791** `±` 0.005 | 0.013 `±` 0.060 | 0.031 `±` 0.035 |
-| *Ablations and execution variant* | *Ablations and execution variant* | *Ablations and execution variant* | *Ablations and execution variant* | *Ablations and execution variant* | *Ablations and execution variant* |
-| `No-goals` | 0.740 `±` 0.004 | 0.055 `±` 0.042 | 0.789 `±` 0.001 | **0.096** `±` 0.056 | -0.001 `±` 0.059 |
-| `Fixed-order` | 0.746 `±` 0.006 | 0.046 `±` 0.086 | 0.787 `±` 0.003 | 0.055 `±` 0.072 | 0.048 `±` 0.041 |
-| `Single-writer` | **0.761** `±` 0.008 | -0.037 `±` 0.006 | 0.770 `±` 0.001 | -0.040 `±` 0.049 | 0.030 `±` 0.038 |
+|  |  |  |  |  |  |  |
+|:---|---:|---:|---:|---:|---:|---:|
+| **System** | **WritingBench** | **WritingBench** | **HelloBench** | **HelloBench** | **DoLoMiTes** | **DoLoMiTes** |
+|  | **Native `↑`** | **Pointwise `↑`** | **Native `↑`** | **Pointwise `↑`** | **Native `↑`** | **Pointwise `↑`** |
+| `Single-pass` | 0.697 `±` 0.006 | -0.090 `±` 0.009 | 0.773 `±` 0.005 | -0.112 `±` 0.018 | <span style="color: nagray">N/A</span> | -0.006 `±` 0.018 |
+| `Staged` (Rohman, 1965) | 0.702 `±` 0.005 | -0.041 `±` 0.012 | 0.781 `±` 0.004 | 0.003 `±` 0.016 | <span style="color: nagray">N/A</span> | **0.064** `±` 0.036 |
+| `Task-planning` (Xiong et al., 2025) | 0.722 `±` 0.004 | -0.033 `±` 0.033 | 0.781 `±` 0.003 | -0.016 `±` 0.061 | <span style="color: nagray">N/A</span> | -0.164 `±` 0.015 |
+| **<span class="smallcaps">Agentic CogWriter</span>** | 0.747 `±` 0.006 | **0.102** `±` 0.040 | **0.791** `±` 0.005 | 0.013 `±` 0.060 | <span style="color: nagray">N/A</span> | 0.031 `±` 0.035 |
+| *Ablations and execution variant* | *Ablations and execution variant* | *Ablations and execution variant* | *Ablations and execution variant* | *Ablations and execution variant* | *Ablations and execution variant* | *Ablations and execution variant* |
+| `No-goals` | 0.740 `±` 0.004 | 0.055 `±` 0.042 | 0.789 `±` 0.001 | **0.096** `±` 0.056 | <span style="color: nagray">N/A</span> | -0.001 `±` 0.059 |
+| `Fixed-order` | 0.746 `±` 0.006 | 0.046 `±` 0.086 | 0.787 `±` 0.003 | 0.055 `±` 0.072 | <span style="color: nagray">N/A</span> | 0.048 `±` 0.041 |
+| `Single-writer` | **0.761** `±` 0.008 | -0.037 `±` 0.006 | 0.770 `±` 0.001 | -0.040 `±` 0.049 | <span style="color: nagray">N/A</span> | 0.030 `±` 0.038 |
 
-Table 3. Document quality (higher is better): mean `±` sample SD of the three generation-run means, not a prompt-level interval. *Native* uses each benchmark’s criteria (DoLoMiTes has none); *Pointwise* uses a common five-dimension rubric, z-scored per generation run and benchmark over all seven systems. Bold marks the highest mean in each column. <span class="smallcaps">Agentic CogWriter</span> exceeds every alternative on WritingBench and HelloBench.
+Table 3. Document quality (higher is better): mean `±` sample SD of the three generation-run means, not a prompt-level interval. *Native* uses each benchmark’s criteria; *Pointwise* uses a common five-dimension rubric, z-scored within each generation run and benchmark over all seven systems shown. Bold marks the highest mean in each column. <span class="smallcaps">Agentic CogWriter</span> exceeds every alternative on WritingBench and HelloBench.
 
 ### Direct Comparison of Writing Systems
 
