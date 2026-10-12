@@ -2,6 +2,34 @@
 
 Draft answers for the October 2026 ARR submission form. Transfer these into OpenReview after the final PDF is frozen and update section labels if pagination or appendix lettering changes.
 
+## Submission form fields
+
+### TL;DR
+
+We build a long-form writing agent whose Monitor chooses online whether to plan, draft, or review and delegates each step to a subagent; it is preferred over single-pass, staged, and task-planning baselines in same-prompt comparisons.
+
+### Keywords
+
+long-form text generation, LLM agents, writing agents, cognitive process theory of writing, process-level control, multi-agent delegation, LLM-as-a-judge, pairwise evaluation
+
+### Research area
+
+LLM agents for NLP
+
+### Research area keywords
+
+LLM-based controllers, multi-agent systems, planning in agents, agent memory, agent evaluation, automatic evaluation, text-to-text generation
+
+These are taken verbatim from the LLM agents and Generation lists on the [ARR areas page](https://aclrollingreview.org/areas).
+
+### Languages studied
+
+English; Chinese (Mandarin, `cmn`, or Chinese, `zho`, if Mandarin is not listed). Other Languages: leave empty. Of the 300 scored prompts, the 32 Chinese ones are all from WritingBench; HelloBench, DoLoMiTes, and the Habermas Machine tasks are English.
+
+### Contribution types
+
+NLP engineering experiment.
+
 ## A. For every submission
 
 ### A1. Did you describe the limitations of your work?
