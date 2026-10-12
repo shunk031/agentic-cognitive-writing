@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from make_numbers import (
     _compute_stratified_entries,
     _pairwise_robustness_entries,
+    _self_refine_entries,
     _staged_roles_entries,
     _plain_agent_entries,
     _cogwriter_style_entries,
@@ -584,6 +585,16 @@ class TokenMacroTests(unittest.TestCase):
         self.assertEqual(output[r"\CogWriterStyleMedianOutput"], "1,684.5")
         spawns = json.loads((Path(__file__).resolve().parents[2] / "results/cogwriter-main/b1-spawns.json").read_text())
         self.assertEqual(dict((n, v) for n, v, _ in _cogwriter_spawn_entries(spawns))[r"\CogWriterStyleSpawns"], "12.6")
+
+    def test_self_refine_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/self-refine/a10-pairwise.json").read_text())
+        output = dict((name, value) for name, value, _ in _self_refine_entries(report))
+        self.assertEqual(output[r"\SelfRefineRounds"], "2")
+        self.assertEqual(output[r"\SelfRefineOutputTokens"], "15,015")
+        self.assertEqual(output[r"\SelfRefineAfourOutputTokens"], "13,343")
+        self.assertEqual(output[r"\FullSelfRefineAcrossWLT"], "137/70/85")
+        self.assertEqual(output[r"\FullSelfRefineAcrossRate"], r"66.2\%")
+        self.assertEqual(output[r"\FullSelfRefineDoLoN"], "97")
 
     def test_trace_endings_macros_are_source_backed(self):
         report = json.loads((Path(__file__).resolve().parents[2] / "results/process-sequences/trace-endings.json").read_text())

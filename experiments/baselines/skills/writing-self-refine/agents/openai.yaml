@@ -1,0 +1,7 @@
+interface:
+  display_name: "Self-Refine writing"
+  short_description: "Draft once, then run fixed Feedback and Refine rounds"
+  default_prompt: "Run condition A10 with one Draft pass and the listed Feedback and Refine rounds."
+
+policy:
+  allow_implicit_invocation: false
