@@ -1,0 +1,25 @@
+{
+  "agreement_with_longer_rule": {
+    "DoLoMiTes": {
+      "agreeing": 1181,
+      "decided_pairs": 1714,
+      "rate": 0.6890315052508752
+    },
+    "HelloBench": {
+      "agreeing": 1137,
+      "decided_pairs": 1570,
+      "rate": 0.7242038216560509
+    },
+    "WritingBench": {
+      "agreeing": 999,
+      "decided_pairs": 1791,
+      "rate": 0.5577889447236181
+    },
+    "all_benchmarks": {
+      "agreeing": 3317,
+      "decided_pairs": 5075,
+      "rate": 0.6535960591133005
+    }
+  },
+  "judge_id": "gpt-5.6-sol-pairwise-v1"
+}

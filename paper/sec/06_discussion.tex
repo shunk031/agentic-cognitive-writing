@@ -1,4 +1,4 @@
-In Section~\ref{sec:results-mechanism}, \condNoGoals, \condFixedOrder, and \condSingleContext\ stay near parity with \condAgenticCogWriter, whereas \condStagedRoles, which adds the same role instructions to the fixed pipeline, does not reproduce its advantage.
-The advantage over the alternatives stays above parity in the logistic length model and in the descriptive compute-matched subsets.
-Adaptive ordering adds only the small advantage over \condFixedOrder\ seen in the post-hoc prompt-level summary, and our system seldom uses it on these tasks, where most traces show one planning--drafting--reviewing cycle.
-Which shared component, if any, carries the advantage is untested; the combined ablation named in the Limitations, which removes goals, fixes the order, and drops subagents together, is that test.
+The component results of Section~\ref{sec:results-mechanism} bound what the theory's parts contribute here: no single ablation removes most of our system's advantage, adding its role instructions to the fixed pipeline does not reproduce it, and the length and compute checks that keep it above parity are descriptive.
+Adaptive ordering adds only a small post-hoc advantage over \condFixedOrder\ and is seldom used: the \texttt{Monitor} usually ends after one planning--drafting--reviewing pass, and after a revision request a fixed cycle also returns to planning (Section~\ref{sec:results-process-dynamics}).
+Testing adaptive control therefore needs tasks whose correct next process is not planning, or whose requirements change during drafting.
+Whether a shared component carries the advantage awaits the combined ablation named in the Limitations.

@@ -1,27 +1,28 @@
 Large language model agents~\citep{yao2023react,shinn2023reflexion,sumers2024cognitive,luo2025llmagent} increasingly combine reasoning, tool use, memory, and delegation to carry out multi-step knowledge work.
 Recent coding agents have made this interactive, tool-mediated style of execution especially prominent~\citep{yang2024sweagent,wang2024openhands}, while similar agentic workflows increasingly produce reports or scientific manuscripts~\citep{schmidgall2025agentlab,lu2024aiscientist}.
 For agents that produce documents, long-form writing requires more than final text generation: the agent must organize the document, turn partial plans into prose, inspect what has been written, and decide when revision is needed.
+How a general-purpose agent should organize these decisions remains an open design question.
 
 \input{fig/tex/overview}
 
 Existing long-form writing systems impose different forms of structure on generation~\citep{yao2019plan,yang2022re3,shao2024assisting,bai2025longwriter,xiong2025beyond,sun2026cot}.
 Some build an outline before drafting~\citep{yao2019plan,yang2022re3}, some generate a document section by section~\citep{shao2024assisting,bai2025longwriter,huot2025agents}, some recursively decompose the document into tasks~\citep{xiong2025beyond}, and some adapt plans or structural reasoning during generation~\citep{wan2025cognitive,sun2026cot}.
-Across these systems, the next step is usually defined by a content unit, task node, or prescribed stage.
-A complementary design question remains comparatively underexplored: should the writer decide which kind of writing process is needed next?
+Across these systems, the design fixes what each step advances, whether a content unit, a task node, or a prescribed stage, so the writer does not decide whether the document next needs more planning, drafting, or reviewing.
 
-The cognitive process theory of writing~\citep{flower1981cognitive,hayes1996new,hayes2012modeling} provides a useful abstraction for process-level control.
+The cognitive process theory of writing~\citep{flower1981cognitive,hayes1996new,hayes2012modeling} motivates a different unit of control.
 \citet{flower1981cognitive} characterize writing as coordination among planning, translating, and reviewing, with a monitor deciding which process to invoke as the document develops.
-This view suggests choosing the next writing process rather than the next section or task node.
-Building on \citet{flower1981cognitive}, we propose \condAgenticCogWriter, a long-form writing system that implements this process-level control on top of a coding-agent-style harness with persistent state and subagent delegation (Figure~\ref{fig:agentic-cogwriter}).
+Building on \citet{flower1981cognitive}, we propose \condAgenticCogWriter, a long-form writing system that implements this process-level control as an agent skill that a coding agent loads, with persistent workspace state and subagent delegation (Figure~\ref{fig:agentic-cogwriter}).
 A top-level Monitor agent observes the evolving draft, goals, and process history, chooses whether the next activity should be planning, drafting, or reviewing, and delegates that activity to a corresponding subagent.
 We call the system \textit{agentic} for this combination: online selection of the next writing process, a persistent state shared across steps, and delegation of each selected process to a subagent.
 
 We evaluate our system on three long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.
-We hold the generator and task information constant across conditions.
+We hold the generator, harness, output budget, and task information constant across conditions.
 Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives.
 In pre-specified per-benchmark pairwise tests, our system is preferred to one-shot generation in \PooledFourOneHolmCellsTotal\ of 9 tests and to a fixed writing pipeline and adaptive task planning in \PooledFourTwoHolmCellsTotal\ and \PooledFourThreeHolmCellsTotal, while a post-hoc prompt-level summary favors it over all three.
-In the component analyses, dropping explicit goals or fixing the process order stays near parity with our system, as does a post-hoc variant without subagents, though the pre-specified single-writer variant trails it; adding our role instructions to the fixed pipeline post hoc does not reproduce its advantage.
-Process traces show \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure, and \AfourReviewingToPlanningRate\ of runs replan.
+Adding our role instructions to the fixed pipeline post hoc does not reproduce this advantage, and a second judge family also prefers our system to that pipeline in one generation run.
+
+The component analyses show which parts of the theory matter on these benchmarks: dropping explicit goals or fixing the process order stays near parity with our system, as does a post-hoc variant without subagents, though the pre-specified single-writer variant trails it.
+Process traces show \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure and \AfourReviewingToPlanningRate\ of runs replan, so adaptivity is seldom used.
 
 Our contributions are threefold.
-(1) We formulate long-form writing for general-purpose agents as a process-level control problem and introduce a concrete system that chooses among planning, drafting, and reviewing during composition; (2) we compare our system with one-shot, fixed-stage, and adaptive task-planning alternatives across complementary long-form benchmarks; and (3) we use ablations and process analyses to test which components the advantage requires and characterize how the loop is used in practice.
+(1) We propose a process-level writing system for general-purpose agents, and we compare our system with one-shot, fixed-stage, and task-planning alternatives; (2) a component analysis identifies which parts of the theory matter on current benchmarks and what benchmarks need to test adaptive control; and (3) we release the skill, prompts, protocol, and code.

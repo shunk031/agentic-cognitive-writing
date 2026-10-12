@@ -23,3 +23,5 @@ python3 scripts/make_numbers.py --pairwise-robustness results/pairwise-sensitivi
 ```
 
 Each command replaces only its own block in [`numbers.tex`](../../numbers.tex).
+
+[`length-rule-agreement.json`](length-rule-agreement.json) is the output of [`length_rule_agreement.py`](../../../experiments/src/agentic_cogwriter/analysis/length_rule_agreement.py) over the three generation-run roots. For each benchmark, and summed over benchmarks, it reports how many order-consistent decided pairs of unequal length in the pre-specified contrasts have the longer output as the judge's winner. Regenerate its macros with `python3 scripts/make_numbers.py --length-rule-agreement results/pairwise-sensitivity/length-rule-agreement.json` from `paper/`.

@@ -77,6 +77,7 @@ Table~\ref{tab:appendix-length-control} reports matched-length win rates for our
 Within the tighter pre-specified matching band, our system is favored over \condSinglePass\ in every run, stays above parity in every run against \condStaged\ and \condFixedOrder, remains above parity against \condTaskPlanning\ while narrowing toward parity, and changes direction across runs against \condNoGoals.
 The wider pre-specified band shows the same qualitative pattern.
 These matching-band results are descriptive sensitivity checks; ties are excluded from the win-rate denominator, and generation runs are reported separately because they reuse the same prompts.
+Following the length check of DoLoMiTes~\citep{malaviya2025dolomites}, a rule that always prefers the longer output agrees with the judge on \LengthRuleWritingRate\ of \LengthRuleWritingPairs\ decided pairs on WritingBench, \LengthRuleHelloRate\ of \LengthRuleHelloPairs\ on HelloBench, and \LengthRuleDoLoRate\ of \LengthRuleDoLoPairs\ on DoLoMiTes, over the pre-specified contrasts and three generation runs.
 The \condSingleWriter\ length-band tests in Section~\ref{sec:results-mechanism}, in which \condSingleWriter\ wins \SingleWriterLengthFiveRate\ and \SingleWriterLengthTenRate, instead combine the three runs, so their sign tests take the prompt as the unit: a prompt counts as a win or a loss when its outcomes in the band, averaged across runs, favor one system.
 \input{tab/appendix-length-control}
 

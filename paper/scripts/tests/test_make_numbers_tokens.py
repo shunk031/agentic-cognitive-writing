@@ -15,6 +15,7 @@ from make_numbers import (
     _trace_endings_entries,
     _revision_tasks_entries,
     _delegation_fallback_entries,
+    _length_rule_entries,
     _cross_family_percent,
     _length_control_entries,
     emit_numbers,
@@ -566,6 +567,12 @@ class TokenMacroTests(unittest.TestCase):
         output = dict((name, value) for name, value, _ in _trace_endings_entries(report))
         self.assertEqual(output[r"\AfourEndBeforeReviewingRuns"], "88")
         self.assertEqual(output[r"\AfourFallbackRuns"], "218")
+
+    def test_length_rule_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/pairwise-sensitivity/length-rule-agreement.json").read_text())
+        output = dict((name, value) for name, value, _ in _length_rule_entries(report))
+        self.assertEqual(output[r"\LengthRuleWritingRate"], "55.8\\%")
+        self.assertEqual(output[r"\LengthRuleAcrossPairs"], "5,075")
 
     def test_delegation_fallback_macros_are_source_backed(self):
         report = json.loads((Path(__file__).resolve().parents[2] / "results/process-sequences/delegation-fallback.json").read_text())

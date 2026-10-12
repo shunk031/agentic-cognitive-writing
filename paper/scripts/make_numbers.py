@@ -175,6 +175,8 @@ TRACE_ENDINGS_MARKER = "% Trace-ending macros."
 REVISION_TASKS_MARKER = "% Revision-request pilot macros."
 QUALITATIVE_EXAMPLE_MARKER = "% Illustrative-example macros."
 DELEGATION_FALLBACK_MARKER = "% Delegation-fallback macros."
+LENGTH_RULE_MARKER = "% Length-rule agreement macros."
+LENGTH_RULE_SCOPES = {"WritingBench": "Writing", "HelloBench": "Hello", "DoLoMiTes": "DoLo", "all_benchmarks": "Across"}
 FALLBACK_CONDITIONS = {"A5": "Afive", "A6": "Asix"}
 FALLBACK_CONTRASTS = {"A4:A1": "FullSinglePass", "A4:A2": "FullStaged", "A4:A3": "FullTaskPlanning", "A4:A5": "FullNoGoals", "A4:A6": "FullFixedOrder"}
 REVISION_CONTRASTS = {"A4:A6": "FullFixedOrder", "A4:A2": "FullStaged", "A4:A1": "FullSinglePass"}
@@ -1549,6 +1551,19 @@ def _delegation_fallback_entries(report: dict[str, Any]) -> list[tuple[str, str,
     return entries
 
 
+def _length_rule_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Share of decided pairs in which the pairwise judge prefers the longer output."""
+    source = "length-rule agreement JSON agreement_with_longer_rule"
+    entries = []
+    for scope, word in LENGTH_RULE_SCOPES.items():
+        stats = report["agreement_with_longer_rule"][scope]
+        entries += [
+            (f"\\LengthRule{word}Rate", _percent_fixed(stats["rate"], 1), f"{source}.{scope}.rate"),
+            (f"\\LengthRule{word}Pairs", f"{stats['decided_pairs']:,}", f"{source}.{scope}.decided_pairs"),
+        ]
+    return entries
+
+
 def _validate_single_context_pair(data: dict[str, Any], source: str) -> None:
     for key in SINGLE_CONTEXT_PAIR_FIELDS:
         value = _required_int(data, key, source)
@@ -2401,6 +2416,7 @@ def main() -> None:
     parser.add_argument("--revision-tasks", type=Path, help="revision-task results JSON; appends its own block")
     parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
     parser.add_argument("--delegation-fallback", type=Path, help="delegation-fallback JSON; appends its own block")
+    parser.add_argument("--length-rule-agreement", type=Path, help="length-rule agreement JSON; appends its own block")
     parser.add_argument("--three-run-quality", nargs=2, type=Path, metavar=("SUMMARY", "PAIRED"))
     parser.add_argument("--prompt-languages", nargs=2, type=Path, metavar=("PROMPT_SETS", "MANIFEST_DIR"))
     parser.add_argument(
@@ -2423,6 +2439,7 @@ def main() -> None:
         (args.revision_tasks, "revision-tasks", REVISION_TASKS_MARKER, _revision_tasks_entries),
         (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),
         (args.delegation_fallback, "delegation-fallback", DELEGATION_FALLBACK_MARKER, _delegation_fallback_entries),
+        (args.length_rule_agreement, "length-rule-agreement", LENGTH_RULE_MARKER, _length_rule_entries),
     ):
         if path is not None:
             if args.aggregations:
