@@ -25,7 +25,7 @@ Points show 95\% Wilson intervals; filled circles survive correction, open circl
 
 \section{Paired Document-Quality Differences}
 \label{app:paired-quality}
-Table~\ref{tab:paired-quality} reports paired differences behind Table~\ref{tab:main-results}
+Table~\ref{tab:paired-quality} reports paired differences behind Table~\ref{tab:main-results}.
 Each prompt's three generation runs are averaged per system before differencing, so the prompt is the resampling unit, and the intervals come from 10,000 prompt-level bootstrap resamples.
 \input{tab/appendix-paired-quality}
 
@@ -35,6 +35,13 @@ Table~\ref{tab:process-summary} reports output size, delegated invocations, goal
 Each cell reports the mean of the corresponding run-level statistic; output size is the mean of the three run-level medians.
 For \condAgenticCogWriter, the three-run means include \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while the post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
 \input{tab/appendix-process}
+
+\paragraph{Trace processing.}
+Process paths are read from the \texttt{Monitor}'s \texttt{process\_switch} events in trace order: each event's destination process is one step, and a run ends once, after its last step (E in Figure~\ref{fig:process-sequences}).
+Figure~\ref{fig:process-sequences}(a) counts these paths as logged, and Figure~\ref{fig:process-sequences}(b,c) counts step-to-step transitions.
+For Table~\ref{tab:process-dynamics}, immediate repeats of a process are merged (\emph{repeat collapsing}), and when the first delegated role is \texttt{Planning} but the first logged switch names a later process, a leading \texttt{Planning} step is restored (\emph{leading-\texttt{Planning} reconstruction}; \AfourLeadingReconstruction\ such runs for \condAgenticCogWriter).
+A path is \emph{cycle-compliant} when the result consists of one or more complete \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} passes, and returns after \texttt{Reviewing} are counted from this observed order.
+\condFixedOrder\ enforces its order through its prompt only, and \AsixCycleCompliantRate\ of its paths are cycle-compliant; the rest skip or repeat a process, for example \texttt{Translating}--\texttt{Reviewing} without \texttt{Planning}.
 
 \section{Sensitivity Analyses}
 \label{app:sensitivity-analyses}

@@ -210,7 +210,7 @@ Execution changes produce a larger but less easily isolated difference. `Single-
 
 ### Observed Writing-Process Behavior
 
-Table 6 shows a mostly simple writing loop after repeat collapsing and leading-`Planning` reconstruction: 74.6% of complete paths conform to the `Planning`–`Translating`–`Reviewing` cycle structure, while 14.8% of runs return from `Reviewing` to `Translating`. Full replanning (0.3%) and goal replacement (0.5%) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over `Fixed-order` because ordering can matter only when the controller departs from the common path.
+Table 6 shows a mostly simple writing loop after repeat collapsing and leading-`Planning` reconstruction: 74.6% of complete paths conform to the `Planning`–`Translating`–`Reviewing` cycle structure, while 16.5% of runs return from `Reviewing` to `Translating`. Full replanning (4.1%) and goal replacement (0.5%) are rare, so adaptivity is used mainly for targeted redrafting, consistent with the small exploratory advantage over `Fixed-order` because ordering can matter only when the controller departs from the common path.
 
 |  |  |
 |:---|---:|
@@ -219,16 +219,16 @@ Table 6 shows a mostly simple writing loop after repeat collapsing and leading-`
 | Cycle-compliant path | 74.6% |
 | Any other complete path | 25.4% |
 | *Runs with each event (can overlap)* | *Runs with each event (can overlap)* |
-| `Reviewing` followed by renewed `Translating` | 14.8% |
-| `Reviewing` followed by renewed `Planning` | 0.3% |
+| `Reviewing` followed by renewed `Translating` | 16.5% |
+| `Reviewing` followed by renewed `Planning` | 4.1% |
 | Runs with an accepted goal replacement | 0.5% |
-| <span style="color: residualgray">Runs with none of these events</span> | <span style="color: residualgray">84.9%</span> |
+| <span style="color: residualgray">Runs with none of these events</span> | <span style="color: residualgray">79.8%</span> |
 
 Table 6. Writing-loop behavior of <span class="smallcaps">Agentic CogWriter</span> after repeat collapsing and leading-`Planning` reconstruction; most paths are cycle-compliant.
 
 Figure 2 shows the same concentration: the forward `Planning`–`Translating`–`Reviewing` progression is most frequent, so our system looks close to `Fixed-order`. Because the demanding subsets increase input or requested output length or procedural burden without guaranteeing a need to replan, the traces show that adaptive control is rarely exercised on these subsets, not that repeated replanning is unnecessary for difficult writing.
 
-Figure 2. Process trajectories: (a) frequent complete paths; (b,c) transition counts per system. Our system mostly follows the same forward `Planning`–`Translating`–`Reviewing` progression as `Fixed-order`; more returns to `Translating` than `Planning` are consistent with the small exploratory advantage of adaptive ordering.
+Figure 2. Process trajectories: (a) frequent complete paths; (b,c) transition counts per system (E: run end). Our system mostly follows the same forward `Planning`–`Translating`–`Reviewing` progression as `Fixed-order`; more returns to `Translating` than `Planning` are consistent with the small exploratory advantage of adaptive ordering.
 
 Table 7 shows similar pairwise win rates against `Fixed-order` and `Single-writer` for runs with one `Planning`–`Translating`–`Reviewing` cycle and runs with other paths, so observed departures do not yield a larger quality advantage. Because the split is observational, it cannot show whether path choice affects quality.[^10]
 
@@ -295,7 +295,7 @@ The 100-prompt count per benchmark was fixed before scoring. Under the realized 
 
 Every pre-specified system receives the same assignment, supplied context, requested output constraints, generator, attempt budget, and information policy. External retrieval is disabled by the coding-agent sandbox and by the experiment prompts. <span class="smallcaps">Agentic CogWriter</span> runs as an agent skill under a top-level `Monitor`; the `Planner`, `Translator`, and `Reviewer` subagents execute the role skills reproduced below. The platform-specific subagent wrappers only dispatch the corresponding role skills and add no separate writing policy. Configuration files pin the skill or stage prompt for every system and record hashes for fixed stage prompts.
 
-All experiment-authored generation and evaluation prompts are reproduced verbatim below. Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix B.
+All experiment-authored generation and evaluation prompts are reproduced below as used; passages that address an interactive user or local resources absent from the non-interactive, isolated runs are elided and marked \[…\]. Prompt headers use the internal condition codes A1 `Single-pass`, A2 `Staged`, A3 `Task-planning`, A4 <span class="smallcaps">Agentic CogWriter</span>, A5 `No-goals`, A6 `Fixed-order`, A7 `Single-writer`, and A8 `Single-context`. Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix B.
 
 ### Generation Prompts
 
@@ -483,9 +483,9 @@ The `Staged` prompts follow the planning–drafting–revision decomposition us
       - factual authority
       - final wording
       - publication decision
-    - Coordinate process switches as the main agent. Record the evidence for each switch and ask the user when a choice materially changes the rhetorical problem or a claim.
+    - Coordinate process switches as the main agent. Record the evidence for each switch [...].
     - Delegate the selected process to its role agent. Follow the delegation instructions below.
-    - Reconcile each returned report with the active goal and tell the user about proposals that affect intent, factual claims, or a major goal. Let the user override any agent decision.
+    - Reconcile each returned report with the active goal [...]
 
     ## Start by establishing the writing state
 
@@ -508,14 +508,7 @@ The `Staged` prompts follow the planning–drafting–revision decomposition us
        - relevant files in `.writing/memory/`
        - the latest entries in `.writing/trace/process.jsonl`
 
-       If `.writing/assignment.md` is missing or underspecified, ask the user for:
-
-       - topic
-       - audience
-       - exigency
-       - writer's goals
-       - genre
-       - constraints
+       [...]
 
        Do not silently invent a rhetorical problem.
 
@@ -555,14 +548,7 @@ The `Staged` prompts follow the planning–drafting–revision decomposition us
 
        Keep user-authored text and uncertain claims visible rather than silently normalizing them.
 
-    6. Tell the user:
-
-       - what changed
-       - which goal is active
-       - what remains uncertain
-       - which process the `Monitor` recommends next
-
-       Ask for a decision when the next move depends on the user's intent or factual authority.
+    [...]
 
     Before sending the final response, complete this non-skippable checklist:
 
@@ -627,6 +613,85 @@ The `Staged` prompts follow the planning–drafting–revision decomposition us
 
     - [`references/trace-jsonl-schema.md`](references/trace-jsonl-schema.md) defines the trace fields and event types.
     - [`references/goals-format.md`](references/goals-format.md) defines hierarchical goal notation and history records.
+
+**Goal Notation Reference**
+
+    # Goal network format
+
+    The goal network in `.writing/goals.md` is the working representation of the writer's purpose. It connects abstract rhetorical aims to concrete content and process goals. It is hierarchical, can be expanded while composing, and can be regenerated when writing changes the author's understanding.
+
+    ## Network notation
+
+    Use stable goal identifiers, one goal per line, and indentation for parent-child relationships:
+
+    ```markdown
+    # Goal network
+
+    ## Active network
+
+    - [G0] Explain the policy change to new team members (kind: content, status: active, parent: none)
+      - [G1] Establish why the change matters to their first week (kind: content, status: active, parent: G0)
+        - [G2] Open with a concrete first-day scenario (kind: process, status: resolved, parent: G1)
+      - [G3] Give one example of the new workflow (kind: content, status: pending, parent: G0)
+
+    ## Goal history
+
+    | Timestamp | Event | Goal | Parent | Rationale | Evidence |
+    | --- | --- | --- | --- | --- | --- |
+    | 2026-01-15T09:04:00+09:00 | created | G1 | G0 | Make the audience impact explicit. | assignment.md |
+    | 2026-01-15T09:18:00+09:00 | regenerated | G0 | none | The opening revealed that the real purpose is adoption, not explanation. | draft.md, reviewer note |
+    ```
+
+    Set the history table's timestamp column to the current wall-clock time obtained from the shell at write time, for example `date -Is`; never copy timestamps from examples.
+
+    `kind` may be `content`, `process`, or `criterion`. Use `status` values `pending`, `active`, `blocked`, `resolved`, or `superseded`. Keep a regenerated goal's original ID in history and give the replacement a new ID when its meaning materially changes. A small wording refinement can stay under the same ID, but record it as `developed` in the history.
+
+    ## Update rules
+
+    - Add a history row whenever a goal is created, developed, or regenerated.
+    - Keep the immediate parent ID on every goal so the Monitor can pop back after a sub-goal resolves.
+    - Put evaluation criteria such as audience fit, claim support, or tone in `criterion` goals when they guide a writing choice.
+    - Mark a goal `superseded` rather than deleting it when a new goal replaces it.
+    - If a goal depends on an unresolved fact or user decision, mark it `blocked` and name the uncertainty in the trace.
+
+**Trace Schema Reference**
+
+    # Trace JSON Lines schema
+
+    The Monitor writes one JSON object per line to `.writing/trace/process.jsonl`. A line must be valid JSON on its own. The log is append-only so a later reader can reconstruct process switches, goal changes, evidence, and uncertainty without relying on a chat transcript.
+
+    ## Fields
+
+    Every event has these fields:
+
+    | Field | Type | Meaning |
+    | --- | --- | --- |
+    | `timestamp` | string | ISO 8601 timestamp with a timezone offset, set to the current wall-clock time obtained from the shell at write time, for example `date -Is`. Never copy example timestamps. |
+    | `event_type` | string | One of `process_switch`, `goal_created`, `goal_developed`, or `goal_regenerated`. |
+    | `responsible_agent` | string | Actor responsible for the decision, such as `monitor`, `planner`, `translator`, `reviewer`, or `user`. |
+    | `process` | string | Process that made or owns the decision, such as `planning`, `generate`, `organize`, `goal-setting`, `translating`, `reviewing`, `evaluate`, or `revise`. |
+    | `decision` | string | Plain-language decision or action. State what changed or why the process moved. |
+    | `evidence` | array | Facts, file paths, draft excerpts, goal identifiers, or observations supporting the decision. Keep entries concrete. |
+    | `open_uncertainty` | array | Questions, unsupported claims, unresolved conflicts, or missing information left open after the decision. Use an empty array when none remains. |
+
+    Use these conditional fields when they apply:
+
+    | Field | Type | Meaning |
+    | --- | --- | --- |
+    | `from_process` | string or null | Process being left for a `process_switch`. Use `null` when starting the loop. |
+    | `to_process` | string or null | Process being entered for a `process_switch`. |
+    | `goal_id` | string | Goal affected by the event. |
+    | `parent_goal_id` | string or null | Immediate parent in the goal network. |
+    | `artifacts` | array | Project-relative files read or changed because of the event. |
+
+    `process_switch` entries must include `from_process` and `to_process`. Goal events must include `goal_id` and `parent_goal_id`. Every process switch and every goal creation, development, or regeneration must include `responsible_agent`, `decision`, `evidence`, and `open_uncertainty`.
+
+    ## Example
+
+    ```json
+    {"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"monitor","process":"planning","from_process":null,"to_process":"planning","decision":"Explore the audience's likely objection before drafting the opening.","evidence":[".writing/assignment.md: audience is first-year students",".writing/goals.md: G0 has no audience-specific sub-goal"],"open_uncertainty":["Which objection matters most to this audience?"],"goal_id":"G0","parent_goal_id":null,"artifacts":[".writing/assignment.md",".writing/goals.md"]}
+    {"timestamp":"2026-01-15T09:04:00+09:00","event_type":"goal_developed","responsible_agent":"planner","process":"goal-setting","decision":"Add a sub-goal to answer the audience's objection with one concrete example.","evidence":["Planner grouped three notes in .writing/memory/audience.md"],"open_uncertainty":["The example still needs a source."],"goal_id":"G1","parent_goal_id":"G0","artifacts":[".writing/goals.md",".writing/memory/audience.md"]}
+    ```
 
 **`Planner` Subagent Wrapper**
 
@@ -1148,7 +1213,7 @@ The `Staged` prompts follow the planning–drafting–revision decomposition us
     printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"goal_created\",\"responsible_agent\":\"Writer\",\"process\":\"goal-setting\",\"decision\":\"Create G1 for the task purpose.\",\"evidence\":[\".writing/goals.md\"],\"open_uncertainty\":[],\"goal_id\":\"G1\",\"parent_goal_id\":null}" >> .writing/trace/process.jsonl
     ```
 
-    Follow the repository writing contract for structure, links, claims, and plain English. Apply the `unslop` skill before finishing. Remove filler, AI-pattern phrasing, vague claims, and unnecessary headings without changing the task's meaning.
+    [...] Remove filler, AI-pattern phrasing, vague claims, and unnecessary headings without changing the task's meaning.
 
     ## Keep a working goal network
 
@@ -1665,7 +1730,7 @@ Figure 3. Run-level pairwise estimates separate the large system comparisons fro
 
 ## Paired Document-Quality Differences
 
-Table 9 reports paired differences behind Table 3 Each prompt’s three generation runs are averaged per system before differencing, so the prompt is the resampling unit, and the intervals come from 10,000 prompt-level bootstrap resamples.
+Table 9 reports paired differences behind Table 3. Each prompt’s three generation runs are averaged per system before differencing, so the prompt is the resampling unit, and the intervals come from 10,000 prompt-level bootstrap resamples.
 
 |  |  |  |  |  |  |
 |:---|---:|---:|---:|---:|---:|
@@ -1683,7 +1748,7 @@ Table 10 reports output size, delegated invocations, goal events, token accounti
 
 |  |  |  |  |  |  |  |
 |:---|---:|---:|---:|---:|---:|---:|
-| **Condition** | **Median**; **units** | **Spawns**; **/run** | **Goals created**; **developed/regenerated** | **Output**; **tokens**; **/run** | **Input**; **tokens**; **/run** | **Mean sec.**; **/completed run** |
+| **Condition** | **Median**; **words** | **Spawns**; **/run** | **Goals created**; **developed/regenerated** | **Output**; **tokens**; **/run** | **Input**; **tokens**; **/run** | **Mean sec.**; **/completed run** |
 | `Single-pass` | 1,625 | 0 | 0/0/0 | 4,931 | 13,303 | 53 |
 | `Staged` | 1,477 | 0 | 0/0/0 | 10,734 | 21,943 | 88 |
 | `Task-planning` | 1,642 | 8.17 | 0/0/0 | 18,313 | 63,812 | 327 |
@@ -1692,7 +1757,11 @@ Table 10 reports output size, delegated invocations, goal events, token accounti
 | `Fixed-order` | 1,815 | 3.38 | 288/1,176.7/3.7 | 11,420 | 43,665 | 243 |
 | `Single-writer` | 1,159 | 0 | 1,679.3/171.7/0.3 | 15,377 | 31,008 | 120 |
 
-Table 10. Realized process and resource use across all three generation runs. Each entry is the mean of its run-level statistic; output size averages the run-level medians. The systems differ substantially in delegated invocations and token use in addition to their control logic, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses.
+Table 10. Realized process and resource use across all three generation runs. Each entry is the mean of its run-level statistic; output size averages the run-level medians, counting each CJK character as one word. The systems differ substantially in delegated invocations and token use in addition to their control logic, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses.
+
+##### Trace processing.
+
+Process paths are read from the `Monitor`’s `process_switch` events in trace order: each event’s destination process is one step, and a run ends once, after its last step (E in Figure 2). Figure 2(a) counts these paths as logged, and Figure 2(b,c) counts step-to-step transitions. For Table 6, immediate repeats of a process are merged (*repeat collapsing*), and when the first delegated role is `Planning` but the first logged switch names a later process, a leading `Planning` step is restored (*leading-`Planning` reconstruction*; 23/39 such runs for <span class="smallcaps">Agentic CogWriter</span>). A path is *cycle-compliant* when the result consists of one or more complete `Planning`–`Translating`–`Reviewing` passes, and returns after `Reviewing` are counted from this observed order. `Fixed-order` enforces its order through its prompt only, and 89.8% of its paths are cycle-compliant; the rest skip or repeat a process, for example `Translating`–`Reviewing` without `Planning`.
 
 ## Sensitivity Analyses
 
