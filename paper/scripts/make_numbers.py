@@ -2163,6 +2163,42 @@ def _paired_quality_entries(paired: dict[str, Any]) -> list[tuple[str, str, str]
     return entries
 
 
+PROMPT_LANGUAGE_MARKER = "% Prompt-language macros."
+PROMPT_LANGUAGE_BENCHMARKS = (("writingbench", "Writing"), ("hellobench", "Hello"), ("dolomites", "DoLo"))
+
+
+def _is_chinese_prompt(text: str) -> bool:
+    """A prompt is Chinese when its Han characters outnumber its Latin letters."""
+    return len(re.findall(r"[\u4e00-\u9fff]", text)) > len(re.findall(r"[A-Za-z]", text))
+
+
+def _render_prompt_language_block(prompt_sets: dict[str, Any], manifest_dir: Path) -> str:
+    """Count scored hard100 prompts written mainly in Chinese, per benchmark and overall."""
+    lines = [PROMPT_LANGUAGE_MARKER]
+    total = 0
+    for benchmark, prefix in PROMPT_LANGUAGE_BENCHMARKS:
+        ids = set(prompt_sets["benchmarks"][benchmark]["hard100"])
+        rows = [json.loads(line) for line in (manifest_dir / f"{benchmark}.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+        selected = [row for row in rows if row["prompt_id"] in ids]
+        if len(selected) != len(ids):
+            raise ValueError(f"{benchmark}: {len(ids)} hard100 ids but {len(selected)} manifest rows")
+        count = sum(_is_chinese_prompt(row["prompt_text"]) for row in selected)
+        total += count
+        lines += [f"% source: prompt manifests {benchmark}.jsonl hard100 prompts with more Han characters than Latin letters", f"\\newcommand{{\\{prefix}ChinesePromptCount}}{{{count}}}"]
+    lines += ["% source: sum of the per-benchmark Chinese prompt counts", f"\\newcommand{{\\ChinesePromptCount}}{{{total}}}"]
+    return "\n".join(lines) + "\n"
+
+
+def _replace_block(existing_text: str, marker: str, block: str) -> str:
+    """Replace only this marker's block, keeping any blocks appended after it."""
+    if marker not in existing_text:
+        return existing_text.rstrip() + "\n\n" + block
+    head, tail = existing_text.split(marker, 1)
+    rest = tail.split("\n\n%", 1)
+    after = "\n\n%" + rest[1] if len(rest) == 2 else ""
+    return head + block.rstrip("\n") + after.rstrip() + "\n"
+
+
 def _render_three_run_quality_block(report: dict[str, Any], paired: dict[str, Any]) -> str:
     lines = ["% Three-run document-quality macros."]
     for name, value, source in [*_three_run_quality_entries(report), *_paired_quality_entries(paired)]:
@@ -2181,6 +2217,7 @@ def main() -> None:
     parser.add_argument("--compute-stratified-sensitivity", type=Path)
     parser.add_argument("--adversarial-review-analysis", type=Path)
     parser.add_argument("--three-run-quality", nargs=2, type=Path, metavar=("SUMMARY", "PAIRED"))
+    parser.add_argument("--prompt-languages", nargs=2, type=Path, metavar=("PROMPT_SETS", "MANIFEST_DIR"))
     parser.add_argument(
         "--a8-stage1",
         nargs=3,
@@ -2192,6 +2229,13 @@ def main() -> None:
     cost_group.add_argument("--public-prices", type=Path)
     cost_group.add_argument("--no-cost", action="store_true")
     args = parser.parse_args()
+    if args.prompt_languages is not None:
+        prompt_sets = _read_json_object(args.prompt_languages[0], "prompt sets")
+        existing_text = args.output.read_text(encoding="utf-8") if args.output.is_file() else ""
+        block = _render_prompt_language_block(prompt_sets, args.prompt_languages[1])
+        args.output.write_text(_replace_block(existing_text, PROMPT_LANGUAGE_MARKER, block), encoding="utf-8")
+        print(f"wrote {args.output}")
+        return
     if args.three_run_quality is not None:
         if args.aggregations or args.a8_stage1 is not None or args.adversarial_review_analysis is not None:
             parser.error("--three-run-quality runs on its own and appends to the existing numbers.tex")
