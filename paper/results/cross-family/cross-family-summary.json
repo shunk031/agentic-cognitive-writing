@@ -129,25 +129,25 @@
       "benchmarks": {
         "DoLoMiTes": {
           "commit_rate": {
-            "denominator": 97,
+            "denominator": 98,
             "numerator": 37,
-            "rate": 0.38144329896907214,
-            "wilson_high": 0.4808725606254558,
-            "wilson_low": 0.2910466453343049
+            "rate": 0.37755102040816324,
+            "wilson_high": 0.47643413794833406,
+            "wilson_low": 0.28790545146922036
           },
           "direction_conflicts": 2,
           "losses": 12,
-          "n": 97,
+          "n": 98,
           "presentation_agreement": {
-            "denominator": 194,
-            "numerator": 110
+            "denominator": 196,
+            "numerator": 112
           },
           "prompt_collapsed_agreement": {
-            "denominator": 97,
-            "numerator": 53
+            "denominator": 98,
+            "numerator": 54
           },
           "sign_test_p": 0.04703102743951604,
-          "ties": 60,
+          "ties": 61,
           "win_rate": {
             "denominator": 37,
             "numerator": 25,
@@ -159,25 +159,25 @@
         },
         "HelloBench": {
           "commit_rate": {
-            "denominator": 97,
+            "denominator": 98,
             "numerator": 16,
-            "rate": 0.16494845360824742,
-            "wilson_high": 0.2512646039484451,
-            "wilson_low": 0.10415923898131364
+            "rate": 0.16326530612244897,
+            "wilson_high": 0.24886583568023965,
+            "wilson_low": 0.10306803521803501
           },
           "direction_conflicts": 2,
           "losses": 10,
-          "n": 97,
+          "n": 98,
           "presentation_agreement": {
-            "denominator": 194,
-            "numerator": 70
+            "denominator": 196,
+            "numerator": 71
           },
           "prompt_collapsed_agreement": {
-            "denominator": 97,
-            "numerator": 51
+            "denominator": 98,
+            "numerator": 52
           },
           "sign_test_p": 0.454498291015625,
-          "ties": 81,
+          "ties": 82,
           "win_rate": {
             "denominator": 16,
             "numerator": 6,
@@ -219,28 +219,28 @@
         }
       },
       "commit_rate": {
-        "denominator": 290,
+        "denominator": 292,
         "numerator": 94,
-        "rate": 0.32413793103448274,
-        "wilson_high": 0.38000261067352487,
-        "wilson_low": 0.2728714241567958
+        "rate": 0.3219178082191781,
+        "wilson_high": 0.37751966210431687,
+        "wilson_low": 0.2709406976621176
       },
       "direction_conflicts": 7,
       "judge_routes": [
         "direct Bedrock"
       ],
       "losses": 34,
-      "n": 290,
+      "n": 292,
       "presentation_agreement": {
-        "denominator": 580,
-        "numerator": 280
+        "denominator": 584,
+        "numerator": 283
       },
       "prompt_collapsed_agreement": {
-        "denominator": 290,
-        "numerator": 145
+        "denominator": 292,
+        "numerator": 147
       },
       "sign_test_p": 0.009547810466077418,
-      "ties": 196,
+      "ties": 198,
       "win_rate": {
         "denominator": 94,
         "numerator": 60,
@@ -534,25 +534,25 @@
         },
         "HelloBench": {
           "commit_rate": {
-            "denominator": 92,
+            "denominator": 93,
             "numerator": 15,
-            "rate": 0.16304347826086957,
-            "wilson_high": 0.25172842984688054,
-            "wilson_low": 0.10136989771516887
+            "rate": 0.16129032258064516,
+            "wilson_high": 0.24920139541510739,
+            "wilson_low": 0.1002507837734874
           },
           "direction_conflicts": 2,
           "losses": 8,
-          "n": 92,
+          "n": 93,
           "presentation_agreement": {
-            "denominator": 184,
+            "denominator": 186,
             "numerator": 64
           },
           "prompt_collapsed_agreement": {
-            "denominator": 92,
+            "denominator": 93,
             "numerator": 48
           },
           "sign_test_p": 1.0,
-          "ties": 77,
+          "ties": 78,
           "win_rate": {
             "denominator": 15,
             "numerator": 7,
@@ -564,25 +564,25 @@
         },
         "WritingBench": {
           "commit_rate": {
-            "denominator": 89,
+            "denominator": 90,
             "numerator": 20,
-            "rate": 0.2247191011235955,
-            "wilson_high": 0.32177359180337495,
-            "wilson_low": 0.15044495557388762
+            "rate": 0.2222222222222222,
+            "wilson_high": 0.31847310391045497,
+            "wilson_low": 0.14871335473639324
           },
           "direction_conflicts": 2,
           "losses": 8,
-          "n": 89,
+          "n": 90,
           "presentation_agreement": {
-            "denominator": 178,
-            "numerator": 68
+            "denominator": 180,
+            "numerator": 69
           },
           "prompt_collapsed_agreement": {
-            "denominator": 89,
+            "denominator": 90,
             "numerator": 28
           },
           "sign_test_p": 0.5034446716308594,
-          "ties": 69,
+          "ties": 70,
           "win_rate": {
             "denominator": 20,
             "numerator": 12,
@@ -594,28 +594,28 @@
         }
       },
       "commit_rate": {
-        "denominator": 273,
+        "denominator": 275,
         "numerator": 71,
-        "rate": 0.2600732600732601,
-        "wilson_high": 0.315183940901176,
-        "wilson_low": 0.21162103781103841
+        "rate": 0.2581818181818182,
+        "wilson_high": 0.3129877617317246,
+        "wilson_low": 0.2100386900645839
       },
       "direction_conflicts": 8,
       "judge_routes": [
         "direct Bedrock"
       ],
       "losses": 33,
-      "n": 273,
+      "n": 275,
       "presentation_agreement": {
-        "denominator": 546,
-        "numerator": 230
+        "denominator": 550,
+        "numerator": 231
       },
       "prompt_collapsed_agreement": {
-        "denominator": 273,
+        "denominator": 275,
         "numerator": 128
       },
       "sign_test_p": 0.6353076420876662,
-      "ties": 202,
+      "ties": 204,
       "win_rate": {
         "denominator": 71,
         "numerator": 38,
@@ -626,29 +626,29 @@
       "wins": 38
     }
   },
-  "eligible_pair_count": 1417,
+  "eligible_pair_count": 1421,
   "note": "No multiplicity correction is applied to this robustness check.",
   "pooled": {
     "commit_rate": {
-      "denominator": 1417,
+      "denominator": 1421,
       "numerator": 443,
-      "rate": 0.31263232180663375,
-      "wilson_high": 0.33724809090946334,
-      "wilson_low": 0.2890297061638761
+      "rate": 0.31175228712174524,
+      "wilson_high": 0.3363166611244008,
+      "wilson_low": 0.28820296757674163
     },
     "direction_conflicts": 47,
     "losses": 163,
-    "n": 1417,
+    "n": 1421,
     "presentation_agreement": {
-      "denominator": 2834,
-      "numerator": 1323
+      "denominator": 2842,
+      "numerator": 1327
     },
     "prompt_collapsed_agreement": {
-      "denominator": 1417,
-      "numerator": 668
+      "denominator": 1421,
+      "numerator": 670
     },
     "sign_test_p": 2.980780993585312e-08,
-    "ties": 974,
+    "ties": 978,
     "win_rate": {
       "denominator": 443,
       "numerator": 280,
