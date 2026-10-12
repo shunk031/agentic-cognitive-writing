@@ -130,6 +130,7 @@ class ScoreHumanEvalTests(unittest.TestCase):
                     "automatic_decision_margin",
                 },
             )
+            self.assertEqual(report["profiles"], {})
 
     def test_two_annotator_staged_preference_and_judge_agreement(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -196,6 +197,111 @@ class ScoreHumanEvalTests(unittest.TestCase):
                 (majority["wins"], majority["losses"], majority["ties"]), (1, 1, 2)
             )
             self.assertEqual(preference["judges"]["same-family"]["wins"], 2)
+
+    def test_profile_columns_are_captured_and_ignored_for_scoring(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            key = root / "key.csv"
+            with key.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.writer(handle)
+                writer.writerow(
+                    ["comparison_id", "benchmark", "contrast", "condition_a"]
+                )
+                writer.writerow(["pair-001", "DoLoMiTes", "A4:A2", "A4"])
+                writer.writerow(["pair-002", "DoLoMiTes", "A4:A2", "A4"])
+            profile_fields = [
+                "profile_position",
+                "profile_position_other",
+                "profile_field",
+                "profile_native_language",
+                "profile_native_language_other",
+                "profile_english",
+                "profile_reads_chinese",
+                "profile_long_writing",
+                "consent",
+            ]
+            profile_values = {
+                "profile_position": "graduate",
+                "profile_position_other": "",
+                "profile_field": "nlp",
+                "profile_native_language": "ja",
+                "profile_native_language_other": "",
+                "profile_english": "daily",
+                "profile_reads_chinese": "no",
+                "profile_long_writing": "yes",
+                "consent": "yes",
+            }
+            answers = []
+            fieldnames = [
+                "comparison_id",
+                "annotator_id",
+                "preference",
+                "reason",
+                *profile_fields,
+                "unexpected_extra_column",
+            ]
+            path = root / "answers-annotator-1.csv"
+            answers.append(path)
+            with path.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=fieldnames)
+                writer.writeheader()
+                for comparison_id, value in (("pair-001", "A"), ("pair-002", "tie")):
+                    writer.writerow(
+                        {
+                            "comparison_id": comparison_id,
+                            "annotator_id": "annotator-1",
+                            "preference": value,
+                            "reason": "",
+                            "unexpected_extra_column": "ignore me",
+                            **profile_values,
+                        }
+                    )
+            report = json.loads(score(answers, key))
+            self.assertEqual(
+                report["profiles"],
+                {
+                    "annotator-1": {
+                        k.removeprefix("profile_"): v
+                        for k, v in profile_values.items()
+                        if k != "consent"
+                    }
+                    | {"consent": "yes"}
+                },
+            )
+            preference = report["overall"]["preference"]["A4:A2"]["annotators"][
+                "annotator-1"
+            ]
+            self.assertEqual(
+                (preference["wins"], preference["losses"], preference["ties"]),
+                (1, 0, 1),
+            )
+
+    def test_old_answers_without_profile_columns_still_score(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            key = root / "key.csv"
+            with key.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.writer(handle)
+                writer.writerow(
+                    ["comparison_id", "benchmark", "contrast", "condition_a"]
+                )
+                writer.writerow(["pair-001", "DoLoMiTes", "A4:A2", "A4"])
+            path = root / "answers-annotator-1.csv"
+            with path.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.writer(handle)
+                writer.writerow(
+                    ["comparison_id", "annotator_id", "preference", "reason"]
+                )
+                writer.writerow(["pair-001", "annotator-1", "A", ""])
+            report = json.loads(score([path], key))
+            self.assertEqual(report["profiles"], {})
+            preference = report["overall"]["preference"]["A4:A2"]["annotators"][
+                "annotator-1"
+            ]
+            self.assertEqual(
+                (preference["wins"], preference["losses"], preference["ties"]),
+                (1, 0, 0),
+            )
 
 
 if __name__ == "__main__":

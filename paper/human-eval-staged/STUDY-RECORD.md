@@ -13,6 +13,8 @@ This record covers the `A4:A2` packet described in [`README.md`](./README.md). T
 
 The page states an estimated time of about 6.1 hours.
 
+**Profile and consent.** Before the first pair, each page collects no name, email, or other identifying information. It asks, bilingually and as required fields, the annotator's position (undergraduate student, graduate student, researcher or faculty, or other with free text), field (natural language processing, other computer science, or other), native language (Japanese, English, Chinese, or other with free text), English reading proficiency (native or equivalent, reads English daily for work or research, or can read English with extra time), whether they can read Chinese, and whether they have experience writing long documents such as papers or reports. A consent checkbox states: "I agree that my responses will be aggregated for research and reported anonymously in a paper." The pairs stay gated behind this page until every question is answered and consent is checked; the profile answers remain editable from the final review page. The downloaded CSV repeats the profile and consent values as constant `profile_*` and `consent` columns on every row, and [`score_human_eval.py`](../scripts/score_human_eval.py) reports them per annotator in the JSON output's `profiles` block.
+
 **Recruitment.** [AUTHOR TO COMPLETE: recruitment source, eligibility criteria, screening, relationship to the authors, and annotator count.]
 
 **Compensation.** [AUTHOR TO COMPLETE: compensation amount or non-monetary arrangement, payment timing, and currency if applicable.]

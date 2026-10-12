@@ -92,6 +92,14 @@ class MakeHumanEvalTests(unittest.TestCase):
         self.assertIn("&lt;script&gt;x&lt;/script&gt;", page)
         self.assertIn("&lt;b&gt;task&lt;/b&gt;", page)
         self.assertNotRegex(page, r"__[A-Z]+__")
+        self.assertIn('section class="page profile narrow"', page)
+        self.assertIn('id="profile-consent"', page)
+        self.assertIn('id="profile-start" disabled', page)
+        self.assertIn('name="profile-native-language" value="other"', page)
+        self.assertIn('"position", "position_other", "field"', page)
+        for label in ("Agentic", "CogWriter", ">A4<", ">A2<", "Staged"):
+            self.assertNotIn(label, page)
+        self.assertNotRegex(page, r"https?://")
 
 
 if __name__ == "__main__":

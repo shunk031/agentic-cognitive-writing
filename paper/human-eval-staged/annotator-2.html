@@ -34,7 +34,8 @@
   .required { color: var(--warn); }
   .choice { display: flex; align-items: center; gap: 12px; padding: 8px 4px; font-size: 18px; cursor: pointer; }
   .choice input { width: 20px; height: 20px; accent-color: var(--accent); }
-  textarea { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1px solid var(--line); border-radius: 4px; }
+  textarea, input[type="text"] { width: 100%; font: inherit; font-size: 16px; padding: 8px; border: 1px solid var(--line); border-radius: 4px; }
+  input[type="text"] { margin: 4px 0 0 32px; max-width: calc(100% - 32px); }
   .nav { display: flex; justify-content: space-between; gap: 12px; margin: 16px 0; }
   button { font: inherit; font-size: 16px; padding: 10px 24px; border-radius: 4px; border: 1px solid var(--line); background: #fff; color: var(--accent); cursor: pointer; }
   button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -87,6 +88,64 @@
 </div>
 <p class="notice" id="storage-warning" hidden>This browser cannot save progress. Keep this tab open until you submit. / このブラウザでは途中保存ができません。提出までこのタブを閉じないでください。</p>
 <div class="nav"><span></span><button type="button" class="primary" id="start">Start / 開始</button></div>
+</section>
+
+<section class="page profile narrow" hidden>
+<div class="card head">
+<h1>Annotator profile / 回答者プロフィール</h1>
+<p class="hint">No name, email, or other identifying information is collected. / 氏名・メールアドレスなどの個人を特定する情報は収集しません。</p>
+</div>
+
+<div class="card">
+<p class="label">1. What is your current position? <span class="required">*</span><br>1. 現在のご身分は？</p>
+<label class="choice"><input type="radio" name="profile-position" value="undergraduate">Undergraduate student / 学部生</label>
+<label class="choice"><input type="radio" name="profile-position" value="graduate">Graduate student / 大学院生</label>
+<label class="choice"><input type="radio" name="profile-position" value="researcher">Researcher or faculty / 研究者・教員</label>
+<label class="choice"><input type="radio" name="profile-position" value="other">Other / その他</label>
+<input type="text" id="profile-position-other" placeholder="Please specify / 具体的にご記入ください" hidden>
+</div>
+
+<div class="card">
+<p class="label">2. What is your field? <span class="required">*</span><br>2. ご専門分野は？</p>
+<label class="choice"><input type="radio" name="profile-field" value="nlp">Natural language processing / 自然言語処理</label>
+<label class="choice"><input type="radio" name="profile-field" value="other_cs">Other computer science / その他の情報科学</label>
+<label class="choice"><input type="radio" name="profile-field" value="other">Other / その他</label>
+</div>
+
+<div class="card">
+<p class="label">3. What is your native language? <span class="required">*</span><br>3. 母語は何ですか？</p>
+<label class="choice"><input type="radio" name="profile-native-language" value="ja">Japanese / 日本語</label>
+<label class="choice"><input type="radio" name="profile-native-language" value="en">English / 英語</label>
+<label class="choice"><input type="radio" name="profile-native-language" value="zh">Chinese / 中国語</label>
+<label class="choice"><input type="radio" name="profile-native-language" value="other">Other / その他</label>
+<input type="text" id="profile-native-language-other" placeholder="Please specify / 具体的にご記入ください" hidden>
+</div>
+
+<div class="card">
+<p class="label">4. How would you describe your English reading proficiency? <span class="required">*</span><br>4. 英語の読解力について、最も当てはまるものを選んでください。</p>
+<label class="choice"><input type="radio" name="profile-english" value="native">Native or equivalent / 母語と同程度</label>
+<label class="choice"><input type="radio" name="profile-english" value="daily">Reads English daily for work or research / 仕事や研究で日常的に英語を読む</label>
+<label class="choice"><input type="radio" name="profile-english" value="extra_time">Can read English with extra time / 時間をかければ英語を読める</label>
+</div>
+
+<div class="card">
+<p class="label">5. Can you read Chinese? <span class="required">*</span><br>5. 中国語を読むことができますか？</p>
+<label class="choice"><input type="radio" name="profile-reads-chinese" value="yes">Yes / はい</label>
+<label class="choice"><input type="radio" name="profile-reads-chinese" value="no">No / いいえ</label>
+</div>
+
+<div class="card">
+<p class="label">6. Do you have experience writing long documents such as papers or reports? <span class="required">*</span><br>6. 論文やレポートなど長文を書いた経験はありますか？</p>
+<label class="choice"><input type="radio" name="profile-long-writing" value="yes">Yes / はい</label>
+<label class="choice"><input type="radio" name="profile-long-writing" value="no">No / いいえ</label>
+</div>
+
+<div class="card">
+<p class="label">7. Consent <span class="required">*</span></p>
+<label class="choice"><input type="checkbox" id="profile-consent">I agree that my responses will be aggregated for research and reported anonymously in a paper. / 私の回答が研究のために集計され、論文において匿名で報告されることに同意します。</label>
+</div>
+
+<div class="nav"><span></span><button type="button" class="primary" id="profile-start" disabled>Start comparisons / 比較を開始</button></div>
 </section>
 
 <section class="page pair" data-id="pair-009" data-number="1" hidden>
@@ -3368,6 +3427,11 @@ Please output the result directly without any additional text.</div></div>
 <p id="status"></p>
 <p class="hint">Click a row to change that answer. / 行をクリックすると回答を修正できます。</p>
 </div>
+<div class="card">
+<h2>Profile / プロフィール</h2>
+<p id="profile-summary"></p>
+<div class="nav"><span></span><button type="button" id="edit-profile">Edit / 編集</button></div>
+</div>
 <div class="card"><ul class="review" id="review"></ul></div>
 <div class="card">
 <p>Press <strong>Submit</strong> to download <code>answers-annotator-2.csv</code>, then send that file to the author.<br>
@@ -3389,32 +3453,61 @@ Please output the result directly without any additional text.</div></div>
   var storageKey = "human-eval-staged-" + annotator;
   var pages = Array.prototype.slice.call(document.querySelectorAll("section.page"));
   var pairs = pages.filter(function (page) { return page.classList.contains("pair"); });
+  var profileIndex = pages.findIndex(function (page) { return page.classList.contains("profile"); });
   var finalIndex = pages.length - 1;
   var answers = {};
+  var profile = {};
   var storageWorks = true;
-  try { answers = JSON.parse(localStorage.getItem(storageKey) || "{}") || {}; } catch (error) { storageWorks = false; answers = {}; }
+  try {
+    var stored = JSON.parse(localStorage.getItem(storageKey) || "{}") || {};
+    answers = stored.answers || {};
+    profile = stored.profile || {};
+  } catch (error) { storageWorks = false; answers = {}; profile = {}; }
   var current = 0;
 
   function byId(id) { return document.getElementById(id); }
   function answer(id) { return answers[id] || {}; }
   function save() {
     try {
-      localStorage.setItem(storageKey, JSON.stringify(answers));
+      localStorage.setItem(storageKey, JSON.stringify({ answers: answers, profile: profile }));
       byId("saved").textContent = "✓ Saved / 保存済み";
     } catch (error) {
       storageWorks = false;
       byId("saved").textContent = "Not saved: keep tab open";
     }
   }
+  var PROFILE_REQUIRED = ["position", "field", "native_language", "english", "reads_chinese", "long_writing"];
+  var PROFILE_OTHER_FIELDS = ["position", "native_language"];
+  function profileComplete() {
+    if (!profile.consent) { return false; }
+    for (var i = 0; i < PROFILE_REQUIRED.length; i++) {
+      if (!profile[PROFILE_REQUIRED[i]]) { return false; }
+    }
+    for (var j = 0; j < PROFILE_OTHER_FIELDS.length; j++) {
+      var field = PROFILE_OTHER_FIELDS[j];
+      if (profile[field] === "other" && !(profile[field + "_other"] || "").trim()) { return false; }
+    }
+    return true;
+  }
   function cell(value) {
     value = String(value || "");
     return /[",\r\n]/.test(value) ? '"' + value.replace(/"/g, '""') + '"' : value;
   }
+  var PROFILE_CSV_FIELDS = [
+    "position", "position_other", "field", "native_language", "native_language_other",
+    "english", "reads_chinese", "long_writing"
+  ];
   function csvText() {
-    var lines = ["comparison_id,annotator_id,preference,reason"];
+    var header = ["comparison_id", "annotator_id", "preference", "reason"]
+      .concat(PROFILE_CSV_FIELDS.map(function (field) { return "profile_" + field; }))
+      .concat(["consent"]);
+    var lines = [header.join(",")];
     pairs.forEach(function (pair) {
       var item = answer(pair.dataset.id);
-      lines.push([pair.dataset.id, annotator, item.preference, item.reason].map(cell).join(","));
+      var row = [pair.dataset.id, annotator, item.preference, item.reason]
+        .concat(PROFILE_CSV_FIELDS.map(function (field) { return profile[field]; }))
+        .concat([profile.consent ? "yes" : ""]);
+      lines.push(row.map(cell).join(","));
     });
     return lines.join("\r\n") + "\r\n";
   }
@@ -3422,7 +3515,39 @@ Please output the result directly without any additional text.</div></div>
     return pairs.filter(function (pair) { return answer(pair.dataset.id).preference; }).length;
   }
   function label(value) { return value === "tie" ? "Tie / 同等" : value; }
+  var PROFILE_LABELS = {
+    position: { undergraduate: "Undergraduate student / 学部生", graduate: "Graduate student / 大学院生", researcher: "Researcher or faculty / 研究者・教員", other: "Other / その他" },
+    field: { nlp: "Natural language processing / 自然言語処理", other_cs: "Other computer science / その他の情報科学", other: "Other / その他" },
+    native_language: { ja: "Japanese / 日本語", en: "English / 英語", zh: "Chinese / 中国語", other: "Other / その他" },
+    english: { native: "Native or equivalent / 母語と同程度", daily: "Reads English daily for work or research / 仕事や研究で日常的に英語を読む", extra_time: "Can read English with extra time / 時間をかければ英語を読める" },
+    reads_chinese: { yes: "Yes / はい", no: "No / いいえ" },
+    long_writing: { yes: "Yes / はい", no: "No / いいえ" }
+  };
+  function profileValueLabel(field) {
+    var value = profile[field];
+    if (!value) { return "unanswered / 未回答"; }
+    if (value === "other" && profile[field + "_other"]) { return "Other / その他: " + profile[field + "_other"]; }
+    return (PROFILE_LABELS[field] || {})[value] || value;
+  }
+  function renderProfileSummary() {
+    var lines = [
+      "1. Position / 身分: " + profileValueLabel("position"),
+      "2. Field / 専門分野: " + profileValueLabel("field"),
+      "3. Native language / 母語: " + profileValueLabel("native_language"),
+      "4. English reading / 英語の読解力: " + profileValueLabel("english"),
+      "5. Reads Chinese / 中国語の読解: " + profileValueLabel("reads_chinese"),
+      "6. Long-writing experience / 長文執筆の経験: " + profileValueLabel("long_writing"),
+      "7. Consent / 同意: " + (profile.consent ? "Agreed / 同意済み" : "Not agreed / 未同意")
+    ];
+    byId("profile-summary").innerHTML = lines.map(function (line) { return html_escape(line); }).join("<br>");
+  }
+  function html_escape(value) {
+    var div = document.createElement("div");
+    div.textContent = value;
+    return div.innerHTML;
+  }
   function renderReview() {
+    renderProfileSummary();
     var list = byId("review");
     list.textContent = "";
     pairs.forEach(function (pair, index) {
@@ -3436,7 +3561,7 @@ Please output the result directly without any additional text.</div></div>
       row.appendChild(left);
       row.appendChild(right);
       if (!item.preference) { row.className = "missing"; }
-      row.addEventListener("click", function () { show(index + 1); });
+      row.addEventListener("click", function () { show(pages.indexOf(pair)); });
       list.appendChild(row);
     });
     var missing = pairs.length - answeredCount();
@@ -3448,10 +3573,11 @@ Please output the result directly without any additional text.</div></div>
   function show(index) {
     current = Math.max(0, Math.min(finalIndex, index));
     pages.forEach(function (page, position) { page.hidden = position !== current; });
-    var onPair = current > 0 && current < finalIndex;
-    byId("topbar").hidden = current === 0;
+    var onPair = pages[current].classList.contains("pair");
+    var pairPosition = pairs.indexOf(pages[current]);
+    byId("topbar").hidden = current === 0 || current === profileIndex;
     byId("pager").hidden = !onPair;
-    var shown = Math.min(current, pairs.length);
+    var shown = pairPosition === -1 ? pairs.length : pairPosition + 1;
     byId("bar").style.width = (100 * answeredCount() / pairs.length) + "%";
     byId("count").textContent = current === finalIndex ? answeredCount() + " / " + pairs.length : shown + " / " + pairs.length;
     if (onPair) {
@@ -3480,12 +3606,51 @@ Please output the result directly without any additional text.</div></div>
     });
   });
 
+  var profilePage = pages[profileIndex];
+  function updateProfileStart() { byId("profile-start").disabled = !profileComplete(); }
+  [["profile-position", "position"], ["profile-field", "field"], ["profile-native-language", "native_language"],
+   ["profile-english", "english"], ["profile-reads-chinese", "reads_chinese"], ["profile-long-writing", "long_writing"]]
+    .forEach(function (entry) {
+      var name = entry[0], field = entry[1];
+      profilePage.querySelectorAll('input[name="' + name + '"]').forEach(function (radio) {
+        radio.checked = radio.value === profile[field];
+        radio.addEventListener("change", function () {
+          profile[field] = radio.value;
+          save();
+          var otherInput = byId(name + "-other");
+          if (otherInput) { otherInput.hidden = radio.value !== "other"; }
+          updateProfileStart();
+        });
+      });
+    });
+  ["position", "native_language"].forEach(function (field) {
+    var otherInput = byId("profile-" + field.replace(/_/g, "-") + "-other");
+    if (!otherInput) { return; }
+    otherInput.value = profile[field + "_other"] || "";
+    otherInput.hidden = profile[field] !== "other";
+    otherInput.addEventListener("input", function () {
+      profile[field + "_other"] = otherInput.value;
+      save();
+      updateProfileStart();
+    });
+  });
+  var consentBox = byId("profile-consent");
+  consentBox.checked = !!profile.consent;
+  consentBox.addEventListener("change", function () {
+    profile.consent = consentBox.checked;
+    save();
+    updateProfileStart();
+  });
+  updateProfileStart();
+  byId("profile-start").addEventListener("click", function () {
+    var firstOpen = pairs.findIndex(function (pair) { return !answer(pair.dataset.id).preference; });
+    show(firstOpen === -1 ? finalIndex : pages.indexOf(pairs[firstOpen]));
+  });
+  byId("edit-profile").addEventListener("click", function () { show(profileIndex); });
+
   byId("storage-warning").hidden = storageWorks;
   if (answeredCount() > 0) { byId("start").textContent = "Resume / 再開"; }
-  byId("start").addEventListener("click", function () {
-    var firstOpen = pairs.findIndex(function (pair) { return !answer(pair.dataset.id).preference; });
-    show(firstOpen === -1 ? finalIndex : firstOpen + 1);
-  });
+  byId("start").addEventListener("click", function () { show(profileIndex); });
   byId("back").addEventListener("click", function () { show(current - 1); });
   byId("next").addEventListener("click", function () { show(current + 1); });
   byId("copy").addEventListener("click", function () {

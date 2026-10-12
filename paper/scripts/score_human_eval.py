@@ -129,8 +129,23 @@ def _read_key(path: Path) -> dict[str, dict[str, str]]:
     return {row["comparison_id"]: row for row in rows if row.get("comparison_id")}
 
 
-def _read_answers(paths: Iterable[Path]) -> dict[tuple[str, str], dict[str, str]]:
+PROFILE_FIELDS = (
+    "position",
+    "position_other",
+    "field",
+    "native_language",
+    "native_language_other",
+    "english",
+    "reads_chinese",
+    "long_writing",
+)
+
+
+def _read_answers(
+    paths: Iterable[Path],
+) -> tuple[dict[tuple[str, str], dict[str, str]], dict[str, dict[str, str]]]:
     answers: dict[tuple[str, str], dict[str, str]] = {}
+    profiles: dict[str, dict[str, str]] = {}
     for path in paths:
         with path.open(newline="", encoding="utf-8-sig") as handle:
             for row in csv.DictReader(handle):
@@ -160,7 +175,15 @@ def _read_answers(paths: Iterable[Path]) -> dict[tuple[str, str], dict[str, str]
                         row.get("adjudication_status") or ""
                     ).strip(),
                 }
-    return answers
+                if annotator not in profiles:
+                    profile = {
+                        field: (row.get(f"profile_{field}") or "").strip()
+                        for field in PROFILE_FIELDS
+                    }
+                    profile["consent"] = (row.get("consent") or "").strip()
+                    if any(profile.values()):
+                        profiles[annotator] = profile
+    return answers, profiles
 
 
 def _condition_a(key: dict[str, str], annotator: str) -> str | None:
@@ -319,7 +342,7 @@ def score(
 ) -> str:
     del judge_paths  # Automatic decisions are frozen in key.csv with the packet.
     keys = _read_key(key_path)
-    answers = _read_answers(answer_paths)
+    answers, profiles = _read_answers(answer_paths)
     by_annotator: dict[str, dict[str, str]] = defaultdict(dict)
     for answer in answers.values():
         comparison_id = answer["comparison_id"]
@@ -335,6 +358,7 @@ def score(
         "overall": _subset_report(by_annotator, keys),
         "breakdowns": {},
         "annotators": sorted(by_annotator),
+        "profiles": profiles,
     }
     dimensions = (
         "benchmark",

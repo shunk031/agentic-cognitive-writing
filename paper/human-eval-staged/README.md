@@ -41,7 +41,7 @@ The pages show the assignment, Response A, Response B, and a pair number. System
 - [`key.csv`](./key.csv): prompt, benchmark, word counts, estimated minutes, response languages, primary (`same_family_decision`) and cross-family judge outcomes, and per-annotator presentation fields
 - [`STUDY-RECORD.md`](./STUDY-RECORD.md): recruitment, consent, and review record for the author to complete
 
-**Form flow.** Each page opens with English and Japanese instructions and the estimated time, followed by a Start button. Each pair then gets its own page:
+**Form flow.** Each page opens with English and Japanese instructions and the estimated time, followed by a Start button that leads to a profile and consent page. That page asks for no name, email, or other identifying information; it asks the annotator's position, field, native language, English reading proficiency, whether they read Chinese, and whether they have experience writing long documents such as papers or reports, and it gates the remaining pairs behind a consent checkbox. Every question is bilingual and required, and the "Start comparisons" button stays disabled until all seven items are answered. Each pair then gets its own page:
 
 - a progress bar
 - the assignment
@@ -49,9 +49,9 @@ The pages show the assignment, Response A, Response B, and a pair number. System
 - a required A / B / tie question; Next stays disabled until it is answered
 - an optional reason field
 
-Answers save automatically to the browser's local storage, so an annotator can close the tab and resume in the same browser. The final page lists every answer, highlights unanswered pairs, and offers Submit. The instruction text is defined in [`human_eval_page.html`](../scripts/human_eval_page.html).
+The profile answers and the pair answers save automatically to the browser's local storage, so an annotator can close the tab and resume in the same browser. The final page lists the profile answers, with an Edit button that returns to the profile page, and every pair answer, highlighting unanswered pairs, and offers Submit. The instruction text is defined in [`human_eval_page.html`](../scripts/human_eval_page.html).
 
-**Answer CSV.** Submit downloads `answers-annotator-k.csv` with the header `comparison_id,annotator_id,preference,reason`. The `preference` column holds `A`, `B`, or `tie`, and an empty value marks an unanswered pair. The file starts with a UTF-8 byte-order mark so that spreadsheet software shows Japanese reasons correctly. When a browser blocks the download, the final page shows the same CSV text for copying.
+**Answer CSV.** Submit downloads `answers-annotator-k.csv` with the header `comparison_id,annotator_id,preference,reason,profile_position,profile_position_other,profile_field,profile_native_language,profile_native_language_other,profile_english,profile_reads_chinese,profile_long_writing,consent`. The `preference` column holds `A`, `B`, or `tie`, and an empty value marks an unanswered pair. The eight `profile_*` columns and the `consent` column repeat the same annotator-level values on every row. The file starts with a UTF-8 byte-order mark so that spreadsheet software shows Japanese reasons correctly. When a browser blocks the download, the final page shows the same CSV text for copying.
 
 ## Scoring
 
@@ -66,6 +66,7 @@ The JSON report contains an overall block and breakdowns by benchmark and by `mi
 - **Human preference.** `preference["A4:A2"]` gives W/L/T for `A4` per annotator, pooled over all judgments, and by majority vote. The win rate is W/(W+L) with a Wilson 95% interval, matching the paper's judge win rate. A pair without a unique plurality counts as a majority tie, so with two annotators every disagreement is a tie.
 - **Human–human agreement.** `human.annotator_pairs` reports the percent agreement and Cohen's kappa for each annotator pair over the three labels `A4`, `A2`, and tie, together with the pair means. `human.fleiss_kappa` and `human.krippendorff_alpha` cover all annotators.
 - **Judge–human agreement.** `automatic_judge_agreement["same-family"]` compares the primary judge's order-consistent outcome with each annotator and with the majority vote. It uses the same percent-agreement and Cohen's-kappa definitions, so it reads directly against the human–human values. The `cross-family` block repeats the comparison for the `claude-sonnet-5` robustness judge.
+- **Annotator profiles.** `profiles` lists each annotator's position, field, native language, English reading proficiency, Chinese reading ability, long-document writing experience, and consent, read from the constant `profile_*` and `consent` columns. An answer CSV without those columns, such as one collected before this packet added the profile step, leaves that annotator out of `profiles` without affecting scoring.
 
 ## Regeneration
 
