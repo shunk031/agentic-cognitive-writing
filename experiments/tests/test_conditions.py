@@ -55,6 +55,51 @@ def test_registry_parses_stages_from_condition_wrappers() -> None:
         assert stages[0].sha256 is None
 
 
+def test_a10_runs_fixed_self_refine_rounds_without_cogwriter_components() -> None:
+    registry = load_condition_registry()
+    a2, a10 = registry["A2"], registry["A10"]
+
+    assert a10.skill_name == "writing-self-refine"
+    for field in (
+        "package_name",
+        "goal_events",
+        "event_types",
+        "require_goal_events",
+        "require_delegation",
+        "product_requires_draft",
+    ):
+        assert getattr(a10, field) == getattr(a2, field), field
+
+    rounds = (len(a10.stages) - 1) // 2
+    assert rounds >= 1
+    assert [stage.stage_id for stage in a10.stages] == [
+        "draft",
+        *(
+            f"{step}_{n}"
+            for n in range(1, rounds + 1)
+            for step in ("feedback", "refine")
+        ),
+    ]
+    assert a10.process_order == ("draft", *(("feedback", "refine") * rounds))
+    assert a10.min_events == a10.max_events == len(a10.stages)
+    readme = (CONDITIONS_DIR / "README.md").read_text(encoding="utf-8")
+    assert f"A10 runs k = {rounds} Feedback and Refine rounds" in readme
+
+    role_lines = {
+        line.strip()
+        for role in ("planning", "translating", "reviewing")
+        for line in (REPOSITORY_ROOT / "plugin" / "skills" / role / "SKILL.md")
+        .read_text(encoding="utf-8")
+        .splitlines()
+        if len(line.strip()) > 40
+    }
+    for stage in {stage.path for stage in a10.stages}:
+        text = stage.read_text(encoding="utf-8")
+        assert not any(line in text for line in role_lines), stage
+        for excluded in ("Monitor", "goal", "trace", "delegat", "subagent"):
+            assert excluded not in text, (stage, excluded)
+
+
 def test_a9_keeps_the_a2_harness_and_adds_role_guidance() -> None:
     registry = load_condition_registry()
     a2, a9 = registry["A2"], registry["A9"]
@@ -82,8 +127,7 @@ def test_a9_keeps_the_a2_harness_and_adds_role_guidance() -> None:
         "planning": (
             "Do not replace missing user intent with a guess.",
             "Separate known material, plausible ideas, and unsupported claims.",
-            "The organizing work makes meaning rather than merely rearranging "
-            "bullets.",
+            "The organizing work makes meaning rather than merely rearranging bullets.",
         ),
         "translating": (
             "do not let fluent wording override the rhetorical purpose.",
@@ -126,6 +170,7 @@ def test_registry_keeps_wrapper_paths_and_families() -> None:
         "A7": "confirmatory",
         "A8": "exploratory",
         "A9": "exploratory",
+        "A10": "exploratory",
         "B1": "exploratory",
         "B2": "exploratory",
     }
@@ -164,7 +209,7 @@ def test_missing_condition_wrapper_is_an_error(tmp_path: Path) -> None:
     conditions_dir = _copy_conditions(tmp_path)
     (conditions_dir / "a4_plugin.toml").unlink()
 
-    with pytest.raises(ConfigurationError, match="exactly A1 through A9"):
+    with pytest.raises(ConfigurationError, match="exactly A1 through A10"):
         load_condition_registry(conditions_dir)
 
 
@@ -176,7 +221,7 @@ def test_stray_condition_wrapper_is_an_error(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    with pytest.raises(ConfigurationError, match="exactly A1 through A9"):
+    with pytest.raises(ConfigurationError, match="exactly A1 through A10"):
         load_condition_registry(conditions_dir)
 
 

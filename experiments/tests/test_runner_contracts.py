@@ -1217,7 +1217,7 @@ def test_composed_prompt_omits_the_stage_chain_header_without_frozen_paths() -> 
 
 @pytest.mark.parametrize(
     "condition_id",
-    ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "B1", "B2"),
+    ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "B1", "B2"),
 )
 @pytest.mark.parametrize("platform", PLATFORMS)
 def test_composed_prompt_has_one_rendered_shared_input_block(
@@ -1268,6 +1268,20 @@ FROZEN_STAGE_HEADINGS = {
         "## A9 Re-Write",
         "### Reviewing role",
         "### Draft to revise",
+    ],
+    "A10": [
+        "## A10 Draft",
+        "### Assignment",
+        "### Supplied context",
+        "### Requested output constraints",
+        "### Previous stage output",
+        *(
+            "## A10 Feedback",
+            "### Draft to give feedback on",
+            "## A10 Refine",
+            "### Feedback to address",
+        )
+        * 2,
     ],
     "B2": [
         "## A3 perspective discovery",

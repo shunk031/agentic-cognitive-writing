@@ -171,6 +171,7 @@ LENGTH_CONTROL_MARKER = "% Length-control macros."
 COMPUTE_STRATIFIED_MARKER = "% Compute-stratified macros."
 PAIRWISE_ROBUSTNESS_MARKER = "% Pairwise-robustness macros."
 STAGED_ROLES_MARKER = "% Staged role-instruction (A9) macros."
+SELF_REFINE_MARKER = "% Budget-matched Self-Refine (A10) macros."
 TRACE_ENDINGS_MARKER = "% Trace-ending macros."
 REVISION_TASKS_MARKER = "% Revision-request pilot macros."
 QUALITATIVE_EXAMPLE_MARKER = "% Illustrative-example macros."
@@ -186,6 +187,7 @@ RAW_RUBRIC_DIMENSIONS = {
     "factuality_constraint_fidelity": "Factuality",
 }
 STAGED_ROLES_CONTRASTS = {"A4:A9": "FullStagedRoles", "A9:A2": "StagedRolesStaged"}
+SELF_REFINE_CONTRASTS = {"A4:A10": "FullSelfRefine"}
 PAIRWISE_ROBUSTNESS_CONTRASTS = {
     "A4:A1": "FullSinglePass",
     "A4:A2": "FullStaged",
@@ -1464,11 +1466,12 @@ def _pairwise_robustness_entries(report: dict[str, Any]) -> list[tuple[str, str,
     return entries
 
 
-def _staged_roles_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
-    """Exploratory A9 pairwise outcomes, per benchmark and over the three benchmarks."""
-    source = "A9 pairwise JSON"
+def _pairwise_addendum_entries(
+    report: dict[str, Any], contrasts: dict[str, str], source: str
+) -> list[tuple[str, str, str]]:
+    """Exploratory pairwise outcomes, per benchmark and over the three benchmarks."""
     entries = []
-    for contrast, contrast_word in STAGED_ROLES_CONTRASTS.items():
+    for contrast, contrast_word in contrasts.items():
         scopes = {"Across": ("pooled", report["pooled"][contrast])}
         scopes.update({word: (f"benchmarks.{name}", report["benchmarks"][name][contrast]) for name, word in ROBUSTNESS_BENCHMARKS.items()})
         for scope_word, (field, stats) in scopes.items():
@@ -1482,6 +1485,23 @@ def _staged_roles_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
                 (prefix + "N", str(stats["scored_prompts"]), stats_source + ".scored_prompts"),
             ]
     return entries
+
+
+def _staged_roles_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory A9 pairwise outcomes."""
+    return _pairwise_addendum_entries(report, STAGED_ROLES_CONTRASTS, "A9 pairwise JSON")
+
+
+def _self_refine_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory A10 pairwise outcomes, round count, and per-document token means."""
+    source = "A10 pairwise JSON"
+    tokens = report["output_plus_reasoning_tokens_mean"]
+    return [
+        ("\\SelfRefineRounds", str(report["rounds"]), source + " rounds"),
+        ("\\SelfRefineOutputTokens", f"{tokens['A10']:,.0f}", source + " output_plus_reasoning_tokens_mean.A10"),
+        ("\\SelfRefineAfourOutputTokens", f"{tokens['A4']:,.0f}", source + " output_plus_reasoning_tokens_mean.A4"),
+        *_pairwise_addendum_entries(report, SELF_REFINE_CONTRASTS, source),
+    ]
 
 
 def _trace_endings_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
@@ -2397,6 +2417,7 @@ def main() -> None:
     parser.add_argument("--adversarial-review-analysis", type=Path)
     parser.add_argument("--pairwise-robustness", type=Path, help="pairwise-robustness JSON; appends its own block")
     parser.add_argument("--staged-roles", type=Path, help="A9 pairwise JSON; appends its own block")
+    parser.add_argument("--self-refine", type=Path, help="A10 pairwise JSON; appends its own block")
     parser.add_argument("--trace-endings", type=Path, help="trace-endings JSON; appends its own block")
     parser.add_argument("--revision-tasks", type=Path, help="revision-task results JSON; appends its own block")
     parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
@@ -2419,6 +2440,7 @@ def main() -> None:
         (args.compute_stratified_sensitivity, "compute-stratified", COMPUTE_STRATIFIED_MARKER, _compute_stratified_entries),
         (args.pairwise_robustness, "pairwise-robustness", PAIRWISE_ROBUSTNESS_MARKER, _pairwise_robustness_entries),
         (args.staged_roles, "staged-roles", STAGED_ROLES_MARKER, _staged_roles_entries),
+        (args.self_refine, "self-refine", SELF_REFINE_MARKER, _self_refine_entries),
         (args.trace_endings, "trace-endings", TRACE_ENDINGS_MARKER, _trace_endings_entries),
         (args.revision_tasks, "revision-tasks", REVISION_TASKS_MARKER, _revision_tasks_entries),
         (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),

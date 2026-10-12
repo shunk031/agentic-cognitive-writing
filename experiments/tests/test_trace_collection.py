@@ -40,6 +40,7 @@ def _plugin_source(tmp_path):
         "cognitive-writing-single-writer",
         "cognitive-writing-single-context",
         "writing-linear",
+        "writing-self-refine",
         "writing-cogwriter-style",
         "writing-adaptive-task-planning",
         "planning",
@@ -241,7 +242,7 @@ def _config():
 def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions():
     registry = load_condition_registry()
 
-    assert set(registry) == {*(f"A{index}" for index in range(1, 10)), "B1", "B2"}
+    assert set(registry) == {*(f"A{index}" for index in range(1, 11)), "B1", "B2"}
     assert [
         registry[condition].skill_name
         for condition in (
@@ -254,6 +255,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
             "A7",
             "A8",
             "A9",
+            "A10",
             "B1",
             "B2",
         )
@@ -267,6 +269,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "cognitive-writing-single-writer",
         "cognitive-writing-single-context",
         "writing-linear",
+        "writing-self-refine",
         "writing-cogwriter-style",
         "writing-storm-style",
     ]

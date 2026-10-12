@@ -1,0 +1,16 @@
+{
+  "skill_name": "writing-self-refine",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run condition A10 for the supplied writing assignment.",
+      "expected_output": "The run writes one draft, then runs every listed Feedback and Refine round in order on the current draft, and returns the last refined draft.",
+      "files": [],
+      "expectations": [
+        "Runs exactly the listed number of Feedback and Refine rounds without stopping early.",
+        "Uses no subagents, goal network, or retrieval.",
+        "Appends one schema-valid stage-transition event per stage."
+      ]
+    }
+  ]
+}

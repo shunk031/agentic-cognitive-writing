@@ -44,3 +44,20 @@ The role sections keep the writing guidance verbatim, including the rhetorical-p
 - Revise drops "in the delegated scope", "call out factual gaps", and "state whether the change is local or changes the goal network". "make only the requested or clearly authorized changes" and "Preserve the writer's intent." are kept.
 - The Boundaries sentences on interrupting other processes and telling the `Monitor`, and on recommending goal regeneration, are removed. "Do not invent citations or claims." is kept.
 - The report format, including the per-goal verdict line, is removed.
+
+## A10 budget-matched Self-Refine
+
+A10 tests whether spending Agentic CogWriter's generation budget on plain self-feedback explains A4's advantage. A10 follows Self-Refine[^1]: one generator writes a draft, gives feedback on it, and refines it, for a fixed number of rounds. A10 is an exploratory condition added after the primary results were observed and sits outside the confirmatory family.
+
+A10 uses the same harness as A2: one `codex exec` session with the shared single-turn contract, the same generator, reasoning effort, output budget, timeout, and retry policy, a workspace-write sandbox with network access off, and a fixed process order recorded as `process_switch` events. The [`writing-self-refine`](../baselines/skills/writing-self-refine/SKILL.md) skill in the baseline package defines the Draft, Feedback, and Refine handoffs and their trace. A10 has no `Monitor`, no goal network or `.writing/goals.md`, no role skills, no subagents, and no early stopping.
+
+The three frozen stage files are generic Self-Refine prompts written for A10, not adaptations of the A4 role skills. [`a10_draft.md`](prompts/a10_draft.md) asks for a complete draft, [`a10_feedback.md`](prompts/a10_feedback.md) asks for actionable and specific feedback that points to the passage or omission behind each problem and the change that would fix it, and [`a10_refine.md`](prompts/a10_refine.md) asks for a complete revision that addresses that feedback. The wrapper lists the Feedback and Refine files once per round, so the trace contract is one Draft event followed by alternating Feedback and Refine events.
+
+**Round count.** A10 runs k = 2 Feedback and Refine rounds. The round count was fixed before the scored run so that A10's mean output-plus-reasoning tokens per document approximate A4's run-1 mean of 13,374 tokens. Calibration ran k = 1 and k = 2 on the same twelve prompts, the four prompts per benchmark ranked immediately below the hard100 cut by the [prompt-set](../prompts/README.md#pilot-and-hard-prompt-subsets) difficulty key. None of the calibration prompts is a pilot or scored prompt. The rule picks the k whose calibration mean is closest to the A4 target, which selects k = 2.
+
+| Rounds | Completed calibration runs | Mean output-plus-reasoning tokens |
+| -----: | -------------------------: | --------------------------------: |
+|      1 |                         12 |                            11,397 |
+|      2 |                         12 |                            13,689 |
+
+[^1]: Aman Madaan, Niket Tandon, Prakhar Gupta, Skyler Hallinan, Luyu Gao, Sarah Wiegreffe, Uri Alon, Nouha Dziri, Shrimai Prabhumoye, Yiming Yang, Shashank Gupta, Bodhisattwa Prasad Majumder, Katherine Hermann, Sean Welleck, Amir Yazdanbakhsh, and Peter Clark, "Self-Refine: Iterative Refinement with Self-Feedback," *Advances in Neural Information Processing Systems* (2023), [DOI](https://doi.org/10.52202/075280-2019) and [arXiv](https://arxiv.org/abs/2303.17651).
