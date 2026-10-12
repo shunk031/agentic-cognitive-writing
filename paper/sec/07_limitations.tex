@@ -20,7 +20,7 @@ Section~\ref{sec:results-effectiveness} complements the order-consistent win rat
 The primary evaluator belongs to the same model family as the generator, and related generator--judge models can exhibit preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
 The cross-family judge rescored one generation run for the contrasts with \condSinglePass, \condTaskPlanning, and \condNoGoals; summing W/L/T counts over the three benchmarks leaves all three favoring our system, but the judge produces many ties and reverses 3 of 9 benchmark-level comparisons.
 Extending the check to \condStaged\ and \condFixedOrder\ and to all three generation runs would cover every contrast between our system and an alternative or ablation.
-Model-judge preference is not human preference: a blinded packet of same-prompt comparisons, stratified by benchmark, contrast, and prompt length for three annotators, is prepared, and collecting those judgments would measure how closely the judges agree with human readers.
+Model-judge preference is not human preference; a blinded human comparison of same-prompt outputs, stratified by benchmark, contrast, and prompt length, would measure how closely the judges agree with human readers.
 
 \paragraph{Component attribution.}
 The ablations constrain explicit goals and adaptive ordering to modest contributions without establishing equivalence.
