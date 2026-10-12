@@ -1,0 +1,249 @@
+{
+  "cross_family_judge_id": "claude-sonnet-5-pairwise-v1-medium",
+  "judge_agreement": {
+    "all_contrasts": {
+      "agreeing_pairs": 395,
+      "both_decided_agreeing_pairs": 212,
+      "both_decided_kappa": 0.7154207821554834,
+      "both_decided_pairs": 244,
+      "kappa": 0.24419241388884605,
+      "pairs": 854
+    },
+    "contrasts": {
+      "A4:A1": {
+        "agreeing_pairs": 125,
+        "both_decided_agreeing_pairs": 81,
+        "both_decided_kappa": 0.5857782197911487,
+        "both_decided_pairs": 98,
+        "kappa": 0.2050061948968414,
+        "pairs": 282
+      },
+      "A4:A3": {
+        "agreeing_pairs": 137,
+        "both_decided_agreeing_pairs": 82,
+        "both_decided_kappa": 0.7612111920275969,
+        "both_decided_pairs": 89,
+        "kappa": 0.24127138308779883,
+        "pairs": 285
+      },
+      "A4:A5": {
+        "agreeing_pairs": 133,
+        "both_decided_agreeing_pairs": 49,
+        "both_decided_kappa": 0.7084398976982098,
+        "both_decided_pairs": 57,
+        "kappa": 0.20153918416013303,
+        "pairs": 287
+      }
+    }
+  },
+  "judge_id": "gpt-5.6-sol-pairwise-v1",
+  "length_logistic": {
+    "A4:A1": {
+      "decided_pairs": 703,
+      "equal_length_preference": 0.8039497653460873,
+      "equal_length_preference_high": 0.8382230885738048,
+      "equal_length_preference_low": 0.7700737102586364,
+      "intercept": 1.4111658606679955,
+      "prompts": 294,
+      "slope": 1.2833021787331131,
+      "slope_high": 1.986034137601831,
+      "slope_low": 0.5980087306513985
+    },
+    "A4:A2": {
+      "decided_pairs": 623,
+      "equal_length_preference": 0.6000118550917232,
+      "equal_length_preference_high": 0.6565218135352455,
+      "equal_length_preference_low": 0.5443481793433226,
+      "intercept": 0.4055145045676876,
+      "prompts": 278,
+      "slope": 2.3221614929233416,
+      "slope_high": 3.2644959506363653,
+      "slope_low": 1.4988352029488625
+    },
+    "A4:A3": {
+      "decided_pairs": 653,
+      "equal_length_preference": 0.6481922074947493,
+      "equal_length_preference_high": 0.6908957911623761,
+      "equal_length_preference_low": 0.5994872825003601,
+      "intercept": 0.6111022864319442,
+      "prompts": 289,
+      "slope": 1.7311953834426186,
+      "slope_high": 2.3944524126043683,
+      "slope_low": 1.196230243639889
+    },
+    "A4:A5": {
+      "decided_pairs": 577,
+      "equal_length_preference": 0.5081424996757802,
+      "equal_length_preference_high": 0.5503089356029034,
+      "equal_length_preference_low": 0.4623807663765355,
+      "intercept": 0.0325728783623035,
+      "prompts": 280,
+      "slope": 2.949569464436959,
+      "slope_high": 3.836946076770691,
+      "slope_low": 2.1850282945404245
+    },
+    "A4:A6": {
+      "decided_pairs": 554,
+      "equal_length_preference": 0.5474009295547753,
+      "equal_length_preference_high": 0.5910686180343594,
+      "equal_length_preference_low": 0.5046046930280899,
+      "intercept": 0.19017481534572625,
+      "prompts": 279,
+      "slope": 2.727231152058687,
+      "slope_high": 3.771603788210321,
+      "slope_low": 1.9105261106200617
+    }
+  },
+  "prompt_level": {
+    "A4:A1": {
+      "across_benchmarks": {
+        "bootstrap_high": 0.7777847222222222,
+        "bootstrap_low": 0.7169444444444445,
+        "pairs": 873,
+        "prompt_losses": 37,
+        "prompt_ties": 29,
+        "prompt_wins": 234,
+        "prompts": 300,
+        "rate": 0.7477777777777778,
+        "sign_test_p": 3.6160034817664284e-36
+      },
+      "benchmarks": {
+        "DoLoMiTes": {
+          "bootstrap_high": 0.7291874999999998,
+          "bootstrap_low": 0.6166666666666667,
+          "pairs": 284,
+          "prompt_losses": 20,
+          "prompt_ties": 11,
+          "prompt_wins": 69,
+          "prompts": 100,
+          "rate": 0.6733333333333333,
+          "sign_test_p": 1.7769640600713887e-07
+        },
+        "HelloBench": {
+          "bootstrap_high": 0.82,
+          "bootstrap_low": 0.73,
+          "pairs": 293,
+          "prompt_losses": 7,
+          "prompt_ties": 12,
+          "prompt_wins": 81,
+          "prompts": 100,
+          "rate": 0.7758333333333333,
+          "sign_test_p": 4.479628833074364e-17
+        },
+        "WritingBench": {
+          "bootstrap_high": 0.845,
+          "bootstrap_low": 0.74,
+          "pairs": 296,
+          "prompt_losses": 10,
+          "prompt_ties": 6,
+          "prompt_wins": 84,
+          "prompts": 100,
+          "rate": 0.7941666666666667,
+          "sign_test_p": 1.032699183755085e-15
+        }
+      }
+    },
+    "A4:A2": {
+      "across_benchmarks": {
+        "bootstrap_high": 0.6561180555555555,
+        "bootstrap_low": 0.5905555555555555,
+        "pairs": 886,
+        "prompt_losses": 75,
+        "prompt_ties": 54,
+        "prompt_wins": 171,
+        "prompts": 300,
+        "rate": 0.6227777777777778,
+        "sign_test_p": 8.544149453207063e-10
+      },
+      "benchmarks": {
+        "DoLoMiTes": {
+          "bootstrap_high": 0.5991666666666666,
+          "bootstrap_low": 0.485,
+          "pairs": 291,
+          "prompt_losses": 31,
+          "prompt_ties": 25,
+          "prompt_wins": 44,
+          "prompts": 100,
+          "rate": 0.5425,
+          "sign_test_p": 0.16542794172425662
+        },
+        "HelloBench": {
+          "bootstrap_high": 0.63,
+          "bootstrap_low": 0.5316666666666666,
+          "pairs": 299,
+          "prompt_losses": 29,
+          "prompt_ties": 23,
+          "prompt_wins": 48,
+          "prompts": 100,
+          "rate": 0.58,
+          "sign_test_p": 0.03953953287797775
+        },
+        "WritingBench": {
+          "bootstrap_high": 0.7991666666666667,
+          "bootstrap_low": 0.69,
+          "pairs": 296,
+          "prompt_losses": 15,
+          "prompt_ties": 6,
+          "prompt_wins": 79,
+          "prompts": 100,
+          "rate": 0.7458333333333332,
+          "sign_test_p": 1.1505439371930658e-11
+        }
+      }
+    },
+    "A4:A3": {
+      "across_benchmarks": {
+        "bootstrap_high": 0.6694444444444445,
+        "bootstrap_low": 0.6080555555555556,
+        "pairs": 878,
+        "prompt_losses": 65,
+        "prompt_ties": 52,
+        "prompt_wins": 183,
+        "prompts": 300,
+        "rate": 0.6388888888888888,
+        "sign_test_p": 3.5337222207217016e-14
+      },
+      "benchmarks": {
+        "DoLoMiTes": {
+          "bootstrap_high": 0.7683333333333333,
+          "bootstrap_low": 0.6708333333333333,
+          "pairs": 288,
+          "prompt_losses": 12,
+          "prompt_ties": 12,
+          "prompt_wins": 76,
+          "prompts": 100,
+          "rate": 0.72,
+          "sign_test_p": 1.567340030469408e-12
+        },
+        "HelloBench": {
+          "bootstrap_high": 0.6241666666666666,
+          "bootstrap_low": 0.5308333333333334,
+          "pairs": 297,
+          "prompt_losses": 25,
+          "prompt_ties": 25,
+          "prompt_wins": 50,
+          "prompts": 100,
+          "rate": 0.5775,
+          "sign_test_p": 0.005228243004014281
+        },
+        "WritingBench": {
+          "bootstrap_high": 0.6758333333333333,
+          "bootstrap_low": 0.5616666666666666,
+          "pairs": 293,
+          "prompt_losses": 28,
+          "prompt_ties": 15,
+          "prompt_wins": 57,
+          "prompts": 100,
+          "rate": 0.6191666666666666,
+          "sign_test_p": 0.0021949089077805926
+        }
+      }
+    }
+  },
+  "run_labels": [
+    "run-1",
+    "run-2",
+    "run-3"
+  ],
+  "schema_version": 1
+}

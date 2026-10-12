@@ -38,7 +38,7 @@ Provider-level defaults not authored by the experiment are set by the runtime co
 \subsection{Generation Prompts}
 
 \subsubsection{Baselines}
-The \condStaged\ prompts follow the planning--drafting--revision decomposition used by prior long-form writing systems~\citep{yang2022re3,wan2025cognitive}, while \condTaskPlanning\ follows the adaptive task-planning formulation of WriteHERE~\citep{xiong2025beyond}.
+The \condStaged\ prompts follow the Pre-Write/Write/Re-Write stage model~\citep{rohman1965pre}, while \condTaskPlanning\ follows the adaptive task-planning formulation of WriteHERE~\citep{xiong2025beyond}.
 
 \promptinput{PromptBaseline}{\condSinglePass}{build/prompt-display/experiments/conditions/prompts/a1_single_shot.md}
 
@@ -70,6 +70,8 @@ The \condStaged\ prompts follow the planning--drafting--revision decomposition u
 \promptinput{PromptReviewer}{\texttt{Reviewer} Role Skill}{build/prompt-display/plugin/skills/reviewing/SKILL.md}
 
 \subsubsection{Ablations and Execution Variants}
+The \condNoGoals\ prompt forbids the goals file and goal events and tells the \texttt{Monitor} not to request goal-setting, but its \texttt{Planner} subagents load the shared planning role skill, whose goal-setting step is therefore present in their instructions.
+Across the three generation runs, no \condNoGoals\ workspace contains a goals file or a goal identifier, and its traces record no goal events.
 \promptinput{PromptAblation}{\condNoGoals}{build/prompt-display/experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md}
 
 \promptinput{PromptAblation}{\condFixedOrder}{build/prompt-display/experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md}

@@ -117,7 +117,7 @@ def check_caption_takeaways() -> None:
         "tab/process-dynamics.tex": (
             (
                 "the first group partitions complete paths",
-                ("partition", "Complete process paths", "one per run"),
+                ("partition", "Complete process paths", "one per document"),
             ),
             ("rows 3-5 are non-exclusive", ("non-exclusive", "Non-exclusive", "can overlap")),
         ),
@@ -394,9 +394,11 @@ def check():
     check_limitations_subset_wording()
     check_trace_process_names()
 
-    assert conclusion.startswith(
-        r"\condAgenticCogWriter\ reframes long-form writing for AI agents"
-    ), "keep the conclusion contribution-first rather than opening with 'We use'"
+    # The conclusion opens with the contribution itself; its wording is free so
+    # that a claim revision does not require a guard change.
+    assert conclusion.startswith(r"\condAgenticCogWriter\ "), (
+        "keep the conclusion contribution-first rather than opening with 'We use'"
+    )
 
     # Appendix organization and terminology are reader-facing constraints.
     assert r"\section{Prompt and Experiment Configuration}" in acl, (

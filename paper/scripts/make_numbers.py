@@ -164,6 +164,16 @@ LENGTH_CONTRASTS = {
 LENGTH_RUNS = {"run-1": "One", "run-2": "Two", "run-3": "Three"}
 LENGTH_CONTROL_MARKER = "% Length-control macros."
 COMPUTE_STRATIFIED_MARKER = "% Compute-stratified macros."
+PAIRWISE_ROBUSTNESS_MARKER = "% Pairwise-robustness macros."
+PAIRWISE_ROBUSTNESS_CONTRASTS = {
+    "A4:A1": "FullSinglePass",
+    "A4:A2": "FullStaged",
+    "A4:A3": "FullTaskPlanning",
+    "A4:A5": "FullNoGoals",
+    "A4:A6": "FullFixedOrder",
+}
+# Bins in which our system used under 0.80 of Staged's output-plus-reasoning tokens.
+COMPUTE_LOW_RATIO_BINS = ("0.00-0.50", "0.50-0.67", "0.67-0.80")
 # Gray N/A for a band without pairs; its table cell is text, not math.
 NOT_AVAILABLE = r"\textcolor{nagray}{N/A}"
 CROSS_FAMILY_SOURCE_FIELDS = {
@@ -233,7 +243,15 @@ SINGLE_CONTEXT_PAIR_FIELDS = (
 )
 
 THREE_RUN_BENCHMARKS = {"WritingBench": "Writing", "HelloBench": "Hello", "DoLoMiTes": "DoLo"}
-THREE_RUN_CONDITIONS = {"A1": "SinglePass", "A2": "Staged", "A3": "TaskPlanning", "A4": "Full"}
+THREE_RUN_CONDITIONS = {
+    "A1": "SinglePass",
+    "A2": "Staged",
+    "A3": "TaskPlanning",
+    "A4": "Full",
+    "A5": "NoGoals",
+    "A6": "FixedOrder",
+    "A7": "SingleWriter",
+}
 # The manuscript reports WritingBench's 1-10 native scale divided by 10 so both native columns read 0-1.
 THREE_RUN_NATIVE_SCALE = {"WritingBench": 10.0, "HelloBench": 1.0}
 ABLATION_CONDITIONS = {"A5": "NoGoals", "A6": "FixedOrder"}
@@ -1351,11 +1369,57 @@ def _compute_stratified_entries(report: dict[str, Any]) -> list[tuple[str, str, 
                     _optional_percent(stats["win_rate"], 1),
                     f"compute-stratified JSON per_replication.{replication}.by_contrast.{contrast}.compute_matched.{band}.win_rate",
                 ))
+        if contrast == "A4:A2":
+            low = [pooled_data["ratio_bins"][ratio_bin] for ratio_bin in COMPUTE_LOW_RATIO_BINS]
+            entries.append((
+                "\\ComputeFullStagedBelowEightyWLT",
+                "/".join(str(sum(stats[key] for stats in low)) for key in ("wins", "losses", "ties")),
+                "compute-stratified JSON pooled.by_contrast.A4:A2.ratio_bins below 0.80, summed W/L/T",
+            ))
         entries.append((
             f"\\Compute{contrast_word}SpearmanRho",
             f"{pooled_data['spearman']['rho']:.4f}",
             f"compute-stratified JSON pooled.by_contrast.{contrast}.spearman.rho",
         ))
+    return entries
+
+
+def _pairwise_robustness_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Prompt-level tests, length-controlled preference, and judge agreement."""
+    entries = []
+    for contrast, contrast_word in PAIRWISE_ROBUSTNESS_CONTRASTS.items():
+        if contrast in report["prompt_level"]:
+            block = report["prompt_level"][contrast]
+            scopes = {"Across": block["across_benchmarks"]}
+            scopes.update({word: block["benchmarks"][name] for name, word in ROBUSTNESS_BENCHMARKS.items()})
+            for scope_word, stats in scopes.items():
+                prefix = f"\\PromptLevel{scope_word}{contrast_word}"
+                source = f"pairwise-robustness JSON prompt_level.{contrast}.{scope_word}"
+                entries += [
+                    (prefix + "Rate", _percent_fixed(stats["rate"], 1), source + ".rate"),
+                    (prefix + "Interval", f"{_percent_fixed(stats['bootstrap_low'], 1)}--{_percent_fixed(stats['bootstrap_high'], 1)}", source + " bootstrap interval"),
+                    (prefix + "WLT", f"{stats['prompt_wins']}/{stats['prompt_losses']}/{stats['prompt_ties']}", source + " prompt W/L/T"),
+                    (prefix + "P", _pvalue(stats["sign_test_p"]), source + ".sign_test_p"),
+                ]
+        stats = report["length_logistic"][contrast]
+        prefix = f"\\LengthModel{contrast_word}"
+        source = f"pairwise-robustness JSON length_logistic.{contrast}"
+        entries += [
+            (prefix + "Decided", f"{stats['decided_pairs']:,}", source + ".decided_pairs"),
+            (prefix + "Preference", _percent_fixed(stats["equal_length_preference"], 1), source + ".equal_length_preference"),
+            (prefix + "Interval", f"{_percent_fixed(stats['equal_length_preference_low'], 1)}--{_percent_fixed(stats['equal_length_preference_high'], 1)}", source + " bootstrap interval"),
+            (prefix + "Slope", f"{stats['slope']:.2f}", source + ".slope"),
+            (prefix + "SlopeInterval", f"{stats['slope_low']:.2f}--{stats['slope_high']:.2f}", source + " slope bootstrap interval"),
+        ]
+    agreement = report["judge_agreement"]["all_contrasts"]
+    source = "pairwise-robustness JSON judge_agreement.all_contrasts"
+    entries += [
+        ("\\JudgeAgreementPairs", str(agreement["pairs"]), source + ".pairs"),
+        ("\\JudgeAgreementKappa", f"{agreement['kappa']:.2f}", source + ".kappa"),
+        ("\\JudgeAgreementDecidedPairs", str(agreement["both_decided_pairs"]), source + ".both_decided_pairs"),
+        ("\\JudgeAgreementDecidedAgreeing", str(agreement["both_decided_agreeing_pairs"]), source + ".both_decided_agreeing_pairs"),
+        ("\\JudgeAgreementDecidedKappa", f"{agreement['both_decided_kappa']:.2f}", source + ".both_decided_kappa"),
+    ]
     return entries
 
 
@@ -2029,7 +2093,7 @@ def _three_run_stat(cell: Any, source: str) -> tuple[float, float]:
 
 
 def _three_run_quality_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
-    """Macros for the three-run native and four-condition pointwise table, mean and SD."""
+    """Macros for the three-run native and pointwise table of all seven systems, mean and SD."""
     across = report.get("across_runs")
     if not isinstance(across, dict):
         raise ValueError("three-run quality JSON is missing across_runs")
@@ -2078,9 +2142,7 @@ def _paired_quality_entries(paired: dict[str, Any]) -> list[tuple[str, str, str]
     for benchmark, benchmark_word in THREE_RUN_BENCHMARKS.items():
         scores = ("native", "pointwise") if benchmark in THREE_RUN_NATIVE_SCALE else ("pointwise",)
         for score in scores:
-            for condition, condition_word in THREE_RUN_CONDITIONS.items():
-                if condition == "A4":
-                    continue
+            for condition, condition_word in ALTERNATIVE_CONDITIONS.items():
                 source = f"paired quality JSON contrasts.{benchmark}.{score}.A4-{condition}"
                 cell = contrasts.get(benchmark, {}).get(score, {}).get(f"A4-{condition}") if isinstance(contrasts.get(benchmark), dict) else None
                 if not isinstance(cell, dict) or not isinstance(cell.get("ci95"), list) or len(cell["ci95"]) != 2:
@@ -2197,6 +2259,7 @@ def main() -> None:
     parser.add_argument("--process-sequences", type=Path)
     parser.add_argument("--compute-stratified-sensitivity", type=Path, help="compute-stratified JSON; appends its own block")
     parser.add_argument("--adversarial-review-analysis", type=Path)
+    parser.add_argument("--pairwise-robustness", type=Path, help="pairwise-robustness JSON; appends its own block")
     parser.add_argument("--three-run-quality", nargs=2, type=Path, metavar=("SUMMARY", "PAIRED"))
     parser.add_argument("--prompt-languages", nargs=2, type=Path, metavar=("PROMPT_SETS", "MANIFEST_DIR"))
     parser.add_argument(
@@ -2213,6 +2276,7 @@ def main() -> None:
     for path, label, marker, entries in (
         (args.length_control, "length-control", LENGTH_CONTROL_MARKER, _length_control_entries),
         (args.compute_stratified_sensitivity, "compute-stratified", COMPUTE_STRATIFIED_MARKER, _compute_stratified_entries),
+        (args.pairwise_robustness, "pairwise-robustness", PAIRWISE_ROBUSTNESS_MARKER, _pairwise_robustness_entries),
     ):
         if path is not None:
             if args.aggregations:

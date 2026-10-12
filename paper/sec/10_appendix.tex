@@ -19,7 +19,7 @@ For \condAgenticCogWriter\ versus \condSinglePass, the descriptive mean win rate
 \begin{figure}
 \centering
 \includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
-\caption{Run-level pairwise estimates separate the large system comparisons from the ablations.
+\caption{Generation-run-level pairwise estimates separate the large system comparisons from the ablations.
 \condAgenticCogWriter\ is consistently favored over \condSinglePass\ and \condTaskPlanning\ and usually over \condStaged, whereas \condNoGoals\ and \condFixedOrder\ remain near parity and do not survive the within-benchmark Holm correction.
 Points show 95\% Wilson intervals; filled circles survive correction, open circles do not, and diamonds are descriptive means across generation runs.}
 \label{fig:appendix-confirmatory-forest}
@@ -39,7 +39,7 @@ Removing explicit goals therefore leaves the full system's advantage intact, and
 \section{Additional Process and Resource Statistics}
 \label{app:process-behavior}
 Table~\ref{tab:process-summary} reports output size, delegated invocations, goal events, token accounting, and wall-clock time, each averaged across the three generation runs.
-For \condAgenticCogWriter, a generation run averages \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while its post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
+For \condAgenticCogWriter, a generation run averages \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while its post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ regeneration proposals, while its trace records \AfourGoalRegeneratedMean\ goal regenerations (Table~\ref{tab:process-summary}).
 \input{tab/appendix-process}
 
 \paragraph{Trace processing.}
@@ -66,12 +66,21 @@ These matching-band results are descriptive sensitivity checks; ties are exclude
 The \condSingleWriter\ length-band tests in Section~\ref{sec:results-mechanism} instead combine the three runs, so their sign tests take the prompt as the unit: a prompt counts as a win or a loss when its outcomes in the band, averaged across runs, favor one system.
 \input{tab/appendix-length-control}
 
+\subsection{Prompt-Level and Length-Controlled Summaries}
+\label{app:prompt-level}
+Table~\ref{tab:appendix-prompt-level} reports the post-hoc prompt-level estimate for each alternative and benchmark.
+Across benchmarks, it separates our system from all three alternatives; against \condStaged, the separation holds on WritingBench and HelloBench ($p=\PromptLevelHelloFullStagedP$, unadjusted) but not on DoLoMiTes ($p=\PromptLevelDoLoFullStagedP$).
+Table~\ref{tab:appendix-length-model} fits a logistic model of the decided outcome on the log length ratio, following the length-controlled evaluation of \citet{dubois2024length}.
+At equal length, our system keeps its preference over the three alternatives, and its preference is \LengthModelFullNoGoalsPreference\ against \condNoGoals\ and \LengthModelFullFixedOrderPreference\ against \condFixedOrder; every slope is positive, so the judge favors the longer output in each contrast.
+\input{tab/appendix-prompt-level}
+
 \subsection{Compute-Stratified Sensitivity}
 \label{app:compute-control}
 Compute matching asks whether the pairwise direction persists when the compared systems use similar realized output-plus-reasoning token budgets.
 Table~\ref{tab:appendix-compute-control} reports outcomes within the pre-specified 1.25$\times$ and 1.50$\times$ matching bands and across descriptive ratio bins.
 Because realized compute is determined by execution, this analysis is a sensitivity check rather than a causal adjustment.
 Each row combines the three generation runs, so the sign tests take the prompt as the unit, as in the \condSingleWriter\ length-band tests.
+Where our system used under 0.80 of \condStaged's output-plus-reasoning tokens, the three ratio bins hold \ComputeFullStagedBelowEightyWLT\ W/L/T, close to parity, whereas every bin from 0.80 to 2.00 favors our system.
 \input{tab/appendix-compute-control}
 \clearpage
 
@@ -88,6 +97,7 @@ Table~\ref{tab:appendix-cross-family} reports benchmark-level results for three 
 Within each contrast, summing W/L/T counts over the three benchmarks gives \CrossFamilyFullSinglePassWLT\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ versus \condNoGoals.
 The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval.
 Across all three selected contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
+Cohen's kappa between the two judges is \JudgeAgreementKappa\ over these outcomes, most of which are cross-family ties, and \JudgeAgreementDecidedKappa\ over the \JudgeAgreementDecidedPairs\ pairs both judges decide, of which \JudgeAgreementDecidedAgreeing\ agree.
 \input{tab/appendix-cross-family}
 
 \section{Consensus-Writing Evaluation on Habermas Machine Data}

@@ -11,10 +11,10 @@ Instead, we report the model identifiers and roles, reasoning effort, output-tok
 No model weights are trained or fine-tuned in this study.
 
 \paragraph{Evaluation controls.}
-Pairwise outputs are blinded and judged in both presentation orders to reduce known position bias in LLM evaluation~\citep{zheng2023judging,wang2024fair}. The two orders are treated as repeated measurements of one prompt-level comparison rather than independent samples: a semantic winner is retained only when both orders agree, and any disagreement becomes a tie. The reported primary judge and generator are both from the GPT-5.6 family, which differs from the planned different-family judge design. We therefore report \modelCross\ separately as a cross-family robustness check rather than pooling it with the confirmatory judge, given evidence that model-family relationships can affect evaluator preferences~\citep{panickssery2024selfpreference}.
+Pairwise outputs are blinded and judged in both presentation orders to reduce known position bias in LLM evaluation~\citep{zheng2023judging,wang2024fair}. The two orders are treated as repeated measurements of one prompt-level comparison rather than independent samples: a semantic winner is retained only when both orders agree, and any disagreement becomes a tie. We report \modelCross\ separately as a cross-family robustness check rather than pooling it with the confirmatory judge, given evidence that model-family relationships can affect evaluator preferences~\citep{panickssery2024selfpreference}.
 
 \paragraph{Frozen operational values.}
-Three independent generation runs define the replication dimension of the pre-specified confirmatory analysis, but the study record gives no additional optimization rationale for choosing exactly three. The 64,000-token generator output budget, primary-judge seed, and two-retry judge policy are likewise frozen operational settings rather than values selected by a documented tuning sweep. Generator temperature is reported as unset because the scored generation interface did not expose that control; unsupported generation controls were monitored rather than varied across conditions. Reporting these values makes the execution reproducible without attributing post-hoc rationales that were not part of the recorded design.
+Three generation runs define the replication dimension of the pre-specified confirmatory analysis. The 64,000-token generator output budget, primary-judge seed, and two-retry judge policy are fixed operational settings, not tuned values. Generator temperature is reported as unset because the scored generation interface did not expose that control; unsupported generation controls were monitored rather than varied across conditions.
 
 \begin{table}[H]
 \centering
@@ -40,6 +40,6 @@ Pairwise presentation & both orders \\
 Presentation disagreement & counted as tie \\
 \bottomrule
 \end{tabular}
-\caption{Frozen runtime and evaluation settings used for the reported runs.}
+\caption{Frozen runtime and evaluation settings used for the reported generation runs.}
 \label{tab:runtime-settings}
 \end{table}

@@ -163,11 +163,13 @@ def check() -> None:
         assert actual == expected, f"{path}: expected numeric columns right-aligned as {expected}, got {actual}"
 
     # Main quality scores use three decimals and remain synchronized with numbers.tex.
+    # Table 3 lists every pointwise-scored system because all seven share the
+    # z-score pool; a reader comparing rows needs the ablations' means too.
     main_values = re.findall(r"(?<![A-Za-z0-9])(-?\d+\.\d+)(?![A-Za-z0-9])", tabular_body(main))
-    assert len(main_values) == 40, ("tab/main-results.tex: unexpected number of displayed scores", len(main_values))
+    assert len(main_values) == 70, ("tab/main-results.tex: unexpected number of displayed scores", len(main_values))
     assert_fixed_decimals(main_values, 3, "tab/main-results.tex")
     expected_main: list[str] = []
-    for condition in ("SinglePass", "Staged", "TaskPlanning", "Full"):
+    for condition in ("SinglePass", "Staged", "TaskPlanning", "Full", "NoGoals", "FixedOrder", "SingleWriter"):
         for cell in (f"Writing{condition}Native", f"Writing{condition}Pointwise", f"Hello{condition}Native", f"Hello{condition}Pointwise", f"DoLo{condition}Pointwise"):
             expected_main.extend(f"{numeric_macro(numbers, f'ThreeRun{cell}{stat}'):.3f}" for stat in ("Mean", "SD"))
     assert main_values == expected_main, ("tab/main-results.tex: displayed scores are stale relative to numbers.tex", main_values, expected_main)
