@@ -326,7 +326,7 @@ def _cross_result() -> dict:
 
 def _cross_family_summary() -> dict:
     contrasts = {}
-    for contrast in ("A4:A1", "A4:A3", "A4:A5"):
+    for contrast in ("A4:A1", "A4:A2", "A4:A3", "A4:A5", "A4:A6"):
         result = _cross_result()
         result["benchmarks"] = {
             benchmark: _cross_result()
@@ -652,6 +652,8 @@ class TokenMacroTests(unittest.TestCase):
         )
         self.assertIn(r"% source: cross-family JSON pooled.commit_rate.rate", output)
         self.assertIn(r"\newcommand{\CrossFamilyPooledCommitRate}{50.0\%}", output)
+        self.assertIn(r"\newcommand{\CrossFamilyFullStagedN}{3}", output)
+        self.assertIn(r"\newcommand{\CrossFamilyWritingFullFixedOrderN}{3}", output)
 
     def test_cross_family_macros_do_not_use_existing_fallback_values(self):
         output = emit_numbers(

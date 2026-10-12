@@ -148,6 +148,11 @@ ROBUSTNESS_CONTRASTS = {
     "A4:A3": "FullTaskPlanning",
     "A4:A5": "FullNoGoals",
 }
+CROSS_FAMILY_CONTRASTS = {
+    **ROBUSTNESS_CONTRASTS,
+    "A4:A2": "FullStaged",
+    "A4:A6": "FullFixedOrder",
+}
 ROBUSTNESS_BENCHMARKS = {
     "DoLoMiTes": "DoLo",
     "HelloBench": "Hello",
@@ -900,7 +905,7 @@ def _length_control_entries(report: dict[str, Any]) -> list[tuple[str, str, str]
 def _validate_cross_family(report: dict[str, Any]) -> dict[str, Any]:
     source = "cross-family JSON"
     contrasts = _required_mapping(report, CROSS_FAMILY_SOURCE_FIELDS["contrasts"], source)
-    for contrast in ROBUSTNESS_CONTRASTS:
+    for contrast in CROSS_FAMILY_CONTRASTS:
         pooled = contrasts.get(contrast)
         if not isinstance(pooled, dict):
             raise ValueError(f"{source}.contrasts is missing {contrast}")
@@ -1335,7 +1340,7 @@ def _emit_cross_family_macros(add: Any, report: dict[str, Any]) -> None:
     add("\\CrossFamilyPooledCommitRate", _cross_family_percent(pooled["commit_rate"]["rate"]), "cross-family JSON pooled.commit_rate.rate")
     add("\\CrossFamilyPooledAgreement", f"{pooled['prompt_collapsed_agreement']['numerator']}/{pooled['prompt_collapsed_agreement']['denominator']}", "cross-family JSON pooled.prompt_collapsed_agreement numerator/denominator")
     add("\\CrossFamilyPooledConflicts", str(pooled["direction_conflicts"]), "cross-family JSON pooled.direction_conflicts")
-    for contrast, contrast_word in ROBUSTNESS_CONTRASTS.items():
+    for contrast, contrast_word in CROSS_FAMILY_CONTRASTS.items():
         pooled_contrast = report[CROSS_FAMILY_SOURCE_FIELDS["contrasts"]][contrast]
         prefix = "\\CrossFamily" + contrast_word
         add(prefix + "N", str(pooled_contrast["n"]), f"cross-family JSON contrasts.{contrast}.n")
