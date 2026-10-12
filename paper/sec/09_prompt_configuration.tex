@@ -30,7 +30,7 @@ External retrieval is disabled by the coding-agent sandbox and by the experiment
 The platform-specific subagent wrappers only dispatch the corresponding role skills and add no separate writing policy.
 Configuration files pin the skill or stage prompt for every system and record hashes for fixed stage prompts.
 
-The experiment-authored generation and evaluation prompt configurations are reproduced below.
+The experiment-authored generation and evaluation prompt configurations are listed below.
 Generation is non-interactive: the runner supplies the assignment, context, and output constraints before each run, so the skill prompts omit interactive user-handoff instructions.
 Prompt headers use the internal condition codes A1 \condSinglePass, A2 \condStaged, A3 \condTaskPlanning, A4 \condAgenticCogWriter, A5 \condNoGoals, A6 \condFixedOrder, A7 \condSingleWriter, and A8 \condSingleContext.
 Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix~\ref{app:runtime}.
@@ -40,43 +40,43 @@ Provider-level defaults not authored by the experiment are set by the runtime co
 \subsubsection{Baselines}
 The \condStaged\ prompts follow the planning--drafting--revision decomposition used by prior long-form writing systems~\citep{yang2022re3,wan2025cognitive}, while \condTaskPlanning\ follows the adaptive task-planning formulation of WriteHERE~\citep{xiong2025beyond}.
 
-\promptinput{PromptBaseline}{\condSinglePass}{../experiments/conditions/prompts/a1_single_shot.md}
+\promptinput{PromptBaseline}{\condSinglePass}{build/prompt-display/experiments/conditions/prompts/a1_single_shot.md}
 
-\promptinput{PromptBaseline}{\condStaged: Pre-Write}{../experiments/conditions/prompts/a2_pre_write.md}
+\promptinput{PromptBaseline}{\condStaged: Pre-Write}{build/prompt-display/experiments/conditions/prompts/a2_pre_write.md}
 
-\promptinput{PromptBaseline}{\condStaged: Write}{../experiments/conditions/prompts/a2_write.md}
+\promptinput{PromptBaseline}{\condStaged: Write}{build/prompt-display/experiments/conditions/prompts/a2_write.md}
 
-\promptinput{PromptBaseline}{\condStaged: Re-Write}{../experiments/conditions/prompts/a2_re_write.md}
+\promptinput{PromptBaseline}{\condStaged: Re-Write}{build/prompt-display/experiments/conditions/prompts/a2_re_write.md}
 
-\promptinput{PromptBaseline}{\condTaskPlanning}{../experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md}
+\promptinput{PromptBaseline}{\condTaskPlanning}{build/prompt-display/experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md}
 
 \subsubsection{\condAgenticCogWriter}
-\promptinput{PromptMonitor}{Top-level Agent Skill}{../plugin/skills/agentic-cog-writer/SKILL.md}
+\promptinput{PromptMonitor}{Top-level Agent Skill}{build/prompt-display/plugin/skills/agentic-cog-writer/SKILL.md}
 
-\promptinput{PromptMonitor}{Goal Notation Reference}{../plugin/skills/agentic-cog-writer/references/goals-format.md}
+\promptinput{PromptMonitor}{Goal Notation Reference}{build/prompt-display/plugin/skills/agentic-cog-writer/references/goals-format.md}
 
-\promptinput{PromptMonitor}{Trace Schema Reference}{../plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md}
+\promptinput{PromptMonitor}{Trace Schema Reference}{build/prompt-display/plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md}
 
-\promptinput{PromptPlanner}{\texttt{Planner} Subagent Wrapper}{../plugin/agents/planner.md}
+\promptinput{PromptPlanner}{\texttt{Planner} Subagent Wrapper}{build/prompt-display/plugin/agents/planner.md}
 
-\promptinput{PromptPlanner}{\texttt{Planner} Role Skill}{../plugin/skills/planning/SKILL.md}
+\promptinput{PromptPlanner}{\texttt{Planner} Role Skill}{build/prompt-display/plugin/skills/planning/SKILL.md}
 
-\promptinput{PromptTranslator}{\texttt{Translator} Subagent Wrapper}{../plugin/agents/translator.md}
+\promptinput{PromptTranslator}{\texttt{Translator} Subagent Wrapper}{build/prompt-display/plugin/agents/translator.md}
 
-\promptinput{PromptTranslator}{\texttt{Translator} Role Skill}{../plugin/skills/translating/SKILL.md}
+\promptinput{PromptTranslator}{\texttt{Translator} Role Skill}{build/prompt-display/plugin/skills/translating/SKILL.md}
 
-\promptinput{PromptReviewer}{\texttt{Reviewer} Subagent Wrapper}{../plugin/agents/reviewer.md}
+\promptinput{PromptReviewer}{\texttt{Reviewer} Subagent Wrapper}{build/prompt-display/plugin/agents/reviewer.md}
 
-\promptinput{PromptReviewer}{\texttt{Reviewer} Role Skill}{../plugin/skills/reviewing/SKILL.md}
+\promptinput{PromptReviewer}{\texttt{Reviewer} Role Skill}{build/prompt-display/plugin/skills/reviewing/SKILL.md}
 
 \subsubsection{Ablations and Execution Variants}
-\promptinput{PromptAblation}{\condNoGoals}{../experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md}
+\promptinput{PromptAblation}{\condNoGoals}{build/prompt-display/experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md}
 
-\promptinput{PromptAblation}{\condFixedOrder}{../experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md}
+\promptinput{PromptAblation}{\condFixedOrder}{build/prompt-display/experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md}
 
-\promptinput{PromptAblation}{\condSingleWriter}{../experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md}
+\promptinput{PromptAblation}{\condSingleWriter}{build/prompt-display/experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md}
 
-\promptinput{PromptAblation}{\condSingleContext}{../experiments/plugin/skills/cognitive-writing-single-context/SKILL.md}
+\promptinput{PromptAblation}{\condSingleContext}{build/prompt-display/experiments/plugin/skills/cognitive-writing-single-context/SKILL.md}
 
 \subsection{Evaluation Prompts}
 
@@ -86,10 +86,10 @@ HelloBench retains 5--7 checklist items per prompt; the evaluator scores each it
 DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark.
 Published leaderboard values are not comparable with these scores because we use a shared evaluator and our own outputs.
 
-\promptinput{PromptEvaluator}{Common Pointwise Rubric}{../experiments/prompts/judges/pointwise-v1.md}
+\promptinput{PromptEvaluator}{Common Pointwise Rubric}{build/prompt-display/experiments/prompts/judges/pointwise-v1.md}
 
-\promptinput{PromptEvaluator}{Pairwise Comparison}{../experiments/prompts/judges/pairwise-v1.md}
+\promptinput{PromptEvaluator}{Pairwise Comparison}{build/prompt-display/experiments/prompts/judges/pairwise-v1.md}
 
-\promptinput{PromptEvaluator}{WritingBench-Native Evaluation}{../experiments/prompts/judges/writingbench-native-v1.md}
+\promptinput{PromptEvaluator}{WritingBench-Native Evaluation}{build/prompt-display/experiments/prompts/judges/writingbench-native-v1.md}
 
-\promptinput{PromptEvaluator}{HelloBench-Native Evaluation}{../experiments/prompts/judges/hellobench-native-v1.md}
+\promptinput{PromptEvaluator}{HelloBench-Native Evaluation}{build/prompt-display/experiments/prompts/judges/hellobench-native-v1.md}

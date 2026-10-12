@@ -5,7 +5,7 @@
 \section{Runtime Configuration}
 \label{app:runtime}
 Table~\ref{tab:runtime-settings} reports the runtime controls shared across conditions.
-We hold the generator, output-token budget, network and retrieval policy, approval policy, task input, and final-output requirements fixed so that the compared conditions differ in how they organize the writing process rather than in model access or external information.
+We hold the generator, output-token budget, network and retrieval policy, approval policy, task input, and final-output requirements fixed across conditions.
 Each prompt--condition pair is generated in three runs.
 Primary pairwise evaluation uses the same judge for every condition, presents each pair in both orders, and records presentation disagreements as ties; the cross-family judge is used only for the separate robustness analysis.
 \input{tab/appendix-runtime-settings}
@@ -13,6 +13,8 @@ Primary pairwise evaluation uses the same judge for every condition, presents ea
 \section{Generation-Run-Level Pairwise Outcomes}
 \label{app:pairwise-detail}
 The following figure shows the prompt-level pairwise estimates for each benchmark and generation run, including the ablation contrasts.
+The Holm family of each benchmark contains 24 tests: eight pre-specified contrasts in each of the three generation runs.
+The contrasts compare \condAgenticCogWriter\ with \condSinglePass, \condStaged, \condTaskPlanning, \condNoGoals, and \condFixedOrder, and \condSingleWriter\ with \condSinglePass, \condAgenticCogWriter, and \condNoGoals.
 For \condAgenticCogWriter\ versus \condSinglePass, the descriptive mean win rates across generation runs are \DoLoFourOneRateMean\ on DoLoMiTes, \HelloFourOneRateMean\ on HelloBench, and \WritingFourOneRateMean\ on WritingBench.
 \begin{figure}
 \centering
@@ -36,9 +38,8 @@ Removing explicit goals therefore leaves the full system's advantage intact, and
 
 \section{Additional Process and Resource Statistics}
 \label{app:process-behavior}
-Table~\ref{tab:process-summary} reports output size, delegated invocations, goal events, token accounting, and wall-clock time as run-level summaries across all three generation runs.
-Each cell reports the mean of the corresponding run-level statistic; output size is the mean of the three run-level medians.
-For \condAgenticCogWriter, the three-run means include \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while the post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
+Table~\ref{tab:process-summary} reports output size, delegated invocations, goal events, token accounting, and wall-clock time, each averaged across the three generation runs.
+For \condAgenticCogWriter, a generation run averages \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events, while its post-\texttt{Reviewing} ledger contains \AfourLedgerEntriesMean\ entries including \AfourLedgerWithProposalMean\ explicit regeneration proposals.
 \input{tab/appendix-process}
 
 \paragraph{Trace processing.}

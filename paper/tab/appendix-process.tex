@@ -7,7 +7,7 @@
 \textbf{Condition}
 & \shortstack{\textbf{Median}\\\textbf{words}}
 & \shortstack{\textbf{Spawns}\\\textbf{/run}}
-& \shortstack{\textbf{Goals created}\\\textbf{developed/regenerated}}
+& \shortstack{\textbf{Goals created/}\\\textbf{developed/regenerated}\\\textbf{/generation run}}
 & \shortstack{\textbf{Output}\\\textbf{tokens}\\\textbf{/run}}
 & \shortstack{\textbf{Input}\\\textbf{tokens}\\\textbf{/run}}
 & \shortstack{\textbf{Mean sec.}\\\textbf{/completed run}} \\
@@ -22,6 +22,6 @@
 \condSingleWriter & \AsevenMedianOutputMean & \AsevenSpawnsMean & \AsevenGoalCreatedMean/\AsevenGoalDevelopedMean/\AsevenGoalRegeneratedMean & \AsevenOutputTokensMean & \AsevenInputTokensMean & \AsevenMeanSecondsMean \\
 \bottomrule
 \end{tabular}
-\caption{Realized process and resource use across all three generation runs. Each entry is the mean of its run-level statistic; output size averages the run-level medians, counting each CJK character as one word. The systems differ substantially in delegated invocations and token use in addition to their control logic, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses.}
+\caption{Realized process and resource use, averaged across the three generation runs. Goal counts are totals per generation run; spawns, tokens, and seconds are means per run (one system on one prompt); words are medians per generation run, counting each CJK character as one word. The systems differ substantially in delegated invocations and token use, while accepted goal regeneration is rare. These realized differences motivate the output-length and compute-matched sensitivity analyses.}
 \label{tab:process-summary}
 \end{table}

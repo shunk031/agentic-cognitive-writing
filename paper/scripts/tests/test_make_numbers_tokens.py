@@ -539,6 +539,18 @@ class TokenMacroTests(unittest.TestCase):
         # The p-value counts prompts, not pairs repeated across generation runs.
         self.assertIn(r"\ComputeFullSinglePassBinTwoPlusP=0.5", output)
 
+    def test_compute_stratified_empty_band_is_not_available(self):
+        summary = _compute_summary()
+        summary["pooled"]["by_contrast"]["A4:A1"]["compute_matched"]["within_1.25"] = {
+            "wins": 0, "losses": 0, "ties": 0, "n_non_tie": 0, "pairs": 0,
+            "win_rate": None, "wilson_low": None, "wilson_high": None, "sign_test_p": 1.0,
+            "prompts": 0, "prompt_wins": 0, "prompt_losses": 0, "prompt_ties": 0, "prompt_sign_test_p": 1.0,
+        }
+        output = dict((name, value) for name, value, _ in _compute_stratified_entries(summary))
+        not_available = r"\textcolor{nagray}{N/A}"
+        self.assertEqual(output[r"\ComputeFullSinglePassWithinOneTwentyFiveRate"], not_available)
+        self.assertEqual(output[r"\ComputeFullSinglePassWithinOneTwentyFiveP"], not_available)
+
     def test_compute_stratified_macros_fail_closed_on_missing_fields(self):
         summary = _compute_summary()
         del summary["pooled"]["by_contrast"]["A4:A2"]["spearman"]["rho"]

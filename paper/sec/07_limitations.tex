@@ -10,7 +10,7 @@ The results therefore do not establish transfer to shorter tasks, other model fa
 A direct next step is a task set that changes objectives, introduces new evidence, or adds rhetorical constraints during writing, so that process selection is required rather than only available.
 
 \paragraph{Comparison design.}
-The alternative writing systems are reimplemented under our generator, harness, tools, output budget, and no-retrieval policy, so each comparison changes the unit of control rather than model access or information; they are not executions of the published systems.
+The alternative writing systems are reimplementations under the shared setup of Section~\ref{sec:implementation}, not executions of the published systems.
 \condTaskPlanning\ also delegates its task nodes to subagents, so delegation is present on both sides of that comparison.
 CogWriter-style and STORM-style adaptations (\condExploratoryOne, \condExploratoryTwo) run only on ten consensus-writing tasks, and running them on the three benchmarks is the next comparison.\footnote{See Appendix~\ref{app:habermas} for the consensus-writing results.}
 The compute-matched analysis selects pairs with similar realized token use after generation; a Self-Refine baseline~\citep{madaan2023self} given our system's token budget before generation would test budget-matched iterative revision directly.
@@ -24,7 +24,7 @@ Model-judge preference is not human preference; a blinded human comparison of sa
 
 \paragraph{Component attribution.}
 The ablations constrain explicit goals and adaptive ordering to modest contributions without establishing equivalence.
-Neither ablation differs from the full system in any benchmark--run test after Holm correction, each such test reaches 80\% power at a true preference of about \PowerCellDetectablePreference, and the exploratory prompt-level summary does not rank the two components.\footnote{See Appendix~\ref{app:prompts} for the power calculation.}
+Neither ablation differs from the full system in any benchmark--run test after Holm correction, each such test reaches 80\% power~\citep{card2020little} at a true preference of about \PowerCellDetectablePreference, and the exploratory prompt-level summary does not rank the two components.\footnote{See Appendix~\ref{app:prompts} for the power calculation.}
 \condFixedOrder\ enforces its cycle through the \texttt{Monitor}'s instructions so that it shares our system's agent runtime and differs only in the selection rule, and \AsixCycleCompliantRate\ of its paths are cycle-compliant.\footnote{See Appendix~\ref{app:process-behavior} for the trace classification.}
 Next steps are a runner-enforced cycle and a combined ablation that removes goals and fixes the order together, which would test whether the two mechanisms substitute for each other.
 

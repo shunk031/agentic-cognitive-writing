@@ -2,7 +2,7 @@
 \label{sec:results-pointwise}
 
 Table~\ref{tab:main-results} reports document-quality scores for benchmark-native and common-rubric evaluation across the three benchmarks.
-\condAgenticCogWriter\ obtains the highest mean among the four systems in Table~\ref{tab:main-results} on every WritingBench and HelloBench measure, and its paired prompt-level differences exclude zero against every alternative on both WritingBench measures and on HelloBench native scores.
+\condAgenticCogWriter\ exceeds every alternative's mean on every WritingBench and HelloBench measure, and its paired prompt-level differences exclude zero against each on both WritingBench measures and HelloBench native scores.
 Its lead over \condStaged\ and \condTaskPlanning\ on HelloBench pointwise scores lies within the paired intervals, as does the higher DoLoMiTes pointwise mean of \condStaged.\footnote{See Appendix~\ref{app:paired-quality} for the paired differences and intervals.}
 
 \input{tab/main-results}
@@ -15,8 +15,7 @@ Table~\ref{tab:pairwise-results} reports a system-level separation in direct sam
 The direction holds in every benchmark and generation run against \condSinglePass\ and \condTaskPlanning, and in all but one benchmark--run test against \condStaged.
 
 Under the pre-specified within-benchmark Holm correction, \PooledFourOneHolmCellsTotal, \PooledFourThreeHolmCellsTotal, and \PooledFourTwoHolmCellsTotal\ of the nine benchmark--run tests separate our system from \condSinglePass, \condTaskPlanning, and \condStaged, respectively.\footnote{See Appendix~\ref{app:pairwise-detail} for run-level intervals and corrected results.}
-The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare, \UncondFullStagedWinShare, and \UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate, \WorstCaseFullStagedRate, and \WorstCaseFullTaskPlanningRate\ among order-consistent comparisons.\footnote{See Appendix~\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \condSinglePass.}
-The direct-comparison result supports the tested system as a whole because our system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \texttt{Monitor}.
+The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare, \UncondFullStagedWinShare, and \UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate, \WorstCaseFullStagedRate, and \WorstCaseFullTaskPlanningRate\ among order-consistent comparisons.\footnote{Appendix~\ref{app:sensitivity-analyses} reports the resource-matched and cross-family sensitivity analyses: the former largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \condSinglePass.}
 
 \input{tab/pairwise-results}
 
@@ -24,7 +23,7 @@ The direct-comparison result supports the tested system as a whole because our s
 \label{sec:results-mechanism}
 
 Table~\ref{tab:ablation-results} places the two pre-specified ablations much closer to \condAgenticCogWriter\ than the alternative writing systems in Table~\ref{tab:pairwise-results}.
-After the within-benchmark Holm correction, all benchmark--run tests comparing our system with \condNoGoals\ or \condFixedOrder\ remain above the corrected significance threshold.
+No benchmark--run test comparing our system with \condNoGoals\ or \condFixedOrder\ is significant after the within-benchmark Holm correction.
 An exploratory prompt-level summary defined after the main results places our system slightly ahead of both ablations, at \ClusteredFullFixedOrderRate\ [\ClusteredFullFixedOrderInterval], $p=\ClusteredFullFixedOrderP$, against \condFixedOrder\ and \ClusteredFullNoGoalsRate\ [\ClusteredFullNoGoalsInterval], $p=\ClusteredFullNoGoalsP$, against \condNoGoals; the two intervals overlap, so the summary does not rank the components.
 The ablations nonetheless keep the full system's advantage over the alternatives: of \PairedSeparationMeasureCount\ paired native and pointwise contrasts with them on WritingBench and HelloBench, intervals exclude zero for \PairedSeparatedNoGoals\ with \condNoGoals\ and \PairedSeparatedFixedOrder\ with \condFixedOrder, against \PairedSeparatedFull\ with the full system.\footnote{See Appendix~\ref{app:paired-quality} for these paired differences.}
 

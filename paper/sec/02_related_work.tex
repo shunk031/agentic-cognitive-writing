@@ -1,6 +1,6 @@
 \paragraph{Language agents and document production.}
 Language-agent research studies systems that interleave reasoning with actions, tools, memory, and feedback~\citep{yao2023react,shinn2023reflexion,sumers2024cognitive}, while writing-support systems assist planning, drafting, and revision~\citep{gero2022design}.
-Multi-agent frameworks divide work among role-specialized agents that converse~\citep{wu2024autogen} or follow standardized operating procedures~\citep{hong2024metagpt}.
+Multi-agent frameworks divide work among role-specialized agents that converse~\citep{wu2024autogen}, follow standardized operating procedures~\citep{hong2024metagpt}, or are directed by an orchestrator that selects the next specialized agent~\citep{fourney2024magentic}.
 Autonomous research systems increasingly connect those capabilities to report or paper generation after literature review and experimentation~\citep{schmidgall2025agentlab,lu2024aiscientist}.
 We focus on how a general-purpose agent organizes that writing stage.
 
@@ -9,8 +9,8 @@ Long-form generation becomes harder to control and evaluate as outputs grow in l
 Plan-and-Write~\citep{yao2019plan}, Re$^3$~\citep{yang2022re3}, DOC~\citep{yang2023doc}, STORM~\citep{shao2024assisting}, RecurrentGPT~\citep{zhou2023recurrentgpt}, and LongWriter~\citep{bai2025longwriter} organize generation around plans, revisions, outlines, sections, or paragraph-level content units.
 CogWriter~\citep{wan2025cognitive}, WriteHERE~\citep{xiong2025beyond}, IS-CoT~\citep{sun2026cot}, and SuperWriter~\citep{wu2026superwriter} make structure or refinement increasingly adaptive.
 CogWriter conditionally revises plans and generated segments within a planning-and-generation workflow, whereas WriteHERE schedules nodes in an evolving heterogeneous task graph.
-Agents' Room~\citep{huot2025agents} lets an orchestrator choose which planning or writing agent to call next from a shared scratchpad, but its agents specialize in story elements and its experiments fix their order, with no reviewing agent.
-Our \condAgenticCogWriter\ instead makes the choice among planning, drafting, and reviewing the document-level control decision.
+Agents' Room~\citep{huot2025agents} defines an orchestrator that chooses the next planning or writing agent from a shared scratchpad, but its agents specialize in story elements, it has no reviewing agent, and its experiments fix the agent order.
+Our \condAgenticCogWriter\ instead has process-defined subagents and a Monitor that chooses among planning, drafting, and reviewing.
 
 \paragraph{Iteration and cognitive models of writing.}
 Iterative generation methods improve text through repeated feedback and revision~\citep{madaan2023self,du2022iterative}, and PEER~\citep{schick2023peer} trains a model to imitate the writing process by proposing and explaining edits, while cognitive writing research offers a process-level account of how planning, drafting, and reviewing interact~\citep{flower1981cognitive,hayes1996new,hayes2012modeling}.

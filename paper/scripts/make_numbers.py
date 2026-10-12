@@ -164,6 +164,8 @@ LENGTH_CONTRASTS = {
 LENGTH_RUNS = {"run-1": "One", "run-2": "Two", "run-3": "Three"}
 LENGTH_CONTROL_MARKER = "% Length-control macros."
 COMPUTE_STRATIFIED_MARKER = "% Compute-stratified macros."
+# Gray N/A for a band without pairs; its table cell is text, not math.
+NOT_AVAILABLE = r"\textcolor{nagray}{N/A}"
 CROSS_FAMILY_SOURCE_FIELDS = {
     "contrasts": "contrasts",
     "pooled": "pooled",
@@ -1334,10 +1336,12 @@ def _compute_stratified_entries(report: dict[str, Any]) -> list[tuple[str, str, 
         for word, field, stats in groups:
             prefix = f"\\Compute{contrast_word}{word}"
             source = f"compute-stratified JSON pooled.by_contrast.{contrast}.{field}"
+            # A band without pairs has no rate and no test; the JSON's p = 1 is a placeholder.
+            empty = stats["wins"] + stats["losses"] + stats["ties"] == 0
             entries += [
                 (prefix + "WLT", _wlt(stats), source + " W/L/T"),
-                (prefix + "Rate", _optional_percent(stats["win_rate"], 1), source + ".win_rate"),
-                (prefix + "P", _pvalue(stats["prompt_sign_test_p"]), source + ".prompt_sign_test_p"),
+                (prefix + "Rate", NOT_AVAILABLE if empty else _optional_percent(stats["win_rate"], 1), source + ".win_rate"),
+                (prefix + "P", NOT_AVAILABLE if empty else _pvalue(stats["prompt_sign_test_p"]), source + ".prompt_sign_test_p"),
             ]
         for band, band_word in COMPUTE_BANDS.items():
             for replication, replication_word in COMPUTE_REPLICATIONS.items():
@@ -1479,7 +1483,7 @@ def _single_context_stage1_entries(
             ("\\SingleContextCompleted", f"{a8['completed']}/{a8['attempted']}", process_source + ".completed/attempted"),
             ("\\SingleContextOutputTokens", _format_process(a8["mean_output_plus_reasoning_tokens"], 0), process_source + ".mean_output_plus_reasoning_tokens"),
             ("\\SingleContextMeanSeconds", _format_process(a8["mean_wall_clock_seconds_completed"], 0), process_source + ".mean_wall_clock_seconds_completed"),
-            ("\\SingleContextGoals", "/".join(str(a8[field]) for field in PROCESS_GOAL_FIELDS), process_source + ".goal_created/goal_developed/goal_regenerated"),
+            ("\\SingleContextGoals", "/".join(_format_process(a8[field], 0) for field in PROCESS_GOAL_FIELDS), process_source + ".goal_created/goal_developed/goal_regenerated"),
             ("\\SingleContextLedgerEntries", str(a8["ledger_entries_contract"]), process_source + ".ledger_entries_contract"),
             ("\\SingleContextLedgerWithProposal", str(a8["ledger_entries_with_proposal"]), process_source + ".ledger_entries_with_proposal"),
             ("\\SingleContextSpawns", _format_process(a8["mean_spawns_per_attempted_run"], 2), process_source + ".mean_spawns_per_attempted_run"),

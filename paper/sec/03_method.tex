@@ -47,4 +47,4 @@ Each subagent writes its changes to the shared workspace before control returns 
 Review feedback can recommend replacing a goal, but the \texttt{Monitor} decides whether to accept that change and records the decision in $H_t$.
 Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass.
 For example, if \texttt{Reviewing} finds that the draft omits a section the task requires, the \texttt{Monitor} can select \texttt{Planning} to add a goal for that section before further \texttt{Translating}.
-After reviewing, the \texttt{Monitor} may instead stop and return the current draft as the final document $D_{\mathrm{final}}$.
+The \texttt{Monitor} may stop after any process and return the current draft as the final document $D_{\mathrm{final}}$; the runner's output-token budget or per-command timeout can also end a run before a \texttt{Reviewing} pass.

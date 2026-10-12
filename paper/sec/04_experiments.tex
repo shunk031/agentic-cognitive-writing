@@ -9,7 +9,7 @@ We consider seven pre-specified systems under the same generation setup.
 Their numbers below are used throughout the analysis.
 
 \paragraph{Alternative writing systems.}
-We compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ produces the complete document in one generation call; (2) \condStaged\ executes \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write}, following the common separation of planning, drafting, and revision~\citep{yang2022re3,wan2025cognitive}; and (3) \condTaskPlanning\ follows a WriteHERE-style adaptive task graph~\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes.
+We compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ produces the complete document in one generation call; (2) \condStaged\ executes the \texttt{Pre-Write}$\rightarrow$\texttt{Write}$\rightarrow$\texttt{Re-Write} stage model~\citep{rohman1965pre}, which \citet{flower1981cognitive} argued against and long-form systems instantiate as planning, drafting, and revision~\citep{yang2022re3,wan2025cognitive}; and (3) \condTaskPlanning\ follows a WriteHERE-style adaptive task graph~\citep{xiong2025beyond}, recursively decomposing the assignment and selecting among dependency-satisfied task nodes.
 The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas our system advances a writing process.
 
 \paragraph{Ablations of \condAgenticCogWriter.}
@@ -19,6 +19,7 @@ The comparison tests whether explicit goals or adaptive ordering explain the ful
 
 \paragraph{Execution variant and full system.}
 (6) \condSingleWriter\ retains the goal representation and adaptive process loop but performs \texttt{Planning}, \texttt{Translating}, and \texttt{Reviewing} in one writer context without subagent delegation; it also limits each \texttt{Translating} step to one paragraph, so the condition is diagnostic rather than a clean ablation.
+Its prompt also asks the writer to follow the repository's writing guidance and remove filler and AI-pattern phrasing, an instruction the other systems' prompts do not contain.
 (7) \condAgenticCogWriter\ is the full system of Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.
 
 \paragraph{Post-hoc execution check.}
@@ -42,8 +43,9 @@ This produces a different demanding subset for each benchmark: WritingBench emph
 \label{sec:implementation}
 
 All systems run in Codex CLI as the coding-agent harness with \modelGenBare\ as the generator; API-based scoring uses \modelJudgeBare\ as the primary evaluator.\footnote{We use Luna, which OpenAI positions for fast, cost-sensitive workloads, for high-volume long-form generation and the higher-capability tier, Sol, for evaluation; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.}
-Holding the generator fixed across systems isolates writing organization rather than base-model capability.
-Our system is an agent skill: its \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} as subagents.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
+The comparison holds the generator, harness, workspace tools, output budget, and task information constant across systems.
+Each system's control design and prompts differ together: the alternatives use prompts reimplemented from published designs, and only our system and its ablations and execution variants receive the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} role instructions.
+Our system is an agent skill: its \texttt{Monitor} invokes the three roles as subagents.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
 
 Every generation run uses the same generator, prompt set, and runtime configuration; main-result tables summarize the three runs unless noted otherwise.
 Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
