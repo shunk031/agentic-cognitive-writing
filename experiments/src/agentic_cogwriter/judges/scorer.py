@@ -241,6 +241,12 @@ def _presentation_orders(pair_id: str, seed: int) -> tuple[str, str]:
     return orders if int(digest[-1], 16) % 2 == 0 else (orders[1], orders[0])
 
 
+def _route(config: JudgeConfig) -> str:
+    if config.transport == "openai":
+        return "gateway OpenAI-compatible"
+    return "direct Bedrock" if config.aws_profile else "gateway Bedrock"
+
+
 def _family_audit(
     config: JudgeConfig, result: JudgeResult, run: RunArtifacts
 ) -> dict[str, str]:
@@ -334,6 +340,7 @@ def _write_score_artifacts(
             "max_output_tokens": config.max_output_tokens,
             "stop_rules": list(config.stop_rules),
             "max_retries": config.max_retries,
+            "route": _route(config),
         },
         "family_audit": family_audit,
         "source_runs": [

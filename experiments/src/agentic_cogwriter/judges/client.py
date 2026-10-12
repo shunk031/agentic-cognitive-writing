@@ -116,6 +116,8 @@ class OpenAICompatibleClient:
     model: Model | None = dataclass_field(default=None, kw_only=True)
 
     def _configured_model(self) -> Model:
+        if self.config.transport == "bedrock" and self.config.aws_profile:
+            return self._direct_bedrock_model()
         base_url = os.environ.get(self.config.base_url_env)
         credential = os.environ.get(self.config.credential_env)
         if not base_url:
@@ -160,6 +162,24 @@ class OpenAICompatibleClient:
                     "gpt-5.6"
                 ),
             ),
+        )
+
+    def _direct_bedrock_model(self) -> Model:
+        try:
+            import boto3
+            from pydantic_ai.models.bedrock import BedrockConverseModel
+            from pydantic_ai.providers.bedrock import BedrockProvider
+        except ImportError as error:
+            raise JudgeConfigurationError(
+                "Bedrock transport requires the bedrock dependency group"
+            ) from error
+        session = boto3.Session(profile_name=self.config.aws_profile)
+        bedrock_client = session.client(
+            "bedrock-runtime", region_name=self.config.region_name
+        )
+        return BedrockConverseModel(
+            self.config.model,
+            provider=BedrockProvider(bedrock_client=bedrock_client),
         )
 
     def complete(

@@ -1784,7 +1784,9 @@ def test_score_run_writes_protocol_jsonl_and_hashed_manifest(tmp_path: Path) -> 
         "max_output_tokens",
         "stop_rules",
         "max_retries",
+        "route",
     }
+    assert manifest["judge"]["route"] == "gateway OpenAI-compatible"
     assert set(manifest["source_runs"][0]) == {
         "run_manifest_sha256",
         "output_sha256",

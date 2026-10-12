@@ -183,6 +183,7 @@ class JudgeConfig:
     effort: JudgeAnthropicEffort | None = None
     transport: JudgeTransport = "openai"
     region_name: str = "us-east-1"
+    aws_profile: str | None = None
     source_path: Path | None = None
 
     @classmethod
@@ -236,6 +237,15 @@ class JudgeConfig:
         if not isinstance(region_name_value, str) or not region_name_value.strip():
             raise JudgeConfigurationError("region_name must be a non-empty string")
         region_name = region_name_value.strip()
+        aws_profile_value = values.get("aws_profile")
+        if aws_profile_value is not None:
+            if not isinstance(aws_profile_value, str) or not aws_profile_value.strip():
+                raise JudgeConfigurationError("aws_profile must be a non-empty string")
+            if transport != "bedrock":
+                raise JudgeConfigurationError(
+                    "aws_profile is only supported with Bedrock transport"
+                )
+        aws_profile = aws_profile_value.strip() if aws_profile_value else None
 
         reasoning_effort_value = values.get("reasoning_effort")
         if reasoning_effort_value is not None:
@@ -267,9 +277,16 @@ class JudgeConfig:
                 )
         effort = cast(JudgeAnthropicEffort | None, effort_value)
 
-        base_url_env = _required_string(values, "base_url_env", "base_url_env_name")
-        credential_env = _required_string(
-            values, "credential_env", "credential_env_name"
+        # Direct AWS mode authenticates through the named profile, not env vars.
+        base_url_env = (
+            ""
+            if aws_profile
+            else _required_string(values, "base_url_env", "base_url_env_name")
+        )
+        credential_env = (
+            ""
+            if aws_profile
+            else _required_string(values, "credential_env", "credential_env_name")
         )
         template_value = _required_string(values, "template_path")
         template_path = Path(template_value).expanduser()
@@ -374,6 +391,7 @@ class JudgeConfig:
             effort=effort,
             transport=transport,
             region_name=region_name,
+            aws_profile=aws_profile,
             source_path=source_path,
         )
 

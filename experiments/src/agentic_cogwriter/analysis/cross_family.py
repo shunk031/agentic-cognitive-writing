@@ -315,6 +315,14 @@ def _provenance(
     return result
 
 
+def _route(manifest: Mapping[str, Any]) -> str:
+    judge = manifest.get("judge")
+    route = judge.get("route") if isinstance(judge, Mapping) else None
+    # Manifests predating route provenance came from the gateway, the only
+    # Bedrock mode the client supported then.
+    return route if isinstance(route, str) else "gateway Bedrock"
+
+
 def aggregate_cross_family(
     runs_root: Path,
     *,
@@ -334,6 +342,13 @@ def aggregate_cross_family(
     for contrast in contrasts:
         contrast_rows = [row for row in rows if row.contrast == contrast]
         report = _metric(contrast_rows)
+        report["judge_routes"] = sorted(
+            {
+                _route(manifest)
+                for row, manifest in zip(rows, manifests, strict=True)
+                if row.contrast == contrast
+            }
+        )
         report["benchmarks"] = {
             benchmark: _metric(
                 [row for row in contrast_rows if row.benchmark == benchmark]
