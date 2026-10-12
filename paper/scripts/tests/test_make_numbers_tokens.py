@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from make_numbers import (
     _compute_stratified_entries,
     _pairwise_robustness_entries,
+    _loop_only_entries,
     _staged_roles_entries,
     _trace_endings_entries,
     _revision_tasks_entries,
@@ -560,6 +561,14 @@ class TokenMacroTests(unittest.TestCase):
         self.assertEqual(output[r"\FullStagedRolesAcrossRate"], r"68.1\%")
         self.assertEqual(output[r"\StagedRolesStagedAcrossRate"], r"45.9\%")
         self.assertEqual(output[r"\StagedRolesStagedHelloP"], "0.0331")
+
+    def test_loop_only_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/combined-ablation/a12-pairwise.json").read_text())
+        output = dict((name, value) for name, value, _ in _loop_only_entries(report))
+        self.assertEqual(output[r"\FullLoopOnlyAcrossWLT"], "96/92/104")
+        self.assertEqual(output[r"\FullLoopOnlyAcrossN"], "292")
+        self.assertEqual(output[r"\LoopOnlyStagedAcrossWLT"], "141/62/96")
+        self.assertEqual(output[r"\LoopOnlyStagedWritingRate"], r"81.9\%")
 
     def test_trace_endings_macros_are_source_backed(self):
         report = json.loads((Path(__file__).resolve().parents[2] / "results/process-sequences/trace-endings.json").read_text())
