@@ -219,7 +219,9 @@ Execution changes produce a larger but less easily isolated difference. Within t
 
 ### Observed Writing-Process Behavior
 
-Table 6 shows a mostly simple writing loop after repeat collapsing and leading-`Planning` reconstruction: 74.6% of complete paths conform to the `Planning`–`Translating`–`Reviewing` cycle structure, while 16.5% of runs return from `Reviewing` to `Translating`. Full replanning (4.1%) and goal replacement (0.5%) are rare, so adaptivity is used mainly for targeted redrafting. Figure 2 shows the same concentration: the forward `Planning`–`Translating`–`Reviewing` progression is most frequent, so our system looks close to `Fixed-order`. The lower panel of Table 6 shows similar pairwise win rates against `Fixed-order` and `Single-writer` for runs with one `Planning`–`Translating`–`Reviewing` cycle and runs with other paths, so departures do not yield a larger quality advantage in this observational split.[^13]
+Table 6 shows a mostly simple writing loop after repeat collapsing and leading-`Planning` reconstruction: 74.6% of complete paths conform to the `Planning`–`Translating`–`Reviewing` cycle structure, while 16.5% of runs return from `Reviewing` to `Translating`. Full replanning (4.1%) and goal replacement (0.5%) are rare, so adaptivity is used mainly for targeted redrafting. Figure 2 shows the same concentration. The lower panel of Table 6 shows similar pairwise win rates against `Fixed-order` and `Single-writer` for runs with one such cycle and runs with other paths, so departures yield no larger quality advantage in this observational split.[^13]
+
+After a change request to a finished version, the `Monitor` returns to `Planning` in 57 of 59 runs and regenerates goals in 33. `Fixed-order` also reruns the cycle and is not separable from our system (18/19/22 W/L/T, `p=1`).[^14]
 
 |  |  |
 |:---|---:|
@@ -247,7 +249,7 @@ Tables 4 and 5 suggest why <span class="smallcaps">Agentic CogWriter</span> win
 
 ##### Scope and external validity.
 
-Our conclusions concern one generator family, one coding-agent-style harness, and deterministic subsets of three long-form benchmarks. The subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent measure of difficulty or of the need to revise. The results therefore do not establish transfer to shorter tasks, other model families or runtimes, interactive human–AI writing, or end-to-end agents with retrieval. In an exploratory revision-request experiment, our system replans and, in most runs, regenerates goals after the request but is not separable from `Fixed-order`, because both rerun the cycle; tasks whose correct next process is not `Planning`, or that change during drafting, are the next test.[^14]
+Our conclusions concern one generator family, one coding-agent-style harness, and deterministic subsets of three long-form benchmarks. The subset rule emphasizes long inputs and, when specified, long requested outputs rather than an independent measure of difficulty or of the need to revise. The results therefore do not establish transfer to shorter tasks, other model families or runtimes, interactive human–AI writing, or end-to-end agents with retrieval. Tasks whose correct next process is not `Planning`, or that change during drafting, are the next test of adaptive process selection.
 
 ##### Comparison design.
 
@@ -2263,7 +2265,7 @@ Wangchunshu Zhou, Yuchen Eleanor Jiang, Peng Cui, Tiannan Wang, Zhenxin Xiao, Yi
 
 [^13]: See Appendix E for process, goal, and resource statistics.
 
-[^14]: See Appendix F for its design and results.
+[^14]: See Appendix F for this exploratory experiment.
 
 [^15]: See Appendix H for the consensus-writing results.
 

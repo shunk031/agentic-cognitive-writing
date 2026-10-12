@@ -144,6 +144,8 @@ underfull_count=$(grep -Ec '^Underfull \\hbox' "$diagnostic_log" || true)
 undefined_reference_count=$(grep -Eic 'LaTeX Warning: Reference .* undefined on input line' "$diagnostic_log" || true)
 undefined_citation_count=$(grep -Eic 'LaTeX Warning: Citation .* undefined on input line' "$diagnostic_log" || true)
 undefined_macro_count=$(grep -Eic 'Undefined control sequence' "$diagnostic_log" || true)
+# TeX wraps log lines at 79 columns, so a long label can push "on input line" onto the next line and escape the pattern above; LaTeX's end-of-run summary still reports it.
+if ((undefined_reference_count == 0)) && grep -q 'There were undefined references' "$diagnostic_log"; then undefined_reference_count=1; fi
 
 printf '\nBuild summary\n'
 if [[ -f "$pdf_path" ]]; then
