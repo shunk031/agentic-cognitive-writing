@@ -2,12 +2,12 @@
   "cross_family_judge_id": "claude-sonnet-5-pairwise-v1-medium",
   "judge_agreement": {
     "all_contrasts": {
-      "agreeing_pairs": 668,
+      "agreeing_pairs": 670,
       "both_decided_agreeing_pairs": 333,
       "both_decided_kappa": 0.7640063424947146,
       "both_decided_pairs": 380,
-      "kappa": 0.2522785667133758,
-      "pairs": 1417
+      "kappa": 0.25211260103972627,
+      "pairs": 1421
     },
     "contrasts": {
       "A4:A1": {
@@ -19,12 +19,12 @@
         "pairs": 282
       },
       "A4:A2": {
-        "agreeing_pairs": 145,
+        "agreeing_pairs": 147,
         "both_decided_agreeing_pairs": 72,
         "both_decided_kappa": 0.805075784279168,
         "both_decided_pairs": 79,
-        "kappa": 0.2547233348693772,
-        "pairs": 290
+        "kappa": 0.2573753814852493,
+        "pairs": 292
       },
       "A4:A3": {
         "agreeing_pairs": 137,
@@ -47,8 +47,8 @@
         "both_decided_agreeing_pairs": 49,
         "both_decided_kappa": 0.7185185185185186,
         "both_decided_pairs": 57,
-        "kappa": 0.19678185175415458,
-        "pairs": 273
+        "kappa": 0.19346793823071703,
+        "pairs": 275
       }
     }
   },

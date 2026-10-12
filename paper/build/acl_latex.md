@@ -255,7 +255,7 @@ The alternative writing systems are reimplementations under the shared setup of 
 
 ##### Evaluator dependence.
 
-The primary evaluator belongs to the same model family as the generator, and related generator–judge models can exhibit preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). The cross-family judge rescored one generation run for every contrast between our system and an alternative or ablation; summing W/L/T counts over the three benchmarks favors our system over `Staged` (63.8%, `p=0.0095`) and leaves `Fixed-order` near parity (53.5%, `p=0.6353`), as under the primary judge. The judge produces many ties and reverses 5 of 15 benchmark-level comparisons, and its agreement with the primary judge is `kappa=0.25` over all 1417 prompt-level outcomes and `kappa=0.76` over the 380 pairs both judges decide; extending it to all three generation runs is the next step. Model-judge preference is not human preference; a blinded human comparison of same-prompt outputs, stratified by benchmark, contrast, and prompt length, would measure judge agreement with human readers.
+The primary evaluator belongs to the same model family as the generator, and related generator–judge models can exhibit preference leakage or self-preference (Li et al., 2026; Panickssery et al., 2024). The cross-family judge rescored one generation run for every contrast between our system and an alternative or ablation; summing W/L/T counts over the three benchmarks favors our system over `Staged` (63.8%, `p=0.0095`) and leaves `Fixed-order` near parity (53.5%, `p=0.6353`), as under the primary judge. The judge produces many ties and reverses 5 of 15 benchmark-level comparisons, and its agreement with the primary judge is `kappa=0.25` over all 1421 prompt-level outcomes and `kappa=0.76` over the 380 pairs both judges decide; extending it to all three generation runs is the next step. Model-judge preference is not human preference; a blinded human comparison of same-prompt outputs, stratified by benchmark, contrast, and prompt length, would measure judge agreement with human readers.
 
 ##### Component attribution.
 
@@ -2033,7 +2033,7 @@ Table 18. Exploratory `Staged-roles` comparisons on generation run 1. The win r
 
 ### Cross-Family Judge Robustness
 
-Table 19 reports benchmark-level results for the five cross-family contrasts between our system and an alternative or ablation, all on generation run 1. Within each contrast, summing W/L/T counts over the three benchmarks gives 67/44/171 versus `Single-pass`, 60/34/196 versus `Staged`, 76/25/184 versus `Task-planning`, 39/27/221 versus `No-goals`, and 38/33/202 versus `Fixed-order`. The corresponding Wilson intervals are 51.06%–68.97%, 53.75%–72.82%, 66.01%–82.64%, 47.05%–70.13%, and 42.04%–64.64%, with sign-test `p=0.0095` against `Staged` and `p=0.6353` against `Fixed-order`. The `Staged` and `Fixed-order` contrasts cover 290 and 273 pairs; five further pairs exceeded the judge’s two output retries and have no cross-family outcome. Across all five contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on 31.3% of 1417 eligible pairs, with 280/163/974 W/L/T; 668/1417 prompt-level outcomes agree with the same-family judge. Cohen’s kappa between the two judges is 0.25 over these outcomes, most of which are cross-family ties, and 0.76 over the 380 pairs both judges decide, of which 333 agree.
+Table 19 reports benchmark-level results for the five cross-family contrasts between our system and an alternative or ablation, all on generation run 1. Within each contrast, summing W/L/T counts over the three benchmarks gives 67/44/171 versus `Single-pass`, 60/34/198 versus `Staged`, 76/25/184 versus `Task-planning`, 39/27/221 versus `No-goals`, and 38/33/204 versus `Fixed-order`. The corresponding Wilson intervals are 51.06%–68.97%, 53.75%–72.82%, 66.01%–82.64%, 47.05%–70.13%, and 42.04%–64.64%, with sign-test `p=0.0095` against `Staged` and `p=0.6353` against `Fixed-order`. The `Staged` and `Fixed-order` contrasts cover 292 and 275 pairs; one further pair, a HelloBench comparison with `Staged`, failed the judge’s structured-output check after all retries and has no cross-family outcome. Across all five contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on 31.2% of 1421 eligible pairs, with 280/163/978 W/L/T; 670/1421 prompt-level outcomes agree with the same-family judge. Cohen’s kappa between the two judges is 0.25 over these outcomes, most of which are cross-family ties, and 0.76 over the 380 pairs both judges decide, of which 333 agree.
 
 |  |  |  |  |  |  |  |
 |:---|:---|---:|---:|---:|---:|---:|
@@ -2042,16 +2042,16 @@ Table 19 reports benchmark-level results for the five cross-family contrasts bet
 | <span class="smallcaps">Agentic CogWriter</span> vs `Single-pass` | HelloBench | 93 | 15/10/68 | 26.88% | 60.00% | 39/93 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `Single-pass` | DoLoMiTes | 93 | 33/13/47 | 49.46% | 71.74% | 55/93 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `Staged` | WritingBench | 96 | 29/12/55 | 42.71% | 70.73% | 41/96 |
-| <span class="smallcaps">Agentic CogWriter</span> vs `Staged` | HelloBench | 97 | 6/10/81 | 16.49% | 37.50% | 51/97 |
-| <span class="smallcaps">Agentic CogWriter</span> vs `Staged` | DoLoMiTes | 97 | 25/12/60 | 38.14% | 67.57% | 53/97 |
+| <span class="smallcaps">Agentic CogWriter</span> vs `Staged` | HelloBench | 98 | 6/10/82 | 16.33% | 37.50% | 52/98 |
+| <span class="smallcaps">Agentic CogWriter</span> vs `Staged` | DoLoMiTes | 98 | 25/12/61 | 37.76% | 67.57% | 54/98 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `Task-planning` | WritingBench | 93 | 28/8/57 | 38.71% | 77.78% | 41/93 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `Task-planning` | HelloBench | 97 | 6/7/84 | 13.40% | 46.15% | 40/97 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `Task-planning` | DoLoMiTes | 95 | 42/10/43 | 54.74% | 80.77% | 56/95 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `No-goals` | WritingBench | 95 | 11/7/77 | 18.95% | 61.11% | 44/95 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `No-goals` | HelloBench | 96 | 4/5/87 | 9.38% | 44.44% | 43/96 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `No-goals` | DoLoMiTes | 96 | 24/15/57 | 40.62% | 61.54% | 46/96 |
-| <span class="smallcaps">Agentic CogWriter</span> vs `Fixed-order` | WritingBench | 89 | 12/8/69 | 22.47% | 60.00% | 28/89 |
-| <span class="smallcaps">Agentic CogWriter</span> vs `Fixed-order` | HelloBench | 92 | 7/8/77 | 16.30% | 46.67% | 48/92 |
+| <span class="smallcaps">Agentic CogWriter</span> vs `Fixed-order` | WritingBench | 90 | 12/8/70 | 22.22% | 60.00% | 28/90 |
+| <span class="smallcaps">Agentic CogWriter</span> vs `Fixed-order` | HelloBench | 93 | 7/8/78 | 16.13% | 46.67% | 48/93 |
 | <span class="smallcaps">Agentic CogWriter</span> vs `Fixed-order` | DoLoMiTes | 92 | 19/17/56 | 39.13% | 52.78% | 52/92 |
 
 Table 19. Cross-family judge robustness using `claude-sonnet-5 medium`. Within each selected contrast, wins, losses, and ties are summed over benchmarks before computing the win rate; every contrast’s summed win rate exceeds 50%, but 5 of 15 benchmark-level comparisons reverse relative to the primary judge and many outcomes are ties. Commit is the fraction of eligible pairs with a non-tied cross-family outcome; Agreement is the fraction whose order-consistent outcome matches the primary judge.

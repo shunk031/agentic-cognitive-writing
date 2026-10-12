@@ -547,7 +547,7 @@ class TokenMacroTests(unittest.TestCase):
         self.assertEqual(output[r"\PromptLevelAcrossFullSinglePassRate"], r"74.8\%")
         self.assertEqual(output[r"\PromptLevelAcrossFullSinglePassWLT"], "234/37/29")
         self.assertEqual(output[r"\LengthModelFullStagedPreference"], r"60.0\%")
-        self.assertEqual(output[r"\JudgeAgreementPairs"], "1417")
+        self.assertEqual(output[r"\JudgeAgreementPairs"], "1421")
         self.assertNotIn(r"\PromptLevelAcrossFullNoGoalsRate", output)
 
     def test_staged_roles_macros_are_source_backed(self):
