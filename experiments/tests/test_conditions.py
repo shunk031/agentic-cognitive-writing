@@ -82,8 +82,7 @@ def test_a9_keeps_the_a2_harness_and_adds_role_guidance() -> None:
         "planning": (
             "Do not replace missing user intent with a guess.",
             "Separate known material, plausible ideas, and unsupported claims.",
-            "The organizing work makes meaning rather than merely rearranging "
-            "bullets.",
+            "The organizing work makes meaning rather than merely rearranging bullets.",
         ),
         "translating": (
             "do not let fluent wording override the rhetorical purpose.",
@@ -109,6 +108,50 @@ def test_a9_keeps_the_a2_harness_and_adds_role_guidance() -> None:
             assert excluded not in a9_text
 
 
+def test_a11_keeps_the_a1_harness_with_only_a_neutral_instruction() -> None:
+    registry = load_condition_registry()
+    a1, a11 = registry["A1"], registry["A11"]
+
+    for field in (
+        "package_name",
+        "trace_processes",
+        "goal_events",
+        "event_types",
+        "min_events",
+        "max_events",
+        "process_order",
+        "require_goal_events",
+        "require_delegation",
+        "product_requires_draft",
+    ):
+        assert getattr(a11, field) == getattr(a1, field), field
+    assert [(stage.stage_id, stage.path) for stage in a11.stages] == [
+        ("plugin_session", None)
+    ]
+
+    skill_text = (
+        EXPERIMENTS_ROOT / "baselines/skills/writing-plain-agent/SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert (
+        "Write the requested document. Keep your working draft in a file in the "
+        "workspace; you may plan, draft, and revise it as you see fit before "
+        "returning the complete final document."
+    ) in skill_text
+    lowered = skill_text.lower()
+    for excluded in (
+        "monitor",
+        "goal",
+        "audience",
+        "planning",
+        "translating",
+        "reviewing",
+        "evaluate",
+        "rhetorical",
+        "delegat",
+    ):
+        assert excluded not in lowered
+
+
 def test_registry_keeps_wrapper_paths_and_families() -> None:
     registry = load_condition_registry()
 
@@ -126,6 +169,7 @@ def test_registry_keeps_wrapper_paths_and_families() -> None:
         "A7": "confirmatory",
         "A8": "exploratory",
         "A9": "exploratory",
+        "A11": "exploratory",
         "B1": "exploratory",
         "B2": "exploratory",
     }
@@ -164,7 +208,7 @@ def test_missing_condition_wrapper_is_an_error(tmp_path: Path) -> None:
     conditions_dir = _copy_conditions(tmp_path)
     (conditions_dir / "a4_plugin.toml").unlink()
 
-    with pytest.raises(ConfigurationError, match="exactly A1 through A9"):
+    with pytest.raises(ConfigurationError, match="exactly A1 through A9, A11"):
         load_condition_registry(conditions_dir)
 
 
@@ -176,7 +220,7 @@ def test_stray_condition_wrapper_is_an_error(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    with pytest.raises(ConfigurationError, match="exactly A1 through A9"):
+    with pytest.raises(ConfigurationError, match="exactly A1 through A9, A11"):
         load_condition_registry(conditions_dir)
 
 

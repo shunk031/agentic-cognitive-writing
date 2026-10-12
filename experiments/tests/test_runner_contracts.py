@@ -198,6 +198,7 @@ def _plugin_source(tmp_path: Path) -> Path:
         "cognitive-writing-single-writer",
         "cognitive-writing-single-context",
         "writing-cogwriter-style",
+        "writing-plain-agent",
         "writing-adaptive-task-planning",
         "planning",
         "translating",
@@ -1217,7 +1218,7 @@ def test_composed_prompt_omits_the_stage_chain_header_without_frozen_paths() -> 
 
 @pytest.mark.parametrize(
     "condition_id",
-    ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "B1", "B2"),
+    ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A11", "B1", "B2"),
 )
 @pytest.mark.parametrize("platform", PLATFORMS)
 def test_composed_prompt_has_one_rendered_shared_input_block(

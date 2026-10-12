@@ -1,6 +1,6 @@
 # Cognitive writing baselines
 
-This package gives experimenters five comparison conditions with the same assignment, supplied context, model settings, output budget, and no-retrieval policy. The `agentic-cognitive-writing` package supplies Agentic CogWriter for the main condition; this package supplies the comparison conditions.
+This package gives experimenters six comparison conditions with the same assignment, supplied context, model settings, output budget, and no-retrieval policy. The `agentic-cognitive-writing` package supplies Agentic CogWriter for the main condition; this package supplies the comparison conditions.
 
 ## Install and invoke
 
@@ -14,6 +14,7 @@ The package layout uses [`.claude-plugin/plugin.json`](.claude-plugin/plugin.jso
 | --- | --- | --- | --- |
 | A1 Single-pass | `writing-single-shot` | One complete generation pass | One generation event |
 | A2 Staged Writing | `writing-linear` | One `Pre-Write`, `Write`, and `Re-Write` pass | Three stage-transition events |
+| A11 Plain agent | `writing-plain-agent` | One neutral working-draft instruction and no process guidance | One fixed session event |
 | A3 Adaptive Task Planning | `writing-adaptive-task-planning` | Persisted typed task graph with recursive decomposition, execution, and text-conditioned graph revision | Graph actions and revisions; retrieval is `N/A` |
 | B1 CogWriter-style | `writing-cogwriter-style` | Initial plan, immediate plan revision, parallel segment generation, and length review | Top-level stage transitions and observable fallback evidence |
 | B2 STORM-style | `writing-storm-style` | Perspective discovery, simulated question answering, outline, per-section draft, and polish | Five stage events; retrieval, evidence, and citation are `N/A` |
