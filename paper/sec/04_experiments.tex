@@ -43,6 +43,8 @@ This produces a different demanding subset for each benchmark: WritingBench emph
 All systems run in Codex CLI as the coding-agent harness with \modelGenBare\ as the generator; API-based scoring uses \modelJudgeBare\ as the primary evaluator.\footnote{We use Luna, which OpenAI positions for fast, cost-sensitive workloads, for high-volume long-form generation and the higher-capability tier, Sol, for evaluation; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.}
 The comparison holds the generator, harness, workspace tools, output budget, and task information constant across systems; \condStaged\ also runs as a Codex agent with file and shell tools, executing its stages in one session whose \texttt{Re-Write} stage rewrites the whole response.
 Our system is an agent skill: its \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} as subagents.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
+
+Main-result tables summarize the three generation runs unless noted otherwise.
 Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
 
 \subsection{Evaluation}

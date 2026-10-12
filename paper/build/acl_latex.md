@@ -80,7 +80,7 @@ We retain Flower and Hayes (1981)’s term `Translating` for the drafting activi
 
 If `Planning` is selected, the `Planner` reads the task and current draft, organizes relevant material for the intended audience, and creates or develops writing goals. If `Translating` is selected, the `Translator` reads the current draft and active goals and writes prose within the delegated draft scope. If `Reviewing` is selected, the `Reviewer` checks the draft against the task and active goals, revises within the delegated scope, and reports whether further planning, drafting, or review is needed.
 
-Each subagent writes its changes to the shared workspace before control returns to the `Monitor`, yielding the next state `S_(t+1)`. Review feedback can recommend replacing a goal, but the `Monitor` decides whether to accept that change and records the decision in `H_t`. Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass. The `Monitor` may stop after any process and return the current draft as the final document `D_final`; the runner’s output-token budget or per-command timeout can also end a run before a `Reviewing` pass.
+Each subagent writes its changes to the shared workspace before control returns to the `Monitor`, yielding the next state `S_(t+1)`. Review feedback can recommend replacing a goal, but the `Monitor` decides whether to accept that change and records the decision in `H_t`. Because each decision is made from the updated state, the process order is not fixed: drafting can expose a structural problem that sends control back to planning, and reviewing can trigger another drafting or planning pass. For example, if `Reviewing` finds that the draft omits a section the task requires, the `Monitor` can select `Planning` to add a goal for that section before further `Translating`. The `Monitor` may stop after any process and return the current draft as the final document `D_final`; the runner’s output-token budget or per-command timeout can also end a run before a `Reviewing` pass.
 
 ## Experimental Design
 
@@ -128,7 +128,9 @@ We evaluate fixed demanding subsets because short or lightly constrained tasks m
 
 ### Implementation
 
-All systems run in Codex CLI as the coding-agent harness with `gpt-5.6-luna` as the generator; API-based scoring uses `gpt-5.6-sol` as the primary evaluator.[^2] The comparison holds the generator, harness, workspace tools, output budget, and task information constant across systems; `Staged` also runs as a Codex agent with file and shell tools, executing its stages in one session whose `Re-Write` stage rewrites the whole response. Our system is an agent skill: its `Monitor` invokes `Planner`, `Translator`, and `Reviewer` as subagents.[^3] Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
+All systems run in Codex CLI as the coding-agent harness with `gpt-5.6-luna` as the generator; API-based scoring uses `gpt-5.6-sol` as the primary evaluator.[^2] The comparison holds the generator, harness, workspace tools, output budget, and task information constant across systems; `Staged` also runs as a Codex agent with file and shell tools, executing its stages in one session whose `Re-Write` stage rewrites the whole response. Our system is an agent skill: its `Monitor` invokes `Planner`, `Translator`, and `Reviewer` as subagents.[^3]
+
+Main-result tables summarize the three generation runs unless noted otherwise. Network access, web search, and external retrieval are disabled for every system, and the harness records completed outputs plus available process traces, token accounting, and timing.
 
 ### Evaluation
 
