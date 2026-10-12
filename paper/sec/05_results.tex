@@ -4,7 +4,7 @@
 Table~\ref{tab:main-results} reports document-quality scores for benchmark-native and common-rubric evaluation across the three benchmarks.
 \condAgenticCogWriter\ exceeds every alternative's mean on every WritingBench and HelloBench measure, and its paired prompt-level differences exclude zero against each on both WritingBench measures and HelloBench native scores.
 Its lead over \condStaged\ and \condTaskPlanning\ on HelloBench pointwise scores lies within the paired intervals, as does the higher DoLoMiTes pointwise mean of \condStaged.\footnote{See Appendix~\ref{app:paired-quality} for the paired differences and intervals.}
-\condSingleWriter\ and \condNoGoals\ have the highest WritingBench native and HelloBench pointwise means among the other rows, which Section~\ref{sec:results-mechanism} compares pairwise.
+\condSingleWriter\ and \condNoGoals\ have the highest WritingBench native and HelloBench pointwise means among the other rows (Section~\ref{sec:results-mechanism}).
 
 \input{tab/main-results}
 
@@ -14,7 +14,7 @@ Its lead over \condStaged\ and \condTaskPlanning\ on HelloBench pointwise scores
 Table~\ref{tab:pairwise-results} reports a system-level separation in direct same-prompt comparisons.
 \condAgenticCogWriter\ is preferred to \condSinglePass, \condStaged, and \condTaskPlanning, with win rates of \PooledFourOneRateMean, \PooledFourTwoRateMean, and \PooledFourThreeRateMean, respectively, when order-consistent wins and losses are summed over benchmarks in each generation run and averaged over runs.
 The direction holds in every benchmark--run test against \condSinglePass\ and \condTaskPlanning\ and in all but one against \condStaged.
-The last three rows, post-hoc comparisons on one generation run with unadjusted tests, also favor our system over \condPlainAgent\ (\FullPlainAgentAcrossRate) and \condSelfRefine\ (\FullSelfRefineAcrossRate, with \SelfRefineTokenExcess\ more tokens) except on DoLoMiTes, at parity, and over \condExploratoryOne\ on every benchmark (\FullCogWriterStyleAcrossRate), excluding its \CogWriterStyleFailed\ failed prompts.
+The last three rows, post-hoc single-run comparisons with unadjusted tests, also favor our system over \condPlainAgent\ (\FullPlainAgentAcrossRate; separated only on WritingBench), \condSelfRefine\ (\FullSelfRefineAcrossRate, with \SelfRefineTokenExcess\ more tokens per completed document) except on DoLoMiTes, and \condExploratoryOne\ (\FullCogWriterStyleAcrossRate), excluding \CogWriterStyleExcluded\ incomplete pairs.
 
 Under the pre-specified within-benchmark Holm correction, \PooledFourOneHolmCellsTotal, \PooledFourTwoHolmCellsTotal, and \PooledFourThreeHolmCellsTotal\ of the nine benchmark--run tests separate our system from \condSinglePass, \condStaged, and \condTaskPlanning, respectively.\footnote{See Appendix~\ref{app:pairwise-detail} for run-level intervals and corrected results.}
 The post-hoc prompt-level estimate separates our system from all three alternatives across benchmarks (largest $p=\PromptLevelAcrossFullStagedP$), and a logistic length model keeps it at equal length, at \LengthModelFullStagedPreference\ against \condStaged\ and \LengthModelFullTaskPlanningPreference\ against \condTaskPlanning.\footnote{See Appendix~\ref{app:sensitivity-analyses} for both analyses, the resource-matched comparisons, which largely preserve the direction, and cross-family rescoring, which is less stable.}
@@ -31,8 +31,8 @@ Table~\ref{tab:ablation-results} instead averages generation-run win rates over 
 The ablations nonetheless keep the full system's advantage over the alternatives: of \PairedSeparationMeasureCount\ paired native and pointwise contrasts with them on WritingBench and HelloBench, intervals exclude zero for \PairedSeparatedNoGoals\ with \condNoGoals\ and \PairedSeparatedFixedOrder\ with \condFixedOrder, against \PairedSeparatedFull\ with the full system.\footnote{See Appendix~\ref{app:paired-quality} for these paired differences.}
 
 Two post-hoc conditions, each from one generation run with unadjusted tests, bear on what our system adds over \condStaged.
-\condStagedRoles\ adds the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} role instructions to the three \condStaged\ stage prompts without a \texttt{Monitor}, goals, or subagents; our system wins \FullStagedRolesAcrossRate\ against it ($p=\FullStagedRolesAcrossP$), and it wins only \StagedRolesStagedAcrossRate\ against \condStaged\ ($p=\StagedRolesStagedAcrossP$).
-\condLoopOnly\ in Table~\ref{tab:ablation-results} stays at parity with our system (\FullLoopOnlyAcrossRate, $p=\FullLoopOnlyAcrossP$) yet beats \condStaged\ (\LoopOnlyStagedAcrossRate, $p=\LoopOnlyStagedAcrossP$), and \LoopOnlyOnePassRuns\ of its \LoopOnlyCompleted\ runs make exactly one pass.\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level results.}
+Our system wins \FullStagedRolesAcrossRate\ against \condStagedRoles\ ($p=\FullStagedRolesAcrossP$), which wins only \StagedRolesStagedAcrossRate\ against \condStaged\ ($p=\StagedRolesStagedAcrossP$).
+\condLoopOnly\ in Table~\ref{tab:ablation-results} stays at parity with our system (\FullLoopOnlyAcrossRate, $p=\FullLoopOnlyAcrossP$) yet beats \condStaged\ (\LoopOnlyStagedAcrossRate, $p=\LoopOnlyStagedAcrossP$), and \LoopOnlyOnePassRuns\ of its \LoopOnlyCompleted\ runs make exactly one pass ending in \texttt{Reviewing}, and \LoopOnlyRewroteDraftRuns\ rewrite the draft (\condPlainAgent: \PlainAgentRevisedRuns\ of \PlainAgentCompletedRuns).\footnote{See Appendix~\ref{app:sensitivity-analyses} for the benchmark-level results.}
 
 \input{tab/ablation-results}
 
@@ -67,7 +67,7 @@ Full replanning (\AfourReviewingToPlanningRate) and goal replacement (\AfourRege
 Figure~\ref{fig:process-sequences} shows the same concentration.
 The lower panel of Table~\ref{tab:process-dynamics} shows similar win rates against \condFixedOrder\ and \condSingleWriter\ for one-cycle runs and runs with other paths, so departures yield no larger quality advantage in this observational split.\footnote{See Appendix~\ref{app:process-behavior} for process, goal, and resource statistics.}
 
-After a change request to a finished version, the \texttt{Monitor} returns to \texttt{Planning} in \RevisionAfourPlanning\ of \RevisionAfourCompleted\ runs and regenerates goals in \RevisionAfourRegenerated.
+After a change request to a finished version, the \texttt{Monitor} returns to \texttt{Planning} in \RevisionAfourPlanning\ of \RevisionAfourCompleted\ runs.
 \condFixedOrder\ also reruns the cycle and is not separable from our system (\RevisionFullFixedOrderWLT\ W/L/T, $p=\RevisionFullFixedOrderP$).
 
 \input{tab/process-dynamics}

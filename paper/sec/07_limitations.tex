@@ -24,15 +24,15 @@ The compute-matched analysis selects pairs with similar realized token use after
 
 \paragraph{Output language.}
 On WritingBench, some English assignments are answered mainly in Chinese in every condition, from \AtwoDriftCount\ of \AtwoDriftEnglish\ for \condStaged\ to \AfiveDriftCount\ of \AfiveDriftEnglish\ for \condNoGoals\ in generation run 1, with \AfourDriftCount\ of \AfourDriftEnglish\ for our system.
-The drift follows prompts with Chinese topics or instructions.\footnote{See Appendix~\ref{app:sensitivity-analyses} for every condition.}
+The drift concentrates on prompts with Chinese topics or instructions and varies by condition.\footnote{See Appendix~\ref{app:sensitivity-analyses} for every condition.}
 
 \paragraph{Missing outputs.}
-Headline win rates exclude prompts without a completed output, but the preference persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare\ (\condSinglePass), \UncondFullStagedWinShare\ (\condStaged), and \UncondFullTaskPlanningWinShare\ (\condTaskPlanning), and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate\ (\condSinglePass), \WorstCaseFullStagedRate\ (\condStaged), and \WorstCaseFullTaskPlanningRate\ (\condTaskPlanning).
-Some systems fail more prompts than others, so this accounting bounds how much the excluded pairs could change the headline contrasts.
+Headline win rates exclude prompts without a completed output; counting every attempted prompt in the denominator, with ties and missing outputs as non-wins, our system wins \UncondFullSinglePassWinShare\ (\condSinglePass), \UncondFullStagedWinShare\ (\condStaged), and \UncondFullTaskPlanningWinShare\ (\condTaskPlanning) of prompts, and assigning every missing pair against our system leaves win rates over decided pairs of at least \WorstCaseFullSinglePassRate\ (\condSinglePass), \WorstCaseFullStagedRate\ (\condStaged), and \WorstCaseFullTaskPlanningRate\ (\condTaskPlanning).
+Some systems fail more prompts than others, so this accounting bounds the effect of the excluded pairs.
 
 \paragraph{Evaluator dependence.}
 The primary evaluator belongs to the same model family as the generator, and related generator--judge models can exhibit preference leakage or self-preference~\citep{li2026preference,panickssery2024selfpreference}.
-The cross-family judge rescored one generation run for every contrast between our system and an alternative or ablation; summing W/L/T counts over the three benchmarks favors our system over \condStaged\ (\CrossFamilyFullStagedWinRate, $p=\CrossFamilyFullStagedP$) and leaves \condFixedOrder\ near parity (\CrossFamilyFullFixedOrderWinRate, $p=\CrossFamilyFullFixedOrderP$), as under the primary judge.
+The cross-family judge rescored generation run 1 for the five contrasts between our system and the pre-specified alternatives and ablations, and for no post-hoc condition; summing W/L/T counts over the three benchmarks favors our system over \condStaged\ (\CrossFamilyFullStagedWinRate, $p=\CrossFamilyFullStagedP$) and leaves \condFixedOrder\ near parity (\CrossFamilyFullFixedOrderWinRate, $p=\CrossFamilyFullFixedOrderP$), as under the primary judge.
 The judge produces many ties and reverses 5 of 15 benchmark-level comparisons, and its agreement with the primary judge is $\kappa=\JudgeAgreementKappa$ over all \JudgeAgreementPairs\ prompt-level outcomes and $\kappa=\JudgeAgreementDecidedKappa$ over the \JudgeAgreementDecidedPairs\ pairs both judges decide; extending it to all three generation runs is the next step.
 Model-judge preference is not human preference; a blinded human comparison of same-prompt outputs, stratified by benchmark, contrast, and prompt length, would measure judge agreement with human readers.
 

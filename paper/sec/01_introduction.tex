@@ -19,9 +19,9 @@ We evaluate our system on three long-form writing benchmarks spanning broad inst
 We hold the generator, harness, output budget, and task information constant across conditions.
 Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives.
 In pre-specified per-benchmark pairwise tests, our system is preferred to one-shot generation in \PooledFourOneHolmCellsTotal\ of 9 tests and to a fixed writing pipeline and adaptive task planning in \PooledFourTwoHolmCellsTotal\ and \PooledFourThreeHolmCellsTotal, while a post-hoc prompt-level summary favors it over all three.
-Adding our role instructions to the fixed pipeline post hoc does not reproduce this advantage, a second judge family prefers our system to that pipeline on one run, and a post-hoc test favors it over the plain agent except on DoLoMiTes.
+Adding our role instructions to the fixed pipeline post hoc does not reproduce this advantage, a second judge family prefers our system to that pipeline on one run, and a post-hoc test favors it over the plain agent, significantly only on WritingBench (one run).
 
-The component analyses show that, on these tasks, the advantage over the fixed pipeline does not need explicit goals, adaptive process order, or subagents: dropping each stays near parity with our system, though the pre-specified single-writer variant trails it, and a post-hoc ablation dropping all three stays at parity and still beats the fixed pipeline.
+The component analyses show that, on these tasks, the advantage over the fixed pipeline does not need explicit goals, adaptive process order, or subagents: dropping each stays near parity with our system overall, though the pre-specified single-writer variant trails it, and a post-hoc ablation dropping all three stays at parity and still beats the fixed pipeline.
 Process traces show \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure and \AfourReviewingToPlanningRate\ of runs replan.
 
 Our contributions are threefold.

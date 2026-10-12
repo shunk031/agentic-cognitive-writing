@@ -174,6 +174,7 @@ STAGED_ROLES_MARKER = "% Staged role-instruction (A9) macros."
 PLAIN_AGENT_MARKER = "% Plain-agent (A11) macros."
 COGWRITER_STYLE_MARKER = "% CogWriter-style (B1) main-benchmark macros."
 COGWRITER_SPAWNS_MARKER = "% CogWriter-style (B1) spawn macros."
+DRAFT_WRITES_MARKER = "% Draft-rewrite macros."
 SELF_REFINE_MARKER = "% Budget-matched Self-Refine (A10) macros."
 LOOP_ONLY_MARKER = "% Loop-only (A12) macros."
 TRACE_ENDINGS_MARKER = "% Trace-ending macros."
@@ -1544,6 +1545,7 @@ def _cogwriter_style_entries(report: dict[str, Any]) -> list[tuple[str, str, str
         ("\\CogWriterStyleRetried", str(attempts["retried_failures"]), source + " generation_attempts.retried_failures"),
         ("\\CogWriterStyleNoDraftFailed", str(attempts["final_failed_by_reason"]["no_draft_file"]), source + " generation_attempts.final_failed_by_reason.no_draft_file"),
         ("\\CogWriterStyleFailed", str(report["completion"]["B1"]["attempted"] - report["completion"]["B1"]["completed"]), source + " completion.B1 attempted - completed"),
+        ("\\CogWriterStyleExcluded", str(report["completion"]["B1"]["attempted"] - report["pooled"]["A4:B1"]["scored_prompts"]), source + " completion.B1.attempted - pooled.A4:B1.scored_prompts"),
     ]
 
 
@@ -1664,6 +1666,11 @@ def _language_drift_entries(report: dict[str, Any]) -> list[tuple[str, str, str]
 def _cogwriter_spawn_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
     """Mean subagent spawns per attempted generation-run-1 run for B1."""
     return [("\\CogWriterStyleSpawns", _format_process(report["B1"]["mean_spawns"], 1), "B1 spawn summary JSON B1.mean_spawns")]
+
+
+def _draft_writes_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Runs that wrote their draft file two or more times, from Codex file_change items."""
+    return [("\\LoopOnlyRewroteDraftRuns", str(report["A12"]["rewrote_draft"]), "draft-writes JSON A12.rewrote_draft")]
 
 
 def _validate_single_context_pair(data: dict[str, Any], source: str) -> None:
@@ -2519,6 +2526,7 @@ def main() -> None:
     parser.add_argument("--cogwriter-spawns", type=Path, help="B1 spawn summary JSON; appends its own block")
     parser.add_argument("--self-refine", type=Path, help="A10 pairwise JSON; appends its own block")
     parser.add_argument("--loop-only", type=Path, help="A12 pairwise JSON; appends its own block")
+    parser.add_argument("--draft-writes", type=Path, help="draft-writes JSON; appends its own block")
     parser.add_argument("--trace-endings", type=Path, help="trace-endings JSON; appends its own block")
     parser.add_argument("--revision-tasks", type=Path, help="revision-task results JSON; appends its own block")
     parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
@@ -2548,6 +2556,7 @@ def main() -> None:
         (args.cogwriter_spawns, "cogwriter-spawns", COGWRITER_SPAWNS_MARKER, _cogwriter_spawn_entries),
         (args.self_refine, "self-refine", SELF_REFINE_MARKER, _self_refine_entries),
         (args.loop_only, "loop-only", LOOP_ONLY_MARKER, _loop_only_entries),
+        (args.draft_writes, "draft-writes", DRAFT_WRITES_MARKER, _draft_writes_entries),
         (args.trace_endings, "trace-endings", TRACE_ENDINGS_MARKER, _trace_endings_entries),
         (args.revision_tasks, "revision-tasks", REVISION_TASKS_MARKER, _revision_tasks_entries),
         (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),

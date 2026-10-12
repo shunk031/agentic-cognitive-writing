@@ -12,7 +12,7 @@ Primary pairwise evaluation uses the same judge for every condition, presents ea
 
 \section{Generation-Run-Level Pairwise Outcomes}
 \label{app:pairwise-detail}
-The following figure shows the prompt-level pairwise estimates for each benchmark and generation run, including the ablation contrasts.
+The following figure shows the generation-run-level win rates for each benchmark and generation run, including the ablation contrasts.
 The pre-specified protocol that fixes the Holm family and its contrasts is included in the supplementary material.
 The eight contrasts compare \condAgenticCogWriter\ with \condSinglePass, \condStaged, \condTaskPlanning, \condNoGoals, and \condFixedOrder, and \condSingleWriter\ with \condSinglePass, \condAgenticCogWriter, and \condNoGoals.
 For \condAgenticCogWriter\ versus \condSinglePass, the descriptive mean win rates across generation runs are \DoLoFourOneRateMean\ on DoLoMiTes, \HelloFourOneRateMean\ on HelloBench, and \WritingFourOneRateMean\ on WritingBench.
@@ -21,7 +21,7 @@ For \condAgenticCogWriter\ versus \condSinglePass, the descriptive mean win rate
 \includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
 \caption{Generation-run-level pairwise estimates separate the large system comparisons from the ablations.
 \condAgenticCogWriter\ is consistently favored over \condSinglePass\ and \condTaskPlanning\ and usually over \condStaged, whereas \condNoGoals\ and \condFixedOrder\ remain near parity and do not survive the within-benchmark Holm correction.
-Points show 95\% Wilson intervals; filled circles survive correction, open circles do not, and diamonds are descriptive means across generation runs.}
+Points show win rates and bars their 95\% Wilson intervals; filled circles survive correction, open circles do not, and diamonds are descriptive means across generation runs.}
 \label{fig:appendix-confirmatory-forest}
 \end{figure}
 
@@ -43,6 +43,7 @@ Every mean is at least \RawRubricMin\ on the five-point scale, so the raw rating
 \section{Additional Process and Resource Statistics}
 \label{app:process-behavior}
 Table~\ref{tab:process-summary} reports output size, delegated invocations, goal events, token accounting, and wall-clock time, each averaged across the three generation runs.
+Goal counts are logged trace events: the \condFixedOrder\ prompt lacks our system's end-of-run check that every goal in the goals file has a trace event, so its counts understate the goals its goal files record.
 For \condAgenticCogWriter, a generation run averages \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events.
 The post-\texttt{Reviewing} ledger is the \texttt{Monitor}'s first process-switch decision after each \texttt{Reviewing} pass, which lists every regeneration proposal from the \texttt{Reviewer} with its acceptance or rejection, or states that none was made.
 A generation run averages \AfourLedgerEntriesMean\ ledger entries, \AfourLedgerWithProposalMean\ of which contain a regeneration proposal, and the trace records \AfourGoalRegeneratedMean\ accepted goal regenerations (Table~\ref{tab:process-summary}).
@@ -52,7 +53,7 @@ A generation run averages \AfourLedgerEntriesMean\ ledger entries, \AfourLedgerW
 Process paths are read from the \texttt{Monitor}'s \texttt{process\_switch} events in trace order: each event's destination process is one step, and a run ends once, after its last step (E in Figure~\ref{fig:process-sequences}).
 Figure~\ref{fig:process-sequences}(a) counts these paths as logged, and Figure~\ref{fig:process-sequences}(b,c) counts step-to-step transitions.
 Of the \AfourRunCount\ completed runs of our system, \AfourEndBeforeReviewingRuns\ end their logged path at \texttt{Planning} (\AfourEndPlanningRuns) or \texttt{Translating} (\AfourEndTranslatingRuns); in \AfourEndLastReviewerRuns\ of these the last delegated subagent is the \texttt{Reviewer}, so a final review ran without a logged switch, and in the rest the final document is the draft as last written.
-For Table~\ref{tab:process-dynamics}, immediate repeats of a process are merged (\emph{repeat collapsing}), and when the first delegated role is \texttt{Planning} but the first logged switch names a later process, a leading \texttt{Planning} step is restored (\emph{leading-\texttt{Planning} reconstruction}; \AfourLeadingReconstruction\ such runs for \condAgenticCogWriter).
+For the top panel of Table~\ref{tab:process-dynamics}, immediate repeats of a process are merged (\emph{repeat collapsing}), and when the first delegated role is \texttt{Planning} but the first logged switch names a later process, a leading \texttt{Planning} step is restored (\emph{leading-\texttt{Planning} reconstruction}; \AfourLeadingReconstruction\ such runs for \condAgenticCogWriter).
 A path is \emph{cycle-compliant} when the result consists of one or more complete \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} passes, and returns after \texttt{Reviewing} are counted from this observed order.
 \condFixedOrder\ enforces its order through its prompt only, and \AsixCycleCompliantRate\ of its paths are cycle-compliant; the rest skip or repeat a process, for example \texttt{Translating}--\texttt{Reviewing} without \texttt{Planning}.
 
@@ -120,7 +121,7 @@ Table~\ref{tab:appendix-staged-roles} reports both contrasts: our system is pref
 The \condPlainAgent\ condition was added after the main results had been observed, to test whether the harness alone organizes writing as our system does.
 It gives the same Codex harness, generator, output budget, and retry policy the task prompt and one neutral instruction to keep a working draft in a workspace file that it may plan, draft, and revise, with no skill content.
 It was generated once on generation run 1 and judged with the run-1 pairwise setup, so the comparison covers the \FullPlainAgentAcrossN\ prompts with a completed run-1 output of our system.
-Table~\ref{tab:appendix-plain-agent} reports the contrast: our system is preferred on WritingBench and HelloBench and is at parity on DoLoMiTes.
+Table~\ref{tab:appendix-plain-agent} reports the contrast: our system is favored across benchmarks and separated on WritingBench, while HelloBench ($p=\FullPlainAgentHelloP$) and DoLoMiTes are not separated.
 All \PlainAgentCompletedRuns\ runs wrote the document to a workspace file, \PlainAgentWrittenOnceRuns\ wrote it once and returned it, and the other \PlainAgentRevisedRuns\ wrote it again, mostly to adjust length after counting words or characters.
 \input{tab/appendix-plain-agent}
 
@@ -137,7 +138,7 @@ Table~\ref{tab:appendix-cogwriter-main} reports the contrast, which favors our s
 \subsection{Budget-Matched Self-Refine}
 \label{app:self-refine}
 The \condSelfRefine\ condition follows Self-Refine~\citep{madaan2023self} in one session: it drafts the document, then gives feedback on it and refines it for \SelfRefineRounds\ rounds, with generic prompts rather than our role instructions.
-The round count was fixed before the scored run by matching our system's run-1 token use on unscored calibration prompts, and in the scored run \condSelfRefine\ received \SelfRefineTokenExcess\ more output-plus-reasoning tokens per document than our system (\SelfRefineOutputTokens\ against \SelfRefineAfourOutputTokens), so the budget favors \condSelfRefine.
+The round count was fixed before the scored run by matching our system's run-1 token use on unscored calibration prompts, and in the scored run \condSelfRefine\ received \SelfRefineTokenExcess\ more output-plus-reasoning tokens per completed document than our system (\SelfRefineOutputTokens\ against \SelfRefineAfourOutputTokens), so the budget favors \condSelfRefine.
 It completed \SelfRefineCompleted\ of \CogWriterStyleAttempted\ prompts, wrote shorter outputs (median \SelfRefineMedianOutput\ words), and covers \FullSelfRefineAcrossN\ prompts in the comparison.
 Table~\ref{tab:appendix-self-refine} shows that our system is preferred on WritingBench and HelloBench and is at parity on DoLoMiTes.
 \input{tab/appendix-self-refine}
@@ -147,7 +148,7 @@ Table~\ref{tab:appendix-self-refine} shows that our system is preferred on Writi
 The \condLoopOnly\ condition removes explicit goals, adaptive ordering, and subagents together: it has no goals file or goal events, its \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} order is fixed by its prompt, and its \texttt{Monitor} performs every role in its own context, with any subagent spawn failing the run.
 It keeps the \texttt{Monitor}, the persistent \texttt{.writing/} workspace draft, and the writing guidance of the role skills, and it is built from the skill texts that \condNoGoals, \condFixedOrder, and \condSingleContext\ executed in generation run 1.
 It completed \LoopOnlyCompleted\ of \CogWriterStyleAttempted\ prompts; \LoopOnlyOnePassRuns\ of those runs make exactly one pass and \LoopOnlyReturnPlanningRuns\ return to \texttt{Planning}.
-It used \LoopOnlyOutputTokens\ output-plus-reasoning and \LoopOnlyInputTokens\ uncached input tokens per run, against \AfourOutputTokens\ and \AfourInputTokens\ for our system.
+It used \LoopOnlyOutputTokens\ output-plus-reasoning and \LoopOnlyInputTokens\ uncached input tokens per attempted run, against \AfourOutputTokens\ and \AfourInputTokens\ for our system.
 Table~\ref{tab:appendix-loop-only} reports both contrasts: \condLoopOnly\ is at parity with our system on every benchmark and beats \condStaged\ across benchmarks, significantly on WritingBench and DoLoMiTes.
 The result is post hoc, from one generation run, and a parity result without an equivalence test.
 \input{tab/appendix-loop-only}
@@ -200,5 +201,5 @@ Table~\ref{tab:appendix-habermas} summarizes pointwise quality and the available
 \input{tab/appendix-habermas}
 
 \condExploratoryOne~\citep{wan2025cognitive} is the exploratory adaptation of CogWriter, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; \condExploratoryTwo~\citep{shao2024assisting} is the exploratory adaptation of STORM, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval.
-On these short consensus-writing tasks, \condAgenticCogWriter\ does not achieve the highest pointwise composite; in particular, it scores below \condSinglePass\ and \condStaged.
+On these short consensus-writing tasks, \condAgenticCogWriter\ does not achieve the highest pointwise composite; in particular, it scores below \condSinglePass\ and \condStaged, and also below \condNoGoals\ and \condFixedOrder.
 Neither our system nor \condFixedOrder\ regenerates a goal on these tasks, and their post-\texttt{Reviewing} ledgers record \HabAfourLedger\ and \HabAsixLedger\ no/proposal outcomes.

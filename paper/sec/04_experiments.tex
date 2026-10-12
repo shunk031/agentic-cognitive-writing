@@ -12,7 +12,7 @@ We compare three alternatives to \condAgenticCogWriter: (1) \condSinglePass\ wri
 The alternatives therefore advance a whole document, a fixed writing stage, or an adaptive task node, whereas our system advances a writing process.
 
 \paragraph{Ablations of \condAgenticCogWriter.}
-Two pre-specified ablations change one control mechanism while retaining the rest of the loop.
+Two pre-specified ablations change one control mechanism while retaining the rest of the loop, though \condFixedOrder\ also omits our goal-logging check.
 (4) \condNoGoals\ forbids the goals file and goal events but keeps adaptive process selection and the three subagents, whose \texttt{Planner} loads the shared planning skill but receives no goal-setting request, while (5) \condFixedOrder\ keeps the shared draft, goals, process history, and subagents but replaces the \texttt{Monitor}'s adaptive decision with a repeated \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} cycle.
 
 \paragraph{Execution variant and full system.}
@@ -21,8 +21,8 @@ Its prompt also asks the writer to follow the repository's writing guidance and 
 (7) \condAgenticCogWriter\ is the full system of Section~\ref{sec:method-writing-processes}, with adaptive process selection, explicit goals, and role-specific subagents.
 
 \paragraph{Post-hoc conditions.}
-Further conditions were added after the main results, outside the seven pre-specified systems.
-\condSingleContext\ runs each selected process in the \texttt{Monitor}'s context instead of a subagent; \condPlainAgent\ gives the same harness the task and one neutral instruction to plan, draft, and revise a workspace draft; \condExploratoryOne\ is our adaptation of CogWriter~\citep{wan2025cognitive}; \condSelfRefine\ follows Self-Refine~\citep{madaan2023self} with \SelfRefineRounds\ feedback rounds chosen on unscored prompts to match our token use; and \condLoopOnly\ removes goals, adaptive ordering, and subagents together while keeping the \texttt{Monitor}, the persistent workspace draft, and the role skills.
+Six conditions were added post hoc, outside the seven pre-specified systems.
+\condStagedRoles\ gives \condStaged\ our role instructions; \condSingleContext\ runs each selected process in the \texttt{Monitor}'s context instead of a subagent; \condPlainAgent\ gives the same harness the task and one neutral instruction to plan, draft, and revise a workspace draft; \condExploratoryOne\ is our adaptation of CogWriter~\citep{wan2025cognitive}; \condSelfRefine\ follows Self-Refine~\citep{madaan2023self} with \SelfRefineRounds\ feedback rounds chosen on unscored prompts to approximate our token use, which it exceeded by \SelfRefineTokenExcess\ per completed document; and \condLoopOnly\ removes goals, adaptive ordering, and subagents together.
 
 \input{tab/experiments-architecture-comparison}
 
@@ -40,7 +40,7 @@ This produces a different demanding subset for each benchmark: WritingBench emph
 \subsection{Implementation}
 \label{sec:implementation}
 
-All systems run in Codex CLI as the coding-agent harness with \modelGenBare\ as the generator; API-based scoring uses \modelJudgeBare\ as the primary evaluator.\footnote{We use Luna, which OpenAI positions for fast, cost-sensitive workloads, for high-volume long-form generation and the higher-capability tier, Sol, for evaluation; the shared model family motivates the cross-family check~\citep{openai2026luna,openai2026sol,openai2026gpt56}.}
+All systems run in Codex CLI as the coding-agent harness with \modelGenBare\ as the generator; API-based scoring uses \modelJudgeBare\ as the primary evaluator.\footnote{We use Luna, which OpenAI positions for fast, cost-sensitive workloads, for high-volume long-form generation and the higher-capability tier, Sol, for evaluation; the shared model family motivates the cross-family check~\citep{openai2026gpt56,openai2026luna,openai2026sol}.}
 The comparison holds the generator, harness, workspace tools, output budget, and task information constant across systems; \condStaged\ also runs as a Codex agent with file and shell tools, executing its stages in one session whose \texttt{Re-Write} stage rewrites the whole response.
 Our system is an agent skill: its \texttt{Monitor} invokes \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} as subagents.\footnote{See Appendix~\ref{app:prompts} for the complete prompts and Appendix~\ref{app:runtime} for the runtime settings.}
 
@@ -81,5 +81,5 @@ For each prompt, win, tie, and loss outcomes are mapped to $1$, $1/2$, and $0$, 
 
 \paragraph{Robustness and behavioral analysis.}
 Pairwise LLM evaluation can favor longer outputs and can change with judge identity~\citep{zheng2023judging,dubois2024length,saito2023verbosity,li2026preference,panickssery2024selfpreference}.
-We therefore test whether the pairwise direction persists within pre-specified output-length bands, at equal length under a logistic model on the log length ratio~\citep{dubois2024length}, under a tight compute match, and under the cross-family evaluator.
+We therefore test whether the pairwise direction persists within pre-specified output-length bands, at equal length under a logistic model on the log length ratio~\citep{dubois2024length}, under a compute match, and under the cross-family evaluator.
 We analyze observable traces of process transitions, goal creation and development, goal replacement, and subagent invocations to characterize how the loop is used.
