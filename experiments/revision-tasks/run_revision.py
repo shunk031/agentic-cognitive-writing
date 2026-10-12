@@ -77,7 +77,7 @@ def generate(args: argparse.Namespace) -> None:
         for row in rows
         if not (
             (run := existing.get((row["prompt_id"], condition)))
-            and run.status == "completed"
+            and run.status in {"completed", "started"}  # started: still in flight
         )
     ]
     print(f"{len(jobs)} jobs", flush=True)
