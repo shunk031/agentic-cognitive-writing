@@ -171,6 +171,7 @@ LENGTH_CONTROL_MARKER = "% Length-control macros."
 COMPUTE_STRATIFIED_MARKER = "% Compute-stratified macros."
 PAIRWISE_ROBUSTNESS_MARKER = "% Pairwise-robustness macros."
 STAGED_ROLES_MARKER = "% Staged role-instruction (A9) macros."
+TRACE_ENDINGS_MARKER = "% Trace-ending macros."
 STAGED_ROLES_CONTRASTS = {"A4:A9": "FullStagedRoles", "A9:A2": "StagedRolesStaged"}
 PAIRWISE_ROBUSTNESS_CONTRASTS = {
     "A4:A1": "FullSinglePass",
@@ -1470,6 +1471,18 @@ def _staged_roles_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
     return entries
 
 
+def _trace_endings_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """How Agentic CogWriter runs end and how often the Monitor fallback is recorded."""
+    source = "trace-endings JSON"
+    return [
+        ("\\AfourEndPlanningRuns", str(report["last_logged_process"]["planning"]), source + " last_logged_process.planning"),
+        ("\\AfourEndTranslatingRuns", str(report["last_logged_process"]["translating"]), source + " last_logged_process.translating"),
+        ("\\AfourEndBeforeReviewingRuns", str(report["ending_before_reviewing"]), source + " ending_before_reviewing"),
+        ("\\AfourEndLastReviewerRuns", str(report["ending_before_reviewing_last_delegated_reviewer"]), source + " ending_before_reviewing_last_delegated_reviewer"),
+        ("\\AfourFallbackRuns", str(report["fallback_recorded_runs"]), source + " fallback_recorded_runs"),
+    ]
+
+
 def _validate_single_context_pair(data: dict[str, Any], source: str) -> None:
     for key in SINGLE_CONTEXT_PAIR_FIELDS:
         value = _required_int(data, key, source)
@@ -2310,6 +2323,7 @@ def main() -> None:
     parser.add_argument("--adversarial-review-analysis", type=Path)
     parser.add_argument("--pairwise-robustness", type=Path, help="pairwise-robustness JSON; appends its own block")
     parser.add_argument("--staged-roles", type=Path, help="A9 pairwise JSON; appends its own block")
+    parser.add_argument("--trace-endings", type=Path, help="trace-endings JSON; appends its own block")
     parser.add_argument("--three-run-quality", nargs=2, type=Path, metavar=("SUMMARY", "PAIRED"))
     parser.add_argument("--prompt-languages", nargs=2, type=Path, metavar=("PROMPT_SETS", "MANIFEST_DIR"))
     parser.add_argument(
@@ -2328,6 +2342,7 @@ def main() -> None:
         (args.compute_stratified_sensitivity, "compute-stratified", COMPUTE_STRATIFIED_MARKER, _compute_stratified_entries),
         (args.pairwise_robustness, "pairwise-robustness", PAIRWISE_ROBUSTNESS_MARKER, _pairwise_robustness_entries),
         (args.staged_roles, "staged-roles", STAGED_ROLES_MARKER, _staged_roles_entries),
+        (args.trace_endings, "trace-endings", TRACE_ENDINGS_MARKER, _trace_endings_entries),
     ):
         if path is not None:
             if args.aggregations:

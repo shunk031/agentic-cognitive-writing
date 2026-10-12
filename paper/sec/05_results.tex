@@ -4,7 +4,7 @@
 Table~\ref{tab:main-results} reports document-quality scores for benchmark-native and common-rubric evaluation across the three benchmarks.
 \condAgenticCogWriter\ exceeds every alternative's mean on every WritingBench and HelloBench measure, and its paired prompt-level differences exclude zero against each on both WritingBench measures and HelloBench native scores.
 Its lead over \condStaged\ and \condTaskPlanning\ on HelloBench pointwise scores lies within the paired intervals, as does the higher DoLoMiTes pointwise mean of \condStaged.\footnote{See Appendix~\ref{app:paired-quality} for the paired differences and intervals.}
-The ablations and the execution variant, z-scored with the other systems, reach the highest WritingBench native mean (\condSingleWriter) and HelloBench pointwise mean (\condNoGoals); Section~\ref{sec:results-mechanism} compares them with our system by pairwise preference.
+Among the ablations and the execution variant, \condSingleWriter\ and \condNoGoals\ have the highest WritingBench native and HelloBench pointwise means; Section~\ref{sec:results-mechanism} compares them pairwise.
 
 \input{tab/main-results}
 
@@ -16,7 +16,7 @@ Table~\ref{tab:pairwise-results} reports a system-level separation in direct sam
 The direction holds in every benchmark--run test against \condSinglePass\ and \condTaskPlanning\ and in all but one against \condStaged.
 
 Under the pre-specified within-benchmark Holm correction, \PooledFourOneHolmCellsTotal, \PooledFourThreeHolmCellsTotal, and \PooledFourTwoHolmCellsTotal\ of the nine benchmark--run tests separate our system from \condSinglePass, \condTaskPlanning, and \condStaged, respectively.\footnote{See Appendix~\ref{app:pairwise-detail} for run-level intervals and corrected results.}
-The preference also persists under more conservative accounting: counting every attempted prompt yields win and loss shares of \UncondFullSinglePassWinShare\ and \UncondFullSinglePassLossShare\ (\condSinglePass), \UncondFullStagedWinShare\ and \UncondFullStagedLossShare\ (\condStaged), and \UncondFullTaskPlanningWinShare\ and \UncondFullTaskPlanningLossShare\ (\condTaskPlanning), and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate\ (\condSinglePass), \WorstCaseFullStagedRate\ (\condStaged), and \WorstCaseFullTaskPlanningRate\ (\condTaskPlanning).
+The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare\ (\condSinglePass), \UncondFullStagedWinShare\ (\condStaged), and \UncondFullTaskPlanningWinShare\ (\condTaskPlanning), and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate\ (\condSinglePass), \WorstCaseFullStagedRate\ (\condStaged), and \WorstCaseFullTaskPlanningRate\ (\condTaskPlanning).
 The post-hoc prompt-level estimate separates our system from all three alternatives across benchmarks (largest $p=\PromptLevelAcrossFullStagedP$), and a logistic length model keeps the preference at equal length, at \LengthModelFullStagedPreference\ against \condStaged\ and \LengthModelFullTaskPlanningPreference\ against \condTaskPlanning.\footnote{See Appendix~\ref{app:sensitivity-analyses} for both analyses, the resource-matched comparisons, which largely preserve the direction, and cross-family rescoring, which is less stable.}
 
 \input{tab/pairwise-results}

@@ -1,0 +1,11 @@
+{
+  "completed_runs": 886,
+  "ending_before_reviewing": 88,
+  "ending_before_reviewing_last_delegated_reviewer": 69,
+  "fallback_recorded_runs": 218,
+  "last_logged_process": {
+    "planning": 21,
+    "reviewing": 798,
+    "translating": 67
+  }
+}

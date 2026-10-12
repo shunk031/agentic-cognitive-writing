@@ -26,11 +26,11 @@ Model-judge preference is not human preference; a blinded human comparison of sa
 The ablations constrain explicit goals and adaptive ordering to modest contributions without establishing equivalence.
 Neither ablation differs from the full system in any benchmark--run test after Holm correction, each such test reaches 80\% power~\citep{card2020little} at a true preference of about \PowerCellDetectablePreference, and the post-hoc prompt-level estimate does not compare the two components.\footnote{See Appendix~\ref{app:prompts} for the power calculation.}
 \condFixedOrder\ enforces its cycle through the \texttt{Monitor}'s instructions so that it shares our system's agent runtime and differs only in the selection rule, and \AsixCycleCompliantRate\ of its paths are cycle-compliant.\footnote{See Appendix~\ref{app:process-behavior} for the trace classification.}
-Next steps are a runner-enforced cycle and a combined ablation that removes goals and fixes the order together, which would test whether the two mechanisms substitute for each other.
+Next steps are a runner-enforced cycle and a combined ablation that removes goals, fixes the order, and runs the roles without subagents together, which would test whether these mechanisms substitute for each other and whether the remaining \texttt{Monitor}-run loop over a persistent draft carries the advantage, as the Discussion suggests.
 
 \paragraph{Execution variants.}
 \condSingleWriter\ changes delegation, role context, decision granularity, and output length together; \condSingleContext\ is narrower but was added post-hoc, uses one exploratory generation run, and differs in execution interface and transport.
-The current evidence therefore does not attribute the remaining system-level advantage to any single shared execution feature.
+The current evidence therefore does not attribute the remaining system-level advantage to any single shared execution feature, and delegation itself varies: in \AfourFallbackRuns\ of \AfourRunCount\ completed runs, the \texttt{Monitor} performed at least one role itself when native delegation was unavailable.
 
 \paragraph{Descriptive execution analyses.}
 The primary evaluator favors longer outputs overall, and the length- and compute-matched analyses are descriptive because both variables result from execution.

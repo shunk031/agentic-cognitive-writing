@@ -12,6 +12,7 @@ from make_numbers import (
     _compute_stratified_entries,
     _pairwise_robustness_entries,
     _staged_roles_entries,
+    _trace_endings_entries,
     _cross_family_percent,
     _length_control_entries,
     emit_numbers,
@@ -557,6 +558,12 @@ class TokenMacroTests(unittest.TestCase):
         self.assertEqual(output[r"\FullStagedRolesAcrossRate"], r"68.1\%")
         self.assertEqual(output[r"\StagedRolesStagedAcrossRate"], r"45.9\%")
         self.assertEqual(output[r"\StagedRolesStagedHelloP"], "0.0331")
+
+    def test_trace_endings_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/process-sequences/trace-endings.json").read_text())
+        output = dict((name, value) for name, value, _ in _trace_endings_entries(report))
+        self.assertEqual(output[r"\AfourEndBeforeReviewingRuns"], "88")
+        self.assertEqual(output[r"\AfourFallbackRuns"], "218")
 
     def test_compute_stratified_empty_band_is_not_available(self):
         summary = _compute_summary()

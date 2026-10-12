@@ -1,3 +1,3 @@
-Tables~\ref{tab:main-results} and~\ref{tab:pairwise-results} show that \condAgenticCogWriter\ is distinguished by consistent same-prompt preference over the three alternatives rather than uniform pointwise dominance.
-The ablations keep most of that advantage over the alternatives, adding our role instructions to \condStaged\ does not reproduce it, and the traces show little replanning on these tasks.
-Figure~\ref{fig:process-sequences} and Table~\ref{tab:process-dynamics} show that our system usually follows planning--drafting--reviewing, so its adaptive ordering is seldom used on these tasks.
+Tables~\ref{tab:pairwise-results} and~\ref{tab:ablation-results} suggest why \condAgenticCogWriter\ wins: \condNoGoals, \condFixedOrder, and \condSingleContext\ keep its \texttt{Monitor}-run loop over a persistent draft and stay near parity, whereas \condStagedRoles\ receives the same role instructions but rewrites the whole response once and does not.
+The advantage is therefore more consistent with that loop than with goals, adaptive ordering, subagent contexts, or instruction content alone, and it persists at equal length and within matched compute bands.
+Because most traces show one planning--drafting--reviewing cycle, the loop seldom uses its adaptive ordering on these tasks.

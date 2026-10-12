@@ -12,18 +12,18 @@ A complementary design question remains comparatively underexplored: should the 
 The cognitive process theory of writing~\citep{flower1981cognitive,hayes1996new,hayes2012modeling} provides a useful abstraction for process-level control.
 \citet{flower1981cognitive} characterize writing as coordination among planning, translating, and reviewing, with a monitor deciding which process to invoke as the document develops.
 This view suggests choosing the next writing process rather than the next section or task node.
-
 Building on \citet{flower1981cognitive}, we propose \condAgenticCogWriter, a long-form writing system that implements this process-level control on top of a coding-agent-style harness with persistent state and subagent delegation (Figure~\ref{fig:agentic-cogwriter}).
 A top-level Monitor agent observes the evolving draft, goals, and process history, chooses whether the next activity should be planning, drafting, or reviewing, and delegates that activity to a corresponding subagent.
-The resulting process order is chosen during writing rather than fixed in advance.
 We call the system \textit{agentic} for this combination: online selection of the next writing process, a persistent state shared across steps, and delegation of each selected process to a subagent.
 
 We evaluate our system on three complementary long-form writing benchmarks spanning broad instruction-driven writing, long-context generation, and methodical expert-document production~\citep{wu2026writingbench,que2024hellobench,malaviya2025dolomites}.
 We hold the generator and task information constant across conditions.
 Pointwise rubric scoring and pairwise same-prompt preference evaluation assess document quality from complementary perspectives.
-In pre-specified per-benchmark pairwise tests, our system is preferred to one-shot generation in \PooledFourOneHolmCellsTotal\ of nine tests and to a fixed writing pipeline and adaptive task planning in \PooledFourTwoHolmCellsTotal\ and \PooledFourThreeHolmCellsTotal, while a post-hoc prompt-level summary favors it over all three.
-The component analyses support a system-level interpretation: ablations that drop explicit goals or fix the process order keep most of this advantage over the alternatives, and adding our role instructions to the fixed pipeline post hoc does not reproduce it.
-Process traces show that \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure and that \AfourReviewingToPlanningRate\ of runs return from reviewing to planning.
+In pre-specified per-benchmark pairwise tests, our system is preferred to one-shot generation in \PooledFourOneHolmCellsTotal\ of 9 tests and to a fixed writing pipeline and adaptive task planning in \PooledFourTwoHolmCellsTotal\ and \PooledFourThreeHolmCellsTotal, while a post-hoc prompt-level summary favors it over all three.
+In the component analyses, dropping explicit goals, fixing the process order, or running the roles without subagents stays near parity with our system, whereas adding our role instructions to the fixed pipeline post hoc does not reproduce its advantage.
+
+The component evidence is consistent with the advantage coming from what these variants share and the fixed pipeline lacks, a loop run by the Monitor agent over a persistent draft that is revised in place.
+Process traces show that \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure, and only \AfourReviewingToPlanningRate\ of runs return from reviewing to planning.
 
 Our contributions are threefold.
 (1) We formulate long-form writing for general-purpose agents as a process-level control problem and introduce a concrete system that chooses among planning, drafting, and reviewing during composition; (2) we compare our system with one-shot, fixed-stage, and adaptive task-planning alternatives across complementary long-form benchmarks; and (3) we use ablations and process analyses to test which components the advantage requires and characterize how the loop is used in practice.

@@ -2,50 +2,50 @@
 \centering
 \small
 \setlength{\tabcolsep}{1.75pt}
-\begin{tabular}{lrrrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
 \textbf{System}
 & \multicolumn{2}{c}{\textbf{WritingBench}}
 & \multicolumn{2}{c}{\textbf{HelloBench}}
-& \multicolumn{2}{c}{\textbf{DoLoMiTes}} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+& \multicolumn{1}{c}{\textbf{DoLoMiTes}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-6}
 & \multicolumn{1}{c}{\textbf{Native $\uparrow$}} & \multicolumn{1}{c}{\textbf{Pointwise $\uparrow$}}
 & \multicolumn{1}{c}{\textbf{Native $\uparrow$}} & \multicolumn{1}{c}{\textbf{Pointwise $\uparrow$}}
-& \multicolumn{1}{c}{\textbf{Native $\uparrow$}} & \multicolumn{1}{c}{\textbf{Pointwise $\uparrow$}} \\
-\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}\cmidrule(lr){7-7}
+& \multicolumn{1}{c}{\textbf{Pointwise $\uparrow$}} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
 \condSinglePass
 & 0.697\,{\scriptsize $\pm$ 0.006} & -0.090\,{\scriptsize $\pm$ 0.009}
 & 0.773\,{\scriptsize $\pm$ 0.005} & -0.112\,{\scriptsize $\pm$ 0.018}
-& \textcolor{nagray}{N/A} & -0.006\,{\scriptsize $\pm$ 0.018} \\
+& -0.006\,{\scriptsize $\pm$ 0.018} \\
 \condStaged~\citep{rohman1965pre}
 & 0.702\,{\scriptsize $\pm$ 0.005} & -0.041\,{\scriptsize $\pm$ 0.012}
 & 0.781\,{\scriptsize $\pm$ 0.004} & 0.003\,{\scriptsize $\pm$ 0.016}
-& \textcolor{nagray}{N/A} & \textbf{0.064}\,{\scriptsize $\pm$ 0.036} \\
+& \textbf{0.064}\,{\scriptsize $\pm$ 0.036} \\
 \condTaskPlanning~\citep{xiong2025beyond}
 & 0.722\,{\scriptsize $\pm$ 0.004} & -0.033\,{\scriptsize $\pm$ 0.033}
 & 0.781\,{\scriptsize $\pm$ 0.003} & -0.016\,{\scriptsize $\pm$ 0.061}
-& \textcolor{nagray}{N/A} & -0.164\,{\scriptsize $\pm$ 0.015} \\
-\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}\cmidrule(lr){7-7}
+& -0.164\,{\scriptsize $\pm$ 0.015} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
 \textbf{\condAgenticCogWriter}
 & 0.747\,{\scriptsize $\pm$ 0.006} & \textbf{0.102}\,{\scriptsize $\pm$ 0.040}
 & \textbf{0.791}\,{\scriptsize $\pm$ 0.005} & 0.013\,{\scriptsize $\pm$ 0.060}
-& \textcolor{nagray}{N/A} & 0.031\,{\scriptsize $\pm$ 0.035} \\
-\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}\cmidrule(lr){7-7}
-\multicolumn{7}{l}{\textit{Ablations and execution variant}} \\
+& 0.031\,{\scriptsize $\pm$ 0.035} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+\multicolumn{6}{l}{\textit{Ablations and execution variant}} \\
 \condNoGoals
 & 0.740\,{\scriptsize $\pm$ 0.004} & 0.055\,{\scriptsize $\pm$ 0.042}
 & 0.789\,{\scriptsize $\pm$ 0.001} & \textbf{0.096}\,{\scriptsize $\pm$ 0.056}
-& \textcolor{nagray}{N/A} & -0.001\,{\scriptsize $\pm$ 0.059} \\
+& -0.001\,{\scriptsize $\pm$ 0.059} \\
 \condFixedOrder
 & 0.746\,{\scriptsize $\pm$ 0.006} & 0.046\,{\scriptsize $\pm$ 0.086}
 & 0.787\,{\scriptsize $\pm$ 0.003} & 0.055\,{\scriptsize $\pm$ 0.072}
-& \textcolor{nagray}{N/A} & 0.048\,{\scriptsize $\pm$ 0.041} \\
+& 0.048\,{\scriptsize $\pm$ 0.041} \\
 \condSingleWriter
 & \textbf{0.761}\,{\scriptsize $\pm$ 0.008} & -0.037\,{\scriptsize $\pm$ 0.006}
 & 0.770\,{\scriptsize $\pm$ 0.001} & -0.040\,{\scriptsize $\pm$ 0.049}
-& \textcolor{nagray}{N/A} & 0.030\,{\scriptsize $\pm$ 0.038} \\
+& 0.030\,{\scriptsize $\pm$ 0.038} \\
 \bottomrule
 \end{tabular}
-\caption{Document quality (higher is better): mean $\pm$ sample SD of the three generation-run means, not a prompt-level interval. \textit{Native} uses each benchmark's criteria; \textit{Pointwise} uses a common five-dimension rubric, z-scored within each generation run and benchmark over all seven systems shown. Bold marks the highest mean in each column. \condAgenticCogWriter\ exceeds every alternative on WritingBench and HelloBench.}
+\caption{Document quality (higher is better): mean $\pm$ sample SD of the three generation-run means, not a prompt-level interval. \textit{Native} uses each benchmark's criteria (DoLoMiTes has none); \textit{Pointwise} uses a common five-dimension rubric, z-scored per generation run and benchmark over all seven systems. Bold marks the highest mean in each column. \condAgenticCogWriter\ exceeds every alternative on WritingBench and HelloBench.}
 \label{tab:main-results}
 \end{table*}
