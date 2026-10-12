@@ -16,11 +16,9 @@ The direction holds in every benchmark and generation run against \condSinglePas
 
 Under the pre-specified within-benchmark Holm correction, \PooledFourOneHolmCellsTotal, \PooledFourThreeHolmCellsTotal, and \PooledFourTwoHolmCellsTotal\ of the nine benchmark--run tests separate our system from \condSinglePass, \condTaskPlanning, and \condStaged, respectively.\footnote{See Appendix~\ref{app:pairwise-detail} for run-level intervals and corrected results.}
 The preference also persists under more conservative accounting: counting every attempted prompt yields win shares of \UncondFullSinglePassWinShare, \UncondFullStagedWinShare, and \UncondFullTaskPlanningWinShare, and assigning every missing pair against our system still leaves win rates of at least \WorstCaseFullSinglePassRate, \WorstCaseFullStagedRate, and \WorstCaseFullTaskPlanningRate\ among order-consistent comparisons.\footnote{See Appendix~\ref{app:sensitivity-analyses} for sensitivity analyses: resource-matched comparisons largely preserve the direction, whereas cross-family rescoring is less stable, including a WritingBench reversal against \condSinglePass.}
+The direct-comparison result supports the tested system as a whole because our system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \texttt{Monitor}.
 
 \input{tab/pairwise-results}
-
-The direct-comparison result supports the tested system as a whole because our system differs from the alternatives in several coupled design choices, including persistent writing state, a process-level action space, and repeated return to the \texttt{Monitor}.
-The ablations below ask whether the advantage depends on explicit goals or adaptive ordering.
 
 \subsection{Ablations and Execution Diagnostics}
 \label{sec:results-mechanism}
@@ -28,8 +26,7 @@ The ablations below ask whether the advantage depends on explicit goals or adapt
 Table~\ref{tab:ablation-results} places the two pre-specified ablations much closer to \condAgenticCogWriter\ than the alternative writing systems in Table~\ref{tab:pairwise-results}.
 After the within-benchmark Holm correction, all benchmark--run tests comparing our system with \condNoGoals\ or \condFixedOrder\ remain above the corrected significance threshold.
 An exploratory prompt-level summary defined after the main results places our system slightly ahead of both ablations, at \ClusteredFullFixedOrderRate\ [\ClusteredFullFixedOrderInterval], $p=\ClusteredFullFixedOrderP$, against \condFixedOrder\ and \ClusteredFullNoGoalsRate\ [\ClusteredFullNoGoalsInterval], $p=\ClusteredFullNoGoalsP$, against \condNoGoals; the two intervals overlap, so the summary does not rank the components.
-The ablations nonetheless keep the full system's advantage over the alternatives: of the \PairedSeparationMeasureCount\ paired WritingBench and HelloBench native and pointwise contrasts with the three alternatives, the interval excludes zero for \PairedSeparatedNoGoals\ with \condNoGoals\ and \PairedSeparatedFixedOrder\ with \condFixedOrder, against \PairedSeparatedFull\ with our system.\footnote{See Appendix~\ref{app:paired-quality} for these paired differences.}
-The advantage therefore does not hinge on either component; the process-level loop that all three variants share carries it.
+The ablations nonetheless keep the full system's advantage over the alternatives: of \PairedSeparationMeasureCount\ paired native and pointwise contrasts with them on WritingBench and HelloBench, intervals exclude zero for \PairedSeparatedNoGoals\ with \condNoGoals\ and \PairedSeparatedFixedOrder\ with \condFixedOrder, against \PairedSeparatedFull\ with our system.\footnote{See Appendix~\ref{app:paired-quality} for these paired differences.}
 
 \input{tab/ablation-results}
 
