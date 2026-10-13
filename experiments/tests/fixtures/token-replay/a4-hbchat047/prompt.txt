@@ -1,0 +1,3 @@
+Read the skill file at plugin/skills/agentic-cog-writer/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact.
+
+## Sin

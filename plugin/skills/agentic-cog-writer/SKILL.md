@@ -20,7 +20,7 @@ You are the `Monitor`. You decide which writing process runs next and on which p
 
 Before every step, read `goals.md`, `draft.md`, and the latest `review.json`. Choose one process and its scope from what they show:
 
-- **Goal-setting.** Your first step is `planning --goals`, which creates the requirements.
+- **Goal-setting.** `planning --goals` creates the requirements; `cw` checks which step may come first.
 - **A requirement is unmet, or a finding is local to a passage.** Run `translating`, scoped to those requirement IDs or that passage.
 - **The requirements are missing something or are wrong, or the draft needs a new structure.** Run `planning`. Add `--goals` when the requirements themselves must change.
 - **The draft changed since the last review.** Run `reviewing` before you stop.
@@ -32,7 +32,7 @@ Before every step, read `goals.md`, `draft.md`, and the latest `review.json`. Ch
 python3 .agents/cw/cw.py step <planning|translating|reviewing> [--scope <ID or passage> ...] [--goals] --why "<what in the state led to this choice>"
 ```
 
-A `translating` step needs a scope: requirement IDs such as `G1 G2.1`, or a quoted passage label. `cw` prints a history line and then a spawn line. Have a role agent perform the step by passing that spawn line verbatim as the message:
+Give the scope as requirement IDs such as `G1 G2.1` or as a quoted passage label; `cw` checks it. `cw` prints a history line and then a spawn line. Have a role agent perform the step by passing that spawn line verbatim as the message:
 
 ```js
 const { agent_id } = await tools.multi_agent_v1__spawn_agent({
@@ -52,7 +52,7 @@ text(JSON.stringify(r.status[agent_id]));
 
 Run the whole block in one call, so the role agent is closed before you read its report and before any other command. Run one role agent at a time. Do not perform a role yourself, do not change files under `.writing/`, and do not run `codex`.
 
-When `cw` reports that a step failed, reissue the same command once. If the reissued step also fails, stop with `--reason failure`.
+When `cw` reports that a step failed, follow its message; `cw` checks the reissue.
 
 ## Proposals
 
@@ -70,9 +70,7 @@ After you accept a proposal, run `planning --goals`, which applies the replaceme
 python3 .agents/cw/cw.py stop --reason met|cap|failure --why "<reason>"
 ```
 
-- `met`: the latest step was `reviewing`, every requirement is met, there are no findings, and you rejected every proposal.
-- `cap`: four `reviewing` steps have run in this turn.
-- `failure`: a reissued step failed.
+Give the reason that fits the state: `met` when the review found everything met, `cap` at the pass limit, or `failure` after a failed reissue. `cw` checks each reason's precondition.
 
 After `cw stop`, end your turn with one short line. The harness takes the document from the snapshot that `cw stop` saves.
 

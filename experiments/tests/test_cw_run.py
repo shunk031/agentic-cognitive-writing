@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ from agentic_cogwriter.runner.execution import ExecutionResult
 from agentic_cogwriter.runner.runner import ExperimentRunner
 
 DRAFT = "The memo states the provided facts.\n"
+DRAFT_TWO = "The memo now states the provided facts in full.\n"
 
 
 def _rollout(
@@ -57,12 +59,31 @@ def _user(text: str) -> dict:
     }
 
 
+def _settings(model: str = "gpt-5.6-luna") -> dict:
+    return {
+        "timestamp": "2026-10-13T00:00:01Z",
+        "type": "turn_context",
+        "payload": {"model": model, "effort": "medium", "service_tier": None},
+    }
+
+
 class SimulatedMonitor:
     """Plays an A4 run: runs the staged cw and emits Codex-shaped records."""
 
-    def __init__(self, *, fork: bool = False, write_while_open: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        fork: bool = False,
+        write_while_open: bool = False,
+        child_model: str = "gpt-5.6-luna",
+        stop_turn_two: bool = True,
+    ) -> None:
         self.fork = fork
         self.write_while_open = write_while_open
+        self.child_model = child_model
+        self.stop_turn_two = stop_turn_two
+        self.turn = 0
+        self.parent_records: list[dict] = []
 
     def cw(self, cwd: Path, thread: str, *args: str, stdin: str = "") -> list[str]:
         result = subprocess.run(
@@ -77,11 +98,14 @@ class SimulatedMonitor:
         return result.stdout.splitlines()
 
     def run(self, command, *, cwd, timeout_seconds, env=None):
+        self.turn += 1
         writing = cwd / ".writing"
         sessions = Path(env["CODEX_HOME"]) / "sessions"
         prompt = command[-1]
         events: list[dict] = [{"type": "thread.started", "thread_id": "parent"}]
-        parent_records = [_user(prompt), _tokens("2026-10-13T00:00:02Z", 10)]
+        if self.turn == 1:
+            self.parent_records = [_settings(), _user(prompt)]
+        self.parent_records.append(_tokens(f"2026-10-13T0{self.turn}:00:02Z", 10))
 
         def item(kind: str, **fields) -> None:
             events.append(
@@ -95,13 +119,14 @@ class SimulatedMonitor:
             ("planning", ["--goals"]),
             ("translating", ["--scope", "G1"]),
             ("reviewing", []),
-        ]
+        ][self.turn - 1 :]
+        draft = DRAFT if self.turn == 1 else DRAFT_TWO
         for index, (process, flags) in enumerate(steps):
             out = self.cw(cwd, "parent", "step", process, *flags, "--why", "state")
             item(
                 "command_execution", command="cw step", aggregated_output="\n".join(out)
             )
-            child = f"child-{index}"
+            child = f"child-{self.turn}-{index}"
             spawn_line = out[1]
             item(
                 "collab_tool_call",
@@ -116,7 +141,7 @@ class SimulatedMonitor:
                 )
                 (writing / f"history/step-{n:02d}/plan.md").write_text("Plan.\n")
             elif process == "translating":
-                (writing / "draft.md").write_text(DRAFT)
+                (writing / "draft.md").write_text(draft)
             else:
                 review = {
                     "verdicts": [
@@ -145,38 +170,47 @@ class SimulatedMonitor:
                 receiver_thread_ids=[child],
                 agents_states=state,
             )
-            records = [_user(f"<skill>\n<name>{process}</name>\n"), _user(spawn_line)]
+            records = [
+                _settings(self.child_model),
+                _user(f"<skill>\n<name>{process}</name>\n"),
+                _user(spawn_line),
+            ]
             if self.fork:
-                records.insert(0, _user(prompt))
-            records.append(_tokens(f"2026-10-13T00:0{index + 1}:00Z", 5))
+                records.insert(1, _user(prompt))
+            records.append(_tokens(f"2026-10-13T0{self.turn}:0{index + 1}:00Z", 5))
             _rollout(sessions / f"rollout-{child}.jsonl", child, "parent", records)
-        out = self.cw(cwd, "parent", "stop", "--reason", "met", "--why", "all met")
-        item("command_execution", command="cw stop", aggregated_output="\n".join(out))
-        item("agent_message", text="Stopped.")
+        if self.turn == 1 or self.stop_turn_two:
+            out = self.cw(cwd, "parent", "stop", "--reason", "met", "--why", "all met")
+            item(
+                "command_execution", command="cw stop", aggregated_output="\n".join(out)
+            )
+        item("agent_message", text=f"Stopped turn {self.turn}.")
         events.append({"type": "turn.completed", "usage": {"output_tokens": 30}})
-        parent_records.append(_tokens("2026-10-13T00:09:00Z", 30))
-        _rollout(sessions / "rollout-parent.jsonl", "parent", None, parent_records)
+        self.parent_records.append(_tokens(f"2026-10-13T0{self.turn}:09:00Z", 30))
+        _rollout(sessions / "rollout-parent.jsonl", "parent", None, self.parent_records)
         stdout = "".join(json.dumps(e) + "\n" for e in events).encode()
         return ExecutionResult(
             returncode=0, stdout=stdout, stderr=b"", session_id="parent"
         )
 
 
-def _run(tmp_path: Path, executor: SimulatedMonitor):
+def _run(tmp_path: Path, executor: SimulatedMonitor, followup: str | None = None):
     # The runner refuses provider homes under the system temporary directory.
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr("tempfile.gettempdir", lambda: str(tmp_path / "system-temp"))
-        return _run_patched(tmp_path, executor)
+        return _run_patched(tmp_path, executor, followup)
 
 
-def _run_patched(tmp_path: Path, executor: SimulatedMonitor):
+def _run_patched(tmp_path: Path, executor: SimulatedMonitor, followup: str | None):
     runner = ExperimentRunner(
         _config(),
         output_root=tmp_path / "runs",
         executor=executor,
         codex_home=tmp_path / "codex-home",
     )
-    return runner.run_prompt(_prompt(), condition_id="A4", platform="codex", run_id="r")
+    return runner.run_prompt(
+        _prompt(), condition_id="A4", platform="codex", run_id="r", followup=followup
+    )
 
 
 def test_a4_run_scores_the_stop_snapshot_and_passes_every_gate(tmp_path: Path) -> None:
@@ -190,14 +224,16 @@ def test_a4_run_scores_the_stop_snapshot_and_passes_every_gate(tmp_path: Path) -
         "source": "placeholder: majority script of the assignment",
     }
     assert (result.run_dir / "output.normalized.txt").read_text() == DRAFT
-    assert (result.run_dir / "final-message.txt").read_text() == "Stopped."
+    assert (result.run_dir / "final-message.txt").read_text() == "Stopped turn 1."
     workspace = result.run_dir / "workspace"
     task = (workspace / ".writing/task.md").read_text()
     assert task.startswith("## Assignment\nWrite a memo.\n\n## Supplied context\n")
     # Roles quote the language line as a requirement source, so it is one line.
     assert task.endswith("\n\nOutput language: English\n")
-    assert (result.run_dir / "prompt.txt").read_text().endswith(
-        "\n\nOutput language: English"
+    assert (
+        (result.run_dir / "prompt.txt")
+        .read_text()
+        .endswith("\n\nOutput language: English")
     )
     assert not (workspace / "plugin/skills/agentic-cog-writer/scripts").exists()
     assert (workspace / ".agents/cw/cw.json").stat().st_mode & 0o222 == 0
@@ -211,6 +247,7 @@ def test_a4_run_scores_the_stop_snapshot_and_passes_every_gate(tmp_path: Path) -
     [
         (SimulatedMonitor(fork=True), "gate:fork"),
         (SimulatedMonitor(write_while_open=True), "gate:top_level_writes"),
+        (SimulatedMonitor(child_model="gpt-5.6-sol"), "gate:spawn_args"),
     ],
 )
 def test_a4_gate_failures_set_the_failure_kind(
@@ -224,6 +261,34 @@ def test_a4_gate_failures_set_the_failure_kind(
     assert manifest["failure"]["kind"] == kind
 
 
+def test_a4_follow_up_scores_each_turn_from_its_own_snapshot(tmp_path: Path) -> None:
+    result = _run(tmp_path, SimulatedMonitor(), followup="State the facts in full.")
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["status"] == "completed"
+    assert manifest["cw"]["stop_reasons"] == {"1": "met", "2": "met"}
+    assert (result.run_dir / "turn1.output.normalized.txt").read_text() == DRAFT
+    assert (result.run_dir / "output.normalized.txt").read_text() == DRAFT_TWO
+    request = result.run_dir / "workspace/.writing/history/turn-02-request.md"
+    assert request.read_text() == "State the facts in full."
+
+
+def test_a4_turn_without_its_own_stop_is_incomplete(tmp_path: Path) -> None:
+    with pytest.raises(ExecutionError, match="incomplete"):
+        _run(tmp_path, SimulatedMonitor(stop_turn_two=False), followup="Change it.")
+    manifest_path = tmp_path / "runs/WritingBench/A4/codex/r/run-manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest["failure"]["kind"] == "incomplete"
+    assert manifest["cw"]["gates"]["completeness"] is False
+
+
+def test_fidelity_counts_returns_within_each_turn() -> None:
+    from agentic_cogwriter.analysis import fidelity
+
+    paths = {1: "PTR", 2: "TRTR"}
+    total = sum((fidelity.returns(p) for p in paths.values()), Counter())
+    assert total == Counter({"RT": 1})
+
+
 # ---- token rule ------------------------------------------------------------
 
 
@@ -234,49 +299,40 @@ def _run_dir(tmp_path: Path) -> Path:
     return run_dir
 
 
-def test_token_rule_resume_reset_and_fork(tmp_path: Path) -> None:
+FIXTURES = Path(__file__).parent / "fixtures/token-replay"
+
+
+def test_token_rule_replays_a4_hbchat047() -> None:
+    # Trimmed real records of smoke run a4-hbchat047: a resumed follow-up turn
+    # whose parent rollout is copied once per attempt.
+    report = cw_run.token_report(FIXTURES / "a4-hbchat047")
+    assert report["child_inclusive"]["output_tokens"] == 121_265
+    assert report["parent_output_per_turn"] == [12_923, 27_791]
+    assert report["budget_statistic"] == 27_791
+
+
+def test_token_rule_subtracts_the_parent_at_the_fork() -> None:
+    # Trimmed real records of an executed A3 run: the forked child's rollout
+    # repeats the parent's totals (189, 325, ..., 1,476) before its own.
+    report = cw_run.token_report(FIXTURES / "a3-fork")
+    child = report["per_thread"]["01a0c310-60f0-7421-9d6b-46b2139d10b6"]
+    assert child["output_tokens"] == 2_860 - 1_476
+    assert child["input_tokens"] == 113_227 - 84_557
+
+
+def test_token_rule_splits_segments_at_a_context_reset(tmp_path: Path) -> None:
+    # No executed rollout contains a context reset, so this series is
+    # synthetic: the reset zeroes the running totals and the segments add up.
     run_dir = _run_dir(tmp_path)
-    first = [_tokens("2026-10-13T00:00:01Z", 10), _tokens("2026-10-13T00:00:02Z", 20)]
-    resumed = [*first, _tokens("2026-10-13T00:10:00Z", 35)]
-    sessions = run_dir / "sessions"
-    _rollout(sessions / "attempt-001/rollout-p.jsonl", "p", None, first)
-    _rollout(sessions / "attempt-002/rollout-p.jsonl", "p", None, resumed)
-    # A context reset zeroes the running totals; the segments add up.
     reset = [
         _tokens("2026-10-13T00:01:00Z", 50, 500, 100),
         _tokens("2026-10-13T00:02:00Z", 5, 50, 0),
         _tokens("2026-10-13T00:03:00Z", 30, 300, 10),
     ]
-    _rollout(sessions / "attempt-001/rollout-c.jsonl", "c", "p", reset)
-    # A forked child starts from the parent's totals at the fork point.
-    forked = [
-        _user("Read the skill file and follow it."),
-        _tokens("2026-10-13T00:05:00Z", 25, 150, 60),
-    ]
-    _rollout(
-        sessions / "attempt-001/rollout-f.jsonl",
-        "f",
-        "p",
-        forked,
-        started="2026-10-13T00:04:00Z",
-    )
-    report = cw_run.token_report(run_dir)
-    threads = report["per_thread"]
-    assert threads["p"]["output_tokens"] == 35
-    assert threads["c"]["output_tokens"] == 80
-    assert threads["c"]["input_tokens"] == 800
-    assert threads["f"]["output_tokens"] == 5
-    assert threads["f"]["input_tokens"] == 50
-    assert report["child_inclusive"]["output_tokens"] == 120
-
-
-@pytest.mark.skipif(
-    "CW_REPLAY_HBCHAT047" not in os.environ,
-    reason="set CW_REPLAY_HBCHAT047 to the a4-hbchat047 smoke run directory",
-)
-def test_token_rule_replays_a4_hbchat047() -> None:
-    report = cw_run.token_report(Path(os.environ["CW_REPLAY_HBCHAT047"]))
-    assert report["child_inclusive"]["output_tokens"] == 121_265
+    _rollout(run_dir / "sessions/attempt-001/rollout-c.jsonl", "c", None, reset)
+    thread = cw_run.token_report(run_dir)["per_thread"]["c"]
+    assert thread["output_tokens"] == 80
+    assert thread["input_tokens"] == 800
 
 
 # ---- failure classification ------------------------------------------------

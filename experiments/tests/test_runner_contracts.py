@@ -74,13 +74,9 @@ SINGLE_TURN_CONTRACT = (
     "\n\n## Single-turn contract\n\n"
     "This is a single-turn task with no interactive user; never ask clarification "
     "questions. When the assignment underspecifies audience, purpose, or scope, "
-    "apply genre-appropriate defaults. The `agentic-cog-writer` skill and its "
-    "`cognitive-writing-*` variants record these assumptions in the restatement in "
-    "`.writing/assignment.md`; every other skill applies them without recording "
-    "them and creates no file for them. Do not state assumptions at the top of the "
-    "deliverable. Do not change the deliverable's content contract. Never include "
-    "a skill acknowledgment line, such as `I read <skill name>.`, in the "
-    "deliverable or the final response."
+    "apply genre-appropriate defaults without recording them, and create no file "
+    "for them. Do not state assumptions at the top of the deliverable. Do not "
+    "change the deliverable's content contract."
 )
 SINGLE_TURN_CONTRACT_TEXT = SINGLE_TURN_CONTRACT.removeprefix("\n\n") + "\n"
 DELEGATION_CONTRACT = (
@@ -1028,17 +1024,10 @@ def test_every_condition_prompt_has_the_uniform_single_turn_contract() -> None:
             assert INFORMATION_CONTRACT in prompt
 
 
-def test_every_wrapper_records_assumptions_in_the_assignment_file() -> None:
-    expected = (
-        "The `agentic-cog-writer` skill and its `cognitive-writing-*` variants "
-        "record these assumptions in the restatement in `.writing/assignment.md`"
-    )
-    for condition in load_condition_registry().values():
-        for platform in ("codex", "claude_code"):
-            prompt = ExperimentRunner(
-                _config(), output_root=Path("runs")
-            )._plugin_prompt(condition, _prompt(), platform.replace("_", "-"))
-            assert expected in prompt
+def test_shared_contracts_name_no_assignment_file_or_acknowledgment() -> None:
+    for path in CONTRACTS_ROOT.glob("*.md"):
+        text = path.read_text(encoding="utf-8")
+        assert "assignment.md" not in text and "acknowledgment" not in text
 
 
 def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:

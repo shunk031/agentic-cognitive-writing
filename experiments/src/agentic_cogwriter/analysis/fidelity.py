@@ -73,8 +73,8 @@ def run_row(run_dir: Path) -> dict[str, Any]:
         )
         if GOAL_LINE.match(line)
     ]
-    path_all = "".join(turn_paths.values())
-    ret = returns(path_all)
+    # Returns are counted within each turn, never across a turn boundary.
+    ret = sum((returns(path) for path in turn_paths.values()), Counter())
     return {
         "run": run_dir.name,
         "condition": manifest["inputs"]["condition_id"],

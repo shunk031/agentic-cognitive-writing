@@ -333,14 +333,6 @@ class State:
     def passes(self) -> int:
         return sum(s["process"] == "reviewing" for s in self.ok_steps())
 
-    def last_review(self) -> dict | None:
-        """The review of the latest successful step, when that step is Reviewing."""
-
-        ok = self.ok_steps()
-        if ok and ok[-1]["process"] == "reviewing":
-            return self.reviews.get(ok[-1]["step"])
-        return None
-
     def latest_review(self) -> dict | None:
         """The review of the latest successful Reviewing step in any turn."""
 
@@ -814,6 +806,8 @@ def cmd_stop(state: State, args) -> None:
         raise Refused("this turn has already stopped")
     _, failed_out = state.failure_state()
     reason = args.reason
+    if failed_out and reason != "failure":
+        raise Refused("a reissued step failed; only `--reason failure` is accepted")
     if reason == "failure":
         if not failed_out:
             raise Refused("`--reason failure` follows only a failed reissue")
@@ -824,9 +818,17 @@ def cmd_stop(state: State, args) -> None:
     if reason == "cap" and state.passes() < CAP:
         raise Refused(f"`--reason cap` needs {CAP} Reviewing steps in this turn")
     if reason == "met":
-        review = state.last_review()
-        if review is None:
-            raise Refused("`--reason met` needs a successful Reviewing step last")
+        steps = state.turn_steps()
+        last = steps[-1] if steps else None
+        if (
+            last is None
+            or last["process"] != "reviewing"
+            or not state.closes[last["step"]]["ok"]
+        ):
+            raise Refused(
+                "`--reason met` needs the latest step to be a successful Reviewing"
+            )
+        review = state.reviews[last["step"]]
         if review["findings"]:
             raise Refused("the latest review lists findings")
         if state.goals_on:

@@ -28,8 +28,6 @@ _HAN = re.compile(r"[㐀-䶿一-鿿豈-﫿]")
 _LATIN = re.compile(r"[A-Za-z]")
 _ROLE = re.compile(r"^\$(planning|translating|reviewing)\b")
 _CODEX_COMMAND = re.compile(r"(?:^|[\s;&|(`'\"])codex(?:\s|$)")
-_SPAWN_CALL = re.compile(r"spawn_agent\(\s*(\{.*?\})\s*\)", re.DOTALL)
-_SPAWN_OVERRIDE = re.compile(r"\b(model|reasoning_effort|service_tier)\s*:")
 _PROVIDER_EVENT = re.compile(r"Reconnecting|stream disconnected", re.IGNORECASE)
 _TOKEN_FIELDS = ("output_tokens", "input_tokens", "cached_input_tokens")
 
@@ -276,6 +274,27 @@ def collab_calls(events: Iterable[dict]) -> list[dict]:
     ]
 
 
+def turn_settings(records: Iterable[dict]) -> tuple | None:
+    """The model, reasoning effort, and service tier of a thread's first turn."""
+
+    for record in records:
+        if record.get("type") == "turn_context":
+            payload = record.get("payload") or {}
+            return (
+                payload.get("model"),
+                payload.get("effort"),
+                payload.get("service_tier"),
+            )
+    return None
+
+
+def turns_run(run_dir: Path) -> int:
+    """Turn 1 plus one turn per runner-written turn request."""
+
+    history_dir = run_dir / "workspace/.writing/history"
+    return 1 + len(list(history_dir.glob("turn-*-request.md")))
+
+
 def spawn_report(run_dir: Path) -> dict[str, Any]:
     """Spawns, forks, overrides, failures, unclosed children, and injection."""
 
@@ -320,18 +339,15 @@ def spawn_report(run_dir: Path) -> dict[str, Any]:
                 if _CODEX_COMMAND.search(text):
                     codex_runs.append(thread_id)
                     break
-    overrides = []
-    for entry in all_threads.values():
-        if entry["parent"] is not None:
-            continue
-        for record in entry["records"]:
-            payload = record.get("payload") or {}
-            if payload.get("type") not in ("function_call", "custom_tool_call"):
-                continue
-            code = str(payload.get("input") or payload.get("arguments") or "")
-            for call in _SPAWN_CALL.findall(code):
-                if _SPAWN_OVERRIDE.search(call):
-                    overrides.append(call)
+    # A spawn override shows as a child turn setting that differs from the parent's.
+    parents = [t for t in all_threads.values() if t["parent"] is None]
+    parent_settings = turn_settings(parents[0]["records"]) if parents else None
+    overrides = [
+        thread_id
+        for thread_id in children
+        if thread_id in all_threads
+        and turn_settings(all_threads[thread_id]["records"]) != parent_settings
+    ]
     return {
         "spawns": len(spawns),
         "children": sorted(children),
@@ -422,8 +438,10 @@ def gates(run_dir: Path, runner_hashes: Mapping[str, str] | None = None) -> dict
         "top_level_writes": not writes,
         "runner_files": unchanged,
         "completeness": completed
-        and bool(stops)
-        and all(reason in ("met", "cap") for reason in stops.values()),
+        and all(
+            stops.get(turn) in ("met", "cap")
+            for turn in range(1, turns_run(run_dir) + 1)
+        ),
     }
     return {
         "results": results,

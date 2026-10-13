@@ -1114,13 +1114,19 @@ class ExperimentRunner:
                 (run_dir / "final-message.txt").write_text(
                     "\n\n".join(final_messages), encoding="utf-8"
                 )
+                # Each turn is scored from its own cw stop snapshot.
                 finals = workspace / ".writing" / "history" / "final"
-                turns = sorted(finals.glob("turn-*/draft.md"))
-                if not turns:
+                snapshots = [
+                    finals / f"turn-{turn:02d}" / "draft.md"
+                    for turn in range(1, cw_run.turns_run(run_dir) + 1)
+                ]
+                if not all(path.is_file() for path in snapshots):
                     raise CwRunFailure({"kind": "incomplete", "class": "model"})
-                if len(turns) > 1:
-                    shutil.copyfile(turns[-2], run_dir / "turn1.output.normalized.txt")
-                output = turns[-1].read_text(encoding="utf-8")
+                if len(snapshots) > 1:
+                    shutil.copyfile(
+                        snapshots[0], run_dir / "turn1.output.normalized.txt"
+                    )
+                output = snapshots[-1].read_text(encoding="utf-8")
                 output_path.write_bytes(output.encode("utf-8"))
                 normalized_path.write_text(output, encoding="utf-8")
                 self._write_json(

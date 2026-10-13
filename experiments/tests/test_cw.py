@@ -402,7 +402,7 @@ def test_cw_stop(tmp_path: Path) -> None:
     ws = make(tmp_path, "A4")
     ws.plan()
     ws.translate()
-    assert "Reviewing step last" in ws.refused("stop", "--reason", "met", "--why", "x")
+    assert "successful Reviewing" in ws.refused("stop", "--reason", "met", "--why", "x")
     assert "failed reissue" in ws.refused("stop", "--reason", "failure", "--why", "x")
     ws.review(
         {**MET, "findings": [{"kind": "structure", "where": "end", "fix": "add"}]}
@@ -423,6 +423,22 @@ def test_cw_stop(tmp_path: Path) -> None:
     stop = ws.ok("stop", "--reason", "met", "--why", "done")
     assert stop["from_process"] == "reviewing" and stop["to_process"] is None
     assert stop["decision"].startswith("regeneration proposals: none. ")
+    # A failed step after a met review: met needs the latest step to be that review.
+    failing = make(tmp_path / "failing", "A4")
+    failing.plan()
+    failing.translate()
+    failing.review()
+    failing.ok("step", "translating", "--scope", "G1", "--why", "no change")
+    assert "successful Reviewing" in failing.refused(
+        "stop", "--reason", "met", "--why", "closes the failed step"
+    )
+    failing.ok("step", "translating", "--scope", "G1", "--why", "reissue")
+    # After the reissue fails too, only failure is accepted.
+    for reason in ("met", "cap"):
+        assert "only `--reason failure`" in failing.refused(
+            "stop", "--reason", reason, "--why", "x"
+        )
+    failing.ok("stop", "--reason", "failure", "--why", "two failures")
     no_goals = make(tmp_path / "a5", "A5")
     no_goals.translate(scope="all")
     no_goals.review({"findings": []})
