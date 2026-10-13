@@ -11,8 +11,8 @@ You are the `Reviewing` role agent, not the `Monitor`. You judge whether the dra
 
 1. Read the brief, then the task, requirements, and draft files it names.
 2. Judge each active requirement that the brief lists:
-   - **Met.** Quote, as `evidence`, the exact words of the draft that meet it.
-   - **Unmet.** Say `where` the draft falls short and the `fix` it needs.
+   - **Met.** The draft meets the requirement fully. Quote, as `evidence`, the exact words of the draft that show it. When the requirement concerns the whole draft, such as a length, a number of items, or every required section, first measure it: count the words or characters, or list each required item you find, and record the result in `where`.
+   - **Unmet.** The draft misses the requirement or meets it only in part. Say `where` the draft falls short and the `fix` it needs.
 3. List as `findings` every other change the draft requires, such as a task constraint that no requirement covers. Mark each finding `structure` when it concerns sections or organization, and `local` when it concerns one passage.
 4. When a requirement itself is wrong for the task, add a proposal that gives its replacement and the reason.
 5. Submit the review, and resubmit it after a refusal, until `cw` accepts it:
