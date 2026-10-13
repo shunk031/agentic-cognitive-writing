@@ -135,6 +135,11 @@ def test_single_writer_is_single_context_plus_the_paragraph_unit() -> None:
     unit = sections[PARAGRAPH]
     assert "at most 120 words, counting each CJK character as one word" in unit
     assert "writing_state.py words --max 120" in unit
+    # A Translating step covers its whole scope as successive paragraphs, so the
+    # pass and step caps count scopes, as in A4, not paragraphs.
+    assert "covers its whole scope" in unit
+    assert "log one process switch before the step, not one per paragraph" in unit
+    assert "exactly one paragraph" not in unit
     assert "repository writing" not in text
     assert "AI-pattern phrasing" not in text
 

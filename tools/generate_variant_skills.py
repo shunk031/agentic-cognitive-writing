@@ -128,7 +128,7 @@ The first time a process is selected, read its role skill at `<project root>/.ag
 
 PARAGRAPH_UNIT = """## Paragraph unit
 
-Each `Translating` step writes exactly one paragraph: one locally coherent block that serves one goal and has at most 120 words, counting each CJK character as one word. Scope each `Translating` step to that paragraph. Before writing the paragraph into `.writing/draft.md`, check its length with this command, which prints the count and fails above 120:
+A `Translating` step covers its whole scope, the goals or sections that the selection table assigns, and writes that scope as successive paragraphs. Each paragraph is one locally coherent block that serves one goal and has at most 120 words, counting each CJK character as one word. Before adding each paragraph to `.writing/draft.md`, check its length with this command, which prints the count and fails above 120:
 
 ```sh
 python3 <skill dir>/scripts/writing_state.py words --max 120 <<'EOF'
@@ -136,7 +136,7 @@ python3 <skill dir>/scripts/writing_state.py words --max 120 <<'EOF'
 EOF
 ```
 
-When the check fails, shorten the paragraph or keep only its first part, and check again.
+When the check fails, split the paragraph and check each part. The paragraphs of one scope belong to one role step: log one process switch before the step, not one per paragraph, so passes and role steps count as they do for any other step.
 
 """
 
