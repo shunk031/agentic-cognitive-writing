@@ -388,6 +388,9 @@ def test_cw_cap(ws: Workspace) -> None:
     assert "only `cw stop`" in ws.refused(
         "step", "translating", "--scope", "G1", "--why", "x"
     )
+    # At the cap, a refused stop points to --reason cap, not to another step.
+    message = ws.refused("stop", "--reason", "met", "--why", "x")
+    assert "stop with `--reason cap`" in message and "cw step" not in message
     # A cap stops the run even with an undecided proposal, which it reports.
     stop = ws.ok("stop", "--reason", "cap", "--why", "four passes")
     assert stop["undecided_proposals"] == ["G2"]

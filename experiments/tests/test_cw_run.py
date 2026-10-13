@@ -6,7 +6,6 @@ import json
 import os
 import subprocess
 import sys
-from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -284,9 +283,12 @@ def test_a4_turn_without_its_own_stop_is_incomplete(tmp_path: Path) -> None:
 def test_fidelity_counts_returns_within_each_turn() -> None:
     from agentic_cogwriter.analysis import fidelity
 
-    paths = {1: "PTR", 2: "TRTR"}
-    total = sum((fidelity.returns(p) for p in paths.values()), Counter())
-    assert total == Counter({"RT": 1})
+    # Trimmed records of a real two-turn A4 run (smoke iteration 10). Turn 1
+    # ends in R and turn 2 opens with P; that boundary is not an R>P return.
+    row = fidelity.run_row(Path(__file__).parent / "fixtures/fidelity-run/A4/run")
+    assert row["path"] == {1: "PTR", 2: "PTRTTR"}
+    assert row["returns"] == {"R>T": 1, "R>P": 0}
+    assert all(row["gates"].values())
 
 
 # ---- token rule ------------------------------------------------------------

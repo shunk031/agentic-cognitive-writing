@@ -901,9 +901,13 @@ def cmd_stop(state: State, args) -> None:
     except Refused as exc:
         if failed_out:
             raise
+        next_move = (
+            f"The pass cap of {CAP} is reached, so stop with `--reason cap`."
+            if state.passes() >= CAP
+            else "Open the next step with `cw step`."
+        )
         raise Refused(
-            f"the turn is not over: {exc.args[0]}.{open_items(state)} "
-            "Open the next step with `cw step`."
+            f"the turn is not over: {exc.args[0]}.{open_items(state)} {next_move}"
         ) from None
     final = W / "history" / "final" / f"turn-{state.turn:02d}"
     final.mkdir(parents=True, exist_ok=True)

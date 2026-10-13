@@ -42,9 +42,9 @@ This changelog records each change to the redesigned CogWriter arms during the s
 
 ### Errata after slice 1
 
-- **Reissue reason.** Motivated by the first `Planning` attempts that failed the goals grammar in runs `a4-wb0051` (`it3`) and `a4-wb0210` (`it4`), 2 of 6 first attempts. A reissue brief now carries `cw`'s refusal reason verbatim. Not yet smoke-tested.
-- **`stop cap`.** A cap no longer requires every proposal to be decided; the stop entry reports the undecided ones.
-- **Turn-2 requirement sources.** `Planning` may quote a runner-written turn request as well as `task.md`.
+- **Reissue reason.** Motivated by the first `Planning` attempts that failed the goals grammar in writingbench-0051 `1ca510232cc34926acf7f0b900d61ceb` (iteration 3) and writingbench-0210 `558643bf9b474a3d92c8ff9e2dbf93cc` (iteration 4), 2 of 6 first attempts. A reissue brief now carries `cw`'s refusal reason verbatim. Not yet smoke-tested.
+- **`stop cap`.** A cap no longer requires every proposal to be decided; the stop entry reports the undecided ones. Motivation: the coordinator's ruling on the slice 1 interpretations, not a run. No run of iterations 1–4 had more than one `Reviewing` step, so none reached the cap, and no metric or run ID motivated it.
+- **Turn-2 requirement sources.** `Planning` may quote a runner-written turn request as well as `task.md`. Motivation: a specification gap found in review, before any follow-up smoke run; no slice 1 iteration 1–4 run had a second turn. The first follow-up run, dolomites-1453 `11f16a501a9b4d7390f09a29a875e220` (iteration 5), then quoted the request in 0 of its turn-2 requirements.
 
 ### Fixes from the independent review of slice 1
 
@@ -61,7 +61,8 @@ The review of 9609cf6 found these defects; none is a prompt iteration.
 
 ### Iteration 5: verification of the review fixes on the replacement pool
 
-- **Change under test.** The review fixes and errata above, at commit `a2b99dd`; no prompt change. Prompts from ranks 105–112 of the replacement pool.
+- **Deviation.** This iteration tested several changes at once: the review fixes and the three errata above. It is a verification run, not a one-change iteration.
+- **Change under test.** The review fixes and errata above; no prompt change. Prompts from ranks 105–112 of the replacement pool.
 - **Runs.** dolomites-1453 with a turn-2 change request `11f16a501a9b4d7390f09a29a875e220` (tokens: parent output 9,541, child-inclusive output 55,166, input 4,074,064), writingbench-0519, whose topic is Chinese law, `1ac3a6e5282d4db5992ded2c4131a85a` (tokens: parent output 4,384, child-inclusive output 43,808, input 2,014,560), and writingbench-0838 `8c5953b3343e408a8fe8b4120327e7de` (tokens: parent output 1,816, child-inclusive output 13,860, input 569,676).
 - **Mechanism exercise.** For the first time, reviews found unmet requirements and findings. writingbench-0519 followed `PTRTRTRTR`, with 4 unmet requirements and 2 findings in its first review and three R→T returns, and stopped `met` after four passes. dolomites-1453 stopped `met` in each turn; turn 2 followed `PtTRTRPR`, with one R→T and one R→P return. No requirement was developed or regenerated, and no proposal was made.
 - **Reissue reason.** Three reissue briefs carried `cw`'s refusal reason. Two reissues passed: a `Planning` source quote in dolomites-1453 step 2, and an unchanged draft in its step 7. One failed: in writingbench-0838 the reissued `Planning` fixed the reported `G8.4` source but wrote a backslash-escaped quote in `G11.2`, so the run ended `cw_failure:output`.
