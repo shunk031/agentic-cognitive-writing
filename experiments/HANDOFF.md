@@ -12,6 +12,8 @@ This file records the state, decisions, and working rules for the CogWriter expe
   2. the generated ablations
   3. the baselines
   4. the runner gates and token accounting
+- **Slice 1.** Built and smoke-tested; an independent review is pending. [`cw`](../plugin/cw/cw.py) enforces every invariant of the specification, and the A4 `Monitor` and role skills run on it. The runner writes `task.md`, stages `cw`, scores the `cw stop` snapshot, gates A4, classifies `failure.kind`, and applies the per-thread token rule. [`fidelity.py`](src/agentic_cogwriter/analysis/fidelity.py) reports from harness records. In the last of four smoke iterations, every A4 gate held on the three disjoint smoke prompts, but every first review found all requirements met, so no run returned from `Reviewing`. The [changelog](CHANGELOG-redesign.md) records each iteration.
+- **Pending in later slices.** Until slice 2, the A5–A8 and A12 skills are the pre-redesign text and still run through the old runner path, and the tests of their text, the generator, and A9 are skipped. The A4 skill directory still holds the old `scripts/` and `references/`, which the runner no longer stages for A4. The output language is a placeholder, the majority script of the assignment, until the manifests carry the language field.
 
 ## Measured defects of the executed study
 
@@ -57,7 +59,8 @@ The redesign spec lists every decision with its source. The author-level decisio
 
 ## Next steps
 
-1. Finish slice 1. An independent reviewer then checks it against the spec and the fidelity report.
-2. Run slices 2–4, each with its own small smoke loop.
-3. Pilot as specified, after the author approves the cost. Then freeze the design.
-4. Before any scored run, discuss the scope and cost of the full rerun with the author.
+1. Have an independent reviewer check slice 1 against the specification and the fidelity report.
+2. Decide whether mechanism exercise needs prompts whose single draft misses a requirement, because on the slice 1 prompts every first review found every requirement met.
+3. Run slices 2–4, each with its own small smoke loop on the replacement smoke pool.
+4. Pilot as specified, after the author approves the cost. Then freeze the design.
+5. Before any scored run, discuss the scope and cost of the full rerun with the author.

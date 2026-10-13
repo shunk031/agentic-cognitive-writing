@@ -27,3 +27,13 @@ This changelog records each change to the redesigned CogWriter arms during the s
 - **Result.** Every gate holds in all three runs. Every spawn passed the printed line, every child was injected with its role skill and closed, and no child was forked or given model arguments. One failed step remains: in `a4-wb0051` the first `Planning` attempt indented `G1.1.1` under the wrong parent, and the reissue passed. Paths are `PTR`, `PTR`, and `pPTR`; every run stopped `met` after one pass.
 - **Mechanism exercise.** Every first review found 0 unmet requirements and 0 findings, so no run returned from `Reviewing`, and no requirement was developed or regenerated. The logs show `Reviewing` met verdicts whose evidence is a short excerpt, such as a title, for requirements about the whole draft; one `Reviewer` measured the length before judging it.
 - **Change for iteration 4.** `Reviewing` marks a requirement met only when the draft meets it fully, and measures whole-draft requirements, such as a length, a number of items, or every required section, before judging them, recording the measurement in `where`. A partial match is unmet. The change targets the `unmet` metric and adds no quality criterion.
+
+### Iteration 4: measured verdicts
+
+- **Runs.** `a4-wb0210`, `a4-wb0049`, `a4-wb0051` (`it4`). Tokens: child-inclusive output 36,918, input 1,611,290.
+- **Result.** Every gate holds in all three runs. Paths are `pPTR`, `PTR`, and `PTR`. The one failed step is again a first `Planning` attempt whose child ID did not extend its parent's ID; the reissue passed. The `Reviewer`s now record measurements in `where`, such as 129 characters against a 100–150 character requirement, all 11 requested technical parameters, and all 12 chapters and 21 articles. Every requirement was still met at the first review, so no run returned from `Reviewing`.
+- **Slice 1 exit criterion.** No run had more than one `Reviewing` step. The logs explain the miss: each first review measured the whole-draft requirements and found them met with verbatim evidence, so `stop met` was the correct move under the stop rule. The three prompts are short WritingBench tasks with explicit constraints that one draft already meets, which is the specification's ceiling risk. The iteration budget of four is spent.
+
+### Tooling fix during slice 1
+
+- `fidelity.py` skips refused `cw` entries when it counts reviews, decisions, and goal events; iteration 2's report failed on a refused `cw review` entry.
