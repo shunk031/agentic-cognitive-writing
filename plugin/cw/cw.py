@@ -215,6 +215,12 @@ def parse_goals(text: str) -> list[dict]:
     return goals
 
 
+def unescape(quote: str) -> str:
+    """Drop the backslash of an escaped quote character, an escape artifact."""
+
+    return quote.replace('\\"', '"').replace("\\'", "'")
+
+
 def sources() -> list[str]:
     """The fixed texts a requirement may quote: task.md and the turn requests."""
 
@@ -230,7 +236,7 @@ def validate_goals(text: str, before: str, texts: list[str]) -> list[dict]:
     ids = {g["id"] for g in goals}
     for goal in goals:
         if goal["quote"] is not None:
-            if not any(norm(goal["quote"]) in t for t in normalized):
+            if not any(norm(unescape(goal["quote"])) in t for t in normalized):
                 problems.append(
                     f"{goal['id']}: the quoted src does not occur in task.md "
                     "or in a turn request"

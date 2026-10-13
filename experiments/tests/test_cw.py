@@ -549,3 +549,17 @@ def test_cw_refusal_lists_every_invalid_requirement_line(ws: Workspace) -> None:
         assert problem in close["detail"], problem
     brief = (ws.w / "history/step-02/brief.md").read_text()
     assert close["detail"] in brief
+
+
+def test_cw_unescapes_quote_characters_before_matching_a_source(tmp_path: Path) -> None:
+    ws = make(tmp_path, "A4")
+    task = ws.w / "task.md"
+    task.write_text(TASK + 'Cite the "Labor Law" and the author\'s note.\n')
+    ws.plan(
+        '- [G1] Cites the law | src: "Cite the \\"Labor Law\\" '
+        "and the author\\'s note.\"\n"
+        '- [G2] Exact otherwise | src: "Cite the \\"Labour Law\\""\n'
+    )
+    close = ws.last_close("step", "planning", "--goals", "--why", "check")
+    assert "G1:" not in close["detail"]
+    assert "G2: the quoted src does not occur" in close["detail"]

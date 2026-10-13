@@ -85,3 +85,8 @@ The review of 9609cf6 found these defects; none is a prompt iteration.
 - **Result on the target.** Both reissues passed: the reissued `Planning` step in writingbench-0519 after a refused source quote, and a reissued `Translating` step in dolomites-1453 turn 2. No refusal in this iteration held more than one defect, so the multi-line listing was exercised only by the unit test.
 - **Mechanism exercise.** writingbench-0519 followed `pPTRTRTRTR`, found 3 unmet requirements in its first review, returned three times from `Reviewing` to `Translating`, and stopped `cap` after four passes. writingbench-0838 stopped `met` after `PTR`. dolomites-1453 developed one requirement and returned twice from `Reviewing` to `Planning` in turn 2.
 - **Stopped run.** I stopped dolomites-1453 during turn 2, after step 13, because the iteration's projected token use exceeded its budget. The runner never wrote turn 2's event stream, so for this run the fidelity table's nonce violations (10), missing turn-2 stop, and token counts reflect the stop, not the model.
+
+### Iteration 8: un-escape quote characters before matching a source
+
+- **Motivation.** Backslash-escaped inner quotes in `src` caused refused `Planning` attempts in writingbench-0838 `8c5953b3343e408a8fe8b4120327e7de` (iteration 5), writingbench-0519 `7379279c36f94fdc8247ada5fdf41a28` (iteration 6, both attempts), and writingbench-0519 `238f8ecffb4146808422d008bbc28b39` (iteration 7, first attempt).
+- **Change.** `cw` only: before matching a quoted `src`, `\"` becomes `"` and `\'` becomes `'`; the match stays exact otherwise. A unit test checks an escaped quote that matches and an exact mismatch that still fails. The specification's Errata section records the change.
