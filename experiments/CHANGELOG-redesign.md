@@ -108,3 +108,10 @@ The review of 9609cf6 found these defects; none is a prompt iteration.
 
 - **Motivation.** In dolomites-1453 `8a2a0f68b31a4b9c93a856973bc43f22` (iteration 8), `cw` refused `stop --reason met` in turn 2 because the latest review listed findings, and the `Monitor` ended the turn with a final message, so turn 2 had no stop and the run failed `completeness`.
 - **Change.** `cw` only, at the point of action: a refused `stop` now says that the turn is not over, names the unmet requirements and findings of the turn's latest review with their fixes, and tells the `Monitor` to open the next step with `cw step`. After a failed reissue, the refusal still points to `--reason failure`. A unit test checks the refusal text.
+- **Runs.** dolomites-1453 with the iteration 5 turn-2 change request `ee698d78d2314edbb4610cd79fa6a9eb` (tokens: parent output 6,219, child-inclusive output 38,634, input 2,814,203), writingbench-0519 `13332b693c9e47f493d547026ff70519` (tokens: parent output 4,018, child-inclusive output 31,986, input 1,477,786), and writingbench-0838 `c35ee0f4c5ae4626b34096cf4e20278b` (tokens: parent output 2,508, child-inclusive output 15,153, input 619,401).
+- **Result.** Every gate held in all three runs, in both turns of dolomites-1453. No step failed. No `cw` stop was refused, so the new refusal text was exercised only by the unit test.
+- **Mechanism exercise.** writingbench-0519 returned twice from `Reviewing` (`PTRTRTR`, 2 unmet requirements and 1 finding over its reviews); dolomites-1453 turn 2 returned once (`PTRTTR`); writingbench-0838 stopped `met` after `PTR`.
+
+### Slice 1 closed
+
+Iterations 9 and 10 each ran all three smoke prompts, including the follow-up, with every gate holding in both turns of every run. Slice 1 is complete and awaits its independent re-review.
