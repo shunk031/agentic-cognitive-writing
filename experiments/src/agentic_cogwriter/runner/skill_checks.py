@@ -68,27 +68,34 @@ def _agent_messages(events: bytes) -> list[str]:
     ]
 
 
-def spawned_roles(events: bytes) -> set[str]:
-    """Return the role skills that ``spawn_agent`` briefs name as ``$role``."""
+def spawned_roles(events: bytes) -> Counter[str]:
+    """Count completed ``spawn_agent`` calls per role their brief names as ``$role``.
 
-    roles: set[str] = set()
+    A spawn counts once, when its ``item.completed`` event reports a completed
+    call with a receiver thread, as ``_subagent_spawn_ids`` counts spawns.
+    """
+
+    roles: dict[str, str] = {}
     for value in _json_objects(events):
         item = value.get("item")
         if (
-            isinstance(item, dict)
+            value.get("type") == "item.completed"
+            and isinstance(item, dict)
             and item.get("type") == "collab_tool_call"
             and item.get("tool") == "spawn_agent"
+            and item.get("status") == "completed"
+            and item.get("receiver_thread_ids")
             and isinstance(item.get("prompt"), str)
             and (match := _ROLE_MENTION.search(item["prompt"]))
         ):
-            roles.add(match.group(1))
-    return roles
+            roles[str(item.get("id"))] = match.group(1)
+    return Counter(roles.values())
 
 
-def selected_roles(trace: Path) -> set[str]:
-    """Return the role processes that the trace's process switches enter."""
+def selected_roles(trace: Path) -> Counter[str]:
+    """Count the process switches that enter each role process."""
 
-    roles: set[str] = set()
+    roles: Counter[str] = Counter()
     if not trace.is_file():
         return roles
     for line in trace.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -101,7 +108,7 @@ def selected_roles(trace: Path) -> set[str]:
             and event.get("event_type") == "process_switch"
             and event.get("to_process") in ROLE_SKILLS
         ):
-            roles.add(event["to_process"])
+            roles[event["to_process"]] += 1
     return roles
 
 

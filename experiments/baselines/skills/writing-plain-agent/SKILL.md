@@ -6,7 +6,7 @@ description: "Experiment condition A11. Give the coding agent the writing task w
 > [!NOTE]
 > After reading this `SKILL.md`, say: `I read writing-plain-agent.`
 >
-> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+> Say the line in an assistant message of its own immediately after reading this skill. The line never appears in `.writing/draft.md` or in the final response.
 
 # Plain agent
 

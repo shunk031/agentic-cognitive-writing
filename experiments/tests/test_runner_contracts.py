@@ -79,7 +79,8 @@ SINGLE_TURN_CONTRACT = (
     "Do not state assumptions "
     "briefly at the top of the deliverable. Conditions without `.writing/` apply "
     "assumptions without an extra preamble. Do not change the deliverable's content "
-    "contract."
+    "contract. Never include a skill acknowledgment line, such as `I read <skill "
+    "name>.`, in the deliverable or the final response."
 )
 SINGLE_TURN_CONTRACT_TEXT = SINGLE_TURN_CONTRACT.removeprefix("\n\n") + "\n"
 DELEGATION_CONTRACT = (
@@ -1053,8 +1054,12 @@ def test_agentic_cog_writer_finishes_with_the_goal_check_and_the_draft() -> None
         encoding="utf-8"
     )
     finish = text.split("## Finish", 1)[1].split("\n## ", 1)[0]
-    assert "Check that every goal in `.writing/goals.md` has a goal event." in finish
-    assert "Append a `goal_created` event for each printed ID." in finish
+    assert "python3 <skill dir>/scripts/writing_state.py check" in finish
+    assert (
+        "For a goal without an event, log a `goal_created` event with "
+        "`responsible_agent: monitor`."
+    ) in finish
+    assert finish.index("check`") < finish.index("Log the last process switch")
     assert (
         "Read `.writing/draft.md` and return exactly its contents as the final "
         "response, with no preamble, summary, acknowledgment line, or code fence."
@@ -1080,14 +1085,19 @@ def test_reviewing_reports_structured_findings_and_goal_verdicts() -> None:
         "Verdict: <changes required, or no required change>",
         "- planning: <location>:",
         "- translating: <location>:",
-        "- G3 — regenerate: <one sentence of evidence>. Replacement:",
+        "- G1.2 — regenerate: <one sentence of evidence>. Replacement:",
+        "Revisions made:",
+        "Open findings:",
+        "Compute the Verdict from Open findings alone",
         "exactly one of the lowercase words `keep`, `develop`, or `regenerate`",
         "Omit the Goal verdicts field when the brief lists no goals.",
         "Next process: <planning, translating, or stop>",
     ):
         assert requirement in reviewing_text, requirement
 
-    ledger = "`regeneration proposals: G2 accepted (<reason>); G4 rejected (<reason>)`"
+    ledger = (
+        "`regeneration proposals: G1.2 accepted (<reason>); G2 rejected (<reason>)`"
+    )
     for path in (
         REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md",
         REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md",
@@ -1482,6 +1492,9 @@ def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
         "plugin/skills/cognitive-writing-fixed-order/SKILL.md",
         "plugin/skills/cognitive-writing-fixed-order/agents/openai.yaml",
         "plugin/skills/cognitive-writing-fixed-order/evals/evals.json",
+        "plugin/skills/cognitive-writing-fixed-order/references/goals-format.md",
+        "plugin/skills/cognitive-writing-fixed-order/references/trace-jsonl-schema.md",
+        "plugin/skills/cognitive-writing-fixed-order/scripts/writing_state.py",
         ".agents/skills/planning/SKILL.md",
         ".agents/skills/planning/agents/openai.yaml",
         ".agents/skills/reviewing/SKILL.md",
@@ -3109,8 +3122,8 @@ def test_delegating_run_records_acknowledgments_and_role_delegation(
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["status"] == "completed"
     assert manifest["role_delegation"] == {
-        "selected": ["planning", "reviewing", "translating"],
-        "delegated": ["planning", "reviewing", "translating"],
+        "switches": {"planning": 1, "reviewing": 1, "translating": 1},
+        "completed_spawns": {"planning": 1, "reviewing": 1, "translating": 1},
         "undelegated": [],
     }
     acknowledgments = manifest["skill_acknowledgments"]
@@ -3128,7 +3141,7 @@ def test_run_fails_when_a_selected_role_was_not_delegated(tmp_path: Path) -> Non
     )
 
     with pytest.raises(
-        ExecutionError, match="no spawn_agent brief delegated: reviewing"
+        ExecutionError, match="completed spawn_agent calls for: reviewing"
     ):
         runner.run_prompt(_prompt(), condition_id="A4", platform="codex", run_id="r")
 

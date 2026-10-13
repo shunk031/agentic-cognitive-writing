@@ -14,48 +14,31 @@ from agentic_cogwriter.runner.skill_checks import ack_token, known_skills
 REPO_ROOT = Path(__file__).parents[2]
 A4_SKILL = REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md"
 EXPERIMENT_SKILLS = REPO_ROOT / "experiments/plugin/skills"
+BASELINE_SKILLS = REPO_ROOT / "experiments/baselines/skills"
+PROMPTS = REPO_ROOT / "experiments/conditions/prompts"
 ROLES = ("planning", "translating", "reviewing")
-SKILL_ROOTS = (
-    REPO_ROOT / "plugin/skills",
-    EXPERIMENT_SKILLS,
-    REPO_ROOT / "experiments/baselines/skills",
-)
+SKILL_ROOTS = (REPO_ROOT / "plugin/skills", EXPERIMENT_SKILLS, BASELINE_SKILLS)
 
 TITLE = "# Agentic CogWriter"
+SELECT = "## Select the next process"
+STATE = "## State"
 DELEGATE = "## Delegate the selected process"
-IN_CONTEXT = "## Perform the selected process"
-GOAL_SECTIONS = {
-    "## Goals",
-    "### Goal events",
-    "### Post-`Reviewing` ledger",
-    "## References",
-}
-NO_GOAL_CHANGES = {
-    "## Select the next process",
-    "## Stop",
-    "## State",
-    "### Brief",
-    "## Role reports",
-    "## Finish",
-}
-# Sections each ablation may change, drop, or rename relative to A4.
+PERFORM = "## Perform the selected process"
+BRIEF = "### Brief"
+REPORTS = "## Role reports"
+FINISH = "## Finish"
+REFERENCES = "## References"
+PARAGRAPH = "## Paragraph unit"
+GOAL_SECTIONS = {"## Goals", "### Goal events", "### Post-`Reviewing` ledger"}
+NO_GOAL_CHANGES = {SELECT, STATE, BRIEF, REPORTS, FINISH, REFERENCES}
+IN_CONTEXT = {DELEGATE: PERFORM}
+# skill -> (sections that change, sections dropped, renamed sections, added sections)
 ABLATIONS = {
-    "cognitive-writing-no-goal-network": (NO_GOAL_CHANGES, GOAL_SECTIONS, {}),
-    "cognitive-writing-fixed-order": (
-        {"## Select the next process"},
-        {"## References"},
-        {},
-    ),
-    "cognitive-writing-single-context": (
-        {"### Brief"},
-        set(),
-        {DELEGATE: IN_CONTEXT},
-    ),
-    "cognitive-writing-loop-only": (
-        NO_GOAL_CHANGES,
-        GOAL_SECTIONS,
-        {DELEGATE: IN_CONTEXT},
-    ),
+    "cognitive-writing-no-goal-network": (NO_GOAL_CHANGES, GOAL_SECTIONS, {}, []),
+    "cognitive-writing-fixed-order": ({SELECT, REPORTS, "## Goals"}, set(), {}, []),
+    "cognitive-writing-single-context": ({BRIEF}, set(), IN_CONTEXT, []),
+    "cognitive-writing-single-writer": ({BRIEF}, set(), IN_CONTEXT, [PARAGRAPH]),
+    "cognitive-writing-loop-only": (NO_GOAL_CHANGES, GOAL_SECTIONS, IN_CONTEXT, []),
 }
 
 
@@ -72,7 +55,7 @@ def _sections(text: str) -> dict[str, str]:
             assert heading not in sections, heading
             sections[heading] = []
         sections[heading].append(line)
-    # A dropped trailing section leaves its predecessor last; ignore that newline.
+    # The last section of a file has no blank line after it; ignore that.
     return {key: "".join(lines).rstrip("\n") for key, lines in sections.items()}
 
 
@@ -80,11 +63,15 @@ def _skill(name: str) -> str:
     return (EXPERIMENT_SKILLS / name / "SKILL.md").read_text(encoding="utf-8")
 
 
+def _a4() -> dict[str, str]:
+    return _sections(A4_SKILL.read_text(encoding="utf-8"))
+
+
 @pytest.mark.parametrize("name", ABLATIONS)
 def test_ablations_differ_from_a4_only_in_declared_sections(name: str) -> None:
-    a4 = _sections(A4_SKILL.read_text(encoding="utf-8"))
+    a4 = _a4()
     ablation = _sections(_skill(name))
-    changed, dropped, renamed = ABLATIONS[name]
+    changed, dropped, renamed, added = ABLATIONS[name]
 
     title = next(heading for heading in ablation if heading.startswith("# "))
     expected = [
@@ -92,7 +79,7 @@ def test_ablations_differ_from_a4_only_in_declared_sections(name: str) -> None:
         for heading in a4
         if heading not in dropped
     ]
-    assert list(ablation) == expected
+    assert [heading for heading in ablation if heading not in added] == expected
     for heading in a4:
         if heading in dropped or heading == "":
             continue
@@ -111,31 +98,45 @@ def test_loop_only_takes_each_change_from_its_single_ablation() -> None:
     fixed_order = _sections(_skill("cognitive-writing-fixed-order"))
     single_context = _sections(_skill("cognitive-writing-single-context"))
 
-    assert (
-        loop_only["## Select the next process"]
-        == (fixed_order["## Select the next process"])
-    )
-    assert loop_only[IN_CONTEXT] == single_context[IN_CONTEXT]
-    for heading in NO_GOAL_CHANGES - {"## Select the next process", "### Brief"}:
+    assert loop_only[SELECT] == fixed_order[SELECT]
+    assert loop_only[PERFORM] == single_context[PERFORM]
+    for heading in (STATE, FINISH, REFERENCES):
         assert loop_only[heading] == no_goals[heading], heading
-    brief = loop_only["### Brief"]
+    assert "scope the next step in the cycle" in loop_only[REPORTS]
+    assert "Goal" not in loop_only[REPORTS]
+    brief = loop_only[BRIEF]
     assert "Process: <Role>" in brief
     assert "Active goals" not in brief
     assert "Never request goal-setting." in brief
 
 
+def test_fixed_order_wording_never_selects_against_the_cycle() -> None:
+    for name in ("cognitive-writing-fixed-order", "cognitive-writing-loop-only"):
+        text = _skill(name)
+        assert "select the next process" not in text
+        assert "selects `Planning`" not in text
+        assert "fixed `Planning`, `Translating`, then `Reviewing` order" in text
+    assert "the agent may change" not in _skill("cognitive-writing-loop-only")
+
+
 def test_a6_keeps_the_a4_goal_logging_check() -> None:
-    a4 = _sections(A4_SKILL.read_text(encoding="utf-8"))
     fixed_order = _sections(_skill("cognitive-writing-fixed-order"))
-    assert fixed_order["## Finish"] == a4["## Finish"]
-    assert "has a goal event" in a4["## Finish"]
+    assert fixed_order[FINISH] == _a4()[FINISH]
+    assert "has no goal event" in fixed_order[FINISH]
 
 
-def test_single_writer_drops_the_extra_writing_guidance() -> None:
+def test_single_writer_is_single_context_plus_the_paragraph_unit() -> None:
     text = _skill("cognitive-writing-single-writer")
-    assert "repository writing contract" not in text
+    sections = _sections(text)
+    single_context = _sections(_skill("cognitive-writing-single-context"))
+    for heading, body in single_context.items():
+        if heading and not heading.startswith("# "):
+            assert sections[heading] == body, heading
+    unit = sections[PARAGRAPH]
+    assert "at most 120 words, counting each CJK character as one word" in unit
+    assert "writing_state.py words --max 120" in unit
+    assert "repository writing" not in text
     assert "AI-pattern phrasing" not in text
-    assert "Each `Translating` step appends exactly one paragraph" in text
 
 
 def _skill_files() -> list[Path]:
@@ -150,6 +151,8 @@ def test_every_staged_skill_opens_with_its_acknowledgment_note(path: Path) -> No
         "> [!NOTE]\n"
         f"> After reading this `SKILL.md`, say: `{ack_token(path.parent.name)}`\n"
     )
+    assert "immediately after reading this skill" in text
+    assert "before any tool call" not in text
     assert "never appears in `.writing/draft.md`" in text or (
         "never goes into `.writing/draft.md`" in text
     )
@@ -169,44 +172,46 @@ def test_role_reports_begin_with_the_acknowledgment_line(role: str) -> None:
     text = (REPO_ROOT / f"plugin/skills/{role}/SKILL.md").read_text(encoding="utf-8")
     report = text.split("## Report format", 1)[1].split("```text\n", 1)[1]
     assert report.startswith(f"{ack_token(role)}\n")
-    assert "Findings:" in report
+    assert "indings:" in report
     assert "Next process:" in report
+    assert "never repeats it in a written report" in text
 
 
-def _cogwriter_texts() -> list[Path]:
+def _prompt_texts() -> list[Path]:
     return [
         A4_SKILL,
         *sorted((A4_SKILL.parent / "references").glob("*.md")),
         *(REPO_ROOT / f"plugin/skills/{role}/SKILL.md" for role in ROLES),
         *sorted(EXPERIMENT_SKILLS.glob("*/SKILL.md")),
-        *sorted(
-            (EXPERIMENT_SKILLS / "cognitive-writing-single-context").glob("*/*.md")
-        ),
+        *sorted(EXPERIMENT_SKILLS.glob("*/references/*.md")),
+        *sorted(BASELINE_SKILLS.glob("*/SKILL.md")),
+        *sorted(PROMPTS.glob("a9_*.md")),
         *sorted((REPO_ROOT / "experiments/conditions/contracts").glob("*.md")),
     ]
 
 
-@pytest.mark.parametrize(
-    "path", _cogwriter_texts(), ids=lambda path: path.relative_to(REPO_ROOT).as_posix()
-)
+def _ids(path: Path) -> str:
+    return path.relative_to(REPO_ROOT).as_posix()
+
+
+@pytest.mark.parametrize("path", _prompt_texts(), ids=_ids)
 def test_prompts_never_mention_a_fallback(path: Path) -> None:
     # The delegation analyses count runs whose trace decisions mention a
     # fallback, so a prompt that uses the word would plant false positives.
     assert "fallback" not in path.read_text(encoding="utf-8").casefold()
 
 
-@pytest.mark.parametrize(
-    "path", _cogwriter_texts(), ids=lambda path: path.relative_to(REPO_ROOT).as_posix()
-)
-def test_prompts_have_no_memory_interruptions_or_user_questions(path: Path) -> None:
-    if path.parent.name == "cognitive-writing-single-writer":
-        pytest.skip("single-writer keeps its paragraph-scale interrupting design")
+@pytest.mark.parametrize("path", _prompt_texts(), ids=_ids)
+def test_prompts_have_no_memory_interruptions_or_user_control(path: Path) -> None:
     text = path.read_text(encoding="utf-8")
     for removed in (
         ".writing/memory",
         "memory/",
         "may interrupt",
         "under the user's control",
+        "The user owns",
+        "user intent",
+        "user's top-level intent",
         "Ask the user",
         "Tell the user",
     ):
@@ -215,39 +220,67 @@ def test_prompts_have_no_memory_interruptions_or_user_questions(path: Path) -> N
 
 @pytest.mark.parametrize("role", ROLES)
 def test_brief_names_its_own_role_first_for_the_trace_analyses(role: str) -> None:
-    brief = _sections(A4_SKILL.read_text(encoding="utf-8"))["### Brief"]
-    template = brief.split("```text\n", 1)[1].split("```", 1)[0]
+    template = _a4()[BRIEF].split("```text\n", 1)[1].split("```", 1)[0]
     filled = template.replace("<role>", role).replace("<Role>", role.capitalize())
     assert filled.startswith(f"${role} ")
     assert ROLE.findall(filled) == [role]
     match = DELEGATED_PROCESS.search(filled)
     assert match is not None and match.group(1).casefold() == role
+    assert "SKILL.md" not in filled
     for required in (
         "You are not the Monitor.",
-        f".agents/skills/{role}/SKILL.md",
+        f"Follow the {role} skill that this message loads.",
         "do not spawn agents",
         "do not run codex",
         "do not write .writing/trace/process.jsonl",
+        "never ask questions",
+        "Do not search the web",
         "Output language:",
         "Length and format:",
         "Scope:",
-        "Active goals:",
+        "Active goals: <the IDs of the active goals",
         ".writing/assignment.md",
     ):
         assert required in filled, required
 
 
-def test_monitor_spawns_without_forked_context_and_closes_agents() -> None:
-    delegate = _sections(A4_SKILL.read_text(encoding="utf-8"))[DELEGATE]
-    for required in ("`fork_context: false`", "`wait_agent`", "`close_agent`"):
+def test_monitor_spawns_without_forked_context_and_bounds_the_wait() -> None:
+    delegate = _a4()[DELEGATE]
+    for required in (
+        "`fork_context: false`",
+        "`timeout_ms: 300000`",
+        "at most three calls in all",
+        "Call `close_agent` on that agent immediately",
+        "Delegate a failed step once more",
+    ):
         assert required in delegate, required
 
 
-def test_stop_rule_and_pass_budget_match_the_reviewer_verdict() -> None:
-    a4 = _sections(A4_SKILL.read_text(encoding="utf-8"))
+def test_selection_has_a_default_row_and_the_stop_rule_has_caps() -> None:
+    a4 = _a4()
+    rows = [line for line in a4[SELECT].splitlines() if line.startswith("| ")][2:]
+    assert rows[-1].startswith("| Any other state")
+    assert any(row.startswith("| The latest report is from `Planning`") for row in rows)
+    for required in (
+        "`Verdict: no required change`",
+        "Four passes have ended.",
+        "Twelve role steps have run.",
+        "no change request arrived after it",
+    ):
+        assert required in a4["## Stop"], required
     reviewing = (REPO_ROOT / "plugin/skills/reviewing/SKILL.md").read_text(
         encoding="utf-8"
     )
-    assert "`Verdict: no required change`" in a4["## Stop"]
-    assert "After the fourth pass, stop" in a4["## Stop"]
-    assert "Write `Verdict: no required change` only when" in reviewing
+    assert "Compute the Verdict from Open findings alone" in reviewing
+
+
+def test_trace_is_written_only_through_the_logging_script() -> None:
+    trace = _a4()["## Trace"]
+    assert "python3 <skill dir>/scripts/writing_state.py log <<'EOF'" in trace
+    assert "date -Is" not in A4_SKILL.read_text(encoding="utf-8")
+    for name in ABLATIONS:
+        script = EXPERIMENT_SKILLS / name / "scripts/writing_state.py"
+        assert (
+            script.read_bytes()
+            == (A4_SKILL.parent / "scripts/writing_state.py").read_bytes()
+        )

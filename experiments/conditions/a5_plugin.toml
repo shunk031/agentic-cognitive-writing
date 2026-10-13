@@ -27,7 +27,7 @@ evidence = "plugin_recorded"
 citation = "plugin_recorded"
 goal_events = "forbidden"
 require_delegation = true
-event_types = ["process_switch", "goal_created", "goal_developed", "goal_regenerated"]
+event_types = ["process_switch"]
 min_events = 1
 processes = ["planning", "generate", "organize", "goal-setting", "translating", "reviewing", "evaluate", "revise"]
 

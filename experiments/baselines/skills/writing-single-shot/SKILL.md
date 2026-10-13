@@ -6,7 +6,7 @@ description: "Experiment condition A1. Generate the complete document in one pas
 > [!NOTE]
 > After reading this `SKILL.md`, say: `I read writing-single-shot.`
 >
-> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+> Say the line in an assistant message of its own immediately after reading this skill. The line never appears in `.writing/draft.md` or in the final response.
 
 # Single-shot writing
 
@@ -16,7 +16,7 @@ Run condition A1 as one generation pass. The generator writes the complete docum
 
 The runner gives this condition the same assignment, supplied context, context-window policy, timeout, model settings, output budget, and attempt budget as every comparison condition. The generator may read the assignment and supplied context, but it must not browse, search, call a retrieval tool, use an external source, or infer evidence that the supplied context does not provide. If the context does not establish a claim, preserve the uncertainty or omit the claim.
 
-The user owns rhetorical intent, factual authority, final wording, and publication. The generator owns the single completion pass. The runner owns trace recording and must not infer hidden planning or review from the output.
+The generator owns the single completion pass. The runner owns trace recording and must not infer hidden planning or review from the output.
 
 ## Procedure
 

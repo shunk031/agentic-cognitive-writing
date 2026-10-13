@@ -6,7 +6,7 @@ description: "Experiment condition A10. Write one draft, then run a fixed number
 > [!NOTE]
 > After reading this `SKILL.md`, say: `I read writing-self-refine.`
 >
-> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+> Say the line in an assistant message of its own immediately after reading this skill. The line never appears in `.writing/draft.md` or in the final response.
 
 # Self-Refine writing
 
@@ -16,7 +16,7 @@ Run condition A10 as one Draft pass followed by a fixed number of Feedback and R
 
 The runner gives this condition the same assignment, supplied context, context-window policy, timeout, model settings, total output budget, and attempt budget as every comparison condition. The generator may use only `.writing/assignment.md`, the supplied context, and the earlier stage outputs in this session. The generator must not browse, search, call a retrieval tool, use an external source, or spawn subagents. When the supplied context does not support a claim, preserve the uncertainty or omit the claim.
 
-The user owns rhetorical intent, factual authority, final wording, and publication. The runner owns stage scheduling and trace recording. The generator owns each stage output. The runner must not infer hidden reasoning from stage text.
+The runner owns stage scheduling and trace recording. The generator owns each stage output. The runner must not infer hidden reasoning from stage text.
 
 ## Procedure
 

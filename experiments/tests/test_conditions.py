@@ -125,7 +125,6 @@ def test_a9_keeps_the_a2_harness_and_adds_role_guidance() -> None:
     roles = ("planning", "translating", "reviewing")
     kept_role_sentences = {
         "planning": (
-            "Do not replace missing user intent with a guess.",
             "Separate known material, plausible ideas, and unsupported claims.",
             "The organizing work makes meaning rather than merely rearranging bullets.",
         ),
@@ -143,11 +142,22 @@ def test_a9_keeps_the_a2_harness_and_adds_role_guidance() -> None:
         a2_text = a2_stage.path.read_text(encoding="utf-8")
         a9_text = a9_stage.path.read_text(encoding="utf-8")
         assert a2_text.split("\n\n")[1] in a9_text
-        # The A9 stage files froze the role-skill text that generation run 1
-        # executed; the role skills were rewritten afterwards.
+        role_text = (
+            REPOSITORY_ROOT / "plugin" / "skills" / role / "SKILL.md"
+        ).read_text(encoding="utf-8")
         for sentence in kept_role_sentences[role]:
+            assert sentence in role_text
             assert sentence in a9_text
-        for excluded in ("Monitor", "goal network", "goals.md", "trace", "delegat"):
+        for excluded in (
+            "Monitor",
+            "goal network",
+            "goals.md",
+            "trace",
+            "delegat",
+            "brief",
+            "user",
+            "fallback",
+        ):
             assert excluded not in a9_text
 
 
@@ -199,8 +209,9 @@ def test_a12_combines_the_a5_a6_and_a8_removals() -> None:
     registry = load_condition_registry()
     a4, a5, a8, a12 = (registry[c] for c in ("A4", "A5", "A8", "A12"))
 
-    for field in ("event_types", "trace_processes", "min_events", "max_events"):
+    for field in ("trace_processes", "min_events", "max_events"):
         assert getattr(a12, field) == getattr(a4, field), field
+    assert a12.event_types == a5.event_types == ("process_switch",)
     assert a12.package_name == a5.package_name
     assert (a12.goal_events, a12.require_goal_events) == ("forbidden", False)
     assert (a5.goal_events, a5.require_goal_events) == ("forbidden", False)
@@ -216,8 +227,7 @@ def test_a12_combines_the_a5_a6_and_a8_removals() -> None:
             "Never request goal-setting.",
         ),
         "cognitive-writing-fixed-order": (
-            "Run `Planning`, `Translating`, then `Reviewing`, and repeat this cycle "
-            "until the stop rule holds.",
+            "Follow the fixed `Planning`, `Translating`, then `Reviewing` order",
         ),
         "cognitive-writing-single-context": (
             "Perform every selected process in your own context instead of "

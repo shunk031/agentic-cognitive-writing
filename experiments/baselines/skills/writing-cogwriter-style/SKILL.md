@@ -6,7 +6,7 @@ description: "Exploratory CogWriter-style adaptation. Produce and immediately re
 > [!NOTE]
 > After reading this `SKILL.md`, say: `I read writing-cogwriter-style.`
 >
-> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+> Say the line in an assistant message of its own immediately after reading this skill. The line never appears in `.writing/draft.md` or in the final response.
 
 # CogWriter[^1]-style writing
 
@@ -24,7 +24,7 @@ The coordinator and every subagent may use only `.writing/assignment.md`, the su
 
 This adaptation has no goal network. Do not create or modify `.writing/goals.md`, emit no goal events, and do not treat the structured document plan as a replacement goal file. The plan exists only to condition segment generation and is persisted at `.writing/baselines/cogwriter-style/plan.json` for run inspection.
 
-The user owns rhetorical intent, factual authority, final wording, and publication. The coordinator owns the fixed top-level order, subagent dispatch, assembly, and trace recording. Planning and generation subagents own their returned artifacts. A native subagent must not launch a nested `codex exec` process.
+The coordinator owns the fixed top-level order, subagent dispatch, assembly, and trace recording. Planning and generation subagents own their returned artifacts. A native subagent must not launch a nested `codex exec` process.
 
 ## Procedure
 
@@ -37,7 +37,7 @@ The user owns rhetorical intent, factual authority, final wording, and publicati
 7. Write the assembled, length-reviewed document to `.writing/draft.md`.
 8. Append schema-valid `process_switch` events to `.writing/trace/process.jsonl` for the four top-level stages. Use `null -> initial-planning`, `initial-planning -> immediate-plan-revision`, `immediate-plan-revision -> parallel-segment-generation`, and `parallel-segment-generation -> length-review`. Internal segment completions and length attempts are artifacts of the current stage, not new top-level process selections.
 
-The trace contract is fixed at exactly four `process_switch` events. Every event's `process` must be one of `initial-planning`, `immediate-plan-revision`, `parallel-segment-generation`, or `length-review`, in this exact order. The transitions are `null -> initial-planning`, `initial-planning -> immediate-plan-revision`, `immediate-plan-revision -> parallel-segment-generation`, and `parallel-segment-generation -> length-review`. Each event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`; each event also includes `artifacts` for relevant plan, segment, or draft files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts` is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. Use `responsible_agent: "runner"`, cite the stage inputs, and list the relevant plan, segment, or draft files in `artifacts`. Do not append goal events, retrieval events, or private reasoning. If a subagent fallback is needed because native delegation is unavailable, the runner records that observable fallback in the event evidence while keeping the top-level order fixed. For example:
+The trace contract is fixed at exactly four `process_switch` events. Every event's `process` must be one of `initial-planning`, `immediate-plan-revision`, `parallel-segment-generation`, or `length-review`, in this exact order. The transitions are `null -> initial-planning`, `initial-planning -> immediate-plan-revision`, `immediate-plan-revision -> parallel-segment-generation`, and `parallel-segment-generation -> length-review`. Each event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`; each event also includes `artifacts` for relevant plan, segment, or draft files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts` is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. Use `responsible_agent: "runner"`, cite the stage inputs, and list the relevant plan, segment, or draft files in `artifacts`. Do not append goal events, retrieval events, or private reasoning. For example:
 
 ```json
 {"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"runner","process":"initial-planning","decision":"Create the initial ordered segment plan.","evidence":[".writing/assignment.md"],"open_uncertainty":["The final segment lengths still need confirmation."],"from_process":null,"to_process":"initial-planning","artifacts":[".writing/baselines/cogwriter-style/plan-initial.json"]}

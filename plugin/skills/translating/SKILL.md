@@ -12,7 +12,7 @@ Turn selected meanings and plans into prose within the draft scope that the `Mon
 
 ## When this skill runs
 
-You perform the `Translating` process for the `Monitor`, as the brief describes. A role agent begins its report with the acknowledgment line. A `Monitor` that applies this skill in its own context says the line in an assistant message instead. The line never goes into `.writing/draft.md` or the final response.
+You perform the `Translating` process for the `Monitor`, as the brief describes. A role agent begins its report with the acknowledgment line. A `Monitor` that applies this skill in its own context says the line once, in an assistant message of its own immediately after reading this skill, and never repeats it in a written report. The line never goes into `.writing/draft.md` or the final response.
 
 ## Read the state first
 
@@ -29,7 +29,7 @@ Translate the selected ideas into prose while treating the current wording as pr
 
 - Write in the output language that the brief names.
 - Write only the brief's scope in `.writing/draft.md` and leave the rest of the file unchanged.
-- Meet the length and format constraints that apply to the scope.
+- Meet the length target that the goals or the plan set for each part of the scope, and the format constraints that apply to it.
 - Preserve useful supplied text.
 - Do not invent sources, quotations, statistics, or facts. Mark a gap in the report rather than filling it.
 - Do not write `.writing/goals.md`, `.writing/assignment.md`, or the trace.

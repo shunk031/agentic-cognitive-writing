@@ -12,22 +12,25 @@ Every condition uses `.writing/trace/process.jsonl` written by its selected skil
 
 ## Agentic CogWriter and its ablations
 
-A4 runs the [`agentic-cog-writer`](../../plugin/skills/agentic-cog-writer/SKILL.md) skill. A5, A6, A8, and A12 share A4's text and differ from it only in the sections that carry the mechanism each removes; [`test_skill_texts.py`](../tests/test_skill_texts.py) fails when any other section differs.
+A4 runs the [`agentic-cog-writer`](../../plugin/skills/agentic-cog-writer/SKILL.md) skill. [`generate_variant_skills.py`](../../tools/generate_variant_skills.py) writes the A5, A6, A7, A8, and A12 skills from A4's text, replacing, dropping, or adding only the sections that carry the mechanism each condition removes, and copies A4's trace script and references into each skill. [`test_generate_variant_skills.py`](../../tools/test_generate_variant_skills.py) fails when a committed file differs from the generator output, and [`test_skill_texts.py`](../tests/test_skill_texts.py) fails when an undeclared section differs from A4.
 
-| Condition          | Sections that differ from A4                                                                                                     |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| A5 no goal network | selection, stop rule, state, brief, role reports, and finish without goals; no goals, goal-event, ledger, or references sections |
-| A6 fixed order     | selection replaced by the repeated `Planning`, `Translating`, then `Reviewing` cycle; no references section                      |
-| A8 single context  | delegation replaced by in-context execution, with a brief that has no role-agent lines                                           |
-| A12 loop only      | A5's goal removals, A6's selection, and A8's in-context execution together                                                       |
+| Condition          | Sections that differ from A4                                                                                                             |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| A5 no goal network | selection, state, brief, role reports, finish, and references without goals; no goals, goal-event, or ledger sections                    |
+| A6 fixed order     | selection replaced by the repeated `Planning`, `Translating`, then `Reviewing` cycle, with role reports and goals reworded to that cycle |
+| A7 single writer   | A8's changes plus a paragraph-unit section that limits each `Translating` step to one paragraph of at most 120 words                     |
+| A8 single context  | delegation replaced by in-context execution, with a brief that has no role-agent lines                                                   |
+| A12 loop only      | A5's goal removals, A6's selection and role reports, and A8's in-context execution together                                              |
 
-A7 keeps its one-writer, paragraph-unit design, including the one-paragraph `Translating` limit. The rewrite removed A7's instructions to follow the repository writing guidance and to remove filler and AI-pattern phrasing, which the other conditions did not have.
+The rewrite removed A7's instructions to follow the repository writing guidance and to remove filler and AI-pattern phrasing, which the other conditions did not have.
 
-**Role skills and delegation.** For Codex runs of A4, A5, A6, A8, and A12, the runner stages the invoked skill under `plugin/skills/` and the [`planning`](../../plugin/skills/planning/SKILL.md), [`translating`](../../plugin/skills/translating/SKILL.md), and [`reviewing`](../../plugin/skills/reviewing/SKILL.md) role skills under `.agents/skills/`. Codex discovers the role skills there, and their `allow_implicit_invocation: false` policy keeps them out of the `Monitor`'s skill list while a `$planning` mention in a brief still loads the skill. The `Monitor` skill stays outside the discovery roots, so role agents cannot find it. The generated Codex configuration pins `[agents] max_depth = 1` and `max_threads = 6`, the defaults of the pinned Codex version.
+**Role skills and delegation.** For Codex runs of A4 to A8 and A12, the runner stages the invoked skill under `plugin/skills/` and the [`planning`](../../plugin/skills/planning/SKILL.md), [`translating`](../../plugin/skills/translating/SKILL.md), and [`reviewing`](../../plugin/skills/reviewing/SKILL.md) role skills under `.agents/skills/`. Codex discovers the role skills there, and their `allow_implicit_invocation: false` policy keeps them out of the `Monitor`'s skill list while a `$planning` mention in a brief still loads the skill. The `Monitor` skill stays outside the discovery roots, and role agents are told not to open it. The generated Codex configuration pins `[agents] max_depth = 1` and `max_threads = 6`, the defaults of the pinned Codex version.
 
-The `Monitor` spawns each role agent with `fork_context: false` and a brief that begins with `$<role>`, names the role skill's absolute path, and states that the agent is not the `Monitor`. A delegating run fails when a process that the trace's `process_switch` events enter has no `spawn_agent` brief naming that role; the manifest records the comparison under `role_delegation`. The skills contain no performed-by-the-`Monitor` alternative, so a trace decision that mentions a fallback indicates a deviation from the skill.
+The `Monitor` spawns each role agent with `fork_context: false` and a brief that begins with `$<role>`, states that the agent is not the `Monitor`, and repeats the single-turn, language, and no-retrieval rules that role agents do not otherwise see. A delegating run fails when a role has fewer completed `spawn_agent` calls naming it than `process_switch` events entering it; the manifest records both counts under `role_delegation`. The skills contain no performed-by-the-`Monitor` alternative, so a trace decision that mentions a fallback indicates a deviation from the skill.
 
-**Acknowledgment lines.** Every skill the runner stages opens with a note asking the reader to say `I read <skill name>.` The top-level agent says its skill's line in its first assistant message, a role agent begins its report with its role skill's line, and an in-context `Monitor` says a role skill's line when it first reads that skill. The manifest's `skill_acknowledgments` counts the lines per skill in the top-level event stream and per spawned role agent in the collected rollouts; missing lines are reported, not enforced. A final response that contains any acknowledgment line fails the run, because the line would otherwise enter the scored document.
+**Trace script.** Each Monitor skill ships `scripts/writing_state.py`. Its `log` command reads `key: value` lines, fills the timestamp, `process`, `from_process`, and the responsible agent, encodes every event with a JSON encoder, and appends nothing when an event is invalid. Its `check` command verifies that the trace parses and lists goals without a goal event, and its `words` command implements A7's paragraph limit with CJK characters counted as words.
+
+**Acknowledgment lines.** Every skill the runner stages opens with a note asking the reader to say `I read <skill name>.` immediately after reading it. The top-level agent says its skill's line in an assistant message, a role agent begins its report with its role skill's line, and an in-context `Monitor` says a role skill's line when it first reads that skill. The manifest's `skill_acknowledgments` counts the lines per skill in the top-level event stream and per spawned role agent in the collected rollouts; missing lines are reported, not enforced. The single-turn contract tells every condition never to include an acknowledgment line in the final response, and a final response that contains one fails the run, because the line would otherwise enter the scored document.
 
 ## A9 staged role instructions
 
@@ -35,34 +38,12 @@ A9 tests whether the role instructions alone, without the `Monitor`, explain A4'
 
 A9 reuses the A2 harness unchanged: the `writing-linear` skill, the same Codex invocation and contracts, one session, the fixed Pre-Write, Write, and Re-Write order, and A2's three-event `process_switch` trace contract. The only difference is the stage text. Each A9 stage file keeps the corresponding A2 stage paragraph and input blocks verbatim and adds one role section taken from the A4 role skills: Pre-Write receives [`planning`](../../plugin/skills/planning/SKILL.md), Write receives [`translating`](../../plugin/skills/translating/SKILL.md), and Re-Write receives [`reviewing`](../../plugin/skills/reviewing/SKILL.md). A9 has no `Monitor`, no goal network or `.writing/goals.md`, no role trace events, no subagents, and no adaptive process selection.
 
-The role sections were taken from the role skills that generation run 1 executed, which were rewritten afterwards; the frozen stage files keep the run-1 text. The role sections keep the writing guidance verbatim, including the rhetorical-problem list, audience and organization guidance, claim-support criteria, no-invention rules, and review criteria. The edits below remove or neutralize only text that refers to the `Monitor`, the goal network, the trace, shared `.writing/` state that A2 does not create, subagent delegation, or the report the role returns to the `Monitor`. A2's stage contract requires the Write and Re-Write stages to return only the draft or final text, so those two roles lose their report formats.
+[`generate_variant_skills.py`](../../tools/generate_variant_skills.py) writes each role section from the current role skill by these rules, which remove only text that refers to the `Monitor`, the goal network, the trace, shared `.writing/` state that A2 does not create, delegation, local-only revision, or the report the role returns to the `Monitor`. The A9 runs of generation run 1 used role sections taken from the role skills before the rewrite.
 
-**All three roles.** The frontmatter, the role name heading, and the "When this skill runs" section, which names the role as a sub-agent receiving a delegation from the `Monitor`, are removed. The "Read the state first" list of `.writing/assignment.md`, `.writing/goals.md`, `.writing/draft.md`, `.writing/memory/`, and trace entries is removed because the stage prompt carries the assignment, supplied context, and previous stage output inline.
-
-**Planning, used in Pre-Write.**
-
-- The opening line "Turn a delegated writing problem into grounded knowledge, useful organization, and a maintained goal network." becomes "Turn the writing problem into grounded knowledge and useful organization."
-- "rather than delegating to more agents" is removed from the sub-process lead-in.
-- "the project memory" is removed from the Generate sources because A2 has no memory directory.
-- Goal-setting "create or develop concrete sub-goals under the active parent goal. Regenerate a higher-level goal only when the exploration or draft provides evidence that the writer's purpose has changed." becomes "create concrete sub-goals for the response."
-- From the Boundaries section, only "Do not silently change the assignment, factual claims, or the user's top-level intent." is kept; the sentences on goal ownership, trace ownership, user intent ownership, `.writing/goals.md` updates, stable goal identifiers, and evidence returned to the `Monitor` are removed.
-- The report format becomes a single sentence asking for a concise plan with generated knowledge separated by confidence, the proposed organization and why it fits the audience, the sub-goals for the response, and unresolved uncertainty. The goal-ID, goal-change, and next-process items are removed.
-
-**Translating, used in Write.**
-
-- The opening line drops "within the `Monitor`'s delegated draft scope".
-- "Keep the active goal visible while drafting. Preserve a useful existing sentence when it serves that goal" becomes "Keep the plan's sub-goals visible while drafting. Preserve a useful existing sentence when it serves those sub-goals".
-- In the drafting rules, "Write only the delegated scope in `.writing/draft.md` unless the `Monitor` explicitly asks for an alternative.", the instruction to flag changes to claims, structure, tone, and audience assumptions, and "Mark a gap as an open uncertainty for the `Monitor`." are removed. "Preserve useful user text." and "Do not invent sources, quotations, statistics, or facts." are kept.
-- The Boundaries section on trace ownership and goal changes and the report format are removed.
-
-**Reviewing, used in Re-Write.**
-
-- The opening line "then revise only within the `Monitor`'s delegated scope" becomes "then revise".
-- "rather than delegating to more agents" is removed from the sub-process lead-in.
-- In the Evaluate list, "active goals" becomes "the plan's sub-goals".
-- Revise drops "in the delegated scope", "call out factual gaps", and "state whether the change is local or changes the goal network". "make only the requested or clearly authorized changes" and "Preserve the writer's intent." are kept.
-- The Boundaries sentences on interrupting other processes and telling the `Monitor`, and on recommending goal regeneration, are removed. "Do not invent citations or claims." is kept.
-- The report format, including the per-goal verdict line, is removed.
+- **All three roles.** The frontmatter, the acknowledgment note, the role heading, the "When this skill runs" section, the list of files to read, the Boundaries section, and the report format are removed.
+- **Planning, used in Pre-Write.** The opening line becomes "Turn the writing problem into grounded knowledge and useful organization." The rhetorical-problem list and the Generate and Organize sub-processes are kept verbatim. Goal-setting becomes "create concrete sub-goals for the response", with the per-section length targets kept, and the goal notation is removed. The no-invention rule is kept, and the report becomes one sentence asking for the organization, the length targets, the generated knowledge by confidence, the sub-goals, and unresolved uncertainty.
+- **Translating, used in Write.** The opening line becomes "Turn selected meanings and plans into prose." The drafting paragraph is kept, with "the scope's goals" becoming "the plan's sub-goals". The drafting rules keep the length-target, supplied-text, and no-invention rules and drop the rules on the brief's language and scope, the files the role must not write, and marking gaps in the report.
+- **Reviewing, used in Re-Write.** The opening line becomes "Evaluate the draft against the rhetorical problem, then revise it." The Evaluate list is kept, with "the active goals" becoming "the plan's sub-goals". Revise becomes "revise the draft to fix the problems that Evaluate finds", because the Re-Write stage returns the final text and has no later process to take findings. "Do not invent citations or claims." is kept.
 
 ## A10 budget-matched Self-Refine
 

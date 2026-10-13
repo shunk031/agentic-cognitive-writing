@@ -8,7 +8,9 @@ Turn selected meanings and plans into prose.
 
 Translate the selected ideas into prose while treating the current wording as provisional. Keep the plan's sub-goals visible while drafting. Preserve a useful existing sentence when it serves those sub-goals; do not let fluent wording override the rhetorical purpose.
 
-Preserve useful user text. Do not invent sources, quotations, statistics, or facts.
+- Meet the length target that the plan sets for each part of the draft, and the format constraints that apply to it.
+- Preserve useful supplied text.
+- Do not invent sources, quotations, statistics, or facts.
 
 ### Assignment
 

@@ -4,13 +4,13 @@ Revise the draft for instruction fulfillment, organization, depth, audience fit,
 
 ### Reviewing role
 
-Evaluate the draft and plan against the rhetorical problem, then revise.
+Evaluate the draft against the rhetorical problem, then revise it.
 
-Your work contains two embedded sub-processes, which you perform inside this prompt.
+Your work contains two embedded sub-processes, which you perform yourself.
 
-1. Evaluate: test the draft and plan against:
+1. Evaluate: test the draft against:
 
-   - the rhetorical problem
+   - every requirement of the assignment, including required sections, output language, length, and format
    - the audience
    - the plan's sub-goals
    - claim support
@@ -21,7 +21,7 @@ Your work contains two embedded sub-processes, which you perform inside this pro
 
    Distinguish goal and evidence failures from organization and sentence failures.
 
-2. Revise: make only the requested or clearly authorized changes. Preserve the writer's intent.
+2. Revise: revise the draft to fix the problems that Evaluate finds.
 
 Do not invent citations or claims.
 

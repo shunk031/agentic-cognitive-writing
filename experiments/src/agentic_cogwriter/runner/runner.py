@@ -364,7 +364,7 @@ def _delegation_check(
 
 
 def _role_delegation(run_dir: Path, trace: Path) -> dict[str, Any]:
-    """Compare the roles the trace selected with the roles spawn briefs name."""
+    """Compare logged switches per role with completed spawns naming that role."""
 
     selected = selected_roles(trace)
     delegated = spawned_roles(
@@ -373,9 +373,11 @@ def _role_delegation(run_dir: Path, trace: Path) -> dict[str, Any]:
         )
     )
     return {
-        "selected": sorted(selected),
-        "delegated": sorted(delegated),
-        "undelegated": sorted(selected - delegated),
+        "switches": dict(sorted(selected.items())),
+        "completed_spawns": dict(sorted(delegated.items())),
+        "undelegated": sorted(
+            role for role, count in selected.items() if delegated[role] < count
+        ),
     }
 
 
@@ -1074,8 +1076,8 @@ class ExperimentRunner:
                 role_delegation = _role_delegation(run_dir, copied_trace)
                 if role_delegation["undelegated"]:
                     raise ExecutionError(
-                        f"Condition {condition.condition_id} selected roles that "
-                        "no spawn_agent brief delegated: "
+                        f"Condition {condition.condition_id} logged more switches "
+                        "than completed spawn_agent calls for: "
                         + ", ".join(role_delegation["undelegated"])
                     )
             if followup is not None:
@@ -1621,6 +1623,7 @@ class ExperimentRunner:
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-single-context": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-loop-only": _CODEX_ROLE_SKILL_DIRECTORIES,
+        "cognitive-writing-single-writer": _CODEX_ROLE_SKILL_DIRECTORIES,
     }
 
     def _stage_codex_plugin(

@@ -1,137 +1,195 @@
 ---
 name: cognitive-writing-single-writer
-description: "Experimental single-writer skill based on Flower and Hayes's single Writer. Use for controlled comparisons that require one main agent, a live hierarchical goal network, paragraph-scale recursion, and an append-only process trace with Figure 2's sentence example as the theoretical anchor."
+description: "Experiment variant of the agentic-cog-writer skill that performs each selected process in the Monitor's own context and limits each Translating step to one paragraph. Use it only when a controlled comparison requests this variant."
 ---
 
 > [!NOTE]
 > After reading this `SKILL.md`, say: `I read cognitive-writing-single-writer.`
 
-# Cognitive writing single writer
+# Single-writer cognitive writing
 
-Use this skill only for the single-writer comparison. Flower and Hayes's _A Cognitive Process Theory of Writing_[^1] models one Writer with Planning, Translating, and Reviewing under a Monitor. The paper says nothing about software agents. This skill operationalizes that model as one main agent that is both Writer and Monitor, with no subagents.
+You are the `Monitor`. Say the acknowledgment line above in an assistant message of its own immediately after reading this skill; the line never appears in `.writing/draft.md` or in the final response. The project root is the current working directory, and `<skill dir>` below is the directory that contains this `SKILL.md`.
 
-Say the acknowledgment line above in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+The `Monitor` selects one writing process at a time from the task and the shared writing state, has its role perform it, and repeats until the stop rule holds. Where the assignment is silent, apply genre-appropriate defaults and record them under Assumptions in the restatement.
 
-## One Writer and one Monitor
+## Select the next process
 
-The main agent is the only Writer. Do not spawn subagents, role agents, delegation tools, or another writing process.
+Before each step, read `.writing/assignment.md`, `.writing/goals.md`, `.writing/draft.md`, the latest trace entries, and the latest role report. Select exactly one process, using the first row that matches:
 
-The `Monitor` is the strategist. Choose the next process from the current goal network, the rhetorical problem, and the growing text. Do not impose a stage sequence. Use this default style: plan briefly at the top level, compose one paragraph at a time, and plan locally when needed. A writer may instead explore for a time or move toward polished prose quickly when the active goals support that choice.
+| State                                                                                                                                          | Next process                                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| The stop rule holds                                                                                                                            | Stop                                                                                                                       |
+| `.writing/goals.md` has no goals, or a change request arrived after the latest role report                                                     | `Planning`                                                                                                                 |
+| The latest report is from `Planning`                                                                                                           | `Translating`, scoped to the goals that report created or changed, or to the goals without draft text when it changed none |
+| The latest report names a structural or goal-level problem: a missing required section, a wrong organization, or a goal that is unmet or wrong | `Planning`                                                                                                                 |
+| An active goal has no draft text yet, or the latest report names a problem localized to a passage                                              | `Translating`, scoped to those goals or that passage                                                                       |
+| Any other state                                                                                                                                | `Reviewing` of the whole draft                                                                                             |
 
-## Read and preserve the writing state
+A `develop` goal verdict and an accepted `regenerate` verdict are goal-level problems. Because a `Planning` report always leads to `Translating`, `Planning` never runs twice in a row. A role's recommended next process is evidence for this choice; the `Monitor` alone selects the next process.
 
-Work in the session's current directory. Create missing files without overwriting existing content:
+## Stop
+
+The stop rule holds when any of these is true:
+
+- The latest `Reviewing` report states `Verdict: no required change`, and no change request arrived after it.
+- Four passes have ended. Each `Reviewing` report ends one pass.
+- Twelve role steps have run.
+- A role step failed twice in a row.
+
+Count passes and role steps from the start of the run or from the latest change request. When the stop rule holds, follow Finish and return the current draft.
+
+## State
+
+The writing state lives in the project's `.writing/` directory.
+
+| File                           | Content                                                    | Written by                                                                                  |
+| ------------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `.writing/assignment.md`       | the task, verbatim, and the `Monitor`'s restatement        | the `Monitor`, at setup and for each follow-up message                                      |
+| `.writing/goals.md`            | the hierarchical goal network                              | the `Planning` process                                                                      |
+| `.writing/draft.md`            | the current draft                                          | the `Translating` process, and the `Reviewing` process for local revisions within its scope |
+| `.writing/trace/process.jsonl` | the process history, one JSON object per line, append-only | the `Monitor`, through `<skill dir>/scripts/writing_state.py`                               |
+
+At setup, before the first process, the `Monitor` creates each missing file above as an empty file without overwriting existing content, copies a draft that the task supplies into `.writing/draft.md` once, and writes `.writing/assignment.md` in this form, copying the three task sections from the prompt exactly:
+
+```markdown
+# Assignment
+
+## Assignment (verbatim)
+
+## Supplied context (verbatim)
+
+## Requested output constraints (verbatim)
+
+## Restatement
+
+- Topic:
+- Audience:
+- Exigency:
+- Writer's goals:
+- Genre:
+- Output language: the language the assignment requests, or, when it requests none, the language of the assignment's instructions
+- Length:
+- Format:
+- Assumptions:
+```
+
+After setup, only the writers in the table change each file.
+
+## Perform the selected process
+
+Perform every selected process in your own context instead of delegating it. Do not call `spawn_agent`, do not run `codex` in the shell, and do not write a script that starts agents.
+
+The first time a process is selected, read its role skill at `<project root>/.agents/skills/<role>/SKILL.md`, where `<role>` is `planning`, `translating`, or `reviewing`, and say the role skill's acknowledgment line in an assistant message of its own. When that file does not exist, read `skills/<role>/SKILL.md` in the `agentic-cognitive-writing` plugin. Each time the process runs:
+
+1. Write the brief below in an assistant message.
+2. Perform the role as its role skill and the brief describe, writing only the files that the process writes.
+3. Write the role's report in an assistant message, in the role skill's report format without the acknowledgment line. Never repeat an acknowledgment line in a brief or a report.
+
+### Brief
+
+Fill every field of this template:
 
 ```text
-.writing/
-├── assignment.md
-├── goals.md
-├── draft.md
-└── trace/process.jsonl
+Process: <Role>
+Project root: <absolute path of the project root>
+Assignment: verbatim in .writing/assignment.md. Read all of it.
+Output language: <the restatement's output language>. Write all prose in it.
+Length and format: <the restatement's length and format>
+Scope: <the goal IDs, sections, or passage this step may change>
+Active goals: <the IDs of the active goals; their statements are in .writing/goals.md>
+Goal-setting: <requested or not requested>
+Request: <the work to do: the plan to follow, the findings to address, or the accepted replacement to apply>
 ```
 
-Initialize `.writing/trace/process.jsonl` before writing any goals or process events. Run the trace-initialization command separately from the command that writes initial goals. Create the trace file without truncating existing content. Read `assignment.md`, `goals.md`, `draft.md`, and the latest trace entries before choosing a process. If the assignment leaves the audience, purpose, scope, genre, or constraints unclear, make a reasonable single-turn assumption and record it in `.writing/assignment.md`. Do not ask a clarifying question.
+Write `<Role>` as `Planning`, `Translating`, or `Reviewing`. Request goal-setting in every `Planning` brief.
 
-When the initial goal network is missing, write `goals.md` and append one `goal_created` event for every goal in that initial network in the same shell command, before any `Translating` switch. The trace file must already exist before that command. Never write a goal first and defer its event to a later command.
+## Paragraph unit
 
-Use this order for an initial network. First run the initialization command, then run one new shell command that writes `goals.md` and appends one `goal_created` event for every goal line written in the heredoc:
-
-```sh
-mkdir -p .writing/trace
-: >> .writing/trace/process.jsonl
-```
+Each `Translating` step writes exactly one paragraph: one locally coherent block that serves one goal and has at most 120 words, counting each CJK character as one word. Scope each `Translating` step to that paragraph. Before writing the paragraph into `.writing/draft.md`, check its length with this command, which prints the count and fails above 120:
 
 ```sh
-stamp=$(date -Is)
-cat >> .writing/goals.md <<'EOF'
-G1 | parent: null | State the task's purpose and scope. | kind: content | status: active
+python3 <skill dir>/scripts/writing_state.py words --max 120 <<'EOF'
+<the paragraph>
 EOF
-printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"goal_created\",\"responsible_agent\":\"Writer\",\"process\":\"goal-setting\",\"decision\":\"Create G1 for the task purpose.\",\"evidence\":[\".writing/goals.md\"],\"open_uncertainty\":[],\"goal_id\":\"G1\",\"parent_goal_id\":null}" >> .writing/trace/process.jsonl
 ```
 
-## Keep a working goal network
+When the check fails, shorten the paragraph or keep only its first part, and check again.
 
-The paper's "Writing is a goal-directed process" and "Goals, Topic, and Text" sections describe goals created, developed, and revised during composing. The paper predicts that good and poor writers differ in the quantity and quality of middle-range goals that bridge intention and prose. This skill therefore asks the Writer to make those goals explicit. The prediction belongs to the paper, and the explicit file representation belongs to this experiment.
+## Role reports
 
-Treat `.writing/goals.md` as the current hierarchical network, not a ledger. Each line has a stable goal ID, parent ID, one-line statement, `kind` (`process` or `content`), and `status` (`active`, `resolved`, or `superseded`). Use indentation for parent and child relationships. Keep no history table, verdict list, or proposal list in the file. History lives in the trace.
+Each role's report has fixed fields. Read them as follows:
 
-When the Writer creates a goal, update the network and append `goal_created`. When the Writer makes an existing goal more specific, update it and append `goal_developed`. When an evaluated passage shows that the active goal is wrong or too abstract, regenerate it immediately: mark the old ID `superseded`, create a new active ID, use the old ID as `parent_goal_id`, and append `goal_regenerated`. There is no proposal-and-acceptance step.
+| Report                    | Field           | Use                                                                                      |
+| ------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
+| `Planning`                | `Goal changes`  | log one goal event per line at once                                                      |
+| `Planning`                | `Plan`          | pass it to the next `Translating` brief's Request                                        |
+| `Planning`, `Translating` | `Findings`      | select the next process                                                                  |
+| `Reviewing`               | `Open findings` | select the next process                                                                  |
+| `Reviewing`               | `Verdict`       | apply the stop rule                                                                      |
+| `Reviewing`               | `Goal verdicts` | select `Planning` for `develop`; decide each `regenerate` in the post-`Reviewing` ledger |
 
-## Compose recursively at paragraph scale
+Never copy an acknowledgment line into `.writing/draft.md`, a brief, or the final response.
 
-The paper's process model treats processes as optional and allows them to embed at any level. Figure 2 remains the theoretical anchor: planning, translating, and reviewing embed while the Writer works on one sentence. This experiment fixes the smallest observable unit at one paragraph because the writer batches to subsection scale when the unit is left at the sentence. A paragraph is one locally coherent block serving one local goal, not a whole section or subsection.
+## Goals
 
-For each paragraph, let the `Monitor` choose the next process, translate the paragraph, and use its text to choose what happens next. `generate` and `evaluate` may interrupt any process at any time. When an `evaluate` step finds that the paragraph elaborates or narrows its active goal, update `goals.md`, append the `evaluate` event, and append `goal_developed` in one shell command, following the paper's "State and Develop" pattern. Do not force `goal_developed` when the goal is unchanged. When a local goal resolves, pop back to its immediate parent. When an exploration burst yields useful material, return to the top-level goal and consolidate it into a more specific goal. When a trial paragraph shows that the active goal needs a new purpose or level of abstraction, update `goals.md` and append the `evaluate` and `goal_regenerated` events in one shell command. Do not pop or regenerate mechanically after every paragraph.
+The `Planning` process keeps `.writing/goals.md` as a hierarchy of goals with stable IDs, in the notation its role skill defines: `G1` for a top-level goal, and the parent's ID plus a number for a child, such as `G1.2`. Entries can be created, developed, or replaced; replacing an existing entry is goal regeneration.
 
-## Mechanical incremental composition
+- A `Reviewing` report proposes a replacement as a `regenerate` goal verdict.
+- The `Monitor` accepts or rejects each proposal in the post-`Reviewing` ledger.
+- After accepting one, the `Monitor` selects `Planning` and names the replacement in the brief's Request. The `Planning` report lists it as a `replaced` line.
 
-The draft is built by appending to `.writing/draft.md`. If the file is missing, create the empty file with `: >> .writing/draft.md`; never truncate it. Never assemble a full draft and write it in one operation. Never use a replacement write, `>`, or a whole-file rewrite. The only exception is a local revision of the most recent passage. Replace only that passage, append a `process_switch` whose `process` is `revise` in the same shell command, and then return to append-only writing. Never rewrite an earlier passage.
+## Trace
 
-Each `Translating` step appends exactly one paragraph serving one local goal, at most about 120 words. Never append more than 200 words. If a coherent paragraph would exceed about 120 words, split it into two append commands and put an `evaluate` step between them. Each append command must contain one paragraph only, never a subsection or several blank-line-separated paragraphs, and must end with a blank line. In the same shell command, append that paragraph first and then append its `process_switch` plus any goal events to `.writing/trace/process.jsonl`. Do not predeclare future paragraphs or events. Do not write any trace event in a setup-only command before the first draft append. A quoted heredoc may hold the short paragraph and one JSON object per line. The shell command must use `>>` for the draft and trace. Keep evidence factual at append time, such as the existing draft quote, file path, or goal ID, never future-tense evidence.
-
-Use one shell command with this order for every translating batch:
+Log every event with this one command, and with no other command. Write one `key: value` line per field and separate events with a `---` line:
 
 ```sh
-fragment=$(cat <<'EOF'
-One paragraph of no more than about 120 words for one local goal.
+python3 <skill dir>/scripts/writing_state.py log <<'EOF'
+event_type: process_switch
+to_process: translating
+decision: Draft the opening section, which has no draft text yet.
+evidence: .writing/draft.md has no opening section
 EOF
-)
-test "$(printf '%s\n' "$fragment" | wc -w)" -le 120
-printf '%s\n\n' "$fragment" >> .writing/draft.md
-stamp=$(date -Is)
-printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"process_switch\",\"responsible_agent\":\"Monitor\",\"process\":\"translating\",\"decision\":\"Append the local passage.\",\"evidence\":[],\"open_uncertainty\":[],\"from_process\":null,\"to_process\":\"translating\"}" >> .writing/trace/process.jsonl
 ```
 
-Replace process values and evidence with the current state. Keep the word-count check before the draft append in a real command. Append any goal events in that same command, each with its own `date -Is` value. If a paragraph is split, finish the first command, append its `evaluate` event, then run the second command.
+The script adds the timestamp, the responsible agent, `process`, and `from_process`, writes valid JSON, and appends nothing when an event is invalid. When it prints an error, fix the input and run the command again. A process switch has these keys:
 
-Every `evaluate` event means a `process_switch` whose `process` is `evaluate`. Append it only after the paragraph exists. Its `evidence` array must contain the opening phrase of the paragraph just appended, copied verbatim with punctuation and case unchanged. Read the phrase back from `.writing/draft.md` in the same shell command; never retype or paraphrase it. Check mechanically that the quote is a substring of that paragraph. A `revise` switch must identify the most recent passage it changes.
+- `event_type`: `process_switch`
+- `to_process`: `planning`, `translating`, or `reviewing`, or `null` when the run stops
+- `decision`: the decision and its reason in plain language
+- `evidence` and `open_uncertainty`: one line per item; omit the key when there is none
 
-For example, read back the last appended paragraph with `tail` and `head`, take its opening eight words, check the substring, and append the evaluate event from `$quote` in that same shell command:
+Log a process switch before every role step, including the last one. When the run stops, log one last switch with `to_process: null`.
 
-```sh
-paragraph=$(tail -n 2 .writing/draft.md | head -n 1)
-quote=$(printf '%s\n' "$paragraph" | awk '{for (i=1; i<=8 && i<=NF; i++) printf "%s%s", $i, (i<8 && i<NF ? OFS : ORS)}')
-case "$paragraph" in *"$quote"*) ;; *) exit 1 ;; esac
-stamp=$(date -Is)
-printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"process_switch\",\"responsible_agent\":\"Monitor\",\"process\":\"evaluate\",\"decision\":\"Evaluate the appended paragraph.\",\"evidence\":[\"$quote\"],\"open_uncertainty\":[],\"from_process\":\"translating\",\"to_process\":\"evaluate\"}" >> .writing/trace/process.jsonl
-```
+### Goal events
 
-## Processes and trace events
+When a `Planning` report arrives, log one goal event per `Goal changes` line at once, before anything else. A goal event has `event_type`, `goal_id`, `parent_goal_id`, `decision`, and optional `evidence` and `open_uncertainty` keys:
 
-The exact process tokens are `planning`, `generate`, `organize`, `goal-setting`, `translating`, `reviewing`, `evaluate`, and `revise`. Use only these tokens in JSON. No other process token is allowed, including `evaluating`, `generating`, `organizing`, or `revising`.
+| Report line                           | `event_type`       | `goal_id` | `parent_goal_id` |
+| ------------------------------------- | ------------------ | --------- | ---------------- |
+| `created G1.3 (parent G1)`            | `goal_created`     | `G1.3`    | `G1`             |
+| `developed G1.2 (parent G1)`          | `goal_developed`   | `G1.2`    | `G1`             |
+| `replaced G1.2 with G1.4 (parent G1)` | `goal_regenerated` | `G1.4`    | `G1`             |
 
-Every event has `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, and `open_uncertainty`. `event_type` is always exactly one of `process_switch`, `goal_created`, `goal_developed`, or `goal_regenerated`; never put a process token such as `evaluate` or `translating` in `event_type`. The first five fields are strings, and `evidence` and `open_uncertainty` are JSON arrays of strings. A `process_switch` also has `from_process` and `to_process`, each a declared process token or `null`. `evaluate`, `translating`, and every other declared process token may appear only in `process`, `from_process`, or `to_process`. A goal event also has string `goal_id` and string-or-null `parent_goal_id`. Keep the shared trace contract unchanged.
+Use `null` as `parent_goal_id` for a top-level goal. The script credits `goal_created` and `goal_developed` to the `planner` and `goal_regenerated` to the `monitor`.
 
-For `goal_created`, set `parent_goal_id` to the immediate parent. For `goal_developed`, retain the goal's current parent. For `goal_regenerated`, use the replacement ID as `goal_id` and the superseded ID as `parent_goal_id`. Record the reason in `decision` and concrete support in `evidence`. Use an empty `open_uncertainty` array when no uncertainty remains.
+### Post-`Reviewing` ledger
 
-Use these shell forms when there is nothing to cite. Assign `stamp` in the same command before appending the line; never copy a timestamp from an example:
+The decision of the first process switch after each `Reviewing` report begins with the ledger: `regeneration proposals: G1.2 accepted (<reason>); G2 rejected (<reason>)`, with the actual goal IDs and reasons, or `regeneration proposals: none` when the report proposed no replacement.
 
-```sh
-stamp=$(date -Is)
-printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"process_switch\",\"responsible_agent\":\"Monitor\",\"process\":\"evaluate\",\"decision\":\"Evaluate the appended paragraph.\",\"evidence\":[],\"open_uncertainty\":[],\"from_process\":\"translating\",\"to_process\":\"evaluate\"}" >> .writing/trace/process.jsonl
-printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"goal_created\",\"responsible_agent\":\"Writer\",\"process\":\"goal-setting\",\"decision\":\"Create the next middle-range goal.\",\"evidence\":[],\"open_uncertainty\":[],\"goal_id\":\"G1\",\"parent_goal_id\":null}" >> .writing/trace/process.jsonl
-```
+## Finish
 
-Every shell command that appends one or more trace lines must execute `stamp=$(date -Is)` in that same command before its first trace append and interpolate `$stamp` into every line in that command. The next command must execute `date -Is` again; never type, estimate, copy, or reuse a timestamp across commands. Append to `.writing/trace/process.jsonl`; never rewrite or truncate it. Use one shell command and one quoted heredoc for a related event batch when practical. Each line remains one standalone JSON object. Append one `process_switch` for each process switch, with the first `from_process` set to `null`. Keep process names lowercase in JSON. Do not invent fields or reuse an old timestamp. Read back the appended lines when the command permits and repair malformed JSON before continuing.
+Before the final response:
 
-For the sequence of `process_switch` events, the first `from_process` is `null`. Every later `from_process` must equal the immediately preceding `process_switch` event's `to_process`. Goal events do not reset this chain. Before finishing, compare the `from_process` and `to_process` values mechanically in trace order. Do not append a final `reviewing` switch with a stale source.
+1. Run `python3 <skill dir>/scripts/writing_state.py check`. The command verifies that the trace parses, prints the logged process path, and prints each goal in `.writing/goals.md` that has no goal event.
+2. Compare the printed path with the role steps that ran. For a goal without an event, log a `goal_created` event with `responsible_agent: monitor`. When the trace does not parse, report the problem in the last switch's `open_uncertainty`; never edit the trace by hand.
+3. Log the last process switch described in Trace.
+4. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
 
-The continuity check has this shape:
+## Follow-up messages
 
-```python
-switches = [e for e in events if e["event_type"] == "process_switch"]
-assert switches[0]["from_process"] is None
-assert all(a["to_process"] == b["from_process"] for a, b in zip(switches, switches[1:]))
-```
+When a later message changes the task, append it verbatim to `.writing/assignment.md` under `## Change request (verbatim)` and update the restatement. The change request voids the latest `Reviewing` verdict and restarts the pass and step counts, so the next process is `Planning`.
 
-## Local checks
+## References
 
-Before each local passage, check the active goal and the text already written. After each append, check the new draft tail and the appended JSON lines. Confirm mechanically that each `evaluate` quote is a substring of the paragraph it evaluates and was read back from the draft. Confirm that each goal update has its required identifiers. Confirm that the current network contains no history table. Confirm that no process switch implies a fixed stage order.
-
-## Review and finish
-
-Review each new passage against its active content goal, process goal, rhetorical problem, audience, purpose, and text already written. Use `generate` or `planning` for a missing idea, `goal-setting` for a more specific path, `reviewing` to read the growing text, and `revise` for a local wording change. Use `goal_developed` when the goal's purpose stays stable but becomes specific. Use `goal_regenerated` when writing changes its purpose or abstraction level. Use the current text as evidence about what comes next, but keep higher-level goals visible. Do not make a section boundary a process boundary or wait for a complete outline before translating.
-
-Before the final response, read `.writing/draft.md` and return exactly its complete contents, with no summary, link, preamble, or code fence. Keep assumptions in `.writing/assignment.md`, not in the draft. Check that every current network change has its trace event, every trace line is standalone JSON, every process value is declared above, and no subagent was spawned.
-
-[^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387. DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885) / JSTOR: [https://www.jstor.org/stable/356600](https://www.jstor.org/stable/356600)
+- [`references/trace-jsonl-schema.md`](references/trace-jsonl-schema.md) describes the trace fields for readers of the trace.
+- [`references/goals-format.md`](references/goals-format.md) describes the goal notation for readers of `.writing/goals.md`.

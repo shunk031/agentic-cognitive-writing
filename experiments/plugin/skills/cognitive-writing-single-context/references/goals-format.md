@@ -7,14 +7,18 @@ The goal network in `.writing/goals.md` is the working representation of the wri
 ```markdown
 # Goals
 
-- [G0] Persuade new engineering managers to adopt the handoff checklist (parent: none, status: active)
-  - [G1] Show why missed handoffs matter in their first week (parent: G0, status: active)
-  - [G2] Present the checklist with one worked example (parent: G0, status: active)
-  - [G3] Explain the policy change (parent: G0, status: replaced by G4)
-  - [G4] Explain what changes in each manager's on-call week (parent: G0, status: active)
+- [G1] Persuade new engineering managers to adopt the handoff checklist (parent: none, status: active, length: 900 words)
+  - [G1.1] Show why missed handoffs matter in their first week (parent: G1, status: active, length: 300 words)
+  - [G1.2] Explain the policy change (parent: G1, status: replaced by G1.4)
+  - [G1.3] Present the checklist with one worked example (parent: G1, status: active, length: 400 words)
+  - [G1.4] Explain what changes in each manager's on-call week (parent: G1, status: active, length: 200 words)
 ```
 
-Each line holds one goal: a stable ID in brackets, the goal statement, its parent, and its status. A child is indented under its parent.
+Each line holds one goal: a stable ID in brackets, the goal statement, its parent, its status, and an optional length target. A child is indented under its parent.
+
+## Goal IDs
+
+A top-level goal's ID is `G` and a number, such as `G1`. A child's ID is its parent's ID, a dot, and the next unused number, such as `G1.3` or `G1.3.1`. IDs are never reused. Every ID matches the regular expression `G\d+(\.\d+)*`.
 
 ## Changes
 

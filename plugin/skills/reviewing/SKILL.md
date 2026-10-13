@@ -12,7 +12,7 @@ Evaluate the draft against the rhetorical problem, revise only locally within th
 
 ## When this skill runs
 
-You perform the `Reviewing` process for the `Monitor`, as the brief describes. A role agent begins its report with the acknowledgment line. A `Monitor` that applies this skill in its own context says the line in an assistant message instead. The line never goes into `.writing/draft.md` or the final response.
+You perform the `Reviewing` process for the `Monitor`, as the brief describes. A role agent begins its report with the acknowledgment line. A `Monitor` that applies this skill in its own context says the line once, in an assistant message of its own immediately after reading this skill, and never repeats it in a written report. The line never goes into `.writing/draft.md` or the final response.
 
 ## Read the state first
 
@@ -40,7 +40,7 @@ Your work contains two embedded sub-processes, which you perform yourself.
 
    Distinguish goal and evidence failures from organization and sentence failures.
 
-2. Revise: make local revisions, such as wording, sentence, or paragraph fixes, only inside the brief's scope, in the output language. Do not add or remove sections, reorganize the draft, or rewrite a passage outside the scope. Report each such change under Findings instead.
+2. Revise: make local revisions only inside the brief's scope, in the output language. A local revision fixes wording, mechanics, or a single sentence. Adding content, cutting content, or rewriting a passage is not a local revision; report it as a `translating` open finding. Adding or removing a section or reorganizing the draft is a `planning` open finding.
 
 ## Boundaries
 
@@ -56,19 +56,20 @@ Your final message is the report. Use exactly these fields:
 ```text
 I read reviewing.
 Verdict: <changes required, or no required change>
-Revisions made: <the local revisions made, or none>
-Findings:
+Revisions made:
+- <a local revision already made, with its location>
+Open findings:
 - planning: <location>: <a structural or goal-level problem and the required change>
 - translating: <location>: <a problem localized to a passage and the required change>
 Goal verdicts:
 - G1 — keep: <one sentence of evidence from the draft>
-- G2 — develop: <one sentence of evidence and the refinement needed>
-- G3 — regenerate: <one sentence of evidence>. Replacement: <the proposed new purpose>
+- G1.1 — develop: <one sentence of evidence and the refinement needed>
+- G1.2 — regenerate: <one sentence of evidence>. Replacement: <the proposed new purpose>
 Next process: <planning, translating, or stop>
 ```
 
-Under Findings, start each line with the process that should handle it: `planning` for a missing required section, a wrong organization, or a goal that is unmet or wrong, and `translating` for a problem localized to a passage. Write `- none` when there is none.
+Revisions made lists only changes already applied; they are not findings. Open findings lists every required change that remains. Start each open finding with the process that should handle it: `planning` for a missing required section, a wrong organization, or a goal that is unmet or wrong, and `translating` for content to add, cut, or rewrite in a passage. List each `develop` or `regenerate` goal verdict also as a `planning` open finding. Write `- none` for an empty list.
 
 Give one goal verdict for each active goal in the brief, identified by ID, using exactly one of the lowercase words `keep`, `develop`, or `regenerate`. Omit the Goal verdicts field when the brief lists no goals.
 
-Write `Verdict: no required change` only when Findings is `- none`, every goal verdict is `keep`, and the draft meets every requirement of the assignment. The recommended next process is advice; the `Monitor` selects the next process.
+Compute the Verdict from Open findings alone: `no required change` when Open findings is `- none`, and `changes required` otherwise. The recommended next process is advice; the `Monitor` selects the next process.

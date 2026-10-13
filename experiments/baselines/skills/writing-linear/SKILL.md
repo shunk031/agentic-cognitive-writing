@@ -6,7 +6,7 @@ description: "Experiment condition A2. Run one fixed Pre-Write, Write, and Re-Wr
 > [!NOTE]
 > After reading this `SKILL.md`, say: `I read writing-linear.`
 >
-> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+> Say the line in an assistant message of its own immediately after reading this skill. The line never appears in `.writing/draft.md` or in the final response.
 
 # Linear writing
 
@@ -18,7 +18,7 @@ The runner gives this condition the same assignment, supplied context, context-w
 
 The generator may use only `.writing/assignment.md`, the supplied context, and the prior stage output. The generator must not browse, search, call a retrieval tool, or use an external source. Retrieval, evidence gathering, and citation generation are disabled. When the supplied context does not support a claim, preserve the uncertainty or omit the claim.
 
-The user owns rhetorical intent, factual authority, final wording, and publication. The runner owns stage scheduling and trace recording. The three stage generators own their respective outputs. The runner must not infer hidden reasoning from stage text.
+The runner owns stage scheduling and trace recording. The three stage generators own their respective outputs. The runner must not infer hidden reasoning from stage text.
 
 ## Procedure
 

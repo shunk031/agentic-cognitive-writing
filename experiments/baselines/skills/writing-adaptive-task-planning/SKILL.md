@@ -6,7 +6,7 @@ description: "Confirmatory condition A3 (Adaptive Task Planning). Build and pers
 > [!NOTE]
 > After reading this `SKILL.md`, say: `I read writing-adaptive-task-planning.`
 >
-> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+> Say the line in an assistant message of its own immediately after reading this skill. The line never appears in `.writing/draft.md` or in the final response.
 
 # Adaptive Task Planning
 
@@ -22,7 +22,7 @@ Retrieval tasks are disabled under the equal-information policy. The graph may c
 
 The final response must contain the complete final text (the runner enforces this; a parallel runner change exists).
 
-This adaptation uses the task graph as its only planning structure. Do not create or modify `.writing/goals.md` and emit no goal events. The user owns rhetorical intent, factual authority, final wording, and publication. The coordinator owns graph state, ready-task scheduling, subagent dispatch, persistence, and trace recording. Typed task subagents own their returned reasoning or composition results. A native subagent must not launch a nested `codex exec` process.
+This adaptation uses the task graph as its only planning structure. Do not create or modify `.writing/goals.md` and emit no goal events. The coordinator owns graph state, ready-task scheduling, subagent dispatch, persistence, and trace recording. Typed task subagents own their returned reasoning or composition results. A native subagent must not launch a nested `codex exec` process.
 
 ## Persisted graph contract
 

@@ -6,7 +6,7 @@ description: "Baseline STORM-style writing. Use a fixed perspective, simulated q
 > [!NOTE]
 > After reading this `SKILL.md`, say: `I read writing-storm-style.`
 >
-> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+> Say the line in an assistant message of its own immediately after reading this skill. The line never appears in `.writing/draft.md` or in the final response.
 
 # STORM[^1]-style writing
 
@@ -22,7 +22,7 @@ The runner gives this condition the same assignment, supplied context, context-w
 
 Citation generation, retrieval, source gathering, evidence collection, and citation metrics are disabled. Retrieval, evidence, and citation traces are `N/A` by design, not zero. The runner records that policy in its run accounting rather than inventing trace events for work that did not occur.
 
-The user owns rhetorical intent, factual authority, final wording, and publication. The runner owns the fixed stage schedule and trace recording. Stage actors own the stage outputs. The runner must not infer hidden reasoning or sources from the prose.
+The runner owns the fixed stage schedule and trace recording. Stage actors own the stage outputs. The runner must not infer hidden reasoning or sources from the prose.
 
 ## Procedure
 
