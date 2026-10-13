@@ -21,7 +21,7 @@ from ..runner import cw_run
 LETTER = {"planning": "P", "translating": "T", "reviewing": "R"}
 GOAL_LINE = re.compile(r"^\s*- \[(G[\d.]+)\] .+$")
 GOAL_SOURCE = re.compile(
-    r"^\s*- \[(G[\d.]+)\] .+? \| src: \"(.+?)\"(?: \| status: .*)?$"
+    r"^\s*- \[(G[\d.]+)\] .+? \| src: (\"(.+?)\"|G[\d.]+)(?: \| status: .*)?$"
 )
 
 
@@ -33,19 +33,32 @@ def request_sources(run_dir: Path, entries: list[dict]) -> dict[int, tuple[int, 
     """Per follow-up turn: requirements changed in it, and how many quote its request.
 
     A requirement counts as changed in turn N when a goal event of a step in
-    turn N names it; it quotes the request when its final ``src`` quote occurs
-    in ``history/turn-NN-request.md``.
+    turn N names it. It is request-derived when its final ``src``, followed
+    through ancestor IDs to a quote, quotes ``history/turn-NN-request.md``.
     """
 
     writing = run_dir / "workspace/.writing"
     goals = writing / "goals.md"
-    quotes = {
+    sources = {
         m[1]: m[2]
         for line in (
             goals.read_text(encoding="utf-8").splitlines() if goals.is_file() else []
         )
         if (m := GOAL_SOURCE.match(line))
     }
+
+    def quote(goal: str) -> str | None:
+        """Follow ancestor-ID sources up to the first quoted source."""
+
+        seen: set[str] = set()
+        while goal in sources and goal not in seen:
+            seen.add(goal)
+            src = sources[goal]
+            if src.startswith('"'):
+                return src[1:-1]
+            goal = src
+        return None
+
     turn_of = {
         e["step"]: e["turn"]
         for e in entries
@@ -60,7 +73,7 @@ def request_sources(run_dir: Path, entries: list[dict]) -> dict[int, tuple[int, 
             for e in entries
             if e.get("cmd") == "goal" and turn_of.get(e.get("step")) == turn
         }
-        quoting = sum(1 for g in changed if g in quotes and _norm(quotes[g]) in text)
+        quoting = sum(1 for g in changed if (q := quote(g)) and _norm(q) in text)
         out[turn] = (len(changed), quoting)
     return out
 

@@ -280,6 +280,15 @@ def test_a4_turn_without_its_own_stop_is_incomplete(tmp_path: Path) -> None:
     assert manifest["cw"]["gates"]["completeness"] is False
 
 
+def test_fidelity_traces_request_sources_through_ancestors() -> None:
+    from agentic_cogwriter.analysis import fidelity
+
+    # Trimmed records of the writingbench-0838 follow-up run (smoke iteration
+    # 11): turn 2 created G9, quoting the request, and G9.1-G9.3 citing G9.
+    fixture = Path(__file__).parent / "fixtures/fidelity-run/A4/followup-wb0838"
+    assert fidelity.run_row(fixture)["request_src"] == {2: (4, 4)}
+
+
 def test_fidelity_counts_returns_within_each_turn() -> None:
     from agentic_cogwriter.analysis import fidelity
 

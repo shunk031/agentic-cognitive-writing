@@ -1,0 +1,5 @@
+Read the skill file at plugin/skills/agentic-cog-writer/SKILL.md and follow it.
+
+## Single-turn contract
+
+This is a single-turn task with no interactive user; never ask clarification questions. When t
