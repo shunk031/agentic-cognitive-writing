@@ -50,7 +50,7 @@ await tools.multi_agent_v1__close_agent({ target: agent_id });
 text(JSON.stringify(r.status[agent_id]));
 ```
 
-Run the whole block in one call, so the role agent is closed before you read its report and before any other command. Run one role agent at a time. Do not perform a role yourself, do not change files under `.writing/`, and do not run `codex`.
+Run the whole block in one call, so the role agent is closed before you read its report and before any other command. Spawn a role agent only with the exact spawn line that `cw step` has just printed, and send it no other message; for any further work, open a new step. Run one role agent at a time. Do not perform a role yourself, do not change files under `.writing/`, and do not run `codex`.
 
 When `cw` reports that a step failed, follow its message; `cw` checks the reissue.
 
