@@ -33,14 +33,15 @@ GOAL_SECTIONS = {"## Goals", "### Goal events", "### Post-`Reviewing` ledger"}
 STOP = "## Stop"
 TRACE = "## Trace"
 NO_GOAL_CHANGES = {SELECT, STOP, STATE, BRIEF, REPORTS, TRACE, FINISH, REFERENCES}
+IN_CONTEXT_CHANGES = {STOP, STATE, BRIEF, TRACE, "### Goal events", FINISH}
 IN_CONTEXT = {DELEGATE: PERFORM}
 # skill -> (sections that change, sections dropped, renamed sections, added sections)
 ABLATIONS = {
     "cognitive-writing-no-goal-network": (NO_GOAL_CHANGES, GOAL_SECTIONS, {}, []),
     "cognitive-writing-fixed-order": ({SELECT, REPORTS, "## Goals"}, set(), {}, []),
-    "cognitive-writing-single-context": ({STOP, BRIEF}, set(), IN_CONTEXT, []),
+    "cognitive-writing-single-context": (IN_CONTEXT_CHANGES, set(), IN_CONTEXT, []),
     "cognitive-writing-single-writer": (
-        {STOP, BRIEF},
+        IN_CONTEXT_CHANGES,
         set(),
         IN_CONTEXT,
         [PARAGRAPH],
@@ -106,9 +107,21 @@ def test_loop_only_takes_each_change_from_its_single_ablation() -> None:
     single_context = _sections(_skill("cognitive-writing-single-context"))
 
     assert loop_only[SELECT] == fixed_order[SELECT]
-    assert loop_only[PERFORM] == single_context[PERFORM]
-    for heading in (STATE, FINISH, REFERENCES):
-        assert loop_only[heading] == no_goals[heading], heading
+    assert loop_only[PERFORM] == single_context[PERFORM].replace(
+        "step <role> <<'EOF'", "step <role> --no-goals <<'EOF'"
+    )
+    assert loop_only[REFERENCES] == no_goals[REFERENCES]
+    reports_row = next(
+        line
+        for line in single_context[STATE].splitlines()
+        if line.startswith("| `.writing/reports.md`")
+    )
+    assert reports_row in loop_only[STATE]
+    assert (
+        "Do not consult or construct a hierarchical goal network." in (loop_only[STATE])
+    )
+    assert "check --reports" in loop_only[FINISH]
+    assert "log --no-goals" in loop_only[TRACE]
     assert "scope the next step in the cycle" in loop_only[REPORTS]
     assert "Goal" not in loop_only[REPORTS]
     brief = loop_only[BRIEF]
@@ -144,11 +157,16 @@ def test_single_writer_is_single_context_plus_the_paragraph_unit() -> None:
     unit = sections[PARAGRAPH]
     for required in (
         "Each `Translating` step writes exactly one paragraph",
-        "at most 120 words, counting each CJK character as one word",
-        "writing_state.py append-paragraph --max 120",
-        "consecutive `Translating` steps on the same scope count as one role step",
+        "with no blank line inside it",
+        "writing_state.py paragraph --append",
+        "`--insert-before N`",
+        "`--replace N`",
+        "editing `.writing/draft.md` with `apply_patch`",
+        "is forbidden",
+        "an unbroken run of `Translating` steps counts as one role step",
     ):
         assert required in unit, required
+    assert "document order" not in unit
     assert "words --max" not in text
     assert "repository writing" not in text
     assert "AI-pattern phrasing" not in text
@@ -202,7 +220,8 @@ def test_role_reports_begin_with_the_acknowledgment_line(role: str) -> None:
     assert report.startswith(f"{ack_token(role)}\n")
     assert "indings:" in report
     assert "Next process:" in report
-    assert "never repeats it in a written report" in text
+    assert "in the same response as your next tool call, and begin your report" in text
+    assert "own context" not in text
 
 
 def _prompt_texts() -> list[Path]:
@@ -294,7 +313,7 @@ def test_selection_has_a_default_row_and_the_stop_rule_has_caps() -> None:
     for required in (
         "Open findings list is `- none`",
         "not from the report's Verdict line",
-        "repeats a rejected regeneration proposal",
+        "accepted none of its `regenerate` verdicts",
         "Four passes have ended.",
         "Twelve role steps have run.",
         "no change request arrived after it",
@@ -386,3 +405,17 @@ def test_storm_style_forbids_subagents_and_caps_are_concrete() -> None:
     )
     assert "at most three levels below the root" in adaptive
     assert "no more than 30 tasks" in adaptive
+
+
+@pytest.mark.parametrize("name", RECIPE_BASELINES)
+def test_baseline_recipes_validate_and_run_at_stage_start(name: str) -> None:
+    text = (BASELINE_SKILLS / name / "SKILL.md").read_text(encoding="utf-8")
+    recipe = text.split("## Trace recipe", 1)[1]
+    assert "immediately when that" in recipe
+    assert "never from a loop or script" in recipe
+    assert "allowed = (" in recipe
+    assert 'sys.exit("invalid trace event; nothing was appended")' in recipe
+    procedure = text.split("## Procedure", 1)[1].split("## Trace recipe", 1)[0]
+    final = procedure.index("final response")
+    assert procedure.index("event") < final
+    assert "with nothing before or after it" in text

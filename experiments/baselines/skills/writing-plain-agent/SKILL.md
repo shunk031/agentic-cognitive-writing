@@ -6,11 +6,11 @@ description: "Experiment condition A11. Give the coding agent the writing task w
 > [!NOTE]
 > After reading this `SKILL.md`, say: `I read writing-plain-agent.`
 >
-> Say the line in an assistant message of its own immediately after reading this skill. The line never appears in `.writing/draft.md` or in the final response.
+> Say the line immediately after reading this skill, in the same response as your next tool call. The line never appears in `.writing/draft.md` or in the final response.
 
 # Plain agent
 
-Write the requested document. Keep your working draft in a file in the workspace; you may plan, draft, and revise it as you see fit before returning the complete final document.
+Write the requested document. Keep your working draft in a file in the workspace; you may plan, draft, and revise it as you see fit before returning the complete final document. Your final response is exactly that document, with nothing before or after it.
 
 The harness also needs one record that this session ran. Run the following command once from the session working directory before the final response; it is not part of the writing task.
 

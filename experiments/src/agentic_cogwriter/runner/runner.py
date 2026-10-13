@@ -42,6 +42,7 @@ from .hashing import sha256_bytes, sha256_file
 from .manifest import PromptRecord, load_benchmark_provenance
 from .skill_checks import (
     leaked_acknowledgments,
+    paragraph_write_report,
     selected_roles,
     spawned_roles,
     summarize_acknowledgments,
@@ -806,6 +807,12 @@ class ExperimentRunner:
                 )
             if platform == "codex":
                 staged_files = self._stage_codex_plugin(condition, workspace)
+            elif uses_role_skills:
+                # Claude Code loads the plugins itself; only the role skills are
+                # staged so in-context variants find them at the same path.
+                staged_files = self._stage_codex_plugin(
+                    condition, workspace, roles_only=True
+                )
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -1138,6 +1145,7 @@ class ExperimentRunner:
                 skill_acknowledgments = self._skill_acknowledgments(
                     condition, run_dir, trace_path, uses_role_skills
                 )
+            paragraph_writes = paragraph_write_report(workspace, trace_path)
             output_path.write_bytes(output.encode("utf-8"))
             normalized_path.write_text(output, encoding="utf-8")
             self._write_json(
@@ -1171,6 +1179,7 @@ class ExperimentRunner:
                     followup=followup_record,
                     role_delegation=role_delegation,
                     skill_acknowledgments=skill_acknowledgments,
+                    paragraph_writes=paragraph_writes,
                 ),
             )
             return RunResult(
@@ -1627,7 +1636,7 @@ class ExperimentRunner:
     }
 
     def _stage_codex_plugin(
-        self, condition: ConditionSpec, workspace: Path
+        self, condition: ConditionSpec, workspace: Path, *, roles_only: bool = False
     ) -> dict[str, str]:
         """Stage the invoked skill and the role skills inside the workspace.
 
@@ -1648,7 +1657,7 @@ class ExperimentRunner:
             ),
         )
         required_directories = [
-            Path("skills") / condition.skill_name,
+            *(() if roles_only else (Path("skills") / condition.skill_name,)),
             *self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(condition.skill_name, ()),
         ]
         sources: dict[Path, Path] = {}
@@ -1674,6 +1683,8 @@ class ExperimentRunner:
                 source,
                 staged_roots[relative in role_directories] / relative,
                 dirs_exist_ok=True,
+                # Example prompts in evals/ are for skill authors, not runs.
+                ignore=shutil.ignore_patterns("evals"),
             )
         return {
             path.relative_to(workspace).as_posix(): f"sha256:{sha256_file(path)}"
@@ -1714,6 +1725,7 @@ class ExperimentRunner:
         followup: Mapping[str, Any] | None = None,
         role_delegation: Mapping[str, Any] | None = None,
         skill_acknowledgments: Mapping[str, Any] | None = None,
+        paragraph_writes: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         if platform == "codex":
@@ -1929,6 +1941,8 @@ class ExperimentRunner:
             manifest["role_delegation"] = dict(role_delegation)
         if skill_acknowledgments is not None:
             manifest["skill_acknowledgments"] = dict(skill_acknowledgments)
+        if paragraph_writes is not None:
+            manifest["paragraph_writes"] = dict(paragraph_writes)
         if output_hash is not None:
             manifest["output_hash"] = output_hash
         if trace_hash is not None:

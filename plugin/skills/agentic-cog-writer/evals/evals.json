@@ -11,17 +11,6 @@
         "Delegates Planning, Translating, and Reviewing to role agents and logs a process switch before each step.",
         "Returns only the complete memo as the final response, without an acknowledgment line or commentary."
       ]
-    },
-    {
-      "id": 2,
-      "prompt": "Here is a rough two-paragraph grant introduction in .writing/draft.md. Revise it into a stronger introduction for a public-health funder.",
-      "expected_output": "The final response is the revised introduction and nothing else. The Reviewer reports open findings and goal verdicts, and any goal replacement it proposes is accepted or rejected in the post-Reviewing ledger of the trace.",
-      "files": [],
-      "expectations": [
-        "Keeps the supplied draft as the starting draft instead of overwriting it.",
-        "Preserves the supplied claims and marks missing evidence rather than inventing it.",
-        "Records a goal regeneration only after the Monitor accepts a Reviewing proposal in the ledger."
-      ]
     }
   ]
 }

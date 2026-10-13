@@ -104,7 +104,7 @@ NO_GOAL_FINISH = """## Finish
 
 Before the final response:
 
-1. Run `python3 <skill dir>/scripts/writing_state.py check`. The command verifies that the trace parses and prints the logged process path.
+1. Run `python3 <skill dir>/scripts/writing_state.py check`. The command verifies that the trace parses, and prints the logged process path.
 2. Log the last process switch described in Trace.
 3. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
 
@@ -151,27 +151,48 @@ IN_CONTEXT = """## Perform the selected process
 
 Perform every selected process in your own context instead of delegating it. Do not call `multi_agent_v1__spawn_agent`, do not run `codex` in the shell, and do not write a script that starts agents.
 
-The first time a process is selected, read its role skill at `<project root>/.agents/skills/<role>/SKILL.md`, where `<role>` is `planning`, `translating`, or `reviewing`, and say the role skill's acknowledgment line in an assistant message of its own. Each time the process runs:
+The first time a process is selected, read its role skill at `<project root>/.agents/skills/<role>/SKILL.md`, where `<role>` is `planning`, `translating`, or `reviewing`, and say the role skill's acknowledgment line immediately after reading it, in the same response as your next tool call. The role skill's instructions about its acknowledgment line and its final message address delegated role agents; here, the report goes to `.writing/reports.md`. Each time a process runs:
 
-1. Append the brief below to `.writing/reports.md` under a `## <Role> brief` heading.
-2. Perform the role as its role skill and the brief describe, writing only the files that the process writes.
-3. Append the role's report, in the role skill's report format but without the acknowledgment line, to `.writing/reports.md` under a `## <Role> report` heading.
+1. Log its switch and open its section in `.writing/reports.md` with this command, which takes the keys of a process switch except `event_type` and `to_process`:
 
-The `Monitor` alone writes `.writing/reports.md`. Write briefs and reports only to that file, never as assistant messages, and never put an acknowledgment line in it.
+   ```sh
+   python3 <skill dir>/scripts/writing_state.py step <role> <<'EOF'
+   decision: Draft the opening section, which has no draft text yet.
+   evidence:
+   - .writing/draft.md has no opening section
+   EOF
+   ```
+
+2. Append the brief below to `.writing/reports.md` under that section.
+3. Perform the role as its role skill and the brief describe, writing only the files that the process writes.
+4. Append the role's report, in the role skill's report format but without the acknowledgment line, under the same section.
+
+The `Monitor` alone writes `.writing/reports.md`. Write briefs and reports only to that file, never as assistant messages, and never put an acknowledgment line in it. Once `.writing/reports.md` exists, the `log` command refuses role switches, and Finish checks that every section has its switch.
 
 """
 
-PARAGRAPH_UNIT = """## Paragraph unit
+PARAGRAPH_MAX_WORDS: int | None = None
+"""A7's paragraph cap in words; None means one paragraph with no numeric cap."""
 
-Each `Translating` step writes exactly one paragraph: one locally coherent block that serves one goal and has at most 120 words, counting each CJK character as one word. Write the paragraph only with this command, which appends it to `.writing/draft.md` and refuses it, appending nothing, when it is over the limit:
+
+def paragraph_unit(limit: int | None = PARAGRAPH_MAX_WORDS) -> str:
+    length = (
+        f" and at most {limit} words, counting each CJK character as one word"
+        if limit is not None
+        else ""
+    )
+    flag = f" --max {limit}" if limit is not None else ""
+    return f"""## Paragraph unit
+
+Each `Translating` step writes exactly one paragraph: one locally coherent block that serves one goal, with no blank line inside it{length}. Every write to `.writing/draft.md` goes through this command; editing `.writing/draft.md` with `apply_patch`, a shell redirect, or any other tool is forbidden. Use `--append` for a new paragraph at the end, `--insert-before N` for a new paragraph before paragraph N, or `--replace N` to rewrite paragraph N, counting paragraphs from 1:
 
 ```sh
-python3 <skill dir>/scripts/writing_state.py append-paragraph --max 120 <<'EOF'
+python3 <skill dir>/scripts/writing_state.py paragraph --append{flag} <<'EOF'
 <the paragraph>
 EOF
 ```
 
-When the command refuses the paragraph, shorten it and run the command again. Draft the scopes in document order, because the command appends at the end of the draft. After each paragraph, select the next process as usual; when the scope is not fully drafted yet, the next step is another `Translating` step on the same scope. For the pass and step counts in the stop rule, consecutive `Translating` steps on the same scope count as one role step, and each of them still gets its own process switch.
+The command refuses a second paragraph in the same `Translating` step, and a `Reviewing` step may use only `--replace` for its local revisions. After each paragraph, select the next process as usual; when the scope is not fully drafted yet, the next step is another `Translating` step on the same scope. For the twelve-step cap in the stop rule, an unbroken run of `Translating` steps counts as one role step; each of them still gets its own process switch.
 
 """
 
@@ -192,15 +213,78 @@ def no_goal_state(text: str) -> str:
 
 def no_goal_stop(text: str) -> str:
     return replace_once(
-        text,
-        ", and do not count an open finding that only repeats a rejected "
-        "regeneration proposal without new evidence",
-        "",
+        text, ", the `Monitor` accepted none of its `regenerate` verdicts,", ""
     )
 
 
 def in_context_stop(text: str) -> str:
     return drop_lines(text, "A role step failed twice")
+
+
+REPORTS_ROW = (
+    "| `.writing/reports.md` | the brief and the report of each role step, "
+    "one `## Step N: Process` section per role switch | the `Monitor`, through "
+    "`<skill dir>/scripts/writing_state.py step` |\n"
+)
+
+
+def in_context_state(text: str) -> str:
+    lines = text.splitlines(keepends=True)
+    trace_row = next(
+        i for i, line in enumerate(lines) if line.startswith("| `.writing/trace/")
+    )
+    lines.insert(trace_row + 1, REPORTS_ROW)
+    return "".join(lines)
+
+
+def in_context_trace(text: str, *, goals: bool = True) -> str:
+    text = replace_once(
+        text,
+        "Log every event with this one command, and with no other command.",
+        "Log each role switch with the `step` command that Perform the selected "
+        "process shows, and every other event, such as goal events and the last "
+        "switch, with this command and no other.",
+    )
+    example = (
+        "event_type: goal_created\ngoal_id: G1.3\nparent_goal_id: G1\n"
+        "decision: Planning created G1.3 for the closing section.\n"
+        if goals
+        else "event_type: process_switch\nto_process: null\n"
+        "decision: Stop after the fourth pass.\n"
+    )
+    return replace_once(
+        text,
+        "event_type: process_switch\nto_process: translating\n"
+        "decision: Draft the opening section, which has no draft text yet.\n"
+        "evidence:\n- .writing/draft.md has no opening section\n",
+        example,
+    )
+
+
+def in_context_goal_events(text: str) -> str:
+    return replace_once(
+        text,
+        "After closing the `Planning` agent, log",
+        "After writing the `Planning` report, log",
+    )
+
+
+def in_context_finish(text: str) -> str:
+    return replace_once(
+        text,
+        "writing_state.py check`. The command verifies that the trace parses,",
+        "writing_state.py check --reports`. The command verifies that the trace "
+        "parses and that `.writing/reports.md` has one step section per role "
+        "switch,",
+    )
+
+
+def no_goal_steps(text: str) -> str:
+    return replace_once(
+        text,
+        "writing_state.py step <role> <<'EOF'",
+        "writing_state.py step <role> --no-goals <<'EOF'",
+    )
 
 
 def no_goal_trace(text: str) -> str:
@@ -352,8 +436,12 @@ NO_GOALS: dict[str, Change] = {
 }
 IN_CONTEXT_CHANGES: dict[str, Change] = {
     STOP: in_context_stop,
+    STATE: in_context_state,
     DELEGATE: IN_CONTEXT,
     BRIEF: in_context_brief,
+    TRACE: in_context_trace,
+    GOAL_EVENTS: in_context_goal_events,
+    FINISH: in_context_finish,
 }
 BOTH_REFERENCES = {
     "goals-format.md": None,
@@ -394,7 +482,7 @@ VARIANTS = {
         ),
         "Single-writer cognitive writing",
         IN_CONTEXT_CHANGES,
-        (BRIEF, PARAGRAPH_UNIT),
+        (BRIEF, paragraph_unit()),
         BOTH_REFERENCES,
     ),
     "cognitive-writing-loop-only": (
@@ -408,7 +496,10 @@ VARIANTS = {
             **NO_GOALS,
             SELECT: FIXED_SELECT,
             STOP: lambda text: in_context_stop(no_goal_stop(text)),
-            DELEGATE: IN_CONTEXT,
+            STATE: lambda text: in_context_state(no_goal_state(text)),
+            DELEGATE: no_goal_steps(IN_CONTEXT),
+            TRACE: lambda text: in_context_trace(no_goal_trace(text), goals=False),
+            FINISH: in_context_finish(NO_GOAL_FINISH),
             BRIEF: lambda text: no_goal_brief(in_context_brief(text)),
             REPORTS: lambda text: fixed_reports(no_goal_reports(text)),
         },
@@ -465,8 +556,13 @@ def translating_role() -> str:
     read = sections["## Read the state first"]
     paragraph = read[read.index("Translate the selected ideas") :]
     for old, new in (
-        ("Keep the scope's goals visible", "Keep the plan's sub-goals visible"),
-        ("when it serves those goals", "when it serves those sub-goals"),
+        (
+            (
+                "Keep the scope's goals visible while drafting. Preserve a useful "
+                "existing sentence when it serves those goals; do not let"
+            ),
+            "Keep the plan's sub-goals visible while drafting, and do not let",
+        ),
     ):
         paragraph = replace_once(paragraph, old, new)
     rules = sections["## Drafting rules"]

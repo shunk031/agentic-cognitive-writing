@@ -12,13 +12,21 @@ Run from the project root. Subcommands:
     The script fills ``timestamp``, ``process``, and ``from_process``,
     requires the post-Reviewing ledger on a switch that leaves ``reviewing``,
     validates every event, and appends nothing unless all of them are valid.
-    ``--no-goals`` refuses goal events and the ledger.
-``check``
+    ``--no-goals`` refuses goal events and the ledger. Once
+    ``.writing/reports.md`` exists, role switches go through ``step``.
+``step PROCESS [--no-goals]``
+    Log a process switch into PROCESS from the same keys, then open a
+    ``## Step N: Process`` section in ``.writing/reports.md`` for the brief
+    and the report of an in-context role step.
+``check [--reports]``
     Verify that the trace parses, print the logged process path, and print
-    each goal in ``.writing/goals.md`` that has no goal event.
-``append-paragraph --max N``
-    Append the paragraph on standard input to ``.writing/draft.md``, or refuse
-    it when it has more than N words, counting each CJK character as a word.
+    each goal in ``.writing/goals.md`` that has no goal event. ``--reports``
+    also requires one ``reports.md`` step section per role switch, in order.
+``paragraph (--append | --replace N | --insert-before N) [--max WORDS]``
+    Write the paragraph on standard input into ``.writing/draft.md``. A
+    ``translating`` step may write one paragraph; a ``reviewing`` step may
+    replace paragraphs. ``--max`` refuses a paragraph above WORDS words,
+    counting each CJK character as a word.
 """
 
 from __future__ import annotations
@@ -34,11 +42,19 @@ from pathlib import Path
 TRACE = Path(".writing/trace/process.jsonl")
 GOALS = Path(".writing/goals.md")
 DRAFT = Path(".writing/draft.md")
+REPORTS = Path(".writing/reports.md")
+PARAGRAPH_LOG = Path(".writing/paragraphs.jsonl")
 PROCESSES = ("planning", "translating", "reviewing")
 GOAL_EVENTS = ("goal_created", "goal_developed", "goal_regenerated")
 GOAL_ID = re.compile(r"G\d+(?:\.\d+)*")
 GOAL_LINE = re.compile(r"\[(G\d+(?:\.\d+)*)\]")
-LEDGER_ENTRY = re.compile(r"G\d+(?:\.\d+)* (?:accepted|rejected) \(.+\)")
+LEDGER_ENTRY = re.compile(r"(G\d+(?:\.\d+)*) (accepted|rejected) \((.+)\)")
+LEDGER_SPLIT = re.compile(r";\s*(?=G\d+(?:\.\d+)* (?:accepted|rejected) \()")
+KEY_SHAPED = re.compile(r"[a-z][a-z_]*:(?:\s|$)")
+STEP_HEADING = re.compile(
+    r"^## Step (\d+): (Planning|Translating|Reviewing)\s*$", re.MULTILINE
+)
+PARAGRAPH_BREAK = re.compile(r"\n[ \t]*\n")
 LIST_KEYS = ("evidence", "open_uncertainty")
 KEYS = (
     "event_type",
@@ -85,6 +101,8 @@ def parse_blocks(text: str) -> list[dict[str, object]]:
             else:
                 current[key] = value
             last = key
+        elif KEY_SHAPED.match(line):
+            raise ValueError(f"unknown key {key!r}; the keys are {', '.join(KEYS)}")
         elif last in LIST_KEYS and line.startswith("- "):
             current[last].append(line[2:].strip())  # type: ignore[union-attr,index]
         elif last is not None:
@@ -119,6 +137,21 @@ def read_trace() -> list[dict[str, object]]:
     return events
 
 
+def ledger_entries(value: str) -> list[tuple[str, str, str]]:
+    """Split a ledger value into (goal ID, accepted or rejected, reason) entries."""
+
+    entries = []
+    for part in LEDGER_SPLIT.split(value.strip()):
+        match = LEDGER_ENTRY.fullmatch(part.strip())
+        if match is None:
+            raise ValueError(
+                "write each regeneration proposal as '<goal ID> accepted (<reason>)' "
+                "or '<goal ID> rejected (<reason>)'"
+            )
+        entries.append((match[1], match[2], match[3]))
+    return entries
+
+
 def _ledger(block: dict[str, object], where: str) -> str:
     value = str(block.get("regeneration_proposals", "")).strip().rstrip(".")
     if not value:
@@ -126,13 +159,11 @@ def _ledger(block: dict[str, object], where: str) -> str:
             f"{where}: a switch that leaves reviewing needs regeneration_proposals: "
             "none, or entries such as 'G1.2 accepted (reason); G2 rejected (reason)'"
         )
-    if value != "none" and not all(
-        LEDGER_ENTRY.fullmatch(entry.strip()) for entry in value.split(";")
-    ):
-        raise ValueError(
-            f"{where}: write each regeneration proposal as "
-            "'<goal ID> accepted (<reason>)' or '<goal ID> rejected (<reason>)'"
-        )
+    if value != "none":
+        try:
+            ledger_entries(value)
+        except ValueError as exc:
+            raise ValueError(f"{where}: {exc}") from exc
     return f"regeneration proposals: {value}."
 
 
@@ -205,8 +236,20 @@ def build_events(
     return events
 
 
-def log(text: str, *, goals: bool = True) -> str:
-    switches = [e for e in read_trace() if e.get("event_type") == "process_switch"]
+def _switches() -> list[dict[str, object]]:
+    return [e for e in read_trace() if e.get("event_type") == "process_switch"]
+
+
+def _append(events: list[dict[str, object]]) -> None:
+    TRACE.parent.mkdir(parents=True, exist_ok=True)
+    with TRACE.open("a", encoding="utf-8") as handle:
+        for event in events:
+            handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+    read_trace()
+
+
+def log(text: str, *, goals: bool = True, via_step: bool = False) -> str:
+    switches = _switches()
     previous = switches[-1].get("to_process") if switches else None
     now = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
     events = build_events(
@@ -217,15 +260,36 @@ def log(text: str, *, goals: bool = True) -> str:
     )
     if not events:
         raise ValueError("no events on standard input")
-    TRACE.parent.mkdir(parents=True, exist_ok=True)
-    with TRACE.open("a", encoding="utf-8") as handle:
+    if not via_step and REPORTS.is_file():
         for event in events:
-            handle.write(json.dumps(event, ensure_ascii=False) + "\n")
-    read_trace()
+            if event["event_type"] == "process_switch" and event["to_process"]:
+                raise ValueError("log role switches with the step command")
+    _append(events)
     return f"logged {len(events)} event(s)"
 
 
-def check() -> tuple[list[str], list[str]]:
+def step(process: str, text: str, *, goals: bool = True) -> str:
+    if process not in PROCESSES:
+        raise ValueError(f"process must be one of {PROCESSES}")
+    blocks = parse_blocks(text)
+    if len(blocks) != 1 or "event_type" in blocks[0] or "to_process" in blocks[0]:
+        raise ValueError("give one block with decision and optional list keys only")
+    blocks[0].update({"event_type": "process_switch", "to_process": process})
+    switches = _switches()
+    previous = switches[-1].get("to_process") if switches else None
+    now = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
+    events = build_events(blocks, previous, now, goals=goals)  # type: ignore[arg-type]
+    number = 1 + sum(1 for s in switches if s.get("to_process"))
+    _append(events)
+    REPORTS.parent.mkdir(parents=True, exist_ok=True)
+    existing = REPORTS.read_text(encoding="utf-8").rstrip() if REPORTS.is_file() else ""
+    separator = "\n\n" if existing else ""
+    heading = f"## Step {number}: {process.capitalize()}"
+    REPORTS.write_text(f"{existing}{separator}{heading}\n", encoding="utf-8")
+    return f"logged the switch and opened '{heading}' in {REPORTS}"
+
+
+def check(*, reports: bool = False) -> tuple[list[str], list[str]]:
     """Return the logged path and the problems found in the trace and goals."""
 
     events = read_trace()
@@ -246,6 +310,15 @@ def check() -> tuple[list[str], list[str]]:
         for goal in dict.fromkeys(GOAL_LINE.findall(GOALS.read_text(encoding="utf-8"))):
             if goal not in logged:
                 problems.append(f"goal {goal} has no goal event")
+    if reports:
+        text = REPORTS.read_text(encoding="utf-8") if REPORTS.is_file() else ""
+        sections = [name.casefold() for _, name in STEP_HEADING.findall(text)]
+        roles = [str(s["to_process"]) for s in switches if s.get("to_process")]
+        if sections != roles:
+            problems.append(
+                f"{REPORTS} step sections {sections} do not match the role "
+                f"switches {roles}"
+            )
     return path, problems
 
 
@@ -253,20 +326,57 @@ def words(text: str) -> int:
     return len(CJK.findall(text)) + len(CJK.sub(" ", text).split())
 
 
-def append_paragraph(text: str, limit: int) -> str:
-    paragraph = text.strip()
-    if not paragraph:
+def _paragraphs() -> list[str]:
+    text = DRAFT.read_text(encoding="utf-8") if DRAFT.is_file() else ""
+    text = text.lstrip("\n").rstrip()
+    return [p for p in PARAGRAPH_BREAK.split(text) if p.strip()] if text else []
+
+
+def paragraph(text: str, action: str, position: int | None, limit: int | None) -> str:
+    switches = _switches()
+    process = switches[-1].get("to_process") if switches else None
+    if process == "translating":
+        writes = (
+            PARAGRAPH_LOG.read_text(encoding="utf-8").splitlines()
+            if (PARAGRAPH_LOG.is_file())
+            else []
+        )
+        if any(json.loads(line)["switch"] == len(switches) for line in writes):
+            raise ValueError(
+                "this Translating step already wrote its paragraph; log a new "
+                "process switch before the next paragraph"
+            )
+    elif process != "reviewing" or action != "replace":
+        raise ValueError(
+            "write a paragraph only in a Translating step, or replace one in a "
+            "Reviewing step"
+        )
+    new = text.strip("\n").rstrip()
+    if not new.strip():
         raise ValueError("the paragraph is empty")
-    if "\n\n" in paragraph:
+    if PARAGRAPH_BREAK.search(new):
         raise ValueError("write one paragraph, with no blank line inside it")
-    count = words(paragraph)
-    if count > limit:
-        raise ValueError(f"the paragraph has {count} words; the limit is {limit}")
-    existing = DRAFT.read_text(encoding="utf-8").rstrip() if DRAFT.is_file() else ""
+    if limit is not None and words(new) > limit:
+        raise ValueError(f"the paragraph has {words(new)} words; the limit is {limit}")
+    paragraphs = _paragraphs()
+    if action == "append":
+        paragraphs.append(new)
+    else:
+        if position is None or not 1 <= position <= len(paragraphs):
+            raise ValueError(
+                f"paragraph {position} does not exist; there are {len(paragraphs)}"
+            )
+        if action == "replace":
+            paragraphs[position - 1] = new
+        else:
+            paragraphs.insert(position - 1, new)
     DRAFT.parent.mkdir(parents=True, exist_ok=True)
-    separator = "\n\n" if existing else ""
-    DRAFT.write_text(f"{existing}{separator}{paragraph}\n", encoding="utf-8")
-    return f"appended a paragraph of {count} words"
+    DRAFT.write_text("\n\n".join(paragraphs) + "\n", encoding="utf-8")
+    PARAGRAPH_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with PARAGRAPH_LOG.open("a", encoding="utf-8") as handle:
+        record = {"switch": len(switches), "process": process, "action": action}
+        handle.write(json.dumps(record) + "\n")
+    return f"{action} done; the draft has {len(paragraphs)} paragraphs"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -274,18 +384,36 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     log_parser = sub.add_parser("log")
     log_parser.add_argument("--no-goals", action="store_true")
-    sub.add_parser("check")
-    paragraph = sub.add_parser("append-paragraph")
-    paragraph.add_argument("--max", type=int, required=True)
+    step_parser = sub.add_parser("step")
+    step_parser.add_argument("process")
+    step_parser.add_argument("--no-goals", action="store_true")
+    check_parser = sub.add_parser("check")
+    check_parser.add_argument("--reports", action="store_true")
+    para = sub.add_parser("paragraph")
+    where = para.add_mutually_exclusive_group(required=True)
+    where.add_argument("--append", action="store_true")
+    where.add_argument("--replace", type=int)
+    where.add_argument("--insert-before", type=int)
+    para.add_argument("--max", type=int)
     args = parser.parse_args(argv)
     try:
         if args.command == "log":
             print(log(sys.stdin.read(), goals=not args.no_goals))
             return 0
-        if args.command == "append-paragraph":
-            print(append_paragraph(sys.stdin.read(), args.max))
+        if args.command == "step":
+            print(step(args.process, sys.stdin.read(), goals=not args.no_goals))
             return 0
-        path, problems = check()
+        if args.command == "paragraph":
+            action, position = (
+                ("append", None)
+                if args.append
+                else ("replace", args.replace)
+                if args.replace is not None
+                else ("insert", args.insert_before)
+            )
+            print(paragraph(sys.stdin.read(), action, position, args.max))
+            return 0
+        path, problems = check(reports=args.reports)
         print("path: " + " > ".join(path))
         for problem in problems:
             print("problem: " + problem)

@@ -12,7 +12,7 @@ Evaluate the draft against the rhetorical problem, revise only locally within th
 
 ## When this skill runs
 
-You perform the `Reviewing` process for the `Monitor`, as the brief describes. A role agent begins its report with the acknowledgment line. A `Monitor` that applies this skill in its own context says the line once, in an assistant message of its own immediately after reading this skill, and never repeats it in a written report. The line never goes into `.writing/draft.md` or the final response.
+You perform the `Reviewing` process for the `Monitor`, as the brief describes. Say the acknowledgment line immediately after reading this skill, in the same response as your next tool call, and begin your report with it. The line never goes into `.writing/draft.md` or the final response.
 
 ## Read the state first
 
@@ -51,7 +51,7 @@ Your work contains two embedded sub-processes, which you perform yourself.
 
 ## Report format
 
-A role agent's final message is the report. A `Monitor` that applies this skill in its own context writes the report where its own skill says instead, without the acknowledgment line. Use exactly these fields:
+Your final message is the report. Use exactly these fields:
 
 ```text
 I read reviewing.
@@ -68,7 +68,7 @@ Verdict: <no required change when Open findings is - none; otherwise changes req
 Next process: <planning, translating, or stop>
 ```
 
-Revisions made lists only changes already applied; they are not findings. Open findings lists every required change that remains. Start each open finding with the process that should handle it: `planning` for a missing required section, a wrong organization, or a goal that is unmet or wrong, and `translating` for content to add, cut, or rewrite in a passage. List each `develop` or `regenerate` goal verdict also as a `planning` open finding. Write `- none` for an empty list.
+Revisions made lists only changes already applied; they are not findings. Open findings lists every required change that remains. Start each open finding with the process that should handle it: `planning` for a missing required section, a wrong organization, or a goal that is unmet or wrong, and `translating` for content to add, cut, or rewrite in a passage. List each `develop` goal verdict also as a `planning` open finding. Report a `regenerate` verdict only under Goal verdicts, never as an open finding, because the `Monitor` decides whether to accept it. Write `- none` for an empty list.
 
 Give one goal verdict for each active goal in the brief, identified by ID, using exactly one of the lowercase words `keep`, `develop`, or `regenerate`. Omit the Goal verdicts field when the brief lists no goals. Do not propose again, as a goal verdict or an open finding, a replacement that the brief lists under Rejected proposals, unless you give new evidence that its stated reason does not answer.
 

@@ -40,7 +40,7 @@ sha256 = "5f373b85539fdf43434760686f5c4e78dc8d6f0851a79560ac9ad304b2d29efc"
 [[stages]]
 id = "write"
 path = "prompts/a9_write.md"
-sha256 = "5c2f0a1eec6d07b7249408810c29235b7935eecd81ea8d963c0f0feb777ba383"
+sha256 = "1d9369b69b2e4beb507edf03a9294442bf86e67c9cab76f7d6bff2622d3ea7a7"
 
 [[stages]]
 id = "re_write"

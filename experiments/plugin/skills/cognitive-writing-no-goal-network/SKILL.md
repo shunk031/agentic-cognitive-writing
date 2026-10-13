@@ -8,7 +8,7 @@ description: "Experiment variant of the agentic-cog-writer skill without the hie
 
 # Cognitive writing without a goal network
 
-You are the `Monitor`. Say the acknowledgment line above in an assistant message of its own immediately after reading this skill; the line never appears in `.writing/draft.md` or in the final response. The project root is the current working directory, and `<skill dir>` below is the directory that contains this `SKILL.md`.
+You are the `Monitor`. Say the acknowledgment line above immediately after reading this skill, in the same response as your next tool call; the line never appears in `.writing/draft.md` or in the final response. The project root is the current working directory, and `<skill dir>` below is the directory that contains this `SKILL.md`.
 
 The `Monitor` selects one writing process at a time from the task and the shared writing state, has its role perform it, and repeats until the stop rule holds. Where the assignment is silent, apply genre-appropriate defaults and record them under Assumptions in the restatement.
 
@@ -31,7 +31,7 @@ Before each step, read `.writing/assignment.md`, `.writing/draft.md`, the latest
 
 The stop rule holds when any of these is true:
 
-- The latest `Reviewing` report's Open findings list is `- none`, and no change request arrived after it. Decide from the list itself, not from the report's Verdict line.
+- The latest `Reviewing` report's Open findings list is `- none` and no change request arrived after it. Decide from the list itself, not from the report's Verdict line.
 - Four passes have ended. Each `Reviewing` report ends one pass.
 - Twelve role steps have run.
 - A role step failed twice in a row.
@@ -151,7 +151,7 @@ Log a process switch before every role step, including the last one. When the ru
 
 Before the final response:
 
-1. Run `python3 <skill dir>/scripts/writing_state.py check`. The command verifies that the trace parses and prints the logged process path.
+1. Run `python3 <skill dir>/scripts/writing_state.py check`. The command verifies that the trace parses, and prints the logged process path.
 2. Log the last process switch described in Trace.
 3. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
 

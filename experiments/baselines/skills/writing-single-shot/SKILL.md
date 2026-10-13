@@ -6,7 +6,7 @@ description: "Experiment condition A1. Generate the complete document in one pas
 > [!NOTE]
 > After reading this `SKILL.md`, say: `I read writing-single-shot.`
 >
-> Say the line in an assistant message of its own immediately after reading this skill. The line never appears in `.writing/draft.md` or in the final response.
+> Say the line immediately after reading this skill, in the same response as your next tool call. The line never appears in `.writing/draft.md` or in the final response.
 
 # Single-shot writing
 
@@ -21,15 +21,15 @@ The generator owns the single completion pass and appends the one trace event it
 ## Procedure
 
 1. Read the Assignment, Supplied context, and Requested output constraints sections of the prompt. Do not create `.writing/assignment.md`, and do not create or modify `.writing/goals.md`, planning notes, review notes, or memory files for this condition.
-2. Generate the complete final document in one pass. Keep the requested audience, genre, structure, length, and other constraints visible in the prompt.
-3. Return the complete final document in the final response. Do not write `.writing/draft.md` or another draft file.
-4. Append exactly one `process_switch` event with `process` `generate` to `.writing/trace/process.jsonl`, using the trace recipe below.
+2. Append exactly one `process_switch` event with `process` `generate` to `.writing/trace/process.jsonl`, using the trace recipe below.
+3. Generate the complete final document in one pass. Keep the requested audience, genre, structure, length, and other constraints visible in the prompt.
+4. Return the complete final document as the final response, with nothing before or after it. Do not write `.writing/draft.md` or another draft file.
 
 The trace contract is fixed at exactly one `process_switch` event, whose only allowed `process` value is `generate`. List unresolved claims in its open-uncertainty list. Do not append goal events or invent internal reasoning.
 
 ## Trace recipe
 
-You append every trace event yourself, with this command and no other. Change only the first four lines: the stage's `process` token, the decision, the evidence list, and the open-uncertainty list. The command fills the timestamp and `from_process`, writes valid JSON, and appends nothing when a value is malformed.
+You append every trace event yourself, with this command and no other. Run it once per stage, immediately when that stage starts, never afterwards and never from a loop or script that writes several events. Change only the first four lines: the `process` token, the decision, the evidence list, and the open-uncertainty list. The command checks the process token and the field types, fills the timestamp and `from_process`, writes valid JSON, and appends nothing when a value is invalid.
 
 ```sh
 python3 - <<'PY'
@@ -37,7 +37,10 @@ process = "generate"
 decision = "Generate the complete document in one pass from the assignment and supplied context."
 evidence = ["assignment and supplied context in the prompt"]
 open_uncertainty = []
-import datetime, json, pathlib
+allowed = ("generate",)
+import datetime, json, pathlib, sys
+if process not in allowed or not isinstance(decision, str) or not decision.strip() or not all(isinstance(v, list) and all(isinstance(x, str) for x in v) for v in (evidence, open_uncertainty)):
+    sys.exit("invalid trace event; nothing was appended")
 trace = pathlib.Path(".writing/trace/process.jsonl")
 trace.parent.mkdir(parents=True, exist_ok=True)
 lines = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines() if line.strip()] if trace.exists() else []

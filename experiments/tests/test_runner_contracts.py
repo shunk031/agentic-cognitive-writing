@@ -1062,7 +1062,7 @@ def test_agentic_cog_writer_finishes_with_the_goal_check_and_the_draft() -> None
     assert finish.index("check`") < finish.index("Log the last process switch")
     assert (
         "Read `.writing/draft.md` and return exactly its contents as the final "
-        "response, with no preamble, summary, acknowledgment line, or code fence."
+        "response, copied byte for byte"
     ) in finish
 
 
@@ -3218,3 +3218,32 @@ def test_staged_role_skills_stay_out_of_the_implicit_skill_list(tmp_path: Path) 
         policy = (tmp_path / f".agents/skills/{role}/agents/openai.yaml").read_text()
         assert "allow_implicit_invocation: false" in policy
     assert (tmp_path / "plugin/skills/agentic-cog-writer/SKILL.md").is_file()
+
+
+def test_staging_skips_evals_and_claude_gets_role_skills_only(tmp_path: Path) -> None:
+    runner = ExperimentRunner(_config(), output_root=tmp_path / "runs")
+    condition = load_condition_registry()["A4"]
+    staged = runner._stage_codex_plugin(condition, tmp_path / "codex")
+    assert not any("/evals/" in path for path in staged)
+    assert (tmp_path / "codex/plugin/skills/agentic-cog-writer/SKILL.md").is_file()
+    roles = runner._stage_codex_plugin(condition, tmp_path / "claude", roles_only=True)
+    assert roles
+    assert all(path.startswith(".agents/skills/") for path in roles)
+
+
+def test_paragraph_write_report_compares_writes_with_switches(tmp_path: Path) -> None:
+    from agentic_cogwriter.runner.skill_checks import paragraph_write_report
+
+    trace = tmp_path / ".writing/trace/process.jsonl"
+    trace.parent.mkdir(parents=True)
+    trace.write_text(json.dumps(_event("process_switch", process="translating")) + "\n")
+    assert paragraph_write_report(tmp_path, trace) is None
+    (tmp_path / ".writing/paragraphs.jsonl").write_text(
+        '{"switch": 1, "process": "translating", "action": "append"}\n' * 2
+    )
+    assert paragraph_write_report(tmp_path, trace) == {
+        "translating_writes": 2,
+        "reviewing_replacements": 0,
+        "translating_switches": 1,
+        "within_one_per_step": False,
+    }

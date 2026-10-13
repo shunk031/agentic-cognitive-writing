@@ -6,7 +6,7 @@ description: "Experiment condition A10. Write one draft, then run a fixed number
 > [!NOTE]
 > After reading this `SKILL.md`, say: `I read writing-self-refine.`
 >
-> Say the line in an assistant message of its own immediately after reading this skill. The line never appears in `.writing/draft.md` or in the final response.
+> Say the line immediately after reading this skill, in the same response as your next tool call. The line never appears in `.writing/draft.md` or in the final response.
 
 # Self-Refine writing
 
@@ -21,11 +21,11 @@ The stages run in this session in the order the prompt lists them, and the gener
 ## Procedure
 
 1. Read the Assignment, Supplied context, and Requested output constraints sections of the prompt. Do not create `.writing/assignment.md`, do not create or modify `.writing/goals.md`, and do not create goal events.
-2. Run the `Draft` stage. Store the draft at `.writing/baselines/self-refine/draft.md` and append the first `process_switch` event for `null -> draft`.
+2. Append the `draft` event with the trace recipe, then run the `Draft` stage. Store the draft at `.writing/baselines/self-refine/draft.md`.
 3. For round `n` from 1 to the number of rounds in the stage list:
-   1. Run the `Feedback` stage on the current draft. Store the feedback at `.writing/baselines/self-refine/feedback-n.md` and append the event for `draft -> feedback` in round 1 or `refine -> feedback` in later rounds.
-   2. Run the `Refine` stage on the current draft and that feedback. Store the refined draft at `.writing/baselines/self-refine/refine-n.md`, make it the current draft, and append the event for `feedback -> refine`.
-4. Write the last refined draft to `.writing/draft.md` and return it as the final response.
+   1. Append the `feedback` event, then run the `Feedback` stage on the current draft. Store the feedback at `.writing/baselines/self-refine/feedback-n.md`.
+   2. Append the `refine` event, then run the `Refine` stage on the current draft and that feedback. Store the refined draft at `.writing/baselines/self-refine/refine-n.md` and make it the current draft.
+4. Write the last refined draft to `.writing/draft.md` and return exactly its contents as the final response, with nothing before or after it.
 
 Before sending the final response, write the final document to `.writing/draft.md`. The run is `INVALID` unless `.writing/draft.md` exists before the final response and the final response contains the complete final text. The final response cannot substitute for the required draft.
 
@@ -33,7 +33,7 @@ The trace contract is one `process_switch` event per stage, in stage order, with
 
 ## Trace recipe
 
-You append every trace event yourself, with this command and no other. Change only the first four lines: the stage's `process` token, the decision, the evidence list, and the open-uncertainty list. The command fills the timestamp and `from_process`, writes valid JSON, and appends nothing when a value is malformed.
+You append every trace event yourself, with this command and no other. Run it once per stage, immediately when that stage starts, never afterwards and never from a loop or script that writes several events. Change only the first four lines: the `process` token, the decision, the evidence list, and the open-uncertainty list. The command checks the process token and the field types, fills the timestamp and `from_process`, writes valid JSON, and appends nothing when a value is invalid.
 
 ```sh
 python3 - <<'PY'
@@ -41,7 +41,10 @@ process = "draft"
 decision = "Write the first complete draft."
 evidence = [".writing/baselines/self-refine/draft.md"]
 open_uncertainty = []
-import datetime, json, pathlib
+allowed = ("draft", "feedback", "refine")
+import datetime, json, pathlib, sys
+if process not in allowed or not isinstance(decision, str) or not decision.strip() or not all(isinstance(v, list) and all(isinstance(x, str) for x in v) for v in (evidence, open_uncertainty)):
+    sys.exit("invalid trace event; nothing was appended")
 trace = pathlib.Path(".writing/trace/process.jsonl")
 trace.parent.mkdir(parents=True, exist_ok=True)
 lines = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines() if line.strip()] if trace.exists() else []

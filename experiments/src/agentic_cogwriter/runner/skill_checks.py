@@ -188,3 +188,32 @@ def leaked_acknowledgments(text: str, skills: Sequence[str] | None = None) -> li
 
     skills = known_skills() if skills is None else skills
     return [ack_token(skill) for skill in skills if ack_token(skill) in text]
+
+
+def paragraph_write_report(workspace: Path, trace: Path) -> dict[str, Any] | None:
+    """Compare single-writer paragraph writes with the Translating switches.
+
+    ``writing_state.py paragraph`` logs each write to ``.writing/paragraphs.jsonl``;
+    a run that bypassed the script, or wrote twice in one step, shows more
+    Translating writes than Translating switches. Returns None when the run
+    used no paragraph command.
+    """
+
+    log = workspace / ".writing" / "paragraphs.jsonl"
+    if not log.is_file():
+        return None
+    writes = Counter()
+    for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(record, dict):
+            writes[str(record.get("process"))] += 1
+    switches = selected_roles(trace)["translating"]
+    return {
+        "translating_writes": writes["translating"],
+        "reviewing_replacements": writes["reviewing"],
+        "translating_switches": switches,
+        "within_one_per_step": writes["translating"] <= switches,
+    }

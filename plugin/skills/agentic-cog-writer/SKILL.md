@@ -8,7 +8,7 @@ description: Use this skill whenever a user needs help with writing. It runs a `
 
 # Agentic CogWriter
 
-You are the `Monitor`. Say the acknowledgment line above in an assistant message of its own immediately after reading this skill; the line never appears in `.writing/draft.md` or in the final response. The project root is the current working directory, and `<skill dir>` below is the directory that contains this `SKILL.md`.
+You are the `Monitor`. Say the acknowledgment line above immediately after reading this skill, in the same response as your next tool call; the line never appears in `.writing/draft.md` or in the final response. The project root is the current working directory, and `<skill dir>` below is the directory that contains this `SKILL.md`.
 
 The `Monitor` selects one writing process at a time from the task and the shared writing state, has its role perform it, and repeats until the stop rule holds. Where the assignment is silent, apply genre-appropriate defaults and record them under Assumptions in the restatement.
 
@@ -22,16 +22,16 @@ Before each step, read `.writing/assignment.md`, `.writing/goals.md`, `.writing/
 | `.writing/goals.md` has no goals, or a change request arrived after the latest role report                                                     | `Planning`                                                                                               |
 | The latest report is from `Planning`                                                                                                           | `Translating`, scoped to the goals and sections that report created, developed, replaced, or reorganized |
 | The latest report names a structural or goal-level problem: a missing required section, a wrong organization, or a goal that is unmet or wrong | `Planning`                                                                                               |
-| An active goal has no draft text yet, or the latest report names a problem localized to a passage                                              | `Translating`, scoped to those goals or that passage                                                     |
+| An active goal has no draft text yet, or the latest `Reviewing` report names a problem localized to a passage                                  | `Translating`, scoped to those goals or that passage                                                     |
 | Any other state                                                                                                                                | `Reviewing` of the whole draft                                                                           |
 
-A `develop` goal verdict and an accepted `regenerate` verdict are goal-level problems. `Planning` runs twice in a row only when its report leaves `.writing/goals.md` without goals or a change request arrives after it; otherwise a `Planning` report leads to `Translating`. A role's recommended next process is evidence for this choice; the `Monitor` alone selects the next process.
+A `develop` goal verdict and an accepted `regenerate` verdict are goal-level problems; a rejected `regenerate` verdict is not a problem. A passage problem that a `Translating` report names goes to the next `Reviewing` step, so every return to `Translating` passes through a `Reviewing` report. `Planning` runs twice in a row only when its report leaves `.writing/goals.md` without goals or a change request arrives after it; otherwise a `Planning` report leads to `Translating`. A role's recommended next process is evidence for this choice; the `Monitor` alone selects the next process.
 
 ## Stop
 
 The stop rule holds when any of these is true:
 
-- The latest `Reviewing` report's Open findings list is `- none`, and no change request arrived after it. Decide from the list itself, not from the report's Verdict line, and do not count an open finding that only repeats a rejected regeneration proposal without new evidence.
+- The latest `Reviewing` report's Open findings list is `- none`, the `Monitor` accepted none of its `regenerate` verdicts, and no change request arrived after it. Decide from the list itself, not from the report's Verdict line.
 - Four passes have ended. Each `Reviewing` report ends one pass.
 - Twelve role steps have run.
 - A role step failed twice in a row.
@@ -174,7 +174,7 @@ Use `null` as `parent_goal_id` for a top-level goal. The script credits `goal_cr
 
 ### Post-`Reviewing` ledger
 
-The first process switch after each `Reviewing` report carries the ledger in a `regeneration_proposals` key: `none` when the report proposed no replacement, or one `<goal ID> accepted (<reason>)` or `<goal ID> rejected (<reason>)` entry per proposal, separated by `; `. The script refuses that switch without the key and writes the ledger at the start of its decision as `regeneration proposals: …`.
+The first process switch after each `Reviewing` report carries the ledger in a `regeneration_proposals` key: `none` when the report proposed no replacement, or one `<goal ID> accepted (<reason>)` or `<goal ID> rejected (<reason>)` entry per proposal, separated by `; `. The script refuses that switch without the key and writes the ledger at the start of its decision as `regeneration proposals: …`. When the `Reviewing` step failed and returned no report, the ledger is `none`.
 
 ## Finish
 
@@ -183,7 +183,7 @@ Before the final response:
 1. Run `python3 <skill dir>/scripts/writing_state.py check`. The command verifies that the trace parses, prints the logged process path, and prints each goal in `.writing/goals.md` that has no goal event.
 2. For each goal without an event, log a `goal_created` event with `responsible_agent: monitor`.
 3. Log the last process switch described in Trace.
-4. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
+4. Read `.writing/draft.md` and return exactly its contents as the final response, copied byte for byte with every leading space and blank line kept, and with no preamble, summary, acknowledgment line, or code fence.
 
 ## Follow-up messages
 

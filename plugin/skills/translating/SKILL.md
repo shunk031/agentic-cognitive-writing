@@ -12,7 +12,7 @@ Turn selected meanings and plans into prose within the draft scope that the `Mon
 
 ## When this skill runs
 
-You perform the `Translating` process for the `Monitor`, as the brief describes. A role agent begins its report with the acknowledgment line. A `Monitor` that applies this skill in its own context says the line once, in an assistant message of its own immediately after reading this skill, and never repeats it in a written report. The line never goes into `.writing/draft.md` or the final response.
+You perform the `Translating` process for the `Monitor`, as the brief describes. Say the acknowledgment line immediately after reading this skill, in the same response as your next tool call, and begin your report with it. The line never goes into `.writing/draft.md` or the final response.
 
 ## Read the state first
 
@@ -36,7 +36,7 @@ Translate the selected ideas into prose while treating the current wording as pr
 
 ## Report format
 
-A role agent's final message is the report. A `Monitor` that applies this skill in its own context writes the report where its own skill says instead, without the acknowledgment line. Use exactly these fields:
+Your final message is the report. Use exactly these fields:
 
 ```text
 I read translating.

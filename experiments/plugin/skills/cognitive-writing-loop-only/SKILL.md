@@ -8,7 +8,7 @@ description: "Experiment variant of the agentic-cog-writer skill without the goa
 
 # Loop-only cognitive writing
 
-You are the `Monitor`. Say the acknowledgment line above in an assistant message of its own immediately after reading this skill; the line never appears in `.writing/draft.md` or in the final response. The project root is the current working directory, and `<skill dir>` below is the directory that contains this `SKILL.md`.
+You are the `Monitor`. Say the acknowledgment line above immediately after reading this skill, in the same response as your next tool call; the line never appears in `.writing/draft.md` or in the final response. The project root is the current working directory, and `<skill dir>` below is the directory that contains this `SKILL.md`.
 
 The `Monitor` selects one writing process at a time from the task and the shared writing state, has its role perform it, and repeats until the stop rule holds. Where the assignment is silent, apply genre-appropriate defaults and record them under Assumptions in the restatement.
 
@@ -20,7 +20,7 @@ Follow the fixed `Planning`, `Translating`, then `Reviewing` order: run the thre
 
 The stop rule holds when any of these is true:
 
-- The latest `Reviewing` report's Open findings list is `- none`, and no change request arrived after it. Decide from the list itself, not from the report's Verdict line.
+- The latest `Reviewing` report's Open findings list is `- none` and no change request arrived after it. Decide from the list itself, not from the report's Verdict line.
 - Four passes have ended. Each `Reviewing` report ends one pass.
 - Twelve role steps have run.
 
@@ -35,6 +35,7 @@ The writing state lives in the project's `.writing/` directory. Do not create or
 | `.writing/assignment.md`       | the task, verbatim, and the `Monitor`'s restatement        | the `Monitor`, at setup and for each follow-up message                                      |
 | `.writing/draft.md`            | the current draft                                          | the `Translating` process, and the `Reviewing` process for local revisions within its scope |
 | `.writing/trace/process.jsonl` | the process history, one JSON object per line, append-only | the `Monitor`, through `<skill dir>/scripts/writing_state.py`                               |
+| `.writing/reports.md` | the brief and the report of each role step, one `## Step N: Process` section per role switch | the `Monitor`, through `<skill dir>/scripts/writing_state.py step` |
 
 At setup, before the first process, the `Monitor` creates each missing file above as an empty file without overwriting existing content, copies a draft that the task supplies into `.writing/draft.md` once, and writes `.writing/assignment.md` in this form, copying the three task sections from the prompt exactly:
 
@@ -66,13 +67,23 @@ After setup, only the writers in the table change each file.
 
 Perform every selected process in your own context instead of delegating it. Do not call `multi_agent_v1__spawn_agent`, do not run `codex` in the shell, and do not write a script that starts agents.
 
-The first time a process is selected, read its role skill at `<project root>/.agents/skills/<role>/SKILL.md`, where `<role>` is `planning`, `translating`, or `reviewing`, and say the role skill's acknowledgment line in an assistant message of its own. Each time the process runs:
+The first time a process is selected, read its role skill at `<project root>/.agents/skills/<role>/SKILL.md`, where `<role>` is `planning`, `translating`, or `reviewing`, and say the role skill's acknowledgment line immediately after reading it, in the same response as your next tool call. The role skill's instructions about its acknowledgment line and its final message address delegated role agents; here, the report goes to `.writing/reports.md`. Each time a process runs:
 
-1. Append the brief below to `.writing/reports.md` under a `## <Role> brief` heading.
-2. Perform the role as its role skill and the brief describe, writing only the files that the process writes.
-3. Append the role's report, in the role skill's report format but without the acknowledgment line, to `.writing/reports.md` under a `## <Role> report` heading.
+1. Log its switch and open its section in `.writing/reports.md` with this command, which takes the keys of a process switch except `event_type` and `to_process`:
 
-The `Monitor` alone writes `.writing/reports.md`. Write briefs and reports only to that file, never as assistant messages, and never put an acknowledgment line in it.
+   ```sh
+   python3 <skill dir>/scripts/writing_state.py step <role> --no-goals <<'EOF'
+   decision: Draft the opening section, which has no draft text yet.
+   evidence:
+   - .writing/draft.md has no opening section
+   EOF
+   ```
+
+2. Append the brief below to `.writing/reports.md` under that section.
+3. Perform the role as its role skill and the brief describe, writing only the files that the process writes.
+4. Append the role's report, in the role skill's report format but without the acknowledgment line, under the same section.
+
+The `Monitor` alone writes `.writing/reports.md`. Write briefs and reports only to that file, never as assistant messages, and never put an acknowledgment line in it. Once `.writing/reports.md` exists, the `log` command refuses role switches, and Finish checks that every section has its switch.
 
 ### Brief
 
@@ -105,15 +116,13 @@ Never copy an acknowledgment line into `.writing/draft.md`, a brief, or the fina
 
 ## Trace
 
-Log every event with this one command, and with no other command. Write one `key: value` line per field, write list items as `- item` lines under their key, and separate events with a `---` line:
+Log each role switch with the `step` command that Perform the selected process shows, and every other event, such as goal events and the last switch, with this command and no other. Write one `key: value` line per field, write list items as `- item` lines under their key, and separate events with a `---` line:
 
 ```sh
 python3 <skill dir>/scripts/writing_state.py log --no-goals <<'EOF'
 event_type: process_switch
-to_process: translating
-decision: Draft the opening section, which has no draft text yet.
-evidence:
-- .writing/draft.md has no opening section
+to_process: null
+decision: Stop after the fourth pass.
 EOF
 ```
 
@@ -130,7 +139,7 @@ Log a process switch before every role step, including the last one. When the ru
 
 Before the final response:
 
-1. Run `python3 <skill dir>/scripts/writing_state.py check`. The command verifies that the trace parses and prints the logged process path.
+1. Run `python3 <skill dir>/scripts/writing_state.py check --reports`. The command verifies that the trace parses and that `.writing/reports.md` has one step section per role switch, and prints the logged process path.
 2. Log the last process switch described in Trace.
 3. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
 

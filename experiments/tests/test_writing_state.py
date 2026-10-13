@@ -120,18 +120,91 @@ def test_check_reports_goals_without_events_and_broken_lines(tmp_path: Path) -> 
     assert "line 3 is not valid JSON" in broken.stderr
 
 
-def test_append_paragraph_refuses_over_limit_paragraphs(tmp_path: Path) -> None:
+def _switch(cwd: Path, process: str) -> None:
+    stdin = f"event_type: process_switch\nto_process: {process}\ndecision: d\n"
+    if (cwd / ".writing/trace/process.jsonl").is_file() and _trace(cwd)[-1].get(
+        "to_process"
+    ) == "reviewing":
+        stdin += "regeneration_proposals: none\n"
+    assert _run(cwd, "log", stdin=stdin).returncode == 0
+
+
+def test_paragraph_allows_one_write_per_translating_step(tmp_path: Path) -> None:
     draft = tmp_path / ".writing/draft.md"
-    ok = _run(tmp_path, "append-paragraph", "--max", "5", stdin="日本語 and two\n")
-    assert ok.returncode == 0, ok.stderr
-    refused = _run(tmp_path, "append-paragraph", "--max", "4", stdin="日本語 and two")
+    refused = _run(tmp_path, "paragraph", "--append", stdin="Too early.")
     assert refused.returncode == 1
-    assert "has 5 words; the limit is 4" in refused.stderr
-    two = _run(tmp_path, "append-paragraph", "--max", "5", stdin="one\n\ntwo")
-    assert two.returncode == 1
-    second = _run(tmp_path, "append-paragraph", "--max", "5", stdin="Second one.")
-    assert second.returncode == 0
-    assert draft.read_text(encoding="utf-8") == "日本語 and two\n\nSecond one.\n"
+    _switch(tmp_path, "translating")
+    first = _run(tmp_path, "paragraph", "--append", stdin="  First one.\n")
+    assert first.returncode == 0, first.stderr
+    second = _run(tmp_path, "paragraph", "--append", stdin="Second one.")
+    assert second.returncode == 1
+    assert "already wrote its paragraph" in second.stderr
+    _switch(tmp_path, "translating")
+    blank = _run(tmp_path, "paragraph", "--append", stdin="one\n   \ntwo")
+    assert blank.returncode == 1
+    assert "no blank line" in blank.stderr
+    inserted = _run(tmp_path, "paragraph", "--insert-before", "1", stdin="Zero.")
+    assert inserted.returncode == 0, inserted.stderr
+    assert draft.read_text(encoding="utf-8") == "Zero.\n\n  First one.\n"
+    _switch(tmp_path, "reviewing")
+    assert _run(tmp_path, "paragraph", "--append", stdin="x").returncode == 1
+    for text in ("Zero!", "Zero!!"):
+        result = _run(tmp_path, "paragraph", "--replace", "1", stdin=text)
+        assert result.returncode == 0, result.stderr
+    assert _run(tmp_path, "paragraph", "--replace", "9", stdin="x").returncode == 1
+    assert draft.read_text(encoding="utf-8") == "Zero!!\n\n  First one.\n"
+    log = (tmp_path / ".writing/paragraphs.jsonl").read_text().splitlines()
+    assert [json.loads(line)["process"] for line in log] == [
+        "translating",
+        "translating",
+        "reviewing",
+        "reviewing",
+    ]
+
+
+def test_paragraph_word_limit_counts_cjk_characters(tmp_path: Path) -> None:
+    _switch(tmp_path, "translating")
+    over = _run(tmp_path, "paragraph", "--append", "--max", "4", stdin="日本語 and two")
+    assert over.returncode == 1
+    assert "has 5 words; the limit is 4" in over.stderr
+
+
+def test_step_couples_each_role_switch_to_a_report_section(tmp_path: Path) -> None:
+    result = _run(tmp_path, "step", "planning", stdin="decision: Plan.\n")
+    assert result.returncode == 0, result.stderr
+    reports = tmp_path / ".writing/reports.md"
+    assert reports.read_text() == "## Step 1: Planning\n"
+    refused = _run(
+        tmp_path,
+        "log",
+        stdin="event_type: process_switch\nto_process: translating\ndecision: d\n",
+    )
+    assert refused.returncode == 1
+    assert "step command" in refused.stderr
+    assert (
+        _run(tmp_path, "step", "translating", stdin="decision: Draft.\n").returncode
+        == 0
+    )
+    with reports.open("a") as handle:
+        handle.write("brief and report\n")
+    assert _run(tmp_path, "check", "--reports").returncode == 0
+    reports.write_text("## Step 1: Planning\n")
+    mismatch = _run(tmp_path, "check", "--reports")
+    assert mismatch.returncode == 1
+    assert "do not match the role switches" in mismatch.stdout
+
+
+def test_unknown_keys_are_rejected(tmp_path: Path) -> None:
+    result = _run(
+        tmp_path,
+        "log",
+        stdin=(
+            "event_type: process_switch\nto_process: planning\ndecision: d\n"
+            "evidance:\n- typo\n"
+        ),
+    )
+    assert result.returncode == 1
+    assert "unknown key 'evidance'" in result.stderr
 
 
 def test_switch_after_reviewing_requires_and_formats_the_ledger(tmp_path: Path) -> None:
@@ -158,13 +231,13 @@ def test_switch_after_reviewing_requires_and_formats_the_ledger(tmp_path: Path) 
         "log",
         stdin=(
             "event_type: process_switch\nto_process: planning\n"
-            "regeneration_proposals: G1.2 accepted (purpose changed); "
+            "regeneration_proposals: G1.2 accepted (purpose; changed); "
             "G2 rejected (no evidence)\ndecision: Replace G1.2.\n"
         ),
     )
     assert good.returncode == 0, good.stderr
     assert _trace(tmp_path)[-1]["decision"] == (
-        "regeneration proposals: G1.2 accepted (purpose changed); "
+        "regeneration proposals: G1.2 accepted (purpose; changed); "
         "G2 rejected (no evidence). Replace G1.2."
     )
 

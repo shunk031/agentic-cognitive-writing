@@ -12,7 +12,7 @@ Turn the writing problem into grounded knowledge, useful organization, and a mai
 
 ## When this skill runs
 
-You perform the `Planning` process for the `Monitor`, as the brief describes. A role agent begins its report with the acknowledgment line. A `Monitor` that applies this skill in its own context says the line once, in an assistant message of its own immediately after reading this skill, and never repeats it in a written report. The line never goes into `.writing/draft.md` or the final response.
+You perform the `Planning` process for the `Monitor`, as the brief describes. Say the acknowledgment line immediately after reading this skill, in the same response as your next tool call, and begin your report with it. The line never goes into `.writing/draft.md` or the final response.
 
 ## Read the state first
 
@@ -63,7 +63,7 @@ Write `.writing/goals.md` as one goal per line, with a stable ID, its statement,
   - [G1.4] Explain what changes in each manager's on-call week (parent: G1, status: active, length: 200 words)
 ```
 
-A top-level goal's ID is `G` and a number, such as `G1`. A child's ID is its parent's ID, a dot, and the next unused number, such as `G1.3` or `G1.3.1`. Never reuse an ID. Status is `active`, `resolved`, or `replaced by <ID>`. A replacement keeps the replaced goal's line, marks it `replaced by <new ID>`, and adds the new goal under the same parent.
+A top-level goal's ID is `G` and a number, such as `G1`. A child's ID is its parent's ID, a dot, and the next unused number, such as `G1.3` or `G1.3.1`. Never reuse an ID. Status is `active` or `replaced by <ID>`. A replacement keeps the replaced goal's line, marks it `replaced by <new ID>`, and adds the new goal under the same parent.
 
 ## Boundaries
 
@@ -74,7 +74,7 @@ A top-level goal's ID is `G` and a number, such as `G1`. A child's ID is its par
 
 ## Report format
 
-A role agent's final message is the report. A `Monitor` that applies this skill in its own context writes the report where its own skill says instead, without the acknowledgment line. Use exactly these fields:
+Your final message is the report. Use exactly these fields:
 
 ```text
 I read planning.

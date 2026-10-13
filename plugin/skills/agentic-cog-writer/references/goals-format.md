@@ -27,6 +27,5 @@ A top-level goal's ID is `G` and a number, such as `G1`. A child's ID is its par
 | Create  | `Planning`                                   | a new line with a new ID                                                          | `goal_created`     |
 | Develop | `Planning`                                   | a more specific statement under the same ID                                       | `goal_developed`   |
 | Replace | the `Monitor` accepts a `Reviewing` proposal | the old line marked `replaced by <new ID>` and the new goal under the same parent | `goal_regenerated` |
-| Resolve | `Planning`                                   | status `resolved`                                                                 | none               |
 
-Status is `active`, `resolved`, or `replaced by <ID>`.
+Status is `active` or `replaced by <ID>`.
