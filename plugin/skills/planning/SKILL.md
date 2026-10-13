@@ -28,7 +28,7 @@ Each requirement is one line: an ID, a checkable statement, and its source in th
 ```
 
 - **Checkable.** A reader of the draft can decide met or unmet. Examples are a required section or item, a length, an audience, the use of supplied material, and a format.
-- **From the task only.** `src` quotes the exact words of `task.md` that the requirement comes from. A child that refines its parent may give an ancestor's ID instead.
+- **From the task only.** `src` is one span of `task.md`, copied character for character between double quotes, that the requirement comes from. Do not translate, shorten with an ellipsis, add backslashes, or join two spans; when a requirement draws on several places, quote its main span or split it into children. A child that refines its parent may give an ancestor's ID instead. Before you finish, confirm each quoted span with `grep -F` on `task.md`.
 - **IDs.** Top-level IDs are `G1`, `G2`, and so on. A child, indented two spaces under its parent, extends the parent's ID, as in `G1.1`. Never remove or reuse an ID.
 - **Changes.** To develop a requirement, rewrite its statement under the same ID. To replace one, keep its line, add `| status: replaced by <new ID>`, and add the new requirement. Apply every accepted proposal in the brief this way.
 - **Nothing else.** Write only requirement lines, with no notes.

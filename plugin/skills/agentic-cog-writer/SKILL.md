@@ -47,9 +47,10 @@ do {
   });
 } while (r.timed_out);
 await tools.multi_agent_v1__close_agent({ target: agent_id });
+text(JSON.stringify(r.status[agent_id]));
 ```
 
-Run one role agent at a time, and close it before the next `cw` command. Do not perform a role yourself, do not change files under `.writing/`, and do not run `codex`.
+Run the whole block in one call, so the role agent is closed before you read its report and before any other command. Run one role agent at a time. Do not perform a role yourself, do not change files under `.writing/`, and do not run `codex`.
 
 When `cw` reports that a step failed, reissue the same command once. If the reissued step also fails, stop with `--reason failure`.
 

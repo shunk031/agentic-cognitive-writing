@@ -51,14 +51,15 @@ def run_row(run_dir: Path) -> dict[str, Any]:
     spawn = gate["spawn"]
     tokens = cw_run.token_report(run_dir)
     turn_paths = paths(entries)
-    reviews = [e for e in entries if e.get("cmd") == "review"]
-    closes = [e for e in entries if e.get("cmd") == "close"]
+    live = [e for e in entries if "refused" not in e]
+    reviews = [e for e in live if e.get("cmd") == "review"]
+    closes = [e for e in live if e.get("cmd") == "close"]
     goal_events = Counter(
         e["event_type"] + (f":{e['origin']}" if "origin" in e else "")
-        for e in entries
+        for e in live
         if e.get("cmd") == "goal"
     )
-    decisions = Counter(e["outcome"] for e in entries if e.get("cmd") == "decide")
+    decisions = Counter(e["outcome"] for e in live if e.get("cmd") == "decide")
     artifact = run_dir / "output.normalized.txt"
     language = (manifest.get("language") or {}).get("value")
     script = (
