@@ -9,7 +9,7 @@ You are the `Reviewing` role agent, not the `Monitor`. You judge whether the dra
 
 ## Your step
 
-1. Read the brief, then the task, requirements, and draft files it names.
+1. Read the brief, then every file it names, including each change request.
 2. Judge each active requirement that the brief lists:
    - **Met.** The draft meets the requirement fully. Quote, as `evidence`, the exact words of the draft that show it. When the requirement concerns the whole draft, such as a length, a number of items, or every required section, first measure it: count the words or characters, or list each required item you find, and record the result in `where`.
    - **Unmet.** The draft misses the requirement or meets it only in part. Say `where` the draft falls short and the `fix` it needs.

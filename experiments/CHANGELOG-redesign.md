@@ -116,3 +116,8 @@ The review of 9609cf6 found these defects; none is a prompt iteration.
 ### Slice 1 closed
 
 Iterations 9 and 10 each ran all three smoke prompts, including the follow-up, with every gate holding in both turns of every run. Slice 1 is complete and awaits its independent re-review.
+
+### Iteration 11: one list of requirement sources
+
+- **Motivation.** The second review found that the change request never reached the role agents: briefs named only `task.md`, no child read `history/turn-02-request.md`, and in dolomites-1453 `ee698d78d2314edbb4610cd79fa6a9eb` (iteration 10) `goals.md` was unchanged by turn 2's `Planning` while the `Monitor` relayed the request through scope labels and `--why`. The new `fidelity.py` metric gives 0 of 0 turn-2 requirements quoting the request for that run.
+- **Change.** One source list for requirement sources. `cw` builds it from `task.md` and every `history/turn-NN-request.md`; every brief names each source, the check of `src` quotes uses the same list, and the role skills read every file the brief names. `Planning` quotes the request for a requirement that the request adds or alters, and its skill no longer tells it to `grep` `task.md` only. `fidelity.py` reports, per follow-up turn, the requirements changed in that turn and how many quote its request. Unit tests cover the brief and the metric.

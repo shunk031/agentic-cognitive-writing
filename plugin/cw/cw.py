@@ -221,11 +221,17 @@ def unescape(quote: str) -> str:
     return quote.replace('\\"', '"').replace("\\'", "'")
 
 
-def sources() -> list[str]:
-    """The fixed texts a requirement may quote: task.md and the turn requests."""
+def source_paths() -> list[Path]:
+    """The requirement sources: task.md and every runner-written turn request."""
 
     requests = sorted(HIST.glob("turn-*-request.md")) if HIST.is_dir() else []
-    return [read(TASK), *(read(p) for p in requests if TURN_REQUEST.match(p.name))]
+    return [TASK, *(p for p in requests if TURN_REQUEST.match(p.name))]
+
+
+def sources() -> list[str]:
+    """The fixed texts a requirement may quote."""
+
+    return [read(path) for path in source_paths()]
 
 
 def validate_goals(text: str, before: str, texts: list[str]) -> list[dict]:
@@ -576,6 +582,10 @@ def brief_text(state: State, n: int, step: dict) -> str:
         ),
         f"- Role skill: {skill}",
         f"- Task: {TASK}",
+        *(
+            f"- Change request for turn {int(TURN_REQUEST.match(p.name)[1])}: {p}"
+            for p in source_paths()[1:]
+        ),
         f"- Output language: {cfg['language']}",
         f"- Scope: {', '.join(step['scope']) if step['scope'] else 'the whole draft'}",
         f"- Draft: {DRAFT}",

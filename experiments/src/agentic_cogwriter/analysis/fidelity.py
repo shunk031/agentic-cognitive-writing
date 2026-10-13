@@ -20,6 +20,49 @@ from ..runner import cw_run
 
 LETTER = {"planning": "P", "translating": "T", "reviewing": "R"}
 GOAL_LINE = re.compile(r"^\s*- \[(G[\d.]+)\] .+$")
+GOAL_SOURCE = re.compile(
+    r"^\s*- \[(G[\d.]+)\] .+? \| src: \"(.+?)\"(?: \| status: .*)?$"
+)
+
+
+def _norm(text: str) -> str:
+    return " ".join(text.replace('\\"', '"').replace("\\'", "'").split())
+
+
+def request_sources(run_dir: Path, entries: list[dict]) -> dict[int, tuple[int, int]]:
+    """Per follow-up turn: requirements changed in it, and how many quote its request.
+
+    A requirement counts as changed in turn N when a goal event of a step in
+    turn N names it; it quotes the request when its final ``src`` quote occurs
+    in ``history/turn-NN-request.md``.
+    """
+
+    writing = run_dir / "workspace/.writing"
+    goals = writing / "goals.md"
+    quotes = {
+        m[1]: m[2]
+        for line in (
+            goals.read_text(encoding="utf-8").splitlines() if goals.is_file() else []
+        )
+        if (m := GOAL_SOURCE.match(line))
+    }
+    turn_of = {
+        e["step"]: e["turn"]
+        for e in entries
+        if e.get("cmd") == "step" and "refused" not in e
+    }
+    out: dict[int, tuple[int, int]] = {}
+    for request in sorted((writing / "history").glob("turn-*-request.md")):
+        turn = int(request.name.split("-")[1])
+        text = _norm(request.read_text(encoding="utf-8"))
+        changed = {
+            e["goal_id"]
+            for e in entries
+            if e.get("cmd") == "goal" and turn_of.get(e.get("step")) == turn
+        }
+        quoting = sum(1 for g in changed if g in quotes and _norm(quotes[g]) in text)
+        out[turn] = (len(changed), quoting)
+    return out
 
 
 def _manifest(run_dir: Path) -> dict:
@@ -109,6 +152,7 @@ def run_row(run_dir: Path) -> dict[str, Any]:
         },
         "failure": (manifest.get("failure") or {}).get("kind"),
         "samples": goal_lines[:3],
+        "request_src": request_sources(run_dir, entries),
     }
 
 
@@ -135,6 +179,11 @@ def _cell(row: dict) -> list[str]:
         "{} / {}".format(
             row["tokens"]["budget"], row["tokens"]["child_inclusive"]["output_tokens"]
         ),
+        " ".join(
+            f"t{turn}:{quoting}/{changed}"
+            for turn, (changed, quoting) in sorted(row["request_src"].items())
+        )
+        or "-",
         row["failure"] or "-",
     ]
 
@@ -154,6 +203,7 @@ HEADER = [
     "goals; proposals",
     "lang out/manifest",
     "tokens parent/child-incl",
+    "request src quoting/changed",
     "failure",
 ]
 

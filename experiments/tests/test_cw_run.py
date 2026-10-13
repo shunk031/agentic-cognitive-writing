@@ -288,6 +288,8 @@ def test_fidelity_counts_returns_within_each_turn() -> None:
     row = fidelity.run_row(Path(__file__).parent / "fixtures/fidelity-run/A4/run")
     assert row["path"] == {1: "PTR", 2: "PTRTTR"}
     assert row["returns"] == {"R>T": 1, "R>P": 0}
+    # Its turn 2 changed no requirement, so none quotes the change request.
+    assert row["request_src"] == {2: (0, 0)}
     assert all(row["gates"].values())
 
 

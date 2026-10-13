@@ -481,6 +481,31 @@ def test_cw_turn_requests_are_requirement_sources(ws: Workspace) -> None:
     )
     ws.translate(text=DRAFT + "Act now.\n", scope="G3")
     assert ws.closes()[-1]["step"] == step and ws.closes()[-1]["ok"] is True
+    # Every brief from then on names the request as a requirement source.
+    brief = (ws.w / f"history/step-{step:02d}/brief.md").read_text()
+    request = ws.w / "history/turn-02-request.md"
+    assert f"- Task: {ws.w / 'task.md'}\n" in brief
+    assert f"- Change request for turn 2: {request}\n" in brief
+
+
+def test_fidelity_counts_turn_requirements_that_quote_the_request(
+    tmp_path: Path,
+) -> None:
+    from agentic_cogwriter.analysis.fidelity import request_sources
+
+    ws = Workspace(tmp_path / "workspace", "A4")
+    ws.plan()
+    ws.translate()
+    ws.review()
+    ws.ok("stop", "--reason", "met", "--why", "done")
+    ws.write("history/turn-02-request.md", "Add a closing call to action.\n")
+    ws.plan(
+        GOALS.replace("The gap is named", "The gap is named early")
+        + '- [G3] It ends with a call to action | src: "a closing call to action"\n'
+    )
+    ws.translate(text=DRAFT + "Act now.\n", scope="G3")
+    # G1.1 was developed without quoting the request; G3 quotes it.
+    assert request_sources(tmp_path, ws.history()) == {2: (2, 1)}
 
 
 def test_cw_snapshot(ws: Workspace) -> None:
