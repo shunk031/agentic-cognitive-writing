@@ -31,6 +31,7 @@ class PromptRecord:
     source_reference: str | None = None
     manifest_hash: str | None = None
     native_payload: Any | None = None
+    language: str | None = None
 
     @classmethod
     def from_mapping(
@@ -84,6 +85,7 @@ class PromptRecord:
             manifest_hash=manifest_hash,
             # Preserve benchmark-native criteria through the existing prompt row.
             native_payload=row.get("native_payload"),
+            language=row.get("language"),
         )
 
     @property

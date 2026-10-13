@@ -1,51 +1,23 @@
 ---
 name: translating
-description: Internal role skill for the agentic-cognitive-writing `Monitor`. Invoked by delegation from the `Monitor`; do not select this skill directly.
+description: Internal role skill for the Agentic CogWriter `Monitor`. A role-agent brief loads it; do not select it directly.
 ---
-
-> [!NOTE]
-> After reading this `SKILL.md`, say: `I read translating.`
 
 # `Translating`
 
-Turn selected meanings and plans into prose within the draft scope that the `Monitor` delegates.
+You are the `Translating` role agent, not the `Monitor`. You turn the plan and the requirements into prose, for the scope your brief assigns.
 
-## When this skill runs
+## Your step
 
-You perform the `Translating` process for the `Monitor`, as the brief describes. Say the acknowledgment line immediately after reading this skill, in the same response as your next tool call, and begin your report with it. The line never goes into `.writing/draft.md` or the final response.
+1. Read the brief, then the task, requirements, latest plan, and draft files it names.
+2. Write or revise, in the draft file and in the output language the brief names, only the scope the brief names. Address each unmet requirement and finding in that scope with the fix the brief gives. Leave the rest of the draft unchanged.
+3. Your final message says what you changed, lists any problem you found that a later step must handle, and recommends the next process. The `Monitor` decides.
 
-## Read the state first
+Change no file other than the draft. The draft holds only the document text, with no notes to the reader.
 
-Read these before editing:
+## Guidance
 
-- the brief
-- `.writing/assignment.md`, which holds the assignment verbatim and the `Monitor`'s restatement
-- `.writing/goals.md`, when the brief lists active goals
-- `.writing/draft.md`
-
-Translate the selected ideas into prose while treating the current wording as provisional. Keep the scope's goals visible while drafting. Preserve a useful existing sentence when it serves those goals; do not let fluent wording override the rhetorical purpose.
-
-## Drafting rules
-
-- Write in the output language that the brief names.
-- Write only the brief's scope in `.writing/draft.md` and leave the rest of the file unchanged.
-- Meet the length target that the goals or the plan set for each part of the scope, and the format constraints that apply to it.
+- Turn the planned ideas into prose. Treat the current wording as provisional, and keep a sentence that serves the purpose of the document.
+- Meet the length and format that the task and the plan set.
 - Preserve useful supplied text.
-- Do not invent sources, quotations, statistics, or facts. Mark a gap in the report rather than filling it.
-- Do not write `.writing/goals.md`, `.writing/assignment.md`, or the trace.
-
-## Report format
-
-Your final message is the report. Use exactly these fields:
-
-```text
-I read translating.
-Scope written: <goal IDs or sections written>
-Changes: <what prose was added or changed>
-Findings:
-- <a structural, goal-level, or passage-level problem that drafting exposed, with its location>
-Uncertainty: <claims that need evidence>
-Next process: <reviewing, planning, or translating>
-```
-
-Write `- none` under Findings when there is none. The recommended next process is advice; the `Monitor` selects the next process.
+- Do not invent sources, quotations, statistics, or facts. Report a gap instead of filling it.

@@ -922,7 +922,8 @@ def test_codex_prompt_references_workspace_skill_file_without_plugin_install(
     assert "follow it" in prompt
     assert "$agentic-cog-writer" not in prompt
     assert "codex plugin add" not in prompt
-    assert "complete final text itself" in prompt
+    # A4 scores the cw stop snapshot, so its prompt asks for no final text.
+    assert "complete final text itself" not in prompt
 
 
 def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> None:
@@ -934,10 +935,11 @@ def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> No
         assert "{codex_plugin_root}" in invocation
         assert "SKILL.md" in invocation
         assert "codex" not in wrapper["install"]
-        assert "complete final text itself" in invocation
         prompt = runner._plugin_prompt(condition, _prompt(), "codex")
         assert f"plugin/skills/{condition.skill_name}/SKILL.md" in prompt
-        assert "complete final text itself" in prompt
+        if condition.cw is None:
+            assert "complete final text itself" in invocation
+            assert "complete final text itself" in prompt
         if condition.condition_id in DELEGATING_CONDITIONS:
             assert DELEGATION_CONTRACT in prompt
         else:
@@ -1049,23 +1051,6 @@ def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
     assert occurrences == 5
 
 
-def test_agentic_cog_writer_finishes_with_the_goal_check_and_the_draft() -> None:
-    text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
-        encoding="utf-8"
-    )
-    finish = text.split("## Finish", 1)[1].split("\n## ", 1)[0]
-    assert "python3 <skill dir>/scripts/writing_state.py check" in finish
-    assert (
-        "For each goal without an event, log a `goal_created` event with "
-        "`responsible_agent: monitor`."
-    ) in finish
-    assert finish.index("check`") < finish.index("Log the last process switch")
-    assert (
-        "Read `.writing/draft.md` and return exactly its contents as the final "
-        "response, copied byte for byte"
-    ) in finish
-
-
 def test_a8_shares_the_a4_references() -> None:
     for name in ("goals-format.md", "trace-jsonl-schema.md"):
         a8_reference = (
@@ -1075,46 +1060,6 @@ def test_a8_shares_the_a4_references() -> None:
         )
         a4_reference = REPO_ROOT / "plugin/skills/agentic-cog-writer/references" / name
         assert a8_reference.read_bytes() == a4_reference.read_bytes()
-
-
-def test_reviewing_reports_structured_findings_and_goal_verdicts() -> None:
-    reviewing_text = (REPO_ROOT / "plugin/skills/reviewing/SKILL.md").read_text(
-        encoding="utf-8"
-    )
-    for requirement in (
-        "Verdict: <no required change when Open findings is - none; otherwise "
-        "changes required>",
-        "Write the Verdict after the open findings",
-        "Rejected proposals",
-        "- planning: <location>:",
-        "- translating: <location>:",
-        "- G1.2 — regenerate: <one sentence of evidence>. Replacement:",
-        "Revisions made:",
-        "Open findings:",
-        "compute it from them alone",
-        "exactly one of the lowercase words `keep`, `develop`, or `regenerate`",
-        "Omit the Goal verdicts field when the brief lists no goals.",
-        "Next process: <planning, translating, or stop>",
-    ):
-        assert requirement in reviewing_text, requirement
-
-    ledger = "`regeneration_proposals` key"
-    for path in (
-        REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md",
-        REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md",
-        REPO_ROOT
-        / "experiments/plugin/skills/cognitive-writing-single-context/SKILL.md",
-    ):
-        text = path.read_text(encoding="utf-8")
-        assert ledger in text
-        assert "`regeneration proposals: …`" in text
-    for name in ("no-goal-network", "loop-only"):
-        text = (
-            REPO_ROOT / f"experiments/plugin/skills/cognitive-writing-{name}/SKILL.md"
-        ).read_text(encoding="utf-8")
-        assert "regeneration proposals" not in text
-        assert "goal_id" not in text
-        assert "writing_state.py log --no-goals" in text
 
 
 @pytest.mark.parametrize(
@@ -1343,8 +1288,8 @@ def test_tampered_stage_file_still_fails_hash_check_before_execution(
 def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
     source_root = tmp_path / "plugin-source"
     files = {
-        "skills/agentic-cog-writer/SKILL.md": "main skill\n",
-        "skills/agentic-cog-writer/references/trace.md": "trace reference\n",
+        "skills/cognitive-writing-fixed-order/SKILL.md": "main skill\n",
+        "skills/cognitive-writing-fixed-order/references/trace.md": "trace reference\n",
         "skills/planning/SKILL.md": "planning role\n",
         "skills/translating/SKILL.md": "translating role\n",
         "skills/reviewing/SKILL.md": "reviewing role\n",
@@ -1380,20 +1325,20 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
     )
 
     result = runner.run_prompt(
-        _prompt(), condition_id="A4", platform="codex", run_id="staged"
+        _prompt(), condition_id="A6", platform="codex", run_id="staged"
     )
 
     manifest = json.loads(result.manifest_path.read_text())
     staged_files = manifest["staged_files"]
     assert set(staged_files) == {
-        "plugin/skills/agentic-cog-writer/SKILL.md",
-        "plugin/skills/agentic-cog-writer/references/trace.md",
+        "plugin/skills/cognitive-writing-fixed-order/SKILL.md",
+        "plugin/skills/cognitive-writing-fixed-order/references/trace.md",
         ".agents/skills/planning/SKILL.md",
         ".agents/skills/translating/SKILL.md",
         ".agents/skills/reviewing/SKILL.md",
     }
     for relative, content in files.items():
-        root = "plugin" if "agentic-cog-writer" in relative else ".agents"
+        root = "plugin" if "cognitive-writing-fixed-order" in relative else ".agents"
         staged = result.run_dir / "workspace" / root / relative
         assert staged.read_text() == content
         assert staged_files[f"{root}/{relative}"] == (
@@ -1402,7 +1347,7 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
 
     prompt_text = (result.run_dir / "prompt.txt").read_text()
     assert (
-        "Read the skill file at plugin/skills/agentic-cog-writer/SKILL.md"
+        "Read the skill file at plugin/skills/cognitive-writing-fixed-order/SKILL.md"
         in prompt_text
     )
     assert str(source_root) not in prompt_text
@@ -3055,7 +3000,10 @@ class _DelegatingExecutor:
         stream: list[dict[str, object]] = [
             {
                 "type": "item.completed",
-                "item": {"type": "agent_message", "text": "I read agentic-cog-writer."},
+                "item": {
+                    "type": "agent_message",
+                    "text": "I read cognitive-writing-fixed-order.",
+                },
             }
         ]
         sessions = Path(env["CODEX_HOME"]) / "sessions"
@@ -3117,7 +3065,7 @@ def test_delegating_run_records_acknowledgments_and_role_delegation(
 ) -> None:
     runner = _runner(tmp_path, executor=_DelegatingExecutor())
 
-    result = runner.run_prompt(_prompt(), condition_id="A4", platform="codex")
+    result = runner.run_prompt(_prompt(), condition_id="A6", platform="codex")
 
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["status"] == "completed"
@@ -3127,7 +3075,7 @@ def test_delegating_run_records_acknowledgments_and_role_delegation(
         "undelegated": [],
     }
     acknowledgments = manifest["skill_acknowledgments"]
-    assert acknowledgments["top_level"] == {"agentic-cog-writer": 1}
+    assert acknowledgments["top_level"] == {"cognitive-writing-fixed-order": 1}
     assert acknowledgments["missing_top_level"] == []
     assert [agent["role"] for agent in acknowledgments["role_agents"]] == list(
         ROLE_SKILLS
@@ -3143,10 +3091,10 @@ def test_run_fails_when_a_selected_role_was_not_delegated(tmp_path: Path) -> Non
     with pytest.raises(
         ExecutionError, match="completed spawn_agent calls for: reviewing"
     ):
-        runner.run_prompt(_prompt(), condition_id="A4", platform="codex", run_id="r")
+        runner.run_prompt(_prompt(), condition_id="A6", platform="codex", run_id="r")
 
     manifest_path = (
-        tmp_path / "WritingBench" / "A4" / "codex" / "r" / "run-manifest.json"
+        tmp_path / "WritingBench" / "A6" / "codex" / "r" / "run-manifest.json"
     )
     manifest = json.loads(manifest_path.read_text())
     assert manifest["status"] == "failed"
@@ -3158,15 +3106,15 @@ def test_final_response_with_an_acknowledgment_line_fails(tmp_path: Path) -> Non
     runner = _runner(tmp_path, executor=_DelegatingExecutor(output=output))
 
     with pytest.raises(ExecutionError, match="acknowledgment lines: I read reviewing."):
-        runner.run_prompt(_prompt(), condition_id="A4", platform="codex", run_id="r")
+        runner.run_prompt(_prompt(), condition_id="A6", platform="codex", run_id="r")
 
     manifest_path = (
-        tmp_path / "WritingBench" / "A4" / "codex" / "r" / "run-manifest.json"
+        tmp_path / "WritingBench" / "A6" / "codex" / "r" / "run-manifest.json"
     )
     manifest = json.loads(manifest_path.read_text())
     assert manifest["status"] == "failed"
     assert manifest["skill_acknowledgments"]["top_level"] == {
-        "agentic-cog-writer": 1,
+        "cognitive-writing-fixed-order": 1,
         "reviewing": 1,
     }
 

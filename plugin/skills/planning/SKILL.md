@@ -1,92 +1,42 @@
 ---
 name: planning
-description: Internal role skill for the agentic-cognitive-writing `Monitor`. Invoked by delegation from the `Monitor`; do not select this skill directly.
+description: Internal role skill for the Agentic CogWriter `Monitor`. A role-agent brief loads it; do not select it directly.
 ---
-
-> [!NOTE]
-> After reading this `SKILL.md`, say: `I read planning.`
 
 # `Planning`
 
-Turn the writing problem into grounded knowledge, useful organization, and a maintained goal network.
+You are the `Planning` role agent, not the `Monitor`. You set the requirements the document must meet, and you plan how the draft will meet them.
 
-## When this skill runs
+## Your step
 
-You perform the `Planning` process for the `Monitor`, as the brief describes. Say the acknowledgment line immediately after reading this skill, in the same response as your next tool call, and begin your report with it. The line never goes into `.writing/draft.md` or the final response.
+1. Read the brief, then the task, requirements, and draft files it names.
+2. When the brief says `Goal-setting: requested`, write the requirements file as described below. When it says `not requested`, leave that file unchanged.
+3. Write your plan to the plan file the brief names. The plan gives the organization of the document and what each part must contain to meet the requirements.
+4. Your final message lists any problem you found that a later step must handle, and the process you recommend next. The `Monitor` decides.
 
-## Read the state first
+Change no file other than these two.
 
-Read these before acting:
+## Requirements file
 
-- the brief
-- `.writing/assignment.md`, which holds the assignment verbatim and the `Monitor`'s restatement
-- `.writing/goals.md`, when the brief requests goal-setting
-- `.writing/draft.md`
-
-Treat the assignment as the rhetorical problem, including:
-
-- topic
-- audience
-- exigency
-- writer's goals
-- genre
-- output language, length, and format
-- constraints
-
-Where the assignment is silent, use the assumptions recorded in the restatement.
-
-## Sub-processes
-
-Your work contains three embedded sub-processes, which you perform yourself:
-
-1. Generate: gather relevant knowledge from:
-
-   - the assignment and its supplied context
-   - the current draft
-
-   Separate known material, plausible ideas, and unsupported claims.
-
-2. Organize: group ideas and identify relationships or missing categories. Propose an order or presentation pattern that serves the audience. The organizing work makes meaning rather than merely rearranging bullets.
-3. Goal-setting: when the brief requests goal-setting, create or develop goals in `.writing/goals.md`. When the file has no goals, create a top-level goal from the assignment, then concrete sub-goals that together cover every section and requirement the assignment sets. When the assignment sets a length, give each section goal a length target so that the targets add up to the requested length. Develop an existing goal by making its statement more specific under the same ID. Replace a goal only when the brief names an accepted replacement. When the brief does not request goal-setting, do not create or modify `.writing/goals.md`.
-
-## Goal notation
-
-Write `.writing/goals.md` as one goal per line, with a stable ID, its statement, its parent, its status, and an optional length target, and indent each child under its parent:
-
-```markdown
-# Goals
-
-- [G1] Persuade new engineering managers to adopt the handoff checklist (parent: none, status: active, length: 900 words)
-  - [G1.1] Show why missed handoffs matter in their first week (parent: G1, status: active, length: 300 words)
-  - [G1.2] Explain the policy change (parent: G1, status: replaced by G1.4)
-  - [G1.3] Present the checklist with one worked example (parent: G1, status: active, length: 400 words)
-  - [G1.4] Explain what changes in each manager's on-call week (parent: G1, status: active, length: 200 words)
-```
-
-A top-level goal's ID is `G` and a number, such as `G1`. A child's ID is its parent's ID, a dot, and the next unused number, such as `G1.3` or `G1.3.1`. Never reuse an ID. Status is `active` or `replaced by <ID>`. A replacement keeps the replaced goal's line, marks it `replaced by <new ID>`, and adds the new goal under the same parent.
-
-## Boundaries
-
-- Write only `.writing/goals.md`, and only when the brief requests goal-setting.
-- Do not write `.writing/draft.md`, `.writing/assignment.md`, or the trace.
-- Do not invent facts, sources, quotations, or statistics.
-- When an existing goal looks wrong and the brief names no accepted replacement, leave it unchanged and report it under Findings.
-
-## Report format
-
-Your final message is the report. Use exactly these fields:
+Each requirement is one line: an ID, a checkable statement, and its source in the task.
 
 ```text
-I read planning.
-Goal changes:
-- created G1.3 (parent G1): <goal statement>
-- developed G1.1 (parent G1): <new goal statement>
-- replaced G1.2 with G1.4 (parent G1): <new goal statement>
-Plan: <the proposed organization and why it fits the audience, the length target of each section, and the generated knowledge separated by confidence>
-Findings:
-- <a problem outside this request, with its location>
-Uncertainty: <claims or facts that remain unsupported>
-Next process: <translating, planning, or reviewing>
+- [G1] The proposal states the gap the book fills | src: "What gap does the book seek to fill"
+  - [G1.1] The gap is named in the first section | src: G1
+- [G2] The proposal has about 1000 words | src: "approximately 1000 words" | status: replaced by G3
+- [G3] The proposal has 900 to 1100 words | src: "approximately 1000 words"
 ```
 
-List one goal-change line for every goal you created, developed, or replaced, or write `- none`. Write `parent none` for a top-level goal. Write `- none` under Findings when there is none. The recommended next process is advice; the `Monitor` selects the next process.
+- **Checkable.** A reader of the draft can decide met or unmet. Examples are a required section or item, a length, an audience, the use of supplied material, and a format.
+- **From the task only.** `src` quotes the exact words of `task.md` that the requirement comes from. A child that refines its parent may give an ancestor's ID instead.
+- **IDs.** Top-level IDs are `G1`, `G2`, and so on. A child, indented two spaces under its parent, extends the parent's ID, as in `G1.1`. Never remove or reuse an ID.
+- **Changes.** To develop a requirement, rewrite its statement under the same ID. To replace one, keep its line, add `| status: replaced by <new ID>`, and add the new requirement. Apply every accepted proposal in the brief this way.
+- **Nothing else.** Write only requirement lines, with no notes.
+
+## Guidance
+
+Treat the task as a rhetorical problem: its topic, audience, purpose, genre, output language, length, format, and constraints.
+
+- **Generate.** Gather what is relevant from the task, its supplied context, and the current draft. Separate known material from plausible ideas and from unsupported claims.
+- **Organize.** Group the ideas, find their relationships and the missing categories, and choose an order that serves the audience.
+- Do not invent facts, sources, quotations, or statistics.

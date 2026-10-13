@@ -38,6 +38,11 @@ KNOWN_TRACE_EVENT_TYPES = frozenset(
     }
 )
 GOAL_EVENT_POLICIES = frozenset({"allowed", "forbidden"})
+CW_KEYS = {
+    "goals": (True, False),
+    "order": ("adaptive", "fixed"),
+    "execution": ("delegated", "in_context", "paragraph"),
+}
 
 
 @dataclass(frozen=True)
@@ -69,6 +74,13 @@ class ConditionSpec:
     require_goal_events: bool
     require_delegation: bool
     product_requires_draft: bool
+    cw: tuple[tuple[str, Any], ...] | None = None
+
+    @property
+    def cw_keys(self) -> dict[str, Any] | None:
+        """Return the arm keys that ``cw.json`` carries, or None outside cw arms."""
+
+        return dict(self.cw) if self.cw is not None else None
 
     @property
     def trace_policy_dict(self) -> dict[str, str]:
@@ -303,6 +315,16 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
         raise ConfigurationError(
             f"Wrapper {wrapper_path} trace.require_delegation must be a boolean"
         )
+    cw = wrapper.get("cw")
+    if cw is not None and (
+        not isinstance(cw, Mapping)
+        or set(cw) != set(CW_KEYS)
+        or any(cw[key] not in CW_KEYS[key] for key in CW_KEYS)
+    ):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} cw table must set exactly "
+            + ", ".join(f"{key} in {values}" for key, values in CW_KEYS.items())
+        )
     return ConditionSpec(
         condition_id=condition_id,
         analysis_family=analysis_family,
@@ -320,6 +342,7 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
         require_goal_events=require_goal_events,
         require_delegation=require_delegation,
         product_requires_draft=product_requires_draft,
+        cw=tuple(sorted(cw.items())) if cw is not None else None,
     )
 
 

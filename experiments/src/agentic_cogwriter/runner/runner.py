@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import fcntl
 import json
 import os
@@ -18,6 +19,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from ..paths import EXPERIMENTS_ROOT, REPOSITORY_ROOT
+from . import cw_run
 from .adapters import PlatformAdapter
 from .budget import OutputBudget
 from .conditions import ConditionSpec, load_condition_registry
@@ -419,6 +421,17 @@ class SessionCollection:
     reason: str | None = None
 
 
+class CwRunFailure(ExecutionError):
+    """A cw-arm run that completed transport but failed its classification."""
+
+    def __init__(self, failure: Mapping[str, Any]) -> None:
+        self.failure = dict(failure)
+        super().__init__(f"cw run failed: {failure['kind']}")
+
+
+_HARNESS_ERRORS = (ConfigurationError, ManifestError, UnscoredRun, OSError)
+
+
 class ExperimentRunner:
     """Run one condition and prompt with immutable policy settings."""
 
@@ -752,13 +765,21 @@ class ExperimentRunner:
             cli_version = "not_probed"
             stage_prompt_hashes = self._stage_prompt_hashes(condition)
             contract_hashes: dict[str, str] = {}
+            language = (
+                cw_run.resolve_language(prompt.language, prompt.input_text)
+                if condition.cw is not None
+                else None
+            )
             command_prompt = self._plugin_prompt(
                 condition,
                 prompt,
                 platform,
                 codex_prompt_root=Path("plugin"),
                 contract_hashes=contract_hashes,
+                language=language["value"] if language else None,
             )
+            runner_hashes: dict[str, str] = {}
+            cw_extra: dict[str, Any] = {"language": language} if language else {}
             benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
             protected_goals = workspace / ".writing" / "goals.md"
             goals_before = (
@@ -807,6 +828,25 @@ class ExperimentRunner:
                 )
             if platform == "codex":
                 staged_files = self._stage_codex_plugin(condition, workspace)
+                if condition.cw is not None and language is not None:
+                    task_path = workspace / ".writing" / "task.md"
+                    task_path.write_text(
+                        cw_run.task_text(
+                            self._task_sections(prompt),
+                            self._read_contracts()[0]["information"],
+                            language["value"],
+                        ),
+                        encoding="utf-8",
+                    )
+                    cw_run.stage_cw(
+                        workspace, condition.cw_keys or {}, language["value"]
+                    )
+                    runner_hashes.update(cw_run.runner_files(workspace))
+                    staged_files = {
+                        path: f"sha256:{digest}"
+                        for path, digest in runner_hashes.items()
+                    }
+                    cw_extra["task_hash"] = staged_files[".writing/task.md"]
             elif uses_role_skills:
                 # Claude Code loads the plugins itself; only the role skills are
                 # staged so in-context variants find them at the same path.
@@ -879,6 +919,18 @@ class ExperimentRunner:
                 evidence_hashes.update(
                     self._persist_attempt_evidence(run_dir, attempt_number, result)
                 )
+                if condition.cw is not None:
+                    meta_path = run_dir / f"attempt-{attempt_number:03d}.meta.json"
+                    self._write_json(
+                        meta_path,
+                        {
+                            "returncode": result.returncode if result else None,
+                            "timed_out": result.timed_out if result else False,
+                            "started": result.started_at if result else None,
+                            "ended": result.ended_at if result else None,
+                        },
+                    )
+                    evidence_hashes[meta_path.name] = f"sha256:{sha256_file(meta_path)}"
                 if platform == "codex":
                     collection = self._collect_codex_sessions(
                         run_dir,
@@ -952,7 +1004,10 @@ class ExperimentRunner:
                             }
                         for key, value in observed_usage.items():
                             token_usage[key] += value
-                        if token_usage["total_tokens"] > budget.limit:
+                        if (
+                            condition.cw is None
+                            and token_usage["total_tokens"] > budget.limit
+                        ):
                             raise BudgetExceeded(
                                 "Codex turn usage exceeds the shared output "
                                 f"budget: used={token_usage['total_tokens']}, "
@@ -995,6 +1050,110 @@ class ExperimentRunner:
                         rollout_collection=rollout_collection,
                         spawn_extraction=spawn_extraction,
                     ),
+                )
+
+            if condition.cw is not None:
+
+                def on_retry() -> None:
+                    name = cw_run.write_retry_marker(workspace)
+                    marker = workspace / ".writing" / "history" / name
+                    runner_hashes[marker.relative_to(workspace).as_posix()] = (
+                        sha256_file(marker)
+                    )
+
+                def run_turn(text: str, session: str | None) -> ExecutionResult:
+                    nonlocal attempts
+                    turn_result, attempts = self._run_turn_with_retry(
+                        adapter,
+                        model_id=self.runtime_config.model_for(platform),
+                        prompt=text,
+                        session_id=session,
+                        cwd=workspace,
+                        env=generator_environment,
+                        attempts=attempts,
+                        record_attempt=record_attempt,
+                        snapshot_sessions=lambda: self._snapshot_codex_sessions(
+                            generator_config_dir
+                        ),
+                        on_retry=on_retry,
+                    )
+                    return turn_result
+
+                final_messages: list[str] = []
+                try:
+                    result = run_turn(command_prompt, None)
+                    final_messages.append(extract_output(result.stdout))
+                    if followup is not None:
+                        request = (
+                            workspace / ".writing" / "history" / "turn-02-request.md"
+                        )
+                        request.parent.mkdir(parents=True, exist_ok=True)
+                        request.write_text(followup, encoding="utf-8")
+                        runner_hashes[request.relative_to(workspace).as_posix()] = (
+                            sha256_file(request)
+                        )
+                        result = run_turn(followup, result.session_id)
+                        final_messages.append(extract_output(result.stdout))
+                except UnscoredRun:
+                    raise
+                except ExecutionError:
+                    pass
+                gate_report = cw_run.gates(run_dir, runner_hashes)
+                cw_extra["cw"] = {
+                    "gates": gate_report["results"],
+                    "reported": gate_report["reported"],
+                    "stop_reasons": cw_run.stop_reasons(run_dir),
+                    "tokens": cw_run.token_report(run_dir),
+                }
+                cw_extra["runner_files"] = runner_hashes
+                failure_kind = cw_run.classify_failure(
+                    run_dir, harness_error=False, gate_results=gate_report["results"]
+                )
+                if failure_kind is not None:
+                    raise CwRunFailure(failure_kind)
+                (run_dir / "final-message.txt").write_text(
+                    "\n\n".join(final_messages), encoding="utf-8"
+                )
+                finals = workspace / ".writing" / "history" / "final"
+                turns = sorted(finals.glob("turn-*/draft.md"))
+                if not turns:
+                    raise CwRunFailure({"kind": "incomplete", "class": "model"})
+                if len(turns) > 1:
+                    shutil.copyfile(turns[-2], run_dir / "turn1.output.normalized.txt")
+                output = turns[-1].read_text(encoding="utf-8")
+                output_path.write_bytes(output.encode("utf-8"))
+                normalized_path.write_text(output, encoding="utf-8")
+                self._write_json(
+                    manifest_path,
+                    self._manifest(
+                        prompt=prompt,
+                        condition=condition,
+                        platform=platform,
+                        adapter=adapter,
+                        run_id=run_id,
+                        status="completed",
+                        started_at=started_at,
+                        cli_version=cli_version,
+                        attempts=attempts,
+                        budget=budget,
+                        output_hash=f"sha256:{sha256_file(output_path)}",
+                        stage_prompt_hashes=stage_prompt_hashes,
+                        contract_hashes=contract_hashes,
+                        benchmark_provenance=benchmark_provenance,
+                        execution_paths=execution_paths,
+                        evidence_hashes=evidence_hashes,
+                        staged_files=staged_files,
+                        token_usage=token_usage,
+                        subagent_spawn_count=len(subagent_spawn_ids),
+                        product_gate=product_gate,
+                        token_accounting_error=token_accounting_error,
+                        rollout_collection=rollout_collection,
+                        spawn_extraction=spawn_extraction,
+                        extra=cw_extra,
+                    ),
+                )
+                return RunResult(
+                    run_dir, manifest_path, output_path, trace_path, run_id
                 )
 
             result, attempts = self._run_turn_with_retry(
@@ -1199,6 +1358,14 @@ class ExperimentRunner:
                 "type": type(exc).__name__,
                 "message": str(exc),
             }
+            if isinstance(exc, CwRunFailure):
+                failure |= exc.failure
+            elif condition.cw is not None:
+                failure |= cw_run.classify_failure(
+                    run_dir,
+                    harness_error=isinstance(exc, _HARNESS_ERRORS),
+                    gate_results=None,
+                ) or {"kind": "harness_error", "class": "implementation"}
             if isinstance(exc, RetrievalViolation):
                 stream = exc.stream or "stdout"
                 artifact_suffix = (
@@ -1260,6 +1427,7 @@ class ExperimentRunner:
                     role_delegation=role_delegation,
                     skill_acknowledgments=skill_acknowledgments,
                     failure=failure,
+                    extra=cw_extra,
                 ),
             )
             raise
@@ -1317,6 +1485,7 @@ class ExperimentRunner:
         ]
         | None = None,
         snapshot_sessions: Callable[[], SessionSnapshot] | None = None,
+        on_retry: Callable[[], None] | None = None,
     ) -> tuple[ExecutionResult, int]:
         """Run one skill turn, retrying only with the identical command policy."""
 
@@ -1343,12 +1512,16 @@ class ExperimentRunner:
             session_before = (
                 snapshot_sessions() if snapshot_sessions is not None else None
             )
+            started = time.time()
             try:
                 result = self.executor.run(
                     command,
                     cwd=cwd,
                     timeout_seconds=self.runtime_config.timeout_seconds,
                     env=env,
+                )
+                result = dataclasses.replace(
+                    result, started_at=started, ended_at=time.time()
                 )
             except Exception:
                 if record_attempt is not None:
@@ -1368,6 +1541,8 @@ class ExperimentRunner:
                             "Cannot retry a timed-out turn without its session_id"
                             + suffix
                         )
+                    if on_retry is not None:
+                        on_retry()
                     continue
                 raise ExecutionError("Headless turn timed out")
             if result.returncode != 0:
@@ -1379,6 +1554,8 @@ class ExperimentRunner:
                             "Cannot retry a failed turn without its session_id"
                             f" (return code {result.returncode})" + suffix
                         )
+                    if on_retry is not None:
+                        on_retry()
                     continue
                 message = result.stderr.decode("utf-8", errors="replace").strip()
                 raise ExecutionError(
@@ -1413,6 +1590,7 @@ class ExperimentRunner:
         *,
         codex_prompt_root: str | Path | None = None,
         contract_hashes: MutableMapping[str, str] | None = None,
+        language: str | None = None,
     ) -> str:
         wrapper = self._wrapper(condition)
         key = platform.replace("-", "_")
@@ -1472,7 +1650,21 @@ class ExperimentRunner:
         )
         if generic_block:
             generic_block = f"\n\n{generic_block}"
-        return f"{invocation}{generic_block}{stage_text}"
+        language_block = f"\n\n## Output language\n{language}" if language else ""
+        return f"{invocation}{generic_block}{stage_text}{language_block}"
+
+    @staticmethod
+    def _task_sections(prompt: PromptRecord) -> str:
+        """Return the Assignment, Supplied context, and constraints sections."""
+
+        constraints = json.dumps(
+            prompt.requested_output_constraints, ensure_ascii=False, sort_keys=True
+        )
+        return (
+            f"## Assignment\n{prompt.input_text}\n\n"
+            f"## Supplied context\n{prompt.supplied_context or '(none)'}\n\n"
+            f"## Requested output constraints\n{constraints}"
+        )
 
     def _stage_prompt_hashes(self, condition: ConditionSpec) -> dict[str, str | None]:
         """Re-read frozen stage files and verify the bytes used for the prompt."""
@@ -1684,7 +1876,14 @@ class ExperimentRunner:
                 staged_roots[relative in role_directories] / relative,
                 dirs_exist_ok=True,
                 # Example prompts in evals/ are for skill authors, not runs.
-                ignore=shutil.ignore_patterns("evals"),
+                ignore=shutil.ignore_patterns(
+                    "evals",
+                    *(
+                        ("scripts", "references", "__pycache__")
+                        if condition.cw is not None
+                        else ()
+                    ),
+                ),
             )
         return {
             path.relative_to(workspace).as_posix(): f"sha256:{sha256_file(path)}"
@@ -1726,6 +1925,7 @@ class ExperimentRunner:
         role_delegation: Mapping[str, Any] | None = None,
         skill_acknowledgments: Mapping[str, Any] | None = None,
         paragraph_writes: Mapping[str, Any] | None = None,
+        extra: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         if platform == "codex":
@@ -1951,6 +2151,8 @@ class ExperimentRunner:
             manifest["failure"] = failure
         if token_accounting_error is not None:
             manifest["token_accounting"]["error"] = token_accounting_error
+        if extra:
+            manifest.update(extra)
         return manifest
 
     @staticmethod

@@ -7,8 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from agentic_cogwriter.analysis.process_sequences import DELEGATED_PROCESS
-from agentic_cogwriter.analysis.trace_endings import ROLE
 from agentic_cogwriter.runner.skill_checks import ack_token, known_skills
 
 REPO_ROOT = Path(__file__).parents[2]
@@ -67,6 +65,14 @@ def _sections(text: str) -> dict[str, str]:
     return {key: "".join(lines).rstrip("\n") for key, lines in sections.items()}
 
 
+SLICE_2 = pytest.mark.skip(
+    reason="slice 2 regenerates the ablations from the cw template "
+    "(docs/experiments/redesign/design.md)"
+)
+# The redesign removes the acknowledgment lines from these skills.
+REDESIGNED = {"agentic-cog-writer", *ROLES}
+
+
 def _skill(name: str) -> str:
     return (EXPERIMENT_SKILLS / name / "SKILL.md").read_text(encoding="utf-8")
 
@@ -75,6 +81,7 @@ def _a4() -> dict[str, str]:
     return _sections(A4_SKILL.read_text(encoding="utf-8"))
 
 
+@SLICE_2
 @pytest.mark.parametrize("name", ABLATIONS)
 def test_ablations_differ_from_a4_only_in_declared_sections(name: str) -> None:
     a4 = _a4()
@@ -139,6 +146,7 @@ def test_fixed_order_wording_never_selects_against_the_cycle() -> None:
     assert "the agent may change" not in _skill("cognitive-writing-loop-only")
 
 
+@SLICE_2
 def test_a6_keeps_the_a4_goal_logging_check() -> None:
     fixed_order = _sections(_skill("cognitive-writing-fixed-order"))
     assert fixed_order[FINISH] == _a4()[FINISH]
@@ -189,7 +197,11 @@ def _skill_files() -> list[Path]:
     return sorted(path for root in SKILL_ROOTS for path in root.glob("*/SKILL.md"))
 
 
-@pytest.mark.parametrize("path", _skill_files(), ids=lambda path: path.parent.name)
+@pytest.mark.parametrize(
+    "path",
+    [p for p in _skill_files() if p.parent.name not in REDESIGNED],
+    ids=lambda path: path.parent.name,
+)
 def test_every_staged_skill_opens_with_its_acknowledgment_note(path: Path) -> None:
     text = path.read_text(encoding="utf-8")
     body = text.split("\n---\n", 1)[1].lstrip("\n")
@@ -211,17 +223,6 @@ def test_acknowledgment_tokens_are_distinct_and_cover_every_skill() -> None:
     assert len(set(tokens)) == len(tokens)
     for token in tokens:
         assert sum(other in token for other in tokens) == 1, token
-
-
-@pytest.mark.parametrize("role", ROLES)
-def test_role_reports_begin_with_the_acknowledgment_line(role: str) -> None:
-    text = (REPO_ROOT / f"plugin/skills/{role}/SKILL.md").read_text(encoding="utf-8")
-    report = text.split("## Report format", 1)[1].split("```text\n", 1)[1]
-    assert report.startswith(f"{ack_token(role)}\n")
-    assert "indings:" in report
-    assert "Next process:" in report
-    assert "in the same response as your next tool call, and begin your report" in text
-    assert "own context" not in text
 
 
 def _prompt_texts() -> list[Path]:
@@ -265,70 +266,40 @@ def test_prompts_have_no_memory_interruptions_or_user_control(path: Path) -> Non
         assert removed not in text, removed
 
 
+def test_redesigned_skills_have_no_acknowledgment_note() -> None:
+    for name in REDESIGNED:
+        root = "plugin/skills"
+        text = (REPO_ROOT / root / name / "SKILL.md").read_text(encoding="utf-8")
+        assert "I read" not in text and "[!NOTE]" not in text
+
+
+def test_monitor_spawns_without_forked_context_and_waits_until_final() -> None:
+    text = A4_SKILL.read_text(encoding="utf-8")
+    code = text.split("```js\n", 1)[1].split("```", 1)[0]
+    for required in (
+        "fork_context: false",
+        'message: "<the spawn line, verbatim>"',
+        "timeout_ms: 300000",
+        "while (r.timed_out)",
+        "multi_agent_v1__close_agent({ target: agent_id })",
+    ):
+        assert required in code, required
+    for forbidden in ("model", "reasoning_effort", "service_tier", "items"):
+        assert forbidden not in code
+
+
 @pytest.mark.parametrize("role", ROLES)
-def test_brief_names_its_own_role_first_for_the_trace_analyses(role: str) -> None:
-    template = _a4()[BRIEF].split("```text\n", 1)[1].split("```", 1)[0]
-    filled = template.replace("<role>", role).replace("<Role>", role.capitalize())
-    assert filled.startswith(f"${role} ")
-    assert ROLE.findall(filled) == [role]
-    match = DELEGATED_PROCESS.search(filled)
-    assert match is not None and match.group(1).casefold() == role
-    assert "SKILL.md" not in filled
-    for required in (
-        "You are not the Monitor.",
-        f"Follow the {role} skill that this message loads.",
-        "do not spawn agents",
-        "do not run codex",
-        "do not write .writing/trace/process.jsonl",
-        "never ask questions",
-        "Do not search the web",
-        "Output language:",
-        "Length and format:",
-        "Scope:",
-        "Active goals: <the IDs of the active goals",
-        ".writing/assignment.md",
-    ):
-        assert required in filled, required
+def test_role_skills_keep_a_separable_guidance_block(role: str) -> None:
+    text = (REPO_ROOT / f"plugin/skills/{role}/SKILL.md").read_text(encoding="utf-8")
+    guidance = text.split("\n## Guidance\n", 1)[1]
+    assert "\n## " not in guidance
+    for operational in ("cw", "brief", "Monitor", "goals.md", "requirements file"):
+        assert operational not in guidance, operational
+    policy = (REPO_ROOT / f"plugin/skills/{role}/agents/openai.yaml").read_text()
+    assert "allow_implicit_invocation: false" in policy
 
 
-def test_monitor_spawns_without_forked_context_and_bounds_the_wait() -> None:
-    delegate = _a4()[DELEGATE]
-    for required in (
-        "`multi_agent_v1__spawn_agent` with `fork_context: false`",
-        "`multi_agent_v1__wait_agent` with `targets: [<agent id>]`",
-        "`timeout_ms: 300000`",
-        "at most three calls in all",
-        "`multi_agent_v1__close_agent` with `target: <agent id>` at once",
-        "`interrupted`, `shutdown`, `not_found`",
-        "Delegate a failed step once more",
-    ):
-        assert required in delegate, required
-
-
-def test_selection_has_a_default_row_and_the_stop_rule_has_caps() -> None:
-    a4 = _a4()
-    rows = [line for line in a4[SELECT].splitlines() if line.startswith("| ")][2:]
-    assert rows[-1].startswith("| Any other state")
-    assert any(row.startswith("| The latest report is from `Planning`") for row in rows)
-    for required in (
-        "Open findings list is `- none`",
-        "not from the report's Verdict line",
-        "accepted none of its `regenerate` verdicts",
-        "Four passes have ended.",
-        "Twelve role steps have run.",
-        "no change request arrived after it",
-    ):
-        assert required in a4[STOP], required
-    reviewing = (REPO_ROOT / "plugin/skills/reviewing/SKILL.md").read_text(
-        encoding="utf-8"
-    )
-    report = reviewing.split("```text\n", 1)[1]
-    assert report.index("Open findings:") < report.index("Verdict:")
-    assert "Write the Verdict after the open findings" in reviewing
-    assert "Rejected proposals" in reviewing
-    assert "Rejected proposals:" in a4[BRIEF]
-
-
+@SLICE_2
 def test_trace_is_written_only_through_the_logging_script() -> None:
     trace = _a4()["## Trace"]
     assert "python3 <skill dir>/scripts/writing_state.py log <<'EOF'" in trace

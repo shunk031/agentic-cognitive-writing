@@ -100,6 +100,7 @@ def test_a10_runs_fixed_self_refine_rounds_without_cogwriter_components() -> Non
             assert excluded not in text, (stage, excluded)
 
 
+@pytest.mark.skip(reason="slice 2 regenerates A9 from the Guidance blocks")
 def test_a9_keeps_the_a2_harness_and_adds_role_guidance() -> None:
     registry = load_condition_registry()
     a2, a9 = registry["A2"], registry["A9"]

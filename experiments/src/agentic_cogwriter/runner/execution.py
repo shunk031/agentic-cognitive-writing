@@ -74,6 +74,8 @@ class ExecutionResult:
     stderr: bytes
     session_id: str | None = None
     timed_out: bool = False
+    started_at: float | None = None
+    ended_at: float | None = None
 
 
 class SubprocessExecutor:
