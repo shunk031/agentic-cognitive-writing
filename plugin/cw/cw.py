@@ -835,13 +835,9 @@ def cmd_decide(state: State, args) -> None:
     )
 
 
-def cmd_stop(state: State, args) -> None:
-    require_coordinator(state, "stop")
-    state = close_open(state)
-    if any(s["turn"] == state.turn for s in state.stops):
-        raise Refused("this turn has already stopped")
-    _, failed_out = state.failure_state()
-    reason = args.reason
+def check_stop(state: State, reason: str, failed_out: bool) -> None:
+    """Raise Refused when the stop reason's precondition does not hold."""
+
     if failed_out and reason != "failure":
         raise Refused("a reissued step failed; only `--reason failure` is accepted")
     if reason == "failure":
@@ -875,6 +871,40 @@ def cmd_stop(state: State, args) -> None:
             done = state.decided(review)
             if any(done[p["goal"]]["outcome"] != "reject" for p in review["proposals"]):
                 raise Refused("an accepted proposal is not yet applied")
+
+
+def open_items(state: State) -> str:
+    """The unmet requirements and findings of this turn's latest review."""
+
+    steps = [s for s in state.turn_steps() if s["process"] == "reviewing"]
+    path = step_dir(steps[-1]["step"]) / "review.json" if steps else None
+    if path is None or not path.is_file():
+        return ""
+    review = json.loads(read(path))
+    items = [
+        f"{v['goal']} unmet: {v.get('fix', '')}"
+        for v in review["verdicts"]
+        if not v["met"]
+    ] + [f"finding at {f.get('where', '')}: {f['fix']}" for f in review["findings"]]
+    return (" Open in the latest review: " + "; ".join(items) + ".") if items else ""
+
+
+def cmd_stop(state: State, args) -> None:
+    require_coordinator(state, "stop")
+    state = close_open(state)
+    if any(s["turn"] == state.turn for s in state.stops):
+        raise Refused("this turn has already stopped")
+    _, failed_out = state.failure_state()
+    reason = args.reason
+    try:
+        check_stop(state, reason, failed_out)
+    except Refused as exc:
+        if failed_out:
+            raise
+        raise Refused(
+            f"the turn is not over: {exc.args[0]}.{open_items(state)} "
+            "Open the next step with `cw step`."
+        ) from None
     final = W / "history" / "final" / f"turn-{state.turn:02d}"
     final.mkdir(parents=True, exist_ok=True)
     if DRAFT.is_file():

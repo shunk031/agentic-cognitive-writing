@@ -573,3 +573,26 @@ def test_cw_unescapes_quote_characters_before_matching_a_source(tmp_path: Path) 
     close = ws.last_close("step", "planning", "--goals", "--why", "check")
     assert "G1:" not in close["detail"]
     assert "G2: the quoted src does not occur" in close["detail"]
+
+
+def test_cw_refused_stop_says_the_turn_is_not_over(ws: Workspace) -> None:
+    ws.plan()
+    ws.translate()
+    review = json.loads(json.dumps(MET))
+    review["verdicts"][2] = {
+        "goal": "G2",
+        "met": False,
+        "fix": "lengthen",
+        "where": "all",
+    }
+    review["findings"] = [{"kind": "local", "where": "end", "fix": "add a close"}]
+    ws.review(review)
+    message = ws.refused("stop", "--reason", "met", "--why", "done")
+    for part in (
+        "the turn is not over",
+        "G2 unmet: lengthen",
+        "finding at end: add a close",
+        "Open the next step with `cw step`",
+    ):
+        assert part in message, part
+    assert "the turn is not over" in ws.refused("stop", "--reason", "cap", "--why", "x")

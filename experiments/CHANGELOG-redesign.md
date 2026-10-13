@@ -103,3 +103,8 @@ The review of 9609cf6 found these defects; none is a prompt iteration.
 - **Runs.** dolomites-1453 with the iteration 5 turn-2 change request `15b829fb3ccc4f76bcdd6e7d6704707a` (tokens: parent output 4,834, child-inclusive output 24,850, input 1,588,233), writingbench-0519 `7bf534b473174754b2eab30b1a1a5839` (tokens: parent output 3,033, child-inclusive output 28,877, input 1,127,894), and writingbench-0838 `a0c3af1c404748029b361a89cbcdea3f` (tokens: parent output 1,911, child-inclusive output 18,331, input 727,436).
 - **Result.** Every gate held in all three runs, in both turns of dolomites-1453: 15 spawns, none forked or overridden, every child injected and closed, every nonce spawned once, and a `met` stop for each turn. No step failed and no `cw` stop was refused.
 - **Mechanism exercise.** writingbench-0519 returned once from `Reviewing` (`PTRTR`, 2 unmet requirements in its first review); dolomites-1453 developed one requirement in turn 2 (`PTTR`); writingbench-0838 stopped `met` after `PTR`.
+
+### Iteration 10: a refused stop says the turn is not over
+
+- **Motivation.** In dolomites-1453 `8a2a0f68b31a4b9c93a856973bc43f22` (iteration 8), `cw` refused `stop --reason met` in turn 2 because the latest review listed findings, and the `Monitor` ended the turn with a final message, so turn 2 had no stop and the run failed `completeness`.
+- **Change.** `cw` only, at the point of action: a refused `stop` now says that the turn is not over, names the unmet requirements and findings of the turn's latest review with their fixes, and tells the `Monitor` to open the next step with `cw step`. After a failed reissue, the refusal still points to `--reason failure`. A unit test checks the refusal text.
