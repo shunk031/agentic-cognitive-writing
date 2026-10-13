@@ -1,60 +1,43 @@
 ---
 name: reviewing
-description: Internal role skill for the agentic-cognitive-writing `Monitor`. Invoked by delegation from the `Monitor`; do not select this skill directly.
+description: Internal role skill for the Agentic CogWriter `Monitor`. A role-agent brief loads it; do not select it directly.
 ---
 
 # `Reviewing`
 
-Evaluate the draft and plan against the rhetorical problem, then revise only within the `Monitor`'s delegated scope.
+You are the `Reviewing` role agent, not the `Monitor`. You judge whether the draft meets each requirement and report every change it still needs. You do not edit any file.
 
-## When this skill runs
+## Your step
 
-You are the `Reviewing` sub-agent for the agentic-cognitive-writing plugin. The `Monitor` delegates a review with a project root, active goal, parent goal, draft scope, and uncertainty.
+1. Read the brief, then every file it names, including each change request.
+2. Judge each active requirement that the brief lists:
+   - **Met.** The draft meets the requirement fully. Quote, as `evidence`, the exact words of the draft that show it. When the requirement concerns the whole draft, such as a length, a number of items, or every required section, first measure it: count the words or characters, or list each required item you find, and record the result in `where`.
+   - **Unmet.** The draft misses the requirement or meets it only in part. Say `where` the draft falls short and the `fix` it needs.
+3. List as `findings` every other change the draft requires, such as a task constraint that no requirement covers. Mark each finding `structure` when it concerns sections or organization, and `local` when it concerns one passage.
+4. When a requirement itself is wrong for the task, add a proposal that gives its replacement and the reason.
+5. Submit the review, and resubmit it after a refusal, until `cw` accepts it:
 
-## Read the state first
+   ```sh
+   python3 .agents/cw/cw.py review <<'EOF'
+   {"verdicts": [{"goal": "G1", "met": true, "evidence": "<exact words from the draft>", "where": "<location>", "fix": ""},
+                 {"goal": "G2", "met": false, "evidence": "", "where": "<location>", "fix": "<required change>"}],
+    "proposals": [{"goal": "G3", "replacement": "<new statement>", "reason": "<why>"}],
+    "findings": [{"kind": "local", "where": "<location>", "fix": "<required change>"}]}
+   EOF
+   ```
 
-Read these before reviewing:
+6. Your final message states how many requirements are met and unmet and how many findings you listed.
 
-- `.writing/assignment.md`
-- `.writing/goals.md`
-- `.writing/draft.md`
-- relevant files in `.writing/memory/`
-- recent trace entries
+Use empty lists when there is nothing to report.
 
-Your work contains two embedded sub-processes, which you perform inside this prompt rather than delegating to more agents.
+## Guidance
 
-## Sub-processes
+Test the draft against:
 
-1. Evaluate: test the draft and plan against:
+- every requirement and constraint of the task, including its output language, length, and format
+- the audience
+- claim support
+- organization and coherence
+- tone and local wording
 
-   - the rhetorical problem
-   - the audience
-   - active goals
-   - claim support
-   - organization
-   - coherence
-   - tone
-   - local wording
-
-   Distinguish goal and evidence failures from organization and sentence failures.
-
-2. Revise: make only the requested or clearly authorized changes in the delegated scope. Preserve the writer's intent, call out factual gaps, and state whether the change is local or changes the goal network.
-
-## Boundaries
-
-Evaluation may interrupt any writing process when the draft, a new fact, or a goal conflict demands it. Tell the `Monitor` when that happens.
-
-If the draft reveals a more useful purpose, recommend goal regeneration with evidence; do not hide the change as copy-editing.
-
-Do not invent citations or claims.
-
-## Report format
-
-Return a concise report with:
-
-- findings ordered by effect on the active goal;
-- evidence from the relevant assignment, goal, memory, or draft state;
-- revisions made and their scope;
-- unsupported claims and open uncertainty;
-- when the delegation brief includes a goal network, give one verdict for each active goal, identified by ID, using exactly one of `keep`, `develop`, or `regenerate`. Use one line per goal in the form `- <goal ID> — <keep|develop|regenerate>: <one sentence of evidence from the draft>`. The verdict word must be lowercase: use exactly `keep`, `develop`, or `regenerate`, not `Keep`, `Develop`, `Regenerate`, or another synonym. For `regenerate`, include the proposed replacement purpose in that sentence. Omit this item when the brief has no goal network;
-- whether the `Monitor` should return to the parent goal, plan, translate, or review again
+List only changes the draft requires, not optional polish. Do not invent citations or claims.

@@ -82,3 +82,18 @@ Cross-cutting edits require local judgment at every occurrence.
 
 - Edit one occurrence at a time and review each hunk before continuing. Do not use bulk find-and-replace for judgment-bearing edits.
 - When a defect or unnecessary passage is flagged in a deliverable, treat it as an instance of a class: survey the whole deliverable and sibling deliverables that can carry the class, fix every instance, and report found and fixed counts. Never fix only the quoted spot.
+
+## Experiment validity
+
+Every condition must run as specified before its outputs are scored or interpreted.
+
+- Before a scored run, run each condition on a few non-evaluation prompts. Check in the harness logs, not in the agent's own trace, that the run executed as specified:
+
+  - every staged skill was loaded;
+  - each delegated role ran in its own agent without inheriting the coordinator's instructions;
+  - the output language and the other task constraints reached every agent;
+  - every trace field that the analyses read was written.
+
+  Start the scored run only after every condition passes these checks.
+
+- When a process measurement departs from what the design expects, such as a role performed by the coordinator or an adaptive move that rarely occurs, trace its cause in the run logs before writing an interpretation. Test an implementation defect as the first hypothesis.

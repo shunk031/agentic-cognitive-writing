@@ -1,0 +1,1 @@
+Read the skill file at plugin/skills/writing-adaptive-task-planning/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artif

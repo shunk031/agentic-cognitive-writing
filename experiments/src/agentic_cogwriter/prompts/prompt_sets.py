@@ -22,6 +22,41 @@ MAX_LENGTH = 6000
 REQUESTED_LENGTH_REGEX = r"(\d[\d,]{2,})\s*(?:-|\s)?(?:words?|字|tokens?)"
 
 
+def rank_by_difficulty(rows: list[dict[str, Any]], excluded: set[str]) -> list[str]:
+    """Rank prompt IDs by the difficulty key, hardest first, skipping exclusions."""
+
+    requested_length_pattern = re.compile(REQUESTED_LENGTH_REGEX, re.IGNORECASE)
+    scored: list[tuple[int, int, int, str]] = []
+    for row in rows:
+        if row["prompt_id"] in excluded:
+            continue
+        text = (
+            row["prompt_text"]
+            + " "
+            + json.dumps(row.get("requested_output_constraints"))
+        )
+        requested_length = max(
+            [
+                int(match.replace(",", ""))
+                for match in requested_length_pattern.findall(text)
+            ]
+            or [0]
+        )
+        prompt_words = len(row["prompt_text"].split())
+        if requested_length > MAX_LENGTH or prompt_words > MAX_LENGTH:
+            continue
+        scored.append(
+            (
+                prompt_words + requested_length,
+                prompt_words,
+                requested_length,
+                row["prompt_id"],
+            )
+        )
+    scored.sort(reverse=True)
+    return [prompt_id for *_, prompt_id in scored]
+
+
 def write_prompt_sets(
     output_path: Path = PROMPT_SETS_PATH,
     manifest_dir: Path = MANIFESTS_DIR,
@@ -59,40 +94,12 @@ def write_prompt_sets(
             )
         )
 
-    requested_length_pattern = re.compile(REQUESTED_LENGTH_REGEX, re.IGNORECASE)
     hard: dict[str, list[str]] = {}
     hard100: dict[str, list[str]] = {}
     for benchmark in BENCHMARKS:
-        scored: list[tuple[int, int, int, str]] = []
-        for row in manifests[benchmark]:
-            if row["prompt_id"] in set(pilot[benchmark]):
-                continue
-            text = (
-                row["prompt_text"]
-                + " "
-                + json.dumps(row.get("requested_output_constraints"))
-            )
-            requested_length = max(
-                [
-                    int(match.replace(",", ""))
-                    for match in requested_length_pattern.findall(text)
-                ]
-                or [0]
-            )
-            prompt_words = len(row["prompt_text"].split())
-            if requested_length > MAX_LENGTH or prompt_words > MAX_LENGTH:
-                continue
-            scored.append(
-                (
-                    prompt_words + requested_length,
-                    prompt_words,
-                    requested_length,
-                    row["prompt_id"],
-                )
-            )
-        scored.sort(reverse=True)
-        hard[benchmark] = [prompt_id for *_, prompt_id in scored[:HARD_COUNT]]
-        hard100[benchmark] = [prompt_id for *_, prompt_id in scored[:HARD100_COUNT]]
+        ranked = rank_by_difficulty(manifests[benchmark], set(pilot[benchmark]))
+        hard[benchmark] = ranked[:HARD_COUNT]
+        hard100[benchmark] = ranked[:HARD100_COUNT]
 
     artifact = {
         "schema_version": "1.0",

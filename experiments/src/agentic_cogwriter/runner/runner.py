@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import fcntl
 import json
 import os
@@ -18,6 +19,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from ..paths import EXPERIMENTS_ROOT, REPOSITORY_ROOT
+from . import cw_run
 from .adapters import PlatformAdapter
 from .budget import OutputBudget
 from .conditions import ConditionSpec, load_condition_registry
@@ -40,6 +42,13 @@ from .execution import (
 )
 from .hashing import sha256_bytes, sha256_file
 from .manifest import PromptRecord, load_benchmark_provenance
+from .skill_checks import (
+    leaked_acknowledgments,
+    paragraph_write_report,
+    selected_roles,
+    spawned_roles,
+    summarize_acknowledgments,
+)
 from .trace import (
     assert_untouched,
     assess_trace_timestamps,
@@ -98,6 +107,7 @@ _SHARED_STAGE_TOKENS = (
 _STAGE_RENDERABLE_TOKENS = frozenset((*_SHARED_STAGE_TOKENS, "previous_stage_output"))
 _CONTRACT_PATHS = {
     "single_turn": EXPERIMENTS_ROOT / "conditions/contracts/single_turn.md",
+    "information": EXPERIMENTS_ROOT / "conditions/contracts/information.md",
     "workspace": EXPERIMENTS_ROOT / "conditions/contracts/workspace.md",
     "delegation": EXPERIMENTS_ROOT / "conditions/contracts/delegation.md",
 }
@@ -283,6 +293,9 @@ def _synthesized_codex_config(
                 f"{_toml_key(key, context='Codex provider auth key')} = "
                 f"{serialized_value}"
             )
+    # Pin the 0.146.0 defaults: role agents cannot spawn further agents, and
+    # at most six agent threads stay open at once.
+    lines.extend(["", "[agents]", "max_depth = 1", "max_threads = 6"])
     return "\n".join(lines) + "\n"
 
 
@@ -307,6 +320,12 @@ def _validate_final_product(
 ) -> None:
     """Require the response channel to carry the complete product text."""
 
+    leaked = leaked_acknowledgments(output)
+    if leaked:
+        raise ExecutionError(
+            f"Condition {condition_id} final response contains skill "
+            f"acknowledgment lines: {', '.join(leaked)}"
+        )
     final_chars = len(output.strip())
     if not final_chars:
         raise ExecutionError(
@@ -347,6 +366,24 @@ def _delegation_check(
     }
 
 
+def _role_delegation(run_dir: Path, trace: Path) -> dict[str, Any]:
+    """Compare logged switches per role with completed spawns naming that role."""
+
+    selected = selected_roles(trace)
+    delegated = spawned_roles(
+        b"".join(
+            path.read_bytes() for path in sorted(run_dir.glob("attempt-*.events.jsonl"))
+        )
+    )
+    return {
+        "switches": dict(sorted(selected.items())),
+        "completed_spawns": dict(sorted(delegated.items())),
+        "undelegated": sorted(
+            role for role, count in selected.items() if delegated[role] < count
+        ),
+    }
+
+
 def _product_gate(condition: ConditionSpec, config: RuntimeConfig) -> dict[str, Any]:
     """Describe the product completeness rule persisted in each run manifest."""
 
@@ -382,6 +419,17 @@ class SessionCollection:
     hashes: dict[str, str]
     status: str
     reason: str | None = None
+
+
+class CwRunFailure(ExecutionError):
+    """A cw-arm run that completed transport but failed its classification."""
+
+    def __init__(self, failure: Mapping[str, Any]) -> None:
+        self.failure = dict(failure)
+        super().__init__(f"cw run failed: {failure['kind']}")
+
+
+_HARNESS_ERRORS = (ConfigurationError, ManifestError, UnscoredRun, OSError)
 
 
 class ExperimentRunner:
@@ -698,6 +746,11 @@ class ExperimentRunner:
             token_accounting_error: str | None = None
             trace_timestamps: Mapping[str, Any] | None = None
             followup_record: dict[str, Any] | None = None
+            role_delegation: dict[str, Any] | None = None
+            skill_acknowledgments: dict[str, Any] | None = None
+            uses_role_skills = (
+                condition.skill_name in self._CODEX_DELEGATED_SKILL_DIRECTORIES
+            )
             subagent_spawn_ids: set[str] = set()
             rollout_collection: dict[str, Any] = {
                 "status": "absent",
@@ -712,13 +765,21 @@ class ExperimentRunner:
             cli_version = "not_probed"
             stage_prompt_hashes = self._stage_prompt_hashes(condition)
             contract_hashes: dict[str, str] = {}
+            language = (
+                cw_run.resolve_language(prompt.language, prompt.input_text)
+                if condition.cw is not None
+                else None
+            )
             command_prompt = self._plugin_prompt(
                 condition,
                 prompt,
                 platform,
                 codex_prompt_root=Path("plugin"),
                 contract_hashes=contract_hashes,
+                language=language["value"] if language else None,
             )
+            runner_hashes: dict[str, str] = {}
+            cw_extra: dict[str, Any] = {"language": language} if language else {}
             benchmark_provenance = load_benchmark_provenance(prompt.benchmark_name)
             protected_goals = workspace / ".writing" / "goals.md"
             goals_before = (
@@ -767,6 +828,31 @@ class ExperimentRunner:
                 )
             if platform == "codex":
                 staged_files = self._stage_codex_plugin(condition, workspace)
+                if condition.cw is not None and language is not None:
+                    task_path = workspace / ".writing" / "task.md"
+                    task_path.write_text(
+                        cw_run.task_text(
+                            self._task_sections(prompt),
+                            self._read_contracts()[0]["information"],
+                            language["value"],
+                        ),
+                        encoding="utf-8",
+                    )
+                    cw_run.stage_cw(
+                        workspace, condition.cw_keys or {}, language["value"]
+                    )
+                    runner_hashes.update(cw_run.runner_files(workspace))
+                    staged_files = {
+                        path: f"sha256:{digest}"
+                        for path, digest in runner_hashes.items()
+                    }
+                    cw_extra["task_hash"] = staged_files[".writing/task.md"]
+            elif uses_role_skills:
+                # Claude Code loads the plugins itself; only the role skills are
+                # staged so in-context variants find them at the same path.
+                staged_files = self._stage_codex_plugin(
+                    condition, workspace, roles_only=True
+                )
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -833,6 +919,18 @@ class ExperimentRunner:
                 evidence_hashes.update(
                     self._persist_attempt_evidence(run_dir, attempt_number, result)
                 )
+                if condition.cw is not None:
+                    meta_path = run_dir / f"attempt-{attempt_number:03d}.meta.json"
+                    self._write_json(
+                        meta_path,
+                        {
+                            "returncode": result.returncode if result else None,
+                            "timed_out": result.timed_out if result else False,
+                            "started": result.started_at if result else None,
+                            "ended": result.ended_at if result else None,
+                        },
+                    )
+                    evidence_hashes[meta_path.name] = f"sha256:{sha256_file(meta_path)}"
                 if platform == "codex":
                     collection = self._collect_codex_sessions(
                         run_dir,
@@ -906,7 +1004,10 @@ class ExperimentRunner:
                             }
                         for key, value in observed_usage.items():
                             token_usage[key] += value
-                        if token_usage["total_tokens"] > budget.limit:
+                        if (
+                            condition.cw is None
+                            and token_usage["total_tokens"] > budget.limit
+                        ):
                             raise BudgetExceeded(
                                 "Codex turn usage exceeds the shared output "
                                 f"budget: used={token_usage['total_tokens']}, "
@@ -951,6 +1052,116 @@ class ExperimentRunner:
                     ),
                 )
 
+            if condition.cw is not None:
+
+                def on_retry() -> None:
+                    name = cw_run.write_retry_marker(workspace)
+                    marker = workspace / ".writing" / "history" / name
+                    runner_hashes[marker.relative_to(workspace).as_posix()] = (
+                        sha256_file(marker)
+                    )
+
+                def run_turn(text: str, session: str | None) -> ExecutionResult:
+                    nonlocal attempts
+                    turn_result, attempts = self._run_turn_with_retry(
+                        adapter,
+                        model_id=self.runtime_config.model_for(platform),
+                        prompt=text,
+                        session_id=session,
+                        cwd=workspace,
+                        env=generator_environment,
+                        attempts=attempts,
+                        record_attempt=record_attempt,
+                        snapshot_sessions=lambda: self._snapshot_codex_sessions(
+                            generator_config_dir
+                        ),
+                        on_retry=on_retry,
+                    )
+                    return turn_result
+
+                final_messages: list[str] = []
+                try:
+                    result = run_turn(command_prompt, None)
+                    final_messages.append(extract_output(result.stdout))
+                    if followup is not None:
+                        request = (
+                            workspace / ".writing" / "history" / "turn-02-request.md"
+                        )
+                        request.parent.mkdir(parents=True, exist_ok=True)
+                        request.write_text(followup, encoding="utf-8")
+                        runner_hashes[request.relative_to(workspace).as_posix()] = (
+                            sha256_file(request)
+                        )
+                        result = run_turn(followup, result.session_id)
+                        final_messages.append(extract_output(result.stdout))
+                except UnscoredRun:
+                    raise
+                except ExecutionError:
+                    pass
+                gate_report = cw_run.gates(run_dir, runner_hashes)
+                cw_extra["cw"] = {
+                    "gates": gate_report["results"],
+                    "reported": gate_report["reported"],
+                    "stop_reasons": cw_run.stop_reasons(run_dir),
+                    "tokens": cw_run.token_report(run_dir),
+                }
+                cw_extra["runner_files"] = runner_hashes
+                failure_kind = cw_run.classify_failure(
+                    run_dir, harness_error=False, gate_results=gate_report["results"]
+                )
+                if failure_kind is not None:
+                    raise CwRunFailure(failure_kind)
+                (run_dir / "final-message.txt").write_text(
+                    "\n\n".join(final_messages), encoding="utf-8"
+                )
+                # Each turn is scored from its own cw stop snapshot.
+                finals = workspace / ".writing" / "history" / "final"
+                snapshots = [
+                    finals / f"turn-{turn:02d}" / "draft.md"
+                    for turn in range(1, cw_run.turns_run(run_dir) + 1)
+                ]
+                if not all(path.is_file() for path in snapshots):
+                    raise CwRunFailure({"kind": "incomplete", "class": "model"})
+                if len(snapshots) > 1:
+                    shutil.copyfile(
+                        snapshots[0], run_dir / "turn1.output.normalized.txt"
+                    )
+                output = snapshots[-1].read_text(encoding="utf-8")
+                output_path.write_bytes(output.encode("utf-8"))
+                normalized_path.write_text(output, encoding="utf-8")
+                self._write_json(
+                    manifest_path,
+                    self._manifest(
+                        prompt=prompt,
+                        condition=condition,
+                        platform=platform,
+                        adapter=adapter,
+                        run_id=run_id,
+                        status="completed",
+                        started_at=started_at,
+                        cli_version=cli_version,
+                        attempts=attempts,
+                        budget=budget,
+                        output_hash=f"sha256:{sha256_file(output_path)}",
+                        stage_prompt_hashes=stage_prompt_hashes,
+                        contract_hashes=contract_hashes,
+                        benchmark_provenance=benchmark_provenance,
+                        execution_paths=execution_paths,
+                        evidence_hashes=evidence_hashes,
+                        staged_files=staged_files,
+                        token_usage=token_usage,
+                        subagent_spawn_count=len(subagent_spawn_ids),
+                        product_gate=product_gate,
+                        token_accounting_error=token_accounting_error,
+                        rollout_collection=rollout_collection,
+                        spawn_extraction=spawn_extraction,
+                        extra=cw_extra,
+                    ),
+                )
+                return RunResult(
+                    run_dir, manifest_path, output_path, trace_path, run_id
+                )
+
             result, attempts = self._run_turn_with_retry(
                 adapter,
                 model_id=self.runtime_config.model_for(platform),
@@ -969,6 +1180,10 @@ class ExperimentRunner:
                 ),
             )
             output = extract_output(result.stdout)
+            if platform == "codex":
+                skill_acknowledgments = self._skill_acknowledgments(
+                    condition, run_dir, trace_path, uses_role_skills
+                )
             reject_retrieval(output.encode("utf-8"), b"")
             budget.consume(
                 self.runtime_config.count_output_units(output), stage="final_output"
@@ -1025,6 +1240,18 @@ class ExperimentRunner:
                     f"execution; {len(subagent_spawn_ids)} spawn_agent event(s) "
                     "were observed"
                 )
+            if (
+                platform == "codex"
+                and uses_role_skills
+                and condition.require_delegation
+            ):
+                role_delegation = _role_delegation(run_dir, copied_trace)
+                if role_delegation["undelegated"]:
+                    raise ExecutionError(
+                        f"Condition {condition.condition_id} logged more switches "
+                        "than completed spawn_agent calls for: "
+                        + ", ".join(role_delegation["undelegated"])
+                    )
             if followup is not None:
                 if not result.session_id:
                     raise ExecutionError("Cannot resume a turn without its session_id")
@@ -1079,6 +1306,11 @@ class ExperimentRunner:
                 # are collected for analysis without that contract.
                 collect_plugin_trace(workspace, run_dir)
                 reject_retrieval(copied_trace.read_bytes(), b"")
+            if platform == "codex":
+                skill_acknowledgments = self._skill_acknowledgments(
+                    condition, run_dir, trace_path, uses_role_skills
+                )
+            paragraph_writes = paragraph_write_report(workspace, trace_path)
             output_path.write_bytes(output.encode("utf-8"))
             normalized_path.write_text(output, encoding="utf-8")
             self._write_json(
@@ -1110,6 +1342,9 @@ class ExperimentRunner:
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
                     followup=followup_record,
+                    role_delegation=role_delegation,
+                    skill_acknowledgments=skill_acknowledgments,
+                    paragraph_writes=paragraph_writes,
                 ),
             )
             return RunResult(
@@ -1129,6 +1364,14 @@ class ExperimentRunner:
                 "type": type(exc).__name__,
                 "message": str(exc),
             }
+            if isinstance(exc, CwRunFailure):
+                failure |= exc.failure
+            elif condition.cw is not None:
+                failure |= cw_run.classify_failure(
+                    run_dir,
+                    harness_error=isinstance(exc, _HARNESS_ERRORS),
+                    gate_results=None,
+                ) or {"kind": "harness_error", "class": "implementation"}
             if isinstance(exc, RetrievalViolation):
                 stream = exc.stream or "stdout"
                 artifact_suffix = (
@@ -1187,13 +1430,35 @@ class ExperimentRunner:
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
                     followup=followup_record,
+                    role_delegation=role_delegation,
+                    skill_acknowledgments=skill_acknowledgments,
                     failure=failure,
+                    extra=cw_extra,
                 ),
             )
             raise
         finally:
             shutil.rmtree(generator_config_dir, ignore_errors=True)
             self._release_generator_config_lock(generator_config_lock)
+
+    @staticmethod
+    def _skill_acknowledgments(
+        condition: ConditionSpec,
+        run_dir: Path,
+        trace: Path,
+        uses_role_skills: bool,
+    ) -> dict[str, Any]:
+        """Count acknowledgment lines; in-context role skills count at top level."""
+
+        return summarize_acknowledgments(
+            run_dir,
+            invoked_skill=condition.skill_name,
+            in_context_roles=(
+                selected_roles(trace)
+                if uses_role_skills and not condition.require_delegation
+                else ()
+            ),
+        )
 
     def _probe_cli(self, adapter: PlatformAdapter) -> str:
         if isinstance(self.executor, SubprocessExecutor):
@@ -1226,6 +1491,7 @@ class ExperimentRunner:
         ]
         | None = None,
         snapshot_sessions: Callable[[], SessionSnapshot] | None = None,
+        on_retry: Callable[[], None] | None = None,
     ) -> tuple[ExecutionResult, int]:
         """Run one skill turn, retrying only with the identical command policy."""
 
@@ -1252,12 +1518,16 @@ class ExperimentRunner:
             session_before = (
                 snapshot_sessions() if snapshot_sessions is not None else None
             )
+            started = time.time()
             try:
                 result = self.executor.run(
                     command,
                     cwd=cwd,
                     timeout_seconds=self.runtime_config.timeout_seconds,
                     env=env,
+                )
+                result = dataclasses.replace(
+                    result, started_at=started, ended_at=time.time()
                 )
             except Exception:
                 if record_attempt is not None:
@@ -1277,6 +1547,8 @@ class ExperimentRunner:
                             "Cannot retry a timed-out turn without its session_id"
                             + suffix
                         )
+                    if on_retry is not None:
+                        on_retry()
                     continue
                 raise ExecutionError("Headless turn timed out")
             if result.returncode != 0:
@@ -1288,6 +1560,8 @@ class ExperimentRunner:
                             "Cannot retry a failed turn without its session_id"
                             f" (return code {result.returncode})" + suffix
                         )
+                    if on_retry is not None:
+                        on_retry()
                     continue
                 message = result.stderr.decode("utf-8", errors="replace").strip()
                 raise ExecutionError(
@@ -1322,6 +1596,7 @@ class ExperimentRunner:
         *,
         codex_prompt_root: str | Path | None = None,
         contract_hashes: MutableMapping[str, str] | None = None,
+        language: str | None = None,
     ) -> str:
         wrapper = self._wrapper(condition)
         key = platform.replace("-", "_")
@@ -1348,11 +1623,11 @@ class ExperimentRunner:
         if contract_hashes is not None:
             contract_hashes.update(observed_contract_hashes)
         contract_names = (
-            ("single_turn", "delegation")
+            ("single_turn", "information", "delegation")
             if platform == "codex" and condition.require_delegation
-            else ("single_turn",)
+            else ("single_turn", "information")
             if platform == "codex"
-            else ("workspace", "single_turn")
+            else ("workspace", "single_turn", "information")
         )
         contracts = "\n\n".join(
             contract_texts[name].removesuffix("\n") for name in contract_names
@@ -1381,7 +1656,21 @@ class ExperimentRunner:
         )
         if generic_block:
             generic_block = f"\n\n{generic_block}"
-        return f"{invocation}{generic_block}{stage_text}"
+        language_block = f"\n\nOutput language: {language}" if language else ""
+        return f"{invocation}{generic_block}{stage_text}{language_block}"
+
+    @staticmethod
+    def _task_sections(prompt: PromptRecord) -> str:
+        """Return the Assignment, Supplied context, and constraints sections."""
+
+        constraints = json.dumps(
+            prompt.requested_output_constraints, ensure_ascii=False, sort_keys=True
+        )
+        return (
+            f"## Assignment\n{prompt.input_text}\n\n"
+            f"## Supplied context\n{prompt.supplied_context or '(none)'}\n\n"
+            f"## Requested output constraints\n{constraints}"
+        )
 
     def _stage_prompt_hashes(self, condition: ConditionSpec) -> dict[str, str | None]:
         """Re-read frozen stage files and verify the bytes used for the prompt."""
@@ -1541,12 +1830,20 @@ class ExperimentRunner:
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-single-context": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-loop-only": _CODEX_ROLE_SKILL_DIRECTORIES,
+        "cognitive-writing-single-writer": _CODEX_ROLE_SKILL_DIRECTORIES,
     }
 
     def _stage_codex_plugin(
-        self, condition: ConditionSpec, workspace: Path
+        self, condition: ConditionSpec, workspace: Path, *, roles_only: bool = False
     ) -> dict[str, str]:
-        """Stage the invoked skill and delegated role skills inside the workspace."""
+        """Stage the invoked skill and the role skills inside the workspace.
+
+        The invoked skill goes under ``plugin/skills/``, which Codex does not
+        scan, so role agents cannot discover it. The role skills go under
+        ``.agents/skills/``, where Codex discovers them as repository skills;
+        their ``allow_implicit_invocation: false`` policy keeps them out of the
+        model's skill list while ``$planning``-style mentions still load them.
+        """
 
         selected_root = self._codex_plugin_root(condition)
         source_roots = (
@@ -1558,7 +1855,7 @@ class ExperimentRunner:
             ),
         )
         required_directories = [
-            Path("skills") / condition.skill_name,
+            *(() if roles_only else (Path("skills") / condition.skill_name,)),
             *self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(condition.skill_name, ()),
         ]
         sources: dict[Path, Path] = {}
@@ -1577,15 +1874,26 @@ class ExperimentRunner:
                 )
             sources[relative] = source
 
-        staged_root = workspace / "plugin"
+        staged_roots = (workspace / "plugin", workspace / ".agents")
+        role_directories = set(self._CODEX_ROLE_SKILL_DIRECTORIES)
         for relative, source in sources.items():
             shutil.copytree(
                 source,
-                staged_root / relative,
+                staged_roots[relative in role_directories] / relative,
                 dirs_exist_ok=True,
+                # Example prompts in evals/ are for skill authors, not runs.
+                ignore=shutil.ignore_patterns(
+                    "evals",
+                    *(
+                        ("scripts", "references", "__pycache__")
+                        if condition.cw is not None
+                        else ()
+                    ),
+                ),
             )
         return {
             path.relative_to(workspace).as_posix(): f"sha256:{sha256_file(path)}"
+            for staged_root in staged_roots
             for path in sorted(staged_root.rglob("*"))
             if path.is_file()
         }
@@ -1620,6 +1928,10 @@ class ExperimentRunner:
         spawn_extraction: Mapping[str, Any] | None = None,
         trace_timestamps: Mapping[str, Any] | None = None,
         followup: Mapping[str, Any] | None = None,
+        role_delegation: Mapping[str, Any] | None = None,
+        skill_acknowledgments: Mapping[str, Any] | None = None,
+        paragraph_writes: Mapping[str, Any] | None = None,
+        extra: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         if platform == "codex":
@@ -1831,6 +2143,12 @@ class ExperimentRunner:
             manifest["trace_timestamps"] = dict(trace_timestamps)
         if followup is not None:
             manifest["followup"] = dict(followup)
+        if role_delegation is not None:
+            manifest["role_delegation"] = dict(role_delegation)
+        if skill_acknowledgments is not None:
+            manifest["skill_acknowledgments"] = dict(skill_acknowledgments)
+        if paragraph_writes is not None:
+            manifest["paragraph_writes"] = dict(paragraph_writes)
         if output_hash is not None:
             manifest["output_hash"] = output_hash
         if trace_hash is not None:
@@ -1839,6 +2157,8 @@ class ExperimentRunner:
             manifest["failure"] = failure
         if token_accounting_error is not None:
             manifest["token_accounting"]["error"] = token_accounting_error
+        if extra:
+            manifest.update(extra)
         return manifest
 
     @staticmethod

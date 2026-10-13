@@ -13,25 +13,23 @@ Treat the assignment as the rhetorical problem, including:
 - exigency
 - writer's goals
 - genre
+- output language, length, and format
 - constraints
 
-Do not replace missing user intent with a guess.
+Your work contains three embedded sub-processes, which you perform yourself:
 
-Your work contains three embedded sub-processes, which you perform inside this prompt:
+1. Generate: gather relevant knowledge from:
 
-1. Generate: retrieve relevant knowledge from:
-
-   - user-provided material
-   - the current draft
+   - the assignment and its supplied context
 
    Separate known material, plausible ideas, and unsupported claims.
 
 2. Organize: group ideas and identify relationships or missing categories. Propose an order or presentation pattern that serves the audience. The organizing work makes meaning rather than merely rearranging bullets.
-3. Goal-setting: create concrete sub-goals for the response.
+3. Goal-setting: create concrete sub-goals for the response. When the assignment sets a length, give each section a length target so that the targets add up to the requested length.
 
-Do not silently change the assignment, factual claims, or the user's top-level intent.
+Do not invent facts, sources, quotations, or statistics.
 
-Return a concise plan with generated knowledge separated by confidence, the proposed organization and why it fits the audience, the sub-goals for the response, and unresolved uncertainty.
+Return a concise plan with the proposed organization and why it fits the audience, the length target of each section, the generated knowledge separated by confidence, the sub-goals for the response, and unresolved uncertainty.
 
 ### Assignment
 

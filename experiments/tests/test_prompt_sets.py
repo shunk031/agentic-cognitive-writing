@@ -151,3 +151,23 @@ def test_prompt_sets_regenerate_byte_for_byte_from_committed_manifests(
     write_prompt_sets(generated, MANIFESTS_DIR)
 
     assert generated.read_bytes() == PROMPT_SET_PATH.read_bytes()
+
+
+def test_smoke_pool_lies_below_calibration_and_outside_every_scored_set() -> None:
+    from agentic_cogwriter.prompts import smoke_pool as pool
+
+    sets = pool.prompt_sets()
+    assert len(sets["calibration"]) == 12
+    assert pool.problems() == []
+    prompts = pool.smoke_pool()
+    assert len(prompts) == len(set(prompts)) == 27
+    assert prompts[-3:] == list(pool.KEPT)
+    rows = {name: pool._benchmark(name)[0] for name in ("writingbench", "hellobench")}
+    window = {name: pool.ranked_window(name) for name in rows}
+    assert (
+        sum(pool.chinese(rows["writingbench"][p]) for p in window["writingbench"]) >= 2
+    )
+    assert (
+        sum(pool.long_input(rows["hellobench"][p]) for p in window["hellobench"]) >= 2
+    )
+    assert window["hellobench"][0] == "hellobench-summarization_023"

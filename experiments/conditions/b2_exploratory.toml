@@ -35,24 +35,24 @@ processes = ["perspective-discovery", "simulated-question-answering", "outline",
 [[stages]]
 id = "perspective_discovery"
 path = "prompts/a3_perspective_discovery.md"
-sha256 = "0ad7ab1fd91759bde9b1d0445f4fef972ae36b0bc0c91287b64e724f50c62a5e"
+sha256 = "3cca748a3e9527053dfde37fe2105ac005ad11d305aef57b9801f7ef2fe08569"
 
 [[stages]]
 id = "simulated_qa"
 path = "prompts/a3_simulated_qa.md"
-sha256 = "013f3e1775067d914c0ad1c1c3ab564ef9ebe3cbe2a730503b204ed33d65fba2"
+sha256 = "0fbf2f35fa52bce03f0e77614374b9a3252805f9b3deb25444a062aa04cccee8"
 
 [[stages]]
 id = "outline"
 path = "prompts/a3_outline.md"
-sha256 = "91b0b41e451c046ccc1fce3affcc94210d3074424211b5c0f625b926de0a6c02"
+sha256 = "a0c2f830620c53860ee6d090ca0228abaa659e80232756aa40dfa036ec4ba732"
 
 [[stages]]
 id = "draft"
 path = "prompts/a3_draft.md"
-sha256 = "5837e08edab596a910d3680f445d5f339d42ab105e40032c97cbf62477f6f23e"
+sha256 = "81615b7b711eb1705840a6ec3d15dcac02487e0f6858cfa42a8117a46eee4a09"
 
 [[stages]]
 id = "polish"
 path = "prompts/a3_polish.md"
-sha256 = "7311670446818ad56f043765acdf3997b45a263e061cfe599f81acffeb6042e4"
+sha256 = "f05fd9e2d9130b11b88b3792d0ece3bea1eb25147b5a9876cb260421a927e6a1"

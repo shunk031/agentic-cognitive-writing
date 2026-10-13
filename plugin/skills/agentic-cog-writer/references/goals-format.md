@@ -1,37 +1,31 @@
 # Goal network format
 
-The goal network in `.writing/goals.md` is the working representation of the writer's purpose. It connects abstract rhetorical aims to concrete content and process goals. It is hierarchical, can be expanded while composing, and can be regenerated when writing changes the author's understanding.
+The goal network in `.writing/goals.md` is the working representation of the writer's purpose. It connects the assignment's aims to concrete content goals, and the `Planning` process alone writes it. The goal history lives in the trace, not in this file.
 
-## Network notation
-
-Use stable goal identifiers, one goal per line, and indentation for parent-child relationships:
+## Notation
 
 ```markdown
-# Goal network
+# Goals
 
-## Active network
-
-- [G0] Explain the policy change to new team members (kind: content, status: active, parent: none)
-  - [G1] Establish why the change matters to their first week (kind: content, status: active, parent: G0)
-    - [G2] Open with a concrete first-day scenario (kind: process, status: resolved, parent: G1)
-  - [G3] Give one example of the new workflow (kind: content, status: pending, parent: G0)
-
-## Goal history
-
-| Timestamp | Event | Goal | Parent | Rationale | Evidence |
-| --- | --- | --- | --- | --- | --- |
-| 2026-01-15T09:04:00+09:00 | created | G1 | G0 | Make the audience impact explicit. | assignment.md |
-| 2026-01-15T09:18:00+09:00 | regenerated | G0 | none | The opening revealed that the real purpose is adoption, not explanation. | draft.md, reviewer note |
+- [G1] Persuade new engineering managers to adopt the handoff checklist (parent: none, status: active, length: 900 words)
+  - [G1.1] Show why missed handoffs matter in their first week (parent: G1, status: active, length: 300 words)
+  - [G1.2] Explain the policy change (parent: G1, status: replaced by G1.4)
+  - [G1.3] Present the checklist with one worked example (parent: G1, status: active, length: 400 words)
+  - [G1.4] Explain what changes in each manager's on-call week (parent: G1, status: active, length: 200 words)
 ```
 
-Set the history table's timestamp column to the current wall-clock time obtained from the shell at write time, for example `date -Is`; never copy timestamps from examples.
+Each line holds one goal: a stable ID in brackets, the goal statement, its parent, its status, and an optional length target. A child is indented under its parent.
 
-`kind` may be `content`, `process`, or `criterion`. Use `status` values `pending`, `active`, `blocked`, `resolved`, or `superseded`. Keep a regenerated goal's original ID in history and give the replacement a new ID when its meaning materially changes. A small wording refinement can stay under the same ID, but record it as `developed` in the history.
+## Goal IDs
 
-## Update rules
+A top-level goal's ID is `G` and a number, such as `G1`. A child's ID is its parent's ID, a dot, and the next unused number, such as `G1.3` or `G1.3.1`. IDs are never reused. Every ID matches the regular expression `G\d+(\.\d+)*`.
 
-- Add a history row whenever a goal is created, developed, or regenerated.
-- Keep the immediate parent ID on every goal so the Monitor can pop back after a sub-goal resolves.
-- Put evaluation criteria such as audience fit, claim support, or tone in `criterion` goals when they guide a writing choice.
-- Mark a goal `superseded` rather than deleting it when a new goal replaces it.
-- If a goal depends on an unresolved fact or user decision, mark it `blocked` and name the uncertainty in the trace.
+## Changes
+
+| Change  | Who decides                                  | In the file                                                                       | In the trace       |
+| ------- | -------------------------------------------- | --------------------------------------------------------------------------------- | ------------------ |
+| Create  | `Planning`                                   | a new line with a new ID                                                          | `goal_created`     |
+| Develop | `Planning`                                   | a more specific statement under the same ID                                       | `goal_developed`   |
+| Replace | the `Monitor` accepts a `Reviewing` proposal | the old line marked `replaced by <new ID>` and the new goal under the same parent | `goal_regenerated` |
+
+Status is `active` or `replaced by <ID>`.

@@ -35,14 +35,14 @@ processes = ["pre-write", "write", "re-write"]
 [[stages]]
 id = "pre_write"
 path = "prompts/a9_pre_write.md"
-sha256 = "f26ab2106f52e6570ba94aaaccf89777cd63dc039155fdb8f16b30b0ae3c909c"
+sha256 = "5f373b85539fdf43434760686f5c4e78dc8d6f0851a79560ac9ad304b2d29efc"
 
 [[stages]]
 id = "write"
 path = "prompts/a9_write.md"
-sha256 = "7ee45eefed9aee3e90fe9b5bcdaefdaeec77cb3ab905afec068215e74b79d633"
+sha256 = "1d9369b69b2e4beb507edf03a9294442bf86e67c9cab76f7d6bff2622d3ea7a7"
 
 [[stages]]
 id = "re_write"
 path = "prompts/a9_re_write.md"
-sha256 = "5bf140350fdf5ecf4fb36c8999ef4aff783eeb22369c8c3b55cac0868b7fecda"
+sha256 = "affca5be24f9392bdd3767078fa4181facf4973ef1e5dff7386422dc9c0db5b8"

@@ -35,7 +35,7 @@ processes = ["draft", "feedback", "refine"]
 [[stages]]
 id = "draft"
 path = "prompts/a10_draft.md"
-sha256 = "07048b295bbdf562a4470289818db03f8ab840c31dc4dcc18868a4e515c9cc69"
+sha256 = "adefbb4df79c89bdcecbc3435875f88fcf37d286263344ddeb87a2bf3ee827c3"
 
 [[stages]]
 id = "feedback_1"

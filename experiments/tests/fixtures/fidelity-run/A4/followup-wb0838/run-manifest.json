@@ -1,0 +1,11 @@
+{
+  "inputs": {
+    "condition_id": "A4",
+    "prompt_id": "writingbench-0838"
+  },
+  "language": {
+    "source": "placeholder: majority script of the assignment",
+    "value": "English"
+  },
+  "status": "completed"
+}

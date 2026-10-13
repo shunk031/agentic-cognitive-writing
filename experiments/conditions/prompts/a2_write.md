@@ -1,6 +1,6 @@
 ## A2 Write
 
-Write a complete draft that answers the assignment. Use the Pre-Write output as working guidance, but use only the assignment and supplied context for content. Do not browse, search, retrieve sources, or add outside facts. Follow the requested output constraints. Return only the draft.
+Write a complete draft that answers the assignment. Use the Pre-Write output as working guidance, but use only the assignment and supplied context for content. Do not browse, search, retrieve sources, or add outside facts. Follow the requested output constraints. Output only the draft.
 
 ### Assignment
 
