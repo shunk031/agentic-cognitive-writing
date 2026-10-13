@@ -127,7 +127,7 @@ class SimulatedMonitor:
                 "command_execution", command="cw step", aggregated_output="\n".join(out)
             )
             child = f"child-{self.turn}-{index}"
-            spawn_line = out[1]
+            spawn_line = json.loads(out[0])["spawn"]
             item(
                 "collab_tool_call",
                 tool="spawn_agent",

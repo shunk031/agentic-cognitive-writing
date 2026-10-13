@@ -32,25 +32,7 @@ Before every step, read `goals.md`, `draft.md`, and the latest `review.json`. Ch
 python3 .agents/cw/cw.py step <planning|translating|reviewing> [--scope <ID or passage> ...] [--goals] --why "<what in the state led to this choice>"
 ```
 
-Give the scope as requirement IDs such as `G1 G2.1` or as a quoted passage label; `cw` checks it. `cw` prints a history line and then a spawn line. Have a role agent perform the step by passing that spawn line verbatim as the message:
-
-```js
-const { agent_id } = await tools.multi_agent_v1__spawn_agent({
-  fork_context: false,
-  message: "<the spawn line, verbatim>",
-});
-let r;
-do {
-  r = await tools.multi_agent_v1__wait_agent({
-    targets: [agent_id],
-    timeout_ms: 300000,
-  });
-} while (r.timed_out);
-await tools.multi_agent_v1__close_agent({ target: agent_id });
-text(JSON.stringify(r.status[agent_id]));
-```
-
-Run the whole block in one call, so the role agent is closed before you read its report and before any other command. Spawn a role agent only with the exact spawn line that `cw step` has just printed, and send it no other message; for any further work, open a new step. Run one role agent at a time. Do not perform a role yourself, do not change files under `.writing/`, and do not run `codex`.
+Give the scope as requirement IDs such as `G1 G2.1` or as a quoted passage label; `cw` checks it. `cw` prints a history line and then the call that has a role agent perform the step. Make exactly the call `cw step` printed, as one call, before any other command, and send the role agent nothing else; for any further work, open a new step. Do not perform a role yourself, do not change files under `.writing/`, and do not run `codex`.
 
 When `cw` reports that a step failed, follow its message; `cw` checks the reissue.
 

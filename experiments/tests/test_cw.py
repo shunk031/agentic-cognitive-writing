@@ -504,9 +504,19 @@ def test_cw_prints_the_spawn_line_and_keeps_why_out_of_the_brief(ws: Workspace) 
     result = ws.cw("step", "planning", "--goals", "--why", "secret reason")
     entry = json.loads(result.stdout.splitlines()[0])
     brief = ws.w / "history/step-01/brief.md"
-    assert result.stdout.splitlines()[1] == (
-        f"$planning Read {brief} and follow it. [{entry['nonce']}]"
+    line = f"$planning Read {brief} and follow it. [{entry['nonce']}]"
+    assert entry["spawn"] == line
+    # cw prints the complete delegation call; the Monitor copies it verbatim.
+    call = result.stdout.split("\n", 2)[2]
+    assert call.startswith(
+        "const { agent_id } = await tools.multi_agent_v1__spawn_agent("
+        f"{{ fork_context: false, message: {json.dumps(line)} }});\n"
     )
+    for required in ("wait_agent(", "timeout_ms: 300000", "while (r.timed_out)"):
+        assert required in call
+    assert "close_agent({ target: agent_id })" in call
+    for forbidden in ("model", "reasoning_effort", "service_tier", "items"):
+        assert forbidden not in call
     text = brief.read_text()
     assert "secret reason" not in text
     for field in (

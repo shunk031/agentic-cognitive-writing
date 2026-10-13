@@ -626,6 +626,22 @@ def brief_text(state: State, n: int, step: dict) -> str:
     return "\n".join(lines)
 
 
+def delegation_call(spawn: str) -> str:
+    """The exact code-mode call that delegates a step to its role agent."""
+
+    return (
+        "const { agent_id } = await tools.multi_agent_v1__spawn_agent("
+        f"{{ fork_context: false, message: {json.dumps(spawn, ensure_ascii=False)} }});\n"
+        "let r;\n"
+        "do {\n"
+        "  r = await tools.multi_agent_v1__wait_agent("
+        "{ targets: [agent_id], timeout_ms: 300000 });\n"
+        "} while (r.timed_out);\n"
+        "await tools.multi_agent_v1__close_agent({ target: agent_id });\n"
+        "text(JSON.stringify(r.status[agent_id]));"
+    )
+
+
 def cmd_step(state: State, args) -> None:
     require_coordinator(state, "step")
     state = close_open(state)
@@ -706,7 +722,8 @@ def cmd_step(state: State, args) -> None:
     step["record"] = tracked()
     append(step)
     if state.delegated:
-        print(step["spawn"])
+        print("Make exactly this call, as one exec call, before any other command:")
+        print(delegation_call(step["spawn"]))
     else:
         skill = ROOT / ".agents" / "skills" / process / "SKILL.md"
         skill_text = read(skill)

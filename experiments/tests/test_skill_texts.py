@@ -273,19 +273,12 @@ def test_redesigned_skills_have_no_acknowledgment_note() -> None:
         assert "I read" not in text and "[!NOTE]" not in text
 
 
-def test_monitor_spawns_without_forked_context_and_waits_until_final() -> None:
+def test_monitor_makes_exactly_the_call_cw_step_prints() -> None:
+    # cw prints the delegation call; the skill holds no second copy of it.
     text = A4_SKILL.read_text(encoding="utf-8")
-    code = text.split("```js\n", 1)[1].split("```", 1)[0]
-    for required in (
-        "fork_context: false",
-        'message: "<the spawn line, verbatim>"',
-        "timeout_ms: 300000",
-        "while (r.timed_out)",
-        "multi_agent_v1__close_agent({ target: agent_id })",
-    ):
-        assert required in code, required
-    for forbidden in ("model", "reasoning_effort", "service_tier", "items"):
-        assert forbidden not in code
+    assert "Make exactly the call `cw step` printed" in text
+    for duplicate in ("```js", "fork_context", "spawn_agent", "wait_agent"):
+        assert duplicate not in text, duplicate
 
 
 @pytest.mark.parametrize("role", ROLES)
