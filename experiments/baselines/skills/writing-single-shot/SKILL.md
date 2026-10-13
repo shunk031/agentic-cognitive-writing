@@ -3,6 +3,11 @@ name: writing-single-shot
 description: "Experiment condition A1. Generate the complete document in one pass from the assignment and supplied context, with no planning or review stage. Use only for the controlled single-shot comparison."
 ---
 
+> [!NOTE]
+> After reading this `SKILL.md`, say: `I read writing-single-shot.`
+>
+> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+
 # Single-shot writing
 
 Run condition A1 as one generation pass. The generator writes the complete document from `.writing/assignment.md` and the supplied context. The generator does not create a plan, ask a planning subagent, run a reviewer, or perform a second generation pass.

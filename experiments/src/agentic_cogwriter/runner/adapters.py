@@ -92,7 +92,12 @@ class PlatformAdapter:
         elif self.platform == "claude-code":
             if "--print" not in self.first_args:
                 raise ConfigurationError("Claude adapter must use claude --print")
-            if "Read,Write,Edit" not in self.first_args:
+            allowed = (
+                self.first_args[self.first_args.index("--allowedTools") + 1]
+                if "--allowedTools" in self.first_args[:-1]
+                else ""
+            )
+            if not {"Read", "Write", "Edit"} <= set(allowed.split(",")):
                 raise ConfigurationError(
                     "Claude adapter must allow plugin trace writes"
                 )

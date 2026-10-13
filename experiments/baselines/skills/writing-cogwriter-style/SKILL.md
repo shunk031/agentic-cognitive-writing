@@ -3,6 +3,11 @@ name: writing-cogwriter-style
 description: "Exploratory CogWriter-style adaptation. Produce and immediately revise a structured plan, generate document segments in parallel with native subagents, and run a bounded length-review loop without a goal network."
 ---
 
+> [!NOTE]
+> After reading this `SKILL.md`, say: `I read writing-cogwriter-style.`
+>
+> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+
 # CogWriter[^1]-style writing
 
 Run a CogWriter[^1]-style adaptation, not a reproduction. The fixed top-level order is:

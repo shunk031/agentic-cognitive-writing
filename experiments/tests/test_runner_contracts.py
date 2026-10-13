@@ -74,7 +74,7 @@ SINGLE_TURN_CONTRACT = (
     "This is a single-turn task with no interactive user; never ask clarification "
     "questions. When the assignment underspecifies audience, purpose, or scope, "
     "apply genre-appropriate defaults and record the assumptions. Conditions with "
-    "a `.writing/` workspace record assumptions in `.writing/assumptions.md`. "
+    "a `.writing/` workspace record assumptions in `.writing/assignment.md`. "
     "Do not state assumptions "
     "briefly at the top of the deliverable. Conditions without `.writing/` apply "
     "assumptions without an extra preamble. Do not change the deliverable's content "
@@ -85,10 +85,20 @@ DELEGATION_CONTRACT = (
     "## Delegation contract\n\n"
     "Native subagent delegation is available in this environment. Delegate every "
     "role the skill assigns to a role agent by spawning a Codex subagent as the "
-    "skill's delegation brief instructs; performing a delegated role as the "
-    "coordinator is not permitted in this run and fails the run."
+    "skill's delegation instructions describe. The coordinator never performs a "
+    "delegated role itself; a run in which a selected role was not delegated fails."
 )
 DELEGATION_CONTRACT_TEXT = DELEGATION_CONTRACT + "\n"
+INFORMATION_CONTRACT = (
+    "## Language and information contract\n\n"
+    "Write the deliverable in the language the assignment requests. When the "
+    "assignment requests no language, write it in the language of the "
+    "assignment's instructions, even when the supplied context is in another "
+    "language. Use only the assignment, the supplied context, and the files this "
+    "run creates. Do not search the web, fetch URLs, call retrieval tools, or use "
+    "any other external source."
+)
+INFORMATION_CONTRACT_TEXT = INFORMATION_CONTRACT + "\n"
 DELEGATING_CONDITIONS = ("A3", "A4", "A5", "A6", "B1")
 
 NO_GOAL_SKILL_PATHS = (
@@ -395,6 +405,7 @@ refresh_interval_ms = 120000
                         },
                     }
                 },
+                "agents": {"max_depth": 1, "max_threads": 6},
             }
         ]
     assert config_root not in result.run_dir.parents
@@ -713,6 +724,7 @@ def test_synthesized_codex_config_round_trips_escaped_unicode_values() -> None:
         "model_providers": {
             "quoted-provider": source_config["model_providers"]["quoted-provider"]
         },
+        "agents": {"max_depth": 1, "max_threads": 6},
     }
 
 
@@ -971,6 +983,7 @@ def test_contract_files_preserve_the_existing_paragraph_bytes() -> None:
         "single_turn": SINGLE_TURN_CONTRACT_TEXT,
         "workspace": CLAUDE_WORKSPACE_CONTRACT_TEXT,
         "delegation": DELEGATION_CONTRACT_TEXT,
+        "information": INFORMATION_CONTRACT_TEXT,
     }
 
     assert {
@@ -984,6 +997,7 @@ def test_wrappers_leave_shared_contracts_to_prompt_composition() -> None:
         SINGLE_TURN_CONTRACT,
         CLAUDE_WORKSPACE_CONTRACT,
         DELEGATION_CONTRACT,
+        INFORMATION_CONTRACT,
     )
     for condition in load_condition_registry().values():
         wrapper = tomllib.loads(condition.plugin_config.read_text(encoding="utf-8"))
@@ -1007,12 +1021,13 @@ def test_every_condition_prompt_has_the_uniform_single_turn_contract() -> None:
         for platform in ("codex", "claude-code"):
             prompt = runner._plugin_prompt(condition, _prompt(), platform)
             assert SINGLE_TURN_CONTRACT in prompt
+            assert INFORMATION_CONTRACT in prompt
 
 
-def test_every_wrapper_records_assumptions_in_the_assumptions_file() -> None:
+def test_every_wrapper_records_assumptions_in_the_assignment_file() -> None:
     expected = (
         "Conditions with a `.writing/` workspace record assumptions in "
-        "`.writing/assumptions.md`."
+        "`.writing/assignment.md`."
     )
     for condition in load_condition_registry().values():
         for platform in ("codex", "claude_code"):
@@ -1235,7 +1250,7 @@ def test_composed_prompt_uses_ordered_headings_without_label_lines() -> None:
             headings = re.findall(r"(?m)^#{2,3} .+$", prompt)
             expected = (
                 (["## Workspace contract"] if platform == "claude-code" else [])
-                + ["## Single-turn contract"]
+                + ["## Single-turn contract", "## Language and information contract"]
                 + (
                     ["## Delegation contract"]
                     if platform == "codex" and condition.require_delegation
@@ -1360,14 +1375,15 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
     assert set(staged_files) == {
         "plugin/skills/agentic-cog-writer/SKILL.md",
         "plugin/skills/agentic-cog-writer/references/trace.md",
-        "plugin/skills/planning/SKILL.md",
-        "plugin/skills/translating/SKILL.md",
-        "plugin/skills/reviewing/SKILL.md",
+        ".agents/skills/planning/SKILL.md",
+        ".agents/skills/translating/SKILL.md",
+        ".agents/skills/reviewing/SKILL.md",
     }
     for relative, content in files.items():
-        staged = result.run_dir / "workspace" / "plugin" / relative
+        root = "plugin" if "agentic-cog-writer" in relative else ".agents"
+        staged = result.run_dir / "workspace" / root / relative
         assert staged.read_text() == content
-        assert staged_files[f"plugin/{relative}"] == (
+        assert staged_files[f"{root}/{relative}"] == (
             "sha256:" + hashlib.sha256(content.encode()).hexdigest()
         )
 
@@ -1421,9 +1437,9 @@ def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6_a8(
     )
     assert set(staged_files) == {
         f"plugin/skills/{skill_name}/SKILL.md",
-        "plugin/skills/planning/SKILL.md",
-        "plugin/skills/translating/SKILL.md",
-        "plugin/skills/reviewing/SKILL.md",
+        ".agents/skills/planning/SKILL.md",
+        ".agents/skills/translating/SKILL.md",
+        ".agents/skills/reviewing/SKILL.md",
     }
 
 
@@ -1465,12 +1481,12 @@ def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
         "plugin/skills/cognitive-writing-fixed-order/SKILL.md",
         "plugin/skills/cognitive-writing-fixed-order/agents/openai.yaml",
         "plugin/skills/cognitive-writing-fixed-order/evals/evals.json",
-        "plugin/skills/planning/SKILL.md",
-        "plugin/skills/planning/agents/openai.yaml",
-        "plugin/skills/reviewing/SKILL.md",
-        "plugin/skills/reviewing/agents/openai.yaml",
-        "plugin/skills/translating/SKILL.md",
-        "plugin/skills/translating/agents/openai.yaml",
+        ".agents/skills/planning/SKILL.md",
+        ".agents/skills/planning/agents/openai.yaml",
+        ".agents/skills/reviewing/SKILL.md",
+        ".agents/skills/reviewing/agents/openai.yaml",
+        ".agents/skills/translating/SKILL.md",
+        ".agents/skills/translating/agents/openai.yaml",
     }
 
 
@@ -2402,6 +2418,7 @@ def _result(
             "id": f"collab-{index}",
             "type": "collab_tool_call",
             "tool": "spawn_agent",
+            "prompt": f"${ROLE_SKILLS[index % len(ROLE_SKILLS)]} You are a role agent.",
             "status": spawn_status,
             "receiver_thread_ids": (
                 receiver_thread_ids
@@ -2636,6 +2653,7 @@ def test_frozen_stage_contents_and_provenance_are_recorded(tmp_path: Path) -> No
     )
     assert manifest["inputs"]["contract_hashes"] == {
         "delegation": hashlib.sha256(DELEGATION_CONTRACT_TEXT.encode()).hexdigest(),
+        "information": hashlib.sha256(INFORMATION_CONTRACT_TEXT.encode()).hexdigest(),
         "single_turn": hashlib.sha256(SINGLE_TURN_CONTRACT_TEXT.encode()).hexdigest(),
         "workspace": hashlib.sha256(
             CLAUDE_WORKSPACE_CONTRACT_TEXT.encode()

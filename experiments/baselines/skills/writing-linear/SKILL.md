@@ -3,6 +3,11 @@ name: writing-linear
 description: "Experiment condition A2. Run one fixed Pre-Write, Write, and Re-Write pass, handing each output to the next under a common output budget. Use only for the controlled linear comparison."
 ---
 
+> [!NOTE]
+> After reading this `SKILL.md`, say: `I read writing-linear.`
+>
+> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+
 # Linear writing
 
 Run condition A2 in the fixed order `Pre-Write -> Write -> Re-Write`. Each stage runs once. The output from one stage is the only process artifact handed to the next stage, together with the unchanged assignment and supplied context. The Re-Write output is the final document.

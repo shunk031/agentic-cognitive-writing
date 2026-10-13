@@ -3,6 +3,11 @@ name: writing-adaptive-task-planning
 description: "Confirmatory condition A3 (Adaptive Task Planning). Build and persist a typed reasoning/composition task graph, recursively decompose and execute tasks with subagents, and revise the graph from aggregated text while keeping adaptation on task structure rather than writing-process selection."
 ---
 
+> [!NOTE]
+> After reading this `SKILL.md`, say: `I read writing-adaptive-task-planning.`
+>
+> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+
 # Adaptive Task Planning
 
 Run confirmatory condition A3, Adaptive Task Planning, as an adaptation of WriteHERE[^1]'s heterogeneous recursive planning, not a reproduction. The coordinator dynamically builds a directed acyclic task graph in project files and interleaves recursive decomposition with execution. The root task is a composition task for the complete document. Child tasks may be reasoning tasks for requirements, structure, consistency, or argument development and composition tasks for section or document writing. The coordinator schedules ready tasks by graph state and dependency order, then persists the graph after every change.

@@ -3,6 +3,11 @@ name: writing-storm-style
 description: "Baseline STORM-style writing. Use a fixed perspective, simulated question-answering, outline, per-section draft, and polish sequence without retrieval or citation generation."
 ---
 
+> [!NOTE]
+> After reading this `SKILL.md`, say: `I read writing-storm-style.`
+>
+> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+
 # STORM[^1]-style writing
 
 Run the STORM-style baseline in the fixed five-stage order:

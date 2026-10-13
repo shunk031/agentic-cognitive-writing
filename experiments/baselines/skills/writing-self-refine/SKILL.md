@@ -3,6 +3,11 @@ name: writing-self-refine
 description: "Experiment condition A10. Write one draft, then run a fixed number of Feedback and Refine rounds on it in one session, following Self-Refine. Use only for the controlled budget-matched Self-Refine comparison."
 ---
 
+> [!NOTE]
+> After reading this `SKILL.md`, say: `I read writing-self-refine.`
+>
+> Say the line in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
+
 # Self-Refine writing
 
 Run condition A10 as one Draft pass followed by a fixed number of Feedback and Refine rounds, following Self-Refine (Madaan et al., 2023). The same generator writes the draft, gives feedback on its own current draft, and refines the draft using that feedback. The frozen stage list in the prompt fixes the number of rounds; run every listed stage once, in order, and never stop early or add a round.

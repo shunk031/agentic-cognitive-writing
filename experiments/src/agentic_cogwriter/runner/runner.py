@@ -40,6 +40,12 @@ from .execution import (
 )
 from .hashing import sha256_bytes, sha256_file
 from .manifest import PromptRecord, load_benchmark_provenance
+from .skill_checks import (
+    leaked_acknowledgments,
+    selected_roles,
+    spawned_roles,
+    summarize_acknowledgments,
+)
 from .trace import (
     assert_untouched,
     assess_trace_timestamps,
@@ -98,6 +104,7 @@ _SHARED_STAGE_TOKENS = (
 _STAGE_RENDERABLE_TOKENS = frozenset((*_SHARED_STAGE_TOKENS, "previous_stage_output"))
 _CONTRACT_PATHS = {
     "single_turn": EXPERIMENTS_ROOT / "conditions/contracts/single_turn.md",
+    "information": EXPERIMENTS_ROOT / "conditions/contracts/information.md",
     "workspace": EXPERIMENTS_ROOT / "conditions/contracts/workspace.md",
     "delegation": EXPERIMENTS_ROOT / "conditions/contracts/delegation.md",
 }
@@ -283,6 +290,9 @@ def _synthesized_codex_config(
                 f"{_toml_key(key, context='Codex provider auth key')} = "
                 f"{serialized_value}"
             )
+    # Pin the 0.146.0 defaults: role agents cannot spawn further agents, and
+    # at most six agent threads stay open at once.
+    lines.extend(["", "[agents]", "max_depth = 1", "max_threads = 6"])
     return "\n".join(lines) + "\n"
 
 
@@ -307,6 +317,12 @@ def _validate_final_product(
 ) -> None:
     """Require the response channel to carry the complete product text."""
 
+    leaked = leaked_acknowledgments(output)
+    if leaked:
+        raise ExecutionError(
+            f"Condition {condition_id} final response contains skill "
+            f"acknowledgment lines: {', '.join(leaked)}"
+        )
     final_chars = len(output.strip())
     if not final_chars:
         raise ExecutionError(
@@ -344,6 +360,22 @@ def _delegation_check(
         "spawn_count": spawn_count,
         "execution_mode": execution_mode,
         "passed": passed,
+    }
+
+
+def _role_delegation(run_dir: Path, trace: Path) -> dict[str, Any]:
+    """Compare the roles the trace selected with the roles spawn briefs name."""
+
+    selected = selected_roles(trace)
+    delegated = spawned_roles(
+        b"".join(
+            path.read_bytes() for path in sorted(run_dir.glob("attempt-*.events.jsonl"))
+        )
+    )
+    return {
+        "selected": sorted(selected),
+        "delegated": sorted(delegated),
+        "undelegated": sorted(selected - delegated),
     }
 
 
@@ -698,6 +730,11 @@ class ExperimentRunner:
             token_accounting_error: str | None = None
             trace_timestamps: Mapping[str, Any] | None = None
             followup_record: dict[str, Any] | None = None
+            role_delegation: dict[str, Any] | None = None
+            skill_acknowledgments: dict[str, Any] | None = None
+            uses_role_skills = (
+                condition.skill_name in self._CODEX_DELEGATED_SKILL_DIRECTORIES
+            )
             subagent_spawn_ids: set[str] = set()
             rollout_collection: dict[str, Any] = {
                 "status": "absent",
@@ -969,6 +1006,10 @@ class ExperimentRunner:
                 ),
             )
             output = extract_output(result.stdout)
+            if platform == "codex":
+                skill_acknowledgments = self._skill_acknowledgments(
+                    condition, run_dir, trace_path, uses_role_skills
+                )
             reject_retrieval(output.encode("utf-8"), b"")
             budget.consume(
                 self.runtime_config.count_output_units(output), stage="final_output"
@@ -1025,6 +1066,18 @@ class ExperimentRunner:
                     f"execution; {len(subagent_spawn_ids)} spawn_agent event(s) "
                     "were observed"
                 )
+            if (
+                platform == "codex"
+                and uses_role_skills
+                and condition.require_delegation
+            ):
+                role_delegation = _role_delegation(run_dir, copied_trace)
+                if role_delegation["undelegated"]:
+                    raise ExecutionError(
+                        f"Condition {condition.condition_id} selected roles that "
+                        "no spawn_agent brief delegated: "
+                        + ", ".join(role_delegation["undelegated"])
+                    )
             if followup is not None:
                 if not result.session_id:
                     raise ExecutionError("Cannot resume a turn without its session_id")
@@ -1079,6 +1132,10 @@ class ExperimentRunner:
                 # are collected for analysis without that contract.
                 collect_plugin_trace(workspace, run_dir)
                 reject_retrieval(copied_trace.read_bytes(), b"")
+            if platform == "codex":
+                skill_acknowledgments = self._skill_acknowledgments(
+                    condition, run_dir, trace_path, uses_role_skills
+                )
             output_path.write_bytes(output.encode("utf-8"))
             normalized_path.write_text(output, encoding="utf-8")
             self._write_json(
@@ -1110,6 +1167,8 @@ class ExperimentRunner:
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
                     followup=followup_record,
+                    role_delegation=role_delegation,
+                    skill_acknowledgments=skill_acknowledgments,
                 ),
             )
             return RunResult(
@@ -1187,6 +1246,8 @@ class ExperimentRunner:
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
                     followup=followup_record,
+                    role_delegation=role_delegation,
+                    skill_acknowledgments=skill_acknowledgments,
                     failure=failure,
                 ),
             )
@@ -1194,6 +1255,25 @@ class ExperimentRunner:
         finally:
             shutil.rmtree(generator_config_dir, ignore_errors=True)
             self._release_generator_config_lock(generator_config_lock)
+
+    @staticmethod
+    def _skill_acknowledgments(
+        condition: ConditionSpec,
+        run_dir: Path,
+        trace: Path,
+        uses_role_skills: bool,
+    ) -> dict[str, Any]:
+        """Count acknowledgment lines; in-context role skills count at top level."""
+
+        return summarize_acknowledgments(
+            run_dir,
+            invoked_skill=condition.skill_name,
+            in_context_roles=(
+                selected_roles(trace)
+                if uses_role_skills and not condition.require_delegation
+                else ()
+            ),
+        )
 
     def _probe_cli(self, adapter: PlatformAdapter) -> str:
         if isinstance(self.executor, SubprocessExecutor):
@@ -1348,11 +1428,11 @@ class ExperimentRunner:
         if contract_hashes is not None:
             contract_hashes.update(observed_contract_hashes)
         contract_names = (
-            ("single_turn", "delegation")
+            ("single_turn", "information", "delegation")
             if platform == "codex" and condition.require_delegation
-            else ("single_turn",)
+            else ("single_turn", "information")
             if platform == "codex"
-            else ("workspace", "single_turn")
+            else ("workspace", "single_turn", "information")
         )
         contracts = "\n\n".join(
             contract_texts[name].removesuffix("\n") for name in contract_names
@@ -1546,7 +1626,14 @@ class ExperimentRunner:
     def _stage_codex_plugin(
         self, condition: ConditionSpec, workspace: Path
     ) -> dict[str, str]:
-        """Stage the invoked skill and delegated role skills inside the workspace."""
+        """Stage the invoked skill and the role skills inside the workspace.
+
+        The invoked skill goes under ``plugin/skills/``, which Codex does not
+        scan, so role agents cannot discover it. The role skills go under
+        ``.agents/skills/``, where Codex discovers them as repository skills;
+        their ``allow_implicit_invocation: false`` policy keeps them out of the
+        model's skill list while ``$planning``-style mentions still load them.
+        """
 
         selected_root = self._codex_plugin_root(condition)
         source_roots = (
@@ -1577,15 +1664,17 @@ class ExperimentRunner:
                 )
             sources[relative] = source
 
-        staged_root = workspace / "plugin"
+        staged_roots = (workspace / "plugin", workspace / ".agents")
+        role_directories = set(self._CODEX_ROLE_SKILL_DIRECTORIES)
         for relative, source in sources.items():
             shutil.copytree(
                 source,
-                staged_root / relative,
+                staged_roots[relative in role_directories] / relative,
                 dirs_exist_ok=True,
             )
         return {
             path.relative_to(workspace).as_posix(): f"sha256:{sha256_file(path)}"
+            for staged_root in staged_roots
             for path in sorted(staged_root.rglob("*"))
             if path.is_file()
         }
@@ -1620,6 +1709,8 @@ class ExperimentRunner:
         spawn_extraction: Mapping[str, Any] | None = None,
         trace_timestamps: Mapping[str, Any] | None = None,
         followup: Mapping[str, Any] | None = None,
+        role_delegation: Mapping[str, Any] | None = None,
+        skill_acknowledgments: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         if platform == "codex":
@@ -1831,6 +1922,10 @@ class ExperimentRunner:
             manifest["trace_timestamps"] = dict(trace_timestamps)
         if followup is not None:
             manifest["followup"] = dict(followup)
+        if role_delegation is not None:
+            manifest["role_delegation"] = dict(role_delegation)
+        if skill_acknowledgments is not None:
+            manifest["skill_acknowledgments"] = dict(skill_acknowledgments)
         if output_hash is not None:
             manifest["output_hash"] = output_hash
         if trace_hash is not None:
