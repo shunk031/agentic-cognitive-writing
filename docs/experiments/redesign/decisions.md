@@ -117,3 +117,6 @@ The author chose to combine three sources:
    - Use a cross-family judge.
 
 Selection criteria never use observed win rates.
+
+## D13. Priority (author, 2026-10-13)
+First build a system that behaves as the paper describes. Discussion of cost and of the dataset protocol's open decisions waits until that system works. The dataset protocol draft and its reviews are kept for later.
