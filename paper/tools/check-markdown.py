@@ -212,8 +212,11 @@ def check():
         "Introduction must contain one 'We evaluate our system' paragraph after naming Agentic CogWriter",
         len(evaluation_paragraphs),
     )
-    assert "component analyses" in evaluation_paragraphs[0], (
-        "keep evaluation and component analysis in the same Introduction paragraph"
+    # The component analysis is its own contribution, so it follows the evaluation
+    # results in the next paragraph rather than being dropped from the Introduction.
+    following = intro_paragraphs[intro_paragraphs.index(evaluation_paragraphs[0]) + 1]
+    assert "component analyses" in following, (
+        "state the component analyses in the paragraph after the evaluation results"
     )
 
     controls = re.findall(r"\\[A-Za-z]+", structural_text)

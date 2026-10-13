@@ -148,6 +148,11 @@ ROBUSTNESS_CONTRASTS = {
     "A4:A3": "FullTaskPlanning",
     "A4:A5": "FullNoGoals",
 }
+CROSS_FAMILY_CONTRASTS = {
+    **ROBUSTNESS_CONTRASTS,
+    "A4:A2": "FullStaged",
+    "A4:A6": "FullFixedOrder",
+}
 ROBUSTNESS_BENCHMARKS = {
     "DoLoMiTes": "DoLo",
     "HelloBench": "Hello",
@@ -165,6 +170,36 @@ LENGTH_RUNS = {"run-1": "One", "run-2": "Two", "run-3": "Three"}
 LENGTH_CONTROL_MARKER = "% Length-control macros."
 COMPUTE_STRATIFIED_MARKER = "% Compute-stratified macros."
 PAIRWISE_ROBUSTNESS_MARKER = "% Pairwise-robustness macros."
+STAGED_ROLES_MARKER = "% Staged role-instruction (A9) macros."
+PLAIN_AGENT_MARKER = "% Plain-agent (A11) macros."
+COGWRITER_STYLE_MARKER = "% CogWriter-style (B1) main-benchmark macros."
+COGWRITER_SPAWNS_MARKER = "% CogWriter-style (B1) spawn macros."
+DRAFT_WRITES_MARKER = "% Draft-rewrite macros."
+SELF_REFINE_MARKER = "% Budget-matched Self-Refine (A10) macros."
+LOOP_ONLY_MARKER = "% Loop-only (A12) macros."
+TRACE_ENDINGS_MARKER = "% Trace-ending macros."
+REVISION_TASKS_MARKER = "% Revision-request pilot macros."
+QUALITATIVE_EXAMPLE_MARKER = "% Illustrative-example macros."
+DELEGATION_FALLBACK_MARKER = "% Delegation-fallback macros."
+LENGTH_RULE_MARKER = "% Length-rule agreement macros."
+LANGUAGE_DRIFT_MARKER = "% Language-drift macros."
+DRIFT_CONDITIONS = {"A1": "Aone", "A2": "Atwo", "A3": "Athree", "A4": "Afour", "A5": "Afive", "A6": "Asix", "A7": "Aseven", "A8": "Aeight", "A9": "Anine"}
+LENGTH_RULE_SCOPES = {"WritingBench": "Writing", "HelloBench": "Hello", "DoLoMiTes": "DoLo", "all_benchmarks": "Across"}
+FALLBACK_CONDITIONS = {"A5": "Afive", "A6": "Asix"}
+FALLBACK_CONTRASTS = {"A4:A1": "FullSinglePass", "A4:A2": "FullStaged", "A4:A3": "FullTaskPlanning", "A4:A5": "FullNoGoals", "A4:A6": "FullFixedOrder"}
+REVISION_CONTRASTS = {"A4:A6": "FullFixedOrder", "A4:A2": "FullStaged", "A4:A1": "FullSinglePass"}
+RAW_RUBRIC_DIMENSIONS = {
+    "instruction_fulfillment": "Instruction",
+    "organization_global_coherence": "Organization",
+    "content_adequacy_depth": "Content",
+    "style_voice_audience_fit": "Style",
+    "factuality_constraint_fidelity": "Factuality",
+}
+STAGED_ROLES_CONTRASTS = {"A4:A9": "FullStagedRoles", "A9:A2": "StagedRolesStaged"}
+PLAIN_AGENT_CONTRASTS = {"A4:A11": "FullPlainAgent"}
+COGWRITER_STYLE_CONTRASTS = {"A4:B1": "FullCogWriterStyle"}
+SELF_REFINE_CONTRASTS = {"A4:A10": "FullSelfRefine"}
+LOOP_ONLY_CONTRASTS = {"A4:A12": "FullLoopOnly", "A12:A2": "LoopOnlyStaged"}
 PAIRWISE_ROBUSTNESS_CONTRASTS = {
     "A4:A1": "FullSinglePass",
     "A4:A2": "FullStaged",
@@ -900,7 +935,7 @@ def _length_control_entries(report: dict[str, Any]) -> list[tuple[str, str, str]
 def _validate_cross_family(report: dict[str, Any]) -> dict[str, Any]:
     source = "cross-family JSON"
     contrasts = _required_mapping(report, CROSS_FAMILY_SOURCE_FIELDS["contrasts"], source)
-    for contrast in ROBUSTNESS_CONTRASTS:
+    for contrast in CROSS_FAMILY_CONTRASTS:
         pooled = contrasts.get(contrast)
         if not isinstance(pooled, dict):
             raise ValueError(f"{source}.contrasts is missing {contrast}")
@@ -1335,14 +1370,14 @@ def _emit_cross_family_macros(add: Any, report: dict[str, Any]) -> None:
     add("\\CrossFamilyPooledCommitRate", _cross_family_percent(pooled["commit_rate"]["rate"]), "cross-family JSON pooled.commit_rate.rate")
     add("\\CrossFamilyPooledAgreement", f"{pooled['prompt_collapsed_agreement']['numerator']}/{pooled['prompt_collapsed_agreement']['denominator']}", "cross-family JSON pooled.prompt_collapsed_agreement numerator/denominator")
     add("\\CrossFamilyPooledConflicts", str(pooled["direction_conflicts"]), "cross-family JSON pooled.direction_conflicts")
-    for contrast, contrast_word in ROBUSTNESS_CONTRASTS.items():
+    for contrast, contrast_word in CROSS_FAMILY_CONTRASTS.items():
         pooled_contrast = report[CROSS_FAMILY_SOURCE_FIELDS["contrasts"]][contrast]
         prefix = "\\CrossFamily" + contrast_word
         add(prefix + "N", str(pooled_contrast["n"]), f"cross-family JSON contrasts.{contrast}.n")
         add(prefix + "WLT", _wlt(pooled_contrast), f"cross-family JSON contrasts.{contrast} W/L/T")
         add(prefix + "CommitRate", _cross_family_percent(pooled_contrast["commit_rate"]["rate"]), f"cross-family JSON contrasts.{contrast}.commit_rate.rate")
         add(prefix + "WinRate", _cross_family_percent(pooled_contrast["win_rate"]["rate"]), f"cross-family JSON contrasts.{contrast}.win_rate.rate")
-        add(prefix + "Interval", f"{_percent_fixed(pooled_contrast['win_rate']['wilson_low'], 2)}--{_percent_fixed(pooled_contrast['win_rate']['wilson_high'], 2)}", f"cross-family JSON contrasts.{contrast}.win_rate Wilson interval")
+        add(prefix + "Interval", f"{_percent_fixed(pooled_contrast['win_rate']['wilson_low'], 1)}--{_percent_fixed(pooled_contrast['win_rate']['wilson_high'], 1)}", f"cross-family JSON contrasts.{contrast}.win_rate Wilson interval")
         add(prefix + "P", _pvalue(pooled_contrast["sign_test_p"]), f"cross-family JSON contrasts.{contrast}.sign_test_p")
         add(prefix + "Conflicts", str(pooled_contrast["direction_conflicts"]), f"cross-family JSON contrasts.{contrast}.direction_conflicts")
         for benchmark, benchmark_word in ROBUSTNESS_BENCHMARKS.items():
@@ -1350,8 +1385,8 @@ def _emit_cross_family_macros(add: Any, report: dict[str, Any]) -> None:
             benchmark_prefix = "\\CrossFamily" + benchmark_word + contrast_word
             add(benchmark_prefix + "N", str(result["n"]), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.n")
             add(benchmark_prefix + "WLT", _wlt(result), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark} W/L/T")
-            add(benchmark_prefix + "CommitRate", _percent_fixed(result["commit_rate"]["rate"], 2), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.commit_rate.rate")
-            add(benchmark_prefix + "WinRate", _percent_fixed(result["win_rate"]["rate"], 2), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.win_rate.rate")
+            add(benchmark_prefix + "CommitRate", _percent_fixed(result["commit_rate"]["rate"], 1), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.commit_rate.rate")
+            add(benchmark_prefix + "WinRate", _percent_fixed(result["win_rate"]["rate"], 1), f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.win_rate.rate")
             agreement = result["prompt_collapsed_agreement"]
             add(benchmark_prefix + "Agreement", f"{agreement['numerator']}/{agreement['denominator']}", f"cross-family JSON contrasts.{contrast}.benchmarks.{benchmark}.prompt_collapsed_agreement numerator/denominator")
 
@@ -1441,6 +1476,201 @@ def _pairwise_robustness_entries(report: dict[str, Any]) -> list[tuple[str, str,
         ("\\JudgeAgreementDecidedKappa", f"{agreement['both_decided_kappa']:.2f}", source + ".both_decided_kappa"),
     ]
     return entries
+
+
+def _staged_roles_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory A9 pairwise outcomes, per benchmark and over the three benchmarks."""
+    return _exploratory_pairwise_entries(report, STAGED_ROLES_CONTRASTS, "A9 pairwise JSON")
+
+
+def _loop_only_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory A12 pairwise outcomes, process paths, and token means."""
+    source = "A12 pairwise JSON"
+    process = report["a12_process"]
+    tokens = report["token_means"]["A12"]
+    return [
+        *_exploratory_pairwise_entries(report, LOOP_ONLY_CONTRASTS, source),
+        ("\\LoopOnlyCompleted", str(report["completion"]["A12"]["completed"]), source + " completion.A12.completed"),
+        ("\\LoopOnlyOnePassRuns", str(process["single_cycle_exact"]["count"]), source + " a12_process.single_cycle_exact.count"),
+        ("\\LoopOnlyReturnPlanningRuns", str(process["after_reviewing"]["planning"]["count"]), source + " a12_process.after_reviewing.planning.count"),
+        ("\\LoopOnlyOutputTokens", _format_process(tokens["mean_output_plus_reasoning_tokens"], 0), source + " token_means.A12.mean_output_plus_reasoning_tokens"),
+        ("\\LoopOnlyInputTokens", _format_process(tokens["mean_uncached_input_tokens"], 0), source + " token_means.A12.mean_uncached_input_tokens"),
+    ]
+
+
+def _plain_agent_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory A11 pairwise outcomes and how often the plain agent revised a draft file."""
+    source = "A11 pairwise JSON"
+    behavior = report["a11_draft_behavior"]["pooled"]
+    return _exploratory_pairwise_entries(report, PLAIN_AGENT_CONTRASTS, source) + [
+        ("\\PlainAgentCompletedRuns", str(behavior["completed_runs"]), source + " a11_draft_behavior.pooled.completed_runs"),
+        ("\\PlainAgentDraftFileRuns", str(behavior["wrote_a_draft_file"]), source + " a11_draft_behavior.pooled.wrote_a_draft_file"),
+        ("\\PlainAgentRevisedRuns", str(behavior["revised_a_draft_file"]), source + " a11_draft_behavior.pooled.revised_a_draft_file"),
+        ("\\PlainAgentWrittenOnceRuns", str(behavior["completed_runs"] - behavior["revised_a_draft_file"]), source + " a11_draft_behavior.pooled completed_runs - revised_a_draft_file"),
+    ]
+
+
+def _exploratory_pairwise_entries(report: dict[str, Any], contrasts: dict[str, str], source: str) -> list[tuple[str, str, str]]:
+    """Pairwise W/L/T, win rate, Wilson interval, sign-test p, and N per benchmark and pooled."""
+    entries = []
+    for contrast, contrast_word in contrasts.items():
+        scopes = {"Across": ("pooled", report["pooled"][contrast])}
+        scopes.update({word: (f"benchmarks.{name}", report["benchmarks"][name][contrast]) for name, word in ROBUSTNESS_BENCHMARKS.items()})
+        for scope_word, (field, stats) in scopes.items():
+            prefix = f"\\{contrast_word}{scope_word}"
+            stats_source = f"{source} {field}.{contrast}"
+            entries += [
+                (prefix + "WLT", _wlt(stats), stats_source + " W/L/T"),
+                (prefix + "Rate", _percent_fixed(stats["win_rate"], 1), stats_source + ".win_rate"),
+                (prefix + "Interval", f"{_percent_fixed(stats['wilson_95_low'], 1)}--{_percent_fixed(stats['wilson_95_high'], 1)}", stats_source + " Wilson 95 percent interval"),
+                (prefix + "P", _pvalue(stats["sign_test_p_exact_two_sided"]), stats_source + ".sign_test_p_exact_two_sided"),
+                (prefix + "N", str(stats["scored_prompts"]), stats_source + ".scored_prompts"),
+            ]
+    return entries
+
+
+def _cogwriter_style_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory B1 pairwise outcomes, completions, length, and tokens on the main benchmarks."""
+    source = "B1 pairwise JSON"
+    tokens = report["mean_tokens_per_attempted_run"]["B1"]
+    attempts = report["generation_attempts"]
+    return [
+        *_exploratory_pairwise_entries(report, COGWRITER_STYLE_CONTRASTS, source),
+        ("\\CogWriterStyleCompleted", str(report["completion"]["B1"]["completed"]), source + " completion.B1.completed"),
+        ("\\CogWriterStyleMedianOutput", _format_process(report["median_output_words"]["B1"]["pooled"]), source + " median_output_words.B1.pooled"),
+        ("\\CogWriterStyleOutputTokens", _format_process(tokens["mean_output_plus_reasoning_tokens"], 0), source + " mean_tokens_per_attempted_run.B1.mean_output_plus_reasoning_tokens"),
+        ("\\CogWriterStyleInputTokens", _format_process(tokens["mean_uncached_input_tokens"], 0), source + " mean_tokens_per_attempted_run.B1.mean_uncached_input_tokens"),
+        ("\\CogWriterStyleAttempted", str(report["completion"]["B1"]["attempted"]), source + " completion.B1.attempted"),
+        ("\\CogWriterStyleFirstPassFailed", str(attempts["first_pass_failed"]), source + " generation_attempts.first_pass_failed"),
+        ("\\CogWriterStyleRetried", str(attempts["retried_failures"]), source + " generation_attempts.retried_failures"),
+        ("\\CogWriterStyleNoDraftFailed", str(attempts["final_failed_by_reason"]["no_draft_file"]), source + " generation_attempts.final_failed_by_reason.no_draft_file"),
+        ("\\CogWriterStyleFailed", str(report["completion"]["B1"]["attempted"] - report["completion"]["B1"]["completed"]), source + " completion.B1 attempted - completed"),
+        ("\\CogWriterStyleExcluded", str(report["completion"]["B1"]["attempted"] - report["pooled"]["A4:B1"]["scored_prompts"]), source + " completion.B1.attempted - pooled.A4:B1.scored_prompts"),
+    ]
+
+
+def _self_refine_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory A10 pairwise outcomes, round count, and per-document token means."""
+    source = "A10 pairwise JSON"
+    tokens = report["output_plus_reasoning_tokens_mean"]
+    return [
+        ("\\SelfRefineRounds", str(report["rounds"]), source + " rounds"),
+        ("\\SelfRefineOutputTokens", f"{tokens['A10']:,.0f}", source + " output_plus_reasoning_tokens_mean.A10"),
+        ("\\SelfRefineAfourOutputTokens", f"{tokens['A4']:,.0f}", source + " output_plus_reasoning_tokens_mean.A4"),
+        *_exploratory_pairwise_entries(report, SELF_REFINE_CONTRASTS, source),
+        ("\\SelfRefineTokenExcess", _percent_fixed(tokens["A10"] / tokens["A4"] - 1, 1), source + " output_plus_reasoning_tokens_mean A10 / A4 - 1"),
+        ("\\SelfRefineCompleted", str(report["completion"]["A10"]["completed"]), source + " completion.A10.completed"),
+        ("\\SelfRefineMedianOutput", _format_process(report["median_output_words"]["A10"]["pooled"]), source + " median_output_words.A10.pooled"),
+    ]
+
+
+def _trace_endings_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """How Agentic CogWriter runs end and how often the Monitor fallback is recorded."""
+    source = "trace-endings JSON"
+    return [
+        ("\\AfourEndPlanningRuns", str(report["last_logged_process"]["planning"]), source + " last_logged_process.planning"),
+        ("\\AfourEndTranslatingRuns", str(report["last_logged_process"]["translating"]), source + " last_logged_process.translating"),
+        ("\\AfourEndBeforeReviewingRuns", str(report["ending_before_reviewing"]), source + " ending_before_reviewing"),
+        ("\\AfourEndLastReviewerRuns", str(report["ending_before_reviewing_last_delegated_reviewer"]), source + " ending_before_reviewing_last_delegated_reviewer"),
+        ("\\AfourFallbackRuns", str(report["fallback_recorded_runs"]), source + " fallback_recorded_runs"),
+    ]
+
+
+def _revision_tasks_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Exploratory revision-request pilot: pairwise outcomes and turn-2 behavior."""
+    source = "revision-task results JSON"
+    entries = [("\\RevisionPrompts", str(report["sample"]["prompts"]), source + " sample.prompts")]
+    for contrast, word in REVISION_CONTRASTS.items():
+        block = report["contrasts"][contrast]
+        stats = block["overall"]
+        prefix = f"\\Revision{word}"
+        entries += [
+            (prefix + "N", str(block["scored_prompts"]), f"{source} contrasts.{contrast}.scored_prompts"),
+            (prefix + "WLT", f"{stats['wins']}/{stats['losses']}/{stats['ties']}", f"{source} contrasts.{contrast}.overall W/L/T"),
+            (prefix + "Rate", _percent_fixed(stats["win_rate_excluding_ties"], 1), f"{source} contrasts.{contrast}.overall.win_rate_excluding_ties"),
+            (prefix + "P", _pvalue(stats["sign_test_p_two_sided"]), f"{source} contrasts.{contrast}.overall.sign_test_p_two_sided"),
+        ]
+    for condition, word in (("A4", "Afour"), ("A6", "Asix")):
+        turn2 = report["turn2_process"][condition]
+        prefix = f"\\Revision{word}"
+        entries += [
+            (prefix + "Completed", str(turn2["completed_runs"]), f"{source} turn2_process.{condition}.completed_runs"),
+            (prefix + "Planning", str(turn2["turn2_planning"]["count"]), f"{source} turn2_process.{condition}.turn2_planning.count"),
+            (prefix + "Regenerated", str(turn2["turn2_goal_regenerated"]["count"]), f"{source} turn2_process.{condition}.turn2_goal_regenerated.count"),
+        ]
+    return entries
+
+
+def _qualitative_example_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Seeded illustrative example: eligible pool size and the selected prompt ID."""
+    source = "qualitative-example JSON"
+    return [
+        ("\\ExampleEligiblePrompts", str(report["eligible_prompts"]), source + " eligible_prompts"),
+        ("\\ExamplePrompt", report["example"]["prompt"], source + " example.prompt"),
+    ]
+
+
+def _delegation_fallback_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Monitor delegation fallback by condition and pairwise rates without fallback runs."""
+    source = "delegation-fallback JSON"
+    counts = report["fallback_by_condition"]
+    entries = []
+    for condition, word in FALLBACK_CONDITIONS.items():
+        entries += [
+            (f"\\{word}FallbackRuns", str(counts[condition]["fallback_runs"]), f"{source} fallback_by_condition.{condition}.fallback_runs"),
+            (f"\\{word}FallbackCompleted", str(counts[condition]["completed_runs"]), f"{source} fallback_by_condition.{condition}.completed_runs"),
+        ]
+    for contrast, word in FALLBACK_CONTRASTS.items():
+        kept = report["contrasts"][contrast]["without_fallback"]
+        entries += [
+            (f"\\NoFallback{word}Rate", _percent_fixed(kept["rate_mean_over_runs"], 1), f"{source} contrasts.{contrast}.without_fallback.rate_mean_over_runs"),
+            (f"\\NoFallback{word}Pairs", f"{kept['pairs']:,}", f"{source} contrasts.{contrast}.without_fallback.pairs"),
+        ]
+    return entries
+
+
+def _length_rule_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Share of decided pairs in which the pairwise judge prefers the longer output."""
+    source = "length-rule agreement JSON agreement_with_longer_rule"
+    entries = []
+    for scope, word in LENGTH_RULE_SCOPES.items():
+        stats = report["agreement_with_longer_rule"][scope]
+        entries += [
+            (f"\\LengthRule{word}Rate", _percent_fixed(stats["rate"], 1), f"{source}.{scope}.rate"),
+            (f"\\LengthRule{word}Pairs", f"{stats['decided_pairs']:,}", f"{source}.{scope}.decided_pairs"),
+        ]
+    return entries
+
+
+def _language_drift_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """English WritingBench assignments answered mainly in Chinese on generation run 1."""
+    source = "language-drift JSON benchmarks.WritingBench"
+    writing = report["benchmarks"]["WritingBench"]
+    entries = []
+    for condition, word in DRIFT_CONDITIONS.items():
+        stats = writing["by_condition"][condition]
+        entries += [
+            (f"\\{word}DriftCount", str(stats["drifted"]), f"{source}.by_condition.{condition}.drifted"),
+            (f"\\{word}DriftEnglish", str(stats["english_completed"]), f"{source}.by_condition.{condition}.english_completed"),
+        ]
+    entries += [
+        ("\\DriftEveryConditionPrompts", str(len(writing["drifted_in_every_condition"])), source + ".drifted_in_every_condition"),
+        ("\\DriftEveryConditionHanPrompts", str(len(writing["every_condition_with_han_in_prompt"])), source + ".every_condition_with_han_in_prompt"),
+    ]
+    for benchmark, word in (("HelloBench", "Hello"), ("DoLoMiTes", "DoLo")):
+        total = sum(v["drifted"] for v in report["benchmarks"][benchmark]["by_condition"].values())
+        entries.append((f"\\{word}DriftTotal", str(total), f"language-drift JSON benchmarks.{benchmark} drifted summed over conditions"))
+    return entries
+
+
+def _cogwriter_spawn_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Mean subagent spawns per attempted generation-run-1 run for B1."""
+    return [("\\CogWriterStyleSpawns", _format_process(report["B1"]["mean_spawns"], 1), "B1 spawn summary JSON B1.mean_spawns")]
+
+
+def _draft_writes_entries(report: dict[str, Any]) -> list[tuple[str, str, str]]:
+    """Runs that wrote their draft file two or more times, from Codex file_change items."""
+    return [("\\LoopOnlyRewroteDraftRuns", str(report["A12"]["rewrote_draft"]), "draft-writes JSON A12.rewrote_draft")]
 
 
 def _validate_single_context_pair(data: dict[str, Any], source: str) -> None:
@@ -2132,6 +2362,12 @@ def _three_run_quality_entries(report: dict[str, Any]) -> list[tuple[str, str, s
                 (prefix + "PointwiseMean", f"{mean:.3f}", source + ".composite.mean"),
                 (prefix + "PointwiseSD", f"{sd:.3f}", source + ".composite.sample_sd"),
             ]
+            raw = cell.get("raw_dimension_means")
+            if not isinstance(raw, dict):
+                raise ValueError(f"{source}.raw_dimension_means is missing")
+            for dimension, dimension_word in RAW_RUBRIC_DIMENSIONS.items():
+                mean, _ = _three_run_stat(raw.get(dimension), source + f".raw_dimension_means.{dimension}")
+                entries.append((f"\\RawRubric{benchmark_word}{condition_word}{dimension_word}", f"{mean:.2f}", source + f".raw_dimension_means.{dimension}.mean"))
             if benchmark in THREE_RUN_NATIVE_SCALE:
                 scale = THREE_RUN_NATIVE_SCALE[benchmark]
                 mean, sd = _three_run_stat(cell.get("native_mean"), source + ".native_mean")
@@ -2152,6 +2388,8 @@ def _three_run_quality_entries(report: dict[str, Any]) -> list[tuple[str, str, s
         ("\\ThreeRunDoLoStagedExceedsFullRuns", str(sum(exceeds)), "three-run quality JSON dolomites_staged_vs_agentic_cogwriter"),
         ("\\ThreeRunCount", str(len(exceeds)), "three-run quality JSON dolomites_staged_vs_agentic_cogwriter"),
     ]
+    raw_means = [value for name, value, _ in entries if name.startswith("\\RawRubric")]
+    entries.append(("\\RawRubricMin", min(raw_means, key=float), "three-run quality JSON minimum of raw_dimension_means.*.mean"))
     return entries
 
 
@@ -2282,6 +2520,19 @@ def main() -> None:
     parser.add_argument("--compute-stratified-sensitivity", type=Path, help="compute-stratified JSON; appends its own block")
     parser.add_argument("--adversarial-review-analysis", type=Path)
     parser.add_argument("--pairwise-robustness", type=Path, help="pairwise-robustness JSON; appends its own block")
+    parser.add_argument("--staged-roles", type=Path, help="A9 pairwise JSON; appends its own block")
+    parser.add_argument("--plain-agent", type=Path, help="A11 pairwise JSON; appends its own block")
+    parser.add_argument("--cogwriter-style", type=Path, help="B1 pairwise JSON; appends its own block")
+    parser.add_argument("--cogwriter-spawns", type=Path, help="B1 spawn summary JSON; appends its own block")
+    parser.add_argument("--self-refine", type=Path, help="A10 pairwise JSON; appends its own block")
+    parser.add_argument("--loop-only", type=Path, help="A12 pairwise JSON; appends its own block")
+    parser.add_argument("--draft-writes", type=Path, help="draft-writes JSON; appends its own block")
+    parser.add_argument("--trace-endings", type=Path, help="trace-endings JSON; appends its own block")
+    parser.add_argument("--revision-tasks", type=Path, help="revision-task results JSON; appends its own block")
+    parser.add_argument("--qualitative-example", type=Path, help="qualitative-example JSON; appends its own block")
+    parser.add_argument("--delegation-fallback", type=Path, help="delegation-fallback JSON; appends its own block")
+    parser.add_argument("--length-rule-agreement", type=Path, help="length-rule agreement JSON; appends its own block")
+    parser.add_argument("--language-drift", type=Path, help="language-drift JSON; appends its own block")
     parser.add_argument("--three-run-quality", nargs=2, type=Path, metavar=("SUMMARY", "PAIRED"))
     parser.add_argument("--prompt-languages", nargs=2, type=Path, metavar=("PROMPT_SETS", "MANIFEST_DIR"))
     parser.add_argument(
@@ -2299,6 +2550,19 @@ def main() -> None:
         (args.length_control, "length-control", LENGTH_CONTROL_MARKER, _length_control_entries),
         (args.compute_stratified_sensitivity, "compute-stratified", COMPUTE_STRATIFIED_MARKER, _compute_stratified_entries),
         (args.pairwise_robustness, "pairwise-robustness", PAIRWISE_ROBUSTNESS_MARKER, _pairwise_robustness_entries),
+        (args.staged_roles, "staged-roles", STAGED_ROLES_MARKER, _staged_roles_entries),
+        (args.plain_agent, "plain-agent", PLAIN_AGENT_MARKER, _plain_agent_entries),
+        (args.cogwriter_style, "cogwriter-style", COGWRITER_STYLE_MARKER, _cogwriter_style_entries),
+        (args.cogwriter_spawns, "cogwriter-spawns", COGWRITER_SPAWNS_MARKER, _cogwriter_spawn_entries),
+        (args.self_refine, "self-refine", SELF_REFINE_MARKER, _self_refine_entries),
+        (args.loop_only, "loop-only", LOOP_ONLY_MARKER, _loop_only_entries),
+        (args.draft_writes, "draft-writes", DRAFT_WRITES_MARKER, _draft_writes_entries),
+        (args.trace_endings, "trace-endings", TRACE_ENDINGS_MARKER, _trace_endings_entries),
+        (args.revision_tasks, "revision-tasks", REVISION_TASKS_MARKER, _revision_tasks_entries),
+        (args.qualitative_example, "qualitative-example", QUALITATIVE_EXAMPLE_MARKER, _qualitative_example_entries),
+        (args.delegation_fallback, "delegation-fallback", DELEGATION_FALLBACK_MARKER, _delegation_fallback_entries),
+        (args.length_rule_agreement, "length-rule-agreement", LENGTH_RULE_MARKER, _length_rule_entries),
+        (args.language_drift, "language-drift", LANGUAGE_DRIFT_MARKER, _language_drift_entries),
     ):
         if path is not None:
             if args.aggregations:

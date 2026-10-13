@@ -3,7 +3,7 @@ The scored study uses the committed \texttt{hard100} subset generated from the p
 Prompts used while developing the protocol are removed first.
 Each remaining prompt is ranked by prompt word count plus the largest requested output length stated in the prompt or structured output constraints, subject to fixed maximum-length gates; ties are resolved by prompt word count, requested length, and prompt identifier.
 The top 100 eligible prompts from each benchmark are retained, yielding 300 scored prompts.
-Of these, \WritingChinesePromptCount\ WritingBench prompts are written mainly in Chinese and the rest are in English; systems and evaluators receive each prompt in its original language.
+Of these, \WritingChinesePromptCount\ WritingBench prompts are written mainly in Chinese, counting Chinese characters against Latin letters, and the rest mainly in English, although some of these give Chinese instructions over English material; systems and evaluators receive each prompt in its original language.
 Generation reads the committed manifests and identifiers, so system output quality cannot affect selection.
 
 \paragraph{Artifact provenance and terms.}
@@ -31,8 +31,8 @@ The platform-specific subagent wrappers only dispatch the corresponding role ski
 Configuration files pin the skill or stage prompt for every system and record hashes for fixed stage prompts.
 
 The experiment-authored generation and evaluation prompt configurations are listed below.
-Generation is non-interactive: the runner supplies the assignment, context, and output constraints before each run, so the skill prompts omit interactive user-handoff instructions.
-Prompt headers use the internal condition codes A1 \condSinglePass, A2 \condStaged, A3 \condTaskPlanning, A4 \condAgenticCogWriter, A5 \condNoGoals, A6 \condFixedOrder, A7 \condSingleWriter, and A8 \condSingleContext.
+Generation is non-interactive: the runner supplies the assignment, context, and output constraints before each run, and a single-turn instruction placed before every prompt states that no interactive user is present and forbids clarification questions, so interactive passages that a skill text retains have no user to address.
+Prompt headers use the internal condition codes A1 \condSinglePass, A2 \condStaged, A3 \condTaskPlanning, A4 \condAgenticCogWriter, A5 \condNoGoals, A6 \condFixedOrder, A7 \condSingleWriter, A8 \condSingleContext, A9 \condStagedRoles, A10 \condSelfRefine, A11 \condPlainAgent, and A12 \condLoopOnly.
 Provider-level defaults not authored by the experiment are set by the runtime configuration in Appendix~\ref{app:runtime}.
 
 \subsection{Generation Prompts}
@@ -48,7 +48,21 @@ The \condStaged\ prompts follow the Pre-Write/Write/Re-Write stage model~\citep{
 
 \promptinput{PromptBaseline}{\condStaged: Re-Write}{build/prompt-display/experiments/conditions/prompts/a2_re_write.md}
 
+\promptinput{PromptBaseline}{\condStagedRoles: Pre-Write}{build/prompt-display/experiments/conditions/prompts/a9_pre_write.md}
+
+\promptinput{PromptBaseline}{\condStagedRoles: Write}{build/prompt-display/experiments/conditions/prompts/a9_write.md}
+
+\promptinput{PromptBaseline}{\condStagedRoles: Re-Write}{build/prompt-display/experiments/conditions/prompts/a9_re_write.md}
+
 \promptinput{PromptBaseline}{\condTaskPlanning}{build/prompt-display/experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md}
+
+\promptinput{PromptBaseline}{\condPlainAgent}{build/prompt-display/experiments/baselines/skills/writing-plain-agent/SKILL.md}
+
+\promptinput{PromptBaseline}{\condSelfRefine: Draft}{build/prompt-display/experiments/conditions/prompts/a10_draft.md}
+
+\promptinput{PromptBaseline}{\condSelfRefine: Feedback}{build/prompt-display/experiments/conditions/prompts/a10_feedback.md}
+
+\promptinput{PromptBaseline}{\condSelfRefine: Refine}{build/prompt-display/experiments/conditions/prompts/a10_refine.md}
 
 \subsubsection{\condAgenticCogWriter}
 \promptinput{PromptMonitor}{Top-level Agent Skill}{build/prompt-display/plugin/skills/agentic-cog-writer/SKILL.md}
@@ -80,6 +94,8 @@ Across the three generation runs, no \condNoGoals\ workspace contains a goals fi
 
 \promptinput{PromptAblation}{\condSingleContext}{build/prompt-display/experiments/plugin/skills/cognitive-writing-single-context/SKILL.md}
 
+\promptinput{PromptAblation}{\condLoopOnly}{build/prompt-display/experiments/plugin/skills/cognitive-writing-loop-only/SKILL.md}
+
 \subsection{Evaluation Prompts}
 
 \paragraph{Benchmark-native evaluation.}
@@ -87,6 +103,8 @@ WritingBench retains five query-specific criteria for each prompt; the evaluator
 HelloBench retains 5--7 checklist items per prompt; the evaluator scores each item on its five-level scale and the native score is the item mean.
 DoLoMiTes has no analogous per-prompt native rubric in our committed evaluation, so we report only the common pointwise rubric for that benchmark.
 Published leaderboard values are not comparable with these scores because we use a shared evaluator and our own outputs.
+
+In the judge templates below, \texttt{\{condition\_id\}} is filled with an opaque hash of the condition name, \texttt{\{platform\}} with the harness name, \texttt{codex}, and \texttt{\{presentation\}} with \texttt{A|B} or \texttt{B|A}, which gives the order of the two responses, so no field names the system that wrote a response.
 
 \promptinput{PromptEvaluator}{Common Pointwise Rubric}{build/prompt-display/experiments/prompts/judges/pointwise-v1.md}
 

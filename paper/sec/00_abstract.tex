@@ -1,8 +1,8 @@
-Recent coding agents have made tool-using, stateful execution prominent.
-The same execution style is increasingly used for knowledge work that ends in long-form documents.
-Yet long-form writing systems usually advance an outline, task graph, or fixed stage sequence rather than deciding which writing process is needed next.
-Drawing on cognitive process theory, we propose \condAgenticCogWriter, which maintains a shared draft, goals, and process history while a Monitor agent chooses and delegates planning, drafting, or reviewing.
-We evaluate our system across three long-form writing benchmarks using pointwise rubric scoring and pairwise same-prompt preference judgments.
-Pre-specified per-benchmark pairwise tests separate our system from one-shot generation in most cases but from a fixed planning--drafting--revision workflow and adaptive task planning in fewer than half, and a post-hoc prompt-level summary across benchmarks favors it over all three.
-Its paired pointwise differences favor it over all three alternatives on WritingBench and on HelloBench's native rubric, and ablations that drop explicit goals or fix the process order keep most of this advantage.
-In process traces, \AfourCycleCompliantRate\ of complete paths conform to the planning--drafting--reviewing cycle structure, and \AfourReviewingToTranslatingRate\ and \AfourReviewingToPlanningRate\ of runs return from reviewing to drafting and to planning, respectively.
+Recent coding agents write long-form documents, yet in our runs a plain agent allowed to revise its draft usually wrote it once.
+Long-form systems instead fix each step's unit in advance, so the writer does not choose the next writing process.
+Motivated by cognitive process theory, we propose \condAgenticCogWriter, a writing skill whose Monitor agent keeps a shared draft and goals and delegates planning, drafting, or reviewing.
+We evaluate our system on three long-form writing benchmarks with pointwise rubric scores and pairwise preferences.
+Pre-specified tests prefer it to one-shot generation in most tests but to a fixed workflow and task planning in fewer than half; post-hoc analyses, and paired pointwise differences on WritingBench and on HelloBench's native rubric, favor it over all three, and a post-hoc test favors it over the plain agent overall.
+Adding our role instructions to the fixed workflow post hoc does not reproduce this advantage.
+A post-hoc ablation removing goals, adaptive ordering, and subagents stays at parity and beats the fixed workflow, tying the advantage on these tasks to the Monitor's role-guided pass over a persistent draft.
+Process traces show \AfourCycleCompliantRate\ of complete paths follow the planning--drafting--reviewing cycle, so benchmarks requiring adaptive selection are next.

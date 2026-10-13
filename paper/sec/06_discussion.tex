@@ -1,3 +1,2 @@
-Tables~\ref{tab:main-results} and~\ref{tab:pairwise-results} show that \condAgenticCogWriter\ is distinguished by consistent same-prompt preference over the three alternatives rather than uniform pointwise dominance.
-The ablations keep most of that advantage over the alternatives, and the traces show little replanning on these tasks.
-Figure~\ref{fig:process-sequences} and Table~\ref{tab:process-dynamics} show that our system usually follows planning--drafting--reviewing, so its adaptive ordering is seldom used on these tasks.
+On these tasks the advantage over the fixed pipeline goes with the \texttt{Monitor}'s role-guided pass over a persistent draft, not with goals, adaptive ordering, or subagents: \condLoopOnly\ removes all three yet matches our system and beats \condStaged, unlike \condStagedRoles, though the parts of that pass, listed in the Limitations, are not separated.
+Adaptive selection, at most a small post-hoc gain, is seldom used, and after a revision request a fixed cycle also replans, so benchmarks requiring it come next.

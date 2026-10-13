@@ -196,6 +196,11 @@ def load_run_artifacts(run_dir: Path) -> RunArtifacts:
     if not isinstance(inputs, Mapping):
         raise RunArtifactError("run manifest needs an inputs object")
     prompt_id, assignment, context = _prompt_inputs(inputs)
+    followup_path = run_dir / "followup.txt"
+    if followup_path.is_file():
+        # A two-turn run is judged against the task as changed by turn 2.
+        followup = followup_path.read_text(encoding="utf-8")
+        assignment = f"{assignment}\n\n[Turn-2 change message]\n{followup}"
     condition_id = _required_text(inputs.get("condition_id"), "condition_id")
     try:
         output = output_path.read_text(encoding="utf-8")
@@ -239,6 +244,12 @@ def _presentation_orders(pair_id: str, seed: int) -> tuple[str, str]:
     orders = ("A|B", "B|A")
     digest = sha256_bytes(f"{seed}:{pair_id}".encode())
     return orders if int(digest[-1], 16) % 2 == 0 else (orders[1], orders[0])
+
+
+def _route(config: JudgeConfig) -> str:
+    if config.transport == "openai":
+        return "gateway OpenAI-compatible"
+    return "direct Bedrock" if config.aws_profile else "gateway Bedrock"
 
 
 def _family_audit(
@@ -334,6 +345,7 @@ def _write_score_artifacts(
             "max_output_tokens": config.max_output_tokens,
             "stop_rules": list(config.stop_rules),
             "max_retries": config.max_retries,
+            "route": _route(config),
         },
         "family_audit": family_audit,
         "source_runs": [

@@ -1,0 +1,22 @@
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llrrrr}
+\toprule
+\textbf{Contrast} & \textbf{Statistic} & \textbf{WritingBench} & \textbf{HelloBench} & \textbf{DoLoMiTes} & \textbf{Across benchmarks} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+\lcell{\condAgenticCogWriter\\vs \condStagedRoles} & Win rate & \FullStagedRolesWritingRate & \FullStagedRolesHelloRate & \FullStagedRolesDoLoRate & \FullStagedRolesAcrossRate \\
+ & 95\% Wilson interval & \FullStagedRolesWritingInterval & \FullStagedRolesHelloInterval & \FullStagedRolesDoLoInterval & \FullStagedRolesAcrossInterval \\
+ & W/L/T & \FullStagedRolesWritingWLT & \FullStagedRolesHelloWLT & \FullStagedRolesDoLoWLT & \FullStagedRolesAcrossWLT \\
+ & $p$ & $\FullStagedRolesWritingP$ & $\FullStagedRolesHelloP$ & $\FullStagedRolesDoLoP$ & $\FullStagedRolesAcrossP$ \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+\lcell{\condStagedRoles\\vs \condStaged} & Win rate & \StagedRolesStagedWritingRate & \StagedRolesStagedHelloRate & \StagedRolesStagedDoLoRate & \StagedRolesStagedAcrossRate \\
+ & 95\% Wilson interval & \StagedRolesStagedWritingInterval & \StagedRolesStagedHelloInterval & \StagedRolesStagedDoLoInterval & \StagedRolesStagedAcrossInterval \\
+ & W/L/T & \StagedRolesStagedWritingWLT & \StagedRolesStagedHelloWLT & \StagedRolesStagedDoLoWLT & \StagedRolesStagedAcrossWLT \\
+ & $p$ & $\StagedRolesStagedWritingP$ & $\StagedRolesStagedHelloP$ & $\StagedRolesStagedDoLoP$ & $\StagedRolesStagedAcrossP$ \\
+\bottomrule
+\end{tabular}
+\caption{Exploratory \condStagedRoles\ comparisons on generation run 1. The win rate belongs to the first-named system and counts order-consistent outcomes; Across sums wins and losses over the three benchmarks. Sign-test $p$-values are unadjusted and outside the Holm family.}
+\label{tab:appendix-staged-roles}
+\end{table}

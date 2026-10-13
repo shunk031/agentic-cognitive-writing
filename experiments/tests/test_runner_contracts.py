@@ -198,6 +198,7 @@ def _plugin_source(tmp_path: Path) -> Path:
         "cognitive-writing-single-writer",
         "cognitive-writing-single-context",
         "writing-cogwriter-style",
+        "writing-plain-agent",
         "writing-adaptive-task-planning",
         "planning",
         "translating",
@@ -1217,7 +1218,7 @@ def test_composed_prompt_omits_the_stage_chain_header_without_frozen_paths() -> 
 
 @pytest.mark.parametrize(
     "condition_id",
-    ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "B1", "B2"),
+    ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12", "B1", "B2"),
 )
 @pytest.mark.parametrize("platform", PLATFORMS)
 def test_composed_prompt_has_one_rendered_shared_input_block(
@@ -1254,6 +1255,34 @@ FROZEN_STAGE_HEADINGS = {
         "### Pre-Write output",
         "## A2 Re-Write",
         "### Draft to revise",
+    ],
+    "A9": [
+        "## A9 Pre-Write",
+        "### Planning role",
+        "### Assignment",
+        "### Supplied context",
+        "### Requested output constraints",
+        "### Previous stage output",
+        "## A9 Write",
+        "### Translating role",
+        "### Pre-Write output",
+        "## A9 Re-Write",
+        "### Reviewing role",
+        "### Draft to revise",
+    ],
+    "A10": [
+        "## A10 Draft",
+        "### Assignment",
+        "### Supplied context",
+        "### Requested output constraints",
+        "### Previous stage output",
+        *(
+            "## A10 Feedback",
+            "### Draft to give feedback on",
+            "## A10 Refine",
+            "### Feedback to address",
+        )
+        * 2,
     ],
     "B2": [
         "## A3 perspective discovery",
@@ -1440,6 +1469,7 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         ("A5", "cognitive-writing-no-goal-network"),
         ("A6", "cognitive-writing-fixed-order"),
         ("A8", "cognitive-writing-single-context"),
+        ("A12", "cognitive-writing-loop-only"),
     ),
 )
 def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6_a8(
@@ -2488,6 +2518,28 @@ def test_retry_reuses_the_returned_session_id(
     assert len(executor.calls) == 2
     assert executor.calls[1][0:3] == ["codex", "exec", "resume"]
     assert "session-1" in executor.calls[1]
+
+
+def test_followup_resumes_the_session_and_replaces_the_output(tmp_path: Path) -> None:
+    executor = _RetryExecutor([_result(output="first " * 10), _result()])
+    runner = _runner(tmp_path, executor=executor)
+
+    result = runner.run_prompt(
+        _prompt(), condition_id="A1", platform="codex", followup="Change it."
+    )
+
+    assert executor.calls[1][0:4] == ["codex", "exec", "resume", "session-1"]
+    assert 'sandbox_mode="workspace-write"' in executor.calls[1]
+    assert executor.calls[1][-1] == "Change it."
+    assert result.output_path.read_text() == "final output " * 10
+    assert (result.run_dir / "turn1.output.normalized.txt").read_text() == (
+        "first " * 10
+    )
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["status"] == "completed"
+    assert manifest["followup"]["turn1_trace_events"] == 1
+    assert manifest["followup"]["turn1_attempts"] == 1
+    assert manifest["attempts"] == 2
 
 
 def test_retry_exhaustion_fails_after_fixed_attempt_count(tmp_path: Path) -> None:

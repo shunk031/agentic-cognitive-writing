@@ -12,16 +12,16 @@ Primary pairwise evaluation uses the same judge for every condition, presents ea
 
 \section{Generation-Run-Level Pairwise Outcomes}
 \label{app:pairwise-detail}
-The following figure shows the prompt-level pairwise estimates for each benchmark and generation run, including the ablation contrasts.
-The Holm family of each benchmark contains 24 tests: eight pre-specified contrasts in each of the three generation runs.
-The contrasts compare \condAgenticCogWriter\ with \condSinglePass, \condStaged, \condTaskPlanning, \condNoGoals, and \condFixedOrder, and \condSingleWriter\ with \condSinglePass, \condAgenticCogWriter, and \condNoGoals.
+The following figure shows the generation-run-level win rates for each benchmark and generation run, including the ablation contrasts.
+The pre-specified protocol that fixes the Holm family and its contrasts is included in the supplementary material.
+The eight contrasts compare \condAgenticCogWriter\ with \condSinglePass, \condStaged, \condTaskPlanning, \condNoGoals, and \condFixedOrder, and \condSingleWriter\ with \condSinglePass, \condAgenticCogWriter, and \condNoGoals.
 For \condAgenticCogWriter\ versus \condSinglePass, the descriptive mean win rates across generation runs are \DoLoFourOneRateMean\ on DoLoMiTes, \HelloFourOneRateMean\ on HelloBench, and \WritingFourOneRateMean\ on WritingBench.
 \begin{figure}
 \centering
 \includegraphics[width=0.96\textwidth]{fig/confirmatory-forest.pdf}
 \caption{Generation-run-level pairwise estimates separate the large system comparisons from the ablations.
 \condAgenticCogWriter\ is consistently favored over \condSinglePass\ and \condTaskPlanning\ and usually over \condStaged, whereas \condNoGoals\ and \condFixedOrder\ remain near parity and do not survive the within-benchmark Holm correction.
-Points show 95\% Wilson intervals; filled circles survive correction, open circles do not, and diamonds are descriptive means across generation runs.}
+Points show win rates and bars their 95\% Wilson intervals; filled circles survive correction, open circles do not, and diamonds are descriptive means across generation runs.}
 \label{fig:appendix-confirmatory-forest}
 \end{figure}
 
@@ -36,9 +36,14 @@ Across the \PairedSeparationMeasureCount\ WritingBench and HelloBench native and
 Removing explicit goals therefore leaves the full system's advantage intact, and fixing the process order keeps it on every WritingBench native comparison and on most HelloBench native comparisons; on DoLoMiTes, all three systems separate only from \condTaskPlanning.
 \input{tab/appendix-paired-ablation}
 
+Table~\ref{tab:appendix-raw-rubric} reports the raw rubric means behind the standardized pointwise scores.
+Every mean is at least \RawRubricMin\ on the five-point scale, so the raw ratings concentrate near the upper end and leave little room to separate systems, which is why Section~\ref{sec:evaluation} standardizes each dimension before averaging.
+\input{tab/appendix-raw-rubric}
+
 \section{Additional Process and Resource Statistics}
 \label{app:process-behavior}
 Table~\ref{tab:process-summary} reports output size, delegated invocations, goal events, token accounting, and wall-clock time, each averaged across the three generation runs.
+Goal counts are logged trace events: the \condFixedOrder\ prompt lacks our system's end-of-run check that every goal in the goals file has a trace event, so its counts understate the goals its goal files record.
 For \condAgenticCogWriter, a generation run averages \AfourGoalCreatedMean\ goal-creation events and \AfourGoalDevelopedMean\ goal-development events.
 The post-\texttt{Reviewing} ledger is the \texttt{Monitor}'s first process-switch decision after each \texttt{Reviewing} pass, which lists every regeneration proposal from the \texttt{Reviewer} with its acceptance or rejection, or states that none was made.
 A generation run averages \AfourLedgerEntriesMean\ ledger entries, \AfourLedgerWithProposalMean\ of which contain a regeneration proposal, and the trace records \AfourGoalRegeneratedMean\ accepted goal regenerations (Table~\ref{tab:process-summary}).
@@ -47,9 +52,17 @@ A generation run averages \AfourLedgerEntriesMean\ ledger entries, \AfourLedgerW
 \paragraph{Trace processing.}
 Process paths are read from the \texttt{Monitor}'s \texttt{process\_switch} events in trace order: each event's destination process is one step, and a run ends once, after its last step (E in Figure~\ref{fig:process-sequences}).
 Figure~\ref{fig:process-sequences}(a) counts these paths as logged, and Figure~\ref{fig:process-sequences}(b,c) counts step-to-step transitions.
-For Table~\ref{tab:process-dynamics}, immediate repeats of a process are merged (\emph{repeat collapsing}), and when the first delegated role is \texttt{Planning} but the first logged switch names a later process, a leading \texttt{Planning} step is restored (\emph{leading-\texttt{Planning} reconstruction}; \AfourLeadingReconstruction\ such runs for \condAgenticCogWriter).
+Of the \AfourRunCount\ completed runs of our system, \AfourEndBeforeReviewingRuns\ end their logged path at \texttt{Planning} (\AfourEndPlanningRuns) or \texttt{Translating} (\AfourEndTranslatingRuns); in \AfourEndLastReviewerRuns\ of these the last delegated subagent is the \texttt{Reviewer}, so a final review ran without a logged switch, and in the rest the final document is the draft as last written.
+For the top panel of Table~\ref{tab:process-dynamics}, immediate repeats of a process are merged (\emph{repeat collapsing}), and when the first delegated role is \texttt{Planning} but the first logged switch names a later process, a leading \texttt{Planning} step is restored (\emph{leading-\texttt{Planning} reconstruction}; \AfourLeadingReconstruction\ such runs for \condAgenticCogWriter).
 A path is \emph{cycle-compliant} when the result consists of one or more complete \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} passes, and returns after \texttt{Reviewing} are counted from this observed order.
 \condFixedOrder\ enforces its order through its prompt only, and \AsixCycleCompliantRate\ of its paths are cycle-compliant; the rest skip or repeat a process, for example \texttt{Translating}--\texttt{Reviewing} without \texttt{Planning}.
+
+\paragraph{Delegation fallback.}
+The prompts of our system, \condNoGoals, and \condFixedOrder\ let the \texttt{Monitor} perform a role itself when native delegation is unavailable and require it to record that fallback in the trace; the \condTaskPlanning\ prompt has no such rule.
+Counting completed runs whose trace decisions mention the fallback, it occurs in \AfourFallbackRuns\ of \AfourRunCount\ runs of our system, \AfiveFallbackRuns\ of \AfiveFallbackCompleted\ of \condNoGoals, and \AsixFallbackRuns\ of \AsixFallbackCompleted\ of \condFixedOrder.
+Dropping every pair whose run of our system used the fallback leaves win rates, averaged over generation runs as in Table~\ref{tab:pairwise-results}, of \NoFallbackFullSinglePassRate, \NoFallbackFullStagedRate, and \NoFallbackFullTaskPlanningRate\ against \condSinglePass, \condStaged, and \condTaskPlanning, over \NoFallbackFullSinglePassPairs, \NoFallbackFullStagedPairs, and \NoFallbackFullTaskPlanningPairs\ pairs.
+Dropping pairs in which either run used it leaves \NoFallbackFullNoGoalsRate\ against \condNoGoals\ and \NoFallbackFullFixedOrderRate\ against \condFixedOrder, over \NoFallbackFullNoGoalsPairs\ and \NoFallbackFullFixedOrderPairs\ pairs.
+The advantage over the alternatives therefore does not rest on runs in which the \texttt{Monitor} performed a role itself.
 
 \section{Sensitivity Analyses}
 \label{app:sensitivity-analyses}
@@ -65,6 +78,7 @@ Table~\ref{tab:appendix-length-control} reports matched-length win rates for our
 Within the tighter pre-specified matching band, our system is favored over \condSinglePass\ in every run, stays above parity in every run against \condStaged\ and \condFixedOrder, remains above parity against \condTaskPlanning\ while narrowing toward parity, and changes direction across runs against \condNoGoals.
 The wider pre-specified band shows the same qualitative pattern.
 These matching-band results are descriptive sensitivity checks; ties are excluded from the win-rate denominator, and generation runs are reported separately because they reuse the same prompts.
+Following the length check of DoLoMiTes~\citep{malaviya2025dolomites}, a rule that always prefers the longer output agrees with the judge on \LengthRuleWritingRate\ of \LengthRuleWritingPairs\ decided pairs on WritingBench, \LengthRuleHelloRate\ of \LengthRuleHelloPairs\ on HelloBench, and \LengthRuleDoLoRate\ of \LengthRuleDoLoPairs\ on DoLoMiTes, over the pre-specified contrasts and three generation runs.
 The \condSingleWriter\ length-band tests in Section~\ref{sec:results-mechanism}, in which \condSingleWriter\ wins \SingleWriterLengthFiveRate\ and \SingleWriterLengthTenRate, instead combine the three runs, so their sign tests take the prompt as the unit: a prompt counts as a win or a loss when its outcomes in the band, averaged across runs, favor one system.
 \input{tab/appendix-length-control}
 
@@ -94,14 +108,88 @@ We registered it as an exploratory condition outside the Holm family before judg
 We therefore report the combined estimate with its interval and the benchmark-level results without adjustment.
 \input{tab/appendix-single-context}
 
+\subsection{Staged with Role Instructions}
+\label{app:staged-roles}
+The \condStagedRoles\ condition was added after the main results had been observed, to test whether the role instructions of our subagents explain the advantage over \condStaged.
+It reuses the \condStaged\ harness, stage order, and trace format, and adds to the \texttt{Pre-Write}, \texttt{Write}, and \texttt{Re-Write} prompts the \texttt{Planner}, \texttt{Translator}, and \texttt{Reviewer} role instructions, without the text that refers to the \texttt{Monitor}, goals, trace, shared files, or delegation.
+It was generated once on generation run 1 and judged with the run-1 pairwise setup, so the \condAgenticCogWriter\ comparison covers the \FullStagedRolesAcrossN\ prompts with a completed run-1 output.
+Table~\ref{tab:appendix-staged-roles} reports both contrasts: our system is preferred on WritingBench and HelloBench but not significantly on DoLoMiTes, and \condStagedRoles\ loses to \condStaged\ on HelloBench and is near parity elsewhere.
+\input{tab/appendix-staged-roles}
+
+\subsection{Plain Coding Agent}
+\label{app:plain-agent}
+The \condPlainAgent\ condition was added after the main results had been observed, to test whether the harness alone organizes writing as our system does.
+It gives the same Codex harness, generator, output budget, and retry policy the task prompt and one neutral instruction to keep a working draft in a workspace file that it may plan, draft, and revise, with no skill content.
+It was generated once on generation run 1 and judged with the run-1 pairwise setup, so the comparison covers the \FullPlainAgentAcrossN\ prompts with a completed run-1 output of our system.
+Table~\ref{tab:appendix-plain-agent} reports the contrast: our system is favored across benchmarks and separated on WritingBench, while HelloBench ($p=\FullPlainAgentHelloP$) and DoLoMiTes are not separated.
+All \PlainAgentCompletedRuns\ runs wrote the document to a workspace file, \PlainAgentWrittenOnceRuns\ wrote it once and returned it, and the other \PlainAgentRevisedRuns\ wrote it again, mostly to adjust length after counting words or characters.
+\input{tab/appendix-plain-agent}
+
+\subsection{CogWriter-Style on the Main Benchmarks}
+\label{app:cogwriter-main}
+The \condExploratoryOne\ condition of Appendix~\ref{app:habermas} was run after the main results on the three benchmarks of generation run 1, with the same generator, harness, output budget, and runner retry policy, and judged with the run-1 pairwise setup.
+It is our adaptation of CogWriter, not the published system, and its skill files are identical to the consensus-writing version.
+It completed \CogWriterStyleCompleted\ of \CogWriterStyleAttempted\ prompts: the other \CogWriterStyleFailed\ failed its final-product gate, \CogWriterStyleNoDraftFailed\ of them for lack of a draft file, and only \CogWriterStyleRetried\ of the \CogWriterStyleFirstPassFailed\ first-pass failures were retried before a cost guard stopped retries.
+A prompt counts only when both systems completed it, so the comparison covers \FullCogWriterStyleAcrossN\ prompts.
+\condExploratoryOne\ uses more compute than our system, with \CogWriterStyleSpawns\ subagent spawns and \CogWriterStyleOutputTokens\ output-plus-reasoning tokens per attempted run against \AfourSpawns\ and \AfourOutputTokens, and writes outputs of similar length (median \CogWriterStyleMedianOutput\ words).
+Table~\ref{tab:appendix-cogwriter-main} reports the contrast, which favors our system on every benchmark.
+\input{tab/appendix-cogwriter-main}
+
+\subsection{Budget-Matched Self-Refine}
+\label{app:self-refine}
+The \condSelfRefine\ condition follows Self-Refine~\citep{madaan2023self} in one session: it drafts the document, then gives feedback on it and refines it for \SelfRefineRounds\ rounds, with generic prompts rather than our role instructions.
+The round count was fixed before the scored run by matching our system's run-1 token use on unscored calibration prompts, and in the scored run \condSelfRefine\ received \SelfRefineTokenExcess\ more output-plus-reasoning tokens per completed document than our system (\SelfRefineOutputTokens\ against \SelfRefineAfourOutputTokens), so the budget favors \condSelfRefine.
+It completed \SelfRefineCompleted\ of \CogWriterStyleAttempted\ prompts, wrote shorter outputs (median \SelfRefineMedianOutput\ words), and covers \FullSelfRefineAcrossN\ prompts in the comparison.
+Table~\ref{tab:appendix-self-refine} shows that our system is preferred on WritingBench and HelloBench and is at parity on DoLoMiTes.
+\input{tab/appendix-self-refine}
+
+\subsection{Combined Loop-Only Ablation}
+\label{app:loop-only}
+The \condLoopOnly\ condition removes explicit goals, adaptive ordering, and subagents together: it has no goals file or goal events, its \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} order is fixed by its prompt, and its \texttt{Monitor} performs every role in its own context, with any subagent spawn failing the run.
+It keeps the \texttt{Monitor}, the persistent \texttt{.writing/} workspace draft, and the writing guidance of the role skills, and it is built from the skill texts that \condNoGoals, \condFixedOrder, and \condSingleContext\ executed in generation run 1.
+It completed \LoopOnlyCompleted\ of \CogWriterStyleAttempted\ prompts; \LoopOnlyOnePassRuns\ of those runs make exactly one pass and \LoopOnlyReturnPlanningRuns\ return to \texttt{Planning}.
+It used \LoopOnlyOutputTokens\ output-plus-reasoning and \LoopOnlyInputTokens\ uncached input tokens per attempted run, against \AfourOutputTokens\ and \AfourInputTokens\ for our system.
+Table~\ref{tab:appendix-loop-only} reports both contrasts: \condLoopOnly\ is at parity with our system on every benchmark and beats \condStaged\ across benchmarks, significantly on WritingBench and DoLoMiTes.
+The result is post hoc, from one generation run, and a parity result without an equivalence test.
+\input{tab/appendix-loop-only}
+
+\subsection{Output-Language Drift}
+\label{app:language-drift}
+Some English assignments are answered mainly in Chinese, counted as outputs whose Chinese characters outnumber their Latin letters, the rule that also classifies prompt language.
+The drift occurs only on WritingBench and in every condition; HelloBench and DoLoMiTes show \HelloDriftTotal\ and \DoLoDriftTotal\ such outputs.
+Table~\ref{tab:appendix-language-drift} reports generation run 1, where our system drifts more often than \condStaged.
+\DriftEveryConditionPrompts\ prompts drift in every condition; their topics concern China, and \DriftEveryConditionHanPrompts\ of them give their instructions in Chinese, one requesting a Chinese report, while attaching English material, so the script rule counts them as English assignments.
+\input{tab/appendix-language-drift}
+
 \subsection{Cross-Family Judge Robustness}
 \label{app:cross-family}
-Table~\ref{tab:appendix-cross-family} reports benchmark-level results for three cross-family robustness contrasts involving our system.
-Within each contrast, summing W/L/T counts over the three benchmarks gives \CrossFamilyFullSinglePassWLT\ versus \condSinglePass, \CrossFamilyFullTaskPlanningWLT\ versus \condTaskPlanning, and \CrossFamilyFullNoGoalsWLT\ versus \condNoGoals.
-The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullTaskPlanningInterval, and \CrossFamilyFullNoGoalsInterval.
-Across all three selected contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
+Table~\ref{tab:appendix-cross-family} reports benchmark-level results for the five cross-family contrasts between our system and an alternative or ablation, all on generation run 1.
+Within each contrast, summing W/L/T counts over the three benchmarks gives \CrossFamilyFullSinglePassWLT\ versus \condSinglePass, \CrossFamilyFullStagedWLT\ versus \condStaged, \CrossFamilyFullTaskPlanningWLT\ versus \condTaskPlanning, \CrossFamilyFullNoGoalsWLT\ versus \condNoGoals, and \CrossFamilyFullFixedOrderWLT\ versus \condFixedOrder.
+The corresponding Wilson intervals are \CrossFamilyFullSinglePassInterval, \CrossFamilyFullStagedInterval, \CrossFamilyFullTaskPlanningInterval, \CrossFamilyFullNoGoalsInterval, and \CrossFamilyFullFixedOrderInterval, with sign-test $p=\CrossFamilyFullStagedP$ against \condStaged\ and $p=\CrossFamilyFullFixedOrderP$ against \condFixedOrder.
+The \condStaged\ and \condFixedOrder\ contrasts cover \CrossFamilyFullStagedN\ and \CrossFamilyFullFixedOrderN\ pairs; one further pair, a HelloBench comparison with \condStaged, failed the judge's structured-output check after all retries and has no cross-family outcome.
+Across all five contrasts and benchmarks, the judge yields a non-tied order-consistent outcome on \CrossFamilyPooledCommitRate\ of \CrossFamilyPooledN\ eligible pairs, with \CrossFamilyPooledWLT\ W/L/T; \CrossFamilyPooledAgreement\ prompt-level outcomes agree with the same-family judge.
 Cohen's kappa between the two judges is \JudgeAgreementKappa\ over these outcomes, most of which are cross-family ties, and \JudgeAgreementDecidedKappa\ over the \JudgeAgreementDecidedPairs\ pairs both judges decide, of which \JudgeAgreementDecidedAgreeing\ agree.
 \input{tab/appendix-cross-family}
+
+\subsection{Revision-Request Experiment}
+\label{app:revision-requests}
+This exploratory experiment, specified before generation, tests whether adaptive process selection matters when a finished document must be revised.
+It draws \RevisionPrompts\ prompts evenly from the three benchmark subsets; each system first completes the assignment and then, in the same session, receives one change request that adds a constraint, supplies new evidence, or conflicts with part of the assignment.
+The change requests were written once by \modelJudgeBare\ and frozen before any system ran; the generator is \modelGen, and the pairwise judge, \modelJudge\ with a revision-specific template, compares the revised documents in both presentation orders and counts an order-inconsistent outcome as a tie.
+Each contrast covers the \RevisionFullFixedOrderN\ prompts on which our system completed both turns.
+Table~\ref{tab:appendix-revision} shows that our system is not separable from \condFixedOrder\ and is favored over \condStaged\ without a significant difference; the \condSinglePass\ contrast was added outside the plan.
+The \texttt{Monitor} responds to the request: its second turn switches to \texttt{Planning} in \RevisionAfourPlanning\ of \RevisionAfourCompleted\ runs and regenerates goals in \RevisionAfourRegenerated, whereas \condFixedOrder\ regenerates goals in \RevisionAsixRegenerated\ of \RevisionAsixCompleted.
+
+The experiment cannot separate adaptive selection from a fixed cycle, because every request arrives after a complete document and calls for replanning, which a fixed order also performs.
+The change requests are written by a model and were not validated by people, and the generator, change writer, and judge all belong to the GPT family.
+Each system ran once per prompt, and the $p$-values carry no multiplicity correction.
+\input{tab/appendix-revision}
+
+\section{Illustrative Example}
+\label{app:example}
+The example below was chosen at random with a fixed seed from the \ExampleEligiblePrompts\ generation-run-1 prompts on which the primary judge preferred our system over \condStaged\ in both presentation orders and both outputs are in English, so it illustrates a win and does not represent typical outputs.
+The prompt is \texttt{\ExamplePrompt}; the assignment excerpt is our \texttt{Monitor}'s restatement of the prompt in its \texttt{assignment.md}, not the benchmark's prompt text, the other excerpts give the opening words of each document, and the judge's reason is quoted from the presentation in which our system is response A.
+\input{tab/appendix-example}
 
 \section{Consensus-Writing Evaluation on Habermas Machine Data}
 \label{app:habermas}
@@ -112,6 +200,6 @@ Across eight conditions, this produces 80 attempted runs; 78 complete successful
 Table~\ref{tab:appendix-habermas} summarizes pointwise quality and the available process statistics.
 \input{tab/appendix-habermas}
 
-\condExploratoryOne\ is the exploratory CogWriter-style~\citep{wan2025cognitive} baseline, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; \condExploratoryTwo\ is the exploratory STORM-style~\citep{shao2024assisting} baseline, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval.
-On these short consensus-writing tasks, \condAgenticCogWriter\ does not achieve the highest pointwise composite; in particular, it scores below \condSinglePass\ and \condStaged.
-Our system and \condFixedOrder\ record \HabAfourRegenerated\ and \HabAsixRegenerated\ regeneration events, respectively; their ledgers contain \HabAfourLedger\ and \HabAsixLedger\ no/proposal outcomes, respectively.
+\condExploratoryOne~\citep{wan2025cognitive} is the exploratory adaptation of CogWriter, with initial planning, immediate plan revision, parallel segment generation, and length review without a goal network; \condExploratoryTwo~\citep{shao2024assisting} is the exploratory adaptation of STORM, with perspective discovery, simulated question answering, outlining, per-section drafting, and polishing without retrieval.
+On these short consensus-writing tasks, \condAgenticCogWriter\ does not achieve the highest pointwise composite; in particular, it scores below \condSinglePass\ and \condStaged, and also below \condNoGoals\ and \condFixedOrder.
+Neither our system nor \condFixedOrder\ regenerates a goal on these tasks, and their post-\texttt{Reviewing} ledgers record \HabAfourLedger\ and \HabAsixLedger\ no/proposal outcomes.

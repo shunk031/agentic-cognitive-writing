@@ -1,0 +1,17 @@
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llrrrr}
+\toprule
+\textbf{Contrast} & \textbf{Statistic} & \textbf{WritingBench} & \textbf{HelloBench} & \textbf{DoLoMiTes} & \textbf{Across benchmarks} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}\cmidrule(lr){6-6}
+\lcell{\condAgenticCogWriter\\vs \condSelfRefine} & Win rate & \FullSelfRefineWritingRate & \FullSelfRefineHelloRate & \FullSelfRefineDoLoRate & \FullSelfRefineAcrossRate \\
+ & 95\% Wilson interval & \FullSelfRefineWritingInterval & \FullSelfRefineHelloInterval & \FullSelfRefineDoLoInterval & \FullSelfRefineAcrossInterval \\
+ & W/L/T & \FullSelfRefineWritingWLT & \FullSelfRefineHelloWLT & \FullSelfRefineDoLoWLT & \FullSelfRefineAcrossWLT \\
+ & $p$ & $\FullSelfRefineWritingP$ & $\FullSelfRefineHelloP$ & $\FullSelfRefineDoLoP$ & $\FullSelfRefineAcrossP$ \\
+\bottomrule
+\end{tabular}
+\caption{Exploratory comparison of \condAgenticCogWriter\ with \condSelfRefine\ on generation run 1. The win rate belongs to our system and counts order-consistent outcomes; Across sums wins and losses over the three benchmarks. Sign-test $p$-values are unadjusted and outside the Holm family.}
+\label{tab:appendix-self-refine}
+\end{table}

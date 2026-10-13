@@ -154,6 +154,51 @@ def test_bedrock_transport_builds_request_and_maps_cache_usage(
     }
 
 
+def test_bedrock_direct_aws_profile_uses_session_without_gateway(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    fake_client = _FakeBedrockClient()
+    captured: dict[str, Any] = {}
+
+    class _FakeSession:
+        def __init__(self, **kwargs: Any) -> None:
+            captured["session"] = kwargs
+
+        def client(self, *args: Any, **kwargs: Any) -> _FakeBedrockClient:
+            captured["args"] = args
+            captured["kwargs"] = kwargs
+            return fake_client
+
+    monkeypatch.setattr(boto3, "Session", _FakeSession)
+    monkeypatch.delenv("TEST_JUDGE_BASE_URL", raising=False)
+    monkeypatch.delenv("TEST_JUDGE_CREDENTIAL", raising=False)
+    config = _config(
+        tmp_path,
+        transport="bedrock",
+        aws_profile="judge-profile",
+        base_url_env=None,
+        credential_env=None,
+    )
+
+    OpenAICompatibleClient(config).complete(
+        "Return one checklist item.",
+        output_type=HelloBenchChecklistRecord,
+        text_output=True,
+    )
+
+    assert captured == {
+        "session": {"profile_name": "judge-profile"},
+        "args": ("bedrock-runtime",),
+        "kwargs": {"region_name": "us-east-1"},
+    }
+    assert fake_client.requests[0]["modelId"] == "us.anthropic.claude-opus-5"
+
+
+def test_aws_profile_requires_bedrock_transport(tmp_path: Path) -> None:
+    with pytest.raises(JudgeConfigurationError, match="aws_profile"):
+        _config(tmp_path, aws_profile="judge-profile")
+
+
 def test_bedrock_transport_rejects_reasoning_effort(tmp_path: Path) -> None:
     with pytest.raises(JudgeConfigurationError, match="reasoning_effort"):
         _config(tmp_path, transport="bedrock", reasoning_effort="low")

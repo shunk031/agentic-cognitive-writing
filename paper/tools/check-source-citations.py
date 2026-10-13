@@ -13,8 +13,9 @@ SOURCE_CITATION_CONTRACTS = (
     ("sec/04_experiments.tex", "HelloBench", "que2024hellobench"),
     ("sec/04_experiments.tex", "DoLoMiTes", "malaviya2025dolomites"),
     ("sec/10_appendix.tex", "Habermas Machine data", "tessler2024common"),
-    ("sec/10_appendix.tex", "CogWriter-style", "wan2025cognitive"),
-    ("sec/10_appendix.tex", "STORM-style", "shao2024assisting"),
+    # The CogWriter-style and STORM-style condition macros carry these names.
+    ("sec/10_appendix.tex", r"\condExploratoryOne", "wan2025cognitive"),
+    ("sec/10_appendix.tex", r"\condExploratoryTwo", "shao2024assisting"),
 )
 
 

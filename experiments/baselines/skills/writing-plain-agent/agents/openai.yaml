@@ -1,0 +1,7 @@
+interface:
+  display_name: "Plain agent writing"
+  short_description: "Write a document with no process guidance for condition A11"
+  default_prompt: "Run condition A11 from the assignment and supplied context."
+
+policy:
+  allow_implicit_invocation: false

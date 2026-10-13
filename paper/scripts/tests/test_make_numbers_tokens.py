@@ -11,6 +11,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from make_numbers import (
     _compute_stratified_entries,
     _pairwise_robustness_entries,
+    _self_refine_entries,
+    _loop_only_entries,
+    _staged_roles_entries,
+    _plain_agent_entries,
+    _cogwriter_style_entries,
+    _cogwriter_spawn_entries,
+    _trace_endings_entries,
+    _revision_tasks_entries,
+    _delegation_fallback_entries,
+    _length_rule_entries,
+    _language_drift_entries,
     _cross_family_percent,
     _length_control_entries,
     emit_numbers,
@@ -326,7 +337,7 @@ def _cross_result() -> dict:
 
 def _cross_family_summary() -> dict:
     contrasts = {}
-    for contrast in ("A4:A1", "A4:A3", "A4:A5"):
+    for contrast in ("A4:A1", "A4:A2", "A4:A3", "A4:A5", "A4:A6"):
         result = _cross_result()
         result["benchmarks"] = {
             benchmark: _cross_result()
@@ -546,8 +557,85 @@ class TokenMacroTests(unittest.TestCase):
         self.assertEqual(output[r"\PromptLevelAcrossFullSinglePassRate"], r"74.8\%")
         self.assertEqual(output[r"\PromptLevelAcrossFullSinglePassWLT"], "234/37/29")
         self.assertEqual(output[r"\LengthModelFullStagedPreference"], r"60.0\%")
-        self.assertEqual(output[r"\JudgeAgreementPairs"], "854")
+        self.assertEqual(output[r"\JudgeAgreementPairs"], "1421")
         self.assertNotIn(r"\PromptLevelAcrossFullNoGoalsRate", output)
+
+    def test_staged_roles_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/staged-role-instructions/a9-pairwise.json").read_text())
+        output = dict((name, value) for name, value, _ in _staged_roles_entries(report))
+        self.assertEqual(output[r"\FullStagedRolesAcrossWLT"], "141/66/86")
+        self.assertEqual(output[r"\FullStagedRolesAcrossRate"], r"68.1\%")
+        self.assertEqual(output[r"\StagedRolesStagedAcrossRate"], r"45.9\%")
+        self.assertEqual(output[r"\StagedRolesStagedHelloP"], "0.0331")
+
+    def test_plain_agent_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/plain-agent/a11-pairwise.json").read_text())
+        output = {name: value for name, value, _ in _plain_agent_entries(report)}
+        self.assertEqual(output[r"\FullPlainAgentAcrossWLT"], "119/89/85")
+        self.assertEqual(output[r"\FullPlainAgentAcrossRate"], r"57.2\%")
+        self.assertEqual(output[r"\FullPlainAgentDoLoP"], "0.7239")
+        self.assertEqual(output[r"\PlainAgentRevisedRuns"], "56")
+
+    def test_cogwriter_style_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/cogwriter-main/b1-pairwise.json").read_text())
+        output = dict((name, value) for name, value, _ in _cogwriter_style_entries(report))
+        self.assertEqual(output[r"\FullCogWriterStyleAcrossWLT"], "186/33/40")
+        self.assertEqual(output[r"\FullCogWriterStyleAcrossN"], "259")
+        self.assertEqual(output[r"\CogWriterStyleCompleted"], "266")
+        self.assertEqual(output[r"\CogWriterStyleOutputTokens"], "18,011")
+        self.assertEqual(output[r"\CogWriterStyleMedianOutput"], "1,684.5")
+        spawns = json.loads((Path(__file__).resolve().parents[2] / "results/cogwriter-main/b1-spawns.json").read_text())
+        self.assertEqual(dict((n, v) for n, v, _ in _cogwriter_spawn_entries(spawns))[r"\CogWriterStyleSpawns"], "12.6")
+
+    def test_self_refine_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/self-refine/a10-pairwise.json").read_text())
+        output = dict((name, value) for name, value, _ in _self_refine_entries(report))
+        self.assertEqual(output[r"\SelfRefineRounds"], "2")
+        self.assertEqual(output[r"\SelfRefineOutputTokens"], "15,015")
+        self.assertEqual(output[r"\SelfRefineAfourOutputTokens"], "13,343")
+        self.assertEqual(output[r"\FullSelfRefineAcrossWLT"], "137/70/85")
+        self.assertEqual(output[r"\FullSelfRefineAcrossRate"], r"66.2\%")
+        self.assertEqual(output[r"\FullSelfRefineDoLoN"], "97")
+
+    def test_loop_only_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/combined-ablation/a12-pairwise.json").read_text())
+        output = dict((name, value) for name, value, _ in _loop_only_entries(report))
+        self.assertEqual(output[r"\FullLoopOnlyAcrossWLT"], "96/92/104")
+        self.assertEqual(output[r"\FullLoopOnlyAcrossN"], "292")
+        self.assertEqual(output[r"\LoopOnlyStagedAcrossWLT"], "141/62/96")
+        self.assertEqual(output[r"\LoopOnlyStagedWritingRate"], r"81.9\%")
+
+    def test_trace_endings_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/process-sequences/trace-endings.json").read_text())
+        output = dict((name, value) for name, value, _ in _trace_endings_entries(report))
+        self.assertEqual(output[r"\AfourEndBeforeReviewingRuns"], "88")
+        self.assertEqual(output[r"\AfourFallbackRuns"], "218")
+
+    def test_language_drift_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/language-drift/language-drift.json").read_text())
+        output = dict((name, value) for name, value, _ in _language_drift_entries(report))
+        self.assertEqual(output[r"\AfourDriftCount"], "29")
+        self.assertEqual(output[r"\AtwoDriftCount"], "16")
+        self.assertEqual(output[r"\HelloDriftTotal"], "0")
+
+    def test_length_rule_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/pairwise-sensitivity/length-rule-agreement.json").read_text())
+        output = dict((name, value) for name, value, _ in _length_rule_entries(report))
+        self.assertEqual(output[r"\LengthRuleWritingRate"], "55.8\\%")
+        self.assertEqual(output[r"\LengthRuleAcrossPairs"], "5,075")
+
+    def test_delegation_fallback_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/process-sequences/delegation-fallback.json").read_text())
+        output = dict((name, value) for name, value, _ in _delegation_fallback_entries(report))
+        self.assertEqual(output[r"\AfiveFallbackRuns"], "355")
+        self.assertEqual(output[r"\NoFallbackFullStagedRate"], "65.5\\%")
+
+    def test_revision_tasks_macros_are_source_backed(self):
+        report = json.loads((Path(__file__).resolve().parents[2] / "results/revision-tasks/results.json").read_text())
+        output = dict((name, value) for name, value, _ in _revision_tasks_entries(report))
+        self.assertEqual(output[r"\RevisionFullFixedOrderWLT"], "18/19/22")
+        self.assertEqual(output[r"\RevisionAfourRegenerated"], "33")
+        self.assertEqual(output[r"\RevisionAsixRegenerated"], "7")
 
     def test_compute_stratified_empty_band_is_not_available(self):
         summary = _compute_summary()
@@ -652,6 +740,8 @@ class TokenMacroTests(unittest.TestCase):
         )
         self.assertIn(r"% source: cross-family JSON pooled.commit_rate.rate", output)
         self.assertIn(r"\newcommand{\CrossFamilyPooledCommitRate}{50.0\%}", output)
+        self.assertIn(r"\newcommand{\CrossFamilyFullStagedN}{3}", output)
+        self.assertIn(r"\newcommand{\CrossFamilyWritingFullFixedOrderN}{3}", output)
 
     def test_cross_family_macros_do_not_use_existing_fallback_values(self):
         output = emit_numbers(

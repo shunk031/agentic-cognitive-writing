@@ -99,9 +99,12 @@ def check_caption_takeaways() -> None:
             ("evolving document state", ("document state",)),
         ),
         "tab/appendix-comparison.tex": (
+            # The caption compares design dimensions; reviewers read an
+            # "only system" sentence as a superiority claim, so it states that the
+            # table is not a performance comparison instead.
             (
-                "our system is the only one with the property",
-                ("only compared system", "only system"),
+                "the table compares design, not performance",
+                ("design dimensions",),
             ),
             ("online selection among writing operations", ("online selection",)),
         ),
@@ -153,8 +156,10 @@ def check_caption_takeaways() -> None:
             ("Single-writer gap", ("gap",)),
         ),
     )
+    # Tables 6 and 7 share one float and caption to save main-text space, so the
+    # process-path takeaways are checked in the merged caption.
     require_concepts(
-        "tab/trace-outcome.tex",
+        "tab/process-dynamics.tex",
         (
             ("the process-path win rates are similar", ("win rates", "Win rates")),
             ("similarity conclusion", ("similar", "Similar")),

@@ -28,9 +28,25 @@ vs. \condTaskPlanning
 & 63.0\%
 & 75.7\%
 & 68.5\% \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
+vs. \condPlainAgent
+& 62.2\%
+& 62.9\%
+& 47.2\%
+& 57.2\% \\
+vs. \condExploratoryOne
+& 92.6\%
+& 77.4\%
+& 84.3\%
+& 84.9\% \\
+vs. \condSelfRefine
+& 78.7\%
+& 65.2\%
+& 52.4\%
+& 66.2\% \\
 \bottomrule
 \end{tabular}%
 }
-\caption{Same-prompt win rates averaged over generation runs; above 50\% favors our system. Across sums outcomes over benchmarks; benchmark rates exceed 50\%, with the largest mean margin over \condSinglePass.}
+\caption{Same-prompt win rates averaged over runs (last three rows: one post-hoc run); above 50\% favors our system. Across sums over benchmarks; benchmark rates exceed 50\% for the first three, with the largest mean margin over \condSinglePass.}
 \label{tab:pairwise-results}
 \end{table}

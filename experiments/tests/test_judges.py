@@ -1601,6 +1601,17 @@ def test_load_run_artifacts_accepts_real_shaped_manifest(tmp_path: Path) -> None
     assert artifacts.context == "Provided fact."
 
 
+def test_load_run_artifacts_appends_the_turn_two_message(tmp_path: Path) -> None:
+    run_dir = _run_dir(tmp_path, "A1", "Provided fact.")
+    (run_dir / "followup.txt").write_text("Add a budget section.", encoding="utf-8")
+
+    artifacts = load_run_artifacts(run_dir)
+
+    assert artifacts.assignment.endswith(
+        "\n\n[Turn-2 change message]\nAdd a budget section."
+    )
+
+
 def test_label_and_heading_prompt_artifacts_score_identically(tmp_path: Path) -> None:
     template = tmp_path / "judge.txt"
     _template(template, "pointwise")
@@ -1784,7 +1795,9 @@ def test_score_run_writes_protocol_jsonl_and_hashed_manifest(tmp_path: Path) -> 
         "max_output_tokens",
         "stop_rules",
         "max_retries",
+        "route",
     }
+    assert manifest["judge"]["route"] == "gateway OpenAI-compatible"
     assert set(manifest["source_runs"][0]) == {
         "run_manifest_sha256",
         "output_sha256",

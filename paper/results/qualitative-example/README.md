@@ -1,0 +1,5 @@
+# Illustrative example
+
+[`example.json`](example.json) is the output of [`qualitative_example.py`](../../../experiments/src/agentic_cogwriter/analysis/qualitative_example.py) over generation run 1. The script collects the prompts on which the primary pairwise judge prefers Agentic CogWriter over Staged in both presentation orders and both outputs are in English, then draws one with `random.Random(20260908)`. The file holds the opening of the assignment as the full system's Monitor restated it in `.writing/assignment.md` (not the benchmark's prompt text), the full system's logged process path, the opening words of each output, and the judge's reason from the presentation in which Agentic CogWriter is response A; it names the prompt by its public benchmark ID and contains no local paths.
+
+From `paper/`, `python3 scripts/render_example.py` writes [`appendix-example.tex`](../../tab/appendix-example.tex), and `python3 scripts/make_numbers.py --qualitative-example results/qualitative-example/example.json` regenerates the pool-size and prompt-ID macros.

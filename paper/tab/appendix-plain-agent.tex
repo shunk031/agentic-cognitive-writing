@@ -1,0 +1,16 @@
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Statistic} & \textbf{WritingBench} & \textbf{HelloBench} & \textbf{DoLoMiTes} & \textbf{Across benchmarks} \\
+\cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}\cmidrule(lr){4-4}\cmidrule(lr){5-5}
+Win rate & \FullPlainAgentWritingRate & \FullPlainAgentHelloRate & \FullPlainAgentDoLoRate & \FullPlainAgentAcrossRate \\
+95\% Wilson interval & \FullPlainAgentWritingInterval & \FullPlainAgentHelloInterval & \FullPlainAgentDoLoInterval & \FullPlainAgentAcrossInterval \\
+W/L/T & \FullPlainAgentWritingWLT & \FullPlainAgentHelloWLT & \FullPlainAgentDoLoWLT & \FullPlainAgentAcrossWLT \\
+$p$ & $\FullPlainAgentWritingP$ & $\FullPlainAgentHelloP$ & $\FullPlainAgentDoLoP$ & $\FullPlainAgentAcrossP$ \\
+\bottomrule
+\end{tabular}
+\caption{Exploratory comparison of \condAgenticCogWriter\ with \condPlainAgent\ on generation run 1. The win rate belongs to our system and counts order-consistent outcomes; Across sums wins and losses over the three benchmarks. Sign-test $p$-values are unadjusted and outside the Holm family.}
+\label{tab:appendix-plain-agent}
+\end{table}

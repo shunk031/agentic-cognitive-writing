@@ -52,6 +52,7 @@ def _pair(
     model: str = "us.anthropic.claude-sonnet-5",
     effort: str = "medium",
     records: list[dict[str, str]] | None = None,
+    route: str | None = None,
 ) -> None:
     pair_id = (
         f"{source_runs[0].parent.parent.name}-{source_runs[1].parent.parent.name}-"
@@ -75,6 +76,7 @@ def _pair(
             "effort": effort,
             "seed": 20260908,
             "max_output_tokens": 8192,
+            **({"route": route} if route else {}),
         },
         "records": [{"usage": {}} for _ in records],
         "source_runs": [{"run_manifest_sha256": _run_hash(run)} for run in source_runs],
@@ -141,7 +143,27 @@ def test_aggregate_cross_family_groups_and_compares_both_levels(
     assert metric["benchmarks"]["WritingBench"]["n"] == 3
     assert metric["benchmarks"]["HelloBench"]["losses"] == 1
     assert report["pooled"]["commit_rate"]["numerator"] == 3
+    assert metric["judge_routes"] == ["gateway Bedrock"]
     assert "holm" not in json.dumps(report).lower()
+
+
+def test_aggregate_cross_family_reports_judge_route_per_contrast(
+    tmp_path: Path,
+) -> None:
+    _fixture(tmp_path)
+    staged = [_run(tmp_path, "WritingBench", c, "p1-staged") for c in ("A4", "A2")]
+    _pair(tmp_path, staged, "claude", ("A", "B"), route="direct Bedrock")
+    _pair(tmp_path, staged, "gpt", ("A", "B"))
+
+    report = aggregate_cross_family(
+        tmp_path,
+        cross_family_judge_id="claude",
+        reference_judge_id="gpt",
+        contrasts=(("A4", "A1"), ("A4", "A2")),
+    )
+
+    assert report["contrasts"]["A4:A1"]["judge_routes"] == ["gateway Bedrock"]
+    assert report["contrasts"]["A4:A2"]["judge_routes"] == ["direct Bedrock"]
 
 
 def test_aggregate_cross_family_excludes_incomplete_pair_manifests(

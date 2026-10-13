@@ -1,17 +1,14 @@
-\begin{table}[t]
-\centering
-\small
-\setlength{\tabcolsep}{3pt}
+% Lower panel of the writing-loop table; tab/process-dynamics.tex inputs it under one caption.
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lrr}
 \toprule
 & \multicolumn{2}{c}{\textbf{\condAgenticCogWriter\ win rate (\%) (non-tied $n$)}} \\
 \cmidrule(lr){2-3}
-\textbf{Process path}
+\textbf{Process path (repeats not merged)}
 & \textbf{\condFixedOrder}
 & \textbf{\condSingleWriter} \\
 \cmidrule(lr){1-1}\cmidrule(lr){2-2}\cmidrule(lr){3-3}
-\lcell{\texttt{Planning}$\rightarrow$\\\texttt{Translating}$\rightarrow$\texttt{Reviewing}}
+\lcell{Exactly \texttt{Planning}$\rightarrow$\\\texttt{Translating}$\rightarrow$\texttt{Reviewing}}
 & \AfourExactCycleFixedOrderWinRate\,{\scriptsize(\AfourExactCycleFixedOrderNonTie)}
 & \AfourExactCycleSingleWriterWinRate\,{\scriptsize(\AfourExactCycleSingleWriterNonTie)} \\
 Other path
@@ -21,6 +18,3 @@ Other path
 \bottomrule
 \end{tabular}%
 }
-\caption{\condAgenticCogWriter\ win rates against \condFixedOrder\ and \condSingleWriter\ are similar for one-cycle \texttt{Planning}--\texttt{Translating}--\texttt{Reviewing} paths and other paths, summing outcomes over benchmarks and generation runs; the split is observational, not causal.}
-\label{tab:trace-outcome}
-\end{table}

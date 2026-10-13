@@ -1,0 +1,58 @@
+condition_id = "A10"
+skill = "writing-self-refine"
+analysis_family = "exploratory"
+product_requires_draft = true
+
+[package]
+name = "cognitive-writing-baselines"
+
+[plugins]
+paths = ["experiments/baselines"]
+
+[adapters]
+codex = "codex_exec"
+claude_code = "claude_print"
+
+[invocation]
+codex = """Read the skill file at {codex_plugin_root}/skills/writing-self-refine/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact."""
+
+claude_code = """/cognitive-writing-baselines:writing-self-refine"""
+
+[install]
+claude_code = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
+
+[trace]
+retrieval = "not_applicable"
+evidence = "plugin_recorded"
+citation = "plugin_recorded"
+goal_events = "forbidden"
+event_types = ["process_switch"]
+min_events = 5
+max_events = 5
+process_order = ["draft", "feedback", "refine", "feedback", "refine"]
+processes = ["draft", "feedback", "refine"]
+
+[[stages]]
+id = "draft"
+path = "prompts/a10_draft.md"
+sha256 = "07048b295bbdf562a4470289818db03f8ab840c31dc4dcc18868a4e515c9cc69"
+
+[[stages]]
+id = "feedback_1"
+path = "prompts/a10_feedback.md"
+sha256 = "677db91dbfc9bf7a38a16089b337b49a24369aca14a8dce8d944f79ada180f54"
+
+[[stages]]
+id = "refine_1"
+path = "prompts/a10_refine.md"
+sha256 = "826c680e8ef9312ad6ca5067b871a943eaecbe90c57f8b97e2de15ced6e415e0"
+
+[[stages]]
+id = "feedback_2"
+path = "prompts/a10_feedback.md"
+sha256 = "677db91dbfc9bf7a38a16089b337b49a24369aca14a8dce8d944f79ada180f54"
+
+[[stages]]
+id = "refine_2"
+path = "prompts/a10_refine.md"
+sha256 = "826c680e8ef9312ad6ca5067b871a943eaecbe90c57f8b97e2de15ced6e415e0"
