@@ -133,9 +133,12 @@ def attempt_meta(run_dir: Path) -> list[dict]:
     ]
 
 
-def history(run_dir: Path) -> list[dict]:
+def history(run_dir: Path, *, refused: bool = False) -> list[dict]:
+    """The cw history entries that took effect, plus refusals when asked."""
+
     path = run_dir / "workspace/.writing/history/history.jsonl"
-    return [e for e in _json_lines(path) if "n" in e] if path.is_file() else []
+    entries = _json_lines(path) if path.is_file() else []
+    return [e for e in entries if "n" in e and (refused or "refused" not in e)]
 
 
 def threads(run_dir: Path) -> dict[str, dict]:

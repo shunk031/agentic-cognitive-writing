@@ -375,8 +375,12 @@ def test_failure_classifier(tmp_path: Path) -> None:
     )
     assert _kind(run_dir, gate_results={"completeness": False}) == "incomplete"
     _history(
-        run_dir, {"cmd": "stop", "turn": 1, "reason": "failure", "failure": "allowance"}
+        run_dir,
+        {"cmd": "stop", "refused": "the latest review lists findings"},
+        {"cmd": "stop", "turn": 1, "reason": "failure", "failure": "allowance"},
     )
+    # A refused stop is not a stop.
+    assert cw_run.stop_reasons(run_dir) == {1: "failure"}
     assert _kind(run_dir) == "cw_failure:allowance"
     over = tmp_path / "budget"
     over.mkdir()

@@ -46,7 +46,7 @@ def returns(path: str) -> Counter[str]:
 
 def run_row(run_dir: Path) -> dict[str, Any]:
     manifest = _manifest(run_dir)
-    entries = cw_run.history(run_dir)
+    entries = cw_run.history(run_dir, refused=True)
     gate = cw_run.gates(run_dir, manifest.get("runner_files"))
     spawn = gate["spawn"]
     tokens = cw_run.token_report(run_dir)
