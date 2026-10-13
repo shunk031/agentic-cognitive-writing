@@ -162,20 +162,23 @@ def current_turn() -> int:
 # ---- goals -----------------------------------------------------------------
 
 
-def parse_goals(text: str) -> list[dict]:
-    """Parse goals.md into goal records, raising ValueError on any defect."""
+def parse_goals_listing(text: str) -> tuple[list[dict], list[str]]:
+    """Parse goals.md into goal records and every defect found on the way."""
 
     goals: list[dict] = []
+    problems: list[str] = []
     stack: list[dict] = []
     for number, line in enumerate(text.splitlines(), 1):
         if not line.strip() or line.startswith("#"):
             continue
         match = GOAL_LINE.match(line)
         if match is None:
-            raise ValueError(f"goals.md line {number} does not match the grammar")
+            problems.append(f"goals.md line {number} does not match the grammar")
+            continue
         depth = len(match[1]) // 2
         if depth > len(stack):
-            raise ValueError(f"goals.md line {number} is indented under no parent")
+            problems.append(f"goals.md line {number} is indented under no parent")
+            continue
         stack = stack[:depth]
         parent = stack[-1] if stack else None
         gid = match[2]
@@ -185,7 +188,7 @@ def parse_goals(text: str) -> list[dict]:
             else re.fullmatch(r"G\d+", gid)
         )
         if not expected:
-            raise ValueError(f"{gid} does not extend its parent's ID")
+            problems.append(f"{gid} does not extend its parent's ID")
         goal = {
             "id": gid,
             "statement": match[3],
@@ -199,7 +202,16 @@ def parse_goals(text: str) -> list[dict]:
         stack.append(goal)
     ids = [g["id"] for g in goals]
     if len(ids) != len(set(ids)):
-        raise ValueError("goals.md repeats an ID")
+        problems.append("goals.md repeats an ID")
+    return goals, problems
+
+
+def parse_goals(text: str) -> list[dict]:
+    """Parse goals.md, raising ValueError that lists every defect."""
+
+    goals, problems = parse_goals_listing(text)
+    if problems:
+        raise ValueError("; ".join(problems))
     return goals
 
 
@@ -211,28 +223,29 @@ def sources() -> list[str]:
 
 
 def validate_goals(text: str, before: str, texts: list[str]) -> list[dict]:
-    goals = parse_goals(text)
+    """Check goals.md; one ValueError lists every invalid requirement line."""
+
+    goals, problems = parse_goals_listing(text)
     normalized = [norm(t) for t in texts]
     ids = {g["id"] for g in goals}
     for goal in goals:
         if goal["quote"] is not None:
             if not any(norm(goal["quote"]) in t for t in normalized):
-                raise ValueError(
+                problems.append(
                     f"{goal['id']}: the quoted src does not occur in task.md "
                     "or in a turn request"
                 )
         elif goal["src_id"] not in goal["ancestors"]:
-            raise ValueError(f"{goal['id']}: src {goal['src_id']} is not an ancestor")
+            problems.append(f"{goal['id']}: src {goal['src_id']} is not an ancestor")
         if goal["replaced_by"] and goal["replaced_by"] not in ids:
-            raise ValueError(f"{goal['id']}: replaced by a goal that does not exist")
-    try:
-        old = {g["id"] for g in parse_goals(before)}
-    except ValueError:
-        old = set()
+            problems.append(f"{goal['id']}: replaced by a goal that does not exist")
+    old = {g["id"] for g in parse_goals_listing(before)[0]}
     if old - ids:
-        raise ValueError(f"IDs disappeared: {', '.join(sorted(old - ids))}")
+        problems.append(f"IDs disappeared: {', '.join(sorted(old - ids))}")
     if not goals:
-        raise ValueError("goals.md has no requirement")
+        problems.append("goals.md has no requirement")
+    if problems:
+        raise ValueError("; ".join(problems))
     return goals
 
 

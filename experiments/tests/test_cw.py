@@ -530,3 +530,22 @@ def test_cw_history_tampering_fails_the_step(ws: Workspace) -> None:
     ws.write("history/step-02/plan.md", "Plan.\n")
     ws.ok("step", "translating", "--scope", "G1", "--why", "x")
     assert ws.closes()[-1]["ok"] is True
+
+
+def test_cw_refusal_lists_every_invalid_requirement_line(ws: Workspace) -> None:
+    ws.plan(
+        '- [G1] Gap | src: "a gap nobody asked for"\n'
+        '  - [G2.1] Bad child | src: "about 1000 words"\n'
+        '- [G3] Count | src: "\\"about 1000 words\\""\n'
+        "- G4 no brackets\n"
+    )
+    close = ws.last_close("step", "planning", "--goals", "--why", "reissue")
+    for problem in (
+        "goals.md line 4 does not match the grammar",
+        "G2.1 does not extend its parent's ID",
+        "G1: the quoted src does not occur",
+        "G3: the quoted src does not occur",
+    ):
+        assert problem in close["detail"], problem
+    brief = (ws.w / "history/step-02/brief.md").read_text()
+    assert close["detail"] in brief
