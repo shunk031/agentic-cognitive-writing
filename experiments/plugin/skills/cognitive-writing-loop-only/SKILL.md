@@ -20,16 +20,15 @@ Follow the fixed `Planning`, `Translating`, then `Reviewing` order: run the thre
 
 The stop rule holds when any of these is true:
 
-- The latest `Reviewing` report states `Verdict: no required change`, and no change request arrived after it.
+- The latest `Reviewing` report's Open findings list is `- none`, and no change request arrived after it. Decide from the list itself, not from the report's Verdict line.
 - Four passes have ended. Each `Reviewing` report ends one pass.
 - Twelve role steps have run.
-- A role step failed twice in a row.
 
 Count passes and role steps from the start of the run or from the latest change request. When the stop rule holds, follow Finish and return the current draft.
 
 ## State
 
-The writing state lives in the project's `.writing/` directory. Do not create or modify `.writing/goals.md`, whether it exists or not.
+The writing state lives in the project's `.writing/` directory. Do not create or modify `.writing/goals.md`, whether it exists or not. Do not consult or construct a hierarchical goal network.
 
 | File                           | Content                                                    | Written by                                                                                  |
 | ------------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
@@ -65,13 +64,15 @@ After setup, only the writers in the table change each file.
 
 ## Perform the selected process
 
-Perform every selected process in your own context instead of delegating it. Do not call `spawn_agent`, do not run `codex` in the shell, and do not write a script that starts agents.
+Perform every selected process in your own context instead of delegating it. Do not call `multi_agent_v1__spawn_agent`, do not run `codex` in the shell, and do not write a script that starts agents.
 
-The first time a process is selected, read its role skill at `<project root>/.agents/skills/<role>/SKILL.md`, where `<role>` is `planning`, `translating`, or `reviewing`, and say the role skill's acknowledgment line in an assistant message of its own. When that file does not exist, read `skills/<role>/SKILL.md` in the `agentic-cognitive-writing` plugin. Each time the process runs:
+The first time a process is selected, read its role skill at `<project root>/.agents/skills/<role>/SKILL.md`, where `<role>` is `planning`, `translating`, or `reviewing`, and say the role skill's acknowledgment line in an assistant message of its own. Each time the process runs:
 
-1. Write the brief below in an assistant message.
+1. Append the brief below to `.writing/reports.md` under a `## <Role> brief` heading.
 2. Perform the role as its role skill and the brief describe, writing only the files that the process writes.
-3. Write the role's report in an assistant message, in the role skill's report format without the acknowledgment line. Never repeat an acknowledgment line in a brief or a report.
+3. Append the role's report, in the role skill's report format but without the acknowledgment line, to `.writing/reports.md` under a `## <Role> report` heading.
+
+The `Monitor` alone writes `.writing/reports.md`. Write briefs and reports only to that file, never as assistant messages, and never put an acknowledgment line in it.
 
 ### Brief
 
@@ -98,21 +99,21 @@ Each role's report has fixed fields. Read them as follows:
 | ------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
 | `Planning`                | `Plan`          | pass it to the next `Translating` brief's Request                                        |
 | `Planning`, `Translating` | `Findings`      | scope the next step in the cycle                                                                  |
-| `Reviewing`               | `Open findings` | scope the next step in the cycle                                                                  |
-| `Reviewing`               | `Verdict`       | apply the stop rule                                                                      |
+| `Reviewing`               | `Open findings` | apply the stop rule and scope the next step in the cycle                                          |
 
 Never copy an acknowledgment line into `.writing/draft.md`, a brief, or the final response.
 
 ## Trace
 
-Log every event with this one command, and with no other command. Write one `key: value` line per field and separate events with a `---` line:
+Log every event with this one command, and with no other command. Write one `key: value` line per field, write list items as `- item` lines under their key, and separate events with a `---` line:
 
 ```sh
-python3 <skill dir>/scripts/writing_state.py log <<'EOF'
+python3 <skill dir>/scripts/writing_state.py log --no-goals <<'EOF'
 event_type: process_switch
 to_process: translating
 decision: Draft the opening section, which has no draft text yet.
-evidence: .writing/draft.md has no opening section
+evidence:
+- .writing/draft.md has no opening section
 EOF
 ```
 
@@ -121,7 +122,7 @@ The script adds the timestamp, the responsible agent, `process`, and `from_proce
 - `event_type`: `process_switch`
 - `to_process`: `planning`, `translating`, or `reviewing`, or `null` when the run stops
 - `decision`: the decision and its reason in plain language
-- `evidence` and `open_uncertainty`: one line per item; omit the key when there is none
+- `evidence` and `open_uncertainty`: optional lists of `- item` lines
 
 Log a process switch before every role step, including the last one. When the run stops, log one last switch with `to_process: null`.
 
@@ -130,9 +131,8 @@ Log a process switch before every role step, including the last one. When the ru
 Before the final response:
 
 1. Run `python3 <skill dir>/scripts/writing_state.py check`. The command verifies that the trace parses and prints the logged process path.
-2. Compare the printed path with the role steps that ran. When the trace does not parse, report the problem in the last switch's `open_uncertainty`; never edit the trace by hand.
-3. Log the last process switch described in Trace.
-4. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
+2. Log the last process switch described in Trace.
+3. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
 
 ## Follow-up messages
 

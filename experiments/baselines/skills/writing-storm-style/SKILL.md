@@ -22,22 +22,38 @@ The runner gives this condition the same assignment, supplied context, context-w
 
 Citation generation, retrieval, source gathering, evidence collection, and citation metrics are disabled. Retrieval, evidence, and citation traces are `N/A` by design, not zero. The runner records that policy in its run accounting rather than inventing trace events for work that did not occur.
 
-The runner owns the fixed stage schedule and trace recording. Stage actors own the stage outputs. The runner must not infer hidden reasoning or sources from the prose.
+The stages run in this session in the fixed order, and you perform every stage yourself, without subagents. You append each stage's trace event yourself with the trace recipe below.
 
 ## Procedure
 
-1. Read `.writing/assignment.md` and the supplied context. Do not create or modify `.writing/goals.md` and do not create goal events.
-2. Run one perspective-discovery pass. Save the discovered perspectives at `.writing/baselines/storm-style/perspectives.md` or the runner-designated equivalent.
-3. Run one simulated-question-answering pass. The question-asker and expert may be separate subagents, but both receive the same supplied context and must not retrieve information. Save the questions and answers at `.writing/baselines/storm-style/question-answering.md`.
+1. Read the Assignment, Supplied context, and Requested output constraints sections of the prompt. Do not create `.writing/assignment.md`, do not create or modify `.writing/goals.md`, and do not create goal events.
+2. Run one perspective-discovery pass. Save the discovered perspectives at `.writing/baselines/storm-style/perspectives.md`.
+3. Run one simulated-question-answering pass. Play both the question-asker and the expert yourself; do not spawn subagents. Both use only the supplied context and must not retrieve information. Save the questions and answers at `.writing/baselines/storm-style/question-answering.md`.
 4. Run one outline pass from the assignment, perspectives, and question-answering output. Save the outline at `.writing/baselines/storm-style/outline.md`.
-5. Run one per-section-draft pass from the complete outline and the preceding supplied-context-only material. A section worker may draft one section, but all section work belongs to this one stage. Save intermediate sections under `.writing/baselines/storm-style/sections/`.
+5. Run one per-section-draft pass from the complete outline and the preceding supplied-context-only material. Draft every section yourself, without subagents; all section work belongs to this one stage. Save intermediate sections under `.writing/baselines/storm-style/sections/`.
 6. Run one polish pass over the assembled section draft. Write the final document to `.writing/draft.md`.
 7. Append exactly five schema-valid `process_switch` events, one for each stage entry: `null -> perspective-discovery`, `perspective-discovery -> simulated-question-answering`, `simulated-question-answering -> outline`, `outline -> per-section-draft`, and `per-section-draft -> polish`.
 
-The trace contract is fixed at exactly five `process_switch` events. Every event's `process` must be one of `perspective-discovery`, `simulated-question-answering`, `outline`, `per-section-draft`, or `polish`, in this exact order. The transitions are `null -> perspective-discovery`, `perspective-discovery -> simulated-question-answering`, `simulated-question-answering -> outline`, `outline -> per-section-draft`, and `per-section-draft -> polish`. Append every event to `.writing/trace/process.jsonl`. Each event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`, plus `artifacts` for relevant stage files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts` is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. Use `responsible_agent: "runner"`, cite the preceding inputs and current stage artifact in `evidence`, preserve unknowns in `open_uncertainty`, and list project-relative files in `artifacts`. Do not append retrieval, evidence, citation, goal, or hidden-reasoning events. For example:
+The trace contract is fixed at exactly five `process_switch` events, with `process` values `perspective-discovery`, `simulated-question-answering`, `outline`, `per-section-draft`, and `polish` in this order. Do not append retrieval, evidence, citation, goal, or hidden-reasoning events.
 
-```json
-{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"runner","process":"perspective-discovery","decision":"Identify useful perspectives from the assignment and supplied context.","evidence":[".writing/assignment.md"],"open_uncertainty":["The audience's highest-priority concern is not yet known."],"from_process":null,"to_process":"perspective-discovery","artifacts":[".writing/baselines/storm-style/perspectives.md"]}
+## Trace recipe
+
+You append every trace event yourself, with this command and no other. Change only the first four lines: the stage's `process` token, the decision, the evidence list, and the open-uncertainty list. The command fills the timestamp and `from_process`, writes valid JSON, and appends nothing when a value is malformed.
+
+```sh
+python3 - <<'PY'
+process = "perspective-discovery"
+decision = "Identify useful perspectives from the assignment and supplied context."
+evidence = [".writing/baselines/storm-style/perspectives.md"]
+open_uncertainty = []
+import datetime, json, pathlib
+trace = pathlib.Path(".writing/trace/process.jsonl")
+trace.parent.mkdir(parents=True, exist_ok=True)
+lines = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines() if line.strip()] if trace.exists() else []
+event = {"timestamp": datetime.datetime.now().astimezone().isoformat(timespec="seconds"), "event_type": "process_switch", "responsible_agent": "runner", "process": process, "from_process": lines[-1]["to_process"] if lines else None, "to_process": process, "decision": decision, "evidence": evidence, "open_uncertainty": open_uncertainty}
+with trace.open("a", encoding="utf-8") as handle:
+    handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+PY
 ```
 
 The five-stage mapping follows STORM[^1]'s separation of perspective-guided questioning, simulated conversation, outline creation, section-oriented writing, and polishing. The adaptation omits the released system's Internet research and citation behavior because those operations would violate the shared policy.

@@ -74,7 +74,7 @@ A top-level goal's ID is `G` and a number, such as `G1`. A child's ID is its par
 
 ## Report format
 
-Your final message is the report. Use exactly these fields:
+A role agent's final message is the report. A `Monitor` that applies this skill in its own context writes the report where its own skill says instead, without the acknowledgment line. Use exactly these fields:
 
 ```text
 I read planning.

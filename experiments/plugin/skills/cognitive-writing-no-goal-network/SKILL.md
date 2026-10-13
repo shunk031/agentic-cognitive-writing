@@ -20,18 +20,18 @@ Before each step, read `.writing/assignment.md`, `.writing/draft.md`, the latest
 | --- | --- |
 | The stop rule holds | Stop |
 | No `Planning` report exists yet, or a change request arrived after the latest role report | `Planning` |
-| The latest report is from `Planning` | `Translating`, scoped to the parts of the plan without draft text |
+| The latest report is from `Planning` | `Translating`, scoped to the sections that report planned or reorganized |
 | The latest report names a structural problem: a missing required section or a wrong organization | `Planning` |
 | Part of the latest plan has no draft text yet, or the latest report names a problem localized to a passage | `Translating`, scoped to that part or passage |
 | Any other state | `Reviewing` of the whole draft |
 
-Because a `Planning` report always leads to `Translating`, `Planning` never runs twice in a row. A role's recommended next process is evidence for this choice; the `Monitor` alone selects the next process. Do not consult or construct a hierarchical goal network.
+`Planning` runs twice in a row only when a change request arrives after its report; otherwise a `Planning` report leads to `Translating`. A role's recommended next process is evidence for this choice; the `Monitor` alone selects the next process.
 
 ## Stop
 
 The stop rule holds when any of these is true:
 
-- The latest `Reviewing` report states `Verdict: no required change`, and no change request arrived after it.
+- The latest `Reviewing` report's Open findings list is `- none`, and no change request arrived after it. Decide from the list itself, not from the report's Verdict line.
 - Four passes have ended. Each `Reviewing` report ends one pass.
 - Twelve role steps have run.
 - A role step failed twice in a row.
@@ -40,7 +40,7 @@ Count passes and role steps from the start of the run or from the latest change 
 
 ## State
 
-The writing state lives in the project's `.writing/` directory. Do not create or modify `.writing/goals.md`, whether it exists or not.
+The writing state lives in the project's `.writing/` directory. Do not create or modify `.writing/goals.md`, whether it exists or not. Do not consult or construct a hierarchical goal network.
 
 | File                           | Content                                                    | Written by                                                                                  |
 | ------------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
@@ -80,12 +80,12 @@ Delegate every selected process to its own role agent: `Planning` to a `Planner`
 
 In Codex, for each step:
 
-1. Call the `spawn_agent` tool with `fork_context: false` and the brief below as the message. Leave `model` and the reasoning settings unset.
-2. Call `wait_agent` on that agent with `timeout_ms: 300000`. Call it again while it times out, at most three calls in all.
-3. Read the report, which is the agent's final message in the completed status.
-4. Call `close_agent` on that agent immediately, before anything else.
+1. Call `multi_agent_v1__spawn_agent` with `fork_context: false` and `message` set to the brief below. Leave `model` and the reasoning settings unset.
+2. Call `multi_agent_v1__wait_agent` with `targets: [<agent id>]` and `timeout_ms: 300000`. Call it again while it returns `timed_out: true`, at most three calls in all.
+3. Read the report, which is the text in the agent's `completed` status.
+4. Call `multi_agent_v1__close_agent` with `target: <agent id>` at once.
 
-The step fails when the agent's status is `errored`, when its completed message is null or empty, or when the third `wait_agent` call times out; close the agent in each case. Delegate a failed step once more with the same brief. When the second attempt also fails, the stop rule holds.
+The step fails when the agent's final status is anything other than `completed` with a non-empty report, such as `errored`, `interrupted`, `shutdown`, `not_found`, or `completed` with null, or when the third `wait_agent` call times out; close the agent in each case. Delegate a failed step once more with the same brief. When the second attempt also fails, the stop rule holds.
 
 Run one role agent at a time. Do not run `codex` in the shell, and do not write a script that starts agents.
 
@@ -120,21 +120,21 @@ Each role's report has fixed fields. Read them as follows:
 | ------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
 | `Planning`                | `Plan`          | pass it to the next `Translating` brief's Request                                        |
 | `Planning`, `Translating` | `Findings`      | select the next process                                                                  |
-| `Reviewing`               | `Open findings` | select the next process                                                                  |
-| `Reviewing`               | `Verdict`       | apply the stop rule                                                                      |
+| `Reviewing`               | `Open findings` | apply the stop rule and select the next process                                          |
 
 Never copy an acknowledgment line into `.writing/draft.md`, a brief, or the final response.
 
 ## Trace
 
-Log every event with this one command, and with no other command. Write one `key: value` line per field and separate events with a `---` line:
+Log every event with this one command, and with no other command. Write one `key: value` line per field, write list items as `- item` lines under their key, and separate events with a `---` line:
 
 ```sh
-python3 <skill dir>/scripts/writing_state.py log <<'EOF'
+python3 <skill dir>/scripts/writing_state.py log --no-goals <<'EOF'
 event_type: process_switch
 to_process: translating
 decision: Draft the opening section, which has no draft text yet.
-evidence: .writing/draft.md has no opening section
+evidence:
+- .writing/draft.md has no opening section
 EOF
 ```
 
@@ -143,7 +143,7 @@ The script adds the timestamp, the responsible agent, `process`, and `from_proce
 - `event_type`: `process_switch`
 - `to_process`: `planning`, `translating`, or `reviewing`, or `null` when the run stops
 - `decision`: the decision and its reason in plain language
-- `evidence` and `open_uncertainty`: one line per item; omit the key when there is none
+- `evidence` and `open_uncertainty`: optional lists of `- item` lines
 
 Log a process switch before every role step, including the last one. When the run stops, log one last switch with `to_process: null`.
 
@@ -152,9 +152,8 @@ Log a process switch before every role step, including the last one. When the ru
 Before the final response:
 
 1. Run `python3 <skill dir>/scripts/writing_state.py check`. The command verifies that the trace parses and prints the logged process path.
-2. Compare the printed path with the role steps that ran. When the trace does not parse, report the problem in the last switch's `open_uncertainty`; never edit the trace by hand.
-3. Log the last process switch described in Trace.
-4. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
+2. Log the last process switch described in Trace.
+3. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
 
 ## Follow-up messages
 

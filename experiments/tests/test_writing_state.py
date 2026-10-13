@@ -120,6 +120,96 @@ def test_check_reports_goals_without_events_and_broken_lines(tmp_path: Path) -> 
     assert "line 3 is not valid JSON" in broken.stderr
 
 
-def test_words_counts_cjk_characters_as_words(tmp_path: Path) -> None:
-    assert _run(tmp_path, "words", stdin="日本語 and two").stdout.strip() == "5"
-    assert _run(tmp_path, "words", "--max", "4", stdin="日本語 and two").returncode == 1
+def test_append_paragraph_refuses_over_limit_paragraphs(tmp_path: Path) -> None:
+    draft = tmp_path / ".writing/draft.md"
+    ok = _run(tmp_path, "append-paragraph", "--max", "5", stdin="日本語 and two\n")
+    assert ok.returncode == 0, ok.stderr
+    refused = _run(tmp_path, "append-paragraph", "--max", "4", stdin="日本語 and two")
+    assert refused.returncode == 1
+    assert "has 5 words; the limit is 4" in refused.stderr
+    two = _run(tmp_path, "append-paragraph", "--max", "5", stdin="one\n\ntwo")
+    assert two.returncode == 1
+    second = _run(tmp_path, "append-paragraph", "--max", "5", stdin="Second one.")
+    assert second.returncode == 0
+    assert draft.read_text(encoding="utf-8") == "日本語 and two\n\nSecond one.\n"
+
+
+def test_switch_after_reviewing_requires_and_formats_the_ledger(tmp_path: Path) -> None:
+    review = "event_type: process_switch\nto_process: reviewing\ndecision: d\n"
+    assert _run(tmp_path, "log", stdin=review).returncode == 0
+    missing = _run(
+        tmp_path,
+        "log",
+        stdin="event_type: process_switch\nto_process: translating\ndecision: d\n",
+    )
+    assert missing.returncode == 1
+    assert "regeneration_proposals" in missing.stderr
+    bad = _run(
+        tmp_path,
+        "log",
+        stdin=(
+            "event_type: process_switch\nto_process: null\n"
+            "regeneration_proposals: G2 maybe\ndecision: d\n"
+        ),
+    )
+    assert bad.returncode == 1
+    good = _run(
+        tmp_path,
+        "log",
+        stdin=(
+            "event_type: process_switch\nto_process: planning\n"
+            "regeneration_proposals: G1.2 accepted (purpose changed); "
+            "G2 rejected (no evidence)\ndecision: Replace G1.2.\n"
+        ),
+    )
+    assert good.returncode == 0, good.stderr
+    assert _trace(tmp_path)[-1]["decision"] == (
+        "regeneration proposals: G1.2 accepted (purpose changed); "
+        "G2 rejected (no evidence). Replace G1.2."
+    )
+
+
+def test_no_goals_refuses_goal_events_and_the_ledger(tmp_path: Path) -> None:
+    first = "event_type: process_switch\nto_process: reviewing\ndecision: d\n"
+    assert _run(tmp_path, "log", "--no-goals", stdin=first).returncode == 0
+    goal = "event_type: goal_created\ngoal_id: G1\ndecision: d\n"
+    assert _run(tmp_path, "log", "--no-goals", stdin=goal).returncode == 1
+    ledger = (
+        "event_type: process_switch\nto_process: null\n"
+        "regeneration_proposals: none\ndecision: d\n"
+    )
+    assert _run(tmp_path, "log", "--no-goals", stdin=ledger).returncode == 1
+    stop = "event_type: process_switch\nto_process: null\ndecision: Stop.\n"
+    assert _run(tmp_path, "log", "--no-goals", stdin=stop).returncode == 0
+    assert _trace(tmp_path)[-1]["decision"] == "Stop."
+
+
+def test_list_items_and_empty_targets(tmp_path: Path) -> None:
+    listed = _run(
+        tmp_path,
+        "log",
+        stdin=(
+            "event_type: process_switch\nto_process: planning\ndecision: d\n"
+            "evidence:\n- first item\n- second item\nopen_uncertainty:\n- open\n"
+        ),
+    )
+    assert listed.returncode == 0, listed.stderr
+    event = _trace(tmp_path)[0]
+    assert event["evidence"] == ["first item", "second item"]
+    assert event["open_uncertainty"] == ["open"]
+    empty = _run(
+        tmp_path,
+        "log",
+        stdin="event_type: process_switch\nto_process:\ndecision: d\n",
+    )
+    assert empty.returncode == 1
+    assert "to_process needs a process name" in empty.stderr
+    assert "Traceback" not in empty.stderr
+    dangling = _run(
+        tmp_path,
+        "log",
+        stdin="event_type: process_switch\nto_process: translating\n"
+        "decision: d\nevidence:\nno dash here\n",
+    )
+    assert dangling.returncode == 1
+    assert "Traceback" not in dangling.stderr

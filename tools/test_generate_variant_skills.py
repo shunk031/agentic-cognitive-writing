@@ -16,3 +16,8 @@ def test_committed_variants_equal_the_generator_output() -> None:
         if not path.is_file() or path.read_text(encoding="utf-8") != text
     ]
     assert stale == []
+
+
+def test_variant_directories_hold_only_generated_files() -> None:
+    generator = runpy.run_path(str(GENERATOR))
+    assert generator["extra_files"](generator["outputs"]()) == []

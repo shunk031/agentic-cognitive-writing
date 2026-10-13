@@ -27,6 +27,8 @@ PROMPT_DIR = ROOT / "experiments/conditions/prompts"
 
 TITLE = "# Agentic CogWriter"
 SELECT = "## Select the next process"
+STOP = "## Stop"
+TRACE = "## Trace"
 STATE = "## State"
 DELEGATE = "## Delegate the selected process"
 BRIEF = "### Brief"
@@ -83,12 +85,12 @@ Before each step, read `.writing/assignment.md`, `.writing/draft.md`, the latest
 | --- | --- |
 | The stop rule holds | Stop |
 | No `Planning` report exists yet, or a change request arrived after the latest role report | `Planning` |
-| The latest report is from `Planning` | `Translating`, scoped to the parts of the plan without draft text |
+| The latest report is from `Planning` | `Translating`, scoped to the sections that report planned or reorganized |
 | The latest report names a structural problem: a missing required section or a wrong organization | `Planning` |
 | Part of the latest plan has no draft text yet, or the latest report names a problem localized to a passage | `Translating`, scoped to that part or passage |
 | Any other state | `Reviewing` of the whole draft |
 
-Because a `Planning` report always leads to `Translating`, `Planning` never runs twice in a row. A role's recommended next process is evidence for this choice; the `Monitor` alone selects the next process. Do not consult or construct a hierarchical goal network.
+`Planning` runs twice in a row only when a change request arrives after its report; otherwise a `Planning` report leads to `Translating`. A role's recommended next process is evidence for this choice; the `Monitor` alone selects the next process.
 
 """
 
@@ -103,9 +105,8 @@ NO_GOAL_FINISH = """## Finish
 Before the final response:
 
 1. Run `python3 <skill dir>/scripts/writing_state.py check`. The command verifies that the trace parses and prints the logged process path.
-2. Compare the printed path with the role steps that ran. When the trace does not parse, report the problem in the last switch's `open_uncertainty`; never edit the trace by hand.
-3. Log the last process switch described in Trace.
-4. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
+2. Log the last process switch described in Trace.
+3. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
 
 """
 
@@ -114,29 +115,63 @@ NO_GOAL_REFERENCES = """## References
 - [`references/trace-jsonl-schema.md`](references/trace-jsonl-schema.md) describes the trace fields for readers of the trace.
 """
 
+NO_GOAL_TRACE_REFERENCE = """# Trace JSON Lines schema
+
+The `Monitor` alone writes `.writing/trace/process.jsonl`, one JSON object per line, through the skill's `scripts/writing_state.py log --no-goals` command, which builds each line with a JSON encoder, validates it, and refuses goal events. The log is append-only, so a reader can reconstruct the process path and the evidence for each decision without the chat transcript.
+
+## Fields
+
+Every event is a process switch with these fields:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `timestamp` | string | ISO 8601 time with a UTC offset, written by the logging script at append time |
+| `event_type` | string | `process_switch` |
+| `responsible_agent` | string | `monitor` |
+| `process` | string | The process entered, or the process left when the run stops |
+| `decision` | string | The decision and its reason in plain language |
+| `evidence` | array of strings | File paths, draft excerpts, or report fields that support the decision |
+| `open_uncertainty` | array of strings | Questions or unsupported claims left open; empty when none remains |
+| `from_process` | string or null | The previous switch's `to_process`; `null` for the first switch |
+| `to_process` | string or null | `planning`, `translating`, or `reviewing`; `null` when the run stops |
+
+## Reading the trace
+
+The process path is the sequence of `to_process` values of the process switches, in line order.
+
+## Example
+
+```json
+{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"monitor","process":"planning","from_process":null,"to_process":"planning","decision":"Plan the document from the assignment.","evidence":[".writing/assignment.md"],"open_uncertainty":[]}
+{"timestamp":"2026-01-15T09:04:00+09:00","event_type":"process_switch","responsible_agent":"monitor","process":"translating","from_process":"planning","to_process":"translating","decision":"Draft the opening section, which has no draft text yet.","evidence":[".writing/draft.md has no opening section"],"open_uncertainty":[]}
+```
+"""
+
 IN_CONTEXT = """## Perform the selected process
 
-Perform every selected process in your own context instead of delegating it. Do not call `spawn_agent`, do not run `codex` in the shell, and do not write a script that starts agents.
+Perform every selected process in your own context instead of delegating it. Do not call `multi_agent_v1__spawn_agent`, do not run `codex` in the shell, and do not write a script that starts agents.
 
-The first time a process is selected, read its role skill at `<project root>/.agents/skills/<role>/SKILL.md`, where `<role>` is `planning`, `translating`, or `reviewing`, and say the role skill's acknowledgment line in an assistant message of its own. When that file does not exist, read `skills/<role>/SKILL.md` in the `agentic-cognitive-writing` plugin. Each time the process runs:
+The first time a process is selected, read its role skill at `<project root>/.agents/skills/<role>/SKILL.md`, where `<role>` is `planning`, `translating`, or `reviewing`, and say the role skill's acknowledgment line in an assistant message of its own. Each time the process runs:
 
-1. Write the brief below in an assistant message.
+1. Append the brief below to `.writing/reports.md` under a `## <Role> brief` heading.
 2. Perform the role as its role skill and the brief describe, writing only the files that the process writes.
-3. Write the role's report in an assistant message, in the role skill's report format without the acknowledgment line. Never repeat an acknowledgment line in a brief or a report.
+3. Append the role's report, in the role skill's report format but without the acknowledgment line, to `.writing/reports.md` under a `## <Role> report` heading.
+
+The `Monitor` alone writes `.writing/reports.md`. Write briefs and reports only to that file, never as assistant messages, and never put an acknowledgment line in it.
 
 """
 
 PARAGRAPH_UNIT = """## Paragraph unit
 
-A `Translating` step covers its whole scope, the goals or sections that the selection table assigns, and writes that scope as successive paragraphs. Each paragraph is one locally coherent block that serves one goal and has at most 120 words, counting each CJK character as one word. Before adding each paragraph to `.writing/draft.md`, check its length with this command, which prints the count and fails above 120:
+Each `Translating` step writes exactly one paragraph: one locally coherent block that serves one goal and has at most 120 words, counting each CJK character as one word. Write the paragraph only with this command, which appends it to `.writing/draft.md` and refuses it, appending nothing, when it is over the limit:
 
 ```sh
-python3 <skill dir>/scripts/writing_state.py words --max 120 <<'EOF'
+python3 <skill dir>/scripts/writing_state.py append-paragraph --max 120 <<'EOF'
 <the paragraph>
 EOF
 ```
 
-When the check fails, split the paragraph and check each part. The paragraphs of one scope belong to one role step: log one process switch before the step, not one per paragraph, so passes and role steps count as they do for any other step.
+When the command refuses the paragraph, shorten it and run the command again. Draft the scopes in document order, because the command appends at the end of the draft. After each paragraph, select the next process as usual; when the scope is not fully drafted yet, the next step is another `Translating` step on the same scope. For the pass and step counts in the stop rule, consecutive `Translating` steps on the same scope count as one role step, and each of them still gets its own process switch.
 
 """
 
@@ -150,12 +185,32 @@ def no_goal_state(text: str) -> str:
         text,
         "The writing state lives in the project's `.writing/` directory.",
         "The writing state lives in the project's `.writing/` directory. Do not "
-        "create or modify `.writing/goals.md`, whether it exists or not.",
+        "create or modify `.writing/goals.md`, whether it exists or not. Do not "
+        "consult or construct a hierarchical goal network.",
+    )
+
+
+def no_goal_stop(text: str) -> str:
+    return replace_once(
+        text,
+        ", and do not count an open finding that only repeats a rejected "
+        "regeneration proposal without new evidence",
+        "",
+    )
+
+
+def in_context_stop(text: str) -> str:
+    return drop_lines(text, "A role step failed twice")
+
+
+def no_goal_trace(text: str) -> str:
+    return replace_once(
+        text, "writing_state.py log <<'EOF'", "writing_state.py log --no-goals <<'EOF'"
     )
 
 
 def no_goal_brief(text: str) -> str:
-    text = drop_lines(text, "Active goals:")
+    text = drop_lines(text, "Active goals:", "Rejected proposals:")
     for old, new in (
         (
             "Goal-setting: <requested or not requested>",
@@ -284,6 +339,8 @@ def _description(text: str) -> str:
 
 NO_GOALS: dict[str, Change] = {
     SELECT: NO_GOAL_SELECT,
+    STOP: no_goal_stop,
+    TRACE: no_goal_trace,
     STATE: no_goal_state,
     BRIEF: no_goal_brief,
     REPORTS: no_goal_reports,
@@ -293,8 +350,16 @@ NO_GOALS: dict[str, Change] = {
     FINISH: NO_GOAL_FINISH,
     REFERENCES: NO_GOAL_REFERENCES,
 }
-IN_CONTEXT_CHANGES: dict[str, Change] = {DELEGATE: IN_CONTEXT, BRIEF: in_context_brief}
-BOTH_REFERENCES = ("goals-format.md", "trace-jsonl-schema.md")
+IN_CONTEXT_CHANGES: dict[str, Change] = {
+    STOP: in_context_stop,
+    DELEGATE: IN_CONTEXT,
+    BRIEF: in_context_brief,
+}
+BOTH_REFERENCES = {
+    "goals-format.md": None,
+    "trace-jsonl-schema.md": None,
+}
+NO_GOAL_TRACE_ONLY = {"trace-jsonl-schema.md": NO_GOAL_TRACE_REFERENCE}
 
 # skill name -> (description, title, changes, insert_after, references)
 VARIANTS = {
@@ -303,7 +368,7 @@ VARIANTS = {
         "Cognitive writing without a goal network",
         NO_GOALS,
         None,
-        ("trace-jsonl-schema.md",),
+        NO_GOAL_TRACE_ONLY,
     ),
     "cognitive-writing-fixed-order": (
         _description("with a fixed Planning, Translating, then Reviewing order"),
@@ -325,7 +390,7 @@ VARIANTS = {
     "cognitive-writing-single-writer": (
         _description(
             "that performs each selected process in the Monitor's own context "
-            "and limits each Translating step to one paragraph"
+            "and writes exactly one paragraph in each Translating step"
         ),
         "Single-writer cognitive writing",
         IN_CONTEXT_CHANGES,
@@ -342,12 +407,13 @@ VARIANTS = {
         {
             **NO_GOALS,
             SELECT: FIXED_SELECT,
+            STOP: lambda text: in_context_stop(no_goal_stop(text)),
             DELEGATE: IN_CONTEXT,
             BRIEF: lambda text: no_goal_brief(in_context_brief(text)),
             REPORTS: lambda text: fixed_reports(no_goal_reports(text)),
         },
         None,
-        ("trace-jsonl-schema.md",),
+        NO_GOAL_TRACE_ONLY,
     ),
 }
 
@@ -380,6 +446,8 @@ def planning_role() -> str:
         "assignment sets a length, give each section a length target so that the "
         "targets add up to the requested length.\n\n",
     )
+    # Pre-Write runs before any draft exists.
+    sub = replace_once(sub, "   - the current draft\n", "")
     return (
         "Turn the writing problem into grounded knowledge and useful organization.\n\n"
         + _rhetorical_problem(sections)
@@ -441,11 +509,8 @@ def reviewing_role() -> str:
         revise,
         "2. Revise: revise the draft to fix the problems that Evaluate finds.\n\n",
     )
-    sub = replace_once(
-        sub,
-        "   - the active goals, when the brief lists them\n",
-        "   - the plan's sub-goals\n",
-    )
+    # Re-Write receives the draft but not the Pre-Write plan.
+    sub = replace_once(sub, "   - the active goals, when the brief lists them\n", "")
     return (
         "Evaluate the draft against the rhetorical problem, then revise it.\n\n"
         + sub
@@ -485,8 +550,8 @@ def outputs() -> dict[Path, str]:
             name, description, title, changes, insert_after=insert
         )
         files[directory / "scripts/writing_state.py"] = script
-        for reference in references:
-            files[directory / "references" / reference] = (
+        for reference, text in references.items():
+            files[directory / "references" / reference] = text or (
                 A4_DIR / "references" / reference
             ).read_text(encoding="utf-8")
     for name, (a2_name, role, body) in A9_STAGES.items():
@@ -494,12 +559,25 @@ def outputs() -> dict[Path, str]:
     return files
 
 
+def extra_files(files: dict[Path, str]) -> list[Path]:
+    """Return files in a variant directory that the generator does not write."""
+
+    return sorted(
+        path
+        for name in VARIANTS
+        for path in (VARIANT_DIR / name).rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts and path not in files
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", action="store_true", help="fail on any difference")
     args = parser.parse_args(argv)
     stale = []
-    for path, text in outputs().items():
+    files = outputs()
+    extra = extra_files(files)
+    for path, text in files.items():
         current = path.read_text(encoding="utf-8") if path.is_file() else None
         if current == text:
             continue
@@ -512,7 +590,9 @@ def main(argv: list[str] | None = None) -> int:
     verb = "differs from the generator output" if args.check else "written"
     for path in stale:
         print(f"{path}: {verb}")
-    return 1 if args.check and stale else 0
+    for path in extra:
+        print(f"{path.relative_to(ROOT).as_posix()}: not written by the generator")
+    return 1 if extra or (args.check and stale) else 0
 
 
 if __name__ == "__main__":

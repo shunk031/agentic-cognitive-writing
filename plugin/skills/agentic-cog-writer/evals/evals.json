@@ -4,23 +4,23 @@
     {
       "id": 1,
       "prompt": "I need to write a 900-word memo for new engineering managers explaining why we are changing our on-call handoff. The audience is busy and skeptical, the exigency is a rise in missed handoffs, and my goal is to get them to adopt a short checklist. Help me plan and draft it in a project that currently has no .writing files.",
-      "expected_output": "The project contains an assignment, a hierarchical goal network, a growing draft, and an auditable trace. The response explains the active goal and why the Monitor chose planning or drafting next, while keeping unsupported operational facts visible.",
+      "expected_output": "The final response is the complete memo and nothing else. The project contains the verbatim assignment with its restatement, a hierarchical goal network, the draft, and a trace that the logging script wrote, with a Planning step followed by Translating and a Reviewing step before the run stops.",
       "files": [],
       "expectations": [
-        "Creates or describes the required .writing state without overwriting existing content.",
-        "Represents the audience, exigency, and writer's goals before drafting.",
-        "Uses a parent-child goal relationship and records process or goal decisions with evidence and uncertainty."
+        "Writes .writing/assignment.md with the task verbatim and a restatement of audience, exigency, and writer's goals before the first process.",
+        "Delegates Planning, Translating, and Reviewing to role agents and logs a process switch before each step.",
+        "Returns only the complete memo as the final response, without an acknowledgment line or commentary."
       ]
     },
     {
       "id": 2,
-      "prompt": "Here is a rough two-paragraph grant introduction in .writing/draft.md. Review it for a public-health funder, revise the weakest paragraph, and tell me whether the revision changes the central goal. If the draft reveals a better framing than my original assignment, show how you would regenerate the goal instead of hiding the change.",
-      "expected_output": "The reviewer evaluates the draft against the funder's audience and the assignment, makes a scoped revision, and reports any goal regeneration as a proposal that the Monitor accepts or rejects in the trace.",
+      "prompt": "Here is a rough two-paragraph grant introduction in .writing/draft.md. Revise it into a stronger introduction for a public-health funder.",
+      "expected_output": "The final response is the revised introduction and nothing else. The Reviewer reports open findings and goal verdicts, and any goal replacement it proposes is accepted or rejected in the post-Reviewing ledger of the trace.",
       "files": [],
       "expectations": [
-        "Separates evaluation from revision and ties findings to the rhetorical problem.",
-        "Preserves the user's claims and marks missing evidence rather than inventing it.",
-        "Records a goal regeneration only when the draft provides evidence for a changed framing."
+        "Keeps the supplied draft as the starting draft instead of overwriting it.",
+        "Preserves the supplied claims and marks missing evidence rather than inventing it.",
+        "Records a goal regeneration only after the Monitor accepts a Reviewing proposal in the ledger."
       ]
     }
   ]

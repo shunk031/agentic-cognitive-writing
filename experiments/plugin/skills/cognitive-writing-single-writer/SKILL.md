@@ -1,6 +1,6 @@
 ---
 name: cognitive-writing-single-writer
-description: "Experiment variant of the agentic-cog-writer skill that performs each selected process in the Monitor's own context and limits each Translating step to one paragraph. Use it only when a controlled comparison requests this variant."
+description: "Experiment variant of the agentic-cog-writer skill that performs each selected process in the Monitor's own context and writes exactly one paragraph in each Translating step. Use it only when a controlled comparison requests this variant."
 ---
 
 > [!NOTE]
@@ -16,25 +16,24 @@ The `Monitor` selects one writing process at a time from the task and the shared
 
 Before each step, read `.writing/assignment.md`, `.writing/goals.md`, `.writing/draft.md`, the latest trace entries, and the latest role report. Select exactly one process, using the first row that matches:
 
-| State                                                                                                                                          | Next process                                                                                                               |
-| ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| The stop rule holds                                                                                                                            | Stop                                                                                                                       |
-| `.writing/goals.md` has no goals, or a change request arrived after the latest role report                                                     | `Planning`                                                                                                                 |
-| The latest report is from `Planning`                                                                                                           | `Translating`, scoped to the goals that report created or changed, or to the goals without draft text when it changed none |
-| The latest report names a structural or goal-level problem: a missing required section, a wrong organization, or a goal that is unmet or wrong | `Planning`                                                                                                                 |
-| An active goal has no draft text yet, or the latest report names a problem localized to a passage                                              | `Translating`, scoped to those goals or that passage                                                                       |
-| Any other state                                                                                                                                | `Reviewing` of the whole draft                                                                                             |
+| State                                                                                                                                          | Next process                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| The stop rule holds                                                                                                                            | Stop                                                                                                     |
+| `.writing/goals.md` has no goals, or a change request arrived after the latest role report                                                     | `Planning`                                                                                               |
+| The latest report is from `Planning`                                                                                                           | `Translating`, scoped to the goals and sections that report created, developed, replaced, or reorganized |
+| The latest report names a structural or goal-level problem: a missing required section, a wrong organization, or a goal that is unmet or wrong | `Planning`                                                                                               |
+| An active goal has no draft text yet, or the latest report names a problem localized to a passage                                              | `Translating`, scoped to those goals or that passage                                                     |
+| Any other state                                                                                                                                | `Reviewing` of the whole draft                                                                           |
 
-A `develop` goal verdict and an accepted `regenerate` verdict are goal-level problems. Because a `Planning` report always leads to `Translating`, `Planning` never runs twice in a row. A role's recommended next process is evidence for this choice; the `Monitor` alone selects the next process.
+A `develop` goal verdict and an accepted `regenerate` verdict are goal-level problems. `Planning` runs twice in a row only when its report leaves `.writing/goals.md` without goals or a change request arrives after it; otherwise a `Planning` report leads to `Translating`. A role's recommended next process is evidence for this choice; the `Monitor` alone selects the next process.
 
 ## Stop
 
 The stop rule holds when any of these is true:
 
-- The latest `Reviewing` report states `Verdict: no required change`, and no change request arrived after it.
+- The latest `Reviewing` report's Open findings list is `- none`, and no change request arrived after it. Decide from the list itself, not from the report's Verdict line, and do not count an open finding that only repeats a rejected regeneration proposal without new evidence.
 - Four passes have ended. Each `Reviewing` report ends one pass.
 - Twelve role steps have run.
-- A role step failed twice in a row.
 
 Count passes and role steps from the start of the run or from the latest change request. When the stop rule holds, follow Finish and return the current draft.
 
@@ -77,13 +76,15 @@ After setup, only the writers in the table change each file.
 
 ## Perform the selected process
 
-Perform every selected process in your own context instead of delegating it. Do not call `spawn_agent`, do not run `codex` in the shell, and do not write a script that starts agents.
+Perform every selected process in your own context instead of delegating it. Do not call `multi_agent_v1__spawn_agent`, do not run `codex` in the shell, and do not write a script that starts agents.
 
-The first time a process is selected, read its role skill at `<project root>/.agents/skills/<role>/SKILL.md`, where `<role>` is `planning`, `translating`, or `reviewing`, and say the role skill's acknowledgment line in an assistant message of its own. When that file does not exist, read `skills/<role>/SKILL.md` in the `agentic-cognitive-writing` plugin. Each time the process runs:
+The first time a process is selected, read its role skill at `<project root>/.agents/skills/<role>/SKILL.md`, where `<role>` is `planning`, `translating`, or `reviewing`, and say the role skill's acknowledgment line in an assistant message of its own. Each time the process runs:
 
-1. Write the brief below in an assistant message.
+1. Append the brief below to `.writing/reports.md` under a `## <Role> brief` heading.
 2. Perform the role as its role skill and the brief describe, writing only the files that the process writes.
-3. Write the role's report in an assistant message, in the role skill's report format without the acknowledgment line. Never repeat an acknowledgment line in a brief or a report.
+3. Append the role's report, in the role skill's report format but without the acknowledgment line, to `.writing/reports.md` under a `## <Role> report` heading.
+
+The `Monitor` alone writes `.writing/reports.md`. Write briefs and reports only to that file, never as assistant messages, and never put an acknowledgment line in it.
 
 ### Brief
 
@@ -98,6 +99,7 @@ Length and format: <the restatement's length and format>
 Scope: <the goal IDs, sections, or passage this step may change>
 Active goals: <the IDs of the active goals; their statements are in .writing/goals.md>
 Goal-setting: <requested or not requested>
+Rejected proposals: <for Reviewing, each regeneration proposal rejected so far, with its reason; otherwise none>
 Request: <the work to do: the plan to follow, the findings to address, or the accepted replacement to apply>
 ```
 
@@ -105,15 +107,15 @@ Write `<Role>` as `Planning`, `Translating`, or `Reviewing`. Request goal-settin
 
 ## Paragraph unit
 
-A `Translating` step covers its whole scope, the goals or sections that the selection table assigns, and writes that scope as successive paragraphs. Each paragraph is one locally coherent block that serves one goal and has at most 120 words, counting each CJK character as one word. Before adding each paragraph to `.writing/draft.md`, check its length with this command, which prints the count and fails above 120:
+Each `Translating` step writes exactly one paragraph: one locally coherent block that serves one goal and has at most 120 words, counting each CJK character as one word. Write the paragraph only with this command, which appends it to `.writing/draft.md` and refuses it, appending nothing, when it is over the limit:
 
 ```sh
-python3 <skill dir>/scripts/writing_state.py words --max 120 <<'EOF'
+python3 <skill dir>/scripts/writing_state.py append-paragraph --max 120 <<'EOF'
 <the paragraph>
 EOF
 ```
 
-When the check fails, split the paragraph and check each part. The paragraphs of one scope belong to one role step: log one process switch before the step, not one per paragraph, so passes and role steps count as they do for any other step.
+When the command refuses the paragraph, shorten it and run the command again. Draft the scopes in document order, because the command appends at the end of the draft. After each paragraph, select the next process as usual; when the scope is not fully drafted yet, the next step is another `Translating` step on the same scope. For the pass and step counts in the stop rule, consecutive `Translating` steps on the same scope count as one role step, and each of them still gets its own process switch.
 
 ## Role reports
 
@@ -121,11 +123,10 @@ Each role's report has fixed fields. Read them as follows:
 
 | Report                    | Field           | Use                                                                                      |
 | ------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
-| `Planning`                | `Goal changes`  | log one goal event per line at once                                                      |
+| `Planning`                | `Goal changes`  | log one goal event per line                                                              |
 | `Planning`                | `Plan`          | pass it to the next `Translating` brief's Request                                        |
 | `Planning`, `Translating` | `Findings`      | select the next process                                                                  |
-| `Reviewing`               | `Open findings` | select the next process                                                                  |
-| `Reviewing`               | `Verdict`       | apply the stop rule                                                                      |
+| `Reviewing`               | `Open findings` | apply the stop rule and select the next process                                          |
 | `Reviewing`               | `Goal verdicts` | select `Planning` for `develop`; decide each `regenerate` in the post-`Reviewing` ledger |
 
 Never copy an acknowledgment line into `.writing/draft.md`, a brief, or the final response.
@@ -135,19 +136,20 @@ Never copy an acknowledgment line into `.writing/draft.md`, a brief, or the fina
 The `Planning` process keeps `.writing/goals.md` as a hierarchy of goals with stable IDs, in the notation its role skill defines: `G1` for a top-level goal, and the parent's ID plus a number for a child, such as `G1.2`. Entries can be created, developed, or replaced; replacing an existing entry is goal regeneration.
 
 - A `Reviewing` report proposes a replacement as a `regenerate` goal verdict.
-- The `Monitor` accepts or rejects each proposal in the post-`Reviewing` ledger.
+- The `Monitor` accepts or rejects each proposal in the post-`Reviewing` ledger, and lists every rejected proposal with its reason in later `Reviewing` briefs.
 - After accepting one, the `Monitor` selects `Planning` and names the replacement in the brief's Request. The `Planning` report lists it as a `replaced` line.
 
 ## Trace
 
-Log every event with this one command, and with no other command. Write one `key: value` line per field and separate events with a `---` line:
+Log every event with this one command, and with no other command. Write one `key: value` line per field, write list items as `- item` lines under their key, and separate events with a `---` line:
 
 ```sh
 python3 <skill dir>/scripts/writing_state.py log <<'EOF'
 event_type: process_switch
 to_process: translating
 decision: Draft the opening section, which has no draft text yet.
-evidence: .writing/draft.md has no opening section
+evidence:
+- .writing/draft.md has no opening section
 EOF
 ```
 
@@ -156,13 +158,13 @@ The script adds the timestamp, the responsible agent, `process`, and `from_proce
 - `event_type`: `process_switch`
 - `to_process`: `planning`, `translating`, or `reviewing`, or `null` when the run stops
 - `decision`: the decision and its reason in plain language
-- `evidence` and `open_uncertainty`: one line per item; omit the key when there is none
+- `evidence` and `open_uncertainty`: optional lists of `- item` lines
 
 Log a process switch before every role step, including the last one. When the run stops, log one last switch with `to_process: null`.
 
 ### Goal events
 
-When a `Planning` report arrives, log one goal event per `Goal changes` line at once, before anything else. A goal event has `event_type`, `goal_id`, `parent_goal_id`, `decision`, and optional `evidence` and `open_uncertainty` keys:
+After closing the `Planning` agent, log one goal event per `Goal changes` line before selecting the next process. A goal event has `event_type`, `goal_id`, `parent_goal_id`, `decision`, and optional `evidence` and `open_uncertainty` keys:
 
 | Report line                           | `event_type`       | `goal_id` | `parent_goal_id` |
 | ------------------------------------- | ------------------ | --------- | ---------------- |
@@ -174,14 +176,14 @@ Use `null` as `parent_goal_id` for a top-level goal. The script credits `goal_cr
 
 ### Post-`Reviewing` ledger
 
-The decision of the first process switch after each `Reviewing` report begins with the ledger: `regeneration proposals: G1.2 accepted (<reason>); G2 rejected (<reason>)`, with the actual goal IDs and reasons, or `regeneration proposals: none` when the report proposed no replacement.
+The first process switch after each `Reviewing` report carries the ledger in a `regeneration_proposals` key: `none` when the report proposed no replacement, or one `<goal ID> accepted (<reason>)` or `<goal ID> rejected (<reason>)` entry per proposal, separated by `; `. The script refuses that switch without the key and writes the ledger at the start of its decision as `regeneration proposals: …`.
 
 ## Finish
 
 Before the final response:
 
 1. Run `python3 <skill dir>/scripts/writing_state.py check`. The command verifies that the trace parses, prints the logged process path, and prints each goal in `.writing/goals.md` that has no goal event.
-2. Compare the printed path with the role steps that ran. For a goal without an event, log a `goal_created` event with `responsible_agent: monitor`. When the trace does not parse, report the problem in the last switch's `open_uncertainty`; never edit the trace by hand.
+2. For each goal without an event, log a `goal_created` event with `responsible_agent: monitor`.
 3. Log the last process switch described in Trace.
 4. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
 

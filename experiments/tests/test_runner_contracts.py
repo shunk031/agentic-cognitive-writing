@@ -74,13 +74,13 @@ SINGLE_TURN_CONTRACT = (
     "\n\n## Single-turn contract\n\n"
     "This is a single-turn task with no interactive user; never ask clarification "
     "questions. When the assignment underspecifies audience, purpose, or scope, "
-    "apply genre-appropriate defaults and record the assumptions. Conditions with "
-    "a `.writing/` workspace record assumptions in `.writing/assignment.md`. "
-    "Do not state assumptions "
-    "briefly at the top of the deliverable. Conditions without `.writing/` apply "
-    "assumptions without an extra preamble. Do not change the deliverable's content "
-    "contract. Never include a skill acknowledgment line, such as `I read <skill "
-    "name>.`, in the deliverable or the final response."
+    "apply genre-appropriate defaults. The `agentic-cog-writer` skill and its "
+    "`cognitive-writing-*` variants record these assumptions in the restatement in "
+    "`.writing/assignment.md`; every other skill applies them without recording "
+    "them and creates no file for them. Do not state assumptions at the top of the "
+    "deliverable. Do not change the deliverable's content contract. Never include "
+    "a skill acknowledgment line, such as `I read <skill name>.`, in the "
+    "deliverable or the final response."
 )
 SINGLE_TURN_CONTRACT_TEXT = SINGLE_TURN_CONTRACT.removeprefix("\n\n") + "\n"
 DELEGATION_CONTRACT = (
@@ -1028,8 +1028,8 @@ def test_every_condition_prompt_has_the_uniform_single_turn_contract() -> None:
 
 def test_every_wrapper_records_assumptions_in_the_assignment_file() -> None:
     expected = (
-        "Conditions with a `.writing/` workspace record assumptions in "
-        "`.writing/assignment.md`."
+        "The `agentic-cog-writer` skill and its `cognitive-writing-*` variants "
+        "record these assumptions in the restatement in `.writing/assignment.md`"
     )
     for condition in load_condition_registry().values():
         for platform in ("codex", "claude_code"):
@@ -1043,7 +1043,7 @@ def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
     occurrences = 0
     for path in NO_GOAL_SKILL_PATHS:
         text = path.read_text(encoding="utf-8")
-        occurrences += text.count(NO_GOAL_FILE_RULE)
+        occurrences += text.casefold().count(NO_GOAL_FILE_RULE.casefold())
         assert "Leave `.writing/goals.md` untouched" not in text
         assert "Leave `goals.md` untouched" not in text
     assert occurrences == 5
@@ -1056,7 +1056,7 @@ def test_agentic_cog_writer_finishes_with_the_goal_check_and_the_draft() -> None
     finish = text.split("## Finish", 1)[1].split("\n## ", 1)[0]
     assert "python3 <skill dir>/scripts/writing_state.py check" in finish
     assert (
-        "For a goal without an event, log a `goal_created` event with "
+        "For each goal without an event, log a `goal_created` event with "
         "`responsible_agent: monitor`."
     ) in finish
     assert finish.index("check`") < finish.index("Log the last process switch")
@@ -1082,22 +1082,23 @@ def test_reviewing_reports_structured_findings_and_goal_verdicts() -> None:
         encoding="utf-8"
     )
     for requirement in (
-        "Verdict: <changes required, or no required change>",
+        "Verdict: <no required change when Open findings is - none; otherwise "
+        "changes required>",
+        "Write the Verdict after the open findings",
+        "Rejected proposals",
         "- planning: <location>:",
         "- translating: <location>:",
         "- G1.2 — regenerate: <one sentence of evidence>. Replacement:",
         "Revisions made:",
         "Open findings:",
-        "Compute the Verdict from Open findings alone",
+        "compute it from them alone",
         "exactly one of the lowercase words `keep`, `develop`, or `regenerate`",
         "Omit the Goal verdicts field when the brief lists no goals.",
         "Next process: <planning, translating, or stop>",
     ):
         assert requirement in reviewing_text, requirement
 
-    ledger = (
-        "`regeneration proposals: G1.2 accepted (<reason>); G2 rejected (<reason>)`"
-    )
+    ledger = "`regeneration_proposals` key"
     for path in (
         REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md",
         REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md",
@@ -1106,13 +1107,14 @@ def test_reviewing_reports_structured_findings_and_goal_verdicts() -> None:
     ):
         text = path.read_text(encoding="utf-8")
         assert ledger in text
-        assert "`regeneration proposals: none`" in text
+        assert "`regeneration proposals: …`" in text
     for name in ("no-goal-network", "loop-only"):
         text = (
             REPO_ROOT / f"experiments/plugin/skills/cognitive-writing-{name}/SKILL.md"
         ).read_text(encoding="utf-8")
         assert "regeneration proposals" not in text
         assert "goal_id" not in text
+        assert "writing_state.py log --no-goals" in text
 
 
 @pytest.mark.parametrize(
@@ -1123,7 +1125,7 @@ def test_reviewing_reports_structured_findings_and_goal_verdicts() -> None:
         (
             "B2",
             5,
-            "## A3 perspective discovery",
+            "## B2 perspective discovery",
             STAGE_SESSION_HEADER.format(count=5),
         ),
     ),
@@ -1235,17 +1237,17 @@ FROZEN_STAGE_HEADINGS = {
         * 2,
     ],
     "B2": [
-        "## A3 perspective discovery",
+        "## B2 perspective discovery",
         "### Assignment",
         "### Supplied context",
         "### Requested output constraints",
-        "## A3 simulated question answering",
+        "## B2 simulated question answering",
         "### Discovered perspectives",
-        "## A3 outline",
+        "## B2 outline",
         "### Prior planning output",
-        "## A3 draft",
+        "## B2 draft",
         "### Outline",
-        "## A3 polish",
+        "## B2 polish",
         "### Draft",
     ],
 }
@@ -1490,8 +1492,6 @@ def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
 
     assert set(staged_files) == {
         "plugin/skills/cognitive-writing-fixed-order/SKILL.md",
-        "plugin/skills/cognitive-writing-fixed-order/agents/openai.yaml",
-        "plugin/skills/cognitive-writing-fixed-order/evals/evals.json",
         "plugin/skills/cognitive-writing-fixed-order/references/goals-format.md",
         "plugin/skills/cognitive-writing-fixed-order/references/trace-jsonl-schema.md",
         "plugin/skills/cognitive-writing-fixed-order/scripts/writing_state.py",

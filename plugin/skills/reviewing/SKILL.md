@@ -51,11 +51,10 @@ Your work contains two embedded sub-processes, which you perform yourself.
 
 ## Report format
 
-Your final message is the report. Use exactly these fields:
+A role agent's final message is the report. A `Monitor` that applies this skill in its own context writes the report where its own skill says instead, without the acknowledgment line. Use exactly these fields:
 
 ```text
 I read reviewing.
-Verdict: <changes required, or no required change>
 Revisions made:
 - <a local revision already made, with its location>
 Open findings:
@@ -65,11 +64,12 @@ Goal verdicts:
 - G1 — keep: <one sentence of evidence from the draft>
 - G1.1 — develop: <one sentence of evidence and the refinement needed>
 - G1.2 — regenerate: <one sentence of evidence>. Replacement: <the proposed new purpose>
+Verdict: <no required change when Open findings is - none; otherwise changes required>
 Next process: <planning, translating, or stop>
 ```
 
 Revisions made lists only changes already applied; they are not findings. Open findings lists every required change that remains. Start each open finding with the process that should handle it: `planning` for a missing required section, a wrong organization, or a goal that is unmet or wrong, and `translating` for content to add, cut, or rewrite in a passage. List each `develop` or `regenerate` goal verdict also as a `planning` open finding. Write `- none` for an empty list.
 
-Give one goal verdict for each active goal in the brief, identified by ID, using exactly one of the lowercase words `keep`, `develop`, or `regenerate`. Omit the Goal verdicts field when the brief lists no goals.
+Give one goal verdict for each active goal in the brief, identified by ID, using exactly one of the lowercase words `keep`, `develop`, or `regenerate`. Omit the Goal verdicts field when the brief lists no goals. Do not propose again, as a goal verdict or an open finding, a replacement that the brief lists under Rejected proposals, unless you give new evidence that its stated reason does not answer.
 
-Compute the Verdict from Open findings alone: `no required change` when Open findings is `- none`, and `changes required` otherwise. The recommended next process is advice; the `Monitor` selects the next process.
+Write the Verdict after the open findings and compute it from them alone: no open findings means `no required change`, and any open finding means `changes required`. The recommended next process is advice; the `Monitor` selects the next process.

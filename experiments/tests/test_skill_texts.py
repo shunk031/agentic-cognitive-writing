@@ -30,14 +30,21 @@ FINISH = "## Finish"
 REFERENCES = "## References"
 PARAGRAPH = "## Paragraph unit"
 GOAL_SECTIONS = {"## Goals", "### Goal events", "### Post-`Reviewing` ledger"}
-NO_GOAL_CHANGES = {SELECT, STATE, BRIEF, REPORTS, FINISH, REFERENCES}
+STOP = "## Stop"
+TRACE = "## Trace"
+NO_GOAL_CHANGES = {SELECT, STOP, STATE, BRIEF, REPORTS, TRACE, FINISH, REFERENCES}
 IN_CONTEXT = {DELEGATE: PERFORM}
 # skill -> (sections that change, sections dropped, renamed sections, added sections)
 ABLATIONS = {
     "cognitive-writing-no-goal-network": (NO_GOAL_CHANGES, GOAL_SECTIONS, {}, []),
     "cognitive-writing-fixed-order": ({SELECT, REPORTS, "## Goals"}, set(), {}, []),
-    "cognitive-writing-single-context": ({BRIEF}, set(), IN_CONTEXT, []),
-    "cognitive-writing-single-writer": ({BRIEF}, set(), IN_CONTEXT, [PARAGRAPH]),
+    "cognitive-writing-single-context": ({STOP, BRIEF}, set(), IN_CONTEXT, []),
+    "cognitive-writing-single-writer": (
+        {STOP, BRIEF},
+        set(),
+        IN_CONTEXT,
+        [PARAGRAPH],
+    ),
     "cognitive-writing-loop-only": (NO_GOAL_CHANGES, GOAL_SECTIONS, IN_CONTEXT, []),
 }
 
@@ -132,16 +139,32 @@ def test_single_writer_is_single_context_plus_the_paragraph_unit() -> None:
     for heading, body in single_context.items():
         if heading and not heading.startswith("# "):
             assert sections[heading] == body, heading
+    description = sections[""].split("description:", 1)[1].split("\n", 1)[0]
+    assert "writes exactly one paragraph in each Translating step" in description
     unit = sections[PARAGRAPH]
-    assert "at most 120 words, counting each CJK character as one word" in unit
-    assert "writing_state.py words --max 120" in unit
-    # A Translating step covers its whole scope as successive paragraphs, so the
-    # pass and step caps count scopes, as in A4, not paragraphs.
-    assert "covers its whole scope" in unit
-    assert "log one process switch before the step, not one per paragraph" in unit
-    assert "exactly one paragraph" not in unit
+    for required in (
+        "Each `Translating` step writes exactly one paragraph",
+        "at most 120 words, counting each CJK character as one word",
+        "writing_state.py append-paragraph --max 120",
+        "consecutive `Translating` steps on the same scope count as one role step",
+    ):
+        assert required in unit, required
+    assert "words --max" not in text
     assert "repository writing" not in text
     assert "AI-pattern phrasing" not in text
+
+
+def test_in_context_variants_write_reports_to_the_workspace() -> None:
+    for name in (
+        "cognitive-writing-single-context",
+        "cognitive-writing-single-writer",
+        "cognitive-writing-loop-only",
+    ):
+        text = _skill(name)
+        assert "`.writing/reports.md`" in text
+        assert "never as assistant messages" in text
+        assert "A role step failed twice" not in text
+        assert "When that file does not exist" not in text
 
 
 def _skill_files() -> list[Path]:
@@ -252,10 +275,12 @@ def test_brief_names_its_own_role_first_for_the_trace_analyses(role: str) -> Non
 def test_monitor_spawns_without_forked_context_and_bounds_the_wait() -> None:
     delegate = _a4()[DELEGATE]
     for required in (
-        "`fork_context: false`",
+        "`multi_agent_v1__spawn_agent` with `fork_context: false`",
+        "`multi_agent_v1__wait_agent` with `targets: [<agent id>]`",
         "`timeout_ms: 300000`",
         "at most three calls in all",
-        "Call `close_agent` on that agent immediately",
+        "`multi_agent_v1__close_agent` with `target: <agent id>` at once",
+        "`interrupted`, `shutdown`, `not_found`",
         "Delegate a failed step once more",
     ):
         assert required in delegate, required
@@ -267,16 +292,22 @@ def test_selection_has_a_default_row_and_the_stop_rule_has_caps() -> None:
     assert rows[-1].startswith("| Any other state")
     assert any(row.startswith("| The latest report is from `Planning`") for row in rows)
     for required in (
-        "`Verdict: no required change`",
+        "Open findings list is `- none`",
+        "not from the report's Verdict line",
+        "repeats a rejected regeneration proposal",
         "Four passes have ended.",
         "Twelve role steps have run.",
         "no change request arrived after it",
     ):
-        assert required in a4["## Stop"], required
+        assert required in a4[STOP], required
     reviewing = (REPO_ROOT / "plugin/skills/reviewing/SKILL.md").read_text(
         encoding="utf-8"
     )
-    assert "Compute the Verdict from Open findings alone" in reviewing
+    report = reviewing.split("```text\n", 1)[1]
+    assert report.index("Open findings:") < report.index("Verdict:")
+    assert "Write the Verdict after the open findings" in reviewing
+    assert "Rejected proposals" in reviewing
+    assert "Rejected proposals:" in a4[BRIEF]
 
 
 def test_trace_is_written_only_through_the_logging_script() -> None:
@@ -289,3 +320,69 @@ def test_trace_is_written_only_through_the_logging_script() -> None:
             script.read_bytes()
             == (A4_SKILL.parent / "scripts/writing_state.py").read_bytes()
         )
+
+
+RECIPE_BASELINES = (
+    "writing-single-shot",
+    "writing-linear",
+    "writing-self-refine",
+    "writing-storm-style",
+    "writing-cogwriter-style",
+    "writing-adaptive-task-planning",
+)
+
+
+@pytest.mark.parametrize("name", RECIPE_BASELINES)
+def test_baselines_read_the_prompt_and_append_their_own_trace(name: str) -> None:
+    text = (BASELINE_SKILLS / name / "SKILL.md").read_text(encoding="utf-8")
+    assert "Read the Assignment, Supplied context, and Requested output" in text
+    assert "Do not create `.writing/assignment.md`" in text
+    assert "Read `.writing/assignment.md`" not in text
+    assert "## Trace recipe" in text
+    assert "json.dumps(event, ensure_ascii=False)" in text
+    for removed in (
+        "date -Is",
+        "runner owns",
+        "runner-designated",
+        "runner's fixed",
+        "Run condition A2",
+        "a parallel runner change",
+    ):
+        assert removed not in text, removed
+
+
+@pytest.mark.parametrize(
+    "name", ("writing-cogwriter-style", "writing-adaptive-task-planning")
+)
+def test_delegating_baselines_spawn_without_forked_context(name: str) -> None:
+    text = (BASELINE_SKILLS / name / "SKILL.md").read_text(encoding="utf-8")
+    procedure = text.split("## Subagent procedure", 1)[1]
+    for required in (
+        "`multi_agent_v1__spawn_agent` with `fork_context: false`",
+        "Keep at most five agents open at a time.",
+        "`multi_agent_v1__close_agent`",
+        "This is a single-turn task with no interactive user",
+        "Do not search the web",
+        "Output language:",
+        "Length:",
+        "Scope:",
+    ):
+        assert required in procedure, required
+
+
+def test_storm_style_forbids_subagents_and_caps_are_concrete() -> None:
+    storm = (BASELINE_SKILLS / "writing-storm-style/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert "may be separate subagents" not in storm
+    assert "do not spawn subagents" in storm
+    cogwriter = (BASELINE_SKILLS / "writing-cogwriter-style/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert "at most two revision attempts per segment" in cogwriter
+    assert "within 10 percent of its target length" in cogwriter
+    adaptive = (BASELINE_SKILLS / "writing-adaptive-task-planning/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert "at most three levels below the root" in adaptive
+    assert "no more than 30 tasks" in adaptive

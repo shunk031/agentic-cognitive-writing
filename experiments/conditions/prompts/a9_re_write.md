@@ -12,7 +12,6 @@ Your work contains two embedded sub-processes, which you perform yourself.
 
    - every requirement of the assignment, including required sections, output language, length, and format
    - the audience
-   - the plan's sub-goals
    - claim support
    - organization
    - coherence

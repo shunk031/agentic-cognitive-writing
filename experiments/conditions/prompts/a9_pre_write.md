@@ -21,7 +21,6 @@ Your work contains three embedded sub-processes, which you perform yourself:
 1. Generate: gather relevant knowledge from:
 
    - the assignment and its supplied context
-   - the current draft
 
    Separate known material, plausible ideas, and unsupported claims.
 
