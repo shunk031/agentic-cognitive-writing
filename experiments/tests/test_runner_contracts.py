@@ -44,6 +44,7 @@ from agentic_cogwriter.runner.runner import (
     SessionSnapshot,
     _synthesized_codex_config,
 )
+from agentic_cogwriter.runner.skill_checks import summarize_acknowledgments
 from agentic_cogwriter.runner.trace import (
     TraceValidationError,
     assess_trace_timestamps,
@@ -3012,3 +3013,195 @@ def test_unreadable_rollout_file_marks_run_unscored(
 def test_public_config_constructor_does_not_accept_non_strict_mode() -> None:
     with pytest.raises(TypeError):
         RuntimeConfig.from_dict({}, strict=False)  # type: ignore[call-arg]
+
+
+class _DelegatingExecutor:
+    """Write one delegating A4 attempt: trace, draft, spawns, and rollouts."""
+
+    def __init__(
+        self,
+        *,
+        spawn_roles: tuple[str, ...] = ROLE_SKILLS,
+        output: str = "final output " * 10,
+    ) -> None:
+        self.spawn_roles = spawn_roles
+        self.output = output
+
+    def run(self, command, *, cwd, timeout_seconds, env=None):
+        trace_path = cwd / ".writing" / "trace" / "process.jsonl"
+        trace_path.parent.mkdir(parents=True, exist_ok=True)
+        trace_path.write_text(
+            "".join(
+                json.dumps(_event("process_switch", process=role)) + "\n"
+                for role in ROLE_SKILLS
+            )
+            + json.dumps(_event("goal_created"))
+            + "\n"
+        )
+        (cwd / ".writing" / "draft.md").write_text("final output " * 10)
+        stream: list[dict[str, object]] = [
+            {
+                "type": "item.completed",
+                "item": {"type": "agent_message", "text": "I read agentic-cog-writer."},
+            }
+        ]
+        sessions = Path(env["CODEX_HOME"]) / "sessions"
+        sessions.mkdir(parents=True, exist_ok=True)
+        (sessions / "rollout-monitor.jsonl").write_text(
+            json.dumps({"type": "session_meta", "payload": {"id": "monitor"}}) + "\n"
+        )
+        for index, role in enumerate(self.spawn_roles):
+            brief = f"${role} You are the {role.capitalize()} role agent."
+            item = {
+                "id": f"collab-{index}",
+                "type": "collab_tool_call",
+                "tool": "spawn_agent",
+                "prompt": brief,
+                "status": "completed",
+                "receiver_thread_ids": [f"child-{index}"],
+            }
+            stream += [
+                {"type": "item.started", "item": item},
+                {"type": "item.completed", "item": item},
+            ]
+            child = [
+                {
+                    "type": "session_meta",
+                    "payload": {"id": f"child-{index}", "parent_thread_id": "monitor"},
+                },
+                {
+                    "type": "event_msg",
+                    "payload": {"type": "user_message", "message": brief},
+                },
+                {
+                    "type": "event_msg",
+                    "payload": {
+                        "type": "agent_message",
+                        "message": f"I read {role}.\nFindings:\n- none",
+                    },
+                },
+            ]
+            (sessions / f"rollout-child-{index}.jsonl").write_text(
+                "".join(json.dumps(line) + "\n" for line in child)
+            )
+        stream += [
+            {
+                "type": "item.completed",
+                "item": {"type": "agent_message", "text": self.output},
+            },
+            {"type": "turn.completed", "usage": {"output_tokens": 1}},
+        ]
+        return ExecutionResult(
+            returncode=0,
+            stdout=("\n".join(json.dumps(event) for event in stream) + "\n").encode(),
+            stderr=b"",
+            session_id="session-1",
+        )
+
+
+def test_delegating_run_records_acknowledgments_and_role_delegation(
+    tmp_path: Path,
+) -> None:
+    runner = _runner(tmp_path, executor=_DelegatingExecutor())
+
+    result = runner.run_prompt(_prompt(), condition_id="A4", platform="codex")
+
+    manifest = json.loads(result.manifest_path.read_text())
+    assert manifest["status"] == "completed"
+    assert manifest["role_delegation"] == {
+        "selected": ["planning", "reviewing", "translating"],
+        "delegated": ["planning", "reviewing", "translating"],
+        "undelegated": [],
+    }
+    acknowledgments = manifest["skill_acknowledgments"]
+    assert acknowledgments["top_level"] == {"agentic-cog-writer": 1}
+    assert acknowledgments["missing_top_level"] == []
+    assert [agent["role"] for agent in acknowledgments["role_agents"]] == list(
+        ROLE_SKILLS
+    )
+    assert acknowledgments["role_agents_acknowledged"] == 3
+
+
+def test_run_fails_when_a_selected_role_was_not_delegated(tmp_path: Path) -> None:
+    runner = _runner(
+        tmp_path, executor=_DelegatingExecutor(spawn_roles=("planning", "translating"))
+    )
+
+    with pytest.raises(
+        ExecutionError, match="no spawn_agent brief delegated: reviewing"
+    ):
+        runner.run_prompt(_prompt(), condition_id="A4", platform="codex", run_id="r")
+
+    manifest_path = (
+        tmp_path / "WritingBench" / "A4" / "codex" / "r" / "run-manifest.json"
+    )
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest["status"] == "failed"
+    assert manifest["role_delegation"]["undelegated"] == ["reviewing"]
+
+
+def test_final_response_with_an_acknowledgment_line_fails(tmp_path: Path) -> None:
+    output = "I read reviewing.\n" + "final output " * 10
+    runner = _runner(tmp_path, executor=_DelegatingExecutor(output=output))
+
+    with pytest.raises(ExecutionError, match="acknowledgment lines: I read reviewing."):
+        runner.run_prompt(_prompt(), condition_id="A4", platform="codex", run_id="r")
+
+    manifest_path = (
+        tmp_path / "WritingBench" / "A4" / "codex" / "r" / "run-manifest.json"
+    )
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest["status"] == "failed"
+    assert manifest["skill_acknowledgments"]["top_level"] == {
+        "agentic-cog-writer": 1,
+        "reviewing": 1,
+    }
+
+
+def test_in_context_roles_count_as_expected_top_level_acknowledgments(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "attempt-001.events.jsonl").write_text(
+        json.dumps(
+            {
+                "type": "item.completed",
+                "item": {
+                    "type": "agent_message",
+                    "text": "I read cognitive-writing-single-context.",
+                },
+            }
+        )
+        + "\n"
+        + json.dumps(
+            {
+                "type": "item.completed",
+                "item": {"type": "agent_message", "text": "I read planning."},
+            }
+        )
+        + "\n"
+    )
+
+    summary = summarize_acknowledgments(
+        tmp_path,
+        invoked_skill="cognitive-writing-single-context",
+        in_context_roles={"planning", "reviewing"},
+    )
+
+    assert summary["expected_top_level"] == [
+        "cognitive-writing-single-context",
+        "planning",
+        "reviewing",
+    ]
+    assert summary["missing_top_level"] == ["reviewing"]
+    assert summary["role_agents"] == []
+
+
+def test_staged_role_skills_stay_out_of_the_implicit_skill_list(tmp_path: Path) -> None:
+    runner = ExperimentRunner(_config(), output_root=tmp_path / "runs")
+    runner._stage_codex_plugin(load_condition_registry()["A4"], tmp_path)
+
+    assert not (tmp_path / ".agents/skills/agentic-cog-writer").exists()
+    for role in ROLE_SKILLS:
+        policy = (tmp_path / f".agents/skills/{role}/agents/openai.yaml").read_text()
+        assert "allow_implicit_invocation: false" in policy
+    assert (tmp_path / "plugin/skills/agentic-cog-writer/SKILL.md").is_file()
