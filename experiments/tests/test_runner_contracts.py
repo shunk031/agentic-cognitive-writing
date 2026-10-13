@@ -1029,10 +1029,10 @@ def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
         occurrences += text.count(NO_GOAL_FILE_RULE)
         assert "Leave `.writing/goals.md` untouched" not in text
         assert "Leave `goals.md` untouched" not in text
-    assert occurrences == 6
+    assert occurrences == 5
 
 
-def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
+def test_agentic_cog_writer_finishes_with_the_goal_check_and_the_draft() -> None:
     text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
         encoding="utf-8"
     )

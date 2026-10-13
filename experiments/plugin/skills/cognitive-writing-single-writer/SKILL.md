@@ -1,40 +1,43 @@
 ---
 name: cognitive-writing-single-writer
-description: "Experimental A7 writing skill based on Flower and Hayes's single Writer. Use for controlled comparisons that require one main agent, a live hierarchical goal network, paragraph-scale recursion, and an append-only process trace with Figure 2's sentence example as the theoretical anchor."
+description: "Experimental single-writer skill based on Flower and Hayes's single Writer. Use for controlled comparisons that require one main agent, a live hierarchical goal network, paragraph-scale recursion, and an append-only process trace with Figure 2's sentence example as the theoretical anchor."
 ---
+
+> [!NOTE]
+> After reading this `SKILL.md`, say: `I read cognitive-writing-single-writer.`
 
 # Cognitive writing single writer
 
-Use this skill only for A7. Flower and Hayes's _A Cognitive Process Theory of Writing_[^1] models one Writer with Planning, Translating, and Reviewing under a Monitor. The paper says nothing about software agents. A7 operationalizes that model as one main agent that is both Writer and Monitor, with no subagents.
+Use this skill only for the single-writer comparison. Flower and Hayes's _A Cognitive Process Theory of Writing_[^1] models one Writer with Planning, Translating, and Reviewing under a Monitor. The paper says nothing about software agents. This skill operationalizes that model as one main agent that is both Writer and Monitor, with no subagents.
+
+Say the acknowledgment line above in your first assistant message, before any tool call. The line never appears in `.writing/draft.md` or in the final response.
 
 ## One Writer and one Monitor
 
-The main agent is the only Writer. Do not spawn subagents, role agents, delegation tools, or another writing process. The wrapper sets `require_delegation = false`.
+The main agent is the only Writer. Do not spawn subagents, role agents, delegation tools, or another writing process.
 
 The `Monitor` is the strategist. Choose the next process from the current goal network, the rhetorical problem, and the growing text. Do not impose a stage sequence. Use this default style: plan briefly at the top level, compose one paragraph at a time, and plan locally when needed. A writer may instead explore for a time or move toward polished prose quickly when the active goals support that choice.
 
 ## Read and preserve the writing state
 
-Work in the session's current directory. Create missing files without overwriting user content:
+Work in the session's current directory. Create missing files without overwriting existing content:
 
 ```text
 .writing/
 ├── assignment.md
-├── assumptions.md
 ├── goals.md
 ├── draft.md
-├── memory/
 └── trace/process.jsonl
 ```
 
-Initialize `.writing/trace/process.jsonl` before writing any goals or process events. Run the trace-initialization command separately from the command that writes initial goals. Create the trace file without truncating existing content. Read `assignment.md`, `goals.md`, `draft.md`, relevant `memory/` files, and the latest trace entries before choosing a process. If the assignment leaves the audience, purpose, scope, genre, or constraints unclear, make a reasonable single-turn assumption and record it in `.writing/assumptions.md`. Do not ask a clarifying question.
+Initialize `.writing/trace/process.jsonl` before writing any goals or process events. Run the trace-initialization command separately from the command that writes initial goals. Create the trace file without truncating existing content. Read `assignment.md`, `goals.md`, `draft.md`, and the latest trace entries before choosing a process. If the assignment leaves the audience, purpose, scope, genre, or constraints unclear, make a reasonable single-turn assumption and record it in `.writing/assignment.md`. Do not ask a clarifying question.
 
 When the initial goal network is missing, write `goals.md` and append one `goal_created` event for every goal in that initial network in the same shell command, before any `Translating` switch. The trace file must already exist before that command. Never write a goal first and defer its event to a later command.
 
 Use this order for an initial network. First run the initialization command, then run one new shell command that writes `goals.md` and appends one `goal_created` event for every goal line written in the heredoc:
 
 ```sh
-mkdir -p .writing/trace .writing/memory
+mkdir -p .writing/trace
 : >> .writing/trace/process.jsonl
 ```
 
@@ -46,11 +49,9 @@ EOF
 printf '%s\n' "{\"timestamp\":\"$stamp\",\"event_type\":\"goal_created\",\"responsible_agent\":\"Writer\",\"process\":\"goal-setting\",\"decision\":\"Create G1 for the task purpose.\",\"evidence\":[\".writing/goals.md\"],\"open_uncertainty\":[],\"goal_id\":\"G1\",\"parent_goal_id\":null}" >> .writing/trace/process.jsonl
 ```
 
-Follow the repository writing contract for structure, links, claims, and plain English. Before finishing, remove filler, AI-pattern phrasing, vague claims, and unnecessary headings without changing the task's meaning.
-
 ## Keep a working goal network
 
-The paper's "Writing is a goal-directed process" and "Goals, Topic, and Text" sections describe goals created, developed, and revised during composing. The paper predicts that good and poor writers differ in the quantity and quality of middle-range goals that bridge intention and prose. A7 therefore asks the Writer to make those goals explicit. The prediction belongs to the paper, and the explicit file representation belongs to this experiment.
+The paper's "Writing is a goal-directed process" and "Goals, Topic, and Text" sections describe goals created, developed, and revised during composing. The paper predicts that good and poor writers differ in the quantity and quality of middle-range goals that bridge intention and prose. This skill therefore asks the Writer to make those goals explicit. The prediction belongs to the paper, and the explicit file representation belongs to this experiment.
 
 Treat `.writing/goals.md` as the current hierarchical network, not a ledger. Each line has a stable goal ID, parent ID, one-line statement, `kind` (`process` or `content`), and `status` (`active`, `resolved`, or `superseded`). Use indentation for parent and child relationships. Keep no history table, verdict list, or proposal list in the file. History lives in the trace.
 
@@ -131,6 +132,6 @@ Before each local passage, check the active goal and the text already written. A
 
 Review each new passage against its active content goal, process goal, rhetorical problem, audience, purpose, and text already written. Use `generate` or `planning` for a missing idea, `goal-setting` for a more specific path, `reviewing` to read the growing text, and `revise` for a local wording change. Use `goal_developed` when the goal's purpose stays stable but becomes specific. Use `goal_regenerated` when writing changes its purpose or abstraction level. Use the current text as evidence about what comes next, but keep higher-level goals visible. Do not make a section boundary a process boundary or wait for a complete outline before translating.
 
-Before the final response, read `.writing/draft.md` and return exactly its complete contents, with no summary, link, preamble, or code fence. Keep assumptions in `.writing/assumptions.md`, not in the draft. Check that every current network change has its trace event, every trace line is standalone JSON, every process value is declared above, and no subagent was spawned.
+Before the final response, read `.writing/draft.md` and return exactly its complete contents, with no summary, link, preamble, or code fence. Keep assumptions in `.writing/assignment.md`, not in the draft. Check that every current network change has its trace event, every trace line is standalone JSON, every process value is declared above, and no subagent was spawned.
 
 [^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387. DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885) / JSTOR: [https://www.jstor.org/stable/356600](https://www.jstor.org/stable/356600)

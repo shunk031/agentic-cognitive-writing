@@ -213,18 +213,15 @@ def test_a12_combines_the_a5_a6_and_a8_removals() -> None:
     kept_sentences = {
         "cognitive-writing-no-goal-network": (
             "Do not create or modify `.writing/goals.md`, whether it exists or not.",
-            "Treat the assignment as the single implicit objective.",
-            "Do not consult or construct a hierarchical goal network.",
+            "Never request goal-setting.",
         ),
         "cognitive-writing-fixed-order": (
-            "Start with `Planning`. After `Planning` resolves, switch to "
-            "`Translating`. After `Translating` resolves, switch to `Reviewing`. "
-            "Start the next pass with `Planning`.",
-            "An interruption must not select a new order.",
+            "Run `Planning`, `Translating`, then `Reviewing`, and repeat this cycle "
+            "until the stop rule holds.",
         ),
         "cognitive-writing-single-context": (
-            "Do not spawn a role agent, subagent, or child `codex exec` process.",
-            "Cite the files or draft passages that support decisions.",
+            "Perform every selected process in your own context instead of "
+            "delegating it.",
         ),
     }
     for source, sentences in kept_sentences.items():
@@ -233,8 +230,7 @@ def test_a12_combines_the_a5_a6_and_a8_removals() -> None:
             assert sentence in source_text, (source, sentence)
             assert sentence in a12_text, (source, sentence)
     for excluded in (
-        "## Delegation",
-        "spawn a native Codex subagent",
+        "fork_context",
         "goal_id",
         "regeneration proposals",
         "goals-format.md",

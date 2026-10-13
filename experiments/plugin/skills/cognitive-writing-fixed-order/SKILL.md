@@ -3,107 +3,170 @@ name: cognitive-writing-fixed-order
 description: "Experiment-comparison variant of the agentic-cog-writer skill for testing a fixed `Planning`, `Translating`, then `Reviewing` order. For internal comparison use only, not the recommended default. Use when a controlled fixed-order comparison is explicitly requested."
 ---
 
+> [!NOTE]
+> After reading this `SKILL.md`, say: `I read cognitive-writing-fixed-order.`
+
 # Fixed-order cognitive writing
 
-Run a comparison with a fixed `Planning`, `Translating`, then `Reviewing` order while preserving the agentic-cog-writer skill's project state, goal network, delegation, and trace contracts.
+You are the `Monitor`. Say the acknowledgment line above in your first assistant message, before any tool call; the line never appears in `.writing/draft.md` or in the final response. The project root is the current working directory.
 
-## When this skill runs
+The `Monitor` selects one writing process at a time from the task and the shared writing state, has its role perform it, and repeats until the stop rule holds. Where the assignment is silent, apply genre-appropriate defaults and record them under Assumptions in the restatement.
 
-Use this skill only for the A6 fixed-order comparison. Do not use it as the default writing workflow.
+## Select the next process
 
-## `Monitor` responsibilities
+Run `Planning`, `Translating`, then `Reviewing`, and repeat this cycle until the stop rule holds. Never change this order, even when a report recommends another process. Before each step, read the writing state and the latest role report, and use them to scope the step: `Planning` addresses the findings of the last `Reviewing` report, `Translating` writes what the plan or those findings require, and `Reviewing` covers the whole draft.
 
-- Keep rhetorical intent, factual authority, final wording, and publication decisions under the user's control.
-- Coordinate the prescribed order and record the evidence for each process switch.
-- Reconcile each returned role report with the active goal before continuing.
+## Stop
 
-## Read the state first
+End the run only after a `Reviewing` report finds no remaining required change against both the task requirements and the active goals, which the report states as `Verdict: no required change`. Each `Reviewing` report ends one pass. After the fourth pass, stop even when required changes remain. Then follow Finish and return the current draft.
 
-Create missing files and directories without overwriting existing content. Treat these files as the externalized task environment and long-term memory:
+## State
+
+The writing state lives in the project's `.writing/` directory. Create missing files without overwriting existing content.
+
+| File                           | Content                                                    | Written by                                                                                  |
+| ------------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `.writing/assignment.md`       | the task, verbatim, and the `Monitor`'s restatement        | the `Monitor`, before the first process and for each follow-up message                      |
+| `.writing/goals.md`            | the hierarchical goal network                              | the `Planning` process                                                                      |
+| `.writing/draft.md`            | the current draft, empty unless the task supplies one      | the `Translating` process, and the `Reviewing` process for local revisions within its scope |
+| `.writing/trace/process.jsonl` | the process history, one JSON object per line, append-only | the `Monitor`                                                                               |
+
+Before the first process, write `.writing/assignment.md` in this form, copying the three task sections from the prompt exactly:
+
+```markdown
+# Assignment
+
+## Assignment (verbatim)
+
+## Supplied context (verbatim)
+
+## Requested output constraints (verbatim)
+
+## Restatement
+
+- Topic:
+- Audience:
+- Exigency:
+- Writer's goals:
+- Genre:
+- Output language: the language the assignment requests, or, when it requests none, the language of the assignment's instructions
+- Length:
+- Format:
+- Assumptions:
+```
+
+## Delegate the selected process
+
+Delegate every selected process to its own role agent: `Planning` to a `Planner`, `Translating` to a `Translator`, and `Reviewing` to a `Reviewer`. Never perform a role yourself and never write `.writing/goals.md` or `.writing/draft.md`. When a role agent fails, delegate the same process again.
+
+In Codex, for each step:
+
+1. Call the `spawn_agent` tool with `fork_context: false` and the brief below as the message. Leave `model` and the reasoning settings unset.
+2. Call `wait_agent` on that agent with a long timeout, such as 1,200,000 ms, and call it again while it times out.
+3. Read the report, which is the agent's final message in the completed status.
+4. Call `close_agent` on that agent.
+
+Run one role agent at a time. Do not run `codex` in the shell, and do not write a script that starts agents.
+
+In Claude Code, delegate to the bundled `planner`, `translator`, or `reviewer` agent with the same brief.
+
+### Brief
+
+Fill every field of this template:
 
 ```text
-.writing/
-├── assignment.md       # topic, audience, exigency, and writer's goals
-├── goals.md            # hierarchical goals and creation/development history
-├── draft.md            # growing text
-├── memory/             # topic knowledge, audience knowledge, and writing plans
-└── trace/              # structured process history, one JSON object per line
+$<role> You are the <Role> role agent for a writing project. You are not the Monitor.
+Role skill: <project root>/.agents/skills/<role>/SKILL.md. Read it in full first and follow it.
+Do not open the Monitor skill or another role's skill, do not spawn agents, do not run codex, and do not write .writing/trace/process.jsonl.
+Project root: <absolute path of the project root>
+Assignment: verbatim in <project root>/.writing/assignment.md. Read all of it.
+Output language: <the restatement's output language>
+Length and format: <the restatement's length and format>
+Scope: <the goal IDs, sections, or passage the agent may change>
+Active goals: <each active goal's ID, parent ID, and statement>
+Goal-setting: <requested or not requested>
+Request: <the work to do: the plan to follow, the findings to address, or the accepted replacement to apply>
+Your final message is your report, in the role skill's report format, beginning with the role skill's acknowledgment line.
 ```
 
-Read these before the first process:
+Write `<role>` in lowercase and `<Role>` capitalized: `planning` and `Planning`, `translating` and `Translating`, or `reviewing` and `Reviewing`. When `.agents/skills/<role>/SKILL.md` does not exist under the project root, give the absolute path of `<role>/SKILL.md` in the skills directory that contains this skill. Request goal-setting in every `Planning` brief.
 
-- `.writing/assignment.md`
-- `.writing/goals.md`
-- `.writing/draft.md`
-- relevant files in `.writing/memory/`
-- the latest entries in `.writing/trace/process.jsonl`
+## Role reports
 
-Treat `assignment.md` as the fixed rhetorical problem and constraints for the run.
+Each role's report has fixed fields. Read them as follows:
 
-Keep `goals.md` in the project's hierarchical notation. Use stable goal identifiers (IDs). Put one goal on each line. Indent child goals beneath their parent. Keep a history section.
+| Report      | Field           | Use                                                                                      |
+| ----------- | --------------- | ---------------------------------------------------------------------------------------- |
+| `Planning`  | `Goal changes`  | log one goal event per line                                                              |
+| `Planning`  | `Plan`          | pass it to the next `Translating` brief's Request                                        |
+| every role  | `Findings`      | select the next process                                                                  |
+| `Reviewing` | `Verdict`       | apply the stop rule                                                                      |
+| `Reviewing` | `Goal verdicts` | select `Planning` for `develop`; decide each `regenerate` in the post-`Reviewing` ledger |
 
-Update the file whenever a goal is created, developed, or regenerated. Preserve earlier history and record the reason for each change.
+Never copy an acknowledgment line into `.writing/draft.md` or the final response.
 
-Read the trace field contract below before writing the first entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
+## Goals
 
-## Fixed `Monitor` loop
+The `Planning` process keeps `.writing/goals.md` as a hierarchy of goals with stable IDs, in the notation its role skill defines. Entries can be created, developed, or replaced; replacing an existing entry is goal regeneration.
 
-At each pass, the `Monitor` must:
+- A `Reviewing` report proposes a replacement as a `regenerate` goal verdict.
+- The `Monitor` accepts or rejects each proposal in the post-`Reviewing` ledger.
+- After accepting one, the `Monitor` selects `Planning` and names the replacement in the brief's Request. The `Planning` report lists it as a `replaced` line.
 
-1. Start with `Planning`. After `Planning` resolves, switch to `Translating`. After `Translating` resolves, switch to `Reviewing`. Start the next pass with `Planning`.
-2. Keep the active goal and its parent visible. When a sub-goal resolves, pop back to its parent before continuing the prescribed order.
-3. Compare the active goal with the rhetorical problem, draft, retrieved memory, and open uncertainty. Use that evidence within the current prescribed process. Do not choose a different next process because a local preference suggests it.
-4. Before every process switch, append a `process_switch` event naming the responsible process or agent and recording its decision, evidence, and open uncertainty. Record a separate goal event whenever a goal is created, developed, or regenerated. Use the exact fields in the trace contract below.
-5. Delegate the current role using the Delegation section.
-6. After every `Reviewing` pass, re-read changed state and reconcile the role's report with the active goal. Treat `Reviewing` verdicts as proposals. Record `goal_developed` only when the Monitor updates that goal and adds its `goals.md` history row; otherwise record an unacted-on `develop` verdict as a disposition without a goal event. For every `regenerate` verdict, either accept it or reject it. On acceptance, update `goals.md` with a history row that keeps the original goal ID marked `superseded` and gives the replacement a new goal ID, and emit `goal_regenerated` with the replacement's `goal_id` and the original goal's `parent_goal_id`; on rejection, write `rejected regeneration of <goal id>: <reason>` in the next `process_switch` decision. The next `process_switch` decision after a `Reviewing` pass must enumerate every received `regenerate` verdict as `regeneration proposals: G2 accepted (<reason>); G4 rejected (<reason>)`, substituting the actual goal IDs and reasons, or `regeneration proposals: none` when no `regenerate` verdict was received. Append that post-`Reviewing` `process_switch` carrying the enumeration before either continuing or completing the run. If the run continues, set its `to_process` to the next process. If the run ends after `Reviewing`, set its `process` and `from_process` to `reviewing` and its `to_process` to `null` before completing the run. After a `regenerate` disposition, do not return to `Planning` within the current pass or change the fixed order; complete the `Reviewing` pass, then begin the next pass with `Planning`. After every Translating pass, compare the new draft with every active goal in goals.md, then record a goal_developed or goal_regenerated event for each goal the draft changed, or state in the next process_switch decision that the goal network needed no change and why. Update the appropriate project state:
+## Trace
 
-   - `goals.md`
-   - `draft.md`
-   - `memory/`
+Append events to `.writing/trace/process.jsonl` with one shell command per step, the same command for every kind of event. The command replaces `@NOW@` with the current time:
 
-   Keep supplied text and uncertain claims visible.
-
-Before sending the final response, write the complete current document to `.writing/draft.md`. The run is `INVALID` unless `.writing/draft.md` exists before the final response and the final response contains the complete final text. The final response cannot substitute for the required draft.
-
-## Interruptions
-
-Generate and Evaluate may interrupt any process when new information or a conflict in the growing text demands it. Log each interruption as a `process_switch`, perform the interrupt through the relevant shared role, return to the interrupted process, and then continue with the next process in the prescribed order.
-
-An interruption must not select a new order. After any sub-goal resolves, return to its parent goal.
-
-## Delegation
-
-For every delegation, pass:
-
-- the project root
-- the current goal context: for `Reviewing`, every active goal with its ID plus the parent goal ID; otherwise, the active and parent goal IDs
-- relevant uncertainty
-- the requested output
-
-Ask the delegated agent to cite the files or draft passages that support its decisions. Use the platform path that matches the host:
-
-- Claude Code: delegate to the planner, translator, or reviewer agent shipped in the `agentic-cognitive-writing` plugin. That agent preloads the matching role skill.
-- Codex: spawn a native Codex subagent and instruct it to use `$planning`, `$translating`, or `$reviewing`.
-
-Do not write a script that spawns `codex exec` children. If native delegation is unavailable, perform the role as the `Monitor` and record that fallback in the trace.
-
-## Trace contract
-
-Every process switch and every goal creation, development, or regeneration must append one valid JSON object to `.writing/trace/process.jsonl`. `event_type` is one of `process_switch`, `goal_created`, `goal_developed`, or `goal_regenerated`. A process-switch object includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. A goal event also includes `goal_id` and `parent_goal_id`. Optional `artifacts` lists project-relative files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; `goal_id` is a string; `parent_goal_id` is a string or `null`; and `artifacts`, when present, is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. Keep the code-formatted role names `Planning`, `Translating`, and `Reviewing` in surrounding prose, but write JSON `process`, `from_process`, and `to_process` values with the lowercase contract tokens `planning`, `translating`, and `reviewing`. Do not add experiment-specific fields to the shared trace contract. For example:
-
-```json
-{
-  "timestamp": "2026-01-15T09:00:00+09:00",
-  "event_type": "process_switch",
-  "responsible_agent": "monitor",
-  "process": "planning",
-  "decision": "Begin the prescribed planning pass for the active goal.",
-  "evidence": [".writing/assignment.md", ".writing/goals.md"],
-  "open_uncertainty": [
-    "The audience's highest-priority concern is not yet known."
-  ],
-  "from_process": null,
-  "to_process": "planning",
-  "artifacts": [".writing/goals.md"]
-}
+```sh
+sed "s/@NOW@/$(date -Is)/" >> .writing/trace/process.jsonl <<'EOF'
+{"timestamp":"@NOW@","event_type":"process_switch","responsible_agent":"monitor","process":"translating","from_process":"planning","to_process":"translating","decision":"Draft the opening section, which has no draft text yet.","evidence":[".writing/draft.md has no opening section"],"open_uncertainty":[]}
+EOF
 ```
+
+Each event is one JSON object on one line. A process switch has these fields:
+
+- `timestamp`: `"@NOW@"`
+- `event_type`: `process_switch`
+- `responsible_agent`: `monitor`
+- `process`: the `to_process` value, or `reviewing` when the run stops
+- `from_process`: the previous switch's `to_process`, or `null` for the first switch
+- `to_process`: `planning`, `translating`, or `reviewing`, or `null` when the run stops
+- `decision`: the decision and its reason in plain language
+- `evidence` and `open_uncertainty`: arrays of strings, `[]` when empty
+
+Append a process switch before every role step, including the last one. When the run stops, append one last switch with `from_process` `reviewing` and `to_process` `null`.
+
+### Goal events
+
+After a `Planning` report, append one goal event per `Goal changes` line in the same command as the next process switch. A goal event has the fields of a process switch except `from_process` and `to_process`, with `process` `planning`, plus `goal_id` and `parent_goal_id`:
+
+| Report line                       | `event_type`       | `responsible_agent` | `goal_id` | `parent_goal_id` |
+| --------------------------------- | ------------------ | ------------------- | --------- | ---------------- |
+| `created G3 (parent G1)`          | `goal_created`     | `planner`           | `G3`      | `G1`             |
+| `developed G2 (parent G0)`        | `goal_developed`   | `planner`           | `G2`      | `G0`             |
+| `replaced G2 with G7 (parent G0)` | `goal_regenerated` | `monitor`           | `G7`      | `G0`             |
+
+Use `null` as `parent_goal_id` for a top-level goal.
+
+### Post-`Reviewing` ledger
+
+The decision of the first process switch after each `Reviewing` report begins with the ledger: `regeneration proposals: G2 accepted (<reason>); G4 rejected (<reason>)`, with the actual goal IDs and reasons, or `regeneration proposals: none` when the report proposed no replacement.
+
+## Finish
+
+Before the final response:
+
+1. Append the last process switch described in Trace.
+2. Check that every goal in `.writing/goals.md` has a goal event. This command prints each goal ID that has none:
+
+   ```sh
+   for g in $(grep -oE '\[G[0-9]+\]' .writing/goals.md | tr -d '[]' | sort -u); do grep -qE "\"goal_id\": *\"$g\"" .writing/trace/process.jsonl || echo "$g"; done
+   ```
+
+   Append a `goal_created` event for each printed ID.
+
+3. Read `.writing/draft.md` and return exactly its contents as the final response, with no preamble, summary, acknowledgment line, or code fence.
+
+## Follow-up messages
+
+When a later message changes the task, append it verbatim to `.writing/assignment.md` under `## Change request (verbatim)`, update the restatement, and continue from Select the next process with a new pass count.
