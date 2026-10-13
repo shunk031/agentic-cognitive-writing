@@ -3,47 +3,49 @@ name: translating
 description: Internal role skill for the agentic-cognitive-writing `Monitor`. Invoked by delegation from the `Monitor`; do not select this skill directly.
 ---
 
+> [!NOTE]
+> After reading this `SKILL.md`, say: `I read translating.`
+
 # `Translating`
 
-Turn selected meanings and plans into prose within the `Monitor`'s delegated draft scope.
+Turn selected meanings and plans into prose within the draft scope that the `Monitor` delegates.
 
 ## When this skill runs
 
-You are the `Translating` sub-agent for the agentic-cognitive-writing plugin. The `Monitor` delegates a bounded drafting task with a project root, active goal, parent goal, audience, and requested scope.
+You perform the `Translating` process for the `Monitor`, as the brief describes. Say the acknowledgment line immediately after reading this skill, in the same response as your next tool call, and begin your report with it. The line never goes into `.writing/draft.md` or the final response.
 
 ## Read the state first
 
 Read these before editing:
 
-- `.writing/assignment.md`
-- `.writing/goals.md`
+- the brief
+- `.writing/assignment.md`, which holds the assignment verbatim and the `Monitor`'s restatement
+- `.writing/goals.md`, when the brief lists active goals
 - `.writing/draft.md`
-- relevant files in `.writing/memory/`
-- recent trace entries
 
-Translate the selected ideas into prose while treating the current wording as provisional. Keep the active goal visible while drafting. Preserve a useful existing sentence when it serves that goal; do not let fluent wording override the rhetorical purpose.
+Translate the selected ideas into prose while treating the current wording as provisional. Keep the scope's goals visible while drafting. Preserve a useful existing sentence when it serves those goals; do not let fluent wording override the rhetorical purpose.
 
 ## Drafting rules
 
-Write only the delegated scope in `.writing/draft.md` unless the `Monitor` explicitly asks for an alternative. Preserve useful user text. Flag changes to any of these:
-
-- claims
-- structure
-- tone
-- audience assumptions
-
-Do not invent sources, quotations, statistics, or facts. Mark a gap as an open uncertainty for the `Monitor`.
-
-## Boundaries
-
-The `Monitor` owns the process trace and decides whether a new goal is warranted. You may recommend a goal change, but do not create one silently while translating.
+- Write in the output language that the brief names.
+- Write only the brief's scope in `.writing/draft.md` and leave the rest of the file unchanged.
+- Meet the length target that the goals or the plan set for each part of the scope, and the format constraints that apply to it.
+- Preserve useful supplied text.
+- Do not invent sources, quotations, statistics, or facts. Mark a gap in the report rather than filling it.
+- Do not write `.writing/goals.md`, `.writing/assignment.md`, or the trace.
 
 ## Report format
 
-Return a concise report with:
+Your final message is the report. Use exactly these fields:
 
-- the goal and draft scope addressed;
-- what prose was added or changed;
-- claims that need evidence or user confirmation;
-- how the draft now serves the audience;
-- whether the result exposed a new planning or review need
+```text
+I read translating.
+Scope written: <goal IDs or sections written>
+Changes: <what prose was added or changed>
+Findings:
+- <a structural, goal-level, or passage-level problem that drafting exposed, with its location>
+Uncertainty: <claims that need evidence>
+Next process: <reviewing, planning, or translating>
+```
+
+Write `- none` under Findings when there is none. The recommended next process is advice; the `Monitor` selects the next process.

@@ -125,7 +125,6 @@ def test_a9_keeps_the_a2_harness_and_adds_role_guidance() -> None:
     roles = ("planning", "translating", "reviewing")
     kept_role_sentences = {
         "planning": (
-            "Do not replace missing user intent with a guess.",
             "Separate known material, plausible ideas, and unsupported claims.",
             "The organizing work makes meaning rather than merely rearranging bullets.",
         ),
@@ -142,14 +141,23 @@ def test_a9_keeps_the_a2_harness_and_adds_role_guidance() -> None:
     for a2_stage, a9_stage, role in zip(a2.stages, a9.stages, roles, strict=True):
         a2_text = a2_stage.path.read_text(encoding="utf-8")
         a9_text = a9_stage.path.read_text(encoding="utf-8")
+        assert a2_text.split("\n\n")[1] in a9_text
         role_text = (
             REPOSITORY_ROOT / "plugin" / "skills" / role / "SKILL.md"
         ).read_text(encoding="utf-8")
-        assert a2_text.split("\n\n")[1] in a9_text
         for sentence in kept_role_sentences[role]:
             assert sentence in role_text
             assert sentence in a9_text
-        for excluded in ("Monitor", "goal network", "goals.md", "trace", "delegat"):
+        for excluded in (
+            "Monitor",
+            "goal network",
+            "goals.md",
+            "trace",
+            "delegat",
+            "brief",
+            "user",
+            "fallback",
+        ):
             assert excluded not in a9_text
 
 
@@ -201,8 +209,9 @@ def test_a12_combines_the_a5_a6_and_a8_removals() -> None:
     registry = load_condition_registry()
     a4, a5, a8, a12 = (registry[c] for c in ("A4", "A5", "A8", "A12"))
 
-    for field in ("event_types", "trace_processes", "min_events", "max_events"):
+    for field in ("trace_processes", "min_events", "max_events"):
         assert getattr(a12, field) == getattr(a4, field), field
+    assert a12.event_types == a5.event_types == ("process_switch",)
     assert a12.package_name == a5.package_name
     assert (a12.goal_events, a12.require_goal_events) == ("forbidden", False)
     assert (a5.goal_events, a5.require_goal_events) == ("forbidden", False)
@@ -215,18 +224,14 @@ def test_a12_combines_the_a5_a6_and_a8_removals() -> None:
     kept_sentences = {
         "cognitive-writing-no-goal-network": (
             "Do not create or modify `.writing/goals.md`, whether it exists or not.",
-            "Treat the assignment as the single implicit objective.",
-            "Do not consult or construct a hierarchical goal network.",
+            "Never request goal-setting.",
         ),
         "cognitive-writing-fixed-order": (
-            "Start with `Planning`. After `Planning` resolves, switch to "
-            "`Translating`. After `Translating` resolves, switch to `Reviewing`. "
-            "Start the next pass with `Planning`.",
-            "An interruption must not select a new order.",
+            "Follow the fixed `Planning`, `Translating`, then `Reviewing` order",
         ),
         "cognitive-writing-single-context": (
-            "Do not spawn a role agent, subagent, or child `codex exec` process.",
-            "Cite the files or draft passages that support decisions.",
+            "Perform every selected process in your own context instead of "
+            "delegating it.",
         ),
     }
     for source, sentences in kept_sentences.items():
@@ -235,8 +240,7 @@ def test_a12_combines_the_a5_a6_and_a8_removals() -> None:
             assert sentence in source_text, (source, sentence)
             assert sentence in a12_text, (source, sentence)
     for excluded in (
-        "## Delegation",
-        "spawn a native Codex subagent",
+        "fork_context",
         "goal_id",
         "regeneration proposals",
         "goals-format.md",

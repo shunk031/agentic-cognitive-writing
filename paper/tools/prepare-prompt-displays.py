@@ -22,13 +22,6 @@ DISPLAY = "build/prompt-display/"
 ENGINE_PATH = " in `experiments/src/agentic_cogwriter/judges/engine.py`"
 
 REMOVALS = {
-    "experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md": (
-        " (the runner enforces this; a parallel runner change exists)",
-    ),
-    "experiments/plugin/skills/cognitive-writing-single-context/SKILL.md": (
-        " from `plugin/skills/planning/SKILL.md`, `plugin/skills/translating/SKILL.md`,"
-        " or `plugin/skills/reviewing/SKILL.md`",
-    ),
     "experiments/prompts/judges/pointwise-v1.md": (
         "Protocol source: docs/experiments/protocol.md, descriptive pointwise quality\n",
         ENGINE_PATH,

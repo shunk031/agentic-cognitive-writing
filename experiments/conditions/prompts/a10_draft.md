@@ -1,6 +1,6 @@
 ## A10 Draft
 
-Write a complete initial draft that answers the assignment. Use only the assignment and supplied context. Do not browse, search, retrieve sources, or add outside facts. Follow the requested output constraints. Return only the draft.
+Write a complete initial draft that answers the assignment. Use only the assignment and supplied context. Do not browse, search, retrieve sources, or add outside facts. Follow the requested output constraints. Output only the draft.
 
 ### Assignment
 

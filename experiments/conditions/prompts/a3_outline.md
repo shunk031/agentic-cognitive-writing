@@ -1,4 +1,4 @@
-## A3 outline
+## B2 outline
 
 Turn the perspectives and simulated answers into an ordered outline for the final response. Include section purposes and handoffs. Use only the assignment and supplied context. Do not browse, search, retrieve sources, or add outside facts. Citation generation and source gathering are omitted by design.
 
