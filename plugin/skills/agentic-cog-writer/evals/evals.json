@@ -15,7 +15,7 @@
     {
       "id": 2,
       "prompt": "Here is a rough two-paragraph grant introduction in .writing/draft.md. Review it for a public-health funder, revise the weakest paragraph, and tell me whether the revision changes the central goal. If the draft reveals a better framing than my original assignment, show how you would regenerate the goal instead of hiding the change.",
-      "expected_output": "The reviewer evaluates the draft against the funder's audience and the assignment, makes a scoped revision, and records any goal regeneration with the old and new rationale in goals.md and the trace.",
+      "expected_output": "The reviewer evaluates the draft against the funder's audience and the assignment, makes a scoped revision, and reports any goal regeneration as a proposal that the Monitor accepts or rejects in the trace.",
       "files": [],
       "expectations": [
         "Separates evaluation from revision and ties findings to the rhetorical problem.",

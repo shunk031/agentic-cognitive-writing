@@ -142,12 +142,10 @@ def test_a9_keeps_the_a2_harness_and_adds_role_guidance() -> None:
     for a2_stage, a9_stage, role in zip(a2.stages, a9.stages, roles, strict=True):
         a2_text = a2_stage.path.read_text(encoding="utf-8")
         a9_text = a9_stage.path.read_text(encoding="utf-8")
-        role_text = (
-            REPOSITORY_ROOT / "plugin" / "skills" / role / "SKILL.md"
-        ).read_text(encoding="utf-8")
         assert a2_text.split("\n\n")[1] in a9_text
+        # The A9 stage files froze the role-skill text that generation run 1
+        # executed; the role skills were rewritten afterwards.
         for sentence in kept_role_sentences[role]:
-            assert sentence in role_text
             assert sentence in a9_text
         for excluded in ("Monitor", "goal network", "goals.md", "trace", "delegat"):
             assert excluded not in a9_text

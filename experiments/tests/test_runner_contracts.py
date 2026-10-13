@@ -61,6 +61,7 @@ WRITING_TRACE_PROCESSES = (
     "revise",
 )
 
+ROLE_SKILLS = ("planning", "translating", "reviewing")
 REPO_ROOT = Path(__file__).parents[2]
 CONTRACTS_ROOT = REPO_ROOT / "experiments/conditions/contracts"
 PROMPT_SNAPSHOT_PATH = (
@@ -1035,149 +1036,57 @@ def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
     text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
         encoding="utf-8"
     )
-    checklist = (
-        "Before sending the final response, complete this non-skippable checklist:\n\n"
-        "1. The complete current document is written to `.writing/draft.md`.\n"
-        "2. The trace holds one goal event (`goal_created`, `goal_developed`, or "
-        "`goal_regenerated`) for every goal recorded in `goals.md` during this run.\n"
-        "3. The final response contains the complete final text."
-    )
-    assert checklist in text
+    finish = text.split("## Finish", 1)[1].split("\n## ", 1)[0]
+    assert "Check that every goal in `.writing/goals.md` has a goal event." in finish
+    assert "Append a `goal_created` event for each printed ID." in finish
     assert (
-        "The run is `INVALID` unless `.writing/draft.md` exists before the final "
-        "response and the final response contains the complete final text."
-    ) in text
+        "Read `.writing/draft.md` and return exactly its contents as the final "
+        "response, with no preamble, summary, acknowledgment line, or code fence."
+    ) in finish
 
 
-@pytest.mark.parametrize("reference_name", ("goals-format.md", "trace-jsonl-schema.md"))
-def test_a8_keeps_a4_trace_contract_and_removes_delegation(
-    reference_name: str,
-) -> None:
-    a4_text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
-        encoding="utf-8"
-    )
-    a8_text = (
-        REPO_ROOT
-        / "experiments/plugin/skills/cognitive-writing-single-context/SKILL.md"
-    ).read_text(encoding="utf-8")
-
-    def section(text: str, heading: str, next_heading: str) -> str:
-        return text.split(heading, 1)[1].split(next_heading, 1)[0]
-
-    assert section(a8_text, "## Trace contract", "## References") == section(
-        a4_text, "## Trace contract", "## References"
-    )
-    a8_reference = (
-        REPO_ROOT
-        / "experiments"
-        / "plugin"
-        / "skills"
-        / "cognitive-writing-single-context"
-        / "references"
-        / reference_name
-    )
-    a4_reference = (
-        REPO_ROOT
-        / "plugin"
-        / "skills"
-        / "agentic-cog-writer"
-        / "references"
-        / reference_name
-    )
-    assert a8_reference.read_bytes() == a4_reference.read_bytes()
-    assert "## Delegation briefs" not in a8_text
-    assert "## In-context process execution" in a8_text
-    assert "spawn a native Codex subagent" not in a8_text
-    assert "Tell the user about proposals that affect intent" not in a8_text
-    assert "Let the user override any agent decision." not in a8_text
-    assert "every active goal with its ID plus the parent goal ID" in a8_text
-    assert "Cite the files or draft passages that support decisions." in a8_text
+def test_a8_shares_the_a4_references() -> None:
+    for name in ("goals-format.md", "trace-jsonl-schema.md"):
+        a8_reference = (
+            REPO_ROOT
+            / "experiments/plugin/skills/cognitive-writing-single-context/references"
+            / name
+        )
+        a4_reference = REPO_ROOT / "plugin/skills/agentic-cog-writer/references" / name
+        assert a8_reference.read_bytes() == a4_reference.read_bytes()
 
 
-def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
+def test_reviewing_reports_structured_findings_and_goal_verdicts() -> None:
     reviewing_text = (REPO_ROOT / "plugin/skills/reviewing/SKILL.md").read_text(
         encoding="utf-8"
     )
     for requirement in (
-        "one verdict for each active goal",
-        "identified by ID",
-        "exactly one of `keep`, `develop`, or `regenerate`",
-        "one sentence of evidence from the draft",
-        "include the proposed replacement purpose",
-        "brief has no goal network",
-        "Use one line per goal in the form",
-        "The verdict word must be lowercase",
-        "not `Keep`, `Develop`, `Regenerate`, or another synonym",
+        "Verdict: <changes required, or no required change>",
+        "- planning: <location>:",
+        "- translating: <location>:",
+        "- G3 — regenerate: <one sentence of evidence>. Replacement:",
+        "exactly one of the lowercase words `keep`, `develop`, or `regenerate`",
+        "Omit the Goal verdicts field when the brief lists no goals.",
+        "Next process: <planning, translating, or stop>",
     ):
-        assert requirement in reviewing_text
+        assert requirement in reviewing_text, requirement
 
-    disposition_sentence = (
-        "Treat `Reviewing` verdicts as proposals. Record `goal_developed` only when "
-        "the Monitor updates that goal and adds its `goals.md` history row; "
-        "otherwise record an unacted-on `develop` verdict as a disposition without "
-        "a goal event."
-    )
-    regeneration_sentence = (
-        "For every `regenerate` verdict, either accept it or reject it. On acceptance, "
-        "update `goals.md` with a history row that keeps the original goal ID marked "
-        "`superseded` and gives the replacement a new goal ID, and emit "
-        "`goal_regenerated` with the replacement's `goal_id` and the original goal's "
-        "`parent_goal_id`; on rejection, write `rejected regeneration of <goal id>: "
-        "<reason>` in the next `process_switch` decision."
-    )
-    enumeration_sentence = (
-        "The next `process_switch` decision after a `Reviewing` pass must enumerate "
-        "every received `regenerate` verdict as `regeneration proposals: G2 accepted "
-        "(<reason>); G4 rejected (<reason>)`, substituting the actual goal IDs and "
-        "reasons, or `regeneration proposals: none` when no `regenerate` verdict was "
-        "received."
-    )
-    post_review_sentence = (
-        "Append that post-`Reviewing` `process_switch` carrying the enumeration before "
-        "either continuing or completing the run."
-    )
-    continuing_sentence = (
-        "If the run continues, set its `to_process` to the next process."
-    )
-    terminal_sentence = (
-        "If the run ends after `Reviewing`, set its `process` and `from_process` to "
-        "`reviewing` and its `to_process` to `null` before completing the run."
-    )
-
+    ledger = "`regeneration proposals: G2 accepted (<reason>); G4 rejected (<reason>)`"
     for path in (
         REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md",
         REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md",
+        REPO_ROOT
+        / "experiments/plugin/skills/cognitive-writing-single-context/SKILL.md",
     ):
         text = path.read_text(encoding="utf-8")
-        assert "every active goal with its ID" in text
-        assert disposition_sentence in text
-        assert regeneration_sentence in text
-        assert enumeration_sentence in text
-        assert post_review_sentence in text
-        assert continuing_sentence in text
-        assert terminal_sentence in text
-        assert "record `goal_developed` for each `develop` verdict" not in text
-
-    a5_text = (
-        REPO_ROOT
-        / "experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md"
-    ).read_text(encoding="utf-8")
-    a5_delegation = a5_text.split("## Delegation", 1)[1].split("## Trace contract", 1)[
-        0
-    ]
-    assert "- the assignment summary" in a5_delegation
-    assert "goal network" not in a5_delegation.lower()
-    assert "active goal" not in a5_delegation.lower()
-
-    fixed_cycle_sentence = (
-        "After a `regenerate` disposition, do not return to `Planning` within the "
-        "current pass or change the fixed order; complete the `Reviewing` pass, "
-        "then begin the next pass with `Planning`."
-    )
-    fixed_order_text = (
-        REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md"
-    ).read_text(encoding="utf-8")
-    assert fixed_cycle_sentence in fixed_order_text
+        assert ledger in text
+        assert "`regeneration proposals: none`" in text
+    for name in ("no-goal-network", "loop-only"):
+        text = (
+            REPO_ROOT / f"experiments/plugin/skills/cognitive-writing-{name}/SKILL.md"
+        ).read_text(encoding="utf-8")
+        assert "regeneration proposals" not in text
+        assert "goal_id" not in text
 
 
 @pytest.mark.parametrize(
@@ -1218,7 +1127,22 @@ def test_composed_prompt_omits_the_stage_chain_header_without_frozen_paths() -> 
 
 @pytest.mark.parametrize(
     "condition_id",
-    ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12", "B1", "B2"),
+    (
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "A7",
+        "A8",
+        "A9",
+        "A10",
+        "A11",
+        "A12",
+        "B1",
+        "B2",
+    ),
 )
 @pytest.mark.parametrize("platform", PLATFORMS)
 def test_composed_prompt_has_one_rendered_shared_input_block(

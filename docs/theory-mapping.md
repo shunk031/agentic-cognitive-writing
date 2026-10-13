@@ -57,8 +57,8 @@ The following table maps each element of the writing model to the plugin artifac
 | Task environment | Rhetorical problem and produced text | User project `.writing/assignment.md` and `.writing/draft.md` |
 |  | Rhetorical problem: topic, audience, exigency | Sections in `.writing/assignment.md` |
 |  | Produced text | User project `.writing/draft.md` |
-| Writer's long-term memory | Topic and audience knowledge | User project `.writing/memory/` |
-|  | Writing plans | Notes and plans in `.writing/memory/` plus `.writing/goals.md` |
+| Writer's long-term memory | Topic and audience knowledge | The model's own knowledge, gathered by the `Planning` skill's Generate sub-process |
+|  | Writing plans | `.writing/goals.md` and the `Planning` report |
 | `Planning` | Process and embedded sub-processes | Shared [planning skill](../plugin/skills/planning/SKILL.md) plus [Claude planner adapter](../plugin/agents/planner.md) |
 |  | Generating ideas | `Planning` skill's embedded Generate sub-process |
 |  | Organizing ideas and presentation | `Planning` skill's embedded Organize sub-process |
@@ -69,7 +69,7 @@ The following table maps each element of the writing model to the plugin artifac
 |  | Revising | `Reviewing` skill's embedded Revise sub-process |
 | `Monitor` | Orchestration role | [`plugin/skills/agentic-cog-writer/SKILL.md`](../plugin/skills/agentic-cog-writer/SKILL.md), executed by the main agent |
 
-Agentic CogWriter follows the recursive writing process described in "A Cognitive Process Theory of Writing"[^1]. Generate and Evaluate may interrupt any process. When a sub-goal resolves, control returns to its parent goal.
+Agentic CogWriter follows the writing process described in "A Cognitive Process Theory of Writing"[^1]. The `Monitor` selects the next process from the updated state after every step, so drafting can send control back to planning and reviewing can trigger another drafting or planning pass.
 
 [^1]: Linda Flower and John R. Hayes. "A Cognitive Process Theory of Writing." College Composition and Communication 32(4), 1981, pp. 365-387.
     DOI: [10.58680/ccc198115885](https://doi.org/10.58680/ccc198115885) / JSTOR: [https://www.jstor.org/stable/356600](https://www.jstor.org/stable/356600)

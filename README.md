@@ -4,7 +4,7 @@
 
 `Agentic CogWriter` is a harness that turns a coding agent into a cognitive writing system. The harness installs as skills and subagents, runs long-form writing as an explicit cognitive process, and keeps goals, drafts, notes, and the decision log as files in the directory where you write. Instead of generating text in one pass, the harness revisits and rewrites its own plans and goals as the draft develops.
 
-Agentic CogWriter realizes the writing model in "A Cognitive Process Theory of Writing"[^1] as an agent system. The theory's `Monitor` runs as the orchestrating agent and decides what to work on next. The `Monitor` delegates `Planning`, `Translating`, and `Reviewing` as roles backed by skills and subagents. The task environment and long-term memory live as files in the writing project, and the goal network evolves as composition proceeds. The three roles work as follows:
+Agentic CogWriter realizes the writing model in "A Cognitive Process Theory of Writing"[^1] as an agent system. The theory's `Monitor` runs as the orchestrating agent and decides what to work on next. The `Monitor` delegates `Planning`, `Translating`, and `Reviewing` as roles backed by skills and subagents. The task, the draft, the goal network, and the process history live as files in the writing project, and the goal network evolves as composition proceeds. The three roles work as follows:
 
 - `Planning` generates and organizes ideas and sets goals.
 - `Translating` turns selected meanings into words.
@@ -47,13 +47,12 @@ Use the GitHub marketplace for the main install path. If the repository is priva
 Agentic CogWriter turns your task into a file-backed writing session that you can inspect between turns.
 
 1. Start in the project where the writing should live.
-2. Invoke `/agentic-cognitive-writing:agentic-cog-writer` in Claude Code or `$agentic-cog-writer` in Codex. Describe the topic, audience, reason for writing, and desired result. The main skill asks for the rhetorical problem when needed, then coordinates the writing work through the project files.
+2. Invoke `/agentic-cognitive-writing:agentic-cog-writer` in Claude Code or `$agentic-cog-writer` in Codex. Describe the topic, audience, reason for writing, and desired result. The main skill records the task, then coordinates the writing work through the project files.
 3. Review the files the skill creates or updates:
 
-   - `.writing/assignment.md` records the rhetorical problem and constraints.
-   - `.writing/goals.md` records the hierarchical goal network and its history.
+   - `.writing/assignment.md` records the task verbatim and its restatement.
+   - `.writing/goals.md` records the hierarchical goal network.
    - `.writing/draft.md` holds the growing text.
-   - `.writing/memory/` holds topic knowledge, audience knowledge, and writing plans.
    - `.writing/trace/process.jsonl` records every process switch and goal change as one JSON line. See the [trace schema](plugin/skills/agentic-cog-writer/references/trace-jsonl-schema.md).
 
 The `Monitor` reads this state before each operation. You can inspect or edit it between turns.

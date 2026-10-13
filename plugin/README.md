@@ -68,20 +68,16 @@ Agentic CogWriter creates or maintains this layout in the project where it is us
 
 ```text
 .writing/
-├── assignment.md       # topic, audience, exigency (reason for writing), writer's goals, constraints
-├── goals.md            # hierarchical goal network and history
+├── assignment.md       # the task verbatim, and its topic, audience, exigency (reason for writing), writer's goals, and constraints
+├── goals.md            # hierarchical goal network
 ├── draft.md            # growing text
-├── memory/
-│   ├── topic.md        # optional topic knowledge
-│   ├── audience.md     # optional audience knowledge
-│   └── plans.md        # optional reusable writing plans
 └── trace/
     └── process.jsonl   # append-only process log
 ```
 
 The `Monitor` appends every process switch and goal change as one JSON line to `.writing/trace/process.jsonl`. Read the [field-by-field trace schema](skills/agentic-cog-writer/references/trace-jsonl-schema.md) before inspecting or extending the log.
 
-The main skill also uses [`goals-format.md`](skills/agentic-cog-writer/references/goals-format.md) for the hierarchical notation in `goals.md`.
+The [`goals-format.md`](skills/agentic-cog-writer/references/goals-format.md) reference describes the hierarchical notation in `goals.md`.
 
 The shipped package contains the manifests, skills, and agents it reads at runtime; no other file in this repository is required.
 
