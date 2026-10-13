@@ -194,8 +194,11 @@ def test_a4_run_scores_the_stop_snapshot_and_passes_every_gate(tmp_path: Path) -
     workspace = result.run_dir / "workspace"
     task = (workspace / ".writing/task.md").read_text()
     assert task.startswith("## Assignment\nWrite a memo.\n\n## Supplied context\n")
-    assert task.endswith("## Output language\nEnglish\n")
-    assert "## Output language\nEnglish" in (result.run_dir / "prompt.txt").read_text()
+    # Roles quote the language line as a requirement source, so it is one line.
+    assert task.endswith("\n\nOutput language: English\n")
+    assert (result.run_dir / "prompt.txt").read_text().endswith(
+        "\n\nOutput language: English"
+    )
     assert not (workspace / "plugin/skills/agentic-cog-writer/scripts").exists()
     assert (workspace / ".agents/cw/cw.json").stat().st_mode & 0o222 == 0
     tokens = manifest["cw"]["tokens"]

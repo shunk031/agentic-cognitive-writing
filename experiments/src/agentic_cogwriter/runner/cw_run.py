@@ -66,7 +66,7 @@ def task_text(sections: str, information_contract: str, language: str) -> str:
 
     return (
         f"{sections.strip()}\n\n{information_contract.strip()}\n\n"
-        f"## Output language\n{language}\n"
+        f"Output language: {language}\n"
     )
 
 

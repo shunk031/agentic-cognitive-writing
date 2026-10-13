@@ -1650,7 +1650,7 @@ class ExperimentRunner:
         )
         if generic_block:
             generic_block = f"\n\n{generic_block}"
-        language_block = f"\n\n## Output language\n{language}" if language else ""
+        language_block = f"\n\nOutput language: {language}" if language else ""
         return f"{invocation}{generic_block}{stage_text}{language_block}"
 
     @staticmethod
