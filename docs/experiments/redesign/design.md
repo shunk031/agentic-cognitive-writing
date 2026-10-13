@@ -480,3 +480,7 @@ A check script asserts the following before every iteration:
 - **Residual write gap.** A top-level shell write to a state file can land between `cw step` and the spawn, or after the close and before the next `cw` call. Such a write is attributed to the step. It has not been observed.
 - **Budget asymmetry.** The budget counts parent tokens only, so A4's children are uncounted. The A10 cap check reports any binding.
 - **Platform.** Everything is pinned to Codex 0.146.
+
+## Errata
+
+- **Smoke pool (2026-10-13).** The fixed pool in [Iteration loop and rules](#iteration-loop-and-rules) shared six prompts with the 12 A10 calibration prompts (dolomites-349, -480, -530, hellobench-chat_047, and writingbench-0354 and -0692), which its own disjointness rule forbids. The disjointness rule stands. The pool is now the prompts ranked directly below the calibration set on the prompt-set difficulty key, ranks 105–112 of each benchmark, plus writingbench-0210, -0049, and -0051, which pass the check. A benchmark's window extends downward one rank at a time until WritingBench holds at least two prompts with Chinese instructions or a Chinese topic and HelloBench holds at least two long-input prompts of at least 1,000 words. [`smoke_pool.py`](../../../experiments/src/agentic_cogwriter/prompts/smoke_pool.py) implements the pool and the check. Slice 1 ran on the three kept WritingBench prompts.

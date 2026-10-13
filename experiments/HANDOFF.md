@@ -44,6 +44,7 @@ The redesign spec lists every decision with its source. The author-level decisio
   - Process history comes from harness records, not from logs the model writes.
 - **Open questions (D10).** Every open decision in the spec takes its recommended option. A7 Single-writer is defined by the paper's construct: A8 plus one paragraph per `Translating` step, generated from the same template as the other arms.
 - **Working method (D11).** Keep prompts simple, with behavior that supports the paper's claims. Be thorough. Test small and iterate quickly.
+- **Smoke pool erratum.** Six of the specified smoke prompts were A10 calibration prompts. The pool is now ranks 105–112 below the calibration set plus three disjoint WritingBench prompts, as the Errata section of the [specification](../docs/experiments/redesign/design.md#errata) records.
 
 ## Working rules
 
