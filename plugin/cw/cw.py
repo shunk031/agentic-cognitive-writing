@@ -203,15 +203,23 @@ def parse_goals(text: str) -> list[dict]:
     return goals
 
 
-def validate_goals(text: str, before: str, task: str) -> list[dict]:
+def sources() -> list[str]:
+    """The fixed texts a requirement may quote: task.md and the turn requests."""
+
+    requests = sorted(HIST.glob("turn-*-request.md")) if HIST.is_dir() else []
+    return [read(TASK), *(read(p) for p in requests if TURN_REQUEST.match(p.name))]
+
+
+def validate_goals(text: str, before: str, texts: list[str]) -> list[dict]:
     goals = parse_goals(text)
-    task_text = norm(task)
+    normalized = [norm(t) for t in texts]
     ids = {g["id"] for g in goals}
     for goal in goals:
         if goal["quote"] is not None:
-            if norm(goal["quote"]) not in task_text:
+            if not any(norm(goal["quote"]) in t for t in normalized):
                 raise ValueError(
-                    f"{goal['id']}: the quoted src does not occur in task.md"
+                    f"{goal['id']}: the quoted src does not occur in task.md "
+                    "or in a turn request"
                 )
         elif goal["src_id"] not in goal["ancestors"]:
             raise ValueError(f"{goal['id']}: src {goal['src_id']} is not an ancestor")
@@ -351,8 +359,11 @@ class State:
         }
 
     def undecided(self) -> list[str]:
+        """Undecided proposals of this turn's latest review; a capped turn's lapse."""
+
         review = self.latest_review()
-        if review is None:
+        turns = {s["step"]: s["turn"] for s in self.steps}
+        if review is None or turns[review["step"]] != self.turn:
             return []
         done = self.decided(review)
         return [p["goal"] for p in review["proposals"] if p["goal"] not in done]
@@ -440,9 +451,7 @@ def output_problem(state: State, step: dict) -> str | None:
             return f"Planning wrote no {rel(directory / 'plan.md')}"
         if step["goals"]:
             try:
-                validate_goals(
-                    read(GOALS), read(directory / "pre-goals.md"), read(TASK)
-                )
+                validate_goals(read(GOALS), read(directory / "pre-goals.md"), sources())
             except ValueError as exc:
                 return f"goals.md is invalid: {exc}"
         return None
@@ -532,7 +541,7 @@ def ledger(state: State) -> str:
         for p in review["proposals"]
         if p["goal"] in done
     ]
-    return "regeneration proposals: " + "; ".join(parts) + ". "
+    return "regeneration proposals: " + ("; ".join(parts) or "none") + ". "
 
 
 def require_coordinator(state: State, command: str) -> None:
@@ -549,6 +558,11 @@ def brief_text(state: State, n: int, step: dict) -> str:
         "",
         f"- Nonce: {step['nonce']}",
         f"- Role: {process.capitalize()}",
+        *(
+            [f"- Previous attempt refused by cw: {step['reissue_reason']}"]
+            if step.get("reissue_reason")
+            else []
+        ),
         f"- Role skill: {skill}",
         f"- Task: {TASK}",
         f"- Output language: {cfg['language']}",
@@ -622,7 +636,7 @@ def cmd_step(state: State, args) -> None:
         raise Refused("this arm has no requirements; `--goals` is refused")
     if goals and process != "planning":
         raise Refused("`--goals` belongs to a Planning step")
-    attempt = 1
+    attempt, reissue_reason = 1, None
     if pending is not None:
         if (process, scope, goals) != (
             pending["process"],
@@ -634,6 +648,7 @@ def cmd_step(state: State, args) -> None:
                 f"{pending['process']}` with the same scope and flags, or stop"
             )
         attempt = 2
+        reissue_reason = state.closes[pending["step"]]["detail"]
     first = state.goals_on and state.turn == 1 and not state.turn_steps()
     if first and (process, goals) != ("planning", True):
         raise Refused("the first step must be `cw step planning --goals`")
@@ -670,6 +685,9 @@ def cmd_step(state: State, args) -> None:
         "goals": goals,
         "decision": ledger(state) + args.why,
     }
+    if reissue_reason is not None:
+        step["reissue_of"] = pending["step"]
+        step["reissue_reason"] = reissue_reason
     (directory / "brief.md").write_text(brief_text(state, n, step), encoding="utf-8")
     brief = directory / "brief.md"
     if state.delegated:
@@ -799,7 +817,7 @@ def cmd_stop(state: State, args) -> None:
     if reason == "failure":
         if not failed_out:
             raise Refused("`--reason failure` follows only a failed reissue")
-    else:
+    elif reason == "met":
         undecided = state.undecided()
         if undecided:
             raise Refused("decide every proposal first: " + ", ".join(undecided))
@@ -837,6 +855,7 @@ def cmd_stop(state: State, args) -> None:
             "to_process": None,
             "decision": ledger(state) + args.why,
             "draft": "copied" if DRAFT.is_file() else "absent",
+            "undecided_proposals": state.undecided(),
             "record": tracked(),
         }
     )

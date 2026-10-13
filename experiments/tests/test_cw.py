@@ -177,6 +177,9 @@ def test_cw_output_check(tmp_path: Path) -> None:
     ws.ok("step", "planning", "--goals", "--why", "reissue")
     close = ws.closes()[-1]
     assert close["reason"] == "output" and "plan.md" in close["detail"]
+    # The reissue brief carries cw's refusal reason verbatim.
+    brief = (ws.w / "history/step-02/brief.md").read_text()
+    assert f"- Previous attempt refused by cw: {close['detail']}\n" in brief
     assert not (ws.w / "goals.md").exists()
     other = make(tmp_path / "t", "A4")
     other.plan()
@@ -377,14 +380,18 @@ def test_cw_cap(ws: Workspace) -> None:
     }
     ws.plan()
     ws.translate()
+    proposal = {"goal": "G2", "replacement": "Roughly 1000 words", "reason": "r"}
     for index in range(4):
-        ws.review(unmet)
+        ws.review(unmet if index < 3 else {**unmet, "proposals": [proposal]})
         if index < 3:
             ws.translate(text=DRAFT + "x" * (index + 1) + "\n")
     assert "only `cw stop`" in ws.refused(
         "step", "translating", "--scope", "G1", "--why", "x"
     )
-    ws.ok("stop", "--reason", "cap", "--why", "four passes")
+    # A cap stops the run even with an undecided proposal, which it reports.
+    stop = ws.ok("stop", "--reason", "cap", "--why", "four passes")
+    assert stop["undecided_proposals"] == ["G2"]
+    assert ledgers([stop]) == [[]]
     ws.write("history/turn-02-request.md", "Again.")
     ws.translate(text=DRAFT + "turn two\n")
     ws.review(unmet)
@@ -441,6 +448,20 @@ def test_cw_para(tmp_path: Path) -> None:
     assert "no paragraph unit" in make(tmp_path / "a4", "A4").refused(
         "para", "--append", stdin="x"
     )
+
+
+def test_cw_turn_requests_are_requirement_sources(ws: Workspace) -> None:
+    ws.plan()
+    ws.translate()
+    ws.review()
+    ws.ok("stop", "--reason", "met", "--why", "done")
+    ws.write("history/turn-02-request.md", "Add a closing call to action.\n")
+    step = ws.plan(
+        GOALS
+        + '- [G3] It ends with a call to action | src: "a closing call to action"\n'
+    )
+    ws.translate(text=DRAFT + "Act now.\n", scope="G3")
+    assert ws.closes()[-1]["step"] == step and ws.closes()[-1]["ok"] is True
 
 
 def test_cw_snapshot(ws: Workspace) -> None:

@@ -37,3 +37,9 @@ This changelog records each change to the redesigned CogWriter arms during the s
 ### Tooling fix during slice 1
 
 - `fidelity.py` skips refused `cw` entries when it counts reviews, decisions, and goal events; iteration 2's report failed on a refused `cw review` entry.
+
+### Errata after slice 1
+
+- **Reissue reason.** Motivated by the first `Planning` attempts that failed the goals grammar in runs `a4-wb0051` (`it3`) and `a4-wb0210` (`it4`), 2 of 6 first attempts. A reissue brief now carries `cw`'s refusal reason verbatim. Not yet smoke-tested.
+- **`stop cap`.** A cap no longer requires every proposal to be decided; the stop entry reports the undecided ones.
+- **Turn-2 requirement sources.** `Planning` may quote a runner-written turn request as well as `task.md`.
