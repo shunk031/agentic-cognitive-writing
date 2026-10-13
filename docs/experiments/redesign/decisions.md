@@ -100,3 +100,20 @@ Also approved: smoke and pilot runs use only non-evaluation prompts, and no tuni
 - Be thorough.
 - Run small tests and improve quickly in short loops.
 - Iteration targets process fidelity and mechanism exercise, measured from harness records on non-evaluation prompts only. Do not tune toward output quality. Freeze the design before any scored run.
+
+## D12. Evaluation task sets (author, 2026-10-13)
+The audit of the current hard100 subsets found:
+- HelloBench is 82/100 summarization and saturated.
+- WritingBench suits the claim.
+- DoLoMiTes suits it only for its compose prompts.
+
+The author chose to combine three sources:
+1. Re-select prompts from the existing benchmarks using criteria fixed before any results are seen: composition tasks with explicit requirements, excluding long-input summarization. Also report the current hard100 subsets in full, for comparability.
+2. Add LongGenBench-16K, where planning methods previously showed gains.
+3. Build a requirement-revision task set from existing prompts, with three variants: mid-draft requirement changes, seeded defects, and added checkable constraints.
+   - Freeze the generator before any scored run.
+   - Keep dev and test splits separate.
+   - Keep the checkers hidden from the Reviewer.
+   - Use a cross-family judge.
+
+Selection criteria never use observed win rates.
