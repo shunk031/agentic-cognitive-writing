@@ -12,6 +12,6 @@ Work in `.writing/` under the current working directory.
 
    `- G<n>: <requirement> | source: "<verbatim quote from task.md>"`
 
-   Child requirements use IDs such as `G1.1`. Copy the quote exactly from one line of `task.md`; it must support the requirement.
+   Child requirements use IDs such as `G1.1`. Copy the quote exactly from within one line of `task.md`, never joining lines; it must support the requirement.
 5. Write in the output language the task specifies, or in the language of the task's instructions if it specifies none.
 6. Write no file other than `goals.md`.
