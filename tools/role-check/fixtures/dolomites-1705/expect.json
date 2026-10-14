@@ -1,0 +1,16 @@
+{
+  "section": "Business Purpose and Scope",
+  "missing": ["G3"],
+  "length": ["G1.1", "G2.1", "G3.1", "G4.1", "G5.1", "G6.1", "G7.1"],
+  "constraints": [
+    ["Purpose", "sentences"],
+    ["Intended Audience and Use", "sentences"],
+    ["Business Purpose and Scope", "paragraph"],
+    ["Stakeholders", "sentences"],
+    ["System purpose and overview", "paragraph"],
+    ["Stakeholder requirements", "paragraph"],
+    ["Functional and Nonfunctional", "paragraph"],
+    ["familiar"],
+    ["supplied"]
+  ]
+}

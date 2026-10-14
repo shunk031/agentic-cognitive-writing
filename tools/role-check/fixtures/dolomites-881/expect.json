@@ -1,0 +1,11 @@
+{
+  "section": "Legal and Regulatory Compliance",
+  "missing": ["G2"],
+  "length": ["G1.1", "G2.1", "G3.1"],
+  "constraints": [
+    ["Executive Summary", "paragraph"],
+    ["Legal and Regulatory Compliance", "paragraph"],
+    ["Baseline Environmental Conditions", "paragraph"],
+    ["supplied"]
+  ]
+}
