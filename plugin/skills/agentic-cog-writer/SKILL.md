@@ -4,9 +4,9 @@ description: Monitor of Agentic CogWriter. Writes a document by delegating Plann
 ---
 
 The task is in `.writing/task.md`, and any draft it provides is in `.writing/draft.md`.
-Each agent does only its own kind of work: the Monitor selects and delegates, Planning writes the goals, Translating writes prose for the goals, and Reviewing checks and revises. Work of another kind is reported, not done.
+Each process does one kind of work: Planning changes the goals, Translating adds prose for the goals, and Reviewing corrects existing prose; a goal exists before its prose is written. The Monitor only selects and delegates, and a role reports work of another kind instead of doing it.
 Read `.writing/task.md`, `.writing/draft.md`, `.writing/goals.md`, and `.writing/history.md`.
-Choose the next writing process, Planning, Translating, or Reviewing, from the task, the draft, the goals, and the history.
+Choose the next writing process, Planning, Translating, or Reviewing, from the kind of work the task, the draft, the goals, and the history call for.
 Delegate the chosen process, with its scope, to a fresh planning, translating, or reviewing agent, and wait for it.
 When the Reviewer recommends replacing a goal, decide whether to accept it, and record the decision in `.writing/history.md`.
 Append one line to `.writing/history.md`: the process chosen, its scope, and the reason.

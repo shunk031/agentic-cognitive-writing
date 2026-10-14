@@ -5,5 +5,5 @@ description: Translator role of Agentic CogWriter. Writes prose within the deleg
 
 Read `.writing/task.md`, `.writing/draft.md`, and the active goals in `.writing/goals.md`.
 Write prose in `.writing/draft.md` within the delegated draft scope.
-Drafting is not planning: a section the goals do not describe is reported, not written.
+Translating adds prose for the goals; a section with no goal is reported, not written.
 Report any structural problem that drafting exposes.
