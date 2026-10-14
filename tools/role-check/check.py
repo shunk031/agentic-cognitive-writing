@@ -64,10 +64,10 @@ def read(path: Path) -> str:
     return path.read_text() if path.exists() else ""
 
 
-def parses(path: Path, pattern: re.Pattern) -> list[re.Match]:
-    """Matches for every non-blank line, or [] when any line fails or none exist."""
+def parse(path: Path, pattern: re.Pattern) -> tuple[list[re.Match], bool]:
+    """Matching lines, and whether every non-blank line (at least one) matches."""
     found = [pattern.fullmatch(x) for x in read(path).splitlines() if x.strip()]
-    return found if found and all(found) else []
+    return [m for m in found if m], bool(found) and all(found)
 
 
 def sections(text: str) -> list[str]:
@@ -76,7 +76,7 @@ def sections(text: str) -> list[str]:
 
 def planning(out: Path, fx: Path, expect: dict) -> dict:
     codex(out, "planning", {"task.md": fx / "task.md"}, "Run your role.")
-    goals = parses(out / "workspace/.writing/goals.md", GOAL)
+    goals, formatted = parse(out / "workspace/.writing/goals.md", GOAL)
     task, lines = read(fx / "task.md"), {m[1]: m[0].lower() for m in goals}
 
     def text(g: str) -> str:  # a goal line together with its parent lines
@@ -89,7 +89,7 @@ def planning(out: Path, fx: Path, expect: dict) -> dict:
     return {
         "Planning: source quotes verbatim": quoted,
         "Planning: constraints covered": all(map(covered, expect["constraints"])),
-        "Format: goals.md": bool(goals),
+        "Format: goals.md": formatted,
     }
 
 
@@ -115,9 +115,9 @@ def reviewing(out: Path, fx: Path, expect: dict) -> dict:
         files = {n: fx / n for n in ("task.md", "goals.md")} | {"draft.md": draft}
         codex(out / case, "reviewing", files, "Run your role.")
         ws = out / case / "workspace/.writing"
-        review = parses(ws / "review.md", REVIEW)
+        review, ok = parse(ws / "review.md", REVIEW)
         marked = all((m[2] == "unmet") == bool(m[4]) for m in review)
-        formatted &= bool(review) and marked
+        formatted &= ok and marked
         unchanged &= read(ws / "draft.md") == read(draft)
         unmet[case] = {m[1] for m in review if m[2] == "unmet"}
     good = " ".join([str(len(unmet["draft"]))] + sorted(unmet["draft"]))
