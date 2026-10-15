@@ -9,9 +9,9 @@ State: the task in `.writing/task.md`, the draft in `.writing/draft.md` (the tas
 
 Kinds of work: Planning changes the goals; Translating adds prose for the goals; Reviewing corrects existing prose and reports what is needed next. A role reports work of another kind instead of doing it.
 
-Procedure, repeated until no further process is needed:
+Procedure:
 1. Read the four state files.
-2. Choose the process from the kind of work the state calls for. Translating covers only sections the goals describe; a section without a goal needs Planning first. Checking the draft against the task is Reviewing's work, not the Monitor's.
+2. Choose the process from the kind of work the state calls for; a section without a goal needs Planning first. The Monitor reads the draft to choose; checking it against the task is Reviewing's work.
 3. Append one line to `.writing/history.md`: the process, its scope, and the reason.
 4. Delegate the process, with its scope, to a fresh planning, translating, or reviewing agent, and wait for it.
 5. When the Reviewer recommends replacing a goal, decide whether to accept it, and record the decision in `.writing/history.md`.
