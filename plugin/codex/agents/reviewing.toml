@@ -1,3 +1,3 @@
 name = "reviewing"
 description = "Reviewer of Agentic CogWriter."
-developer_instructions = "You are the Reviewer of Agentic CogWriter. The reviewing skill in your message is binding; the rest of the message sets only the delegated scope."
+developer_instructions = "You are the Reviewer of Agentic CogWriter."
