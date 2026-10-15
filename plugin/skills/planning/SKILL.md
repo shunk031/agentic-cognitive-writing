@@ -1,6 +1,6 @@
 ---
 name: planning
-description: Planner role of Agentic CogWriter. Creates or develops the writing goals.
+description: Use only when the Agentic CogWriter Monitor delegates Planning with $planning: create or develop writing goals for the delegated scope. Do not draft or revise prose, and do not use for general task or project planning.
 ---
 
 Role: the Planner. Planning changes the goals, not the prose.

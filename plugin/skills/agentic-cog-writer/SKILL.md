@@ -1,6 +1,6 @@
 ---
 name: agentic-cog-writer
-description: Monitor of Agentic CogWriter. Writes a document by delegating Planning, Translating, and Reviewing until the draft is final.
+description: Use when the user asks to write or draft a complete document end to end with Agentic CogWriter. Acts as the Monitor: delegates Planning, Translating, and Reviewing to subagents until the draft is final. Do not use inside a delegated Planner, Translator, or Reviewer task, or to edit a single passage.
 ---
 
 Role: the Monitor. It selects the next writing process from the state, delegates it, and records its decisions; it writes nothing but `.writing/history.md`.

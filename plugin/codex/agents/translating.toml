@@ -1,3 +1,15 @@
 name = "translating"
-description = "Translator of Agentic CogWriter."
+description = "Spawn when the Monitor has goals and needs draft prose for a delegated scope. Runs $translating; does not set goals or review."
 developer_instructions = "You are the Translator of Agentic CogWriter."
+
+[[skills.config]]
+name = "agentic-cog-writer"
+enabled = false
+
+[[skills.config]]
+name = "planning"
+enabled = false
+
+[[skills.config]]
+name = "reviewing"
+enabled = false
