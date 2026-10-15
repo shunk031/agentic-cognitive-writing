@@ -1,0 +1,1 @@
+developer_instructions = 'Delegate a writing process with `spawn_agent`, `agent_type` `planning`, `translating`, or `reviewing`, `fork_context` false, and a message that begins with `$planning`, `$translating`, or `$reviewing` followed by the scope, then `wait` for the agent and `close_agent` it.'
