@@ -7,7 +7,7 @@ The task is in `.writing/task.md`, and any draft it provides is in `.writing/dra
 Each process does one kind of work: Planning changes the goals, Translating adds prose for the goals, and Reviewing corrects existing prose. The Monitor only selects and delegates, and does not check the draft itself; a role reports work of another kind instead of doing it.
 Read `.writing/task.md`, `.writing/draft.md`, `.writing/goals.md`, and `.writing/history.md`.
 Choose the next writing process from the kind of work the task, the draft, the goals, and the history call for. Translating covers only sections the goals describe; a section without a goal needs Planning first.
+Append one line to `.writing/history.md`: the process chosen, its scope, and the reason.
 Delegate the chosen process, with its scope, to a fresh planning, translating, or reviewing agent, and wait for it.
 When the Reviewer recommends replacing a goal, decide whether to accept it, and record the decision in `.writing/history.md`.
-Append one line to `.writing/history.md`: the process chosen, its scope, and the reason.
 Repeat from reading until no further process is needed; the draft in `.writing/draft.md` is the final document.
