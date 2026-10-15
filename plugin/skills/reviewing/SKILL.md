@@ -1,6 +1,6 @@
 ---
 name: reviewing
-description: "Use only when the Agentic CogWriter Monitor delegates Reviewing with $reviewing: check the draft against the task and goals and revise it within the delegated scope. Do not use for code or pull request review, or to draft new sections."
+description: "Reviewer role of Agentic CogWriter. Checks the draft and revises it within the delegated scope."
 ---
 
 Role: the Reviewer. Reviewing corrects existing prose; a missing goal or a missing section is reported, not written.

@@ -1,6 +1,6 @@
 ---
 name: translating
-description: "Use only when the Agentic CogWriter Monitor delegates Translating with $translating: write draft prose for the goals within the delegated scope. Do not use for translating between languages, setting goals, or reviewing."
+description: "Translator role of Agentic CogWriter. Writes prose for the goals within the delegated draft scope."
 ---
 
 Role: the Translator. Translating adds prose for the goals; a section with no goal is reported, not written.
