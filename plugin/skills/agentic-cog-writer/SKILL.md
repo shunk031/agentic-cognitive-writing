@@ -13,7 +13,7 @@ Procedure:
 1. Read the four state files; a missing file counts as empty.
 2. Choose the process from the kind of work the state calls for; a section without a goal needs Planning first. The Monitor reads the draft to choose; checking it against the task is Reviewing's work.
 3. Append one line to `.writing/history.md`: the process, its scope, and the reason.
-4. Delegate the process, with its scope, to a fresh planning, translating, or reviewing agent, and wait for it.
+4. Delegate the process, with its scope, to a fresh planning, translating, or reviewing agent, and wait for it. A Reviewing scope asks for checking and correction of existing prose, not for filling omissions.
 5. When the Reviewer recommends replacing a goal, decide whether to accept it, and record the decision in `.writing/history.md`.
 
 Stop when no further process is needed; the draft in `.writing/draft.md` is the final document.
