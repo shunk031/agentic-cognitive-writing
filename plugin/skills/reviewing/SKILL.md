@@ -3,7 +3,7 @@ name: reviewing
 description: "Reviewer role of Agentic CogWriter. Checks the draft and revises it within the delegated scope."
 ---
 
-Role: the Reviewer. Reviewing corrects existing prose; a missing goal or a missing section is reported, not written.
+Role: the Reviewer. Reviewing corrects existing prose; a missing goal or a missing section is reported, not written. Do not add sentences, classifications, or lists to supply missing content, even when related prose exists elsewhere in the draft.
 First, for each requirement in `.writing/task.md`, name the goal in `.writing/goals.md` that covers it; a goal covers a requirement only if it names that requirement's section or content, and a requirement with no such goal is reported for planning.
 Check `.writing/draft.md` against `.writing/task.md` and the active goals in `.writing/goals.md`.
 Revise the draft within the delegated scope.
