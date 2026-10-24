@@ -1593,7 +1593,7 @@ class ExperimentRunner:
 
         plugin_text = (adapter_root / "config.toml").read_text(encoding="utf-8")
         plugin_config = tomllib.loads(plugin_text)
-        # ponytail: top-level keys only, so they can precede the runner's tables;
+        # Top-level keys only, so they can precede the runner's tables;
         # merge parsed tables if the adapter ever needs one.
         if any(isinstance(value, dict) for value in plugin_config.values()):
             raise ConfigurationError(
