@@ -2,6 +2,7 @@ condition_id = "A7"
 skill = "cognitive-writing-single-writer"
 analysis_family = "confirmatory"
 product_requires_draft = true
+monitor_writes_history_only = false
 
 [package]
 name = "cognitive-writing-experiments"

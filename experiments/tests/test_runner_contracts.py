@@ -1574,6 +1574,38 @@ def test_a8_accepts_in_context_execution_without_spawn_event(tmp_path: Path) -> 
     ] == ["process_switch", "goal_created"]
 
 
+def test_codex_run_with_complete_clean_records_stays_scoring_eligible(
+    tmp_path: Path,
+) -> None:
+    class RecordedExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            rollout = Path(env["CODEX_HOME"]) / "sessions" / "rollout-session-1.jsonl"
+            rollout.parent.mkdir(parents=True)
+            rollout.write_text(
+                json.dumps({"type": "session_meta", "payload": {"id": "session-1"}})
+                + "\n"
+            )
+            return super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+
+    result = _result()
+    started = json.dumps({"type": "thread.started", "thread_id": "session-1"})
+    result = replace(result, stdout=f"{started}\n".encode() + result.stdout)
+    runner = _runner(
+        tmp_path / "runs",
+        executor=RecordedExecutor([result]),
+        codex_home=tmp_path / "codex-home",
+    )
+
+    run = runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    manifest = json.loads(run.manifest_path.read_text())
+    assert manifest["fidelity_gate"] == {"status": "scorable", "reasons": []}
+    assert manifest["status"] == "completed"
+    assert manifest["scoring"] == {"status": "eligible"}
+
+
 def test_required_delegation_fails_closed_without_spawn_event(tmp_path: Path) -> None:
     condition = replace(load_condition_registry()["A1"], require_delegation=True)
     runner = _runner(

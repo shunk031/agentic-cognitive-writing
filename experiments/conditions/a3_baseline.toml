@@ -3,6 +3,7 @@ title = "Adaptive Task Planning"
 skill = "writing-adaptive-task-planning"
 analysis_family = "confirmatory"
 product_requires_draft = true
+monitor_writes_history_only = false
 
 [package]
 name = "cognitive-writing-baselines"

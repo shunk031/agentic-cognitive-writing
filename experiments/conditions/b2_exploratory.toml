@@ -2,6 +2,7 @@ condition_id = "B2"
 skill = "writing-storm-style"
 analysis_family = "exploratory"
 product_requires_draft = true
+monitor_writes_history_only = false
 
 [package]
 name = "cognitive-writing-baselines"
