@@ -1,0 +1,157 @@
+"""Fidelity gate: reject runs whose harness records show a measured defect."""
+
+from __future__ import annotations
+
+import json
+import re
+from collections import defaultdict
+from collections.abc import Iterable
+from pathlib import Path, PurePosixPath
+from typing import Any
+
+from .execution import _json_objects
+
+ROLES = ("planning", "translating", "reviewing")
+THREAD_LIMIT_ERROR = "agent thread limit reached"
+_ROLE_TOKEN = re.compile(r"\$(planning|translating|reviewing)\b")
+_CALL_TYPES = frozenset({"function_call", "custom_tool_call", "local_shell_call"})
+_OUTPUT_TYPES = frozenset({"function_call_output", "custom_tool_call_output"})
+
+
+def check_fidelity(
+    run_dir: Path,
+    *,
+    platform: str,
+    requires_draft: bool,
+    monitor_writes_history_only: bool,
+) -> dict[str, Any]:
+    """Classify a finished run as scorable or rejected, with every reason."""
+
+    if platform == "codex":
+        reasons = _codex_reasons(run_dir, monitor_writes_history_only)
+    else:
+        reasons = [
+            f"{platform} records expose no subagent or tool events, "
+            "so fidelity cannot be verified"
+        ]
+    if requires_draft:
+        draft = run_dir / "workspace" / ".writing" / "draft.md"
+        output = run_dir / "output.normalized.txt"
+        if not (
+            draft.is_file()
+            and output.is_file()
+            and draft.read_bytes() == output.read_bytes()
+        ):
+            reasons.append("scored output is not workspace/.writing/draft.md")
+    return {"status": "rejected" if reasons else "scorable", "reasons": reasons}
+
+
+def _response_items(records: Iterable[dict[str, Any]]) -> Iterable[dict[str, Any]]:
+    for record in records:
+        payload = record.get("payload")
+        if record.get("type") == "response_item" and isinstance(payload, dict):
+            yield payload
+
+
+def _read_own_skill(records: list[dict[str, Any]], role: str) -> bool:
+    """Return whether Codex injected the role skill or the agent read its file."""
+
+    injected = f"<skill>\n<name>{role}</name>"
+    skill_path = f"skills/{role}/SKILL.md"
+    # Known limit: a forked rollout replays parent messages, so a parent's injected
+    # role skill would count here; the fork check rejects such runs anyway.
+    for payload in _response_items(records):
+        if payload.get("type") == "message" and payload.get("role") == "user":
+            for part in payload.get("content") or []:
+                if isinstance(part, dict) and injected in str(part.get("text", "")):
+                    return True
+        elif payload.get("type") in _CALL_TYPES and skill_path in json.dumps(payload):
+            return True
+    return False
+
+
+def _codex_reasons(run_dir: Path, monitor_writes_history_only: bool) -> list[str]:
+    events = [
+        event
+        for path in sorted(run_dir.glob("attempt-*.events.jsonl"))
+        for event in _json_objects(path.read_bytes())
+    ]
+    if not events:
+        return ["no Codex event stream was recorded"]
+    reasons: list[str] = []
+
+    metas: dict[str, dict[str, Any]] = {}
+    records: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for path in sorted(run_dir.glob("sessions/**/rollout-*.jsonl")):
+        lines = _json_objects(path.read_bytes())
+        first = lines[0] if lines else {}
+        meta = first.get("payload")
+        if first.get("type") != "session_meta" or not isinstance(meta, dict):
+            reasons.append(f"rollout {path.name} does not start with session_meta")
+            continue
+        metas[str(meta.get("id"))] = meta
+        records[str(meta.get("id"))].extend(lines[1:])
+
+    # The events stream records only the top-level thread, which is the Monitor.
+    top_level = {
+        event["thread_id"]
+        for event in events
+        if event.get("type") == "thread.started"
+        and isinstance(event.get("thread_id"), str)
+    }
+    if not top_level:
+        reasons.append("Codex event stream has no thread.started event")
+    items = [
+        event["item"]
+        for event in events
+        if event.get("type") == "item.completed" and isinstance(event.get("item"), dict)
+    ]
+    spawned: set[str] = set()
+    closed: set[str] = set()
+    spawn_prompts: dict[str, str] = {}
+    for item in items:
+        if item.get("type") != "collab_tool_call":
+            continue
+        receivers = item.get("receiver_thread_ids") or []
+        if item.get("tool") == "spawn_agent":
+            spawned.update(receivers)
+            spawn_prompts.update(dict.fromkeys(receivers, str(item.get("prompt"))))
+        elif item.get("tool") == "close_agent" and item.get("status") == "completed":
+            closed.update(receivers)
+
+    for thread in sorted((top_level | spawned) - metas.keys()):
+        reasons.append(f"no rollout was recorded for thread {thread}")
+
+    for thread, meta in sorted(metas.items()):
+        if meta.get("forked_from_id"):
+            reasons.append(f"child {thread} was spawned with inherited context")
+        if meta.get("parent_thread_id"):
+            role = meta.get("agent_role")
+            if role not in ROLES:
+                match = _ROLE_TOKEN.search(spawn_prompts.get(thread, ""))
+                role = match.group(1) if match else None
+            if role and not _read_own_skill(records[thread], role):
+                reasons.append(f"{role} agent {thread} did not read its own SKILL.md")
+
+    if monitor_writes_history_only:
+        # Known limit: only apply_patch writes become file_change items; a shell
+        # redirect by the Monitor is not visible here.
+        for item in items:
+            if item.get("type") != "file_change" or item.get("status") != "completed":
+                continue
+            for change in item.get("changes") or []:
+                path = str(change.get("path", ""))
+                if PurePosixPath(path).parts[-2:] != (".writing", "history.md"):
+                    reasons.append(f"Monitor wrote {path}")
+
+    # Closing a child also closes its descendants, so top-level closes suffice.
+    for thread in sorted(spawned - closed):
+        reasons.append(f"child {thread} was never closed")
+    for thread in sorted(records):
+        if any(
+            payload.get("type") in _OUTPUT_TYPES
+            and THREAD_LIMIT_ERROR in json.dumps(payload)
+            for payload in _response_items(records[thread])
+        ):
+            reasons.append(f"thread {thread} hit the agent thread limit")
+    return list(dict.fromkeys(reasons))

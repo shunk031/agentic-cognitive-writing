@@ -1,0 +1,1 @@
+essional associations, and rehearse aloud. Behavioral answers should remain truthful and should include a concrete action and result; do not memorize them so rigidly that they stop sounding like you.

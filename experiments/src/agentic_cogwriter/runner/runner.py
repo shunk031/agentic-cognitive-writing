@@ -38,6 +38,7 @@ from .execution import (
     extract_token_usage,
     reject_retrieval,
 )
+from .fidelity import check_fidelity
 from .hashing import sha256_bytes, sha256_file
 from .manifest import PromptRecord, load_benchmark_provenance
 from .trace import (
@@ -1018,6 +1019,12 @@ class ExperimentRunner:
                 )
             output_path.write_bytes(output.encode("utf-8"))
             normalized_path.write_text(output, encoding="utf-8")
+            fidelity_gate = check_fidelity(
+                run_dir,
+                platform=platform,
+                requires_draft=condition.product_requires_draft,
+                monitor_writes_history_only=condition.monitor_writes_history_only,
+            )
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -1026,7 +1033,11 @@ class ExperimentRunner:
                     platform=platform,
                     adapter=adapter,
                     run_id=run_id,
-                    status="completed",
+                    status=(
+                        "completed"
+                        if fidelity_gate["status"] == "scorable"
+                        else "unscored"
+                    ),
                     started_at=started_at,
                     cli_version=cli_version,
                     attempts=attempts,
@@ -1046,6 +1057,7 @@ class ExperimentRunner:
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
+                    fidelity_gate=fidelity_gate,
                 ),
             )
             return RunResult(
@@ -1553,6 +1565,7 @@ class ExperimentRunner:
         rollout_collection: Mapping[str, Any] | None = None,
         spawn_extraction: Mapping[str, Any] | None = None,
         trace_timestamps: Mapping[str, Any] | None = None,
+        fidelity_gate: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         if platform == "codex":
@@ -1762,6 +1775,8 @@ class ExperimentRunner:
             manifest["inputs"]["native_payload"] = prompt.native_payload
         if trace_timestamps is not None:
             manifest["trace_timestamps"] = dict(trace_timestamps)
+        if fidelity_gate is not None:
+            manifest["fidelity_gate"] = dict(fidelity_gate)
         if output_hash is not None:
             manifest["output_hash"] = output_hash
         if trace_hash is not None:
