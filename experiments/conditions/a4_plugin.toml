@@ -8,6 +8,7 @@ name = "agentic-cognitive-writing"
 
 [plugins]
 paths = ["plugin"]
+codex_adapter = "codex"
 
 [adapters]
 codex = "codex_exec"

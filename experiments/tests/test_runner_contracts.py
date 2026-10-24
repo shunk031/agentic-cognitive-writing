@@ -1312,13 +1312,39 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         "skills/translating/SKILL.md": "translating role\n",
         "skills/reviewing/SKILL.md": "reviewing role\n",
     }
-    for relative, content in files.items():
+    adapter_files = {
+        "agents/planning.toml": 'name = "planning"\n',
+        "agents/translating.toml": 'name = "translating"\n',
+        "agents/reviewing.toml": 'name = "reviewing"\n',
+        "rules/deny.rules": 'prefix_rule(pattern=["git"], decision="forbidden")\n',
+        "config.toml": 'developer_instructions = "Delegate."\n',
+    }
+    for relative, content in (
+        *files.items(),
+        *((f"codex/{name}", text) for name, text in adapter_files.items()),
+    ):
         path = source_root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
+    codex_source = tmp_path / "codex-home"
+    codex_source.mkdir()
+    (codex_source / "config.toml").write_text(
+        'model_provider = "p"\n\n[model_providers.p]\nname = "p"\n'
+    )
+    observed_homes: list[dict[str, str]] = []
+    observed_configs: list[dict[str, object]] = []
 
     class StageExecutor:
         def run(self, command, *, cwd, timeout_seconds, env=None):
+            home = Path(env["CODEX_HOME"])
+            observed_homes.append(
+                {
+                    path.relative_to(home).as_posix(): path.read_text()
+                    for path in home.rglob("*")
+                    if path.is_file()
+                }
+            )
+            observed_configs.append(tomllib.loads((home / "config.toml").read_text()))
             trace_path = cwd / ".writing" / "trace" / "process.jsonl"
             trace_path.parent.mkdir(parents=True, exist_ok=True)
             trace_path.write_text(
@@ -1339,22 +1365,38 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         output_root=tmp_path / "runs",
         executor=StageExecutor(),
         codex_plugin_root=source_root,
-        codex_home=tmp_path / "codex-home",
+        codex_home=codex_source,
     )
 
     result = runner.run_prompt(
         _prompt(), condition_id="A4", platform="codex", run_id="staged"
     )
 
+    expected_home = {
+        **files,
+        **{name: text for name, text in adapter_files.items() if "/" in name},
+    }
+    [home] = observed_homes
+    assert {
+        name: text for name, text in home.items() if name != "config.toml"
+    } == expected_home
+    assert observed_configs == [
+        {
+            "developer_instructions": "Delegate.",
+            "model_provider": "p",
+            "model_reasoning_effort": "xhigh",
+            "model_providers": {"p": {"name": "p"}},
+        }
+    ]
     manifest = json.loads(result.manifest_path.read_text())
     staged_files = manifest["staged_files"]
     assert set(staged_files) == {
-        "plugin/skills/agentic-cog-writer/SKILL.md",
-        "plugin/skills/agentic-cog-writer/references/trace.md",
-        "plugin/skills/planning/SKILL.md",
-        "plugin/skills/translating/SKILL.md",
-        "plugin/skills/reviewing/SKILL.md",
+        *(f"plugin/{relative}" for relative in files),
+        *(f"CODEX_HOME/{relative}" for relative in (*expected_home, "config.toml")),
     }
+    assert staged_files["CODEX_HOME/config.toml"] == (
+        "sha256:" + hashlib.sha256(home["config.toml"].encode()).hexdigest()
+    )
     for relative, content in files.items():
         staged = result.run_dir / "workspace" / "plugin" / relative
         assert staged.read_text() == content
@@ -1376,6 +1418,46 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
             result.run_dir / "workspace" / ".writing" / "trace" / "process.jsonl"
         ).resolve()
     )
+
+
+def test_a4_installs_the_repository_plugin_codex_adapter(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    runner = ExperimentRunner(_config(), output_root=tmp_path / "runs")
+
+    runner._stage_codex_plugin(
+        load_condition_registry()["A4"], tmp_path / "workspace", codex_home=home
+    )
+
+    roles = ("planning", "translating", "reviewing")
+    assert sorted(path.name for path in (home / "skills").iterdir()) == sorted(
+        ("agentic-cog-writer", *roles)
+    )
+    assert all(
+        (home / "skills" / name / "SKILL.md").is_file()
+        for name in ("agentic-cog-writer", *roles)
+    )
+    assert sorted(path.name for path in (home / "agents").iterdir()) == sorted(
+        f"{role}.toml" for role in roles
+    )
+    assert [path.name for path in (home / "rules").iterdir()] == ["deny.rules"]
+    assert "developer_instructions" in tomllib.loads((home / "config.toml").read_text())
+
+
+def test_codex_adapter_config_conflicting_with_runner_settings_is_rejected(
+    tmp_path: Path,
+) -> None:
+    adapter = tmp_path / "plugin" / "codex"
+    for relative in ("agents", "rules"):
+        (adapter / relative).mkdir(parents=True)
+    (adapter / "config.toml").write_text('model_reasoning_effort = "low"\n')
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / "config.toml").write_text('model_reasoning_effort = "medium"\n')
+
+    with pytest.raises(ConfigurationError, match="conflicts"):
+        ExperimentRunner._install_codex_adapter(adapter, {}, home)
+    assert (home / "config.toml").read_text() == 'model_reasoning_effort = "medium"\n'
 
 
 @pytest.mark.parametrize(

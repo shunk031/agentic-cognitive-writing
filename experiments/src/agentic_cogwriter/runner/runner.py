@@ -747,7 +747,9 @@ class ExperimentRunner:
                     f"pinned version {expected_version!r}"
                 )
             if platform == "codex":
-                staged_files = self._stage_codex_plugin(condition, workspace)
+                staged_files = self._stage_codex_plugin(
+                    condition, workspace, codex_home=generator_config_dir
+                )
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -1479,9 +1481,19 @@ class ExperimentRunner:
     }
 
     def _stage_codex_plugin(
-        self, condition: ConditionSpec, workspace: Path
+        self,
+        condition: ConditionSpec,
+        workspace: Path,
+        *,
+        codex_home: Path | None = None,
     ) -> dict[str, str]:
-        """Stage the invoked skill and delegated role skills inside the workspace."""
+        """Stage the invoked skill and delegated role skills inside the workspace.
+
+        A wrapper that names ``plugins.codex_adapter`` also installs the plugin's
+        Codex adapter into ``codex_home``: the staged skills under ``skills/``,
+        the adapter's ``agents/`` and ``rules/``, and its ``config.toml`` layered
+        over the runner's synthesized one.
+        """
 
         selected_root = self._codex_plugin_root(condition)
         source_roots = (
@@ -1519,11 +1531,67 @@ class ExperimentRunner:
                 staged_root / relative,
                 dirs_exist_ok=True,
             )
-        return {
+        staged = {
             path.relative_to(workspace).as_posix(): f"sha256:{sha256_file(path)}"
             for path in sorted(staged_root.rglob("*"))
             if path.is_file()
         }
+        adapter = self._wrapper(condition)["plugins"].get("codex_adapter")
+        if adapter is None:
+            return staged
+        if codex_home is None:
+            raise ConfigurationError("Codex adapter staging requires a Codex home")
+        self._install_codex_adapter(selected_root / adapter, sources, codex_home)
+        staged.update(
+            {
+                f"CODEX_HOME/{path.relative_to(codex_home).as_posix()}": (
+                    f"sha256:{sha256_file(path)}"
+                )
+                for path in sorted(codex_home.rglob("*"))
+                if path.is_file()
+                and path.relative_to(codex_home).parts[0]
+                in {"skills", "agents", "rules", "config.toml"}
+            }
+        )
+        return staged
+
+    @staticmethod
+    def _install_codex_adapter(
+        adapter_root: Path, sources: Mapping[Path, Path], codex_home: Path
+    ) -> None:
+        """Install skills, agents, rules, and layered config into ``codex_home``."""
+
+        for relative in ("agents", "rules", "config.toml"):
+            if not (adapter_root / relative).exists():
+                raise ManifestError(
+                    f"Codex adapter {adapter_root} is missing {relative}"
+                )
+        for relative, source in sources.items():
+            shutil.copytree(source, codex_home / relative)
+        for relative in ("agents", "rules"):
+            shutil.copytree(adapter_root / relative, codex_home / relative)
+
+        plugin_text = (adapter_root / "config.toml").read_text(encoding="utf-8")
+        plugin_config = tomllib.loads(plugin_text)
+        # ponytail: top-level keys only, so they can precede the runner's tables;
+        # merge parsed tables if the adapter ever needs one.
+        if any(isinstance(value, dict) for value in plugin_config.values()):
+            raise ConfigurationError(
+                f"Codex adapter config {adapter_root / 'config.toml'} "
+                "must hold only top-level keys"
+            )
+        config_path = codex_home / "config.toml"
+        runner_text = (
+            config_path.read_text(encoding="utf-8") if config_path.is_file() else ""
+        )
+        layered = f"{plugin_text.rstrip()}\n\n{runner_text}"
+        try:
+            tomllib.loads(layered)
+        except tomllib.TOMLDecodeError as exc:
+            raise ConfigurationError(
+                "Codex adapter config conflicts with the runner's Codex settings"
+            ) from exc
+        config_path.write_text(layered, encoding="utf-8")
 
     def _manifest(
         self,
