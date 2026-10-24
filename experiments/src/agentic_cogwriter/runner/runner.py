@@ -130,6 +130,26 @@ def _assert_guidance_free_workspace(workspace: Path) -> None:
         )
 
 
+def _shared_values(prompt: PromptRecord) -> dict[str, str]:
+    return {
+        "assignment": prompt.input_text,
+        "supplied_context": prompt.supplied_context or "(none)",
+        "output_constraints": json.dumps(
+            prompt.requested_output_constraints, ensure_ascii=False, sort_keys=True
+        ),
+    }
+
+
+def _task_sections(shared_values: Mapping[str, str]) -> dict[str, str]:
+    return {
+        "assignment": f"## Assignment\n{shared_values['assignment']}",
+        "supplied_context": f"## Supplied context\n{shared_values['supplied_context']}",
+        "output_constraints": (
+            f"## Requested output constraints\n{shared_values['output_constraints']}"
+        ),
+    }
+
+
 def _generator_model_family(runtime_config: RuntimeConfig, platform: str) -> str:
     """Resolve the selected generator model ID through the frozen family map."""
 
@@ -748,7 +768,10 @@ class ExperimentRunner:
                 )
             if platform == "codex":
                 staged_files = self._stage_codex_plugin(
-                    condition, workspace, codex_home=generator_config_dir
+                    condition,
+                    workspace,
+                    codex_home=generator_config_dir,
+                    prompt=prompt,
                 )
             self._write_json(
                 manifest_path,
@@ -1296,25 +1319,11 @@ class ExperimentRunner:
             contract_texts[name].removesuffix("\n") for name in contract_names
         )
         invocation = f"{invocation}\n\n{contracts}"
-        constraints = json.dumps(
-            prompt.requested_output_constraints,
-            ensure_ascii=False,
-            sort_keys=True,
-        )
-        shared_values = {
-            "assignment": prompt.input_text,
-            "supplied_context": prompt.supplied_context or "(none)",
-            "output_constraints": constraints,
-        }
+        shared_values = _shared_values(prompt)
         stage_text, carried_tokens = self._stage_prompt_text(condition, shared_values)
-        generic_values = [
-            f"## Assignment\n{shared_values['assignment']}",
-            f"## Supplied context\n{shared_values['supplied_context']}",
-            f"## Requested output constraints\n{shared_values['output_constraints']}",
-        ]
         generic_block = "\n\n".join(
             value
-            for token, value in zip(_SHARED_STAGE_TOKENS, generic_values, strict=True)
+            for token, value in _task_sections(shared_values).items()
             if token not in carried_tokens
         )
         if generic_block:
@@ -1486,13 +1495,15 @@ class ExperimentRunner:
         workspace: Path,
         *,
         codex_home: Path | None = None,
+        prompt: PromptRecord | None = None,
     ) -> dict[str, str]:
         """Stage the invoked skill and delegated role skills inside the workspace.
 
         A wrapper that names ``plugins.codex_adapter`` also installs the plugin's
         Codex adapter into ``codex_home``: the staged skills under ``skills/``,
         the adapter's ``agents/`` and ``rules/``, and its ``config.toml`` layered
-        over the runner's synthesized one.
+        over the runner's synthesized one. It also writes the prompt's task
+        sections to ``.writing/task.md``, the plugin's task state.
         """
 
         selected_root = self._codex_plugin_root(condition)
@@ -1539,9 +1550,18 @@ class ExperimentRunner:
         adapter = self._wrapper(condition)["plugins"].get("codex_adapter")
         if adapter is None:
             return staged
-        if codex_home is None:
-            raise ConfigurationError("Codex adapter staging requires a Codex home")
+        if codex_home is None or prompt is None:
+            raise ConfigurationError(
+                "Codex adapter staging requires a Codex home and a prompt"
+            )
         self._install_codex_adapter(selected_root / adapter, sources, codex_home)
+        task_path = workspace / ".writing" / "task.md"
+        task_path.parent.mkdir(parents=True, exist_ok=True)
+        task_path.write_text(
+            "\n\n".join(_task_sections(_shared_values(prompt)).values()) + "\n",
+            encoding="utf-8",
+        )
+        staged[".writing/task.md"] = f"sha256:{sha256_file(task_path)}"
         staged.update(
             {
                 f"CODEX_HOME/{path.relative_to(codex_home).as_posix()}": (

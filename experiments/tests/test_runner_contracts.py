@@ -1390,9 +1390,16 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
     ]
     manifest = json.loads(result.manifest_path.read_text())
     staged_files = manifest["staged_files"]
+    task = (result.run_dir / "workspace" / ".writing" / "task.md").read_text()
+    assert task == (
+        "## Assignment\nWrite a memo.\n\n"
+        "## Supplied context\nProvided facts only.\n\n"
+        "## Requested output constraints\n{}\n"
+    )
     assert set(staged_files) == {
         *(f"plugin/{relative}" for relative in files),
         *(f"CODEX_HOME/{relative}" for relative in (*expected_home, "config.toml")),
+        ".writing/task.md",
     }
     assert staged_files["CODEX_HOME/config.toml"] == (
         "sha256:" + hashlib.sha256(home["config.toml"].encode()).hexdigest()
@@ -1426,7 +1433,10 @@ def test_a4_installs_the_repository_plugin_codex_adapter(tmp_path: Path) -> None
     runner = ExperimentRunner(_config(), output_root=tmp_path / "runs")
 
     runner._stage_codex_plugin(
-        load_condition_registry()["A4"], tmp_path / "workspace", codex_home=home
+        load_condition_registry()["A4"],
+        tmp_path / "workspace",
+        codex_home=home,
+        prompt=_prompt(),
     )
 
     roles = ("planning", "translating", "reviewing")
