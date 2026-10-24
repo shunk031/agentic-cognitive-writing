@@ -906,7 +906,7 @@ def test_codex_prompt_references_workspace_skill_file_without_plugin_install(
     assert "follow it" in prompt
     assert "$agentic-cog-writer" not in prompt
     assert "codex plugin add" not in prompt
-    assert "complete final text itself" in prompt
+    assert "complete final text itself" not in prompt
 
 
 def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> None:
@@ -918,10 +918,12 @@ def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> No
         assert "{codex_plugin_root}" in invocation
         assert "SKILL.md" in invocation
         assert "codex" not in wrapper["install"]
-        assert "complete final text itself" in invocation
+        # Only a condition without a draft scores its final response.
+        final_text_rule = not condition.product_requires_draft
+        assert ("complete final text itself" in invocation) is final_text_rule
         prompt = runner._plugin_prompt(condition, _prompt(), "codex")
         assert f"plugin/skills/{condition.skill_name}/SKILL.md" in prompt
-        assert "complete final text itself" in prompt
+        assert ("complete final text itself" in prompt) is final_text_rule
         if condition.condition_id in DELEGATING_CONDITIONS:
             assert DELEGATION_CONTRACT in prompt
         else:
@@ -1556,10 +1558,7 @@ def test_a8_accepts_in_context_execution_without_spawn_event(tmp_path: Path) -> 
     assert manifest["scoring"] == {"status": "excluded"}
     assert manifest["fidelity_gate"] == {
         "status": "rejected",
-        "reasons": [
-            "Codex event stream has no thread.started event",
-            "scored output is not workspace/.writing/draft.md",
-        ],
+        "reasons": ["Codex event stream has no thread.started event"],
     }
     assert manifest["subagent_spawn_count"] == 0
     assert manifest["delegation_check"] == {
@@ -2515,45 +2514,54 @@ def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
         runner.run_prompt(_prompt(), condition_id="A5", platform="codex")
 
 
-def test_runner_rejects_a_summary_when_workspace_draft_is_the_product(
-    tmp_path: Path,
-) -> None:
-    class SummaryExecutor(_RetryExecutor):
+def test_draft_product_scores_draft_md_verbatim(tmp_path: Path) -> None:
+    draft_bytes = b"# Title\r\n\r\nBody text with trailing space.  \n\n"
+
+    class DraftExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
             result = super().run(
                 command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
             )
-            draft = cwd / ".writing" / "draft.md"
-            draft.write_text("draft " * 100)
+            (cwd / ".writing" / "draft.md").write_bytes(draft_bytes)
             return result
 
     runner = _runner(
-        tmp_path,
-        executor=SummaryExecutor([_result(output="short summary")]),
+        tmp_path, executor=DraftExecutor([_result(output="short summary")])
     )
 
-    with pytest.raises(ExecutionError, match="less than 50% of draft.md"):
-        runner.run_prompt(
-            _prompt(),
-            condition_id="A3",
-            platform="codex",
-            run_id="summary-output",
-        )
+    result = runner.run_prompt(_prompt(), condition_id="A8", platform="codex")
 
-    run_dir = tmp_path / "WritingBench" / "A3" / "codex" / "summary-output"
-    assert not (run_dir / "output.raw").exists()
+    run_dir = result.run_dir
+    assert (run_dir / "output.normalized.txt").read_bytes() == draft_bytes
+    assert (run_dir / "output.raw").read_bytes() == draft_bytes
+    manifest = json.loads(result.manifest_path.read_text())
     assert (
-        (run_dir / "workspace" / ".writing" / "draft.md")
-        .read_text()
-        .startswith("draft")
+        manifest["output_hash"] == f"sha256:{hashlib.sha256(draft_bytes).hexdigest()}"
     )
-    manifest = json.loads((run_dir / "run-manifest.json").read_text())
-    assert manifest["failure"]["type"] == "ExecutionError"
-    assert manifest["failure"]["message"].endswith("final_chars=13, draft_chars=599")
+    assert manifest["product_gate"]["rule"] == (
+        "workspace/.writing/draft.md is the scored output, verbatim"
+    )
+    assert (
+        "scored output is not workspace/.writing/draft.md"
+        not in manifest["fidelity_gate"]["reasons"]
+    )
 
 
-def test_a2_rejects_short_response_against_its_draft(tmp_path: Path) -> None:
-    class A2DraftExecutor(_RetryExecutor):
+@pytest.mark.parametrize(
+    ("draft", "message"),
+    [
+        (
+            None,
+            "requires workspace/.writing/draft.md as its scored output; "
+            "the workspace has no draft.md",
+        ),
+        ("  \n", "wrote an empty workspace/.writing/draft.md"),
+    ],
+)
+def test_draft_product_without_draft_fails_with_reason(
+    tmp_path: Path, draft: str | None, message: str
+) -> None:
+    class A2Executor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
             result = super().run(
                 command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
@@ -2576,18 +2584,25 @@ def test_a2_rejects_short_response_against_its_draft(tmp_path: Path) -> None:
                     )
                 )
             )
-            (cwd / ".writing" / "draft.md").write_text("draft " * 300)
+            if draft is not None:
+                (cwd / ".writing" / "draft.md").write_text(draft)
             return result
 
     runner = _runner(
-        tmp_path,
-        executor=A2DraftExecutor(
-            [_result(output="one two three four five six seven eight nine ten")]
-        ),
+        tmp_path, executor=A2Executor([_result(output="complete text " * 100)])
     )
 
-    with pytest.raises(ExecutionError, match="less than 50% of draft.md"):
-        runner.run_prompt(_prompt(), condition_id="A2", platform="codex")
+    with pytest.raises(ExecutionError, match=re.escape(message)):
+        runner.run_prompt(
+            _prompt(), condition_id="A2", platform="codex", run_id="no-draft"
+        )
+
+    run_dir = tmp_path / "WritingBench" / "A2" / "codex" / "no-draft"
+    assert not (run_dir / "output.raw").exists()
+    assert not (run_dir / "output.normalized.txt").exists()
+    manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    assert manifest["failure"]["type"] == "ExecutionError"
+    assert message in manifest["failure"]["message"]
 
 
 def test_runner_does_not_substitute_draft_for_empty_final_response(
@@ -2815,17 +2830,27 @@ def test_non_draft_condition_accepts_short_output(tmp_path: Path) -> None:
         requested_output_constraints={"min_words": 20},
         row_hash="row-hash",
     )
+
+    class StrayDraftExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            result = super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+            (cwd / ".writing" / "draft.md").write_text("stray draft " * 50)
+            return result
+
     runner = _runner(
         tmp_path,
-        executor=_RetryExecutor([_result(output="short", usage={"output_tokens": 2})]),
+        executor=StrayDraftExecutor(
+            [_result(output="short", usage={"output_tokens": 2})]
+        ),
     )
 
-    runner.run_prompt(prompt, condition_id="A1", platform="codex")
+    result = runner.run_prompt(prompt, condition_id="A1", platform="codex")
 
-    run_dir = tmp_path / "WritingBench" / "A1" / "codex"
-    manifest = json.loads(
-        next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
-    )
+    # A1 has no draft product, so its final response stays the scored output.
+    assert (result.run_dir / "output.normalized.txt").read_text() == "short"
+    manifest = json.loads(result.manifest_path.read_text())
     assert manifest["product_gate"] == {
         "requires_draft": False,
         "rule": "final response must be non-empty",
