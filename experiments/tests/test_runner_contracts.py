@@ -1030,60 +1030,23 @@ def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
     assert occurrences == 6
 
 
-def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
+def test_agentic_cog_writer_ends_with_the_draft_as_the_final_document() -> None:
     text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
         encoding="utf-8"
     )
-    checklist = (
-        "Before sending the final response, complete this non-skippable checklist:\n\n"
-        "1. The complete current document is written to `.writing/draft.md`.\n"
-        "2. The trace holds one goal event (`goal_created`, `goal_developed`, or "
-        "`goal_regenerated`) for every goal recorded in `goals.md` during this run.\n"
-        "3. The final response contains the complete final text."
-    )
-    assert checklist in text
     assert (
-        "The run is `INVALID` unless `.writing/draft.md` exists before the final "
-        "response and the final response contains the complete final text."
+        "Stop when no further process is needed; the draft in `.writing/draft.md` "
+        "is the final document."
     ) in text
 
 
-@pytest.mark.parametrize("reference_name", ("goals-format.md", "trace-jsonl-schema.md"))
-def test_a8_keeps_a4_trace_contract_and_removes_delegation(
-    reference_name: str,
-) -> None:
-    a4_text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
-        encoding="utf-8"
-    )
-    a8_text = (
-        REPO_ROOT
-        / "experiments/plugin/skills/cognitive-writing-single-context/SKILL.md"
-    ).read_text(encoding="utf-8")
+def test_a8_runs_processes_in_context_with_its_own_trace_references() -> None:
+    a8_root = REPO_ROOT / "experiments/plugin/skills/cognitive-writing-single-context"
+    a8_text = (a8_root / "SKILL.md").read_text(encoding="utf-8")
 
-    def section(text: str, heading: str, next_heading: str) -> str:
-        return text.split(heading, 1)[1].split(next_heading, 1)[0]
-
-    assert section(a8_text, "## Trace contract", "## References") == section(
-        a4_text, "## Trace contract", "## References"
-    )
-    a8_reference = (
-        REPO_ROOT
-        / "experiments"
-        / "plugin"
-        / "skills"
-        / "cognitive-writing-single-context"
-        / "references"
-        / reference_name
-    )
-    a4_reference = (
-        REPO_ROOT
-        / "plugin"
-        / "skills"
-        / "agentic-cog-writer"
-        / "references"
-        / reference_name
-    )
-    assert a8_reference.read_bytes() == a4_reference.read_bytes()
+    for reference_name in ("goals-format.md", "trace-jsonl-schema.md"):
+        assert f"(references/{reference_name})" in a8_text
+        assert (a8_root / "references" / reference_name).is_file()
     assert "## Delegation briefs" not in a8_text
     assert "## In-context process execution" in a8_text
     assert "spawn a native Codex subagent" not in a8_text
@@ -1093,23 +1056,7 @@ def test_a8_keeps_a4_trace_contract_and_removes_delegation(
     assert "Cite the files or draft passages that support decisions." in a8_text
 
 
-def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
-    reviewing_text = (REPO_ROOT / "plugin/skills/reviewing/SKILL.md").read_text(
-        encoding="utf-8"
-    )
-    for requirement in (
-        "one verdict for each active goal",
-        "identified by ID",
-        "exactly one of `keep`, `develop`, or `regenerate`",
-        "one sentence of evidence from the draft",
-        "include the proposed replacement purpose",
-        "brief has no goal network",
-        "Use one line per goal in the form",
-        "The verdict word must be lowercase",
-        "not `Keep`, `Develop`, `Regenerate`, or another synonym",
-    ):
-        assert requirement in reviewing_text
-
+def test_fixed_order_monitor_reconciles_reviewing_verdicts() -> None:
     disposition_sentence = (
         "Treat `Reviewing` verdicts as proposals. Record `goal_developed` only when "
         "the Monitor updates that goal and adds its `goals.md` history row; "
@@ -1143,19 +1090,17 @@ def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
         "`reviewing` and its `to_process` to `null` before completing the run."
     )
 
-    for path in (
-        REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md",
-        REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md",
-    ):
-        text = path.read_text(encoding="utf-8")
-        assert "every active goal with its ID" in text
-        assert disposition_sentence in text
-        assert regeneration_sentence in text
-        assert enumeration_sentence in text
-        assert post_review_sentence in text
-        assert continuing_sentence in text
-        assert terminal_sentence in text
-        assert "record `goal_developed` for each `develop` verdict" not in text
+    fixed_order_text = (
+        REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert "every active goal with its ID" in fixed_order_text
+    assert disposition_sentence in fixed_order_text
+    assert regeneration_sentence in fixed_order_text
+    assert enumeration_sentence in fixed_order_text
+    assert post_review_sentence in fixed_order_text
+    assert continuing_sentence in fixed_order_text
+    assert terminal_sentence in fixed_order_text
+    assert "record `goal_developed` for each `develop` verdict" not in fixed_order_text
 
     a5_text = (
         REPO_ROOT
@@ -1173,9 +1118,6 @@ def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
         "current pass or change the fixed order; complete the `Reviewing` pass, "
         "then begin the next pass with `Planning`."
     )
-    fixed_order_text = (
-        REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md"
-    ).read_text(encoding="utf-8")
     assert fixed_cycle_sentence in fixed_order_text
 
 
@@ -1512,11 +1454,8 @@ def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
         "plugin/skills/cognitive-writing-fixed-order/agents/openai.yaml",
         "plugin/skills/cognitive-writing-fixed-order/evals/evals.json",
         "plugin/skills/planning/SKILL.md",
-        "plugin/skills/planning/agents/openai.yaml",
         "plugin/skills/reviewing/SKILL.md",
-        "plugin/skills/reviewing/agents/openai.yaml",
         "plugin/skills/translating/SKILL.md",
-        "plugin/skills/translating/agents/openai.yaml",
     }
 
 
