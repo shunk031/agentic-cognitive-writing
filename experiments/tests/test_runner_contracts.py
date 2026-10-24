@@ -1030,6 +1030,16 @@ def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
     assert occurrences == 6
 
 
+def test_agentic_cog_writer_ends_with_the_draft_as_the_final_document() -> None:
+    text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    assert (
+        "Stop when no further process is needed; the draft in `.writing/draft.md` "
+        "is the final document."
+    ) in text
+
+
 def test_a8_runs_processes_in_context_with_its_own_trace_references() -> None:
     a8_root = REPO_ROOT / "experiments/plugin/skills/cognitive-writing-single-context"
     a8_text = (a8_root / "SKILL.md").read_text(encoding="utf-8")
