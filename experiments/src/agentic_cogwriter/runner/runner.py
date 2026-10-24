@@ -75,7 +75,6 @@ class RunResult:
     run_id: str
 
 
-FINAL_OUTPUT_DRAFT_RATIO = 0.5
 _GENERATOR_CONFIG_ENV = {
     "codex": "CODEX_HOME",
     "claude-code": "CLAUDE_CONFIG_DIR",
@@ -287,34 +286,36 @@ def _synthesized_codex_config(
     return "\n".join(lines) + "\n"
 
 
-def _validate_final_product(
-    output: str,
-    draft: str | None,
-    *,
-    condition_id: str,
-    requires_draft: bool,
-) -> None:
-    """Require the response channel to carry the complete product text."""
+def _scored_output(
+    stdout: bytes, draft_path: Path, *, condition_id: str, requires_draft: bool
+) -> bytes:
+    """Return the scored product: draft.md verbatim, or the final response."""
 
-    final_chars = len(output.strip())
-    if not final_chars:
-        raise ExecutionError(
-            f"Condition {condition_id} produced no final response; "
-            "draft.md is not accepted as a substitute"
-        )
-    if requires_draft and draft is None:
-        raise ExecutionError(
-            f"Condition {condition_id} requires workspace/.writing/draft.md; "
-            "the final response cannot substitute for a missing draft"
-        )
-    if requires_draft and draft is not None:
-        draft_chars = len(draft.strip())
-        if final_chars < draft_chars * FINAL_OUTPUT_DRAFT_RATIO:
+    if not requires_draft:
+        output = extract_output(stdout)
+        if not output.strip():
             raise ExecutionError(
-                f"Condition {condition_id} final response is less than "
-                f"{FINAL_OUTPUT_DRAFT_RATIO:.0%} of draft.md; "
-                f"final_chars={final_chars}, draft_chars={draft_chars}"
+                f"Condition {condition_id} produced no final response; "
+                "draft.md is not accepted as a substitute"
             )
+        return output.encode("utf-8")
+    if not draft_path.is_file():
+        raise ExecutionError(
+            f"Condition {condition_id} requires workspace/.writing/draft.md "
+            "as its scored output; the workspace has no draft.md"
+        )
+    try:
+        draft = draft_path.read_bytes()
+        text = draft.decode("utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise ExecutionError(
+            f"Cannot read workspace draft {draft_path}: {exc}"
+        ) from exc
+    if not text.strip():
+        raise ExecutionError(
+            f"Condition {condition_id} wrote an empty workspace/.writing/draft.md"
+        )
+    return draft
 
 
 def _delegation_check(
@@ -342,10 +343,7 @@ def _product_gate(condition: ConditionSpec, config: RuntimeConfig) -> dict[str, 
     if condition.product_requires_draft:
         return {
             "requires_draft": True,
-            "rule": (
-                "workspace/.writing/draft.md must exist and the final response "
-                "must be at least 50% of its characters"
-            ),
+            "rule": "workspace/.writing/draft.md is the scored output, verbatim",
             "unit": config.output_unit,
         }
     return {
@@ -951,25 +949,16 @@ class ExperimentRunner:
                     else None
                 ),
             )
-            output = extract_output(result.stdout)
-            draft_path = workspace / ".writing" / "draft.md"
-            draft = None
-            if draft_path.is_file():
-                try:
-                    draft = draft_path.read_text(encoding="utf-8")
-                except (OSError, UnicodeError) as exc:
-                    raise ExecutionError(
-                        f"Cannot read workspace draft {draft_path}: {exc}"
-                    ) from exc
-            reject_retrieval(output.encode("utf-8"), b"")
-            budget.consume(
-                self.runtime_config.count_output_units(output), stage="final_output"
-            )
-            _validate_final_product(
-                output,
-                draft,
+            scored = _scored_output(
+                result.stdout,
+                workspace / ".writing" / "draft.md",
                 condition_id=condition.condition_id,
                 requires_draft=condition.product_requires_draft,
+            )
+            reject_retrieval(scored, b"")
+            budget.consume(
+                self.runtime_config.count_output_units(scored.decode("utf-8")),
+                stage="final_output",
             )
             if condition.goal_events == "forbidden":
                 assert_untouched(protected_goals, goals_before)
@@ -1017,8 +1006,8 @@ class ExperimentRunner:
                     f"execution; {len(subagent_spawn_ids)} spawn_agent event(s) "
                     "were observed"
                 )
-            output_path.write_bytes(output.encode("utf-8"))
-            normalized_path.write_text(output, encoding="utf-8")
+            output_path.write_bytes(scored)
+            normalized_path.write_bytes(scored)
             fidelity_gate = check_fidelity(
                 run_dir,
                 platform=platform,

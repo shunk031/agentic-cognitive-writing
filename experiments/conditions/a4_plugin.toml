@@ -14,7 +14,7 @@ codex = "codex_exec"
 claude_code = "claude_print"
 
 [invocation]
-codex = """Read the skill file at {codex_plugin_root}/skills/agentic-cog-writer/SKILL.md and follow it. The final response must contain the complete final text itself, not a summary or a link to a workspace artifact."""
+codex = """Read the skill file at {codex_plugin_root}/skills/agentic-cog-writer/SKILL.md and follow it."""
 
 claude_code = """/agentic-cognitive-writing:agentic-cog-writer"""
 

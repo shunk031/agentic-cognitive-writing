@@ -65,15 +65,15 @@ Each successful run contains the following files:
 
 - `run-manifest.json` records the prompt, condition, platform, versions, policy status, and run outcome.
 - `prompt.txt` preserves the exact composed prompt sent to the top-level session.
-- `output.raw` preserves the final output bytes extracted from the headless response.
-- `output.normalized.txt` contains the same final output as text for downstream tools.
+- `output.raw` preserves the scored output bytes: `.writing/draft.md` for conditions with `product_requires_draft = true`, and the final response extracted from the headless output otherwise.
+- `output.normalized.txt` contains the same scored output for downstream tools.
 - `.writing/trace/process.jsonl` contains the selected skill's trace events.
 - `attempt-NNN.events.jsonl`, `attempt-NNN.stdout.raw`, and `attempt-NNN.stderr.raw` preserve each transport stream; failed runs retain them for diagnosis.
 - `run-manifest.json` reports `budget_used_tokens` as the sum of Codex `turn.completed` output and reasoning tokens across the run. A missing or malformed usage record marks the run `unscored` and excludes it from scoring. `output_units_used` records the configured post-hoc output-budget measurement.
 
 The run manifest records absolute execution paths and the authoritative SHA-256 hashes for output, trace, transport evidence, and staged skill files. The runner also copies `.writing/goals.md` and `.writing/draft.md` when the selected skill creates them. It does not rewrite claims or paragraph boundaries during normalization.
 
-The final response must contain the complete product text. Conditions that write `.writing/draft.md` must include at least half of its characters in the final response; conditions without a draft require a non-empty final response. The runner never substitutes `.writing/draft.md` for the response.
+For conditions with `product_requires_draft = true`, the scored output is the final `.writing/draft.md` copied byte for byte, and the agent's final message is not scored. A run whose workspace has no `.writing/draft.md`, or an empty one, fails with that reason. A1 has no draft product, so its scored output is the final response, which must be non-empty; the runner never substitutes `.writing/draft.md` for it.
 
 The wrapper TOMLs are the source of truth for trace contracts. Each declares the allowed event types, goal-event policy, event-count bounds, process values, and any exact process-transition order. The runner rejects events outside those declarations; `process_switch` events always require `from_process` and `to_process`, and forbidden-goal conditions also require the run not to create or modify `.writing/goals.md`.
 
