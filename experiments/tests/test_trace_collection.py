@@ -472,7 +472,14 @@ def test_claude_code_delegating_condition_bypasses_codex_delegation_gate(
     result = runner.run_prompt(prompt, condition_id="A3", platform="claude-code")
 
     manifest = json.loads(result.manifest_path.read_text())
-    assert manifest["status"] == "completed"
+    assert manifest["status"] == "unscored"
+    assert manifest["fidelity_gate"] == {
+        "status": "rejected",
+        "reasons": [
+            "claude-code records expose no subagent or tool events, "
+            "so fidelity cannot be verified"
+        ],
+    }
     assert manifest["delegation_check"] == {
         "required": True,
         "spawn_count": 0,

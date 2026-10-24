@@ -65,6 +65,7 @@ class ConditionSpec:
     require_goal_events: bool
     require_delegation: bool
     product_requires_draft: bool
+    monitor_writes_history_only: bool = False
 
     @property
     def trace_policy_dict(self) -> dict[str, str]:
@@ -147,6 +148,11 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
     if not isinstance(product_requires_draft, bool):
         raise ConfigurationError(
             f"Wrapper {wrapper_path} product_requires_draft must be a boolean"
+        )
+    monitor_writes_history_only = wrapper.get("monitor_writes_history_only", False)
+    if not isinstance(monitor_writes_history_only, bool):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} monitor_writes_history_only must be a boolean"
         )
     package = wrapper.get("package")
     if not isinstance(package, Mapping):
@@ -316,6 +322,7 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
         require_goal_events=require_goal_events,
         require_delegation=require_delegation,
         product_requires_draft=product_requires_draft,
+        monitor_writes_history_only=monitor_writes_history_only,
     )
 
 

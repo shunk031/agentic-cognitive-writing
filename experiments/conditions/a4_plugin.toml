@@ -2,6 +2,7 @@ condition_id = "A4"
 skill = "agentic-cog-writer"
 analysis_family = "confirmatory"
 product_requires_draft = true
+monitor_writes_history_only = true
 
 [package]
 name = "agentic-cognitive-writing"

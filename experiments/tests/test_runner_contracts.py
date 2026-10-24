@@ -1552,7 +1552,15 @@ def test_a8_accepts_in_context_execution_without_spawn_event(tmp_path: Path) -> 
     result = runner.run_prompt(_prompt(), condition_id="A8", platform="codex")
 
     manifest = json.loads(result.manifest_path.read_text())
-    assert manifest["status"] == "completed"
+    assert manifest["status"] == "unscored"
+    assert manifest["scoring"] == {"status": "excluded"}
+    assert manifest["fidelity_gate"] == {
+        "status": "rejected",
+        "reasons": [
+            "Codex event stream has no thread.started event",
+            "scored output is not workspace/.writing/draft.md",
+        ],
+    }
     assert manifest["subagent_spawn_count"] == 0
     assert manifest["delegation_check"] == {
         "required": False,
