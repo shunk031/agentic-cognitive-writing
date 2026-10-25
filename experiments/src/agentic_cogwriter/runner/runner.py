@@ -289,6 +289,14 @@ def _synthesized_codex_config(
         auth = provider["auth"]
         if not isinstance(auth, Mapping):
             raise ConfigurationError("Codex provider auth must be a table")
+        if "command" in auth:
+            # The child Codex runs with a per-run HOME so that it discovers no
+            # host skills; the host's credential command keeps the host HOME.
+            auth = {
+                **auth,
+                "command": "env",
+                "args": [f"HOME={Path.home()}", auth["command"], *auth.get("args", [])],
+            }
         lines.extend(["", f"[model_providers.{provider_key}.auth]"])
         for key, value in auth.items():
             kind = _CODEX_AUTH_SCHEMA.get(key)
@@ -552,6 +560,10 @@ class ExperimentRunner:
         try:
             config_root.mkdir(mode=0o700, parents=True, exist_ok=False)
             created_config_root = True
+            if platform == "codex":
+                # Codex lists $HOME/.agents/skills as a user skill root and no config
+                # key disables it, so the child gets an empty HOME in its own home.
+                (config_root / "home").mkdir(mode=0o700)
             for filename in _GENERATOR_CONFIG_ALLOWLIST[platform]:
                 source = source_root / filename
                 try:
@@ -593,6 +605,8 @@ class ExperimentRunner:
 
         child_environment = dict(os.environ)
         child_environment[_GENERATOR_CONFIG_ENV[platform]] = str(config_root.resolve())
+        if platform == "codex":
+            child_environment["HOME"] = str((config_root / "home").resolve())
         return config_root, child_environment
 
     def _sweep_stale_generator_configs(self) -> None:
@@ -993,30 +1007,31 @@ class ExperimentRunner:
                 started_at=started_at,
                 manifest_written_at=timestamp(),
             )
-            if not trace_path.is_file():
-                raise ExecutionError(
-                    f"Condition {condition.condition_id} produced no plugin trace at "
-                    f"{trace_path}"
-                )
-            trace_files = collect_plugin_trace(workspace, run_dir)
             copied_trace = run_dir / required_trace
-            if required_trace not in trace_files or not copied_trace.is_file():
-                raise ExecutionError(
-                    f"Condition {condition.condition_id} could not collect plugin "
-                    f"trace from {trace_path}"
+            if condition.trace_required:
+                if not trace_path.is_file():
+                    raise ExecutionError(
+                        f"Condition {condition.condition_id} produced no plugin "
+                        f"trace at {trace_path}"
+                    )
+                trace_files = collect_plugin_trace(workspace, run_dir)
+                if required_trace not in trace_files or not copied_trace.is_file():
+                    raise ExecutionError(
+                        f"Condition {condition.condition_id} could not collect "
+                        f"plugin trace from {trace_path}"
+                    )
+                reject_retrieval(copied_trace.read_bytes(), b"")
+                validate_trace(
+                    copied_trace,
+                    condition_id=condition.condition_id,
+                    declared_processes=condition.trace_processes,
+                    goal_events=condition.goal_events,
+                    allowed_event_types=condition.event_types,
+                    min_events=condition.min_events,
+                    max_events=condition.max_events,
+                    process_order=condition.process_order,
+                    require_goal_events=condition.require_goal_events,
                 )
-            reject_retrieval(copied_trace.read_bytes(), b"")
-            validate_trace(
-                copied_trace,
-                condition_id=condition.condition_id,
-                declared_processes=condition.trace_processes,
-                goal_events=condition.goal_events,
-                allowed_event_types=condition.event_types,
-                min_events=condition.min_events,
-                max_events=condition.max_events,
-                process_order=condition.process_order,
-                require_goal_events=condition.require_goal_events,
-            )
             delegation_check = _delegation_check(
                 condition, platform, len(subagent_spawn_ids)
             )
@@ -1036,6 +1051,7 @@ class ExperimentRunner:
             fidelity_gate = check_fidelity(
                 run_dir,
                 platform=platform,
+                codex_home=generator_config_dir.resolve(),
                 requires_draft=condition.product_requires_draft,
                 monitor_writes_history_only=condition.monitor_writes_history_only,
             )
@@ -1057,7 +1073,11 @@ class ExperimentRunner:
                     attempts=attempts,
                     budget=budget,
                     output_hash=f"sha256:{sha256_file(output_path)}",
-                    trace_hash=f"sha256:{sha256_file(copied_trace)}",
+                    trace_hash=(
+                        f"sha256:{sha256_file(copied_trace)}"
+                        if condition.trace_required
+                        else None
+                    ),
                     stage_prompt_hashes=stage_prompt_hashes,
                     contract_hashes=contract_hashes,
                     benchmark_provenance=benchmark_provenance,

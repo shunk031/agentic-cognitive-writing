@@ -72,12 +72,8 @@ SINGLE_TURN_CONTRACT = (
     "\n\n## Single-turn contract\n\n"
     "This is a single-turn task with no interactive user; never ask clarification "
     "questions. When the assignment underspecifies audience, purpose, or scope, "
-    "apply genre-appropriate defaults and record the assumptions. Conditions with "
-    "a `.writing/` workspace record assumptions in `.writing/assumptions.md`. "
-    "Do not state assumptions "
-    "briefly at the top of the deliverable. Conditions without `.writing/` apply "
-    "assumptions without an extra preamble. Do not change the deliverable's content "
-    "contract."
+    "apply genre-appropriate defaults without stating them in the deliverable. "
+    "Do not change the deliverable's content contract."
 )
 SINGLE_TURN_CONTRACT_TEXT = SINGLE_TURN_CONTRACT.removeprefix("\n\n") + "\n"
 DELEGATION_CONTRACT = (
@@ -369,6 +365,8 @@ refresh_interval_ms = 120000
     config_root = observed_config_dirs[0]
     assert executor.environments[0] is not None
     assert executor.environments[0][variable] == str(config_root.resolve())
+    if platform == "codex":
+        assert executor.environments[0]["HOME"] == str(config_root / "home")
     assert observed_config_files == [set(allowlist)]
     assert config_root == (tmp_path / "runs" / ".generator-config" / result.run_id)
     assert observed_config_modes == [0o700]
@@ -387,8 +385,13 @@ refresh_interval_ms = 120000
                         "env_http_headers": {"X-Env-Header": "env-value"},
                         "query_params": {"api-version": "version-value"},
                         "auth": {
-                            "command": "provider-auth",
-                            "args": ["--token", "token-value"],
+                            "command": "env",
+                            "args": [
+                                f"HOME={Path.home()}",
+                                "provider-auth",
+                                "--token",
+                                "token-value",
+                            ],
                             "refresh_interval_ms": 120000,
                         },
                     }
@@ -705,11 +708,24 @@ def test_synthesized_codex_config_round_trips_escaped_unicode_values() -> None:
     rendered = _synthesized_codex_config(source_config, "xhigh")
     parsed = tomllib.loads(rendered)
 
+    provider = source_config["model_providers"]["quoted-provider"]
     assert parsed == {
         "model_provider": "quoted-provider",
         "model_reasoning_effort": "xhigh",
         "model_providers": {
-            "quoted-provider": source_config["model_providers"]["quoted-provider"]
+            "quoted-provider": {
+                **provider,
+                "auth": {
+                    "command": "env",
+                    "args": [
+                        f"HOME={Path.home()}",
+                        r"auth\\helper",
+                        "--label",
+                        '値 "quoted"',
+                    ],
+                    "refresh_interval_ms": 42,
+                },
+            }
         },
     }
 
@@ -1007,19 +1023,6 @@ def test_every_condition_prompt_has_the_uniform_single_turn_contract() -> None:
         for platform in ("codex", "claude-code"):
             prompt = runner._plugin_prompt(condition, _prompt(), platform)
             assert SINGLE_TURN_CONTRACT in prompt
-
-
-def test_every_wrapper_records_assumptions_in_the_assumptions_file() -> None:
-    expected = (
-        "Conditions with a `.writing/` workspace record assumptions in "
-        "`.writing/assumptions.md`."
-    )
-    for condition in load_condition_registry().values():
-        for platform in ("codex", "claude_code"):
-            prompt = ExperimentRunner(
-                _config(), output_root=Path("runs")
-            )._plugin_prompt(condition, _prompt(), platform.replace("_", "-"))
-            assert expected in prompt
 
 
 def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
@@ -1345,14 +1348,6 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
                 }
             )
             observed_configs.append(tomllib.loads((home / "config.toml").read_text()))
-            trace_path = cwd / ".writing" / "trace" / "process.jsonl"
-            trace_path.parent.mkdir(parents=True, exist_ok=True)
-            trace_path.write_text(
-                json.dumps(_event("process_switch"))
-                + "\n"
-                + json.dumps(_event("goal_created"))
-                + "\n"
-            )
             (cwd / ".writing" / "draft.md").write_text("final output " * 10)
             result = _result(subagent_spawns=1)
             rollout = Path(env["CODEX_HOME"]) / "sessions" / "attempt.jsonl"
@@ -1389,6 +1384,10 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         }
     ]
     manifest = json.loads(result.manifest_path.read_text())
+    # A4 needs no plugin trace: the run reaches the fidelity gate without one.
+    assert "failure" not in manifest
+    assert "trace_hash" not in manifest
+    assert "fidelity_gate" in manifest
     staged_files = manifest["staged_files"]
     task = (result.run_dir / "workspace" / ".writing" / "task.md").read_text()
     assert task == (

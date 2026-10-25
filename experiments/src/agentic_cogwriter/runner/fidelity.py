@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections import defaultdict
 from collections.abc import Iterable
@@ -14,6 +15,9 @@ from .execution import _json_objects
 ROLES = ("planning", "translating", "reviewing")
 THREAD_LIMIT_ERROR = "agent thread limit reached"
 _ROLE_TOKEN = re.compile(r"\$(planning|translating|reviewing)\b")
+_SKILL_ROOT = re.compile(r"(?m)^- `r\d+` = `([^`]+)`$")
+# An absolute path, not the tail of a relative or variable-prefixed one.
+_ABSOLUTE_SKILL_FILE = re.compile(r"(?<![\w.~$}-])/[^\s\"'`\\]*/SKILL\.md")
 _CALL_TYPES = frozenset({"function_call", "custom_tool_call", "local_shell_call"})
 _OUTPUT_TYPES = frozenset({"function_call_output", "custom_tool_call_output"})
 
@@ -22,13 +26,21 @@ def check_fidelity(
     run_dir: Path,
     *,
     platform: str,
+    codex_home: Path | None,
     requires_draft: bool,
     monitor_writes_history_only: bool,
 ) -> dict[str, Any]:
-    """Classify a finished run as scorable or rejected, with every reason."""
+    """Classify a finished run as scorable or rejected, with every reason.
+
+    ``codex_home`` is the run's own Codex home. When given, every skill root that
+    Codex listed must lie inside it, and every skill file read by absolute path
+    inside it or the run's workspace; records from other harnesses pass ``None``.
+    """
 
     if platform == "codex":
         reasons = _codex_reasons(run_dir, monitor_writes_history_only)
+        if codex_home is not None:
+            reasons.extend(_skill_isolation_reasons(run_dir, codex_home))
     else:
         reasons = [
             f"{platform} records expose no subagent or tool events, "
@@ -154,4 +166,36 @@ def _codex_reasons(run_dir: Path, monitor_writes_history_only: bool) -> list[str
             for payload in _response_items(records[thread])
         ):
             reasons.append(f"thread {thread} hit the agent thread limit")
+    return list(dict.fromkeys(reasons))
+
+
+def _skill_isolation_reasons(run_dir: Path, codex_home: Path) -> list[str]:
+    """Reject skill roots or skill reads outside the run's staged skills."""
+
+    def inside(path: str, *roots: Path) -> bool:
+        return any(Path(os.path.normpath(path)).is_relative_to(r) for r in roots)
+
+    reasons: list[str] = []
+    for path in sorted(run_dir.glob("sessions/**/rollout-*.jsonl")):
+        lines = _json_objects(path.read_bytes())
+        meta = lines[0].get("payload") if lines else None
+        thread = meta.get("id") if isinstance(meta, dict) else path.name
+        for payload in _response_items(lines):
+            if payload.get("type") == "message":
+                for part in payload.get("content") or []:
+                    text = str(part.get("text", "")) if isinstance(part, dict) else ""
+                    for root in _SKILL_ROOT.findall(text):
+                        if not inside(root, codex_home):
+                            reasons.append(
+                                f"thread {thread} lists skill root {root} "
+                                "outside the run's Codex home"
+                            )
+            elif payload.get("type") in _CALL_TYPES:
+                # Known limit: relative reads resolve in the workspace and pass.
+                text = json.dumps(payload).replace("\\n", " ")
+                for read in _ABSOLUTE_SKILL_FILE.findall(text):
+                    if not inside(read, codex_home, run_dir / "workspace"):
+                        reasons.append(
+                            f"thread {thread} read {read} outside the staged skills"
+                        )
     return list(dict.fromkeys(reasons))
