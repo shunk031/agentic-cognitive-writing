@@ -337,11 +337,16 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A2"].goal_events == "forbidden"
     assert registry["A3"].goal_events == "forbidden"
     assert registry["A4"].goal_events == "allowed"
-    assert registry["A4"].trace_required is False
-    assert all(spec.trace_required for name, spec in registry.items() if name != "A4")
+    monitor_skill_conditions = {"A4", "A6"}
+    assert not any(registry[name].trace_required for name in monitor_skill_conditions)
+    assert all(
+        spec.trace_required
+        for name, spec in registry.items()
+        if name not in monitor_skill_conditions
+    )
     assert registry["A5"].goal_events == "forbidden"
     assert registry["A6"].goal_events == "allowed"
-    assert registry["A6"].require_goal_events is True
+    assert registry["A6"].require_goal_events is False
     assert registry["A7"].goal_events == "allowed"
     assert registry["A7"].require_goal_events is True
     assert registry["A7"].require_delegation is False

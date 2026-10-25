@@ -1576,7 +1576,16 @@ class ExperimentRunner:
             raise ConfigurationError(
                 "Codex adapter staging requires a Codex home and a prompt"
             )
-        self._install_codex_adapter(selected_root / adapter, sources, codex_home)
+        # An ablation skill lives in another root than the plugin's adapter.
+        adapter_root = next(
+            (root / adapter for root in source_roots if (root / adapter).is_dir()),
+            None,
+        )
+        if adapter_root is None:
+            raise ManifestError(
+                f"No configured plugin path has Codex adapter {adapter}"
+            )
+        self._install_codex_adapter(adapter_root, sources, codex_home)
         task_path = workspace / ".writing" / "task.md"
         task_path.parent.mkdir(parents=True, exist_ok=True)
         task_path.write_text(
