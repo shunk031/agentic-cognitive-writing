@@ -19,7 +19,7 @@ _SKILL_ROOT = re.compile(r"(?m)^- `r\d+` = `([^`]+)`$")
 # An absolute path, not the tail of a relative or variable-prefixed one.
 _ABSOLUTE_SKILL_FILE = re.compile(r"(?<![\w.~$}-])/[^\s\"'`\\]*/SKILL\.md")
 _SKILL_FILE_TOKEN = re.compile(r"[^\s\"'`\\]*SKILL\.md")
-_PARENT_SEGMENT = re.compile(r"(?:^|[/=:])\.\.(?:/|$)")
+_PARENT_SEGMENT = re.compile(r"(?:^|[^\w.])\.\.(?:/|$)")
 _CALL_TYPES = frozenset({"function_call", "custom_tool_call", "local_shell_call"})
 _OUTPUT_TYPES = frozenset({"function_call_output", "custom_tool_call_output"})
 

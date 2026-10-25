@@ -252,6 +252,9 @@ def test_skill_read_outside_the_staged_skills_rejects_the_run(
         "../../../../home/user/.agents/skills/x/SKILL.md",
         "plugin/../../x/SKILL.md",
         "--file=../SKILL.md",
+        "<../SKILL.md",
+        "$(<../h/SKILL.md)",
+        "true;../h/SKILL.md",
     ],
 )
 def test_relative_skill_read_through_a_parent_directory_rejects_the_run(
@@ -261,7 +264,7 @@ def test_relative_skill_read_through_a_parent_directory_rejects_the_run(
     run["rollouts"][CHILD].append(_read(f"cat {path}"))
 
     assert _gate(_materialize(tmp_path, run))["reasons"] == [
-        f"thread {CHILD} read {path} through a parent directory"
+        f"thread {CHILD} read {path.rstrip(')')} through a parent directory"
     ]
 
 
@@ -287,6 +290,7 @@ def test_staged_and_relative_skill_reads_are_scorable(tmp_path: Path) -> None:
             _read("sed -n '1,240p' plugin/skills/agentic-cog-writer/SKILL.md"),
             _read(f"cat {run_dir}/workspace/plugin/skills/planning/SKILL.md"),
             _read("cat ~/.agents/skills/x/SKILL.md $HOME/y/SKILL.md"),
+            _read("cat a..b/SKILL.md ./plugin/skills/planning/SKILL.md"),
         ]
     )
 
