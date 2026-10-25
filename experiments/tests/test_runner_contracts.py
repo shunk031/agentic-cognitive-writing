@@ -1452,6 +1452,10 @@ def test_monitor_conditions_install_the_repository_plugin_codex_adapter(
     assert all(
         (home / "skills" / name / "SKILL.md").is_file() for name in (skill_name, *roles)
     )
+    # A6 stages exactly what A4 stages; only the Monitor's SKILL.md differs.
+    assert [path.name for path in (home / "skills" / skill_name).rglob("*")] == [
+        "SKILL.md"
+    ]
     assert sorted(path.name for path in (home / "agents").iterdir()) == sorted(
         f"{role}.toml" for role in roles
     )
@@ -1549,8 +1553,6 @@ def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
 
     assert set(staged_files) == {
         "plugin/skills/cognitive-writing-fixed-order/SKILL.md",
-        "plugin/skills/cognitive-writing-fixed-order/agents/openai.yaml",
-        "plugin/skills/cognitive-writing-fixed-order/evals/evals.json",
         "plugin/skills/planning/SKILL.md",
         "plugin/skills/reviewing/SKILL.md",
         "plugin/skills/translating/SKILL.md",
