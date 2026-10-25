@@ -9,6 +9,7 @@ from agentic_cogwriter.runner.fidelity import check_fidelity
 FIXTURES = Path(__file__).parent / "fixtures" / "fidelity"
 MONITOR = "monitor-thread"
 CHILD = "child-thread"
+CODEX_HOME = Path("/runs/.generator-config/run")
 
 
 def _item(**item: Any) -> dict[str, Any]:
@@ -84,6 +85,7 @@ def _materialize(tmp_path: Path, run: dict[str, Any]) -> Path:
 def _gate(run_dir: Path, **overrides: Any) -> dict[str, Any]:
     options = {
         "platform": "codex",
+        "codex_home": CODEX_HOME,
         "requires_draft": True,
         "monitor_writes_history_only": True,
         **overrides,
@@ -181,11 +183,118 @@ def test_explicit_read_of_the_role_skill_file_counts_as_loading(
         "type": "response_item",
         "payload": {
             "type": "custom_tool_call",
-            "input": "sed -n '1,240p' /workspace/.agents/skills/planning/SKILL.md",
+            "input": f"sed -n '1,240p' {CODEX_HOME}/skills/planning/SKILL.md",
         },
     }
 
     assert _gate(_materialize(tmp_path, run))["status"] == "scorable"
+
+
+def _skills_message(*roots: str) -> dict[str, Any]:
+    table = "".join(f"- `r{index}` = `{root}`\n" for index, root in enumerate(roots))
+    return _message(f"<skills_instructions>\n### Skill roots\n{table}")
+
+
+def test_skill_roots_inside_the_run_codex_home_are_scorable(tmp_path: Path) -> None:
+    run = _clean_run()
+    run["rollouts"][MONITOR].append(
+        _skills_message(f"{CODEX_HOME}/skills", f"{CODEX_HOME}/skills/.system")
+    )
+
+    assert _gate(_materialize(tmp_path, run))["status"] == "scorable"
+
+
+def test_host_skill_root_rejects_the_run(tmp_path: Path) -> None:
+    run = _clean_run()
+    run["rollouts"][CHILD].append(
+        _skills_message(f"{CODEX_HOME}/skills", "/home/user/.agents/skills")
+    )
+
+    assert _gate(_materialize(tmp_path, run))["reasons"] == [
+        f"thread {CHILD} lists skill root /home/user/.agents/skills "
+        "outside the run's Codex home"
+    ]
+
+
+def test_skill_root_escaping_the_run_codex_home_rejects_the_run(
+    tmp_path: Path,
+) -> None:
+    run = _clean_run()
+    run["rollouts"][CHILD].append(_skills_message(f"{CODEX_HOME}/../other/skills"))
+
+    assert _gate(_materialize(tmp_path, run))["status"] == "rejected"
+
+
+def _read(command: str) -> dict[str, Any]:
+    return {
+        "type": "response_item",
+        "payload": {"type": "custom_tool_call", "input": command},
+    }
+
+
+def test_skill_read_outside_the_staged_skills_rejects_the_run(
+    tmp_path: Path,
+) -> None:
+    run = _clean_run()
+    run["rollouts"][CHILD].append(
+        _read("cat /a\nsed -n '1,80p' /home/user/.agents/skills/unslop/SKILL.md")
+    )
+
+    assert _gate(_materialize(tmp_path, run))["reasons"] == [
+        f"thread {CHILD} read /home/user/.agents/skills/unslop/SKILL.md "
+        "outside the staged skills"
+    ]
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "../../../../home/user/.agents/skills/x/SKILL.md",
+        "plugin/../../x/SKILL.md",
+        "--file=../SKILL.md",
+        "<../SKILL.md",
+        "$(<../h/SKILL.md)",
+        "true;../h/SKILL.md",
+    ],
+)
+def test_relative_skill_read_through_a_parent_directory_rejects_the_run(
+    tmp_path: Path, path: str
+) -> None:
+    run = _clean_run()
+    run["rollouts"][CHILD].append(_read(f"cat {path}"))
+
+    assert _gate(_materialize(tmp_path, run))["reasons"] == [
+        f"thread {CHILD} read {path.rstrip(')')} through a parent directory"
+    ]
+
+
+def test_relative_skill_read_after_cd_out_of_the_workspace_passes(
+    tmp_path: Path,
+) -> None:
+    """Known limit: the gate does not track the working directory of a call."""
+
+    run = _clean_run()
+    run["rollouts"][CHILD].append(
+        _read("cd /home/user/.agents/skills/x && cat SKILL.md")
+    )
+
+    assert _gate(_materialize(tmp_path, run))["status"] == "scorable"
+
+
+def test_staged_and_relative_skill_reads_are_scorable(tmp_path: Path) -> None:
+    run = _clean_run()
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    run["rollouts"][MONITOR].extend(
+        [
+            _read("sed -n '1,240p' plugin/skills/agentic-cog-writer/SKILL.md"),
+            _read(f"cat {run_dir}/workspace/plugin/skills/planning/SKILL.md"),
+            _read("cat ~/.agents/skills/x/SKILL.md $HOME/y/SKILL.md"),
+            _read("cat a..b/SKILL.md ./plugin/skills/planning/SKILL.md"),
+        ]
+    )
+
+    assert _gate(_materialize(run_dir, run))["status"] == "scorable"
 
 
 def test_monitor_write_rule_applies_only_to_monitor_conditions(
@@ -232,7 +341,7 @@ def test_recorded_rebuilt_plugin_run_is_scorable() -> None:
     the fixture scores the draft itself, as the gate requires.
     """
 
-    assert _gate(FIXTURES / "monitor-loopback") == {
+    assert _gate(FIXTURES / "monitor-loopback", codex_home=None) == {
         "status": "scorable",
         "reasons": [],
     }
@@ -245,7 +354,7 @@ def test_recorded_executed_study_run_shows_every_measured_defect() -> None:
     translating = "01a0c3e8-d569-75f3-9240-8ceb92ef96cf"
     reviewing = "01a0c3ea-2993-7651-af43-6e355ebcff75"
 
-    assert _gate(FIXTURES / "executed-a4")["reasons"] == [
+    assert _gate(FIXTURES / "executed-a4", codex_home=None)["reasons"] == [
         f"child {planning} was spawned with inherited context",
         f"planning agent {planning} did not read its own SKILL.md",
         f"child {translating} was spawned with inherited context",

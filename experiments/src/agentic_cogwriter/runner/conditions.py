@@ -66,6 +66,7 @@ class ConditionSpec:
     require_delegation: bool
     product_requires_draft: bool
     monitor_writes_history_only: bool = True
+    trace_required: bool = True
 
     @property
     def trace_policy_dict(self) -> dict[str, str]:
@@ -305,6 +306,11 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
         raise ConfigurationError(
             f"Wrapper {wrapper_path} trace.require_delegation must be a boolean"
         )
+    trace_required = trace.get("required", True)
+    if not isinstance(trace_required, bool):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} trace.required must be a boolean"
+        )
     return ConditionSpec(
         condition_id=condition_id,
         analysis_family=analysis_family,
@@ -323,6 +329,7 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
         require_delegation=require_delegation,
         product_requires_draft=product_requires_draft,
         monitor_writes_history_only=monitor_writes_history_only,
+        trace_required=trace_required,
     )
 
 
