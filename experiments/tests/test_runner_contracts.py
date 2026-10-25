@@ -1073,52 +1073,48 @@ def test_a8_runs_processes_in_context_with_its_own_trace_references() -> None:
     assert "Cite the files or draft passages that support decisions." in a8_text
 
 
-def test_fixed_order_monitor_reconciles_reviewing_verdicts() -> None:
-    disposition_sentence = (
-        "Treat `Reviewing` verdicts as proposals. Record `goal_developed` only when "
-        "the Monitor updates that goal and adds its `goals.md` history row; "
-        "otherwise record an unacted-on `develop` verdict as a disposition without "
-        "a goal event."
-    )
-    regeneration_sentence = (
-        "For every `regenerate` verdict, either accept it or reject it. On acceptance, "
-        "update `goals.md` with a history row that keeps the original goal ID marked "
-        "`superseded` and gives the replacement a new goal ID, and emit "
-        "`goal_regenerated` with the replacement's `goal_id` and the original goal's "
-        "`parent_goal_id`; on rejection, write `rejected regeneration of <goal id>: "
-        "<reason>` in the next `process_switch` decision."
-    )
-    enumeration_sentence = (
-        "The next `process_switch` decision after a `Reviewing` pass must enumerate "
-        "every received `regenerate` verdict as `regeneration proposals: G2 accepted "
-        "(<reason>); G4 rejected (<reason>)`, substituting the actual goal IDs and "
-        "reasons, or `regeneration proposals: none` when no `regenerate` verdict was "
-        "received."
-    )
-    post_review_sentence = (
-        "Append that post-`Reviewing` `process_switch` carrying the enumeration before "
-        "either continuing or completing the run."
-    )
-    continuing_sentence = (
-        "If the run continues, set its `to_process` to the next process."
-    )
-    terminal_sentence = (
-        "If the run ends after `Reviewing`, set its `process` and `from_process` to "
-        "`reviewing` and its `to_process` to `null` before completing the run."
-    )
+def test_fixed_order_skill_is_the_monitor_skill_with_a_fixed_cycle() -> None:
+    def body(path: str) -> list[str]:
+        return (
+            (REPO_ROOT / path)
+            .read_text(encoding="utf-8")
+            .split("---\n", 2)[2]
+            .splitlines()
+        )
 
-    fixed_order_text = (
-        REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md"
-    ).read_text(encoding="utf-8")
-    assert "every active goal with its ID" in fixed_order_text
-    assert disposition_sentence in fixed_order_text
-    assert regeneration_sentence in fixed_order_text
-    assert enumeration_sentence in fixed_order_text
-    assert post_review_sentence in fixed_order_text
-    assert continuing_sentence in fixed_order_text
-    assert terminal_sentence in fixed_order_text
-    assert "record `goal_developed` for each `develop` verdict" not in fixed_order_text
+    a4 = body("plugin/skills/agentic-cog-writer/SKILL.md")
+    a6 = body("experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md")
+    changed = {(old, new) for old, new in zip(a4, a6, strict=True) if old != new}
 
+    assert {(old.split(" ")[0], new) for old, new in changed} == {
+        (
+            "Role:",
+            "Role: the Monitor. It selects the next writing process from the fixed "
+            "order, delegates it, and records its decisions; it writes nothing but "
+            "`.writing/history.md`.",
+        ),
+        (
+            "2.",
+            "2. Take the next process in the fixed `Planning`, `Translating`, then "
+            "`Reviewing` order; each pass starts again with `Planning`. Checking the "
+            "draft against the task is Reviewing's work.",
+        ),
+        (
+            "5.",
+            "5. When the Reviewer recommends replacing a goal, decide whether to "
+            "accept it, record the decision in `.writing/history.md`, and delegate an "
+            "accepted replacement to the next pass's `Planning`; the `Monitor` does "
+            "not edit `.writing/goals.md`.",
+        ),
+        (
+            "Stop",
+            "Stop only after `Reviewing`, when no further process is needed; the "
+            "draft in `.writing/draft.md` is the final document.",
+        ),
+    }
+
+
+def test_no_goal_delegation_omits_the_goal_context() -> None:
     a5_text = (
         REPO_ROOT
         / "experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md"
@@ -1129,13 +1125,6 @@ def test_fixed_order_monitor_reconciles_reviewing_verdicts() -> None:
     assert "- the assignment summary" in a5_delegation
     assert "goal network" not in a5_delegation.lower()
     assert "active goal" not in a5_delegation.lower()
-
-    fixed_cycle_sentence = (
-        "After a `regenerate` disposition, do not return to `Planning` within the "
-        "current pass or change the fixed order; complete the `Reviewing` pass, "
-        "then begin the next pass with `Planning`."
-    )
-    assert fixed_cycle_sentence in fixed_order_text
 
 
 @pytest.mark.parametrize(
@@ -1438,13 +1427,19 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
     )
 
 
-def test_a4_installs_the_repository_plugin_codex_adapter(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("condition_id", "skill_name"),
+    (("A4", "agentic-cog-writer"), ("A6", "cognitive-writing-fixed-order")),
+)
+def test_monitor_conditions_install_the_repository_plugin_codex_adapter(
+    tmp_path: Path, condition_id: str, skill_name: str
+) -> None:
     home = tmp_path / "home"
     home.mkdir()
     runner = ExperimentRunner(_config(), output_root=tmp_path / "runs")
 
     runner._stage_codex_plugin(
-        load_condition_registry()["A4"],
+        load_condition_registry()[condition_id],
         tmp_path / "workspace",
         codex_home=home,
         prompt=_prompt(),
@@ -1452,12 +1447,15 @@ def test_a4_installs_the_repository_plugin_codex_adapter(tmp_path: Path) -> None
 
     roles = ("planning", "translating", "reviewing")
     assert sorted(path.name for path in (home / "skills").iterdir()) == sorted(
-        ("agentic-cog-writer", *roles)
+        (skill_name, *roles)
     )
     assert all(
-        (home / "skills" / name / "SKILL.md").is_file()
-        for name in ("agentic-cog-writer", *roles)
+        (home / "skills" / name / "SKILL.md").is_file() for name in (skill_name, *roles)
     )
+    # A6 stages exactly what A4 stages; only the Monitor's SKILL.md differs.
+    assert [path.name for path in (home / "skills" / skill_name).rglob("*")] == [
+        "SKILL.md"
+    ]
     assert sorted(path.name for path in (home / "agents").iterdir()) == sorted(
         f"{role}.toml" for role in roles
     )
@@ -1485,11 +1483,10 @@ def test_codex_adapter_config_conflicting_with_runner_settings_is_rejected(
     ("condition_id", "skill_name"),
     (
         ("A5", "cognitive-writing-no-goal-network"),
-        ("A6", "cognitive-writing-fixed-order"),
         ("A8", "cognitive-writing-single-context"),
     ),
 )
-def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6_a8(
+def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a8(
     tmp_path: Path, condition_id: str, skill_name: str
 ) -> None:
     source_root = tmp_path / "plugin-source"
@@ -1556,8 +1553,6 @@ def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
 
     assert set(staged_files) == {
         "plugin/skills/cognitive-writing-fixed-order/SKILL.md",
-        "plugin/skills/cognitive-writing-fixed-order/agents/openai.yaml",
-        "plugin/skills/cognitive-writing-fixed-order/evals/evals.json",
         "plugin/skills/planning/SKILL.md",
         "plugin/skills/reviewing/SKILL.md",
         "plugin/skills/translating/SKILL.md",
