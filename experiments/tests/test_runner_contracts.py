@@ -683,6 +683,18 @@ def test_synthesized_codex_config_drops_known_provider_capabilities() -> None:
     assert parsed["model_providers"]["test"] == {"name": "test"}
 
 
+def test_synthesized_codex_config_rejects_string_auth_args() -> None:
+    source_config = {
+        "model_provider": "p",
+        "model_providers": {
+            "p": {"name": "p", "auth": {"command": "helper", "args": "--flag"}}
+        },
+    }
+
+    with pytest.raises(ConfigurationError, match="auth args must be an array"):
+        _synthesized_codex_config(source_config, "xhigh")
+
+
 def test_synthesized_codex_config_round_trips_escaped_unicode_values() -> None:
     source_config = {
         "model_provider": "quoted-provider",

@@ -289,6 +289,8 @@ def _synthesized_codex_config(
         auth = provider["auth"]
         if not isinstance(auth, Mapping):
             raise ConfigurationError("Codex provider auth must be a table")
+        if not isinstance(auth.get("args", []), list):
+            raise ConfigurationError("Codex provider auth args must be an array")
         if "command" in auth:
             # The child Codex runs with a per-run HOME so that it discovers no
             # host skills; the host's credential command keeps the host HOME.

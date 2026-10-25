@@ -246,6 +246,38 @@ def test_skill_read_outside_the_staged_skills_rejects_the_run(
     ]
 
 
+@pytest.mark.parametrize(
+    "path",
+    [
+        "../../../../home/user/.agents/skills/x/SKILL.md",
+        "plugin/../../x/SKILL.md",
+        "--file=../SKILL.md",
+    ],
+)
+def test_relative_skill_read_through_a_parent_directory_rejects_the_run(
+    tmp_path: Path, path: str
+) -> None:
+    run = _clean_run()
+    run["rollouts"][CHILD].append(_read(f"cat {path}"))
+
+    assert _gate(_materialize(tmp_path, run))["reasons"] == [
+        f"thread {CHILD} read {path} through a parent directory"
+    ]
+
+
+def test_relative_skill_read_after_cd_out_of_the_workspace_passes(
+    tmp_path: Path,
+) -> None:
+    """Known limit: the gate does not track the working directory of a call."""
+
+    run = _clean_run()
+    run["rollouts"][CHILD].append(
+        _read("cd /home/user/.agents/skills/x && cat SKILL.md")
+    )
+
+    assert _gate(_materialize(tmp_path, run))["status"] == "scorable"
+
+
 def test_staged_and_relative_skill_reads_are_scorable(tmp_path: Path) -> None:
     run = _clean_run()
     run_dir = tmp_path / "run"

@@ -18,6 +18,8 @@ _ROLE_TOKEN = re.compile(r"\$(planning|translating|reviewing)\b")
 _SKILL_ROOT = re.compile(r"(?m)^- `r\d+` = `([^`]+)`$")
 # An absolute path, not the tail of a relative or variable-prefixed one.
 _ABSOLUTE_SKILL_FILE = re.compile(r"(?<![\w.~$}-])/[^\s\"'`\\]*/SKILL\.md")
+_SKILL_FILE_TOKEN = re.compile(r"[^\s\"'`\\]*SKILL\.md")
+_PARENT_SEGMENT = re.compile(r"(?:^|[/=:])\.\.(?:/|$)")
 _CALL_TYPES = frozenset({"function_call", "custom_tool_call", "local_shell_call"})
 _OUTPUT_TYPES = frozenset({"function_call_output", "custom_tool_call_output"})
 
@@ -191,11 +193,17 @@ def _skill_isolation_reasons(run_dir: Path, codex_home: Path) -> list[str]:
                                 "outside the run's Codex home"
                             )
             elif payload.get("type") in _CALL_TYPES:
-                # Known limit: relative reads resolve in the workspace and pass.
+                # Known limit: a relative path without a `..` segment passes even
+                # after a `cd` out of the workspace, as in `cd /x && cat SKILL.md`.
                 text = json.dumps(payload).replace("\\n", " ")
                 for read in _ABSOLUTE_SKILL_FILE.findall(text):
                     if not inside(read, codex_home, run_dir / "workspace"):
                         reasons.append(
                             f"thread {thread} read {read} outside the staged skills"
+                        )
+                for read in _SKILL_FILE_TOKEN.findall(text):
+                    if _PARENT_SEGMENT.search(read):
+                        reasons.append(
+                            f"thread {thread} read {read} through a parent directory"
                         )
     return list(dict.fromkeys(reasons))
