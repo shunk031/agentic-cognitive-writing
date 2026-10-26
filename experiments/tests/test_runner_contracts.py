@@ -1057,20 +1057,54 @@ def test_agentic_cog_writer_ends_with_the_draft_as_the_final_document() -> None:
     ) in text
 
 
-def test_a8_runs_processes_in_context_with_its_own_trace_references() -> None:
-    a8_root = REPO_ROOT / "experiments/plugin/skills/cognitive-writing-single-context"
-    a8_text = (a8_root / "SKILL.md").read_text(encoding="utf-8")
+def test_single_context_skill_is_the_monitor_skill_running_roles_in_context() -> None:
+    def body(path: str) -> str:
+        return (REPO_ROOT / path).read_text(encoding="utf-8").split("---\n", 2)[2]
 
-    for reference_name in ("goals-format.md", "trace-jsonl-schema.md"):
-        assert f"(references/{reference_name})" in a8_text
-        assert (a8_root / "references" / reference_name).is_file()
-    assert "## Delegation briefs" not in a8_text
-    assert "## In-context process execution" in a8_text
-    assert "spawn a native Codex subagent" not in a8_text
-    assert "Tell the user about proposals that affect intent" not in a8_text
-    assert "Let the user override any agent decision." not in a8_text
-    assert "every active goal with its ID plus the parent goal ID" in a8_text
-    assert "Cite the files or draft passages that support decisions." in a8_text
+    a8_root = REPO_ROOT / "experiments/plugin/skills/cognitive-writing-single-context"
+    monitor, *roles = body(
+        "experiments/plugin/skills/cognitive-writing-single-context/SKILL.md"
+    ).split("\n\n## ")
+    a4 = body("plugin/skills/agentic-cog-writer/SKILL.md").rstrip("\n").splitlines()
+    changed = {
+        (old, new)
+        for old, new in zip(a4, monitor.splitlines(), strict=True)
+        if old != new
+    }
+
+    assert {(old.split(" ")[0], new) for old, new in changed} == {
+        (
+            "Role:",
+            "Role: the Monitor. It selects the next writing process from the state, "
+            "runs it in its own context, and records its decisions; outside a "
+            "process it writes nothing but `.writing/history.md`.",
+        ),
+        (
+            "4.",
+            "4. Run the process, with its scope, in your own context by following "
+            "its role section below; do not spawn an agent. The Reviewing scope is "
+            "this sentence and nothing more: check `.writing/draft.md` against "
+            "`.writing/task.md` and the active goals, correct existing prose, and "
+            "report what is needed next. The Planning scope is this sentence and "
+            "nothing more: read `.writing/task.md`, `.writing/draft.md`, and "
+            "`.writing/goals.md`, and create or develop the goals so that every "
+            "requirement in the task has a goal.",
+        ),
+        (
+            "5.",
+            "5. When the Reviewer recommends replacing a goal, decide whether to "
+            "accept it, record the decision in `.writing/history.md`, and run an "
+            "accepted replacement as `Planning`; the `Monitor` edits "
+            "`.writing/goals.md` only while running `Planning`.",
+        ),
+    }
+    # The role sections are the role skills' bodies, verbatim.
+    assert roles == [
+        f"{role.capitalize()}\n{body(f'plugin/skills/{role}/SKILL.md')}".rstrip("\n")
+        + ("\n" if role == "reviewing" else "")
+        for role in ("planning", "translating", "reviewing")
+    ]
+    assert [path.name for path in a8_root.rglob("*")] == ["SKILL.md"]
 
 
 def test_fixed_order_skill_is_the_monitor_skill_with_a_fixed_cycle() -> None:
@@ -1463,6 +1497,34 @@ def test_monitor_conditions_install_the_repository_plugin_codex_adapter(
     assert "developer_instructions" in tomllib.loads((home / "config.toml").read_text())
 
 
+def test_single_context_installs_the_adapter_rules_without_delegation(
+    tmp_path: Path,
+) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / "config.toml").write_text('model_reasoning_effort = "medium"\n')
+    runner = ExperimentRunner(_config(), output_root=tmp_path / "runs")
+
+    staged = runner._stage_codex_plugin(
+        load_condition_registry()["A8"],
+        tmp_path / "workspace",
+        codex_home=home,
+        prompt=_prompt(),
+    )
+
+    skill = home / "skills" / "cognitive-writing-single-context"
+    assert sorted(path.name for path in home.iterdir()) == [
+        "config.toml",
+        "rules",
+        "skills",
+    ]
+    assert [path.name for path in (home / "skills").iterdir()] == [skill.name]
+    assert [path.name for path in skill.rglob("*")] == ["SKILL.md"]
+    assert [path.name for path in (home / "rules").iterdir()] == ["deny.rules"]
+    assert (home / "config.toml").read_text() == 'model_reasoning_effort = "medium"\n'
+    assert ".writing/task.md" in staged
+
+
 def test_codex_adapter_config_conflicting_with_runner_settings_is_rejected(
     tmp_path: Path,
 ) -> None:
@@ -1475,18 +1537,15 @@ def test_codex_adapter_config_conflicting_with_runner_settings_is_rejected(
     (home / "config.toml").write_text('model_reasoning_effort = "medium"\n')
 
     with pytest.raises(ConfigurationError, match="conflicts"):
-        ExperimentRunner._install_codex_adapter(adapter, {}, home)
+        ExperimentRunner._install_codex_adapter(adapter, {}, home, delegated=True)
     assert (home / "config.toml").read_text() == 'model_reasoning_effort = "medium"\n'
 
 
 @pytest.mark.parametrize(
     ("condition_id", "skill_name"),
-    (
-        ("A5", "cognitive-writing-no-goal-network"),
-        ("A8", "cognitive-writing-single-context"),
-    ),
+    (("A5", "cognitive-writing-no-goal-network"),),
 )
-def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a8(
+def test_codex_stages_delegated_roles_and_trace_schema_for_a5(
     tmp_path: Path, condition_id: str, skill_name: str
 ) -> None:
     source_root = tmp_path / "plugin-source"
@@ -1665,10 +1724,6 @@ def test_a8_accepts_in_context_execution_without_spawn_event(tmp_path: Path) -> 
         "execution_mode": "in_context",
         "passed": True,
     }
-    assert [
-        json.loads(line)["event_type"]
-        for line in result.trace_path.read_text().splitlines()
-    ] == ["process_switch", "goal_created"]
 
 
 def test_codex_run_with_complete_clean_records_stays_scoring_eligible(
@@ -2488,17 +2543,10 @@ class _RetryExecutor:
         trace_path = cwd / ".writing" / "trace" / "process.jsonl"
         trace_path.parent.mkdir(parents=True, exist_ok=True)
         if any("cognitive-writing-single-context" in argument for argument in command):
-            trace_path.write_text(
-                json.dumps(_event("process_switch", process="planning"))
-                + "\n"
-                + json.dumps(_event("goal_created", process="goal-setting"))
-                + "\n"
-            )
             (cwd / ".writing" / "draft.md").write_text("draft " * 10)
-        else:
-            trace_path.write_text(
-                json.dumps(_event("process_switch", process="generate")) + "\n"
-            )
+        trace_path.write_text(
+            json.dumps(_event("process_switch", process="generate")) + "\n"
+        )
         return self.results.pop(0)
 
 

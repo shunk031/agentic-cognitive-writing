@@ -1508,7 +1508,6 @@ class ExperimentRunner:
         "agentic-cog-writer": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-no-goal-network": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
-        "cognitive-writing-single-context": _CODEX_ROLE_SKILL_DIRECTORIES,
     }
 
     def _stage_codex_plugin(
@@ -1524,8 +1523,9 @@ class ExperimentRunner:
         A wrapper that names ``plugins.codex_adapter`` also installs the plugin's
         Codex adapter into ``codex_home``: the staged skills under ``skills/``,
         the adapter's ``agents/`` and ``rules/``, and its ``config.toml`` layered
-        over the runner's synthesized one. It also writes the prompt's task
-        sections to ``.writing/task.md``, the plugin's task state.
+        over the runner's synthesized one; an in-context condition gets only the
+        skills and rules. It also writes the prompt's task sections to
+        ``.writing/task.md``, the plugin's task state.
         """
 
         selected_root = self._codex_plugin_root(condition)
@@ -1585,7 +1585,12 @@ class ExperimentRunner:
             raise ManifestError(
                 f"No configured plugin path has Codex adapter {adapter}"
             )
-        self._install_codex_adapter(adapter_root, sources, codex_home)
+        self._install_codex_adapter(
+            adapter_root,
+            sources,
+            codex_home,
+            delegated=condition.require_delegation,
+        )
         task_path = workspace / ".writing" / "task.md"
         task_path.parent.mkdir(parents=True, exist_ok=True)
         task_path.write_text(
@@ -1608,19 +1613,31 @@ class ExperimentRunner:
 
     @staticmethod
     def _install_codex_adapter(
-        adapter_root: Path, sources: Mapping[Path, Path], codex_home: Path
+        adapter_root: Path,
+        sources: Mapping[Path, Path],
+        codex_home: Path,
+        *,
+        delegated: bool,
     ) -> None:
-        """Install skills, agents, rules, and layered config into ``codex_home``."""
+        """Install skills, agents, rules, and layered config into ``codex_home``.
 
-        for relative in ("agents", "rules", "config.toml"):
+        The agents and the config's spawn instruction are the delegation
+        mechanism, so an in-context condition installs only skills and rules.
+        """
+
+        directories = ("agents", "rules") if delegated else ("rules",)
+        required = (*directories, "config.toml") if delegated else directories
+        for relative in required:
             if not (adapter_root / relative).exists():
                 raise ManifestError(
                     f"Codex adapter {adapter_root} is missing {relative}"
                 )
         for relative, source in sources.items():
             shutil.copytree(source, codex_home / relative)
-        for relative in ("agents", "rules"):
+        for relative in directories:
             shutil.copytree(adapter_root / relative, codex_home / relative)
+        if not delegated:
+            return
 
         plugin_text = (adapter_root / "config.toml").read_text(encoding="utf-8")
         plugin_config = tomllib.loads(plugin_text)

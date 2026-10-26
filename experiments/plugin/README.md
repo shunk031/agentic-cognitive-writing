@@ -1,10 +1,10 @@
 # Agentic CogWriter experiment variants
 
-The `Agentic CogWriter` experiment package gives experimenters three skills for comparing writing-process choices: `cognitive-writing-fixed-order` fixes the process order, `cognitive-writing-no-goal-network` removes the hierarchical goal network, and `cognitive-writing-single-writer` keeps one Writer with a live goal network.
+The `Agentic CogWriter` experiment package gives experimenters four skills for comparing writing-process choices: `cognitive-writing-fixed-order` fixes the process order, `cognitive-writing-no-goal-network` removes the hierarchical goal network, `cognitive-writing-single-writer` keeps one Writer with a live goal network, and `cognitive-writing-single-context` runs the processes without subagents.
 
-The variants write to the project's `.writing/` directory and require the main `agentic-cognitive-writing` package. A5 and A6 delegate through the main package's role skills; A7 keeps the main agent as the sole Writer.
+The variants write to the project's `.writing/` directory and require the main `agentic-cognitive-writing` package. A5 and A6 delegate through the main package's role skills; A7 keeps the main agent as the sole Writer; A8 runs the role skills' processes in the main agent's context.
 
-The package ships a Claude Code manifest at [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and a Codex manifest at [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json); each manifest packages the three skill directories under [`skills/`](skills/).
+The package ships a Claude Code manifest at [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and a Codex manifest at [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json); each manifest packages the skill directories under [`skills/`](skills/).
 
 ## Install the required packages
 
@@ -59,9 +59,10 @@ The variants' seed prompts live beside the skills in [`skills/`](skills/).
 - `cognitive-writing-fixed-order` is the main package's `Monitor` skill with a fixed order: each pass delegates `Planning`, `Translating`, and `Reviewing` in that order, and the `Monitor` stops only after `Reviewing`.
 - `cognitive-writing-no-goal-network` treats the assignment as one implicit objective, does not create or modify `.writing/goals.md`, and traces process switches.
 - `cognitive-writing-single-writer` runs the main agent as one Writer, composes at sentence level, and traces its live goal network.
+- `cognitive-writing-single-context` is the main package's `Monitor` skill followed by the three role skills verbatim: the `Monitor` runs each selected process in its own context instead of spawning an agent.
 
 ## Invoke a variant
 
-In Claude Code, invoke `/cognitive-writing-experiments:cognitive-writing-fixed-order`, `/cognitive-writing-experiments:cognitive-writing-no-goal-network`, or `/cognitive-writing-experiments:cognitive-writing-single-writer`. In Codex, invoke `$cognitive-writing-fixed-order`, `$cognitive-writing-no-goal-network`, or `$cognitive-writing-single-writer`.
+In Claude Code, invoke `/cognitive-writing-experiments:cognitive-writing-fixed-order`, `/cognitive-writing-experiments:cognitive-writing-no-goal-network`, `/cognitive-writing-experiments:cognitive-writing-single-writer`, or `/cognitive-writing-experiments:cognitive-writing-single-context`. In Codex, invoke `$cognitive-writing-fixed-order`, `$cognitive-writing-no-goal-network`, `$cognitive-writing-single-writer`, or `$cognitive-writing-single-context`.
 
 Read the [project repository](https://github.com/shunk031/agentic-cognitive-writing) for the main plugin README, shared `.writing/` state layout, trace contract, research protocol, and experiment context.
