@@ -1,8 +1,8 @@
 # Agentic CogWriter experiment variants
 
-The `Agentic CogWriter` experiment package gives experimenters four skills for comparing writing-process choices: `cognitive-writing-fixed-order` fixes the process order, `cognitive-writing-no-goal-network` removes the hierarchical goal network, `cognitive-writing-single-writer` keeps one Writer with a live goal network, and `cognitive-writing-single-context` runs the processes without subagents.
+The `Agentic CogWriter` experiment package gives experimenters four skills for comparing writing-process choices: `cognitive-writing-fixed-order` fixes the process order, `cognitive-writing-no-goal-network` removes the explicit goals, `cognitive-writing-single-writer` keeps one Writer with a live goal network, and `cognitive-writing-single-context` runs the processes without subagents.
 
-The variants write to the project's `.writing/` directory and require the main `agentic-cognitive-writing` package. A5 and A6 delegate through the main package's role skills; A7 keeps the main agent as the sole Writer; A8 runs the role skills' processes in the main agent's context.
+The variants write to the project's `.writing/` directory and require the main `agentic-cognitive-writing` package. A6 delegates through the main package's role skills, and A5 through its own copies of them in the `no-goal-planning`, `no-goal-translating`, and `no-goal-reviewing` skill directories; A7 keeps the main agent as the sole Writer; A8 runs the role skills' processes in the main agent's context.
 
 The package ships a Claude Code manifest at [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) and a Codex manifest at [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json); each manifest packages the skill directories under [`skills/`](skills/).
 
@@ -57,7 +57,7 @@ Use these skills only for controlled comparisons. They are not recommended defau
 The variants' seed prompts live beside the skills in [`skills/`](skills/).
 
 - `cognitive-writing-fixed-order` is the main package's `Monitor` skill with a fixed order: each pass delegates `Planning`, `Translating`, and `Reviewing` in that order, and the `Monitor` stops only after `Reviewing`.
-- `cognitive-writing-no-goal-network` treats the assignment as one implicit objective, does not create or modify `.writing/goals.md`, and traces process switches.
+- `cognitive-writing-no-goal-network` is the main package's `Monitor` skill without the goals file: the task is the single implicit objective, the Planner reports its organization of the material instead of writing goals, and the `Monitor` copies that organization into later `Translating` and `Reviewing` scopes. The runner stages the A5 role copies under the shared role names, so the main package's Codex agents load them.
 - `cognitive-writing-single-writer` runs the main agent as one Writer, composes at sentence level, and traces its live goal network.
 - `cognitive-writing-single-context` is the main package's `Monitor` skill followed by the three role skills verbatim: the `Monitor` runs each selected process in its own context instead of spawning an agent.
 

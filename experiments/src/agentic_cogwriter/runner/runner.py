@@ -1501,12 +1501,18 @@ class ExperimentRunner:
             f"Plugin wrapper {condition.plugin_config} has no configured plugin path"
         )
 
-    _CODEX_ROLE_SKILL_DIRECTORIES = tuple(
-        Path("skills") / role for role in ("planning", "translating", "reviewing")
-    )
+    # Staged role directory -> source directory. A5 stages its own role copies
+    # under the shared names, so the adapter's `$planning` agents load them.
+    _CODEX_ROLE_SKILL_DIRECTORIES = {
+        Path("skills") / role: Path("skills") / role
+        for role in ("planning", "translating", "reviewing")
+    }
     _CODEX_DELEGATED_SKILL_DIRECTORIES = {
         "agentic-cog-writer": _CODEX_ROLE_SKILL_DIRECTORIES,
-        "cognitive-writing-no-goal-network": _CODEX_ROLE_SKILL_DIRECTORIES,
+        "cognitive-writing-no-goal-network": {
+            Path("skills") / role: Path("skills") / f"no-goal-{role}"
+            for role in ("planning", "translating", "reviewing")
+        },
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
     }
 
@@ -1537,23 +1543,24 @@ class ExperimentRunner:
                 if root != selected_root
             ),
         )
-        required_directories = [
-            Path("skills") / condition.skill_name,
-            *self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(condition.skill_name, ()),
-        ]
+        invoked = Path("skills") / condition.skill_name
+        required_directories = {
+            invoked: invoked,
+            **self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(condition.skill_name, {}),
+        }
         sources: dict[Path, Path] = {}
-        for relative in required_directories:
+        for relative, source_relative in required_directories.items():
             source = next(
                 (
-                    root / relative
+                    root / source_relative
                     for root in source_roots
-                    if (root / relative).is_dir()
+                    if (root / source_relative).is_dir()
                 ),
                 None,
             )
             if source is None:
                 raise ManifestError(
-                    f"Cannot stage required Codex skill directory: {relative}"
+                    f"Cannot stage required Codex skill directory: {source_relative}"
                 )
             sources[relative] = source
 

@@ -8,6 +8,7 @@ name = "cognitive-writing-experiments"
 
 [plugins]
 paths = ["plugin", "experiments/plugin"]
+codex_adapter = "codex"
 
 [adapters]
 codex = "codex_exec"
@@ -22,6 +23,10 @@ claude_code = """/cognitive-writing-experiments:cognitive-writing-no-goal-networ
 claude_code = ["/plugin marketplace add .", "/plugin install agentic-cognitive-writing@agentic-cognitive-writing-process", "/plugin install cognitive-writing-experiments@agentic-cognitive-writing-process"]
 
 [trace]
+# The Monitor writes only .writing/history.md, as in A4; the fidelity gate reads
+# process history from the harness records instead of a plugin trace. Forbidden
+# goal events make the runner reject any run that creates or changes goals.md.
+required = false
 retrieval = "not_applicable"
 evidence = "plugin_recorded"
 citation = "plugin_recorded"

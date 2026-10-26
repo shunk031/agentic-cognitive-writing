@@ -1,99 +1,20 @@
 ---
 name: cognitive-writing-no-goal-network
-description: "Experiment-comparison variant of the agentic-cog-writer skill for testing writing without a hierarchical goal network. For internal comparison use only, not the recommended default. Use when a controlled no-goal-network comparison is explicitly requested."
+description: "Experiment-comparison variant of the agentic-cog-writer skill for testing writing without explicit goals: the task is the single implicit objective. For internal comparison use only, not the recommended default. Use when a controlled no-goals comparison is explicitly requested."
 ---
 
-# Cognitive writing without a goal network
+Role: the Monitor. It selects the next writing process from the state, delegates it, and records its decisions; it writes nothing but `.writing/history.md`.
 
-Run a comparison that uses the assignment as one implicit objective while preserving the agentic-cog-writer skill's project state, delegation, and trace contracts.
+State: the task in `.writing/task.md`, the draft in `.writing/draft.md` (the task may provide one), and the history in `.writing/history.md`.
 
-## When this skill runs
+Kinds of work: Planning organizes the relevant material and reports it; Translating adds prose for the task's requirements; Reviewing corrects existing prose and reports what is needed next. A role reports work of another kind instead of doing it.
 
-Use this skill only for the A5 no-goal-network comparison. Do not use it as the default writing workflow.
+Procedure:
 
-## `Monitor` responsibilities
+1. Read the three state files; a missing file counts as empty.
+2. Choose the process from the kind of work the state calls for. The Monitor reads the draft to choose; checking it against the task is Reviewing's work.
+3. Append one line to `.writing/history.md`: the process, its scope, and the reason.
+4. Delegate the process, with its scope, to a fresh planning, translating, or reviewing agent, and wait for it. The Reviewing scope is this sentence, followed by the Planner's most recent reported organization if there is one, and nothing more: check `.writing/draft.md` against `.writing/task.md`, correct existing prose, and report what is needed next. The Planning scope is this sentence and nothing more: read `.writing/task.md` and `.writing/draft.md`, organize the relevant material for the intended audience, and report the organization.
+5. When the Planner reports an organization, append a one-line summary of it to `.writing/history.md`, and copy the organization into every later Translating and Reviewing scope until the next Planning report replaces it.
 
-- Keep rhetorical intent, factual authority, final wording, and publication decisions under the user's control.
-- Coordinate process switches and record the evidence for each switch.
-- Reconcile each returned role report with the assignment before continuing.
-
-## Read the state first
-
-Create missing files and directories without overwriting existing content. Do not create or modify `.writing/goals.md`. Treat these files as the externalized task environment and long-term memory:
-
-```text
-.writing/
-├── assignment.md       # topic, audience, exigency, and writer's goals
-├── goals.md            # existing file is left untouched, if present
-├── draft.md            # growing text
-├── memory/             # topic knowledge, audience knowledge, and writing plans
-└── trace/              # structured process history, one JSON object per line
-```
-
-Read these before choosing a process:
-
-- `.writing/assignment.md`
-- `.writing/draft.md`
-- relevant files in `.writing/memory/`
-- the latest entries in `.writing/trace/process.jsonl`
-
-Do not create or modify `.writing/goals.md`, whether it exists or not.
-
-Treat the assignment as the single implicit objective. Do not use a hierarchical goal to fill missing intent.
-
-Treat `assignment.md` as the fixed task specification for the run.
-
-Read the trace field contract below before writing the first entry. Append to `.writing/trace/process.jsonl`; never rewrite or truncate that log.
-
-## `Monitor` loop
-
-At each turn, the `Monitor` must:
-
-1. Compare the assignment's implicit objective with the current project state and open uncertainty. Choose `Planning`, `Translating`, or `Reviewing` from that comparison. Do not consult or construct a hierarchical goal network.
-2. Before every process switch, append a `process_switch` event naming the responsible process or agent, its decision, its evidence, and open uncertainty. The no-goal-network variant records no goal-created, goal-developed, or goal-regenerated events.
-3. Delegate the selected role using the Delegation section.
-4. For a `Planning` delegation, request problem representation, Generate, and Organize. Do not request Goal-setting or ask the agent to write `goals.md`. If the agent proposes a hierarchical goal, report it as an observation without changing the file.
-5. Re-read changed state and reconcile the role's work with the assignment. Update `draft.md` or `memory/` as appropriate. Keep supplied text and uncertain claims visible.
-
-Before sending the final response, write the complete current document to `.writing/draft.md`. The run is `INVALID` unless `.writing/draft.md` exists before the final response and the final response contains the complete final text. The final response cannot substitute for the required draft.
-
-## Interruptions
-
-Generate and Evaluate may interrupt any process when new information or a claim conflict in the growing text demands it. Log each interruption as a `process_switch`, perform the interrupt through the relevant shared role, return to the process that initiated it, and then continue the `Monitor`'s process choice.
-
-Do not create a goal to track the interrupt. When an interrupt resolves, return to the process that initiated it rather than silently changing the assignment.
-
-## Delegation
-
-For every delegation, pass:
-
-- the project root
-- the assignment summary
-- relevant uncertainty
-- the requested output
-
-Ask the delegated agent to cite the files or draft passages that support its decisions. Use the platform path that matches the host:
-
-- Claude Code: delegate to the planner, translator, or reviewer agent shipped in the `agentic-cognitive-writing` plugin. That agent preloads the matching role skill.
-- Codex: spawn a native Codex subagent and instruct it to use `$planning`, `$translating`, or `$reviewing`.
-
-Do not write a script that spawns `codex exec` children. If native delegation is unavailable, perform the role as the `Monitor` and record that fallback in the trace.
-
-## Trace contract
-
-Every process switch must append one valid JSON object to `.writing/trace/process.jsonl`. `event_type` is `process_switch`; goal events are not written in this condition. A process-switch object includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Optional `artifacts` lists project-relative files. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts`, when present, is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. Keep the code-formatted role names `Planning`, `Translating`, and `Reviewing` in surrounding prose, but write JSON `process`, `from_process`, and `to_process` values with the lowercase contract tokens `planning`, `translating`, and `reviewing`. Do not write goal fields or experiment-specific fields. For example:
-
-```json
-{
-  "timestamp": "2026-01-15T09:00:00+09:00",
-  "event_type": "process_switch",
-  "responsible_agent": "monitor",
-  "process": "planning",
-  "decision": "Choose planning for the assignment's implicit objective.",
-  "evidence": [".writing/assignment.md"],
-  "open_uncertainty": [],
-  "from_process": null,
-  "to_process": "planning",
-  "artifacts": [".writing/assignment.md"]
-}
-```
+Stop when no further process is needed; the draft in `.writing/draft.md` is the final document.
