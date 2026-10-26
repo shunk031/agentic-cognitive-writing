@@ -1515,6 +1515,11 @@ class ExperimentRunner:
         },
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
     }
+    # A condition listed here installs its own agent definitions in place of the
+    # adapter's `agents/`, so the role descriptions match its role skills.
+    _CODEX_AGENT_DIRECTORIES = {
+        "cognitive-writing-no-goal-network": Path("no-goal-agents"),
+    }
 
     def _stage_codex_plugin(
         self,
@@ -1592,11 +1597,23 @@ class ExperimentRunner:
             raise ManifestError(
                 f"No configured plugin path has Codex adapter {adapter}"
             )
+        agents = self._CODEX_AGENT_DIRECTORIES.get(condition.skill_name)
+        agents_root = None
+        if agents is not None:
+            agents_root = next(
+                (root / agents for root in source_roots if (root / agents).is_dir()),
+                None,
+            )
+            if agents_root is None:
+                raise ManifestError(
+                    f"No configured plugin path has Codex agents {agents}"
+                )
         self._install_codex_adapter(
             adapter_root,
             sources,
             codex_home,
             delegated=condition.require_delegation,
+            agents_root=agents_root,
         )
         task_path = workspace / ".writing" / "task.md"
         task_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1625,11 +1642,13 @@ class ExperimentRunner:
         codex_home: Path,
         *,
         delegated: bool,
+        agents_root: Path | None = None,
     ) -> None:
         """Install skills, agents, rules, and layered config into ``codex_home``.
 
         The agents and the config's spawn instruction are the delegation
         mechanism, so an in-context condition installs only skills and rules.
+        ``agents_root`` replaces the adapter's ``agents/`` when given.
         """
 
         directories = ("agents", "rules") if delegated else ("rules",)
@@ -1642,7 +1661,10 @@ class ExperimentRunner:
         for relative, source in sources.items():
             shutil.copytree(source, codex_home / relative)
         for relative in directories:
-            shutil.copytree(adapter_root / relative, codex_home / relative)
+            source = adapter_root / relative
+            if relative == "agents" and agents_root is not None:
+                source = agents_root
+            shutil.copytree(source, codex_home / relative)
         if not delegated:
             return
 

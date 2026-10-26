@@ -1194,9 +1194,8 @@ def test_no_goals_skills_are_the_a4_skills_without_explicit_goals() -> None:
         "-2. Choose the process from the kind of work the state calls for; a section "
         "without a goal needs Planning first. The Monitor reads the draft to choose; "
         "checking it against the task is Reviewing's work.",
-        "+1. Read the three state files; a missing file counts as empty.",
-        "+2. Choose the process from the kind of work the state calls for. The Monitor "
-        "reads the draft to choose; checking it against the task is Reviewing's work.",
+        "-3. Append one line to `.writing/history.md`: the process, its scope, and "
+        "the reason.",
         "-4. Delegate the process, with its scope, to a fresh planning, translating, "
         "or reviewing agent, and wait for it. The Reviewing scope is this sentence and "
         "nothing more: check `.writing/draft.md` against `.writing/task.md` and the "
@@ -1207,17 +1206,21 @@ def test_no_goals_skills_are_the_a4_skills_without_explicit_goals() -> None:
         "-5. When the Reviewer recommends replacing a goal, decide whether to accept "
         "it, record the decision in `.writing/history.md`, and delegate an accepted "
         "replacement to `Planning`; the `Monitor` does not edit `.writing/goals.md`.",
+        "+1. Read the three state files; a missing file counts as empty.",
+        "+2. Choose the process from the kind of work the state calls for. The Monitor "
+        "reads the draft to choose; checking it against the task is Reviewing's work.",
+        "+3. Append one line to `.writing/history.md`: the process, its scope, and "
+        "the reason. For Planning, append the line after the Planner reports, and end "
+        "it with a one-line summary of the reported organization.",
         "+4. Delegate the process, with its scope, to a fresh planning, translating, "
-        "or reviewing agent, and wait for it. The Reviewing scope is this sentence, "
-        "followed by the Planner's most recent reported organization if there is one, "
-        "and nothing more: check `.writing/draft.md` against `.writing/task.md`, "
-        "correct existing prose, and report what is needed next. The Planning scope is "
-        "this sentence and nothing more: read `.writing/task.md` and "
-        "`.writing/draft.md`, organize the relevant material for the intended "
-        "audience, and report the organization.",
-        "+5. When the Planner reports an organization, append a one-line summary of it "
-        "to `.writing/history.md`, and copy the organization into every later "
-        "Translating and Reviewing scope until the next Planning report replaces it.",
+        "or reviewing agent, and wait for it. The Reviewing scope is this sentence and "
+        "nothing more: check `.writing/draft.md` against `.writing/task.md`, correct "
+        "existing prose, and report what is needed next. The Planning scope is this "
+        "sentence and nothing more: read `.writing/task.md` and `.writing/draft.md`, "
+        "organize the relevant material for the intended audience, and report the "
+        "organization.",
+        "+5. Copy the Planner's most recent reported organization into every later "
+        "Translating scope until the next Planning report replaces it.",
     ]
     assert changes(
         "plugin/skills/planning/SKILL.md", f"{a5_root}/no-goal-planning/SKILL.md"
@@ -1295,6 +1298,40 @@ def test_no_goals_skills_are_the_a4_skills_without_explicit_goals() -> None:
         assert "goals.md" not in (a5_root / name / "SKILL.md").read_text(
             encoding="utf-8"
         )
+    agents = REPO_ROOT / "experiments/plugin/no-goal-agents"
+    assert sorted(path.name for path in agents.iterdir()) == [
+        "planning.toml",
+        "reviewing.toml",
+        "translating.toml",
+    ]
+    assert changes("plugin/codex/agents/planning.toml", f"{agents}/planning.toml") == [
+        '-description = "Spawn when the Agentic CogWriter Monitor needs writing goals '
+        'created or developed. Runs $planning; does not draft or review prose."',
+        '+description = "Spawn when the Agentic CogWriter Monitor needs the relevant '
+        'material organized. Runs $planning; does not draft or review prose."',
+    ]
+    assert changes(
+        "plugin/codex/agents/translating.toml", f"{agents}/translating.toml"
+    ) == [
+        '-description = "Spawn when the Monitor has goals and needs draft prose for a '
+        'delegated scope. Runs $translating; does not set goals or review."',
+        "+description = \"Spawn when the Monitor needs draft prose for the task's "
+        "requirements within a delegated scope. Runs $translating; does not organize "
+        'material or review."',
+    ]
+    assert changes(
+        "plugin/codex/agents/reviewing.toml", f"{agents}/reviewing.toml"
+    ) == [
+        '-description = "Spawn when a draft exists and the Monitor needs it checked '
+        "and revised within a delegated scope. Runs $reviewing; does not set goals or "
+        'draft new sections."',
+        '+description = "Spawn when a draft exists and the Monitor needs it checked '
+        "and revised within a delegated scope. Runs $reviewing; does not organize "
+        'material or draft new sections."',
+    ]
+    assert not any(
+        "goal" in path.read_text(encoding="utf-8") for path in agents.iterdir()
+    )
 
 
 @pytest.mark.parametrize(
@@ -1642,6 +1679,15 @@ def test_monitor_conditions_install_the_repository_plugin_codex_adapter(
     assert sorted(path.name for path in (home / "agents").iterdir()) == sorted(
         f"{role}.toml" for role in roles
     )
+    agents_root = (
+        "experiments/plugin/no-goal-agents/"
+        if condition_id == "A5"
+        else "plugin/codex/agents/"
+    )
+    for role in roles:
+        assert (home / "agents" / f"{role}.toml").read_bytes() == (
+            REPO_ROOT / f"{agents_root}{role}.toml"
+        ).read_bytes()
     assert [path.name for path in (home / "rules").iterdir()] == ["deny.rules"]
     assert "developer_instructions" in tomllib.loads((home / "config.toml").read_text())
 

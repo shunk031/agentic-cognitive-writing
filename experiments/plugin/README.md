@@ -57,7 +57,7 @@ Use these skills only for controlled comparisons. They are not recommended defau
 The variants' seed prompts live beside the skills in [`skills/`](skills/).
 
 - `cognitive-writing-fixed-order` is the main package's `Monitor` skill with a fixed order: each pass delegates `Planning`, `Translating`, and `Reviewing` in that order, and the `Monitor` stops only after `Reviewing`.
-- `cognitive-writing-no-goal-network` is the main package's `Monitor` skill without the goals file: the task is the single implicit objective, the Planner reports its organization of the material instead of writing goals, and the `Monitor` copies that organization into later `Translating` and `Reviewing` scopes. The runner stages the A5 role copies under the shared role names, so the main package's Codex agents load them.
+- `cognitive-writing-no-goal-network` is the main package's `Monitor` skill without the goals file: the task is the single implicit objective, the Planner reports its organization of the material instead of writing goals, and the `Monitor` copies that organization into later `Translating` scopes. The runner stages the A5 role copies under the shared role names and installs the A5 Codex agent definitions from [`no-goal-agents/`](no-goal-agents/) in place of the main package's, whose descriptions are written in goal terms.
 - `cognitive-writing-single-writer` runs the main agent as one Writer, composes at sentence level, and traces its live goal network.
 - `cognitive-writing-single-context` is the main package's `Monitor` skill followed by the three role skills verbatim: the `Monitor` runs each selected process in its own context instead of spawning an agent.
 

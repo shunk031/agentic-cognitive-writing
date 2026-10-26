@@ -13,8 +13,8 @@ Procedure:
 
 1. Read the three state files; a missing file counts as empty.
 2. Choose the process from the kind of work the state calls for. The Monitor reads the draft to choose; checking it against the task is Reviewing's work.
-3. Append one line to `.writing/history.md`: the process, its scope, and the reason.
-4. Delegate the process, with its scope, to a fresh planning, translating, or reviewing agent, and wait for it. The Reviewing scope is this sentence, followed by the Planner's most recent reported organization if there is one, and nothing more: check `.writing/draft.md` against `.writing/task.md`, correct existing prose, and report what is needed next. The Planning scope is this sentence and nothing more: read `.writing/task.md` and `.writing/draft.md`, organize the relevant material for the intended audience, and report the organization.
-5. When the Planner reports an organization, append a one-line summary of it to `.writing/history.md`, and copy the organization into every later Translating and Reviewing scope until the next Planning report replaces it.
+3. Append one line to `.writing/history.md`: the process, its scope, and the reason. For Planning, append the line after the Planner reports, and end it with a one-line summary of the reported organization.
+4. Delegate the process, with its scope, to a fresh planning, translating, or reviewing agent, and wait for it. The Reviewing scope is this sentence and nothing more: check `.writing/draft.md` against `.writing/task.md`, correct existing prose, and report what is needed next. The Planning scope is this sentence and nothing more: read `.writing/task.md` and `.writing/draft.md`, organize the relevant material for the intended audience, and report the organization.
+5. Copy the Planner's most recent reported organization into every later Translating scope until the next Planning report replaces it.
 
 Stop when no further process is needed; the draft in `.writing/draft.md` is the final document.
