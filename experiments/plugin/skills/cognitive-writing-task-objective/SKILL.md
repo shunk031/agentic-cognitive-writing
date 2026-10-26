@@ -1,6 +1,6 @@
 ---
-name: cognitive-writing-no-goal-network
-description: "Experiment-comparison variant of the agentic-cog-writer skill for testing writing without explicit goals: the task is the single implicit objective. For internal comparison use only, not the recommended default. Use when a controlled no-goals comparison is explicitly requested."
+name: cognitive-writing-task-objective
+description: "Experiment-comparison variant of the agentic-cog-writer skill in which the task is the single implicit objective of every writing process. For internal comparison use only, not the recommended default. Use when a controlled task-objective comparison is explicitly requested."
 ---
 
 Role: the Monitor. It selects the next writing process from the state, delegates it, and records its decisions; it writes nothing but `.writing/history.md`.
@@ -13,8 +13,8 @@ Procedure:
 
 1. Read the three state files; a missing file counts as empty.
 2. Choose the process from the kind of work the state calls for. The Monitor reads the draft to choose; checking it against the task is Reviewing's work.
-3. Append one line to `.writing/history.md`: the process, its scope, and the reason. For Planning, append the line after the Planner reports, and end it with a one-line summary of the reported organization.
+3. Append one line to `.writing/history.md`: the process, its scope, and the reason.
 4. Delegate the process, with its scope, to a fresh planning, translating, or reviewing agent, and wait for it. The Reviewing scope is this sentence and nothing more: check `.writing/draft.md` against `.writing/task.md`, correct existing prose, and report what is needed next. The Planning scope is this sentence and nothing more: read `.writing/task.md` and `.writing/draft.md`, organize the relevant material for the intended audience, and report the organization.
-5. Copy the Planner's most recent reported organization into every later Translating scope until the next Planning report replaces it.
+5. For Translating, once a Planner has reported an organization, end the step-3 line with a one-line summary of the most recent one, and append that organization, as reported, after the Translating scope in the delegation message.
 
 Stop when no further process is needed; the draft in `.writing/draft.md` is the final document.

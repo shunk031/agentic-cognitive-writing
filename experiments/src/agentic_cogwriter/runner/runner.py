@@ -1509,8 +1509,8 @@ class ExperimentRunner:
     }
     _CODEX_DELEGATED_SKILL_DIRECTORIES = {
         "agentic-cog-writer": _CODEX_ROLE_SKILL_DIRECTORIES,
-        "cognitive-writing-no-goal-network": {
-            Path("skills") / role: Path("skills") / f"no-goal-{role}"
+        "cognitive-writing-task-objective": {
+            Path("skills") / role: Path("skills") / f"task-objective-{role}"
             for role in ("planning", "translating", "reviewing")
         },
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
@@ -1518,7 +1518,7 @@ class ExperimentRunner:
     # A condition listed here installs its own agent definitions in place of the
     # adapter's `agents/`, so the role descriptions match its role skills.
     _CODEX_AGENT_DIRECTORIES = {
-        "cognitive-writing-no-goal-network": Path("no-goal-agents"),
+        "cognitive-writing-task-objective": Path("task-objective-agents"),
     }
 
     def _stage_codex_plugin(
