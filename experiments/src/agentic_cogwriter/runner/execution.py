@@ -93,6 +93,7 @@ class SubprocessExecutor:
             completed = subprocess.run(
                 command,
                 cwd=cwd,
+                stdin=subprocess.DEVNULL,
                 capture_output=True,
                 check=False,
                 timeout=timeout_seconds,

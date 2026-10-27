@@ -252,6 +252,23 @@ def test_subprocess_executor_forwards_the_child_environment(
     assert observed["env"] == environment
 
 
+def test_subprocess_executor_starts_the_child_with_stdin_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    observed: dict[str, object] = {}
+
+    def fake_run(command, **kwargs):
+        observed.update(kwargs)
+        return SimpleNamespace(returncode=0, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr("agentic_cogwriter.runner.execution.subprocess.run", fake_run)
+
+    SubprocessExecutor().run(["codex", "exec"], cwd=tmp_path, timeout_seconds=5)
+
+    # An open stdin pipe makes `codex exec` wait for additional input.
+    assert observed["stdin"] is subprocess.DEVNULL
+
+
 def _runner(tmp_path: Path, config: RuntimeConfig | None = None, **kwargs):
     kwargs.setdefault("codex_home", tmp_path / "codex-home")
     return ExperimentRunner(
