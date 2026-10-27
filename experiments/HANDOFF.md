@@ -9,13 +9,14 @@ This file records the state, decisions, and working rules for the CogWriter expe
 - **Plugin measurement.** The plugin was measured on ten DoLoMiTes[^1] prompts with a seeded missing section, ten runs each, from harness records with independent verification. `Planning` ran before the missing section was written in 100 of 100 runs, and the requested counts were met in 99. No `Monitor` edit to `goals.md` occurred in the 350 runs since that rule, no Planner merged goals, and no Reviewer wrote a section. The remaining failure type is a Reviewer splitting a one-paragraph section into per-item lines, seen in one run of 100. The PR 151 body and its "All runs" comments hold the details and every run table.
 - **Runtime branch.** The `cw` runtime branch from the earlier redesign (`cogwriter-cw`) is closed by the author's decision; the merged skills-only plugin is the only artifact. The branch stays for reference.
 - **Superseded PR.** [shunk031/agentic-cognitive-writing#144](https://github.com/shunk031/agentic-cognitive-writing/pull/144), the incremental prompt fix, is open and superseded by the redesign. Keep it open until the author decides.
-- **Not yet rebuilt.** The baselines (A3, B1), the generated ablations, and token accounting are not yet rebuilt. The fidelity gate is merged through [shunk031/agentic-cognitive-writing#154](https://github.com/shunk031/agentic-cognitive-writing/pull/154).
-  - **Ablation skills.** The A5, A6, and A8 experiment skills still describe themselves as variants of the previous agentic-cog-writer contract. For example, A6 expects per-goal keep, develop, and regenerate verdicts that the rebuilt Reviewer no longer produces. The ablations therefore do not match the rebuilt A4 until slice 2 rewrites them.
+- **Not yet rebuilt.** The baselines (A3, B1), the A7 Single-writer ablation, and token accounting are not yet rebuilt. The fidelity gate is merged through [shunk031/agentic-cognitive-writing#154](https://github.com/shunk031/agentic-cognitive-writing/pull/154).
+  - **Ablation skills.** The A6 and A8 ablations are rebuilt on main through [shunk031/agentic-cognitive-writing#161](https://github.com/shunk031/agentic-cognitive-writing/pull/161) and [shunk031/agentic-cognitive-writing#162](https://github.com/shunk031/agentic-cognitive-writing/pull/162), and the A5 ablation is rebuilt on the integration branch. The A7 Single-writer skill still follows the previous contract.
   - **Skill text.** Several baseline and ablation skills still tell the agent to repeat the full text in its final message, and one says the runner enforces this; the runner no longer scores that message. Slice 2 rewrites those skills.
   - **Host skills.** Codex loads the host user's personal skills unless the child HOME is isolated; the runner now isolates every Codex child, and the gate rejects reads outside the per-run Codex home. The cd-then-relative read is a known limit of the gate.
   - **A4 final response.** The scored output is `draft.md` itself for every draft-product condition ([shunk031/agentic-cognitive-writing#156](https://github.com/shunk031/agentic-cognitive-writing/pull/156)). The Claude Code invocation path is out of scope under [D14](#decisions).
   - **Runner-contract tests.** Five runner-contract tests fail on main because they encode the previous plugin's contracts. [shunk031/agentic-cognitive-writing#152](https://github.com/shunk031/agentic-cognitive-writing/pull/152) fixes them and is not merged yet.
 - **Runner path.** With [shunk031/agentic-cognitive-writing#158](https://github.com/shunk031/agentic-cognitive-writing/pull/158) and [shunk031/agentic-cognitive-writing#159](https://github.com/shunk031/agentic-cognitive-writing/pull/159) merged, an A4 run through the runner on a smoke prompt passes the fidelity gate: Planning, Translating, Reviewing in order, no forked child, each role reading its own skill from the per-run Codex home, the Monitor writing only `history.md`, and `draft.md` scored.
+- **Integration branch.** Work since the rebuilt ablations accumulates on `rerun-arr2027`. The A5 ablation from [shunk031/agentic-cognitive-writing#163](https://github.com/shunk031/agentic-cognitive-writing/pull/163) is on that branch, not on main. Its rename breaks the paper's prompt display until the paper edit, which is one reason main stays unchanged until results are ready.
 - **Measurement scope.** All measurements so far come from seeded states on one benchmark with one model and one reasoning effort. Natural runs, other benchmarks, and the runner path are unmeasured.
 
 ## Measured defects of the executed study
@@ -62,19 +63,25 @@ The redesign spec lists every decision with its source. The author-level decisio
 - **No ad hoc fixes.** Trace every change to the spec, a paper requirement, or an author decision. A change that alters a construct or an earlier decision goes to the author first.
 - **Fidelity before interpretation.** Follow the "Experiment validity" section of [`AGENTS.md`](../AGENTS.md): check fidelity from harness logs before any scored run, and test an implementation defect first whenever a process metric looks surprising.
 - **Fidelity gate.** Before any scored run, a mechanical check of the harness records rejects runs that show any measured defect of the executed study: a child spawned with inherited context, a role agent that did not read its own skill, a Monitor write outside `.writing/history.md`, an unclosed child or thread-limit hit, or a scored output other than `draft.md`. The gate is code in the runner, not instruction text.
-- **Merges.** A merge needs the author's explicit approval for that specific PR.
+- **Integration.** Rerun work accumulates on the integration branch `rerun-arr2027`. Each change is a pull request into that branch, reviewed by an independent reviewer, and merged by the orchestrator after the review accepts it. Progress reports to the author describe results and blockers, not pull request approvals. The author decides on merging the integration branch into main only when the results meet the readiness criteria below.
 - **Public files.** Never put private paths, hostnames, or credentials in repository files.
+
+## Readiness criteria
+
+Results are ready for the paper when the rerun shows that the mechanisms the executed study failed to exercise now work, measured from harness records, and the preregistered comparisons are computed on runs that pass the fidelity gate.
+
+- **Fidelity.** Every scored run passes the fidelity gate. Rejected runs are reported with their reasons and excluded, never silently dropped. None of the measured defects recurs.
+- **Mechanism.** In unseeded runs, the behaviors the method claims appear in the harness records at measurable rates for the full system: `Planning` before a section is written, `Reviewing` that leads to `Planning`, and goal creation, development, and replacement. The executed study recorded `Reviewing`-to-`Planning` in 0.3% of runs and accepted goal replacement in 0.5%. Each ablation differs from the full system only in its construct, verified from the records.
+- **Outcome.** The preregistered comparisons are computed on `draft.md` with the planned statistics and reported as they come out. The criterion requires valid comparisons, not a particular winner; the paper's claims follow the results.
 
 ## Next steps
 
-1. Make CI green: update or delete the five runner-contract tests that encode the previous plugin's contracts.
-2. Done: the fidelity gate was added to the runner, as the working rules define it, and tested against the recorded defects, merged through [shunk031/agentic-cognitive-writing#154](https://github.com/shunk031/agentic-cognitive-writing/pull/154).
-3. Rebuild slices 2 to 4 on the merged plugin, Codex only: baselines, ablations, and runner gates and token accounting. Run each slice through the same loop before any scoring: a small batch, fidelity from harness records, independent verification, and one change at a time.
-   - Done: `draft.md` is the scored deliverable, via [shunk031/agentic-cognitive-writing#156](https://github.com/shunk031/agentic-cognitive-writing/pull/156).
-   - Done: the A4 runner path passes the fidelity gate, via [shunk031/agentic-cognitive-writing#158](https://github.com/shunk031/agentic-cognitive-writing/pull/158) and [shunk031/agentic-cognitive-writing#159](https://github.com/shunk031/agentic-cognitive-writing/pull/159). The remaining slice 2 work is the ablations (A5, A6, A8) and baselines (A3, B1), then token accounting.
+1. Pilot on non-evaluation prompts through the runner for the full system and the rebuilt ablations, with unseeded runs, to check the Fidelity and Mechanism criteria before any scored run.
    - The process-sequence analysis still reads `process.jsonl` and needs a harness-record source.
-4. Run a pilot through the runner path on non-evaluation prompts and publish its fidelity report. Then freeze the design.
-5. Settle the deferred dataset-protocol decisions of the evaluation task sets ([D12](#decisions)) and the cost of the full rerun with the author. Then run the full rerun.
-6. Update the paper only after the rerun, and replace every figure with results from the executed study.
+2. Rebuild the baselines (A3, B1) and token accounting on the integration branch with the same loop.
+   - The loop is a small batch, fidelity from harness records, independent verification, and one change at a time.
+3. Settle the dataset-protocol decisions ([D12](#decisions)) and the rerun's scale and cost with the author.
+4. Run the rerun and the preregistered comparisons; check all three readiness criteria.
+5. Propose merging the integration branch into main and update the paper from the results.
 
 [^1]: Chaitanya Malaviya, Priyanka Agrawal, Kuzman Ganchev, Pranesh Srinivasan, Fantine Huot, Jonathan Berant, Mark Yatskar, Dipanjan Das, Mirella Lapata, and Chris Alberti. "DOLOMITES: Domain-Specific Long-Form Methodical Tasks." Transactions of the Association for Computational Linguistics, 2025. https://doi.org/10.1162/tacl_a_00727
