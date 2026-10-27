@@ -278,6 +278,21 @@ def test_build_writingbench_maps_index_query_and_language(tmp_path: Path) -> Non
     with pytest.raises(ValueError, match="language row 7 differs"):
         build_writingbench(source, tagged)
 
+    tagged.write_text(json.dumps({**source_row, "extra": 1, "lang": "zh"}) + "\n")
+    with pytest.raises(ValueError, match="language row 7 differs"):
+        build_writingbench(source, tagged)
+
+    tagged.write_text((json.dumps({**source_row, "lang": "zh"}) + "\n") * 2)
+    with pytest.raises(ValueError, match="duplicate index"):
+        build_writingbench(source, tagged)
+
+    other = {**source_row, "index": 8, "lang": "en"}
+    tagged.write_text(
+        json.dumps({**source_row, "lang": "zh"}) + "\n" + json.dumps(other) + "\n"
+    )
+    with pytest.raises(ValueError, match="indexes differ from source"):
+        build_writingbench(source, tagged)
+
     tagged.write_text(json.dumps({**source_row, "lang": "fr"}) + "\n")
     with pytest.raises(ValueError, match="language must be one of"):
         build_writingbench(source, tagged)

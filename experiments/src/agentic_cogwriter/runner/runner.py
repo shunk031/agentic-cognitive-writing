@@ -112,8 +112,12 @@ def _assert_guidance_free_workspace(workspace: Path) -> None:
             candidate = ancestor / marker
             try:
                 mode = candidate.stat().st_mode
+                # An empty directory supplies nothing; Codex's Linux sandbox
+                # briefly creates empty `.codex` markers in each writable root.
                 present = (
-                    stat.S_ISDIR(mode) if marker.startswith(".") else stat.S_ISREG(mode)
+                    stat.S_ISDIR(mode) and any(candidate.iterdir())
+                    if marker.startswith(".")
+                    else stat.S_ISREG(mode)
                 )
             except FileNotFoundError:
                 present = False

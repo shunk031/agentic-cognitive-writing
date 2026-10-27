@@ -26,25 +26,50 @@ _CALL_TYPES = frozenset({"function_call", "custom_tool_call", "local_shell_call"
 _OUTPUT_TYPES = frozenset({"function_call_output", "custom_tool_call_output"})
 
 
-def check_output_language(text: str, language: str) -> dict[str, Any]:
-    """Flag a deliverable whose dominant letter script is not the prompt's.
+def _script(char: str) -> str | None:
+    if not char.isalpha():
+        return None
+    name = unicodedata.name(char, "")
+    if name.startswith(("LATIN", "FULLWIDTH LATIN")):
+        return "LATIN"
+    if name.startswith("CJK"):
+        return "CJK"
+    return None
 
-    The flag is recorded, never a rejection reason.
+
+def check_output_language(text: str, language: str) -> dict[str, Any]:
+    """Flag a deliverable whose dominant script is not the prompt's.
+
+    A Latin word (a maximal run of Latin letters) and a CJK character each count
+    as one unit, so English terms in Chinese prose do not outweigh it. Text with
+    neither, or a tie, has no dominant script and no flag. The flag is recorded,
+    never a rejection reason.
     """
 
-    scripts = Counter(
-        unicodedata.name(char, "").split(" ", 1)[0] for char in text if char.isalpha()
+    units: Counter[str] = Counter()
+    previous = None
+    for char in text:
+        script = _script(char)
+        if script == "CJK" or (script == "LATIN" and previous != "LATIN"):
+            units[script] += 1
+        previous = script
+    ranked = units.most_common()
+    dominant = (
+        ranked[0][0]
+        if ranked and (len(ranked) == 1 or ranked[0][1] > ranked[1][1])
+        else None
     )
-    dominant = scripts.most_common(1)[0][0] if scripts else None
     expected = LANGUAGES[language][1]
     return {
         "expected_language": language,
         "expected_script": expected,
+        "latin_words": units["LATIN"],
+        "cjk_characters": units["CJK"],
         "dominant_script": dominant,
         "dominant_share": (
-            round(scripts[dominant] / scripts.total(), 4) if dominant else None
+            round(units[dominant] / units.total(), 4) if dominant else None
         ),
-        "mismatch": dominant != expected,
+        "mismatch": dominant != expected if dominant else None,
     }
 
 

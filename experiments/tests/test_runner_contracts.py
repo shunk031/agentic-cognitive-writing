@@ -831,6 +831,18 @@ def test_runner_rejects_guidance_ancestor_before_starting_a_session(
     assert not (blocked_root / "runs" / "WritingBench").exists()
 
 
+def test_runner_ignores_an_empty_guidance_directory_ancestor(tmp_path: Path) -> None:
+    root = tmp_path / "sandbox-marker"
+    (root / ".codex").mkdir(parents=True)
+    runner = _runner(root / "runs", executor=_RetryExecutor([_result()]))
+
+    runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+    (root / ".codex" / "config.toml").write_text("model = 'x'\n", encoding="utf-8")
+    with pytest.raises(ConfigurationError, match=r"\.codex"):
+        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+
+
 def _event(
     event_type: str = "process_switch",
     *,
@@ -1936,11 +1948,18 @@ def test_a8_accepts_in_context_execution_without_spawn_event(tmp_path: Path) -> 
 
 
 @pytest.mark.parametrize(
-    ("output", "dominant", "mismatch"),
-    [("final output " * 10, "LATIN", False), ("最终输出" * 10, "CJK", True)],
+    ("output", "units", "dominant", "mismatch"),
+    [
+        ("final output " * 10, (20, 0), "LATIN", False),
+        ("最终输出" * 10, (0, 40), "CJK", True),
+    ],
 )
 def test_codex_run_with_complete_clean_records_stays_scoring_eligible(
-    tmp_path: Path, output: str, dominant: str, mismatch: bool
+    tmp_path: Path,
+    output: str,
+    units: tuple[int, int],
+    dominant: str,
+    mismatch: bool,
 ) -> None:
     class RecordedExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
@@ -1973,6 +1992,8 @@ def test_codex_run_with_complete_clean_records_stays_scoring_eligible(
     assert manifest["output_language"] == {
         "expected_language": "en",
         "expected_script": "LATIN",
+        "latin_words": units[0],
+        "cjk_characters": units[1],
         "dominant_script": dominant,
         "dominant_share": 1.0,
         "mismatch": mismatch,
