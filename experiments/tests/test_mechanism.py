@@ -201,6 +201,7 @@ def _rollout(
     parent: str | None = "monitor",
     role: str | None = None,
     turns: tuple[int, ...] = (0,),
+    ends: tuple[int, ...] = (),
 ) -> list[dict[str, Any]]:
     meta = {"id": thread, "parent_thread_id": parent, "agent_role": role}
     return [
@@ -212,6 +213,14 @@ def _rollout(
                 "payload": {"type": "task_started"},
             }
             for turn in turns
+        ),
+        *(
+            {
+                "type": "event_msg",
+                "timestamp": _second(end),
+                "payload": {"type": "task_complete"},
+            }
+            for end in ends
         ),
         *(
             {
@@ -510,3 +519,74 @@ def test_n_a_follows_the_declaration_and_rates_cover_scorable_runs(
         "| n/a | n/a | 0 | 0 | n/a | n/a | n/a |"
     ) in out
     assert "excludes runs without an attributed first heading (A4 1, A8 1)" in out
+
+
+def test_a_queued_delegation_cannot_move_a_change_after_review(
+    tmp_path: Path,
+) -> None:
+    detail = _detail(
+        tmp_path,
+        [
+            _spawn("r1", "$reviewing check"),
+            _wait("r1"),
+            _spawn("p1", "$planning create the goals"),
+            _wait("p1"),
+            # The Translator is not waited for, so the reuse is queued behind it.
+            _spawn("t1", "$translating write"),
+            _collab("send_input", "t1", prompt="continue"),
+            _collab("send_input", "p1", prompt="replace goal 2"),
+            _wait("t1"),
+            _wait("p1"),
+        ],
+        {
+            "r1": _rollout("r1"),
+            # The Planner's second turn has no task_started record.
+            "p1": _rollout(
+                "p1",
+                (2_000, GOALS, _add(FIRST_GOALS)),
+                (30_000, GOALS, _update(REWRITE)),
+                turns=(1,),
+                ends=(3,),
+            ),
+            "t1": _rollout("t1", (10_000, DRAFT, _add("# Title\n")), turns=(5, 40)),
+        },
+    )
+
+    assert [
+        (i["delegation"], i["process"], i["event"]) for i in detail["goal_intervals"]
+    ] == [(1, "planning", "created"), (None, "unattributed", "replaced")]
+    assert detail["goal_replaced_after_review"] is False
+    assert detail["planning_before_first_section"] is True
+
+
+def test_monitor_changes_keep_goal_events_after_an_unknown_start(
+    tmp_path: Path,
+) -> None:
+    detail = _detail(
+        tmp_path,
+        [
+            _spawn("p1", "$planning create the goals"),
+            _wait("p1"),
+            _collab("send_input", "p1", prompt="develop the goals"),
+            _wait("p1"),
+        ],
+        {
+            "monitor": _rollout(
+                "monitor",
+                (20_000, GOALS, _update("@@ -7 +7,2 @@\n - [ ] Rent\n+- Law\n")),
+                (25_000, DRAFT, _add("# Title\n")),
+                parent=None,
+            ),
+            "p1": _rollout(
+                "p1", (2_000, GOALS, _add(FIRST_GOALS)), turns=(1,), ends=(3,)
+            ),
+        },
+    )
+
+    assert [
+        (i["delegation"], i["process"], i["event"]) for i in detail["goal_intervals"]
+    ] == [(0, "planning", "created"), (0, "monitor", "developed")]
+    assert detail["goal_developed"] is True
+    assert detail["unattributed_changes"] == 0
+    # The section may follow the untimed delegation, so its position is unknown.
+    assert detail["planning_before_first_section"] is None
