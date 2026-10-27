@@ -38,9 +38,9 @@ from .execution import (
     extract_token_usage,
     reject_retrieval,
 )
-from .fidelity import check_fidelity
+from .fidelity import check_fidelity, check_output_language
 from .hashing import sha256_bytes, sha256_file
-from .manifest import PromptRecord, load_benchmark_provenance
+from .manifest import LANGUAGES, PromptRecord, load_benchmark_provenance
 from .trace import (
     assert_untouched,
     assess_trace_timestamps,
@@ -137,6 +137,7 @@ def _shared_values(prompt: PromptRecord) -> dict[str, str]:
         "output_constraints": json.dumps(
             prompt.requested_output_constraints, ensure_ascii=False, sort_keys=True
         ),
+        "output_language": LANGUAGES[prompt.language][0],
     }
 
 
@@ -146,6 +147,11 @@ def _task_sections(shared_values: Mapping[str, str]) -> dict[str, str]:
         "supplied_context": f"## Supplied context\n{shared_values['supplied_context']}",
         "output_constraints": (
             f"## Requested output constraints\n{shared_values['output_constraints']}"
+        ),
+        # No stage file carries this section, so every condition receives it.
+        "output_language": (
+            "## Output language\n"
+            f"Write the deliverable in {shared_values['output_language']}."
         ),
     }
 
@@ -1094,6 +1100,9 @@ class ExperimentRunner:
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
                     fidelity_gate=fidelity_gate,
+                    output_language=check_output_language(
+                        scored.decode("utf-8"), prompt.language
+                    ),
                 ),
             )
             return RunResult(
@@ -1720,6 +1729,7 @@ class ExperimentRunner:
         spawn_extraction: Mapping[str, Any] | None = None,
         trace_timestamps: Mapping[str, Any] | None = None,
         fidelity_gate: Mapping[str, Any] | None = None,
+        output_language: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         if platform == "codex":
@@ -1931,6 +1941,8 @@ class ExperimentRunner:
             manifest["trace_timestamps"] = dict(trace_timestamps)
         if fidelity_gate is not None:
             manifest["fidelity_gate"] = dict(fidelity_gate)
+        if output_language is not None:
+            manifest["output_language"] = dict(output_language)
         if output_hash is not None:
             manifest["output_hash"] = output_hash
         if trace_hash is not None:

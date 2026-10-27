@@ -31,8 +31,8 @@ from agentic_cogwriter.prompts.materialize import (
     HABERMAS_COMMIT,
     HABERMAS_FILES,
     HABERMAS_RATINGS_FILE,
-    MANIFEST_FILENAMES,
     MANIFEST_FIELDS,
+    MANIFEST_FILENAMES,
     RemoteFile,
     acquire,
     build_dolomites,
@@ -61,6 +61,7 @@ def _test_manifest_row(prompt_id: str = "p1") -> dict[str, Any]:
         "source_version": "test@1",
         "prompt_text": "Write a test.",
         "requested_output_constraints": ["Be concise."],
+        "language": "en",
     }
     row["hash"] = hash_manifest_row(row)
     return row
@@ -242,39 +243,48 @@ def test_acquire_rejects_cached_and_downloaded_hash_mismatches(
         acquire(download_source, tmp_path)
 
 
-def test_build_writingbench_maps_index_and_query(tmp_path: Path) -> None:
-    source = tmp_path / "writingbench.jsonl"
-    source.write_text(
-        json.dumps(
+def test_build_writingbench_maps_index_query_and_language(tmp_path: Path) -> None:
+    source_row = {
+        "index": 7,
+        "query": "Write a memo.",
+        "checklist": [
             {
-                "index": 7,
-                "query": "Write a memo.",
-                "checklist": [
-                    {
-                        "name": "Structure",
-                        "criteria_description": "Use a clear structure.",
-                        "1-2": "Missing.",
-                        "3-4": "Weak.",
-                        "5-6": "Adequate.",
-                        "7-8": "Strong.",
-                        "9-10": "Excellent.",
-                    }
-                ],
+                "name": "Structure",
+                "criteria_description": "Use a clear structure.",
+                "1-2": "Missing.",
+                "3-4": "Weak.",
+                "5-6": "Adequate.",
+                "7-8": "Strong.",
+                "9-10": "Excellent.",
             }
-        )
-        + "\n"
-    )
+        ],
+    }
+    source = tmp_path / "writingbench.jsonl"
+    source.write_text(json.dumps(source_row) + "\n")
+    tagged = tmp_path / "writingbench-lang.jsonl"
+    tagged.write_text(json.dumps({**source_row, "lang": "zh"}) + "\n")
 
-    rows = build_writingbench(source)
+    rows = build_writingbench(source, tagged)
 
     assert len(rows) == 1
     assert rows[0]["prompt_id"] == "writingbench-0007"
     assert rows[0]["native_payload"][0]["name"] == "Structure"
+    assert rows[0]["language"] == "zh"
     validate_manifest_row(rows[0])
+
+    tagged.write_text(
+        json.dumps({**source_row, "query": "Changed.", "lang": "zh"}) + "\n"
+    )
+    with pytest.raises(ValueError, match="language row 7 differs"):
+        build_writingbench(source, tagged)
+
+    tagged.write_text(json.dumps({**source_row, "lang": "fr"}) + "\n")
+    with pytest.raises(ValueError, match="language must be one of"):
+        build_writingbench(source, tagged)
 
     source.write_text('{"index": "seven", "query": "Write.", "checklist": []}\n')
     with pytest.raises(TypeError, match="index must be an integer"):
-        build_writingbench(source)
+        build_writingbench(source, tagged)
 
 
 def test_build_hellobench_uses_requirements_and_fallbacks(tmp_path: Path) -> None:
@@ -853,7 +863,9 @@ def test_materialize_dispatches_selected_benchmarks(
         "acquire",
         lambda source, cache: cache / source.cache_name,
     )
-    monkeypatch.setattr(materialize_module, "build_writingbench", lambda source: [])
+    monkeypatch.setattr(
+        materialize_module, "build_writingbench", lambda source, language: []
+    )
     monkeypatch.setattr(materialize_module, "build_hellobench", lambda _sources: [])
     monkeypatch.setattr(
         materialize_module,

@@ -51,6 +51,7 @@ def _run(
         "source_version": "test@1",
         "prompt_text": "Write a memo.",
         "requested_output_constraints": {},
+        "language": "en",
     }
     prompt_row["hash"] = sha256_json(prompt_row)
     manifest_path = root / "manifests" / f"{benchmark.casefold()}.jsonl"

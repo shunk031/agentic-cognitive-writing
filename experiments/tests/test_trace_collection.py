@@ -378,6 +378,7 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path, monkey
         prompt_text="Write a memo.",
         supplied_context="Provided facts only.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
     monkeypatch.setattr(
@@ -428,6 +429,7 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
         prompt_text="Write a memo.",
         supplied_context="Provided facts only.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
     runner = _runner(tmp_path, executor=FakeExecutor(subagent_spawns=1))
@@ -471,6 +473,7 @@ def test_claude_code_delegating_condition_bypasses_codex_delegation_gate(
         prompt_text="Write a memo.",
         supplied_context="Provided facts only.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
     runner = _runner(tmp_path, executor=FakeExecutor())
@@ -501,6 +504,7 @@ def test_runner_rejects_output_over_shared_budget(tmp_path):
         source_version="test",
         prompt_text="Write a memo.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
     config = _config()
@@ -525,6 +529,7 @@ def test_runner_fails_closed_on_retrieval_event(tmp_path):
         source_version="test",
         prompt_text="Write a memo.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
     runner = _runner(tmp_path, executor=FakeExecutor(retrieval=True))
@@ -540,6 +545,7 @@ def test_runner_rejects_missing_plugin_trace(tmp_path):
         source_version="test",
         prompt_text="Write a memo.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
     runner = _runner(tmp_path, executor=FakeExecutor(write_trace=False))
@@ -560,6 +566,7 @@ def test_missing_trace_preserves_transport_evidence_and_absolute_paths(tmp_path)
         source_version="test",
         prompt_text="Write a memo.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
     executor = FakeExecutor(write_trace=False)
@@ -617,6 +624,7 @@ def test_trace_path_is_derived_from_codex_cwd(tmp_path):
         source_version="test",
         prompt_text="Write a memo.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
     executor = FakeExecutor()
@@ -651,6 +659,7 @@ def test_executor_start_failure_preserves_empty_transport_evidence(tmp_path):
         source_version="test",
         prompt_text="Write a memo.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
 
@@ -701,6 +710,7 @@ def test_retry_failure_preserves_each_attempt_transport_evidence(tmp_path):
         source_version="test",
         prompt_text="Write a memo.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
     executor = RetryFailureExecutor()
@@ -774,6 +784,7 @@ def test_final_execution_errors_preserve_transport_evidence(tmp_path, result, me
         source_version="test",
         prompt_text="Write a memo.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
     runner = _runner(tmp_path, executor=FinalFailureExecutor())

@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from agentic_cogwriter.runner.fidelity import check_fidelity
+from agentic_cogwriter.runner.fidelity import check_fidelity, check_output_language
 
 FIXTURES = Path(__file__).parent / "fixtures" / "fidelity"
 MONITOR = "monitor-thread"
@@ -370,3 +370,23 @@ def test_recorded_executed_study_run_shows_every_measured_defect() -> None:
         f"child {reviewing} was never closed",
         "scored output is not workspace/.writing/draft.md",
     ]
+
+
+@pytest.mark.parametrize(
+    ("text", "language", "dominant", "mismatch"),
+    [
+        ("A memo about Hangzhou (杭州) tea.", "en", "LATIN", False),
+        ("关于杭州龙井茶的备忘录，涉及 Longjing 产区。", "en", "CJK", True),
+        ("关于杭州龙井茶的备忘录。", "zh", "CJK", False),
+        ("A memo about tea.", "zh", "LATIN", True),
+        ("123 — 456", "en", None, True),
+    ],
+)
+def test_output_language_flags_a_dominant_script_mismatch(
+    text: str, language: str, dominant: str | None, mismatch: bool
+) -> None:
+    result = check_output_language(text, language)
+
+    assert result["expected_language"] == language
+    assert result["dominant_script"] == dominant
+    assert result["mismatch"] is mismatch

@@ -17,6 +17,7 @@ def _run(root: Path, benchmark: str, condition: str, prompt: str) -> Path:
         "source_version": "test@1",
         "prompt_text": "Write a memo.",
         "requested_output_constraints": {},
+        "language": "en",
     }
     prompt_row["hash"] = sha256_json(prompt_row)
     manifest = {
