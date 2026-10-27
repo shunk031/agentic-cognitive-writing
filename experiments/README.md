@@ -57,7 +57,7 @@ uv run --package agentic-cogwriter agentic-cogwriter-runner \
 
 The default tracked configuration stops in preflight. For Codex, set `--codex-plugin-root` to a directory containing `skills/<skill>/SKILL.md`; the runner copies the required files into the run workspace before invoking Codex. A container run that mounts the plugin at `/plugin` must pass `--codex-plugin-root /plugin`. Codex reads `plugin/skills/<skill>/SKILL.md` from the workspace and does not install a plugin into `CODEX_HOME`. When the option is omitted, the runner selects matching skill files from the wrapper's configured plugin paths. Claude Code uses the plugin directories listed by its selected wrapper.
 
-The resolved workspace must not have an ancestor carrying `AGENTS.md`, `CLAUDE.md`, or a non-empty `.codex/` or `.claude/`. An empty directory supplies no guidance, and the Codex Linux sandbox briefly creates empty `.codex/` markers in each writable root, including `/tmp`. The runner refuses an output path under the repository because the repository's ancestors contain guidance files. Choose an output root whose ancestors are guidance-free, or use the [Docker runner](docker/README.md), which mounts the host `runs/` directory at `/run-output`.
+The resolved workspace must not have an ancestor carrying `AGENTS.md`, `CLAUDE.md`, `.codex/`, or `.claude/`. The runner refuses an output path under the repository because the repository's ancestors contain guidance files. Choose an output root whose ancestors are guidance-free, or use the [Docker runner](docker/README.md), which mounts the host `runs/` directory at `/run-output`.
 
 ## Inspect artifacts
 

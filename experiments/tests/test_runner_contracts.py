@@ -17,6 +17,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from agentic_cogwriter.runner import runner as runner_module
 from agentic_cogwriter.runner.adapters import PlatformAdapter
 from agentic_cogwriter.runner.cli import build_parser
 from agentic_cogwriter.runner.conditions import (
@@ -831,16 +832,19 @@ def test_runner_rejects_guidance_ancestor_before_starting_a_session(
     assert not (blocked_root / "runs" / "WritingBench").exists()
 
 
-def test_runner_ignores_an_empty_guidance_directory_ancestor(tmp_path: Path) -> None:
-    root = tmp_path / "sandbox-marker"
-    (root / ".codex").mkdir(parents=True)
-    runner = _runner(root / "runs", executor=_RetryExecutor([_result()]))
+def test_guidance_scan_root_bounds_only_the_test_suite(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    host = tmp_path / "host"
+    (host / ".codex").mkdir(parents=True)
+    workspace = host / "runs" / "workspace"
+    monkeypatch.setattr(runner_module, "_GUIDANCE_SCAN_ROOT", host / "runs")
 
-    runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+    runner_module._assert_guidance_free_workspace(workspace)
 
-    (root / ".codex" / "config.toml").write_text("model = 'x'\n", encoding="utf-8")
-    with pytest.raises(ConfigurationError, match=r"\.codex"):
-        runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
+    monkeypatch.setattr(runner_module, "_GUIDANCE_SCAN_ROOT", None)
+    with pytest.raises(ConfigurationError, match=r"host/\.codex"):
+        runner_module._assert_guidance_free_workspace(workspace)
 
 
 def _event(
