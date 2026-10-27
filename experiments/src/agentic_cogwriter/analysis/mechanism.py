@@ -19,11 +19,20 @@ events:
 - developed: goal lines existed before and none was removed;
 - replaced: a goal line before is missing after, so it was removed or rewritten.
 
+A replacement after review is a replaced event in a ``Planning`` delegation
+that comes right after a ``Reviewing`` delegation. It approximates the executed
+study's accepted goal replacement, where the Reviewer reports a conflict, the
+Monitor accepts it, and ``Planning`` replaces the goal; the broad replaced event
+also counts any other removal or rewrite.
+
 A section is a Markdown heading line. ``Planning`` precedes the first section
 when a ``Planning`` delegation precedes the first change that adds a heading to
-``draft.md``; a run that adds no heading has no value. ``Reviewing`` is followed
-by ``Planning`` when the delegation right after a ``Reviewing`` delegation is
-``Planning``.
+``draft.md``; a run that adds no heading has no value. ``Planning`` precedes the
+first ``Translating`` when the first ``Planning`` delegation comes before the
+first ``Translating`` delegation, or there is none. ``Reviewing`` is followed by
+``Planning`` when the delegation right after a ``Reviewing`` delegation is
+``Planning``. A condition whose runs spawn no child has no process sequence, so
+its process-derived values are reported as missing rather than as zero.
 
 Only ``apply_patch`` writes become ``FileChange`` items. Each run therefore
 lists the shell commands that mention ``goals.md`` or ``draft.md`` and look like
@@ -53,9 +62,21 @@ from .aggregate import wilson_interval
 TRACKED = ("goals.md", "draft.md")
 GOAL_EVENTS = ("created", "developed", "replaced")
 RATES = (
+    "planning_before_first_translating",
     "planning_before_first_section",
     "reviewing_then_planning",
     *(f"goal_{event}" for event in GOAL_EVENTS),
+    "goal_replaced_after_review",
+)
+# Values that need a process sequence; missing for conditions that spawn no child.
+PROCESS_DERIVED = frozenset(
+    {
+        "planning_before_first_translating",
+        "planning_before_first_section",
+        "reviewing_then_planning",
+        "goal_replaced_after_review",
+        "mean_processes",
+    }
 )
 _GOAL_LINE = re.compile(r"^(?:#{1,6}|[-*+]|\d+[.)])\s")
 _HEADING = re.compile(r"^#{1,6}\s")
@@ -223,17 +244,23 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
                     )
     changes.sort(key=attrgetter("at"))
 
+    # A Monitor change shares its delegation index but follows that delegation.
     intervals = [
-        (delegation, [c.change for c in group])
-        for delegation, group in groupby(
-            (c for c in changes if c.file == "goals.md"), key=attrgetter("delegation")
+        (delegation, preceding, [c.change for c in group])
+        for (delegation, preceding), group in groupby(
+            (c for c in changes if c.file == "goals.md"),
+            key=attrgetter("delegation", "preceding"),
         )
     ]
     goal_intervals = [
-        {"delegation": delegation, "events": events}
-        for (delegation, _), events in zip(
+        {
+            "delegation": delegation,
+            "process": processes[delegation] if delegation == preceding else "monitor",
+            "events": events,
+        }
+        for (delegation, preceding, _), events in zip(
             intervals,
-            classify_goal_intervals(group for _, group in intervals),
+            classify_goal_intervals(group for *_, group in intervals),
             strict=True,
         )
     ]
@@ -245,9 +272,11 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
         for thread, thread_records in records.items()
         for command in unrecorded_writes(thread_records)
     ]
+    translating = processes.index("translating") if "translating" in processes else None
     return {
         "processes": processes,
         "goal_intervals": goal_intervals,
+        "planning_before_first_translating": "planning" in processes[:translating],
         "planning_before_first_section": None
         if first_section is None
         else "planning" in processes[: first_section.preceding],
@@ -259,6 +288,13 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
             f"goal_{event}": any(event in i["events"] for i in goal_intervals)
             for event in GOAL_EVENTS
         },
+        "goal_replaced_after_review": any(
+            interval["process"] == "planning"
+            and "replaced" in interval["events"]
+            and interval["delegation"] > 0
+            and processes[interval["delegation"] - 1] == "reviewing"
+            for interval in goal_intervals
+        ),
         "unrecorded_writes": writes,
     }
 
@@ -278,7 +314,8 @@ def summarize(runs: Sequence[dict[str, Any]]) -> dict[str, Any]:
     """Aggregate completed runs: each mechanism's rate with a 95% Wilson interval."""
 
     completed = [run for run in runs if run["status"] == "completed"]
-    return {
+    spawned = any(run["processes"] for run in completed)
+    summary = {
         "runs": len(runs),
         "completed": len(completed),
         "scorable": sum(run["fidelity"] == "scorable" for run in runs),
@@ -296,6 +333,9 @@ def summarize(runs: Sequence[dict[str, Any]]) -> dict[str, Any]:
         ),
         "unrecorded_writes": sum(len(run["unrecorded_writes"]) for run in runs),
     }
+    if not spawned:
+        summary.update(dict.fromkeys(PROCESS_DERIVED))
+    return summary
 
 
 def report(roots: Sequence[Path]) -> dict[str, dict[str, Any]]:
@@ -354,6 +394,12 @@ def format_table(summary: dict[str, dict[str, Any]]) -> str:
     for condition, row in summary.items():
         cells = " | ".join(_cell(row[column]) for column in columns)
         lines.append(f"| {condition} | {cells} |")
+    lines += [
+        "",
+        "goal_replaced_after_review is comparable to the executed study's accepted "
+        "goal replacement; goal_replaced counts every removed or rewritten goal. "
+        "n/a: no spawned child, so no process sequence.",
+    ]
     return "\n".join(lines)
 
 

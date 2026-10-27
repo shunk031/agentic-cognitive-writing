@@ -222,16 +222,18 @@ def test_report_derives_processes_and_goal_events_from_rollouts(
 
     assert detail["processes"] == ["planning", "translating", "reviewing", "planning"]
     assert detail["goal_intervals"] == [
-        {"delegation": 0, "events": ["created"]},
-        {"delegation": 3, "events": ["replaced"]},
+        {"delegation": 0, "process": "planning", "events": ["created"]},
+        {"delegation": 3, "process": "planning", "events": ["replaced"]},
     ]
+    assert detail["planning_before_first_translating"] is True
     assert detail["planning_before_first_section"] is True
     assert detail["reviewing_then_planning"] is True
+    assert detail["goal_replaced_after_review"] is True
     assert detail["unrecorded_writes"] == []
     assert (
         "| A4 | 1 | 1 | 1 | 1/1 1.00 [0.21, 1.00] | 1/1 1.00 [0.21, 1.00] "
-        "| 1/1 1.00 [0.21, 1.00] | 0/1 0.00 [0.00, 0.79] | 1/1 1.00 [0.21, 1.00] "
-        "| 4.00 | 0 | 0 |"
+        "| 1/1 1.00 [0.21, 1.00] | 1/1 1.00 [0.21, 1.00] | 0/1 0.00 [0.00, 0.79] "
+        "| 1/1 1.00 [0.21, 1.00] | 1/1 1.00 [0.21, 1.00] | 4.00 | 0 | 0 |"
     ) in capsys.readouterr().out
 
 
@@ -242,13 +244,25 @@ def test_a_section_written_before_planning_is_not_planning_first(
         tmp_path,
         [_spawn("t1", "$translating write"), _spawn("p1", "$planning plan")],
         {
-            "t1": _rollout("t1", (5_000, DRAFT, _add("# Title\n")), started=1),
-            "p1": _rollout("p1", (9_000, GOALS, _add(FIRST_GOALS)), started=8),
+            "t1": _rollout(
+                "t1",
+                (3_000, GOALS, _add(FIRST_GOALS)),
+                (5_000, DRAFT, _add("# Title\n")),
+                started=1,
+            ),
+            "p1": _rollout("p1", (9_000, GOALS, _update(REWRITE)), started=8),
         },
     )
 
+    assert detail["planning_before_first_translating"] is False
     assert detail["planning_before_first_section"] is False
-    assert detail["goal_intervals"] == [{"delegation": 1, "events": ["created"]}]
+    assert detail["goal_intervals"] == [
+        {"delegation": 0, "process": "translating", "events": ["created"]},
+        {"delegation": 1, "process": "planning", "events": ["replaced"]},
+    ]
+    # The replacement follows Translating, not Reviewing.
+    assert detail["goal_replaced"] is True
+    assert detail["goal_replaced_after_review"] is False
 
 
 def test_monitor_changes_fall_between_its_delegations(tmp_path: Path) -> None:
@@ -270,11 +284,34 @@ def test_monitor_changes_fall_between_its_delegations(tmp_path: Path) -> None:
     )
 
     assert detail["goal_intervals"] == [
-        {"delegation": -1, "events": ["created"]},
-        {"delegation": 0, "events": ["created"]},
+        {"delegation": -1, "process": "monitor", "events": ["created"]},
+        {"delegation": 0, "process": "planning", "events": ["created"]},
     ]
     # The Monitor wrote the section after the Planning delegation started.
     assert detail["planning_before_first_section"] is True
     assert detail["unrecorded_writes"] == [
         {"thread": "monitor", "command": "touch .writing/goals.md"}
     ]
+
+
+def test_conditions_without_spawns_have_no_process_values(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    detail = _detail(
+        tmp_path,
+        [{"type": "thread.started", "thread_id": "monitor"}],
+        {
+            "monitor": _rollout(
+                "monitor",
+                (1_000, GOALS, _add(FIRST_GOALS)),
+                (2_000, DRAFT, _add("# Title\n")),
+                parent=None,
+            )
+        },
+    )
+
+    assert detail["processes"] == []
+    assert (
+        "| A4 | 1 | 1 | 1 | n/a | n/a | n/a | 1/1 1.00 [0.21, 1.00] "
+        "| 0/1 0.00 [0.00, 0.79] | 0/1 0.00 [0.00, 0.79] | n/a | n/a | 0 | 0 |"
+    ) in capsys.readouterr().out
