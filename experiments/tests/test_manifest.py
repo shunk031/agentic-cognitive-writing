@@ -21,6 +21,7 @@ def _jsonl_row():
         "source_version": "test@1",
         "prompt_text": "Write a test.",
         "requested_output_constraints": ["Be concise."],
+        "language": "en",
     }
     row["hash"] = _digest(row)
     return row
@@ -55,6 +56,25 @@ def test_prompt_manifest_rejects_tampering(tmp_path):
     path.write_text(json.dumps(row) + "\n")
 
     with pytest.raises(ManifestError, match="row hash"):
+        load_prompt_manifest(path)
+
+
+@pytest.mark.parametrize(
+    ("language", "message"),
+    [(None, "missing fields: language"), ("fr", "language must be one of")],
+)
+def test_prompt_manifest_requires_a_known_output_language(tmp_path, language, message):
+    path = tmp_path / "testbench.jsonl"
+    row = _jsonl_row()
+    del row["hash"]
+    if language is None:
+        del row["language"]
+    else:
+        row["language"] = language
+    row["hash"] = _digest(row)
+    path.write_text(json.dumps(row) + "\n")
+
+    with pytest.raises(ManifestError, match=message):
         load_prompt_manifest(path)
 
 

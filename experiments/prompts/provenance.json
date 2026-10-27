@@ -5,6 +5,7 @@
       "archive_url": "https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip",
       "attribution": "DeepMind Technologies Limited, DoLoMiTes: Domain-Specific Long-Form Methodical Tasks; CC BY 4.0. Changes: transformed the development examples into prompt rows and omitted reference outputs.",
       "item_count": 820,
+      "language": "en for every row: English-only benchmark without a language field",
       "license": "CC-BY-4.0",
       "manifest": "manifests/dolomites.jsonl",
       "name": "DoLoMiTes",
@@ -29,6 +30,7 @@
       "attribution": "Tessler et al., AI can help humans find common ground in democratic deliberation, Science 386(6719), 2024, https://doi.org/10.1126/science.adq2852; Google DeepMind Habermas Machine other materials, CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Changes: selected OOD_TEST deliberation groups and converted their five participant opinions into supplied context.",
       "citation": "Tessler et al., AI can help humans find common ground in democratic deliberation, Science 386(6719), 2024, https://doi.org/10.1126/science.adq2852",
       "item_count": 10,
+      "language": "en for every row: English-only benchmark without a language field",
       "license": "CC-BY-4.0",
       "license_url": "https://creativecommons.org/licenses/by/4.0/",
       "manifest": "manifests/habermasmachine.jsonl",
@@ -84,6 +86,7 @@
     },
     "hellobench": {
       "item_count": 647,
+      "language": "en for every row: English-only benchmark without a language field",
       "license": "MIT",
       "manifest": "manifests/hellobench.jsonl",
       "name": "HelloBench",
@@ -129,6 +132,12 @@
     },
     "writingbench": {
       "item_count": 1000,
+      "language": {
+        "join": "index; every other field must equal the source row",
+        "source_field": "lang",
+        "source_sha256": "18fee37c645166eb2e206b36366b2e354265b1e4201db2c86e759e825eaddcbe",
+        "source_url": "https://raw.githubusercontent.com/X-PLUG/WritingBench/7a30aa4bd4305cc912d07b37a491b99097fc5078/benchmark_query/benchmark_all.jsonl"
+      },
       "license": "Apache-2.0",
       "manifest": "manifests/writingbench.jsonl",
       "name": "WritingBench",

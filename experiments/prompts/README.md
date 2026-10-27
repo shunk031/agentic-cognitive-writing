@@ -53,7 +53,7 @@ experiments/
 Each manifest row contains:
 
 `prompt_id`, `benchmark_name`, `source_version`, `prompt_text`,
-`requested_output_constraints`, and `hash`. WritingBench rows also carry the
+`requested_output_constraints`, `language`, and `hash`. WritingBench rows also carry the
 source row's `native_payload` checklist for native pointwise judging. HelloBench
 rows carry `native_payload` as a non-empty list of non-empty checklist strings;
 the materializer maps the pinned source row's `checklists` field and verifies
@@ -61,6 +61,8 @@ that `formatted_checklists` and `num_checklist` are present and consistent. Each
 checklist item uses the upstream five-step evaluation scale: `0`, `0.25`, `0.5`,
 `0.75`, or `1`. HabermasMachine rows carry `supplied_context` as a numbered list
 of participant opinions and omit `native_payload`.
+
+`language` is the deliverable's language, `en` or `zh`, and the runner states it in every condition's prompt. WritingBench takes it from the `lang` field that upstream added in commit [`7a30aa4b`](https://github.com/X-PLUG/WritingBench/commit/7a30aa4bd4305cc912d07b37a491b99097fc5078); the materializer joins that file by `index` and requires every other field to equal the pinned source row. The language tag, not the prompt's script, decides: several Chinese requests embed long English reference papers. HelloBench, DoLoMiTes, and HabermasMachine have no language field and are English-only benchmarks, so their rows record `en`. [`provenance.json`](provenance.json) records both rules.
 
 `hash` is SHA-256 over the canonical UTF-8 JSON object containing every field
 except `hash` itself. Canonical JSON uses sorted keys, no insignificant

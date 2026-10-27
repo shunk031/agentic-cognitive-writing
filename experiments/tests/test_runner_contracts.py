@@ -39,6 +39,7 @@ from agentic_cogwriter.runner.execution import (
     extract_token_usage,
     reject_retrieval,
 )
+from agentic_cogwriter.runner.hashing import sha256_json
 from agentic_cogwriter.runner.manifest import PromptRecord
 from agentic_cogwriter.runner.runner import (
     ExperimentRunner,
@@ -178,6 +179,7 @@ def _prompt() -> PromptRecord:
         prompt_text="Write a memo.",
         supplied_context="Provided facts only.",
         requested_output_constraints={},
+        language="en",
         row_hash="row-hash",
     )
 
@@ -1054,6 +1056,30 @@ def test_every_condition_prompt_has_the_uniform_single_turn_contract() -> None:
             assert SINGLE_TURN_CONTRACT in prompt
 
 
+@pytest.mark.parametrize(("language", "name"), [("en", "English"), ("zh", "Chinese")])
+def test_every_condition_prompt_states_the_manifest_output_language_once(
+    language: str, name: str
+) -> None:
+    row = {
+        "prompt_id": "writingbench-0001",
+        "benchmark_name": "WritingBench",
+        "source_version": "test",
+        "prompt_text": "Write a memo about Hangzhou tea.",
+        "requested_output_constraints": {},
+        "language": language,
+    }
+    prompt = PromptRecord.from_mapping({**row, "hash": sha256_json(row)})
+    section = f"## Output language\nWrite the deliverable in {name}."
+    runner = ExperimentRunner(_config(), output_root=Path("runs"))
+    conditions = load_condition_registry()
+    assert sorted(conditions) == [*(f"A{n}" for n in range(1, 9)), "B1", "B2"]
+    for condition in conditions.values():
+        for platform in PLATFORMS:
+            composed = runner._plugin_prompt(condition, prompt, platform)
+            assert composed.count("## Output language") == 1
+            assert section in composed
+
+
 def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
     occurrences = 0
     for path in NO_GOAL_SKILL_PATHS:
@@ -1463,13 +1489,15 @@ def test_composed_prompt_uses_ordered_headings_without_label_lines() -> None:
                     if platform == "codex" and condition.require_delegation
                     else []
                 )
-                + FROZEN_STAGE_HEADINGS.get(
-                    condition_id,
-                    [
+                + (
+                    ["## Output language", *FROZEN_STAGE_HEADINGS[condition_id]]
+                    if condition_id in FROZEN_STAGE_HEADINGS
+                    else [
                         "## Assignment",
                         "## Supplied context",
                         "## Requested output constraints",
-                    ],
+                        "## Output language",
+                    ]
                 )
             )
 
@@ -1621,7 +1649,8 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
     assert task == (
         "## Assignment\nWrite a memo.\n\n"
         "## Supplied context\nProvided facts only.\n\n"
-        "## Requested output constraints\n{}\n"
+        "## Requested output constraints\n{}\n\n"
+        "## Output language\nWrite the deliverable in English.\n"
     )
     assert set(staged_files) == {
         *(f"plugin/{relative}" for relative in files),
@@ -1906,8 +1935,12 @@ def test_a8_accepts_in_context_execution_without_spawn_event(tmp_path: Path) -> 
     }
 
 
+@pytest.mark.parametrize(
+    ("output", "dominant", "mismatch"),
+    [("final output " * 10, "LATIN", False), ("最终输出" * 10, "CJK", True)],
+)
 def test_codex_run_with_complete_clean_records_stays_scoring_eligible(
-    tmp_path: Path,
+    tmp_path: Path, output: str, dominant: str, mismatch: bool
 ) -> None:
     class RecordedExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
@@ -1921,7 +1954,7 @@ def test_codex_run_with_complete_clean_records_stays_scoring_eligible(
                 command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
             )
 
-    result = _result()
+    result = _result(output=output)
     started = json.dumps({"type": "thread.started", "thread_id": "session-1"})
     result = replace(result, stdout=f"{started}\n".encode() + result.stdout)
     runner = _runner(
@@ -1936,6 +1969,14 @@ def test_codex_run_with_complete_clean_records_stays_scoring_eligible(
     assert manifest["fidelity_gate"] == {"status": "scorable", "reasons": []}
     assert manifest["status"] == "completed"
     assert manifest["scoring"] == {"status": "eligible"}
+    # A language mismatch is recorded for the fidelity report, never rejected.
+    assert manifest["output_language"] == {
+        "expected_language": "en",
+        "expected_script": "LATIN",
+        "dominant_script": dominant,
+        "dominant_share": 1.0,
+        "mismatch": mismatch,
+    }
 
 
 def test_required_delegation_fails_closed_without_spawn_event(tmp_path: Path) -> None:
@@ -3154,6 +3195,7 @@ def test_non_draft_condition_accepts_short_output(tmp_path: Path) -> None:
         source_version="test",
         prompt_text="Write a memo.",
         requested_output_constraints={"min_words": 20},
+        language="en",
         row_hash="row-hash",
     )
 

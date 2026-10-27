@@ -20,12 +20,20 @@ from agentic_cogwriter.runner.hashing import (
     sha256_file,
     sha256_json,
 )
+from agentic_cogwriter.runner.manifest import LANGUAGES
 
 DEFAULT_OUTPUT_DIR = MANIFESTS_DIR
 DEFAULT_CACHE_DIR = BENCHMARK_CACHE_DIR
 
 WRITINGBENCH_COMMIT = "9c24bb67fd7451a2eacf5810aa7721e3a8b3bdad"
 WRITINGBENCH_BLOB_SHA1 = "e6cd82aabed6fa845f0a28cd2114daad59c012b9"
+# Upstream's "Add language tag" commit: the same rows plus a per-row `lang` field.
+WRITINGBENCH_LANG_COMMIT = "7a30aa4bd4305cc912d07b37a491b99097fc5078"
+# Benchmarks without a language field are English-only, so each row records "en".
+ENGLISH_ONLY = "en"
+ENGLISH_LANGUAGE_RULE = (
+    "en for every row: English-only benchmark without a language field"
+)
 HELLOBENCH_COMMIT = "92c7d469230b5b6b6ee1bfc1ea2ce49cb9125b57"
 DOLOMITES_COMMIT = "8331dd998bf510cacc58d10ad613c9e685787747"
 HABERMAS_COMMIT = "7923b71966c14136077c78d7841bc9e1a182dfe0"
@@ -55,6 +63,10 @@ WRITINGBENCH_URL = (
     "https://raw.githubusercontent.com/X-PLUG/WritingBench/"
     f"{WRITINGBENCH_COMMIT}/benchmark_query/benchmark_all.jsonl"
 )
+WRITINGBENCH_LANG_URL = (
+    "https://raw.githubusercontent.com/X-PLUG/WritingBench/"
+    f"{WRITINGBENCH_LANG_COMMIT}/benchmark_query/benchmark_all.jsonl"
+)
 DOLOMITES_ARCHIVE_URL = (
     "https://dolomites-benchmark.s3.us-west-2.amazonaws.com/dolomites_examples.zip"
 )
@@ -73,6 +85,7 @@ MANIFEST_FIELDS = (
     "source_version",
     "prompt_text",
     "requested_output_constraints",
+    "language",
     "hash",
 )
 # Native evaluator payloads are optional at the manifest schema level and are
@@ -164,6 +177,11 @@ WRITINGBENCH_FILE = RemoteFile(
     "writingbench-benchmark_all.jsonl",
     WRITINGBENCH_URL,
     "026e3f9482ff3474c802cd43f5cae9fd584e10d0848d3e0a152695434becbc98",
+)
+WRITINGBENCH_LANG_FILE = RemoteFile(
+    "writingbench-benchmark_all-lang.jsonl",
+    WRITINGBENCH_LANG_URL,
+    "18fee37c645166eb2e206b36366b2e354265b1e4201db2c86e759e825eaddcbe",
 )
 
 DOLOMITES_ARCHIVE = RemoteFile(
@@ -275,6 +293,8 @@ def validate_manifest_row(row: dict[str, Any]) -> None:
         )
     elif "supplied_context" in row:
         raise ValueError("supplied_context is only supported for HabermasMachine rows")
+    if row["language"] not in LANGUAGES:
+        raise ValueError(f"language must be one of {sorted(LANGUAGES)}")
     if not isinstance(row["hash"], str) or len(row["hash"]) != 64:
         raise ValueError("hash must be a 64-character SHA-256 hex digest")
     if row["hash"] != hash_manifest_row(row):
@@ -348,6 +368,7 @@ def _manifest_row(
     source_version: str,
     prompt_text: str,
     requested_output_constraints: list[str],
+    language: str = ENGLISH_ONLY,
     native_payload: list[dict[str, Any]] | None = None,
     supplied_context: str | None = None,
 ) -> dict[str, Any]:
@@ -357,6 +378,7 @@ def _manifest_row(
         "source_version": source_version,
         "prompt_text": prompt_text,
         "requested_output_constraints": requested_output_constraints,
+        "language": language,
     }
     if native_payload is not None:
         row["native_payload"] = native_payload
@@ -394,13 +416,17 @@ def _write_manifest(
     return target
 
 
-def build_writingbench(source_path: Path) -> list[dict[str, Any]]:
+def build_writingbench(source_path: Path, language_path: Path) -> list[dict[str, Any]]:
     source_rows = _read_jsonl(source_path)
+    tagged = {row.get("index"): row for row in _read_jsonl(language_path)}
     rows = []
     for source_row in source_rows:
         index = source_row.get("index")
         if not isinstance(index, int):
             raise TypeError("WritingBench index must be an integer")
+        tagged_row = tagged.get(index, {})
+        if {key: tagged_row.get(key) for key in source_row} != source_row:
+            raise ValueError(f"WritingBench language row {index} differs from source")
         rows.append(
             _manifest_row(
                 prompt_id=f"writingbench-{index:04d}",
@@ -414,6 +440,7 @@ def build_writingbench(source_path: Path) -> list[dict[str, Any]]:
                     "Follow all task, language, audience, format, style, length, and "
                     "content constraints embedded in prompt_text."
                 ],
+                language=tagged_row.get("lang"),
                 native_payload=source_row["checklist"],
             )
         )
@@ -735,6 +762,12 @@ def provenance(
                 "source_url": WRITINGBENCH_URL,
                 "source_sha256": WRITINGBENCH_FILE.sha256,
                 "source_blob_sha1": WRITINGBENCH_BLOB_SHA1,
+                "language": {
+                    "source_field": "lang",
+                    "source_url": WRITINGBENCH_LANG_URL,
+                    "source_sha256": WRITINGBENCH_LANG_FILE.sha256,
+                    "join": "index; every other field must equal the source row",
+                },
                 "license": "Apache-2.0",
                 "redistribution": (
                     "Prompt manifest only; source file is acquired by the script."
@@ -763,6 +796,7 @@ def provenance(
                     "manifest_field": "native_payload",
                     "shape": "non-empty list of non-empty strings",
                 },
+                "language": ENGLISH_LANGUAGE_RULE,
                 "license": "MIT",
                 "redistribution": (
                     "Prompt manifest only; source files are acquired by the script."
@@ -776,6 +810,7 @@ def provenance(
                 "source_version": f"google-deepmind/dolomites@{DOLOMITES_COMMIT}",
                 "archive_url": DOLOMITES_ARCHIVE_URL,
                 "archive_sha256": DOLOMITES_ARCHIVE_SHA256,
+                "language": ENGLISH_LANGUAGE_RULE,
                 "license": "CC-BY-4.0",
                 "attribution": (
                     "DeepMind Technologies Limited, DoLoMiTes: Domain-Specific "
@@ -817,6 +852,7 @@ def provenance(
                     "candidate_comparisons": list(HABERMAS_CANDIDATE_FIELDS),
                     "position_statement_ratings": list(HABERMAS_RATING_FIELDS),
                 },
+                "language": ENGLISH_LANGUAGE_RULE,
                 "license": "CC-BY-4.0",
                 "license_url": "https://creativecommons.org/licenses/by/4.0/",
                 "citation": (
@@ -892,7 +928,10 @@ def materialize(
     counts: dict[str, int] = {}
 
     if "writingbench" in selected:
-        rows = build_writingbench(acquire(WRITINGBENCH_FILE, cache_dir))
+        rows = build_writingbench(
+            acquire(WRITINGBENCH_FILE, cache_dir),
+            acquire(WRITINGBENCH_LANG_FILE, cache_dir),
+        )
         _write_manifest(output_dir, "writingbench", rows)
         counts["writingbench"] = len(rows)
 

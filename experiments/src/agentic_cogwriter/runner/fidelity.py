@@ -5,12 +5,14 @@ from __future__ import annotations
 import json
 import os
 import re
-from collections import defaultdict
+import unicodedata
+from collections import Counter, defaultdict
 from collections.abc import Iterable
 from pathlib import Path, PurePosixPath
 from typing import Any
 
 from .execution import _json_objects
+from .manifest import LANGUAGES
 
 ROLES = ("planning", "translating", "reviewing")
 THREAD_LIMIT_ERROR = "agent thread limit reached"
@@ -22,6 +24,28 @@ _SKILL_FILE_TOKEN = re.compile(r"[^\s\"'`\\]*SKILL\.md")
 _PARENT_SEGMENT = re.compile(r"(?:^|[^\w.])\.\.(?:/|$)")
 _CALL_TYPES = frozenset({"function_call", "custom_tool_call", "local_shell_call"})
 _OUTPUT_TYPES = frozenset({"function_call_output", "custom_tool_call_output"})
+
+
+def check_output_language(text: str, language: str) -> dict[str, Any]:
+    """Flag a deliverable whose dominant letter script is not the prompt's.
+
+    The flag is recorded, never a rejection reason.
+    """
+
+    scripts = Counter(
+        unicodedata.name(char, "").split(" ", 1)[0] for char in text if char.isalpha()
+    )
+    dominant = scripts.most_common(1)[0][0] if scripts else None
+    expected = LANGUAGES[language][1]
+    return {
+        "expected_language": language,
+        "expected_script": expected,
+        "dominant_script": dominant,
+        "dominant_share": (
+            round(scripts[dominant] / scripts.total(), 4) if dominant else None
+        ),
+        "mismatch": dominant != expected,
+    }
 
 
 def check_fidelity(

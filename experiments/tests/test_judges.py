@@ -1449,6 +1449,7 @@ def _run_dir(
         "prompt_text": assignment,
         "supplied_context": "Provided fact.",
         "requested_output_constraints": {},
+        "language": "en",
     }
     if native_payload is not None:
         prompt_row["native_payload"] = native_payload

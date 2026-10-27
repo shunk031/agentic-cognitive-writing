@@ -12,6 +12,10 @@ from ..paths import PROVENANCE_PATH
 from .errors import ManifestError
 from .hashing import sha256_bytes, sha256_json
 
+# Manifest language code -> (name stated in the prompt, Unicode script of the
+# deliverable as a ``unicodedata.name`` prefix).
+LANGUAGES = {"en": ("English", "LATIN"), "zh": ("Chinese", "CJK")}
+
 
 def _without(mapping: Mapping[str, Any], key: str) -> dict[str, Any]:
     return {name: value for name, value in mapping.items() if name != key}
@@ -27,6 +31,7 @@ class PromptRecord:
     prompt_text: str | None
     requested_output_constraints: Any
     row_hash: str
+    language: str
     supplied_context: str = ""
     source_reference: str | None = None
     manifest_hash: str | None = None
@@ -41,6 +46,7 @@ class PromptRecord:
             "benchmark_name",
             "source_version",
             "requested_output_constraints",
+            "language",
             "hash",
         )
         missing = [field for field in required if field not in row]
@@ -66,6 +72,8 @@ class PromptRecord:
             or not row["source_version"].strip()
         ):
             raise ManifestError("source_version must be a non-empty string")
+        if row["language"] not in LANGUAGES:
+            raise ManifestError(f"language must be one of {sorted(LANGUAGES)}")
         expected_hash = sha256_json(_without(row, "hash"))
         if row["hash"] != expected_hash:
             raise ManifestError(
@@ -81,6 +89,7 @@ class PromptRecord:
             supplied_context=str(row.get("supplied_context", "")),
             requested_output_constraints=row["requested_output_constraints"],
             row_hash=row["hash"],
+            language=row["language"],
             manifest_hash=manifest_hash,
             # Preserve benchmark-native criteria through the existing prompt row.
             native_payload=row.get("native_payload"),
