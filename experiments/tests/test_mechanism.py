@@ -583,10 +583,163 @@ def test_monitor_changes_keep_goal_events_after_an_unknown_start(
         },
     )
 
+    # The Planner's own change may belong to the untimed reuse; the Monitor's
+    # change keeps its interval.
     assert [
         (i["delegation"], i["process"], i["event"]) for i in detail["goal_intervals"]
-    ] == [(0, "planning", "created"), (0, "monitor", "developed")]
+    ] == [(None, "unattributed", "created"), (0, "monitor", "developed")]
     assert detail["goal_developed"] is True
-    assert detail["unattributed_changes"] == 0
+    assert detail["unattributed_changes"] == 1
     # The section may follow the untimed delegation, so its position is unknown.
     assert detail["planning_before_first_section"] is None
+
+
+GOAL_LIST = "# Goals\n\n1. Parties\n2. Terms\n"
+LIST_REWRITE = _update("@@ -4 +4 @@\n-2. Terms\n+2. Payment\n")
+LIST_ADD = _update("@@ -4 +4,2 @@\n 2. Terms\n+3. Rent\n")
+
+
+def _close(thread: str) -> dict[str, Any]:
+    return _collab("close_agent", thread)
+
+
+def _after_review(tmp_path: Path, events: list, rollouts: dict) -> bool:
+    return _detail(tmp_path, events, rollouts)["goal_replaced_after_review"]
+
+
+def test_a_queued_input_merged_into_a_running_turn_is_not_after_review(
+    tmp_path: Path,
+) -> None:
+    # The input queued to the busy Planner joins its first turn, so the later
+    # reuse after the Translator has no turn record of its own.
+    events = [
+        _spawn("p0", "$planning"),
+        _spawn("r1", "$reviewing"),
+        _wait("r1"),
+        _close("r1"),
+        _collab("send_input", "p0", prompt="queued"),
+        _wait("p0"),
+        _spawn("t3", "$translating"),
+        _wait("t3"),
+        _close("t3"),
+        _collab("send_input", "p0", prompt="replace"),
+        _wait("p0"),
+    ]
+    rollouts = {
+        "p0": _rollout(
+            "p0",
+            (3_000, GOALS, _add(GOAL_LIST)),
+            (35_000, GOALS, LIST_REWRITE),
+            role="planning",
+            turns=(1, 30),
+            ends=(20, 40),
+        ),
+        "r1": _rollout("r1", role="reviewing", turns=(2,), ends=(5,)),
+        "t3": _rollout(
+            "t3", (25_000, GOALS, LIST_ADD), role="translating", turns=(22,), ends=(28,)
+        ),
+    }
+
+    assert _after_review(tmp_path, events, rollouts) is False
+
+
+def test_a_task_complete_after_close_does_not_shift_a_change(tmp_path: Path) -> None:
+    # The Translator is closed while running and its task_complete comes later.
+    events = [
+        _spawn("r0", "$reviewing"),
+        _wait("r0"),
+        _close("r0"),
+        _spawn("p1", "$planning"),
+        _wait("p1"),
+        _close("p1"),
+        _spawn("t2", "$translating"),
+        _close("t2"),
+        _collab("send_input", "p1", prompt="replace"),
+        _wait("p1"),
+    ]
+    rollouts = {
+        "r0": _rollout("r0", role="reviewing", ends=(2,)),
+        "p1": _rollout(
+            "p1",
+            (5_000, GOALS, _add(GOAL_LIST)),
+            (35_000, GOALS, LIST_REWRITE),
+            role="planning",
+            turns=(3,),
+            ends=(8, 40),
+        ),
+        "t2": _rollout(
+            "t2", (15_000, GOALS, LIST_ADD), role="translating", turns=(10,), ends=(50,)
+        ),
+    }
+
+    assert _after_review(tmp_path, events, rollouts) is False
+
+
+REUSE_AFTER_TRANSLATING = [
+    _spawn("r0", "$reviewing"),
+    _wait("r0"),
+    _spawn("p1", "$planning"),
+    _wait("p1"),
+    _spawn("t2", "$translating"),
+    _wait("t2"),
+    _collab("send_input", "p1", prompt="replace"),
+    _wait("p1"),
+]
+
+
+@pytest.mark.parametrize(
+    ("planner_turns", "attributed"),
+    [
+        # The reused Planner's turn is recorded: its rewrite follows Translating.
+        ((1, 8), True),
+        # Case K: the reused turn has no record, so the rewrite is unattributed.
+        ((1,), False),
+    ],
+)
+def test_a_reuse_after_translating_is_not_after_review(
+    tmp_path: Path, planner_turns: tuple[int, ...], attributed: bool
+) -> None:
+    detail = _detail(
+        tmp_path,
+        REUSE_AFTER_TRANSLATING,
+        {
+            "r0": _rollout("r0", role="reviewing"),
+            "p1": _rollout(
+                "p1",
+                (2_000, GOALS, _add(GOAL_LIST)),
+                (9_000, GOALS, LIST_REWRITE),
+                role="planning",
+                turns=planner_turns,
+            ),
+            "t2": _rollout("t2", role="translating", turns=(4,)),
+        },
+    )
+
+    assert detail["goal_replaced"] is attributed
+    assert detail["goal_replaced_after_review"] is False
+
+
+def test_a_reuse_right_after_review_is_after_review(tmp_path: Path) -> None:
+    # Case L: Reviewing ends, then the Planner is resumed and given the task.
+    events = [
+        _spawn("p1", "$planning"),
+        _wait("p1"),
+        _close("p1"),
+        _spawn("r1", "$reviewing"),
+        _wait("r1"),
+        _collab("resume_agent", "p1"),
+        _collab("send_input", "p1", prompt="replace"),
+        _wait("p1"),
+    ]
+    rollouts = {
+        "p1": _rollout(
+            "p1",
+            (1_000, GOALS, _add(GOAL_LIST)),
+            (9_000, GOALS, LIST_REWRITE),
+            role="planning",
+            turns=(0, 8),
+        ),
+        "r1": _rollout("r1", role="reviewing", turns=(2,)),
+    }
+
+    assert _after_review(tmp_path, events, rollouts) is True

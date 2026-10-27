@@ -17,10 +17,13 @@ File changes. The completed ``FileChange`` items of every rollout that touch
 change by a delegated child, or by a descendant of one, belongs to that child's
 latest delegation started before the change. A change by the Monitor itself
 belongs to the interval after the latest delegation started before it. When a
-delegation has no matching ``task_started`` record, its start is unknown but no
-earlier than the end (its turn's ``task_complete`` record, or else its start) of
-any delegation that had ended when it was issued; an open or queued delegation
-bounds nothing.
+delegation has no matching ``task_started`` record, its start is unknown. Its
+lower bound is the smaller of two bounds: the latest known start among the
+delegations issued up to it, and the latest end (a turn's ``task_complete``
+record, or else its start) among the delegations that had ended when it was
+issued. Neither bound alone holds in every record: a queued delegation can
+start late, a queued input can join a running turn without a turn record of
+its own, and a ``task_complete`` record can follow a ``close_agent``.
 A child's change that could belong to such a delegation is unattributed: it
 still updates the goal lines but counts toward no interval-based measure, and
 runs with unattributed changes are counted. A change by the Monitor keeps its
@@ -361,19 +364,17 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
         ends.append(thread_ends[n] if n < len(thread_ends) else starts[-1])
         seen[thread] += 1
 
-    # A delegation starts after every delegation that had ended when it was
-    # issued; an open or queued one bounds nothing.
+    # An unknown start takes the smaller of two lower bounds, as the module
+    # docstring explains.
+    def latest(times: Iterable[float]) -> float:
+        return max((time for time in times if time != float("inf")), default=0)
+
     earliest = [
-        max(
-            (
-                time
-                for i in d["ended_at_issue"]
-                for time in (ends[i], starts[i])
-                if time != float("inf")
-            ),
-            default=0,
+        min(
+            latest(starts[: k + 1]),
+            latest(time for i in d["ended_at_issue"] for time in (ends[i], starts[i])),
         )
-        for d in delegations
+        for k, d in enumerate(delegations)
     ]
     delegated = {d["thread"] for d in delegations}
 
