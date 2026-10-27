@@ -10,6 +10,7 @@ FIXTURES = Path(__file__).parent / "fixtures" / "fidelity"
 MONITOR = "monitor-thread"
 CHILD = "child-thread"
 CODEX_HOME = Path("/runs/.generator-config/run")
+TOUCH = "mkdir -p .writing && touch .writing/history.md .writing/draft.md"
 
 
 def _item(**item: Any) -> dict[str, Any]:
@@ -34,6 +35,13 @@ def _message(text: str) -> dict[str, Any]:
             "role": "user",
             "content": [{"type": "input_text", "text": text}],
         },
+    }
+
+
+def _read(command: str) -> dict[str, Any]:
+    return {
+        "type": "response_item",
+        "payload": {"type": "custom_tool_call", "input": command},
     }
 
 
@@ -123,6 +131,10 @@ def _monitor_writes_goals(run: dict[str, Any]) -> None:
     run["events"].append(_write("/workspace/.writing/goals.md"))
 
 
+def _monitor_touches_state(run: dict[str, Any]) -> None:
+    run["rollouts"][MONITOR].append(_read(f"exec_command({{cmd:{json.dumps(TOUCH)}}})"))
+
+
 def _leave_child_open(run: dict[str, Any]) -> None:
     run["events"].pop()
 
@@ -157,6 +169,7 @@ def _lose_child_rollout(run: dict[str, Any]) -> None:
             f"planning agent {CHILD} did not read its own SKILL.md",
         ),
         (_monitor_writes_goals, "Monitor wrote /workspace/.writing/goals.md"),
+        (_monitor_touches_state, f"Monitor ran shell write {TOUCH!r}"),
         (_leave_child_open, f"child {CHILD} was never closed"),
         (_hit_thread_limit, f"thread {MONITOR} hit the agent thread limit"),
         (_score_retyped_message, "scored output is not workspace/.writing/draft.md"),
@@ -225,13 +238,6 @@ def test_skill_root_escaping_the_run_codex_home_rejects_the_run(
     assert _gate(_materialize(tmp_path, run))["status"] == "rejected"
 
 
-def _read(command: str) -> dict[str, Any]:
-    return {
-        "type": "response_item",
-        "payload": {"type": "custom_tool_call", "input": command},
-    }
-
-
 def test_skill_read_outside_the_staged_skills_rejects_the_run(
     tmp_path: Path,
 ) -> None:
@@ -244,6 +250,36 @@ def test_skill_read_outside_the_staged_skills_rejects_the_run(
         f"thread {CHILD} read /home/user/.agents/skills/unslop/SKILL.md "
         "outside the staged skills"
     ]
+
+
+def _output(call_id: str, text: str) -> dict[str, Any]:
+    return {
+        "type": "response_item",
+        "payload": {
+            "type": "custom_tool_call_output",
+            "call_id": call_id,
+            "output": [{"type": "input_text", "text": text}],
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ("output", "status"),
+    [
+        ("sed: can't read {path}: No such file or directory\n", "scorable"),
+        ("Role: the Reviewer.\n", "rejected"),
+    ],
+)
+def test_skill_read_outside_the_staged_skills_counts_only_if_the_path_exists(
+    tmp_path: Path, output: str, status: str
+) -> None:
+    path = f"{CODEX_HOME.parent}/skills/planning/SKILL.md"
+    run = _clean_run()
+    read = _read(f'exec_command({{cmd:"sed -n 1,240p {path}"}})')
+    read["payload"]["call_id"] = "call-1"
+    run["rollouts"][CHILD] += [read, _output("call-1", output.format(path=path))]
+
+    assert _gate(_materialize(tmp_path, run))["status"] == status
 
 
 @pytest.mark.parametrize(
@@ -297,11 +333,21 @@ def test_staged_and_relative_skill_reads_are_scorable(tmp_path: Path) -> None:
     assert _gate(_materialize(run_dir, run))["status"] == "scorable"
 
 
+def test_monitor_shell_append_to_the_history_is_scorable(tmp_path: Path) -> None:
+    run = _clean_run()
+    run["rollouts"][MONITOR].append(
+        _read('exec_command({cmd:"printf x >> .writing/history.md"})')
+    )
+
+    assert _gate(_materialize(tmp_path, run))["status"] == "scorable"
+
+
+@pytest.mark.parametrize("defect", [_monitor_writes_goals, _monitor_touches_state])
 def test_monitor_write_rule_applies_only_to_monitor_conditions(
-    tmp_path: Path,
+    tmp_path: Path, defect: Any
 ) -> None:
     run = _clean_run()
-    _monitor_writes_goals(run)
+    defect(run)
 
     gate = _gate(_materialize(tmp_path, run), monitor_writes_history_only=False)
 

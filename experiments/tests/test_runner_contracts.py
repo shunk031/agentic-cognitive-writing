@@ -1656,7 +1656,9 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         *(f"plugin/{relative}" for relative in files),
         *(f"CODEX_HOME/{relative}" for relative in (*expected_home, "config.toml")),
         ".writing/task.md",
+        ".writing/history.md",
     }
+    assert (result.run_dir / "workspace" / ".writing" / "history.md").read_text() == ""
     assert staged_files["CODEX_HOME/config.toml"] == (
         "sha256:" + hashlib.sha256(home["config.toml"].encode()).hexdigest()
     )

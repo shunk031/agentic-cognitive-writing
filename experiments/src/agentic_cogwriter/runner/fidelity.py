@@ -24,6 +24,18 @@ _SKILL_FILE_TOKEN = re.compile(r"[^\s\"'`\\]*SKILL\.md")
 _PARENT_SEGMENT = re.compile(r"(?:^|[^\w.])\.\.(?:/|$)")
 _CALL_TYPES = frozenset({"function_call", "custom_tool_call", "local_shell_call"})
 _OUTPUT_TYPES = frozenset({"function_call_output", "custom_tool_call_output"})
+_COMMAND = re.compile(r"""\bcmd"?\s*:\s*(["'`])((?:(?!\1)[^\\]|\\.)*)\1""")
+_TARGET = re.compile(
+    r"\b(?:goals|draft)\.md\b|\.writing(?:/\S*[*?\[]|/?(?=[\s'\"`;|&)]|$))"
+)
+_GLOBAL_WRITE = re.compile(r"\bgit\s+(?:reset\s+--hard|stash|apply)\b|\bpatch\s+-p\d")
+_HARMLESS_REDIRECT = re.compile(r"\d*>\s*/dev/null|\d*>&\d")
+_WRITE = re.compile(
+    r">|\b(?:tee|sponge|ed|patch|cp|mv|rm|touch|truncate|dd|install)\b"
+    r"|\b(?:python3?|perl|ruby|node)\b"
+    r"|\bsed\b[^|;&\n]*?\s(?:-[a-zA-Z]*i|--in-place)"
+    r"|\bgit\s+(?:checkout|restore|apply|reset|stash)\b"
+)
 
 
 def check_output_language(text: str, language: str) -> dict[str, Any]:
@@ -82,6 +94,54 @@ def check_fidelity(
         ):
             reasons.append("scored output is not workspace/.writing/draft.md")
     return {"status": "rejected" if reasons else "scorable", "reasons": reasons}
+
+
+def _commands(payload: dict[str, Any]) -> list[str]:
+    kind = payload.get("type")
+    if kind == "custom_tool_call":
+        commands = []
+        for quote, text in _COMMAND.findall(str(payload.get("input", ""))):
+            try:
+                commands.append(json.loads(f'"{text}"') if quote == '"' else text)
+            except json.JSONDecodeError:
+                commands.append(text)
+        return commands
+    if kind == "function_call":
+        try:
+            arguments = json.loads(payload.get("arguments") or "{}")
+        except json.JSONDecodeError:
+            return []
+        command = arguments.get("cmd") or arguments.get("command")
+    elif kind == "local_shell_call":
+        command = (payload.get("action") or {}).get("command")
+    else:
+        return []
+    if isinstance(command, list):
+        command = " ".join(map(str, command))
+    return [command] if isinstance(command, str) else []
+
+
+def _writes_tracked(command: str) -> bool:
+    if "apply_patch" in command:
+        return False
+    command = _HARMLESS_REDIRECT.sub("", command)
+    return bool(
+        _GLOBAL_WRITE.search(command)
+        or (_TARGET.search(command) and _WRITE.search(command))
+    )
+
+
+def unrecorded_writes(records: Iterable[dict[str, Any]]) -> list[str]:
+    """Return shell commands that look like writes to the tracked files."""
+
+    return [
+        command
+        for record in records
+        if record.get("type") == "response_item"
+        and isinstance(record.get("payload"), dict)
+        for command in _commands(record["payload"])
+        if _writes_tracked(command)
+    ]
 
 
 def _response_items(records: Iterable[dict[str, Any]]) -> Iterable[dict[str, Any]]:
@@ -199,8 +259,11 @@ def _codex_reasons(run_dir: Path, monitor_writes_history_only: bool) -> list[str
                 reasons.append(f"{role} agent {thread} did not read its own SKILL.md")
 
     if monitor_writes_history_only:
-        # Known limit: only apply_patch writes become file_change items; a shell
-        # redirect by the Monitor is not visible here.
+        # Only apply_patch writes become file_change items, so the Monitor's shell
+        # commands go through the textual write detector.
+        for thread in sorted(top_level & records.keys()):
+            for command in unrecorded_writes(records[thread]):
+                reasons.append(f"Monitor ran shell write {command!r}")
         for item in items:
             if item.get("type") != "file_change" or item.get("status") != "completed":
                 continue
@@ -233,6 +296,11 @@ def _skill_isolation_reasons(run_dir: Path, codex_home: Path) -> list[str]:
         lines = _json_objects(path.read_bytes())
         meta = lines[0].get("payload") if lines else None
         thread = meta.get("id") if isinstance(meta, dict) else path.name
+        outputs = {
+            payload.get("call_id"): json.dumps(payload)
+            for payload in _response_items(lines)
+            if payload.get("type") in _OUTPUT_TYPES and payload.get("call_id")
+        }
         for payload in _response_items(lines):
             if payload.get("type") == "message":
                 for part in payload.get("content") or []:
@@ -247,7 +315,11 @@ def _skill_isolation_reasons(run_dir: Path, codex_home: Path) -> list[str]:
                 # Known limit: a relative path without a `..` segment passes even
                 # after a `cd` out of the workspace, as in `cd /x && cat SKILL.md`.
                 text = json.dumps(payload).replace("\\n", " ")
+                # A read of a path that does not exist reads nothing.
+                missing = outputs.get(payload.get("call_id"), "")
                 for read in _ABSOLUTE_SKILL_FILE.findall(text):
+                    if f"{read}: No such file or directory" in missing:
+                        continue
                     if not inside(read, codex_home, run_dir / "workspace"):
                         reasons.append(
                             f"thread {thread} read {read} outside the staged skills"

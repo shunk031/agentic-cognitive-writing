@@ -1545,7 +1545,8 @@ class ExperimentRunner:
         the adapter's ``agents/`` and ``rules/``, and its ``config.toml`` layered
         over the runner's synthesized one; an in-context condition gets only the
         skills and rules. It also writes the prompt's task sections to
-        ``.writing/task.md``, the plugin's task state.
+        ``.writing/task.md``, the plugin's task state, and creates an empty
+        ``.writing/history.md`` for the Monitor to append to.
         """
 
         selected_root = self._codex_plugin_root(condition)
@@ -1631,6 +1632,10 @@ class ExperimentRunner:
             encoding="utf-8",
         )
         staged[".writing/task.md"] = f"sha256:{sha256_file(task_path)}"
+        # Every adapter condition's Monitor appends to the history, so it exists.
+        history_path = task_path.with_name("history.md")
+        history_path.touch()
+        staged[".writing/history.md"] = f"sha256:{sha256_file(history_path)}"
         staged.update(
             {
                 f"CODEX_HOME/{path.relative_to(codex_home).as_posix()}": (
