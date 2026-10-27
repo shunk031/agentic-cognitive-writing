@@ -1,46 +1,64 @@
 """Report the writing mechanisms each run exercised, from Codex harness records.
 
-The process sequence is the role of each child the Monitor spawned, in spawn
-order. File changes come from the completed ``FileChange`` items of every
-rollout that touch ``.writing/goals.md`` or ``.writing/draft.md``, in
-completion order. A change by a delegated child, or by a descendant of one,
-belongs to that delegation; a change by the Monitor itself belongs to the
-interval after the last delegation spawned before it.
+Delegations. The event stream's completed ``spawn_agent``, ``send_input``, and
+``resume_agent`` items addressed to a child are the Monitor's delegations, in
+stream order; items with any other status are ignored. A delegation's process
+is the child's role, from its agent type or the ``$role`` token of the prompt
+that spawned it, so reusing a child repeats its role. The n-th delegation to a
+child starts at the child's n-th ``task_started`` record. A delegation ends at a
+completed ``close_agent`` for the child or a completed ``wait`` that reports the
+child as completed. A delegation issued before the previous one ended overlaps
+it; runs with overlapping or reused delegations are counted.
 
-A goal line is a non-blank line of ``goals.md`` that is a Markdown heading or
-list item. The goal lines are replayed through every change (an added file sets
-them, a diff removes its ``-`` lines and adds its ``+`` lines, a deleted file
-empties them), and each delegation interval that changes ``goals.md`` is
-classified by its goal lines before and after; one interval can show several
-events:
+File changes. The completed ``FileChange`` items of every rollout that touch
+``.writing/goals.md`` or ``.writing/draft.md`` are ordered by completion time. A
+change by a delegated child, or by a descendant of one, belongs to that child's
+latest delegation started before the change. A change by the Monitor itself
+belongs to the interval after the latest delegation started before it.
 
-- created: ``goals.md`` first appears, or the interval gains a goal line and
-  removes none;
-- developed: goal lines existed before and none was removed;
-- replaced: a goal line before is missing after, so it was removed or rewritten.
+Goal lines. A goal line is a Markdown heading, bullet, or numbered item of
+``goals.md``. It is compared in normalized form: heading marks, list markers,
+numbering such as ``2.1.``, and checkboxes are removed and whitespace is
+collapsed, so renumbering, a heading-level change, a marker swap, a ticked box,
+or respacing changes nothing. The normalized goal lines are replayed through
+every change (an added file sets them, a diff removes its ``-`` lines and adds
+its ``+`` lines, a deleted file empties them), and each interval that changes
+``goals.md`` gets at most one event from its goal lines before and after:
 
-A replacement after review is a replaced event in a ``Planning`` delegation
-that comes right after a ``Reviewing`` delegation. It approximates the executed
-study's accepted goal replacement, where the Reviewer reports a conflict, the
-Monitor accepts it, and ``Planning`` replaces the goal; the broad replaced event
-also counts any other removal or rewrite.
+- created: no goal line before, at least one after;
+- developed: goal lines before, at least one added, none removed;
+- replaced: at least one goal line removed, which includes a rewrite;
+- none: any other change, such as a prose-only edit.
 
-A section is a Markdown heading line. ``Planning`` precedes the first section
-when a ``Planning`` delegation precedes the first change that adds a heading to
-``draft.md``; a run that adds no heading has no value. ``Planning`` precedes the
-first ``Translating`` when the first ``Planning`` delegation comes before the
-first ``Translating`` delegation, or there is none. ``Reviewing`` is followed by
-``Planning`` when the delegation right after a ``Reviewing`` delegation is
-``Planning``. A condition whose runs spawn no child has no process sequence, so
-its process-derived values are reported as missing rather than as zero.
+Each replaced interval records its removed and added goal lines, normalized and
+raw, for a manual audit. A replacement after review is a replaced interval in a
+``Planning`` delegation that directly follows a ``Reviewing`` delegation that
+had ended; it is the measure comparable to the executed study's accepted goal
+replacement.
 
-Only ``apply_patch`` writes become ``FileChange`` items. Each run therefore
-lists the shell commands that mention ``goals.md`` or ``draft.md`` and look like
-writes (a redirection, ``tee``, ``sed -i``, ``cp``, ``mv``, ``rm``, ``touch``,
-an interpreter, or a ``git`` checkout); the match is textual, so a listed
-command may not have written, and its effect is missing from the events above.
-Goal lines supplied with the task are unknown, so the first change to a seeded
-``goals.md`` counts as creation.
+Process order. ``Planning`` precedes the first ``Translating`` when the first
+``Planning`` delegation comes before the first ``Translating`` delegation, or
+there is none. ``Planning`` precedes the first section when a ``Planning``
+delegation precedes the first ``draft.md`` change that adds a normalized heading;
+a run that adds no heading has no value. ``Reviewing`` is followed by
+``Planning`` when a ``Planning`` delegation directly follows a ``Reviewing``
+delegation that had ended.
+
+Aggregation. Rates count runs that pass the fidelity gate, with a 95% Wilson
+interval. A condition whose wrapper does not require delegation, such as A8,
+which runs every process in the Monitor's own context, reports its
+process-derived values as missing; any other condition reports them even when a
+run never delegates.
+
+Unrecorded writes. Only ``apply_patch`` writes become ``FileChange`` items. Each
+run therefore lists the shell commands that look like writes to ``goals.md``,
+``draft.md``, ``.writing`` itself, or a glob under it (a redirection, ``tee``,
+``sponge``, in-place ``sed``, ``ed``, ``patch``, ``cp``, ``mv``, ``rm``,
+``touch``, an interpreter, or a ``git`` checkout), and any ``git reset --hard``,
+``git stash``, or ``patch -p``. The match is textual, so a listed command may not have
+written, and its effect is missing from the events above. Goal lines supplied
+with the task are unknown, so the first change to a seeded ``goals.md`` counts
+as creation.
 """
 
 from __future__ import annotations
@@ -60,6 +78,7 @@ from ..runner.fidelity import completed_items, read_codex_records, spawn_role
 from .aggregate import wilson_interval
 
 TRACKED = ("goals.md", "draft.md")
+DELEGATING_TOOLS = ("spawn_agent", "send_input", "resume_agent")
 GOAL_EVENTS = ("created", "developed", "replaced")
 RATES = (
     "planning_before_first_translating",
@@ -68,7 +87,7 @@ RATES = (
     *(f"goal_{event}" for event in GOAL_EVENTS),
     "goal_replaced_after_review",
 )
-# Values that need a process sequence; missing for conditions that spawn no child.
+# Values that need delegations; missing for conditions that declare none.
 PROCESS_DERIVED = frozenset(
     {
         "planning_before_first_translating",
@@ -76,79 +95,118 @@ PROCESS_DERIVED = frozenset(
         "reviewing_then_planning",
         "goal_replaced_after_review",
         "mean_processes",
+        "runs_with_reused_children",
+        "runs_with_overlapping_delegations",
     }
 )
-_GOAL_LINE = re.compile(r"^(?:#{1,6}|[-*+]|\d+[.)])\s")
+COUNTS = (
+    "runs_with_unrecorded_writes",
+    "unrecorded_writes",
+    "runs_with_reused_children",
+    "runs_with_overlapping_delegations",
+)
+_GOAL_LINE = re.compile(r"^(?:#{1,6}|[-*+]|\d+(?:\.\d+)*[.)])\s")
 _HEADING = re.compile(r"^#{1,6}\s")
+_PREFIX = re.compile(r"^(?:#{1,6}\s+|[-*+]\s+|\[[ xX]\]\s*|\d+(?:\.\d+)*[.)]?\s+)+")
 _COMMAND = re.compile(r"""\bcmd"?\s*:\s*(["'`])((?:(?!\1)[^\\]|\\.)*)\1""")
-_TARGET = re.compile(r"\b(?:goals|draft)\.md\b")
+_TARGET = re.compile(
+    r"\b(?:goals|draft)\.md\b|\.writing(?:/\S*[*?\[]|/?(?=[\s'\"`;|&)]|$))"
+)
+_GLOBAL_WRITE = re.compile(r"\bgit\s+(?:reset\s+--hard|stash)\b|\bpatch\s+-p\d")
 _HARMLESS_REDIRECT = re.compile(r"\d*>\s*/dev/null|\d*>&\d")
 _WRITE = re.compile(
-    r">|\b(?:tee|cp|mv|rm|touch|truncate|dd|install|python3?|perl|ruby|node)\b"
-    r"|\bsed\s+(?:-\w+\s+)*-i|\bgit\s+(?:checkout|restore|apply|reset|stash)\b"
+    r">|\b(?:tee|sponge|ed|patch|cp|mv|rm|touch|truncate|dd|install)\b"
+    r"|\b(?:python3?|perl|ruby|node)\b"
+    r"|\bsed\b[^|;&\n]*?\s(?:-[a-zA-Z]*i|--in-place)"
+    r"|\bgit\s+(?:checkout|restore|apply|reset|stash)\b"
 )
 
 
 class _Change(NamedTuple):
-    at: int
+    at: float
     file: str
     change: dict[str, Any]
     delegation: int
-    preceding: int
+    by_monitor: bool
 
 
-def _lines(lines: Iterable[str], pattern: re.Pattern[str]) -> Counter[str]:
-    return Counter(line.strip() for line in lines if pattern.match(line.strip()))
+def normalize(line: str) -> str:
+    """Return a goal or heading line without markers, numbering, or extra spaces."""
+
+    return " ".join(_PREFIX.sub("", line.strip()).split())
 
 
-def _diff(change: dict[str, Any], sign: str, pattern: re.Pattern[str]) -> Counter:
+def _lines(lines: Iterable[str], pattern: re.Pattern[str]) -> dict[str, list[str]]:
+    """Map each normalized matching line to its raw forms, in order."""
+
+    found: dict[str, list[str]] = defaultdict(list)
+    for line in lines:
+        if pattern.match(line.strip()) and normalize(line):
+            found[normalize(line)].append(line.strip())
+    return found
+
+
+def _counter(found: dict[str, list[str]]) -> Counter[str]:
+    return Counter({key: len(raws) for key, raws in found.items()})
+
+
+def _diff(change: dict[str, Any], sign: str, pattern: re.Pattern[str]):
     diff = str(change.get("unified_diff", "")).splitlines()
     return _lines((line[1:] for line in diff if line.startswith(sign)), pattern)
 
 
-def _apply(goals: Counter[str], exists: bool, change: dict[str, Any]):
-    kind = change.get("type")
-    if kind == "add":
-        content = str(change.get("content", "")).splitlines()
-        return _lines(content, _GOAL_LINE), True
-    if kind == "update":
-        removed = _diff(change, "-", _GOAL_LINE)
-        return goals - removed + _diff(change, "+", _GOAL_LINE), True
-    if kind == "delete":
-        return Counter(), False
-    return goals, exists
+def _content(change: dict[str, Any], pattern: re.Pattern[str]):
+    return _lines(str(change.get("content", "")).splitlines(), pattern)
 
 
 def classify_goal_intervals(
     intervals: Iterable[Iterable[dict[str, Any]]],
-) -> list[list[str]]:
-    """Classify each ordered interval of ``goals.md`` changes."""
+) -> list[dict[str, Any]]:
+    """Give each ordered interval of ``goals.md`` changes at most one event."""
 
-    result: list[list[str]] = []
+    result: list[dict[str, Any]] = []
     goals: Counter[str] = Counter()
-    exists = False
+    raw: dict[str, str] = {}
     for changes in intervals:
-        before, existed = goals, exists
+        before, raw_before = goals, dict(raw)
         for change in changes:
-            goals, exists = _apply(goals, exists, change)
-        events = []
-        if (exists and not existed) or (goals - before and not before - goals):
-            events.append("created")
-        if before and not before - goals:
-            events.append("developed")
-        if before - goals:
-            events.append("replaced")
-        result.append(events)
+            kind = change.get("type")
+            if kind == "add":
+                added = _content(change, _GOAL_LINE)
+                goals = _counter(added)
+            elif kind == "update":
+                added = _diff(change, "+", _GOAL_LINE)
+                goals = goals - _counter(_diff(change, "-", _GOAL_LINE))
+                goals += _counter(added)
+            elif kind == "delete":
+                added, goals = {}, Counter()
+            else:
+                continue
+            raw.update({key: raws[-1] for key, raws in added.items()})
+        removed, gained = before - goals, goals - before
+        interval: dict[str, Any] = {"event": None}
+        if removed:
+            interval = {
+                "event": "replaced",
+                "removed": [
+                    {"normalized": key, "raw": raw_before.get(key)} for key in removed
+                ],
+                "added": [{"normalized": key, "raw": raw.get(key)} for key in gained],
+            }
+        elif gained:
+            interval["event"] = "developed" if before else "created"
+        result.append(interval)
     return result
 
 
 def adds_section(change: dict[str, Any]) -> bool:
-    """Return whether a ``draft.md`` change adds a Markdown heading line."""
+    """Return whether a ``draft.md`` change adds a normalized heading line."""
 
     if change.get("type") == "add":
-        return bool(_lines(str(change.get("content", "")).splitlines(), _HEADING))
+        return bool(_content(change, _HEADING))
     if change.get("type") == "update":
-        return bool(_diff(change, "+", _HEADING) - _diff(change, "-", _HEADING))
+        added = _counter(_diff(change, "+", _HEADING))
+        return bool(added - _counter(_diff(change, "-", _HEADING)))
     return False
 
 
@@ -177,8 +235,18 @@ def _commands(payload: dict[str, Any]) -> list[str]:
     return [command] if isinstance(command, str) else []
 
 
+def _writes_tracked(command: str) -> bool:
+    if "apply_patch" in command:
+        return False
+    command = _HARMLESS_REDIRECT.sub("", command)
+    return bool(
+        _GLOBAL_WRITE.search(command)
+        or (_TARGET.search(command) and _WRITE.search(command))
+    )
+
+
 def unrecorded_writes(records: Iterable[dict[str, Any]]) -> list[str]:
-    """Return shell commands that look like writes to ``goals.md`` or ``draft.md``."""
+    """Return shell commands that look like writes to the tracked files."""
 
     return [
         command
@@ -186,9 +254,7 @@ def unrecorded_writes(records: Iterable[dict[str, Any]]) -> list[str]:
         if record.get("type") == "response_item"
         and isinstance(record.get("payload"), dict)
         for command in _commands(record["payload"])
-        if _TARGET.search(command)
-        and "apply_patch" not in command
-        and _WRITE.search(_HARMLESS_REDIRECT.sub("", command))
+        if _writes_tracked(command)
     ]
 
 
@@ -199,28 +265,86 @@ def _ms(timestamp: Any) -> float:
         return float("inf")
 
 
+def _ended(item: dict[str, Any], thread: str) -> bool:
+    if item.get("status") != "completed" or thread not in (
+        item.get("receiver_thread_ids") or []
+    ):
+        return False
+    if item.get("tool") == "close_agent":
+        return True
+    state = (item.get("agents_states") or {}).get(thread)
+    return item.get("tool") == "wait" and (
+        isinstance(state, dict) and state.get("status") == "completed"
+    )
+
+
 def analyze_run(run_dir: Path) -> dict[str, Any]:
-    """Return one run's processes, goal intervals, and mechanism flags."""
+    """Return one run's delegations, goal intervals, and mechanism flags."""
 
     events, metas, records, _ = read_codex_records(run_dir)
-    delegations = [
-        (thread, spawn_role(metas.get(thread, {}), str(item.get("prompt"))) or "other")
-        for item in completed_items(events)
-        if item.get("type") == "collab_tool_call" and item.get("tool") == "spawn_agent"
-        for thread in item.get("receiver_thread_ids") or []
-    ]
-    processes = [role for _, role in delegations]
-    index = {thread: k for k, (thread, _) in enumerate(delegations)}
-    starts = [_ms(metas.get(thread, {}).get("timestamp")) for thread in index]
+    prompts: dict[str, str] = {}
+    delegations: list[dict[str, Any]] = []
+    for item in completed_items(events):
+        if item.get("type") != "collab_tool_call":
+            continue
+        for thread in item.get("receiver_thread_ids") or []:
+            if item.get("tool") in DELEGATING_TOOLS:
+                if item.get("status") != "completed":
+                    continue
+                prompts.setdefault(thread, str(item.get("prompt")))
+                delegations.append(
+                    {
+                        "thread": thread,
+                        "tool": item["tool"],
+                        "ended": False,
+                        # Issued while an earlier delegation was still open.
+                        "overlaps": any(not d["ended"] for d in delegations),
+                        "previous_ended": bool(delegations)
+                        and delegations[-1]["ended"],
+                    }
+                )
+            elif _ended(item, thread):
+                for delegation in delegations:
+                    if delegation["thread"] == thread:
+                        delegation["ended"] = True
+    for delegation in delegations:
+        thread = delegation["thread"]
+        delegation["process"] = (
+            spawn_role(metas.get(thread, {}), prompts[thread]) or "other"
+        )
+    processes = [d["process"] for d in delegations]
 
-    def position(thread: str | None, at: int) -> tuple[int, int]:
-        # The delegation interval a change falls in, and the delegations before it.
-        while thread in metas and thread not in index:
+    # The n-th delegation to a child starts with the child's n-th turn.
+    turns = {
+        thread: [
+            _ms(record.get("timestamp"))
+            for record in thread_records
+            if record.get("type") == "event_msg"
+            and (record.get("payload") or {}).get("type") == "task_started"
+        ]
+        for thread, thread_records in records.items()
+    }
+    starts: list[float] = []
+    seen: Counter[str] = Counter()
+    for delegation in delegations:
+        thread = delegation["thread"]
+        thread_turns = turns.get(thread, [])
+        n = seen[thread]
+        starts.append(thread_turns[n] if n < len(thread_turns) else float("inf"))
+        seen[thread] += 1
+
+    delegated = {d["thread"] for d in delegations}
+
+    def position(thread: str | None, at: float) -> tuple[int, bool]:
+        """Return the change's delegation and whether the Monitor made it."""
+        while thread in metas and thread not in delegated:
             thread = metas[thread].get("parent_thread_id")
-        if thread in index:
-            return index[thread], index[thread]
-        started = sum(start <= at for start in starts)
-        return started - 1, started
+        if thread in delegated:
+            mine = [k for k, d in enumerate(delegations) if d["thread"] == thread]
+            started = [k for k in mine if starts[k] <= at]
+            return (started[-1] if started else mine[0]), False
+        started = [k for k, start in enumerate(starts) if start <= at]
+        return (started[-1] if started else -1), True
 
     changes = []
     for thread, thread_records in records.items():
@@ -235,7 +359,7 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
                 or item.get("status") != "completed"
             ):
                 continue
-            at = int(payload.get("completed_at_ms") or 0)
+            at = float(payload.get("completed_at_ms") or 0)
             for path, change in (item.get("changes") or {}).items():
                 parts = PurePosixPath(path).parts[-2:]
                 if parts[0] == ".writing" and parts[-1] in TRACKED:
@@ -244,57 +368,73 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
                     )
     changes.sort(key=attrgetter("at"))
 
-    # A Monitor change shares its delegation index but follows that delegation.
     intervals = [
-        (delegation, preceding, [c.change for c in group])
-        for (delegation, preceding), group in groupby(
+        (delegation, by_monitor, [c.change for c in group])
+        for (delegation, by_monitor), group in groupby(
             (c for c in changes if c.file == "goals.md"),
-            key=attrgetter("delegation", "preceding"),
+            key=attrgetter("delegation", "by_monitor"),
         )
     ]
     goal_intervals = [
         {
             "delegation": delegation,
-            "process": processes[delegation] if delegation == preceding else "monitor",
-            "events": events,
+            "process": "monitor" if by_monitor else processes[delegation],
+            **interval,
         }
-        for (delegation, preceding, _), events in zip(
+        for (delegation, by_monitor, _), interval in zip(
             intervals,
             classify_goal_intervals(group for *_, group in intervals),
             strict=True,
         )
     ]
+
+    def after_review(k: int) -> bool:
+        """Return whether delegation k is Planning right after an ended Reviewing."""
+        return (
+            k > 0
+            and processes[k] == "planning"
+            and processes[k - 1] == "reviewing"
+            and delegations[k]["previous_ended"]
+        )
+
     first_section = next(
         (c for c in changes if c.file == "draft.md" and adds_section(c.change)), None
     )
+    preceding = (
+        None
+        if first_section is None
+        else first_section.delegation + first_section.by_monitor
+    )
+    translating = processes.index("translating") if "translating" in processes else None
     writes = [
         {"thread": thread, "command": command}
         for thread, thread_records in records.items()
         for command in unrecorded_writes(thread_records)
     ]
-    translating = processes.index("translating") if "translating" in processes else None
     return {
         "processes": processes,
+        "delegations": [
+            {key: d[key] for key in ("thread", "tool", "process", "overlaps")}
+            for d in delegations
+        ],
         "goal_intervals": goal_intervals,
         "planning_before_first_translating": "planning" in processes[:translating],
         "planning_before_first_section": None
-        if first_section is None
-        else "planning" in processes[: first_section.preceding],
-        "reviewing_then_planning": any(
-            pair == ("reviewing", "planning")
-            for pair in zip(processes, processes[1:], strict=False)
-        ),
+        if preceding is None
+        else "planning" in processes[:preceding],
+        "reviewing_then_planning": any(map(after_review, range(len(processes)))),
         **{
-            f"goal_{event}": any(event in i["events"] for i in goal_intervals)
+            f"goal_{event}": any(i["event"] == event for i in goal_intervals)
             for event in GOAL_EVENTS
         },
         "goal_replaced_after_review": any(
-            interval["process"] == "planning"
-            and "replaced" in interval["events"]
-            and interval["delegation"] > 0
-            and processes[interval["delegation"] - 1] == "reviewing"
-            for interval in goal_intervals
+            i["event"] == "replaced"
+            and i["process"] != "monitor"
+            and after_review(i["delegation"])
+            for i in goal_intervals
         ),
+        "reused_children": sum(d["tool"] != "spawn_agent" for d in delegations),
+        "overlapping_delegations": sum(d["overlaps"] for d in delegations),
         "unrecorded_writes": writes,
     }
 
@@ -311,29 +451,37 @@ def _rate(values: Sequence[bool]) -> dict[str, Any]:
 
 
 def summarize(runs: Sequence[dict[str, Any]]) -> dict[str, Any]:
-    """Aggregate completed runs: each mechanism's rate with a 95% Wilson interval."""
+    """Aggregate gate-passing runs: each rate with a 95% Wilson interval."""
 
-    completed = [run for run in runs if run["status"] == "completed"]
-    spawned = any(run["processes"] for run in completed)
+    scorable = [run for run in runs if run["fidelity"] == "scorable"]
     summary = {
         "runs": len(runs),
-        "completed": len(completed),
-        "scorable": sum(run["fidelity"] == "scorable" for run in runs),
+        "completed": sum(run["status"] == "completed" for run in runs),
+        "scorable": len(scorable),
         **{
-            metric: _rate([run[metric] for run in completed if run[metric] is not None])
+            metric: _rate([run[metric] for run in scorable if run[metric] is not None])
             for metric in RATES
         },
+        "no_heading_runs": sum(
+            run["planning_before_first_section"] is None for run in scorable
+        ),
         "mean_processes": (
-            sum(len(run["processes"]) for run in completed) / len(completed)
-            if completed
+            sum(len(run["processes"]) for run in scorable) / len(scorable)
+            if scorable
             else None
         ),
         "runs_with_unrecorded_writes": sum(
-            bool(run["unrecorded_writes"]) for run in runs
+            bool(run["unrecorded_writes"]) for run in scorable
         ),
-        "unrecorded_writes": sum(len(run["unrecorded_writes"]) for run in runs),
+        "unrecorded_writes": sum(len(run["unrecorded_writes"]) for run in scorable),
+        "runs_with_reused_children": sum(
+            bool(run["reused_children"]) for run in scorable
+        ),
+        "runs_with_overlapping_delegations": sum(
+            bool(run["overlapping_delegations"]) for run in scorable
+        ),
     }
-    if not spawned:
+    if not any(run["delegation_required"] for run in runs):
         summary.update(dict.fromkeys(PROCESS_DERIVED))
     return summary
 
@@ -350,6 +498,9 @@ def report(roots: Sequence[Path]) -> dict[str, dict[str, Any]]:
                 "prompt": manifest["inputs"]["prompt_id"],
                 "status": manifest.get("status"),
                 "fidelity": (manifest.get("fidelity_gate") or {}).get("status"),
+                "delegation_required": bool(
+                    (manifest.get("delegation_check") or {}).get("required")
+                ),
                 **analyze_run(manifest_path.parent),
             }
             (manifest_path.parent / "mechanism.json").write_text(
@@ -376,17 +527,9 @@ def _cell(value: Any) -> str:
 
 
 def format_table(summary: dict[str, dict[str, Any]]) -> str:
-    """Render per-condition summaries as a Markdown table."""
+    """Render per-condition summaries as a Markdown table with its notes."""
 
-    columns = (
-        "runs",
-        "completed",
-        "scorable",
-        *RATES,
-        "mean_processes",
-        "runs_with_unrecorded_writes",
-        "unrecorded_writes",
-    )
+    columns = ("runs", "completed", "scorable", *RATES, "mean_processes", *COUNTS)
     lines = [
         "| condition | " + " | ".join(columns) + " |",
         "|---|" + "---:|" * len(columns),
@@ -394,11 +537,16 @@ def format_table(summary: dict[str, dict[str, Any]]) -> str:
     for condition, row in summary.items():
         cells = " | ".join(_cell(row[column]) for column in columns)
         lines.append(f"| {condition} | {cells} |")
+    excluded = ", ".join(
+        f"{condition} {row['no_heading_runs']}" for condition, row in summary.items()
+    )
     lines += [
         "",
-        "goal_replaced_after_review is comparable to the executed study's accepted "
-        "goal replacement; goal_replaced counts every removed or rewritten goal. "
-        "n/a: no spawned child, so no process sequence.",
+        "Rates and counts cover scorable runs. goal_replaced_after_review is "
+        "comparable to the executed study's accepted goal replacement; "
+        "goal_replaced counts every removed or rewritten goal. "
+        "planning_before_first_section excludes runs that add no heading "
+        f"({excluded}). n/a: the condition does not delegate.",
     ]
     return "\n".join(lines)
 
