@@ -125,6 +125,7 @@ FLAGGED = [
     "rm -rf .writing",
     "for f in .writing/*.md; do cat $f; done > all.md",
     "patch -p1 < fix.diff",
+    "git apply fix.diff",
     "sed --in-place 's/a/b/' .writing/draft.md",
     "sed -Ei 's/a/b/' .writing/goals.md",
     "fmt .writing/draft.md | sponge .writing/draft.md",
@@ -313,7 +314,7 @@ def test_report_derives_processes_and_goal_events_from_rollouts(
     assert (
         "| A4 | 1 | 1 | 1 | 1/1 1.00 [0.21, 1.00] | 1/1 1.00 [0.21, 1.00] "
         "| 1/1 1.00 [0.21, 1.00] | 1/1 1.00 [0.21, 1.00] | 0/1 0.00 [0.00, 0.79] "
-        "| 1/1 1.00 [0.21, 1.00] | 1/1 1.00 [0.21, 1.00] | 4.00 | 0 | 0 | 0 | 0 |"
+        "| 1/1 1.00 [0.21, 1.00] | 1/1 1.00 [0.21, 1.00] | 4.00 | 0 | 0 | 0 | 0 | 0 |"
     ) in capsys.readouterr().out
 
 
@@ -372,6 +373,60 @@ def test_a_reused_child_starts_a_new_delegation(tmp_path: Path) -> None:
     ]
     assert detail["reused_children"] == 1
     assert detail["goal_replaced_after_review"] is True
+
+
+def test_resume_agent_is_not_a_delegation(tmp_path: Path) -> None:
+    detail = _detail(
+        tmp_path,
+        [
+            _spawn("p1", "$planning create the goals"),
+            _wait("p1"),
+            _collab("resume_agent", "p1"),
+            _collab("send_input", "p1", prompt="develop the goals"),
+            _wait("p1"),
+        ],
+        {"p1": _rollout("p1", turns=(0, 30))},
+    )
+
+    assert [d["tool"] for d in detail["delegations"]] == ["spawn_agent", "send_input"]
+    assert detail["reused_children"] == 1
+
+
+def test_a_change_after_an_untimed_reuse_is_unattributed(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    detail = _detail(
+        tmp_path,
+        [
+            _spawn("p1", "$planning create the goals"),
+            _wait("p1"),
+            _spawn("r1", "$reviewing check"),
+            _collab("close_agent", "r1"),
+            _collab("send_input", "p1", prompt="replace goal 2"),
+            _wait("p1"),
+        ],
+        {
+            # The child's second turn has no task_started record.
+            "p1": _rollout(
+                "p1",
+                (5_000, GOALS, _add(FIRST_GOALS)),
+                (35_000, GOALS, _update(REWRITE)),
+                (36_000, GOALS, _update("@@ -6 +6,2 @@\n ## 2. Payment\n+- Law\n")),
+            ),
+            "r1": _rollout("r1", turns=(10,)),
+        },
+    )
+
+    assert [
+        (i["delegation"], i["process"], i["event"]) for i in detail["goal_intervals"]
+    ] == [
+        (0, "planning", "created"),
+        (None, "unattributed", "replaced"),
+    ]
+    assert detail["unattributed_changes"] == 2
+    assert detail["goal_replaced"] is False
+    assert detail["goal_replaced_after_review"] is False
+    assert capsys.readouterr().out.splitlines()[2].endswith("| 0 | 0 | 1 | 0 | 1 |")
 
 
 def test_planning_before_reviewing_ends_is_an_overlap(tmp_path: Path) -> None:
@@ -448,10 +503,10 @@ def test_n_a_follows_the_declaration_and_rates_cover_scorable_runs(
     zero = "0/1 0.00 [0.00, 0.79]"
     assert (
         f"| A4 | 2 | 2 | 1 | {zero} | 0/0 | {zero} | {created} | {zero} | {zero} "
-        f"| {zero} | 0.00 | 0 | 0 | 0 | 0 |"
+        f"| {zero} | 0.00 | 0 | 0 | 0 | 0 | 0 |"
     ) in out
     assert (
         f"| A8 | 1 | 1 | 1 | n/a | n/a | n/a | {created} | {zero} | {zero} "
-        "| n/a | n/a | 0 | 0 | n/a | n/a |"
+        "| n/a | n/a | 0 | 0 | n/a | n/a | n/a |"
     ) in out
-    assert "excludes runs that add no heading (A4 1, A8 1)" in out
+    assert "excludes runs without an attributed first heading (A4 1, A8 1)" in out

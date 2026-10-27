@@ -1,26 +1,36 @@
 """Report the writing mechanisms each run exercised, from Codex harness records.
 
-Delegations. The event stream's completed ``spawn_agent``, ``send_input``, and
-``resume_agent`` items addressed to a child are the Monitor's delegations, in
-stream order; items with any other status are ignored. A delegation's process
-is the child's role, from its agent type or the ``$role`` token of the prompt
-that spawned it, so reusing a child repeats its role. The n-th delegation to a
-child starts at the child's n-th ``task_started`` record. A delegation ends at a
-completed ``close_agent`` for the child or a completed ``wait`` that reports the
-child as completed. A delegation issued before the previous one ended overlaps
-it; runs with overlapping or reused delegations are counted.
+Delegations. The event stream's completed ``spawn_agent`` and ``send_input``
+items addressed to a child are the Monitor's delegations, in stream order; items
+with any other status are ignored. ``resume_agent`` carries only a thread id,
+and the task arrives with the next ``send_input``, so it is not a delegation. A
+delegation's process is the child's role, from its agent type or the ``$role``
+token of the prompt that spawned it, so reusing a child repeats its role. The
+n-th delegation to a child starts at the child's n-th ``task_started`` record. A
+delegation ends at a completed ``close_agent`` for the child, even one that is
+still running, or at a completed ``wait`` that reports the child as completed. A
+delegation issued before the previous one ended overlaps it; runs with
+overlapping or reused delegations are counted.
 
 File changes. The completed ``FileChange`` items of every rollout that touch
 ``.writing/goals.md`` or ``.writing/draft.md`` are ordered by completion time. A
 change by a delegated child, or by a descendant of one, belongs to that child's
 latest delegation started before the change. A change by the Monitor itself
-belongs to the interval after the latest delegation started before it.
+belongs to the interval after the latest delegation started before it. When a
+delegation has no matching ``task_started`` record, its start is unknown but
+no earlier than the start of any delegation issued before it, so a change that
+could belong to it is unattributed: it still updates the goal
+lines but counts toward no interval-based measure, and runs with unattributed
+changes are counted.
 
 Goal lines. A goal line is a Markdown heading, bullet, or numbered item of
 ``goals.md``. It is compared in normalized form: heading marks, list markers,
 numbering such as ``2.1.``, and checkboxes are removed and whitespace is
 collapsed, so renumbering, a heading-level change, a marker swap, a ticked box,
-or respacing changes nothing. The normalized goal lines are replayed through
+or respacing changes nothing. Leading numbers are removed even when they are
+part of the goal's text, so goals that differ only in such a number compare
+equal, and a change to that number alone is not counted as a replacement. The
+normalized goal lines are replayed through
 every change (an added file sets them, a diff removes its ``-`` lines and adds
 its ``+`` lines, a deleted file empties them), and each interval that changes
 ``goals.md`` gets at most one event from its goal lines before and after:
@@ -40,7 +50,8 @@ Process order. ``Planning`` precedes the first ``Translating`` when the first
 ``Planning`` delegation comes before the first ``Translating`` delegation, or
 there is none. ``Planning`` precedes the first section when a ``Planning``
 delegation precedes the first ``draft.md`` change that adds a normalized heading;
-a run that adds no heading has no value. ``Reviewing`` is followed by
+a run that adds no heading, or whose first such change is unattributed, has no
+value. ``Reviewing`` is followed by
 ``Planning`` when a ``Planning`` delegation directly follows a ``Reviewing``
 delegation that had ended.
 
@@ -48,17 +59,19 @@ Aggregation. Rates count runs that pass the fidelity gate, with a 95% Wilson
 interval. A condition whose wrapper does not require delegation, such as A8,
 which runs every process in the Monitor's own context, reports its
 process-derived values as missing; any other condition reports them even when a
-run never delegates.
+run never delegates. The declaration is the run manifest's
+``delegation_check.required``; a manifest without it counts as not requiring
+delegation.
 
 Unrecorded writes. Only ``apply_patch`` writes become ``FileChange`` items. Each
 run therefore lists the shell commands that look like writes to ``goals.md``,
 ``draft.md``, ``.writing`` itself, or a glob under it (a redirection, ``tee``,
 ``sponge``, in-place ``sed``, ``ed``, ``patch``, ``cp``, ``mv``, ``rm``,
 ``touch``, an interpreter, or a ``git`` checkout), and any ``git reset --hard``,
-``git stash``, or ``patch -p``. The match is textual, so a listed command may not have
-written, and its effect is missing from the events above. Goal lines supplied
-with the task are unknown, so the first change to a seeded ``goals.md`` counts
-as creation.
+``git stash``, ``git apply``, or ``patch -p``. The match is textual, so a listed
+command may not have written, and its effect is missing from the events above.
+Goal lines supplied with the task are unknown, so the first change to a seeded
+``goals.md`` counts as creation.
 """
 
 from __future__ import annotations
@@ -78,7 +91,7 @@ from ..runner.fidelity import completed_items, read_codex_records, spawn_role
 from .aggregate import wilson_interval
 
 TRACKED = ("goals.md", "draft.md")
-DELEGATING_TOOLS = ("spawn_agent", "send_input", "resume_agent")
+DELEGATING_TOOLS = ("spawn_agent", "send_input")
 GOAL_EVENTS = ("created", "developed", "replaced")
 RATES = (
     "planning_before_first_translating",
@@ -97,6 +110,7 @@ PROCESS_DERIVED = frozenset(
         "mean_processes",
         "runs_with_reused_children",
         "runs_with_overlapping_delegations",
+        "runs_with_unattributed_changes",
     }
 )
 COUNTS = (
@@ -104,6 +118,7 @@ COUNTS = (
     "unrecorded_writes",
     "runs_with_reused_children",
     "runs_with_overlapping_delegations",
+    "runs_with_unattributed_changes",
 )
 _GOAL_LINE = re.compile(r"^(?:#{1,6}|[-*+]|\d+(?:\.\d+)*[.)])\s")
 _HEADING = re.compile(r"^#{1,6}\s")
@@ -112,7 +127,7 @@ _COMMAND = re.compile(r"""\bcmd"?\s*:\s*(["'`])((?:(?!\1)[^\\]|\\.)*)\1""")
 _TARGET = re.compile(
     r"\b(?:goals|draft)\.md\b|\.writing(?:/\S*[*?\[]|/?(?=[\s'\"`;|&)]|$))"
 )
-_GLOBAL_WRITE = re.compile(r"\bgit\s+(?:reset\s+--hard|stash)\b|\bpatch\s+-p\d")
+_GLOBAL_WRITE = re.compile(r"\bgit\s+(?:reset\s+--hard|stash|apply)\b|\bpatch\s+-p\d")
 _HARMLESS_REDIRECT = re.compile(r"\d*>\s*/dev/null|\d*>&\d")
 _WRITE = re.compile(
     r">|\b(?:tee|sponge|ed|patch|cp|mv|rm|touch|truncate|dd|install)\b"
@@ -126,7 +141,7 @@ class _Change(NamedTuple):
     at: float
     file: str
     change: dict[str, Any]
-    delegation: int
+    delegation: int | None
     by_monitor: bool
 
 
@@ -333,18 +348,33 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
         starts.append(thread_turns[n] if n < len(thread_turns) else float("inf"))
         seen[thread] += 1
 
+    # A delegation starts no earlier than any delegation issued before it.
+    earliest = [
+        max((start for start in starts[: k + 1] if start != float("inf")), default=0)
+        for k in range(len(starts))
+    ]
     delegated = {d["thread"] for d in delegations}
 
-    def position(thread: str | None, at: float) -> tuple[int, bool]:
-        """Return the change's delegation and whether the Monitor made it."""
+    def position(thread: str | None, at: float) -> tuple[int | None, bool]:
+        """Return the change's delegation, or None, and whether the Monitor made it."""
         while thread in metas and thread not in delegated:
             thread = metas[thread].get("parent_thread_id")
-        if thread in delegated:
-            mine = [k for k, d in enumerate(delegations) if d["thread"] == thread]
-            started = [k for k in mine if starts[k] <= at]
-            return (started[-1] if started else mine[0]), False
-        started = [k for k, start in enumerate(starts) if start <= at]
-        return (started[-1] if started else -1), True
+        by_monitor = thread not in delegated
+        candidates = (
+            range(len(delegations))
+            if by_monitor
+            else [k for k, d in enumerate(delegations) if d["thread"] == thread]
+        )
+        started = [k for k in candidates if starts[k] <= at]
+        k = started[-1] if started else (-1 if by_monitor else candidates[0])
+        # A delegation with an unknown start that may have begun may own it.
+        if any(
+            starts[j] == float("inf") and earliest[j] <= at
+            for j in candidates
+            if j >= k
+        ):
+            return None, by_monitor
+        return k, by_monitor
 
     changes = []
     for thread, thread_records in records.items():
@@ -378,7 +408,11 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
     goal_intervals = [
         {
             "delegation": delegation,
-            "process": "monitor" if by_monitor else processes[delegation],
+            "process": "unattributed"
+            if delegation is None
+            else "monitor"
+            if by_monitor
+            else processes[delegation],
             **interval,
         }
         for (delegation, by_monitor, _), interval in zip(
@@ -402,7 +436,7 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
     )
     preceding = (
         None
-        if first_section is None
+        if first_section is None or first_section.delegation is None
         else first_section.delegation + first_section.by_monitor
     )
     translating = processes.index("translating") if "translating" in processes else None
@@ -424,17 +458,21 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
         else "planning" in processes[:preceding],
         "reviewing_then_planning": any(map(after_review, range(len(processes)))),
         **{
-            f"goal_{event}": any(i["event"] == event for i in goal_intervals)
+            f"goal_{event}": any(
+                i["event"] == event and i["process"] != "unattributed"
+                for i in goal_intervals
+            )
             for event in GOAL_EVENTS
         },
         "goal_replaced_after_review": any(
             i["event"] == "replaced"
-            and i["process"] != "monitor"
+            and i["process"] not in ("monitor", "unattributed")
             and after_review(i["delegation"])
             for i in goal_intervals
         ),
         "reused_children": sum(d["tool"] != "spawn_agent" for d in delegations),
         "overlapping_delegations": sum(d["overlaps"] for d in delegations),
+        "unattributed_changes": sum(c.delegation is None for c in changes),
         "unrecorded_writes": writes,
     }
 
@@ -462,7 +500,7 @@ def summarize(runs: Sequence[dict[str, Any]]) -> dict[str, Any]:
             metric: _rate([run[metric] for run in scorable if run[metric] is not None])
             for metric in RATES
         },
-        "no_heading_runs": sum(
+        "no_first_section_runs": sum(
             run["planning_before_first_section"] is None for run in scorable
         ),
         "mean_processes": (
@@ -479,6 +517,9 @@ def summarize(runs: Sequence[dict[str, Any]]) -> dict[str, Any]:
         ),
         "runs_with_overlapping_delegations": sum(
             bool(run["overlapping_delegations"]) for run in scorable
+        ),
+        "runs_with_unattributed_changes": sum(
+            bool(run["unattributed_changes"]) for run in scorable
         ),
     }
     if not any(run["delegation_required"] for run in runs):
@@ -538,14 +579,16 @@ def format_table(summary: dict[str, dict[str, Any]]) -> str:
         cells = " | ".join(_cell(row[column]) for column in columns)
         lines.append(f"| {condition} | {cells} |")
     excluded = ", ".join(
-        f"{condition} {row['no_heading_runs']}" for condition, row in summary.items()
+        f"{condition} {row['no_first_section_runs']}"
+        for condition, row in summary.items()
     )
     lines += [
         "",
         "Rates and counts cover scorable runs. goal_replaced_after_review is "
         "comparable to the executed study's accepted goal replacement; "
         "goal_replaced counts every removed or rewritten goal. "
-        "planning_before_first_section excludes runs that add no heading "
+        "planning_before_first_section excludes runs without an attributed "
+        "first heading "
         f"({excluded}). n/a: the condition does not delegate.",
     ]
     return "\n".join(lines)
