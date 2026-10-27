@@ -21,7 +21,7 @@ The main plugin exposes Flower & Hayes' Cognitive Process Theory of Writing [^1]
 The experiment package keeps controlled comparison variants outside the main plugin. It provides two comparison-variant skills:
 
 - `cognitive-writing-fixed-order`: fixed-process-order comparison
-- `cognitive-writing-no-goal-network`: no-goal-network comparison
+- `cognitive-writing-task-objective`: no-goal-network comparison
 
 The shipped process trace makes writing-process changes measurable, not just final text quality. The trace records phase changes, decisions, evidence, and unresolved questions.
 
@@ -278,7 +278,7 @@ agentic-cognitive-writing-process/
 |       |-- .codex-plugin/
 |       |-- skills/
 |       |   |-- cognitive-writing-fixed-order/
-|       |   `-- cognitive-writing-no-goal-network/
+|       |   `-- cognitive-writing-task-objective/
 ```
 
 - The main plugin's `agents/` directory contains Claude subagents for `planner`, `translator`, and `reviewer`, because Claude plugins natively load plugin-root `agents/`. Codex can treat these as reference prompts or convert them into custom agent files if Codex custom agent file schemas stabilize for local clients. Claude plugin agent behavior source: [Claude Code plugins reference](https://code.claude.com/docs/en/plugins-reference.md).
@@ -385,7 +385,7 @@ The survey findings translate into the shipped architecture and the remaining ex
      - [`plugin/skills/reviewing/SKILL.md`](../../plugin/skills/reviewing/SKILL.md): internal role skill
    - The experiment package puts comparison variants in its own [`experiments/plugin/skills/`](../../experiments/plugin/skills/) tree:
      - [`experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md`](../../experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md): fixed-process-order comparison
-     - [`experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md`](../../experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md): no-goal-network comparison
+     - [`experiments/plugin/skills/cognitive-writing-task-objective/SKILL.md`](../../experiments/plugin/skills/cognitive-writing-task-objective/SKILL.md): no-goal-network comparison
    - The two experiment skills require the main plugin because they reuse its role skills and Claude agents. Source: [`experiments/plugin/README.md`](../../experiments/plugin/README.md).
    - Each package has its own Claude and Codex plugin manifests:
      - [`plugin/.claude-plugin/plugin.json`](../../plugin/.claude-plugin/plugin.json)

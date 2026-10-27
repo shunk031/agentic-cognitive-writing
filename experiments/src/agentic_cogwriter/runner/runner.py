@@ -1501,13 +1501,24 @@ class ExperimentRunner:
             f"Plugin wrapper {condition.plugin_config} has no configured plugin path"
         )
 
-    _CODEX_ROLE_SKILL_DIRECTORIES = tuple(
-        Path("skills") / role for role in ("planning", "translating", "reviewing")
-    )
+    # Staged role directory -> source directory. A5 stages its own role copies
+    # under the shared names, so the adapter's `$planning` agents load them.
+    _CODEX_ROLE_SKILL_DIRECTORIES = {
+        Path("skills") / role: Path("skills") / role
+        for role in ("planning", "translating", "reviewing")
+    }
     _CODEX_DELEGATED_SKILL_DIRECTORIES = {
         "agentic-cog-writer": _CODEX_ROLE_SKILL_DIRECTORIES,
-        "cognitive-writing-no-goal-network": _CODEX_ROLE_SKILL_DIRECTORIES,
+        "cognitive-writing-task-objective": {
+            Path("skills") / role: Path("skills") / f"task-objective-{role}"
+            for role in ("planning", "translating", "reviewing")
+        },
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
+    }
+    # A condition listed here installs its own agent definitions in place of the
+    # adapter's `agents/`, so the role descriptions match its role skills.
+    _CODEX_AGENT_DIRECTORIES = {
+        "cognitive-writing-task-objective": Path("task-objective-agents"),
     }
 
     def _stage_codex_plugin(
@@ -1537,23 +1548,24 @@ class ExperimentRunner:
                 if root != selected_root
             ),
         )
-        required_directories = [
-            Path("skills") / condition.skill_name,
-            *self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(condition.skill_name, ()),
-        ]
+        invoked = Path("skills") / condition.skill_name
+        required_directories = {
+            invoked: invoked,
+            **self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(condition.skill_name, {}),
+        }
         sources: dict[Path, Path] = {}
-        for relative in required_directories:
+        for relative, source_relative in required_directories.items():
             source = next(
                 (
-                    root / relative
+                    root / source_relative
                     for root in source_roots
-                    if (root / relative).is_dir()
+                    if (root / source_relative).is_dir()
                 ),
                 None,
             )
             if source is None:
                 raise ManifestError(
-                    f"Cannot stage required Codex skill directory: {relative}"
+                    f"Cannot stage required Codex skill directory: {source_relative}"
                 )
             sources[relative] = source
 
@@ -1585,11 +1597,23 @@ class ExperimentRunner:
             raise ManifestError(
                 f"No configured plugin path has Codex adapter {adapter}"
             )
+        agents = self._CODEX_AGENT_DIRECTORIES.get(condition.skill_name)
+        agents_root = None
+        if agents is not None:
+            agents_root = next(
+                (root / agents for root in source_roots if (root / agents).is_dir()),
+                None,
+            )
+            if agents_root is None:
+                raise ManifestError(
+                    f"No configured plugin path has Codex agents {agents}"
+                )
         self._install_codex_adapter(
             adapter_root,
             sources,
             codex_home,
             delegated=condition.require_delegation,
+            agents_root=agents_root,
         )
         task_path = workspace / ".writing" / "task.md"
         task_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1618,11 +1642,13 @@ class ExperimentRunner:
         codex_home: Path,
         *,
         delegated: bool,
+        agents_root: Path | None = None,
     ) -> None:
         """Install skills, agents, rules, and layered config into ``codex_home``.
 
         The agents and the config's spawn instruction are the delegation
         mechanism, so an in-context condition installs only skills and rules.
+        ``agents_root`` replaces the adapter's ``agents/`` when given.
         """
 
         directories = ("agents", "rules") if delegated else ("rules",)
@@ -1635,7 +1661,10 @@ class ExperimentRunner:
         for relative, source in sources.items():
             shutil.copytree(source, codex_home / relative)
         for relative in directories:
-            shutil.copytree(adapter_root / relative, codex_home / relative)
+            source = adapter_root / relative
+            if relative == "agents" and agents_root is not None:
+                source = agents_root
+            shutil.copytree(source, codex_home / relative)
         if not delegated:
             return
 

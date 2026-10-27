@@ -1,0 +1,3 @@
+name = "reviewing"
+description = "Spawn when a draft exists and the Monitor needs it checked and revised within a delegated scope. Runs $reviewing; does not organize material or draft new sections."
+developer_instructions = "You are the Reviewer of Agentic CogWriter."

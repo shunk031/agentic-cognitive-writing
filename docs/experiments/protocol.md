@@ -22,7 +22,7 @@ The repository includes these main-plugin files:
 The repository includes these experiments-plugin files:
 
 - [`experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md`](../../experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md)
-- [`experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md`](../../experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md)
+- [`experiments/plugin/skills/cognitive-writing-task-objective/SKILL.md`](../../experiments/plugin/skills/cognitive-writing-task-objective/SKILL.md)
 
 ## Theory test and research questions
 
@@ -76,7 +76,7 @@ Delegating conditions record a `delegation_check` in the run manifest, and a Cod
 
 **Proposed-plugin condition A4.** Condition A4 invokes `Agentic CogWriter` through the documented `agentic-cog-writer` skill from the `agentic-cognitive-writing` plugin. The `Monitor`'s decision is solely its selection among the `Planning`, `Translating`, and `Reviewing` processes. The Planner develops a hierarchical goal network. The Translator drafts. The Reviewer evaluates and revises. The runner uses the plugin's append-only `.writing/trace/process.jsonl` and goal-network files and records the normal loop under the shared trace contract.
 
-**No-goal-network condition A5.** Condition A5 invokes `cognitive-writing-no-goal-network` from the `cognitive-writing-experiments` plugin. The variant uses the assignment as one implicit objective. The `Monitor` chooses `Planning`, `Translating`, or `Reviewing` without a hierarchical goal network. The runner does not create or modify `.writing/goals.md`, records process switches under the shared trace contract, and records no goal events or goal fields.
+**No-goals condition A5.** Condition A5 invokes `cognitive-writing-task-objective` from the `cognitive-writing-experiments` plugin. The task is the single implicit objective: the A5 `Monitor`, role skills, and Codex agent definitions are the A4 ones without goal wording. The Planner reports its organization of the material instead of writing goals, and the `Monitor` appends that organization to later `Translating` scopes. The runner rejects any run that creates or modifies `.writing/goals.md`.
 
 **Fixed-order condition A6.** Condition A6 invokes `cognitive-writing-fixed-order` from the `cognitive-writing-experiments` plugin and retains Agentic CogWriter's full state: current text, goal network, and process history. The process implementations remain unchanged. A6 replaces only the `Monitor`'s selection function with the fixed cycle `Planning -> Translating -> Reviewing` and differs from A4 only in that selection rule. The runner keeps the ordinary goal network and records process switches, goal events, and process-history updates under the shared trace contract.
 

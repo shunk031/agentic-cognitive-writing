@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import difflib
 import fcntl
 import hashlib
 import json
@@ -91,7 +92,6 @@ NO_GOAL_SKILL_PATHS = (
     REPO_ROOT / "experiments/baselines/skills/writing-storm-style/SKILL.md",
     REPO_ROOT / "experiments/baselines/skills/writing-cogwriter-style/SKILL.md",
     REPO_ROOT / "experiments/baselines/skills/writing-adaptive-task-planning/SKILL.md",
-    REPO_ROOT / "experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md",
 )
 NO_GOAL_FILE_RULE = "Do not create or modify `.writing/goals.md`"
 STAGE_SESSION_HEADER = (
@@ -189,7 +189,7 @@ def _plugin_source(tmp_path: Path) -> Path:
         "writing-linear",
         "writing-storm-style",
         "agentic-cog-writer",
-        "cognitive-writing-no-goal-network",
+        "cognitive-writing-task-objective",
         "cognitive-writing-fixed-order",
         "cognitive-writing-single-writer",
         "cognitive-writing-single-context",
@@ -1044,7 +1044,7 @@ def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
         occurrences += text.count(NO_GOAL_FILE_RULE)
         assert "Leave `.writing/goals.md` untouched" not in text
         assert "Leave `goals.md` untouched" not in text
-    assert occurrences == 6
+    assert occurrences == 4
 
 
 def test_agentic_cog_writer_ends_with_the_draft_as_the_final_document() -> None:
@@ -1148,17 +1148,193 @@ def test_fixed_order_skill_is_the_monitor_skill_with_a_fixed_cycle() -> None:
     }
 
 
-def test_no_goal_delegation_omits_the_goal_context() -> None:
-    a5_text = (
-        REPO_ROOT
-        / "experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md"
-    ).read_text(encoding="utf-8")
-    a5_delegation = a5_text.split("## Delegation", 1)[1].split("## Trace contract", 1)[
-        0
+def test_task_objective_skills_are_the_a4_skills_without_goal_wording() -> None:
+    def changes(a4: str, a5: str) -> list[str]:
+        lines = difflib.unified_diff(
+            (REPO_ROOT / a4).read_text(encoding="utf-8").splitlines(),
+            (REPO_ROOT / a5).read_text(encoding="utf-8").splitlines(),
+            n=0,
+            lineterm="",
+        )
+        return [
+            line
+            for line in lines
+            if line[:1] in "+-" and line[:3] not in {"+++", "---"}
+        ]
+
+    skills = "experiments/plugin/skills"
+    agents = "experiments/plugin/task-objective-agents"
+    assert changes(
+        "plugin/skills/agentic-cog-writer/SKILL.md",
+        f"{skills}/cognitive-writing-task-objective/SKILL.md",
+    ) == [
+        "-name: agentic-cog-writer",
+        '-description: "Use when the user asks to write or draft a complete document '
+        "end to end with Agentic CogWriter. Acts as the Monitor: delegates Planning, "
+        "Translating, and Reviewing to subagents until the draft is final. Do not "
+        "use inside a delegated Planner, Translator, or Reviewer task, or to edit a "
+        'single passage."',
+        "+name: cognitive-writing-task-objective",
+        '+description: "Experiment-comparison variant of the agentic-cog-writer '
+        "skill in which the task is the single implicit objective of every writing "
+        "process. For internal comparison use only, not the recommended default. Use "
+        'when a controlled task-objective comparison is explicitly requested."',
+        "-State: the task in `.writing/task.md`, the draft in `.writing/draft.md` "
+        "(the task may provide one), the goals in `.writing/goals.md`, and the "
+        "history in `.writing/history.md`.",
+        "+State: the task in `.writing/task.md`, the draft in `.writing/draft.md` "
+        "(the task may provide one), and the history in `.writing/history.md`.",
+        "-Kinds of work: Planning changes the goals; Translating adds prose for the "
+        "goals; Reviewing corrects existing prose and reports what is needed next. A "
+        "role reports work of another kind instead of doing it.",
+        "+Kinds of work: Planning organizes the relevant material and reports it; "
+        "Translating adds prose for the task's requirements; Reviewing corrects "
+        "existing prose and reports what is needed next. A role reports work of "
+        "another kind instead of doing it.",
+        "-1. Read the four state files; a missing file counts as empty.",
+        "-2. Choose the process from the kind of work the state calls for; a section "
+        "without a goal needs Planning first. The Monitor reads the draft to choose; "
+        "checking it against the task is Reviewing's work.",
+        "+1. Read the three state files; a missing file counts as empty.",
+        "+2. Choose the process from the kind of work the state calls for. The "
+        "Monitor reads the draft to choose; checking it against the task is "
+        "Reviewing's work.",
+        "-4. Delegate the process, with its scope, to a fresh planning, translating, "
+        "or reviewing agent, and wait for it. The Reviewing scope is this sentence "
+        "and nothing more: check `.writing/draft.md` against `.writing/task.md` and "
+        "the active goals, correct existing prose, and report what is needed next. "
+        "The Planning scope is this sentence and nothing more: read "
+        "`.writing/task.md`, `.writing/draft.md`, and `.writing/goals.md`, and "
+        "create or develop the goals so that every requirement in the task has a "
+        "goal.",
+        "-5. When the Reviewer recommends replacing a goal, decide whether to accept "
+        "it, record the decision in `.writing/history.md`, and delegate an accepted "
+        "replacement to `Planning`; the `Monitor` does not edit `.writing/goals.md`.",
+        "+4. Delegate the process, with its scope, to a fresh planning, translating, "
+        "or reviewing agent, and wait for it. The Reviewing scope is this sentence "
+        "and nothing more: check `.writing/draft.md` against `.writing/task.md`, "
+        "correct existing prose, and report what is needed next. The Planning scope "
+        "is this sentence and nothing more: read `.writing/task.md` and "
+        "`.writing/draft.md`, organize the relevant material for the intended "
+        "audience, and report the organization.",
+        "+5. For Translating, once a Planner has reported an organization, end the "
+        "step-3 line with a one-line summary of the most recent one, and append that "
+        "organization, as reported, after the Translating scope in the delegation "
+        "message.",
     ]
-    assert "- the assignment summary" in a5_delegation
-    assert "goal network" not in a5_delegation.lower()
-    assert "active goal" not in a5_delegation.lower()
+    assert changes(
+        "plugin/skills/planning/SKILL.md", f"{skills}/task-objective-planning/SKILL.md"
+    ) == [
+        '-description: "Planner role of Agentic CogWriter. Creates or develops the '
+        'writing goals."',
+        '+description: "Planner role of Agentic CogWriter. Organizes the relevant '
+        'material and reports the organization."',
+        "-Role: the Planner. Planning changes the goals, not the prose.",
+        "-Read `.writing/task.md`, `.writing/draft.md`, and `.writing/goals.md`.",
+        "-Organize the relevant material for the intended audience, and create or "
+        "develop the writing goals as a hierarchy in `.writing/goals.md`, within the "
+        "delegated scope. When a goal conflicts with `.writing/task.md`, the task "
+        "governs: replace the goal.",
+        "+Role: the Planner. Planning organizes the material, not the prose; it "
+        "writes no file.",
+        "+Read `.writing/task.md` and `.writing/draft.md`.",
+        "+Organize the relevant material for the intended audience and report the "
+        "organization, within the delegated scope.",
+    ]
+    assert changes(
+        "plugin/skills/translating/SKILL.md",
+        f"{skills}/task-objective-translating/SKILL.md",
+    ) == [
+        '-description: "Translator role of Agentic CogWriter. Writes prose for the '
+        'goals within the delegated draft scope."',
+        '+description: "Translator role of Agentic CogWriter. Writes prose for the '
+        "task's requirements within the delegated draft scope.\"",
+        "-Role: the Translator. Translating adds prose for the goals; a section with "
+        "no goal is reported, not written.",
+        "-Read `.writing/task.md`, `.writing/draft.md`, and the active goals in "
+        "`.writing/goals.md`.",
+        "+Role: the Translator. Translating adds prose for the task's requirements; "
+        "a section that no task requirement calls for is reported, not written.",
+        "+Read `.writing/task.md` and `.writing/draft.md`.",
+    ]
+    assert changes(
+        "plugin/skills/reviewing/SKILL.md",
+        f"{skills}/task-objective-reviewing/SKILL.md",
+    ) == [
+        "-Role: the Reviewer. Reviewing corrects existing prose; a missing goal or a "
+        "missing section is reported, not written. Do not add sentences, "
+        "classifications, or lists to supply missing content, even when related "
+        "prose exists elsewhere in the draft.",
+        "-First, for each requirement in `.writing/task.md`, name the goal in "
+        "`.writing/goals.md` that covers it; a goal covers a requirement only if it "
+        "names that requirement's section, and a requirement with no such goal is "
+        "reported for planning.",
+        "-Check `.writing/draft.md` against `.writing/task.md` and the active goals "
+        "in `.writing/goals.md`.",
+        "+Role: the Reviewer. Reviewing corrects existing prose; a missing section "
+        "is reported, not written. Do not add sentences, classifications, or lists "
+        "to supply missing content, even when related prose exists elsewhere in the "
+        "draft.",
+        "+First, for each requirement in `.writing/task.md`, name the section of "
+        "`.writing/draft.md` that covers it; a requirement with no such section is "
+        "reported for drafting.",
+        "+Check `.writing/draft.md` against `.writing/task.md`.",
+        "-Report whether further planning, drafting, or review is needed: planning "
+        "when a task requirement has no goal in `.writing/goals.md`, drafting when a "
+        "goal has no prose yet, review when prose remains to check, and none when "
+        "the draft meets the task and goals; you may also recommend replacing a goal.",
+        "+Report whether further planning, drafting, or review is needed: planning "
+        "when the material for a task requirement needs organizing, drafting when a "
+        "task requirement has no prose yet, review when prose remains to check, and "
+        "none when the draft meets the task.",
+    ]
+    assert changes("plugin/codex/agents/planning.toml", f"{agents}/planning.toml") == [
+        '-description = "Spawn when the Agentic CogWriter Monitor needs writing '
+        'goals created or developed. Runs $planning; does not draft or review prose."',
+        '+description = "Spawn when the Agentic CogWriter Monitor needs the relevant '
+        'material organized. Runs $planning; does not draft or review prose."',
+    ]
+    assert changes(
+        "plugin/codex/agents/translating.toml", f"{agents}/translating.toml"
+    ) == [
+        '-description = "Spawn when the Monitor has goals and needs draft prose for '
+        'a delegated scope. Runs $translating; does not set goals or review."',
+        "+description = \"Spawn when the Monitor needs draft prose for the task's "
+        "requirements within a delegated scope. Runs $translating; does not organize "
+        'material or review."',
+    ]
+    assert changes(
+        "plugin/codex/agents/reviewing.toml", f"{agents}/reviewing.toml"
+    ) == [
+        '-description = "Spawn when a draft exists and the Monitor needs it checked '
+        "and revised within a delegated scope. Runs $reviewing; does not set goals "
+        'or draft new sections."',
+        '+description = "Spawn when a draft exists and the Monitor needs it checked '
+        "and revised within a delegated scope. Runs $reviewing; does not organize "
+        'material or draft new sections."',
+    ]
+    # The model reads every A5 skill, front matter included, and agent definition.
+    a5_files = [
+        *(
+            REPO_ROOT / skills / name / "SKILL.md"
+            for name in (
+                "cognitive-writing-task-objective",
+                "task-objective-planning",
+                "task-objective-translating",
+                "task-objective-reviewing",
+            )
+        ),
+        *sorted((REPO_ROOT / agents).iterdir()),
+    ]
+    assert [path.name for path in a5_files[4:]] == [
+        "planning.toml",
+        "reviewing.toml",
+        "translating.toml",
+    ]
+    for path in a5_files:
+        assert "goal" not in path.read_text(encoding="utf-8").lower(), path
+    for path in a5_files[:4]:
+        assert [child.name for child in path.parent.rglob("*")] == ["SKILL.md"]
 
 
 @pytest.mark.parametrize(
@@ -1463,7 +1639,11 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     ("condition_id", "skill_name"),
-    (("A4", "agentic-cog-writer"), ("A6", "cognitive-writing-fixed-order")),
+    (
+        ("A4", "agentic-cog-writer"),
+        ("A5", "cognitive-writing-task-objective"),
+        ("A6", "cognitive-writing-fixed-order"),
+    ),
 )
 def test_monitor_conditions_install_the_repository_plugin_codex_adapter(
     tmp_path: Path, condition_id: str, skill_name: str
@@ -1486,13 +1666,31 @@ def test_monitor_conditions_install_the_repository_plugin_codex_adapter(
     assert all(
         (home / "skills" / name / "SKILL.md").is_file() for name in (skill_name, *roles)
     )
-    # A6 stages exactly what A4 stages; only the Monitor's SKILL.md differs.
+    # A5 and A6 stage the same layout as A4; A5 stages its own role copies.
     assert [path.name for path in (home / "skills" / skill_name).rglob("*")] == [
         "SKILL.md"
     ]
+    role_root = (
+        "experiments/plugin/skills/task-objective-"
+        if condition_id == "A5"
+        else ("plugin/skills/")
+    )
+    for role in roles:
+        assert (home / "skills" / role / "SKILL.md").read_bytes() == (
+            REPO_ROOT / f"{role_root}{role}/SKILL.md"
+        ).read_bytes()
     assert sorted(path.name for path in (home / "agents").iterdir()) == sorted(
         f"{role}.toml" for role in roles
     )
+    agents_root = (
+        "experiments/plugin/task-objective-agents/"
+        if condition_id == "A5"
+        else "plugin/codex/agents/"
+    )
+    for role in roles:
+        assert (home / "agents" / f"{role}.toml").read_bytes() == (
+            REPO_ROOT / f"{agents_root}{role}.toml"
+        ).read_bytes()
     assert [path.name for path in (home / "rules").iterdir()] == ["deny.rules"]
     assert "developer_instructions" in tomllib.loads((home / "config.toml").read_text())
 
@@ -1539,41 +1737,6 @@ def test_codex_adapter_config_conflicting_with_runner_settings_is_rejected(
     with pytest.raises(ConfigurationError, match="conflicts"):
         ExperimentRunner._install_codex_adapter(adapter, {}, home, delegated=True)
     assert (home / "config.toml").read_text() == 'model_reasoning_effort = "medium"\n'
-
-
-@pytest.mark.parametrize(
-    ("condition_id", "skill_name"),
-    (("A5", "cognitive-writing-no-goal-network"),),
-)
-def test_codex_stages_delegated_roles_and_trace_schema_for_a5(
-    tmp_path: Path, condition_id: str, skill_name: str
-) -> None:
-    source_root = tmp_path / "plugin-source"
-    for relative in (
-        f"skills/{skill_name}/SKILL.md",
-        "skills/planning/SKILL.md",
-        "skills/translating/SKILL.md",
-        "skills/reviewing/SKILL.md",
-    ):
-        path = source_root / relative
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(relative)
-
-    runner = ExperimentRunner(
-        _config(),
-        output_root=tmp_path / "runs",
-        codex_plugin_root=source_root,
-    )
-
-    staged_files = runner._stage_codex_plugin(
-        load_condition_registry()[condition_id], tmp_path / "workspace"
-    )
-    assert set(staged_files) == {
-        f"plugin/skills/{skill_name}/SKILL.md",
-        "plugin/skills/planning/SKILL.md",
-        "plugin/skills/translating/SKILL.md",
-        "plugin/skills/reviewing/SKILL.md",
-    }
 
 
 def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(

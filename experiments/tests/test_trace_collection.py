@@ -35,7 +35,7 @@ def _plugin_source(tmp_path):
         "writing-linear",
         "writing-storm-style",
         "agentic-cog-writer",
-        "cognitive-writing-no-goal-network",
+        "cognitive-writing-task-objective",
         "cognitive-writing-fixed-order",
         "cognitive-writing-single-writer",
         "cognitive-writing-single-context",
@@ -260,7 +260,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "writing-linear",
         "writing-adaptive-task-planning",
         "agentic-cog-writer",
-        "cognitive-writing-no-goal-network",
+        "cognitive-writing-task-objective",
         "cognitive-writing-fixed-order",
         "cognitive-writing-single-writer",
         "cognitive-writing-single-context",
@@ -337,7 +337,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A2"].goal_events == "forbidden"
     assert registry["A3"].goal_events == "forbidden"
     assert registry["A4"].goal_events == "allowed"
-    monitor_skill_conditions = {"A4", "A6", "A8"}
+    monitor_skill_conditions = {"A4", "A5", "A6", "A8"}
     assert not any(registry[name].trace_required for name in monitor_skill_conditions)
     assert all(
         spec.trace_required

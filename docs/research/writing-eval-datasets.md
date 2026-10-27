@@ -20,7 +20,7 @@ The planned comparison has 6 conditions, and [`docs/experiments/protocol.md`](..
 - A2: linear Pre-Write/Write/Re-Write
 - A3: Synthesis of Topic Outlines through Retrieval and Multi-perspective Question Asking (STORM) [^2]-style linear pipeline without retrieval
 - A4: `agentic-cog-writer`, the main plugin skill where the Monitor coordinates Planner, Translator, and Reviewer role skills
-- A5: `cognitive-writing-no-goal-network`, the experiments package skill that removes the explicit goal network
+- A5: `cognitive-writing-task-objective`, the experiments package skill that removes the explicit goal network
 - A6: `cognitive-writing-fixed-order`, the experiments package skill that keeps the goal network and prescribes process order
 
 The repository ships two plugin packages for the main skill and comparison variants. The main plugin lives under [`plugin/`](../../plugin/) with `agentic-cog-writer`, `planning`, `translating`, and `reviewing`. The comparison package lives under [`experiments/plugin/`](../../experiments/plugin/) and requires the main plugin. The manifests and README record that split:
@@ -169,7 +169,7 @@ For the six-condition experiment, the process metrics should follow the protocol
 - **Review trace.** Count detected issues and issue types. Map revision intent to clarity, fluency, coherence, style, and meaning change. Check whether fixes improve final rubric scores.
 - **Monitor trace.** Measure process order entropy, meaning how varied the sequence of planning, translating, and reviewing steps is. Check whether transitions respond to detected problems rather than a fixed sequence.
 - **Condition A3 trace.** Record completion of the STORM [^2]-style five protocol stages: Perspective discovery, Simulated question answering, Outline, Draft, and Polish. Retrieval/evidence/citation traces are explicitly N/A under the no-retrieval policy.
-- **A5 `cognitive-writing-no-goal-network` trace.** The experiments package skill leaves `goals.md` untouched. Record process switches under the shared trace contract. Record no goal events or goal fields.
+- **A5 `cognitive-writing-task-objective` trace.** The experiments package skill leaves `goals.md` untouched. Record process switches under the shared trace contract. Record no goal events or goal fields.
 - **A6 `cognitive-writing-fixed-order` trace.** The experiments package skill keeps the ordinary goal network. Record process switches and goal events under the shared trace contract. Permit Generate and Evaluate interruptions, then return to the prescribed order.
 - **Hypotheses to test.** The no-goal-network condition should show fewer explicit goal references. The fixed-process-order condition should show lower adaptive transitions even if final quality is similar.
 
