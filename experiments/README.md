@@ -77,6 +77,20 @@ For conditions with `product_requires_draft = true`, the scored output is the fi
 
 The wrapper TOMLs are the source of truth for trace contracts. Each declares the allowed event types, goal-event policy, event-count bounds, process values, and any exact process-transition order. The runner rejects events outside those declarations; `process_switch` events always require `from_process` and `to_process`, and forbidden-goal conditions also require the run not to create or modify `.writing/goals.md`.
 
+## Report mechanisms
+
+The mechanism report reads each Codex run's harness records under the given roots, writes `mechanism.json` next to its `run-manifest.json`, and prints a per-condition table. The process sequence lists the Monitor's completed delegations, including a reused child's `send_input` or `resume_agent`. Changes to `.writing/goals.md` are classified per delegation as creating, developing, or replacing goals after normalizing goal lines, and each replacement records its removed and added goal lines for audit. The first change that adds a heading to `.writing/draft.md` shows whether `Planning` came before the first section. The module docstring of [`mechanism.py`](src/agentic_cogwriter/analysis/mechanism.py) defines each rule. Every rate and count covers runs that pass the fidelity gate, with a 95% Wilson interval, and the table also prints the completed and scorable counts.
+
+- **Comparable replacement.** `goal_replaced_after_review` counts a goal removed or rewritten by a `Planning` delegation that directly follows a `Reviewing` delegation that had ended, and is the measure comparable to the executed study's accepted goal replacement. `goal_replaced` counts every removed or rewritten goal.
+- **Conditions without delegation.** The Mechanism criterion applies to the full system. A condition whose wrapper does not require delegation, such as A8, which runs every process in the `Monitor`'s own context, has no process sequence in the harness records; its process-derived columns read `n/a`, and its goal columns are reported as usual. Any other condition reports its process-derived values even when a run never delegates.
+- **Unrecorded writes.** Only `apply_patch` writes are recorded as file changes, so each run also lists the shell commands that look like writes to `goals.md`, `draft.md`, or `.writing`, and the table counts them. The match is textual, so a listed command may only have read the file.
+- **Delegation checks.** The table counts runs that reuse a child and runs whose delegations overlap, because a reused child's changes depend on turn timing and an overlapping delegation cannot count as `Reviewing` followed by `Planning`.
+
+```bash
+uv run --project experiments agentic-cogwriter-mechanism-report \
+  --runs-root /path/to/codex-runs
+```
+
 ## Score a completed run
 
 The scorer in [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) reads a completed run's `run-manifest.json`, `prompt.txt`, and `output.normalized.txt`, then writes `scores.jsonl` and `scores-manifest.json` beside the run artifacts. The manifest records the versioned template hash, source-run hashes, API usage counters, response hash, attempt count, score-record hash, and the runtime judge-family evidence chain. A successful command prints the `scores.jsonl` path. Pairwise scoring writes both presentation records only after both judgments pass validation.

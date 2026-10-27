@@ -133,27 +133,61 @@ def _read_own_skill(records: list[dict[str, Any]], role: str) -> bool:
     return False
 
 
-def _codex_reasons(run_dir: Path, monitor_writes_history_only: bool) -> list[str]:
+def read_codex_records(
+    run_dir: Path,
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, list], list[str]]:
+    """Read a run's Codex event stream and rollouts.
+
+    Returns the events, each thread's ``session_meta`` payload and remaining
+    rollout records by thread id, and the names of rollouts without a
+    ``session_meta`` first line.
+    """
+
     events = [
         event
         for path in sorted(run_dir.glob("attempt-*.events.jsonl"))
         for event in _json_objects(path.read_bytes())
     ]
-    if not events:
-        return ["no Codex event stream was recorded"]
-    reasons: list[str] = []
-
     metas: dict[str, dict[str, Any]] = {}
     records: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    malformed: list[str] = []
     for path in sorted(run_dir.glob("sessions/**/rollout-*.jsonl")):
         lines = _json_objects(path.read_bytes())
         first = lines[0] if lines else {}
         meta = first.get("payload")
         if first.get("type") != "session_meta" or not isinstance(meta, dict):
-            reasons.append(f"rollout {path.name} does not start with session_meta")
+            malformed.append(path.name)
             continue
         metas[str(meta.get("id"))] = meta
         records[str(meta.get("id"))].extend(lines[1:])
+    return events, metas, records, malformed
+
+
+def completed_items(events: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return the completed items of a Codex event stream, in order."""
+
+    return [
+        event["item"]
+        for event in events
+        if event.get("type") == "item.completed" and isinstance(event.get("item"), dict)
+    ]
+
+
+def spawn_role(meta: dict[str, Any], prompt: str) -> str | None:
+    """Return a spawned child's role from its agent type or its ``$role`` prompt."""
+
+    role = meta.get("agent_role")
+    if role in ROLES:
+        return role
+    match = _ROLE_TOKEN.search(prompt)
+    return match.group(1) if match else None
+
+
+def _codex_reasons(run_dir: Path, monitor_writes_history_only: bool) -> list[str]:
+    events, metas, records, malformed = read_codex_records(run_dir)
+    if not events:
+        return ["no Codex event stream was recorded"]
+    reasons = [f"rollout {name} does not start with session_meta" for name in malformed]
 
     # The events stream records only the top-level thread, which is the Monitor.
     top_level = {
@@ -164,11 +198,7 @@ def _codex_reasons(run_dir: Path, monitor_writes_history_only: bool) -> list[str
     }
     if not top_level:
         reasons.append("Codex event stream has no thread.started event")
-    items = [
-        event["item"]
-        for event in events
-        if event.get("type") == "item.completed" and isinstance(event.get("item"), dict)
-    ]
+    items = completed_items(events)
     spawned: set[str] = set()
     closed: set[str] = set()
     spawn_prompts: dict[str, str] = {}
@@ -189,10 +219,7 @@ def _codex_reasons(run_dir: Path, monitor_writes_history_only: bool) -> list[str
         if meta.get("forked_from_id"):
             reasons.append(f"child {thread} was spawned with inherited context")
         if meta.get("parent_thread_id"):
-            role = meta.get("agent_role")
-            if role not in ROLES:
-                match = _ROLE_TOKEN.search(spawn_prompts.get(thread, ""))
-                role = match.group(1) if match else None
+            role = spawn_role(meta, spawn_prompts.get(thread, ""))
             if role and not _read_own_skill(records[thread], role):
                 reasons.append(f"{role} agent {thread} did not read its own SKILL.md")
 
