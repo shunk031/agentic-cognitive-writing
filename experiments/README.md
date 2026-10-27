@@ -77,6 +77,15 @@ For conditions with `product_requires_draft = true`, the scored output is the fi
 
 The wrapper TOMLs are the source of truth for trace contracts. Each declares the allowed event types, goal-event policy, event-count bounds, process values, and any exact process-transition order. The runner rejects events outside those declarations; `process_switch` events always require `from_process` and `to_process`, and forbidden-goal conditions also require the run not to create or modify `.writing/goals.md`.
 
+## Report mechanisms
+
+The mechanism report reads each Codex run's harness records under the given roots, writes `mechanism.json` next to its `run-manifest.json`, and prints a per-condition table. The process sequence lists the role of every child the `Monitor` spawned, so a condition that runs every process in the `Monitor`'s own context, such as A8, has an empty sequence. Goal events classify each recorded patch to `.writing/goals.md` as creating, developing, or replacing goals; the module docstring of [`mechanism.py`](src/agentic_cogwriter/analysis/mechanism.py) defines the rule and its limits. The table reports, over completed runs, the share with `Planning` before the first `Translating`, with `Reviewing` immediately followed by `Planning`, and with each goal event, and the mean number of processes.
+
+```bash
+uv run --project experiments agentic-cogwriter-mechanism-report \
+  --runs-root /path/to/codex-runs
+```
+
 ## Score a completed run
 
 The scorer in [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) reads a completed run's `run-manifest.json`, `prompt.txt`, and `output.normalized.txt`, then writes `scores.jsonl` and `scores-manifest.json` beside the run artifacts. The manifest records the versioned template hash, source-run hashes, API usage counters, response hash, attempt count, score-record hash, and the runtime judge-family evidence chain. A successful command prints the `scores.jsonl` path. Pairwise scoring writes both presentation records only after both judgments pass validation.
