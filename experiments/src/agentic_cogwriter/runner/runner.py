@@ -37,6 +37,7 @@ from .execution import (
     extract_output,
     extract_token_usage,
     reject_retrieval,
+    rollout_token_usage,
 )
 from .fidelity import ROLES, check_fidelity, check_output_language
 from .hashing import sha256_bytes, sha256_file
@@ -73,6 +74,18 @@ class RunResult:
     output_path: Path
     trace_path: Path
     run_id: str
+
+
+# The follow-up change block, the same bytes for every condition, opens with this
+# heading; task.md receives the block, and the turn-2 message adds the
+# condition's own turn-1 product clause after it.
+FOLLOWUP_HEADING = "## Change 1 (governs where it conflicts with the task above)"
+
+
+def followup_message(change: str) -> str:
+    """Return the follow-up change block, the same bytes for every condition."""
+
+    return f"{FOLLOWUP_HEADING}\n{change.strip()}\n"
 
 
 _GENERATOR_CONFIG_ENV = {
@@ -668,8 +681,14 @@ class ExperimentRunner:
         condition_id: str,
         platform: str,
         run_id: str | None = None,
+        followup: str | None = None,
     ) -> RunResult:
-        """Run one top-level skill session and copy its plugin-owned trace."""
+        """Run one top-level skill session and copy its plugin-owned trace.
+
+        A ``followup`` change resumes the session for a second turn after turn 1's
+        products are snapshotted under ``turn1/`` and the change is appended to
+        ``.writing/task.md``; the second turn's product is the run's output.
+        """
 
         self.runtime_config.require_scored_run()
         condition = self.conditions.get(condition_id)
@@ -729,6 +748,7 @@ class ExperimentRunner:
             token_usage: dict[str, int] | None = None
             token_accounting_error: str | None = None
             trace_timestamps: Mapping[str, Any] | None = None
+            followup_record: dict[str, Any] | None = None
             subagent_spawn_ids: set[str] = set()
             rollout_collection: dict[str, Any] = {
                 "status": "absent",
@@ -858,6 +878,9 @@ class ExperimentRunner:
                 ),
             )
 
+            # The budget applies to each turn, so a follow-up turn starts afresh.
+            turn_start_tokens = 0
+
             def record_attempt(
                 attempt_number: int,
                 result: ExecutionResult | None,
@@ -934,19 +957,15 @@ class ExperimentRunner:
                         token_accounting_error = str(exc)
                         observed_usage = None
                     if observed_usage is not None:
-                        if token_usage is None:
-                            token_usage = {
-                                "output_tokens": 0,
-                                "reasoning_output_tokens": 0,
-                                "total_tokens": 0,
-                            }
-                        for key, value in observed_usage.items():
-                            token_usage[key] += value
-                        if token_usage["total_tokens"] > budget.limit:
+                        # turn.completed reports the session's cumulative usage, and
+                        # a retry or follow-up resumes the session, so the latest
+                        # observation supersedes the earlier ones.
+                        token_usage = observed_usage
+                        turn_tokens = token_usage["total_tokens"] - turn_start_tokens
+                        if turn_tokens > budget.limit:
                             raise BudgetExceeded(
-                                "Codex turn usage exceeds the shared output "
-                                f"budget: used={token_usage['total_tokens']}, "
-                                f"limit={budget.limit}"
+                                "Codex turn usage exceeds the per-turn output "
+                                f"budget: used={turn_tokens}, limit={budget.limit}"
                             )
                     if (
                         result.returncode == 0
@@ -987,23 +1006,112 @@ class ExperimentRunner:
                     ),
                 )
 
-            result, attempts = self._run_turn_with_retry(
-                adapter,
-                model_id=self.runtime_config.model_for(platform),
-                prompt=command_prompt,
-                cwd=workspace,
-                env=generator_environment,
-                attempts=attempts,
-                plugin_dirs=(
-                    self._plugin_dirs(condition) if platform != "codex" else ()
-                ),
-                record_attempt=record_attempt,
-                snapshot_sessions=(
-                    (lambda: self._snapshot_codex_sessions(generator_config_dir))
-                    if platform == "codex"
-                    else None
-                ),
-            )
+            def run_turn(prompt_text: str, session_id: str | None):
+                return self._run_turn_with_retry(
+                    adapter,
+                    model_id=self.runtime_config.model_for(platform),
+                    prompt=prompt_text,
+                    cwd=workspace,
+                    env=generator_environment,
+                    attempts=attempts,
+                    session_id=session_id,
+                    plugin_dirs=(
+                        self._plugin_dirs(condition) if platform != "codex" else ()
+                    ),
+                    record_attempt=record_attempt,
+                    snapshot_sessions=(
+                        (lambda: self._snapshot_codex_sessions(generator_config_dir))
+                        if platform == "codex"
+                        else None
+                    ),
+                )
+
+            def gate(stage_files: tuple[str, ...]) -> dict[str, Any]:
+                return check_fidelity(
+                    run_dir,
+                    platform=platform,
+                    codex_home=generator_config_dir.resolve(),
+                    requires_draft=condition.product_requires_draft,
+                    monitor_writes_history_only=condition.monitor_writes_history_only,
+                    roles=tuple(
+                        path.name
+                        for path in self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(
+                            condition.skill_name, {}
+                        )
+                    )
+                    or ROLES,
+                    stage_files=stage_files,
+                    spawn_message=condition.spawn_message,
+                )
+
+            result, attempts = run_turn(command_prompt, None)
+            if followup is not None:
+                if not result.session_id:
+                    raise ExecutionError("Cannot resume a turn without its session_id")
+                turn1_dir = run_dir / "turn1"
+                turn1_dir.mkdir()
+                turn1_product = _scored_output(
+                    result.stdout,
+                    workspace / ".writing" / "draft.md",
+                    condition_id=condition.condition_id,
+                    requires_draft=condition.product_requires_draft,
+                )
+                (turn1_dir / "output.normalized.txt").write_bytes(turn1_product)
+                for name in ("draft.md", "goals.md"):
+                    if (workspace / ".writing" / name).is_file():
+                        shutil.copyfile(workspace / ".writing" / name, turn1_dir / name)
+                # The gate compares the run output with the draft, so it judges
+                # turn 1 against turn 1's product; turn 2 overwrites the output.
+                normalized_path.write_bytes(turn1_product)
+                # The frozen stage order describes turn 1; turn 2 may revise any file.
+                turn1_gate = gate(condition.stage_files)
+                change = followup_message(followup)
+                task_path = workspace / ".writing" / "task.md"
+                if task_path.is_file():
+                    with task_path.open("a", encoding="utf-8") as task:
+                        task.write(f"\n{change}")
+                # Each condition re-enters its own procedure with turn 1's clause.
+                message = f"{change}\n" + self._invocation(
+                    condition, platform, Path("plugin")
+                )
+                followup_path = run_dir / "followup.txt"
+                followup_path.write_text(message, encoding="utf-8")
+                turn1_attempts = attempts
+                turn_start_tokens = token_usage["total_tokens"] if token_usage else 0
+                followup_record = {
+                    "message_hash": f"sha256:{sha256_file(followup_path)}",
+                    "task_hash": (
+                        f"sha256:{sha256_file(task_path)}"
+                        if task_path.is_file()
+                        else None
+                    ),
+                    "turn1_attempts": turn1_attempts,
+                    "turn1_fidelity_gate": turn1_gate,
+                    "turn1_hashes": {
+                        path.name: f"sha256:{sha256_file(path)}"
+                        for path in sorted(turn1_dir.iterdir())
+                    },
+                    "turn2_started_at": timestamp(),
+                    "budget": {
+                        "turn1": {
+                            "tokens": turn_start_tokens,
+                            "output_units": self.runtime_config.count_output_units(
+                                turn1_product.decode("utf-8")
+                            ),
+                        }
+                    },
+                }
+                result, attempts = run_turn(message, result.session_id)
+                if platform == "codex":
+                    turn1_usage = rollout_token_usage(run_dir, turn1_attempts)
+                    total_usage = rollout_token_usage(run_dir, attempts)
+                    followup_record["rollout_token_usage"] = {
+                        "turn1": turn1_usage,
+                        "turn2": {
+                            key: value - turn1_usage.get(key, 0)
+                            for key, value in total_usage.items()
+                        },
+                    }
             scored = _scored_output(
                 result.stdout,
                 workspace / ".writing" / "draft.md",
@@ -1015,6 +1123,12 @@ class ExperimentRunner:
                 self.runtime_config.count_output_units(scored.decode("utf-8")),
                 stage="final_output",
             )
+            if followup_record is not None:
+                followup_record["budget"]["turn2"] = {
+                    "tokens": (token_usage["total_tokens"] if token_usage else 0)
+                    - turn_start_tokens,
+                    "output_units": budget.used,
+                }
             if condition.goal_events == "forbidden":
                 assert_untouched(protected_goals, goals_before)
             required_trace = ".writing/trace/process.jsonl"
@@ -1064,22 +1178,21 @@ class ExperimentRunner:
                 )
             output_path.write_bytes(scored)
             normalized_path.write_bytes(scored)
-            fidelity_gate = check_fidelity(
-                run_dir,
-                platform=platform,
-                codex_home=generator_config_dir.resolve(),
-                requires_draft=condition.product_requires_draft,
-                monitor_writes_history_only=condition.monitor_writes_history_only,
-                roles=tuple(
-                    path.name
-                    for path in self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(
-                        condition.skill_name, {}
+            if followup_record is None:
+                fidelity_gate = gate(condition.stage_files)
+            else:
+                # A two-turn run is scorable only if turn 1 and the whole run pass.
+                turn1_reasons = followup_record["turn1_fidelity_gate"]["reasons"]
+                reasons = list(
+                    dict.fromkeys(
+                        [f"turn 1: {reason}" for reason in turn1_reasons]
+                        + gate(())["reasons"]
                     )
                 )
-                or ROLES,
-                stage_files=condition.stage_files,
-                spawn_message=condition.spawn_message,
-            )
+                fidelity_gate = {
+                    "status": "rejected" if reasons else "scorable",
+                    "reasons": reasons,
+                }
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -1116,6 +1229,7 @@ class ExperimentRunner:
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
+                    followup=followup_record,
                     fidelity_gate=fidelity_gate,
                     output_language=check_output_language(
                         scored.decode("utf-8"), prompt.language
@@ -1196,6 +1310,7 @@ class ExperimentRunner:
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
+                    followup=followup_record,
                     failure=failure,
                 ),
             )
@@ -1228,6 +1343,7 @@ class ExperimentRunner:
         cwd: Path,
         env: Mapping[str, str],
         attempts: int,
+        session_id: str | None = None,
         plugin_dirs: tuple[str, ...] = (),
         record_attempt: Callable[
             [int, ExecutionResult | None, SessionSnapshot | None], None
@@ -1239,7 +1355,6 @@ class ExperimentRunner:
 
         max_attempts = self.runtime_config.retry_count + 1
         local_attempts = 0
-        session_id: str | None = None
         while local_attempts < max_attempts:
             local_attempts += 1
             attempts += 1
@@ -1332,27 +1447,7 @@ class ExperimentRunner:
         codex_prompt_root: str | Path | None = None,
         contract_hashes: MutableMapping[str, str] | None = None,
     ) -> str:
-        wrapper = self._wrapper(condition)
-        key = platform.replace("-", "_")
-        invocation = wrapper.get("invocation", {}).get(key)
-        if not isinstance(invocation, str) or not invocation.strip():
-            raise ManifestError(
-                f"Plugin wrapper {condition.plugin_config} has no {key} invocation"
-            )
-        if platform == "codex":
-            prompt_root = Path(codex_prompt_root or "plugin")
-            if prompt_root.is_absolute():
-                raise ManifestError(
-                    "Codex skill prompt path must be workspace-relative"
-                )
-            invocation = invocation.replace(
-                "{codex_plugin_root}", prompt_root.as_posix()
-            )
-            if "{codex_plugin_root}" in invocation:
-                raise ManifestError(
-                    f"Plugin wrapper {condition.plugin_config} has an unresolved "
-                    "Codex plugin root"
-                )
+        invocation = self._invocation(condition, platform, codex_prompt_root)
         contract_texts, observed_contract_hashes = self._read_contracts()
         if contract_hashes is not None:
             contract_hashes.update(observed_contract_hashes)
@@ -1377,6 +1472,37 @@ class ExperimentRunner:
         if generic_block:
             generic_block = f"\n\n{generic_block}"
         return f"{invocation}{generic_block}{stage_text}"
+
+    def _invocation(
+        self,
+        condition: ConditionSpec,
+        platform: str,
+        codex_prompt_root: str | Path | None = None,
+    ) -> str:
+        """Return the wrapper's rendered invocation, the prompt's product clause."""
+
+        wrapper = self._wrapper(condition)
+        key = platform.replace("-", "_")
+        invocation = wrapper.get("invocation", {}).get(key)
+        if not isinstance(invocation, str) or not invocation.strip():
+            raise ManifestError(
+                f"Plugin wrapper {condition.plugin_config} has no {key} invocation"
+            )
+        if platform == "codex":
+            prompt_root = Path(codex_prompt_root or "plugin")
+            if prompt_root.is_absolute():
+                raise ManifestError(
+                    "Codex skill prompt path must be workspace-relative"
+                )
+            invocation = invocation.replace(
+                "{codex_plugin_root}", prompt_root.as_posix()
+            )
+            if "{codex_plugin_root}" in invocation:
+                raise ManifestError(
+                    f"Plugin wrapper {condition.plugin_config} has an unresolved "
+                    "Codex plugin root"
+                )
+        return invocation
 
     def _stage_prompt_hashes(self, condition: ConditionSpec) -> dict[str, str | None]:
         """Re-read frozen stage files and verify the bytes used for the prompt."""
@@ -1761,6 +1887,7 @@ class ExperimentRunner:
         rollout_collection: Mapping[str, Any] | None = None,
         spawn_extraction: Mapping[str, Any] | None = None,
         trace_timestamps: Mapping[str, Any] | None = None,
+        followup: Mapping[str, Any] | None = None,
         fidelity_gate: Mapping[str, Any] | None = None,
         output_language: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
@@ -1972,6 +2099,8 @@ class ExperimentRunner:
             manifest["inputs"]["native_payload"] = prompt.native_payload
         if trace_timestamps is not None:
             manifest["trace_timestamps"] = dict(trace_timestamps)
+        if followup is not None:
+            manifest["followup"] = dict(followup)
         if fidelity_gate is not None:
             manifest["fidelity_gate"] = dict(fidelity_gate)
         if output_language is not None:

@@ -181,6 +181,41 @@ def extract_token_usage(data: bytes) -> dict[str, int]:
     return totals
 
 
+def rollout_token_usage(run_dir: Path, through_attempt: int) -> dict[str, int]:
+    """Sum every thread's usage up to the end of attempt ``through_attempt``.
+
+    A thread's usage is the cumulative ``total_token_usage`` of its last
+    ``token_count`` record in the latest rollout copy collected by that attempt.
+    Codex appends a resumed thread to its rollout, so a later copy supersedes an
+    earlier one, and the difference between two attempt boundaries is the usage
+    of every thread between them.
+    """
+
+    latest: dict[str, dict[str, Any]] = {}
+    for path in sorted(run_dir.glob("sessions/attempt-*/**/rollout-*.jsonl")):
+        attempt = path.relative_to(run_dir / "sessions").parts[0]
+        if int(attempt.removeprefix("attempt-")) > through_attempt:
+            continue
+        records = _json_objects(path.read_bytes())
+        meta = records[0].get("payload") if records else None
+        usage = [
+            record["payload"]["info"]["total_token_usage"]
+            for record in records
+            if isinstance(record.get("payload"), dict)
+            and record["payload"].get("type") == "token_count"
+            and isinstance(record["payload"].get("info"), dict)
+            and isinstance(record["payload"]["info"].get("total_token_usage"), dict)
+        ]
+        if isinstance(meta, dict) and usage:
+            latest[str(meta.get("id"))] = usage[-1]
+    totals: dict[str, int] = {}
+    for usage in latest.values():
+        for key, value in usage.items():
+            if isinstance(value, int) and not isinstance(value, bool):
+                totals[key] = totals.get(key, 0) + value
+    return totals
+
+
 def extract_output(data: bytes) -> str:
     """Extract the model's final text while leaving transport bytes untouched."""
 
