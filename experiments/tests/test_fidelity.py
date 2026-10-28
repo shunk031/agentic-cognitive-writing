@@ -282,6 +282,20 @@ def test_skill_read_outside_the_staged_skills_counts_only_if_the_path_exists(
     assert _gate(_materialize(tmp_path, run))["status"] == status
 
 
+def test_a_missing_longer_path_does_not_hide_a_read_of_its_suffix(
+    tmp_path: Path,
+) -> None:
+    run = _clean_run()
+    read = _read('exec_command({cmd:"cat /x/elsewhere/SKILL.md /elsewhere/SKILL.md"})')
+    read["payload"]["call_id"] = "call-1"
+    error = "cat: /x/elsewhere/SKILL.md: No such file or directory\nRole: other.\n"
+    run["rollouts"][CHILD] += [read, _output("call-1", error)]
+
+    assert _gate(_materialize(tmp_path, run))["reasons"] == [
+        f"thread {CHILD} read /elsewhere/SKILL.md outside the staged skills"
+    ]
+
+
 @pytest.mark.parametrize(
     "path",
     [

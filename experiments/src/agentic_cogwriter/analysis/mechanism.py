@@ -64,12 +64,12 @@ run never delegates. The declaration is the run manifest's
 delegation.
 
 Unrecorded writes. Only ``apply_patch`` writes become ``FileChange`` items. Each
-run therefore lists the shell commands that look like writes to ``goals.md``,
-``draft.md``, ``.writing`` itself, or a glob under it (a redirection, ``tee``,
-``sponge``, in-place ``sed``, ``ed``, ``patch``, ``cp``, ``mv``, ``rm``,
-``touch``, an interpreter, or a ``git`` checkout), and any ``git reset --hard``,
-``git stash``, ``git apply``, or ``patch -p``. The match is textual, so a listed
-command may not have written, and its effect is missing from the events above.
+run therefore lists the shell commands whose write targets ``goals.md``,
+``draft.md``, ``.writing`` itself, or a glob under it, by the rules of the
+fidelity gate's ``_writes_tracked``, which also counts any ``git reset --hard``,
+``git stash`` other than ``list`` or ``show``, ``git apply``, or ``patch -p``. A
+script run with a tracked argument is listed although it may not have written,
+and a listed command's effect is missing from the events above.
 Goal lines supplied with the task are unknown, so the first change to a seeded
 ``goals.md`` counts as creation.
 """
