@@ -17,18 +17,14 @@ File changes. The completed ``FileChange`` items of every rollout that touch
 change by a delegated child, or by a descendant of one, belongs to that child's
 latest delegation started before the change. A change by the Monitor itself
 belongs to the interval after the latest delegation started before it. When a
-delegation has no matching ``task_started`` record, its start is unknown. Its
-lower bound is the smaller of two bounds: the latest known start among the
-delegations issued up to it, and the latest end (a turn's ``task_complete``
-record, or else its start) among the delegations that had ended when it was
-issued. Neither bound alone holds in every record: a queued delegation can
-start late, a queued input can join a running turn without a turn record of
-its own, and a ``task_complete`` record can follow a ``close_agent``.
-A child's change that could belong to such a delegation is unattributed: it
-still updates the goal lines but counts toward no interval-based measure, and
-runs with unattributed changes are counted. A change by the Monitor keeps its
-Monitor interval for goal events, because its author is certain, but cannot
-decide whether ``Planning`` preceded the first section.
+delegation has no matching ``task_started`` record, its start is unknown, and
+no timing record bounds it reliably. A child's change is then unattributed when
+such a delegation of the child comes at or after the child's latest delegation
+started before the change: it still updates the goal lines but counts toward no
+interval-based measure, and runs with unattributed changes are counted. A
+change by the Monitor keeps its Monitor interval for goal events, because its
+author is certain, but cannot decide whether ``Planning`` preceded the first
+section.
 
 Goal lines. A goal line is a Markdown heading, bullet, or numbered item of
 ``goals.md``. It is compared in normalized form: heading marks, list markers,
@@ -324,9 +320,6 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
                         "overlaps": any(not d["ended"] for d in delegations),
                         "previous_ended": bool(delegations)
                         and delegations[-1]["ended"],
-                        "ended_at_issue": [
-                            k for k, d in enumerate(delegations) if d["ended"]
-                        ],
                     }
                 )
             elif _ended(item, thread):
@@ -340,42 +333,23 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
         )
     processes = [d["process"] for d in delegations]
 
-    # The n-th delegation to a child is the child's n-th turn.
-    def turn_times(kind: str) -> dict[str, list[float]]:
-        return {
-            thread: [
-                _ms(record.get("timestamp"))
-                for record in thread_records
-                if record.get("type") == "event_msg"
-                and (record.get("payload") or {}).get("type") == kind
-            ]
-            for thread, thread_records in records.items()
-        }
-
-    turn_starts, turn_ends = turn_times("task_started"), turn_times("task_complete")
+    # The n-th delegation to a child starts with the child's n-th turn.
+    turns = {
+        thread: [
+            _ms(record.get("timestamp"))
+            for record in thread_records
+            if record.get("type") == "event_msg"
+            and (record.get("payload") or {}).get("type") == "task_started"
+        ]
+        for thread, thread_records in records.items()
+    }
     starts: list[float] = []
-    ends: list[float] = []
     seen: Counter[str] = Counter()
     for delegation in delegations:
-        thread, n = delegation["thread"], seen[delegation["thread"]]
-        thread_starts = turn_starts.get(thread, [])
-        thread_ends = turn_ends.get(thread, [])
-        starts.append(thread_starts[n] if n < len(thread_starts) else float("inf"))
-        ends.append(thread_ends[n] if n < len(thread_ends) else starts[-1])
-        seen[thread] += 1
-
-    # An unknown start takes the smaller of two lower bounds, as the module
-    # docstring explains.
-    def latest(times: Iterable[float]) -> float:
-        return max((time for time in times if time != float("inf")), default=0)
-
-    earliest = [
-        min(
-            latest(starts[: k + 1]),
-            latest(time for i in d["ended_at_issue"] for time in (ends[i], starts[i])),
-        )
-        for k, d in enumerate(delegations)
-    ]
+        thread_turns = turns.get(delegation["thread"], [])
+        n = seen[delegation["thread"]]
+        starts.append(thread_turns[n] if n < len(thread_turns) else float("inf"))
+        seen[delegation["thread"]] += 1
     delegated = {d["thread"] for d in delegations}
 
     def position(thread: str | None, at: float) -> tuple[int | None, bool, bool]:
@@ -391,11 +365,8 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
         )
         started = [k for k in candidates if starts[k] <= at]
         k = started[-1] if started else (-1 if by_monitor else candidates[0])
-        ambiguous = any(
-            starts[j] == float("inf") and earliest[j] <= at
-            for j in candidates
-            if j >= k
-        )
+        # A delegation with an unknown start, from k on, may own the change.
+        ambiguous = any(starts[j] == float("inf") for j in candidates if j >= k)
         # The Monitor's own change keeps its interval; a child's is unattributed.
         return (None if ambiguous and not by_monitor else k), by_monitor, ambiguous
 
