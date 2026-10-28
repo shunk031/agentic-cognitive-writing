@@ -2,21 +2,67 @@
 
 This file records the state, decisions, and working rules for the CogWriter experiment redesign, so that a new session can continue without the earlier conversation. Update this file whenever a decision or milestone changes.
 
+## Status
+
+No tested setting shows the current method better than A6 `Fixed-order` on quality, work, or edit locality. The [readiness criteria](#readiness-criteria) stand as follows, unfavorable results first; the [Evidence](#evidence) section gives each measurement condition, and the paper's [code-to-system map](../paper/sec/09_prompt_configuration.tex) names the condition codes.
+
+- **Outcome: not met.** No scored run of the rebuilt arms exists. In the September two-turn requirement-change runs of the executed study's plugin, A4 `Agentic CogWriter` against `Fixed-order` gave 18 wins, 19 losses, and 22 ties.
+- **Mechanism: not met.** In the 24 gate-passing runs of the rebuilt A4 on ordinary non-evaluation prompts, no run returned from `Reviewing` to `Planning` and none replaced a goal, against the executed study's 4.1% and 0.5%.
+- **Fidelity: met on ordinary non-evaluation prompts.** The gate passed 24 of 27 runs of the rebuilt A4 and rejected three with stated reasons. This is a property of the implementation, not support for the paper's claim.
+
+## Pending decision
+
+The author is deciding the paper's claim, and no scored run happens before that decision and a go/no-go pilot for the chosen claim. The options under consideration are:
+
+- **Rebuild the method.** Rebuild the method so that its claimed mechanisms appear, then test it against the ablations.
+- **Evaluation resource.** Make a requirement-change benchmark, with incorporation and break rates as its measures, the primary contribution.
+- **Benchmark first.** Build the benchmark first and use it to decide on the rebuilt method with a preregistered go/no-go.
+
+A survey of prior work, verified against primary sources, found no accepted paper that isolates an LLM-chosen order of planning, drafting, and reviewing against a fixed order under the same generator. The nearest work is WebThinker[^2], WriteHERE[^3], and IS-CoT[^4]. The method's name also risks confusion with CogWriter[^5].
+
 ## Current state
 
 - **Target.** The submission target is the next ARR cycle. The [ARR dates page](https://aclrollingreview.org/dates) lists no exact deadline after the October 2026 cycle, whose deadline of October 12, 2026 has passed. The next published entry is the ACL 2027 final ARR submission date, given as "January, 2027" with no day yet. Plan to that date, and move the plan earlier if a December 2026 cycle is published.
-- **Artifact.** The skills-only plugin under [`plugin/`](../plugin/) was rebuilt and merged to main through [shunk031/agentic-cognitive-writing#148](https://github.com/shunk031/agentic-cognitive-writing/pull/148), [shunk031/agentic-cognitive-writing#150](https://github.com/shunk031/agentic-cognitive-writing/pull/150), and [shunk031/agentic-cognitive-writing#151](https://github.com/shunk031/agentic-cognitive-writing/pull/151). The `Monitor` delegates to fresh `Planning`, `Translating`, and `Reviewing` agents with fixed scopes and writes only `history.md`. The Planner replaces goals that conflict with the task. The Reviewer corrects existing prose and reports missing goals or sections. A goal covers a requirement only if the goal names the requirement's section.
-- **Plugin measurement.** The plugin was measured on ten DoLoMiTes[^1] prompts with a seeded missing section, ten runs each, from harness records with independent verification. `Planning` ran before the missing section was written in 100 of 100 runs, and the requested counts were met in 99. No `Monitor` edit to `goals.md` occurred in the 350 runs since that rule, no Planner merged goals, and no Reviewer wrote a section. The remaining failure type is a Reviewer splitting a one-paragraph section into per-item lines, seen in one run of 100. The PR 151 body and its "All runs" comments hold the details and every run table.
-- **Runtime branch.** The `cw` runtime branch from the earlier redesign (`cogwriter-cw`) is closed by the author's decision; the merged skills-only plugin is the only artifact. The branch stays for reference.
-- **Not yet rebuilt.** The baselines A2 `Staged`, A3 `Task-planning`, B1 `Exploratory-1`, and B2 `Exploratory-2`, the A7 `Single-writer` ablation, and token accounting are not yet rebuilt. The paper's [code-to-system map](../paper/sec/09_prompt_configuration.tex) names the A conditions, and B1 and B2 are the paper's CogWriter-style and STORM-style exploratory baselines. A1 `Single-pass` keeps its skill, because its final response is its deliverable. The fidelity gate is merged through [shunk031/agentic-cognitive-writing#154](https://github.com/shunk031/agentic-cognitive-writing/pull/154).
-  - **Ablation skills.** The A6 `Fixed-order` and A8 `Single-context` ablations are rebuilt on main through [shunk031/agentic-cognitive-writing#161](https://github.com/shunk031/agentic-cognitive-writing/pull/161) and [shunk031/agentic-cognitive-writing#162](https://github.com/shunk031/agentic-cognitive-writing/pull/162), and the A5 `No-goals` ablation is rebuilt on the integration branch. The A7 skill still follows the previous contract.
-  - **Skill text.** The A2 and A3 baseline skills and the A7 skill still require the full text in the final response, and the A3 skill says the runner enforces this; the runner no longer scores that message. The rebuild in the next steps rewrites those skills.
-  - **Host skills.** Codex loads the host user's personal skills unless the child HOME is isolated; the runner now isolates every Codex child, and the gate rejects reads outside the per-run Codex home. The cd-then-relative read is a known limit of the gate.
-  - **A4 final response.** The scored output is `draft.md` itself for every draft-product condition ([shunk031/agentic-cognitive-writing#156](https://github.com/shunk031/agentic-cognitive-writing/pull/156)). The Claude Code invocation path is out of scope under [D14](#decisions).
-  - **Runner-contract tests.** The runner-contract tests encode the rebuilt plugin's contracts, merged into main through [shunk031/agentic-cognitive-writing#152](https://github.com/shunk031/agentic-cognitive-writing/pull/152).
-- **Runner path.** With [shunk031/agentic-cognitive-writing#158](https://github.com/shunk031/agentic-cognitive-writing/pull/158) and [shunk031/agentic-cognitive-writing#159](https://github.com/shunk031/agentic-cognitive-writing/pull/159) merged, an A4 `Agentic CogWriter` run through the runner on a smoke prompt passes the fidelity gate: Planning, Translating, Reviewing in order, no forked child, each role reading its own skill from the per-run Codex home, the Monitor writing only `history.md`, and `draft.md` scored. Smoke runs of the rebuilt A6, A8, and A5 on the same prompt also pass the gate.
-- **Integration branch.** Work since the rebuilt ablations accumulates on `rerun-arr2027`. The A5 `No-goals` ablation from [shunk031/agentic-cognitive-writing#163](https://github.com/shunk031/agentic-cognitive-writing/pull/163) is on that branch, not on main. Its rename breaks the paper build until the paper edit, which is one reason main stays unchanged until results are ready.
-- **Measurement scope.** All rate measurements so far come from seeded states on one benchmark with one model and one reasoning effort. The runner path has only smoke runs on one prompt. Unseeded runs at scale and other benchmarks are unmeasured.
+- **Main.** Main was reverted to its state before the redesign through [shunk031/agentic-cognitive-writing#179](https://github.com/shunk031/agentic-cognitive-writing/pull/179), by the author's decision that unfinished work must not be in main. All redesign work lives on the integration branch `rerun-arr2027`.
+- **Artifact.** The skills-only plugin under [`plugin/`](../plugin/) was rebuilt through [shunk031/agentic-cognitive-writing#148](https://github.com/shunk031/agentic-cognitive-writing/pull/148), [shunk031/agentic-cognitive-writing#150](https://github.com/shunk031/agentic-cognitive-writing/pull/150), and [shunk031/agentic-cognitive-writing#151](https://github.com/shunk031/agentic-cognitive-writing/pull/151), and is on the integration branch only. The `Monitor` delegates to fresh `Planning`, `Translating`, and `Reviewing` agents with fixed scopes and writes only `history.md`. The Planner replaces goals that conflict with the task. The Reviewer corrects existing prose and reports missing goals or sections. A goal covers a requirement only if the goal names the requirement's section.
+- **Runtime branch.** The `cw` runtime branch from the earlier redesign (`cogwriter-cw`) is closed by the author's decision; the rebuilt skills-only plugin is the only artifact. The branch stays for reference.
+- **Rebuilt conditions.** The integration branch holds the rebuilt A4, the ablations A5 `No-goals`, A6, A7 `Single-writer`, and A8 `Single-context`, and the baselines A2 `Staged`, A3 `Task-planning`, and B1 `Exploratory-1`, the paper's CogWriter-style exploratory baseline. A1 `Single-pass` keeps its skill, because its final response is its deliverable. Token accounting is not yet rebuilt.
+- **Runner.** The runner isolates every Codex child's HOME, and the fidelity gate rejects skill reads outside the per-run Codex home; a relative read after a `cd` is a known limit of the gate. The scored output is `draft.md` itself for every draft-product condition, through [shunk031/agentic-cognitive-writing#156](https://github.com/shunk031/agentic-cognitive-writing/pull/156). The Claude Code invocation path is out of scope under [D14](#decisions).
+- **Merged since the previous handoff update.** These pull requests are on the integration branch:
+  - **Child input.** [shunk031/agentic-cognitive-writing#165](https://github.com/shunk031/agentic-cognitive-writing/pull/165) starts the generator child with stdin closed.
+  - **Mechanism report.** [shunk031/agentic-cognitive-writing#166](https://github.com/shunk031/agentic-cognitive-writing/pull/166) reports mechanisms from Codex harness records, and [shunk031/agentic-cognitive-writing#168](https://github.com/shunk031/agentic-cognitive-writing/pull/168) bounds unknown delegation starts by ended delegations.
+  - **Output language.** [shunk031/agentic-cognitive-writing#167](https://github.com/shunk031/agentic-cognitive-writing/pull/167) states the manifest's output language in every condition, and [shunk031/agentic-cognitive-writing#169](https://github.com/shunk031/agentic-cognitive-writing/pull/169) counts Latin words in the language check.
+  - **Gate checks.** [shunk031/agentic-cognitive-writing#170](https://github.com/shunk031/agentic-cognitive-writing/pull/170) seeds the `Monitor` history and closes two fidelity gate gaps, and [shunk031/agentic-cognitive-writing#171](https://github.com/shunk031/agentic-cognitive-writing/pull/171) catches bundled in-place switches and variable write targets.
+  - **A7.** [shunk031/agentic-cognitive-writing#172](https://github.com/shunk031/agentic-cognitive-writing/pull/172) rebuilds A7 as the single-context skill with one-paragraph `Translating` steps.
+  - **A2.** [shunk031/agentic-cognitive-writing#173](https://github.com/shunk031/agentic-cognitive-writing/pull/173) rebuilds A2 to write each stage and score `draft.md`.
+  - **A3.** [shunk031/agentic-cognitive-writing#174](https://github.com/shunk031/agentic-cognitive-writing/pull/174) rebuilds A3 with closed skill-reading task agents.
+  - **B1.** [shunk031/agentic-cognitive-writing#175](https://github.com/shunk031/agentic-cognitive-writing/pull/175) rebuilds B1 with closed skill-reading planning and segment agents.
+  - **Construct checks.** [shunk031/agentic-cognitive-writing#177](https://github.com/shunk031/agentic-cognitive-writing/pull/177) skips patch text in skill reads, checks the A2 stages, and counts A7 steps.
+  - **Resume sandbox.** [shunk031/agentic-cognitive-writing#180](https://github.com/shunk031/agentic-cognitive-writing/pull/180) keeps the workspace-write sandbox on Codex resume turns.
+- **On hold.** The B2 `Exploratory-2` rebuild, [shunk031/agentic-cognitive-writing#176](https://github.com/shunk031/agentic-cognitive-writing/pull/176), and the A3 follow-up, [shunk031/agentic-cognitive-writing#178](https://github.com/shunk031/agentic-cognitive-writing/pull/178), are paused while the claim is decided.
+
+## Evidence
+
+Every result comes from one model and one reasoning effort, and no result shows the method ahead of `Fixed-order`. Each setting has its own measurement condition:
+
+- **Ordinary prompts.** The rebuilt A4 on the integration branch, run through the runner on 27 ordinary non-evaluation prompts, measured from harness records with the mechanism report. The gate rejected two runs for `Monitor` writes to `goals.md` or `draft.md` and one for a shell `touch` of state files.
+- **Seeded defect.** An earlier version of the rebuilt plugin, on ten DoLoMiTes[^1] prompts with one section removed, ten runs each. The [shunk031/agentic-cognitive-writing#151](https://github.com/shunk031/agentic-cognitive-writing/pull/151) body and its "All runs" comments hold every run table.
+- **Requirement change.** The executed study's plugin in September, on 59 prompts with a second turn that changes the requirements, A4 against `Fixed-order`.
+
+| Setting | Measure | Result |
+| --- | --- | --- |
+| Ordinary prompts | Runs passing the fidelity gate | 24 of 27 |
+| Ordinary prompts | One `Planning`-`Translating`-`Reviewing` cycle | 24 of 24 |
+| Ordinary prompts | `Reviewing` followed by `Planning` | 0 of 24 |
+| Ordinary prompts | Goal replacement | 0 of 24 |
+| Seeded defect | `Planning` before the removed section was written | 100 of 100 |
+| Seeded defect | First Reviewer found the gap | 69 of 100 |
+| Requirement change | Pairwise judgments, A4 against `Fixed-order` | 18 wins, 19 losses, 22 ties |
+| Requirement change | `Monitor` returned to `Planning` | 57 of 59 |
+| Requirement change | Turn-2 median ratio A4 to `Fixed-order`, process calls | 1.00 |
+| Requirement change | Turn-2 median ratio A4 to `Fixed-order`, tokens | 1.07, 95% interval 0.96 to 1.28 |
+| Requirement change | Turn-2 median ratio A4 to `Fixed-order`, wall-clock time | 1.04 |
+| Requirement change | Untargeted paragraphs altered, A4 and `Fixed-order` | 0.59 and 0.58 |
 
 ## Measured defects of the executed study
 
@@ -54,7 +100,8 @@ The redesign spec lists every decision with its source. The author-level decisio
 - **Priority (D13).** First build a system that behaves as the paper describes; cost and the dataset protocol's open decisions wait until it works.
 - **Harness (D14).** The rerun uses the Codex harness only. The Claude Code path records no tool or subagent events, so the fidelity gate rejects its runs as unverifiable; rebuilding that adapter is out of scope for the next ARR cycle.
 - **Smoke pool erratum.** Six of the specified smoke prompts were A10 calibration prompts. The pool is now ranks 105–112 below the calibration set plus three disjoint WritingBench prompts, as the Errata section of the specification on the `cogwriter-cw` branch records.
-- **Integration (author).** Merges into `rerun-arr2027` need no author approval; only the merge into main goes to the author once the [readiness criteria](#readiness-criteria) hold.
+- **Integration (author).** Merges into `rerun-arr2027` need no author approval.
+- **Main (author).** Unfinished work must not be in main, so main was reverted to its state before the redesign through [shunk031/agentic-cognitive-writing#179](https://github.com/shunk031/agentic-cognitive-writing/pull/179).
 
 ## Working rules
 
@@ -63,38 +110,41 @@ The redesign spec lists every decision with its source. The author-level decisio
 - **No ad hoc fixes.** Trace every change to the spec, a paper requirement, or an author decision. A change that alters a construct or an earlier decision goes to the author first.
 - **Fidelity before interpretation.** Follow the "Experiment validity" section of [`AGENTS.md`](../AGENTS.md): check fidelity from harness logs before any scored run, and test an implementation defect first whenever a process metric looks surprising.
 - **Fidelity gate.** Before any scored run, a mechanical check of the harness records rejects runs that show any measured defect of the executed study: a child spawned with inherited context, a role agent that did not read its own skill, a Monitor write outside `.writing/history.md`, an unclosed child or thread-limit hit, or a scored output other than `draft.md`. The gate is code in the runner, not instruction text.
-- **Integration.** Rerun work accumulates on the integration branch `rerun-arr2027`. Each change is a pull request into that branch, reviewed by an independent reviewer, and merged by the orchestrator after the review accepts it. Progress reports to the author describe results and blockers, not pull request approvals. The author decides on merging the integration branch into main only when the results meet the readiness criteria below.
+- **Integration.** Rerun work accumulates on the integration branch `rerun-arr2027`. Each change is a pull request into that branch, reviewed by an independent reviewer, and merged by the orchestrator after the review accepts it. Progress reports to the author describe results and blockers, not pull request approvals.
+- **Main.** Main receives only results that support the claim, with the author's approval.
+- **Reporting.** Every report opens with each readiness criterion's status and the measurement condition behind it, with unfavorable results first. Implementation fidelity is reported separately and never presented as support for the paper's claim.
 - **Public files.** Never put private paths, hostnames, or credentials in repository files.
 
 ## Readiness criteria
 
-Results are ready for the paper when the rerun shows, from harness records, that the mechanisms the executed study failed to exercise now work, and the comparisons that failed in that study succeed on runs that pass the fidelity gate.
+Results are ready for the paper when the rerun shows, from harness records, that the mechanisms the executed study failed to exercise now work, and the comparisons that failed in that study succeed on runs that pass the fidelity gate. These criteria are written for the current claim, and the [pending claim decision](#pending-decision) may replace them.
 
 - **Fidelity.** Every scored run passes the fidelity gate. Rejected runs are reported with their reasons and excluded, never silently dropped. None of the measured defects recurs.
-- **Mechanism.** In unseeded runs, each behavior the method claims clears a preregistered bar for the full system: the lower bound of the 95% interval of its rate lies above the executed study's rate. Over 886 complete A4 paths, the executed study recorded `Reviewing` followed by renewed `Planning` in 4.1% and an accepted goal replacement in 0.5%, as [Table 6](../paper/tab/process-dynamics.tex) of the paper reports. The rerun compares goal replacement after review, not the broader goal replacement, with that 0.5%. Bars for behaviors without an executed-study rate are fixed before the pilot. Each ablation differs from the full system only in its construct, verified from the records. The [mechanism report](https://github.com/shunk031/agentic-cognitive-writing/pull/166) measures each behavior from the harness records, by delegation interval:
+- **Mechanism.** In unseeded runs, each behavior the method claims clears a preregistered bar for the full system: the lower bound of the 95% interval of its rate lies above the executed study's rate. Over 886 complete A4 paths, the executed study recorded `Reviewing` followed by renewed `Planning` in 4.1% and an accepted goal replacement in 0.5%, as [Table 6](../paper/tab/process-dynamics.tex) of the paper reports. The rerun compares goal replacement after review, not the broader goal replacement, with that 0.5%. Bars for behaviors without an executed-study rate are fixed before the pilot. Each ablation differs from the full system only in its construct, verified from the records. The mechanism report measures each behavior from the harness records over gate-passing runs, with a 95% Wilson interval; the module docstring of [`mechanism.py`](src/agentic_cogwriter/analysis/mechanism.py) holds the full rules:
 
-  - **Delegation interval.** A change by a delegated child, or by a descendant of one, belongs to that delegation; a change by the `Monitor` itself belongs to the interval after the last delegation spawned before it.
-  - **Goal line.** A non-blank line of `goals.md` that is a Markdown heading or list item. Each delegation interval that changes `goals.md` is classified by its goal lines before and after, and one interval can show several events.
-  - **Goal creation.** `goals.md` first appears, or the interval gains a goal line and removes none.
-  - **Goal development.** Goal lines existed before and none was removed.
-  - **Goal replacement.** A goal line before is missing after, so it was removed or rewritten.
-  - **Goal replacement after review.** A goal line is removed or rewritten during a `Planning` delegation that directly follows a `Reviewing` delegation. The report is being extended with this measure.
-  - **`Planning` before the first section.** A section is a Markdown heading line. A `Planning` delegation precedes the first change that adds a heading to `draft.md`; a run that adds no heading has no value.
-  - **`Reviewing` to `Planning`.** The delegation right after a `Reviewing` delegation is `Planning`.
+  - **Delegation interval.** A change by a delegated child, or by a descendant of one, belongs to that child's latest delegation started before the change; a change by the `Monitor` belongs to the interval after the latest delegation started before it.
+  - **Goal line.** A Markdown heading, bullet, or numbered item of `goals.md`, compared after markers, numbering, and checkboxes are removed. Each interval that changes `goals.md` gets at most one goal event.
+  - **Goal creation.** No goal line before, at least one after.
+  - **Goal development.** Goal lines before, at least one added, none removed.
+  - **Goal replacement.** At least one goal line removed, which includes a rewrite.
+  - **Goal replacement after review.** A replaced interval in a `Planning` delegation that directly follows an ended `Reviewing` delegation. This, not the broader goal replacement, is the measure compared with the executed study's 0.5%.
+  - **`Planning` before the first section.** A `Planning` delegation precedes the first `draft.md` change that adds a heading. A run that adds no heading has no value, and neither does a run whose first such change is unattributed or made by the `Monitor`.
+  - **`Reviewing` to `Planning`.** A `Planning` delegation directly follows an ended `Reviewing` delegation.
 
-  Only `apply_patch` writes become `FileChange` items, so each run lists the shell commands that mention `goals.md` or `draft.md` and look like writes; the match is textual, so a listed command may not have written. Before the pilot, the report needs two extensions: turn the textual shell-write listing into a gate rejection, and measure `Planning` before each section, not only the first.
+  Only `apply_patch` writes become `FileChange` items. The gate rejects shell writes to tracked files by the `Monitor`, and the report lists shell writes by role agents without rejecting them. `Planning` before each section, not only the first, is not yet measured.
 
 - **Outcome.** The comparisons that failed in the executed study succeed. In that study, no benchmark-run test against A5 `No-goals` or A6 `Fixed-order` was significant after the within-benchmark Holm correction, and the post-hoc A8 `Single-context` check found no significant difference, with `Single-context` winning 47.4% against the full system (unadjusted p = 0.52). `Single-context` was outside that study's confirmatory family; the rerun's preregistration adds `Single-context` to the confirmatory Holm family before any scored run. On the preregistered analysis with within-benchmark Holm correction, the full system must beat `No-goals`, `Fixed-order`, and `Single-context` on `draft.md`: for each of the three contrasts, every primary benchmark has at least one Holm-surviving cell favoring the full system and no Holm-surviving cell favoring the ablation. The rule and the primary benchmarks are fixed with the author before any scored run. If the full system does not meet the rule, the results are reported as they are and the paper is not ready. Iteration never uses evaluation prompts or scored results, so the outcome cannot be tuned.
 
 ## Next steps
 
-1. Check the Mechanism criterion for the full system on non-evaluation prompts, as an iteration check rather than the pilot.
-   - The process-sequence analysis still reads `process.jsonl` and needs a harness-record source, which the [mechanism report](https://github.com/shunk031/agentic-cognitive-writing/pull/166) provides.
-2. Rebuild the A7 `Single-writer` ablation, the A2, A3, B1, and B2 baselines, and token accounting on the integration branch with the same loop.
-   - The loop is a small batch, fidelity from harness records, independent verification, and one change at a time.
-3. Pilot all arms on non-evaluation prompts, check the Fidelity and Mechanism criteria, then freeze the design.
-4. Settle with the author, before any scored run, the open dataset-protocol decisions of [D12, the evaluation task sets](#decisions), the Outcome success rule and its primary benchmarks, the addition of `Single-context` to the confirmatory Holm family, and the rerun's scale and cost.
-5. Run the rerun and the preregistered comparisons, then check all three readiness criteria.
-6. Propose merging the integration branch into main and update the paper from the results.
+No scored run happens before steps 1 and 2.
+
+1. The author decides the paper's claim among the options in [Pending decision](#pending-decision).
+2. Run a go/no-go pilot for the chosen claim on non-evaluation prompts, with its criteria fixed before it runs. Report it under the reporting rule in [Working rules](#working-rules).
+3. Resume or close the held B2 and A3 pull requests, and settle with the author the remaining protocol decisions the chosen claim needs, such as [D12, the evaluation task sets](#decisions), the success rule, and the scale and cost of any scored run.
 
 [^1]: Chaitanya Malaviya, Priyanka Agrawal, Kuzman Ganchev, Pranesh Srinivasan, Fantine Huot, Jonathan Berant, Mark Yatskar, Dipanjan Das, Mirella Lapata, and Chris Alberti. "DOLOMITES: Domain-Specific Long-Form Methodical Tasks." Transactions of the Association for Computational Linguistics, 2025. https://doi.org/10.1162/tacl_a_00727
+[^2]: Xiaoxi Li, Jiajie Jin, Guanting Dong, Hongjin Qian, Yongkang Wu, Ji-Rong Wen, Yutao Zhu, and Zhicheng Dou. "WebThinker: Empowering Large Reasoning Models with Deep Research Capability." Advances in Neural Information Processing Systems (NeurIPS), 2025. https://arxiv.org/abs/2504.21776
+[^3]: Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmidhuber. "Beyond Outlining: Heterogeneous Recursive Planning for Adaptive Long-form Writing with Language Models." Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing, 2025. https://doi.org/10.18653/v1/2025.emnlp-main.1254
+[^4]: Zechen Sun, Yuyang Sun, Zecheng Tang, Juntao Li, Wenpeng Hu, Wenliang Chen, Zhunchen Luo, Guotong Geng, and Min Zhang. "IS-CoT: Breaking the Long-form Generation Collapse via Interleaved Structural Thinking." Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), 2026. https://doi.org/10.18653/v1/2026.acl-long.911
+[^5]: Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen. "A Cognitive Writing Perspective for Constrained Long-Form Text Generation." Findings of the Association for Computational Linguistics: ACL 2025, 2025. https://doi.org/10.18653/v1/2025.findings-acl.511
