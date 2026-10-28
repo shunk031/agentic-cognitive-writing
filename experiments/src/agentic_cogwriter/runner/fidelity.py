@@ -7,7 +7,7 @@ import os
 import re
 import unicodedata
 from collections import Counter, defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -42,7 +42,10 @@ _TRACKED_PATH = re.compile(
     r"(?:^|=|(?:^|[/=])\.writing/)(?:goals|draft)\.md$"
     r"|(?:^|[/=])\.writing(?:/?|/[^/]*[*?\[{][^/]*)$"
 )
-_INPLACE = re.compile(r"-[a-zA-Z]*i|--in-place")
+# Bundled switches such as `-0pi`; `-M`, `-I`, and `-x` take the rest of the token.
+_INPLACE = re.compile(r"-(?![MIx])\w*i|--in-place")
+# A whole-word variable, alone or as an operand such as `of=$f`.
+_VARIABLE = re.compile(r"(?:^|=)\$\{?\w+\}?$")
 _INLINE_CODE = re.compile(r"-\w*[ceE]|-")
 _CODE_WRITE = re.compile(
     r"""\bopen\w*\s*\([^\n]*?['"](?:(?:[wax][bt+]*|r[bt]*\+[bt+]*)['"]|\+?>)"""
@@ -165,7 +168,9 @@ def _commands(payload: dict[str, Any]) -> list[str]:
     return [command] if isinstance(command, str) else []
 
 
-def _simple_command_writes(words: list[str], heredocs: str) -> bool:
+def _simple_command_writes(
+    words: list[str], heredocs: str, tracked: Callable[[str], bool]
+) -> bool:
     """Return whether one simple command writes a tracked path."""
 
     while words and (words[0] in _SKIPPED_WORDS or re.match(r"\w+=", words[0])):
@@ -174,7 +179,7 @@ def _simple_command_writes(words: list[str], heredocs: str) -> bool:
         return False
     name, args = PurePosixPath(words[0]).name, words[1:]
     options = [arg for arg in args if arg.startswith("-")]
-    paths = [arg for arg in args if _TRACKED_PATH.search(arg)]
+    paths = [arg for arg in args if tracked(arg)]
     if name in ("bash", "sh", "zsh"):
         flag = next((k for k, arg in enumerate(args) if re.match(r"-\w*c", arg)), -1)
         return flag >= 0 and _writes_tracked(" ".join(args[flag + 1 :]))
@@ -194,7 +199,7 @@ def _simple_command_writes(words: list[str], heredocs: str) -> bool:
         return bool(paths) or any(re.match(r"-p\d", option) for option in options)
     if name in ("cp", "install"):
         target = args[args.index("-t") + 1 :] if "-t" in args else args[-1:]
-        return any(_TRACKED_PATH.search(arg) for arg in target[:1])
+        return any(map(tracked, target[:1]))
     if name == "dd":
         return any(path.startswith("of=") for path in paths)
     if name in ("sed", "perl", "ruby") and any(map(_INPLACE.match, options)):
@@ -219,13 +224,23 @@ def _writes_tracked(command: str) -> bool:
     writes when it names a tracked path and opens a file for writing or calls a
     write function; a script run with a tracked argument counts as a write.
     ``git reset --hard``, ``git stash`` other than ``list`` or ``show``,
-    ``git apply``, and ``patch -p`` always count.
+    ``git apply``, and ``patch -p`` always count. A ``$variable`` target counts
+    as tracked when the command names a tracked path anywhere.
     """
 
-    # ponytail: a hand tokenizer; a path reached through a variable, a `cd`, or
-    # `find -exec` is missed, and a bash parser would close that if it matters.
+    # ponytail: a hand tokenizer; a path reached through a `cd` or `find -exec`, or
+    # a variable when the command names no tracked path, is missed, and a bash
+    # parser would close that if it matters.
     if "apply_patch" in command:
         return False
+    # A variable may hold a tracked path when the command names one anywhere.
+    variables = bool(_TARGET.search(command))
+
+    def tracked(word: str) -> bool:
+        return bool(
+            _TRACKED_PATH.search(word) or (variables and _VARIABLE.search(word))
+        )
+
     heredocs = "\n".join(match.group(0) for match in _HEREDOC.finditer(command))
     text = _HEREDOC.sub(lambda match: match.group(3) + "\n", command)
     text = _HARMLESS_REDIRECT.sub("", text)
@@ -238,18 +253,18 @@ def _writes_tracked(command: str) -> bool:
                 lambda m: next(g for g in m.groups() if g is not None),
                 match.group("word"),
             )
-            if redirect and _TRACKED_PATH.search(word):
+            if redirect and tracked(word):
                 return True
             if not (redirect or skip):
                 words.append(word)
             redirect = skip = False
             continue
         if any(char in token for char in ";|()`\n$") or "&&" in token or token == "&":
-            if _simple_command_writes(words, heredocs):
+            if _simple_command_writes(words, heredocs, tracked):
                 return True
             words = []
         redirect, skip = ">" in token, "<" in token and ">" not in token
-    return _simple_command_writes(words, heredocs)
+    return _simple_command_writes(words, heredocs, tracked)
 
 
 def unrecorded_writes(records: Iterable[dict[str, Any]]) -> list[str]:

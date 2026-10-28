@@ -137,6 +137,9 @@ FLAGGED = [
     "git stash",
     "perl -pi -e 's/a/b/' .writing/draft.md",
     "dd if=/dev/zero of=.writing/goals.md",
+    "perl -0pi -e 's/a/b/' .writing/draft.md",
+    'for f in .writing/goals.md .writing/draft.md; do touch "$f"; done',
+    'f=.writing/draft.md; printf x > "$f"',
     "python3 -c \"open('.writing/goals.md', 'w').write('')\"",
     "python3 - <<'EOF'\nfrom pathlib import Path\n"
     "Path('.writing/draft.md').write_text('x')\nEOF",
@@ -156,6 +159,9 @@ NOT_FLAGGED = [
     "cp .writing/draft.md /tmp/draft.md",
     "echo x | tee -a .writing/history.md",
     "git log --grep apply -- .writing/draft.md",
+    "perl -Mstrict -ne 'print' .writing/draft.md",
+    'f=.writing/history.md; printf x >> "$f"',
+    'out=notes.md; printf x > "$out"',
     "cat .writing/draft.md | python3 -c \"open('/tmp/x', 'w').write('')\"",
 ]
 
