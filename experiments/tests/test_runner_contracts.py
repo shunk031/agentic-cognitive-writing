@@ -1166,6 +1166,42 @@ def test_single_context_skill_is_the_monitor_skill_running_roles_in_context() ->
     assert [path.name for path in a8_root.rglob("*")] == ["SKILL.md"]
 
 
+def test_single_writer_skill_is_single_context_with_one_paragraph_steps() -> None:
+    def text(path: str) -> list[str]:
+        return (REPO_ROOT / path).read_text(encoding="utf-8").splitlines()
+
+    a7_root = REPO_ROOT / "experiments/plugin/skills/cognitive-writing-single-writer"
+    a8 = text("experiments/plugin/skills/cognitive-writing-single-context/SKILL.md")
+    a7 = text("experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md")
+    changed = {(old, new) for old, new in zip(a8, a7, strict=True) if old != new}
+
+    assert {(old.split(" ")[0], new) for old, new in changed} == {
+        ("name:", "name: cognitive-writing-single-writer"),
+        (
+            "description:",
+            'description: "Experiment-comparison variant of the agentic-cog-writer '
+            "skill that runs each selected `Planning`, `Translating`, or `Reviewing` "
+            "process in the Monitor's own context instead of a subagent and limits "
+            "each `Translating` step to one paragraph. For internal comparison use "
+            "only, not the recommended default. Use when a controlled single-writer "
+            'comparison is explicitly requested."',
+        ),
+        (
+            "Kinds",
+            "Kinds of work: Planning changes the goals; Translating adds one "
+            "paragraph of prose for the goals; Reviewing corrects existing prose and "
+            "reports what is needed next. A role reports work of another kind "
+            "instead of doing it.",
+        ),
+        (
+            "Write",
+            "Write one paragraph in `.writing/draft.md` within the delegated draft "
+            "scope.",
+        ),
+    }
+    assert [path.name for path in a7_root.rglob("*")] == ["SKILL.md"]
+
+
 def test_fixed_order_skill_is_the_monitor_skill_with_a_fixed_cycle() -> None:
     def body(path: str) -> list[str]:
         return (
@@ -1759,8 +1795,15 @@ def test_monitor_conditions_install_the_repository_plugin_codex_adapter(
     assert "developer_instructions" in tomllib.loads((home / "config.toml").read_text())
 
 
-def test_single_context_installs_the_adapter_rules_without_delegation(
-    tmp_path: Path,
+@pytest.mark.parametrize(
+    ("condition_id", "skill_name"),
+    [
+        ("A7", "cognitive-writing-single-writer"),
+        ("A8", "cognitive-writing-single-context"),
+    ],
+)
+def test_in_context_conditions_install_the_adapter_rules_without_delegation(
+    tmp_path: Path, condition_id: str, skill_name: str
 ) -> None:
     home = tmp_path / "home"
     home.mkdir()
@@ -1768,13 +1811,13 @@ def test_single_context_installs_the_adapter_rules_without_delegation(
     runner = ExperimentRunner(_config(), output_root=tmp_path / "runs")
 
     staged = runner._stage_codex_plugin(
-        load_condition_registry()["A8"],
+        load_condition_registry()[condition_id],
         tmp_path / "workspace",
         codex_home=home,
         prompt=_prompt(),
     )
 
-    skill = home / "skills" / "cognitive-writing-single-context"
+    skill = home / "skills" / skill_name
     assert sorted(path.name for path in home.iterdir()) == [
         "config.toml",
         "rules",
