@@ -89,6 +89,13 @@ class PlatformAdapter:
                 raise ConfigurationError(
                     "Codex continuation must use codex exec resume"
                 )
+            if (
+                "workspace-write" not in self.continuation_args
+                and 'sandbox_mode="workspace-write"' not in self.continuation_args
+            ):
+                raise ConfigurationError(
+                    "Codex continuation must keep the workspace-write sandbox"
+                )
         elif self.platform == "claude-code":
             if "--print" not in self.first_args:
                 raise ConfigurationError("Claude adapter must use claude --print")

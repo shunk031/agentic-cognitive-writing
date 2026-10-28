@@ -957,6 +957,18 @@ def test_codex_adapter_argv_passes_installed_cli_parser() -> None:
         assert parser_probe.returncode == 0, parser_probe.stderr
 
 
+def test_codex_adapter_rejects_resume_without_workspace_write(tmp_path: Path) -> None:
+    source = Path("experiments/conditions/adapters/codex_exec.toml").read_text()
+    adapter = tmp_path / "codex_exec.toml"
+    adapter.write_text(
+        source.replace('"--config", "sandbox_mode=\\"workspace-write\\"", ', "")
+    )
+    assert adapter.read_text() != source
+
+    with pytest.raises(ConfigurationError, match="continuation"):
+        PlatformAdapter.load(adapter)
+
+
 def test_codex_prompt_references_workspace_skill_file_without_plugin_install(
     tmp_path: Path,
 ) -> None:
