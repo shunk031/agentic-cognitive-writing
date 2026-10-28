@@ -3206,8 +3206,10 @@ def test_followup_resumes_the_session_and_gates_and_counts_each_turn(
         _prompt(), condition_id="A1", platform="codex", followup=CHANGE
     )
 
-    message = runner_module.followup_message(CHANGE)
-    assert message == f"{runner_module.FOLLOWUP_HEADING}\n{CHANGE}\n"
+    change = runner_module.followup_message(CHANGE)
+    assert change == f"{runner_module.FOLLOWUP_HEADING}\n{CHANGE}\n"
+    clause = (run.run_dir / "prompt.txt").read_text().split("\n\n")[0]
+    message = f"{change}\n{clause}"
     assert executor.calls[1][:4] == ["codex", "exec", "resume", "session-1"]
     assert 'sandbox_mode="workspace-write"' in executor.calls[1]
     assert executor.calls[1][-1] == message
@@ -3217,7 +3219,7 @@ def test_followup_resumes_the_session_and_gates_and_counts_each_turn(
     assert (turn1 / "goals.md").read_text() == "# Goals\n- One\n"
     assert (run.run_dir / "output.normalized.txt").read_text() == "draft 2 " * 10
     task = run.run_dir / "workspace" / ".writing" / "task.md"
-    assert task.read_text().endswith(f"\n\n{message}")
+    assert task.read_text().endswith(f"\n\n{change}")
     # The resumed Monitor's rollout is collected again for turn 2.
     assert (run.run_dir / "sessions/attempt-002/rollout-session-1.jsonl").is_file()
     manifest = json.loads(run.manifest_path.read_text())
@@ -3308,8 +3310,10 @@ def test_stage_order_binds_turn_1_and_turn_2_may_revise_the_draft(
     )
 
 
-def test_every_condition_receives_the_same_followup_bytes(tmp_path: Path) -> None:
-    message = runner_module.followup_message(CHANGE)
+def test_every_condition_receives_the_same_change_and_its_own_clause(
+    tmp_path: Path,
+) -> None:
+    change = runner_module.followup_message(CHANGE)
     for condition_id in sorted(load_condition_registry()):
         executor = _TwoTurnExecutor(
             [(_turn_result(1, []), []), (_turn_result(2, []), [])]
@@ -3325,7 +3329,13 @@ def test_every_condition_receives_the_same_followup_bytes(tmp_path: Path) -> Non
                 _prompt(), condition_id=condition_id, platform="codex", followup=CHANGE
             )
 
-        assert executor.calls[1][-1] == message, condition_id
+        # The change block is identical, and the clause is the condition's own
+        # turn-1 product clause: the invocation that opens its turn-1 prompt.
+        message = executor.calls[1][-1]
+        assert message.startswith(f"{change}\n"), condition_id
+        clause = message.removeprefix(f"{change}\n")
+        assert executor.calls[0][-1].startswith(f"{clause}\n\n"), condition_id
+        assert "SKILL.md and follow it." in clause, condition_id
         tasks = list(
             (tmp_path / condition_id).glob("*/*/*/*/workspace/.writing/task.md")
         )
@@ -3333,7 +3343,7 @@ def test_every_condition_receives_the_same_followup_bytes(tmp_path: Path) -> Non
         if condition_id in ("A1", "A2", "B2"):
             assert tasks == [], condition_id
         else:
-            assert tasks[0].read_text().endswith(f"\n\n{message}"), condition_id
+            assert tasks[0].read_text().endswith(f"\n\n{change}"), condition_id
 
 
 def test_the_output_budget_applies_to_each_turn(tmp_path: Path) -> None:
