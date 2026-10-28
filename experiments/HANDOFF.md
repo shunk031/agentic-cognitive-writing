@@ -6,13 +6,13 @@ This file records the state, decisions, and working rules for the CogWriter expe
 
 No tested setting shows A4 `Agentic CogWriter` better than A6 `Fixed-order` on quality, work, or edit locality. The [Evidence](#evidence) section gives each measurement condition, and the paper's [code-to-system map](../paper/sec/09_prompt_configuration.tex) names the condition codes.
 
-- **[Pilot 1](preregistration/pilot1.md): NO-GO.** On 14 non-evaluation DoLoMiTes items with two change classes, one model, and one reasoning effort, A4 did not preserve untargeted sections better than `Fixed-order`. Over the 12 multi-section items, A4 and `Fixed-order` changed a mean 0.174 and 0.160 of untargeted sections, a difference of +0.014 with p = 0.969, and kept a mean untargeted similarity of 0.945 and 0.991, a difference of -0.046 with p = 0.992, so neither preservation route of the [G1 gate](preregistration/pilot1.md#gates-and-decision) passed. Over all 14 items, incorporation was 0.964 in both arms, no counted run broke an unchanged requirement that had passed turn 1, and turn-2 tokens were 441,962 and 510,400 with p = 0.255. Under the preregistration, a NO-GO at this size is weak evidence: it says to redesign before scaling the claim, not that the claim is false.
+**[Pilot 1](preregistration/pilot1.md): NO-GO.** On 14 non-evaluation items with two change classes, one model, and one reasoning effort, A4 did not preserve untargeted sections better than `Fixed-order`. Over the 12 multi-section items, A4 and `Fixed-order` changed a mean 0.174 and 0.160 of untargeted sections, a difference of +0.014 with p = 0.969, and kept a mean untargeted similarity of 0.945 and 0.991, a difference of -0.046 with p = 0.992, so neither preservation route of the [G1 gate](preregistration/pilot1.md#gates-and-decision) passed. Over all 14 items, incorporation was 0.964 in both arms, no counted run broke an unchanged requirement that had passed turn 1, and turn-2 tokens were 441,962 and 510,400 with p = 0.255. Under the preregistration, a NO-GO at this size is weak evidence: it says to redesign before scaling the claim, not that the claim is false.
 
 The [readiness criteria](#readiness-criteria) stand as follows:
 
 - **Outcome: not met.** No scored run of the rebuilt arms exists. In the two-turn requirement-change runs of 2026-10-12, which used the executed study's skills after [shunk031/agentic-cognitive-writing#139](https://github.com/shunk031/agentic-cognitive-writing/pull/139) removed their instructions to ask or tell the user, A4 against `Fixed-order` gave 18 wins, 19 losses, and 22 ties.
 - **Mechanism: not met.** In the 24 gate-passing runs of the rebuilt A4 on ordinary non-evaluation prompts, no run returned from `Reviewing` to `Planning` and none replaced a goal, against the executed study's 4.1% and 0.5%. In the 14 [Stage 0](#evidence) runs with a requirement change, 2 returned from `Reviewing` to `Planning` within a turn and 2 replaced a goal after review in the same turn.
-- **Fidelity: not met.** Measured defects of the executed study still recur, and the gate excludes the affected runs. Pilot 1 met its validity minimum of 26 counted runs per arm, with 27, 26, and 28 of 28 for A4, `Fixed-order`, and A6s, and defects recurred in 3 of its 84 runs: an unclosed child twice and a `Monitor` write outside `history.md` once. The current gate, re-run on copies of 27 runs of the rebuilt A4 on ordinary non-evaluation prompts, rejects three for `Monitor` writes outside `history.md`. Fidelity is a property of the implementation, not support for the paper's claim.
+- **Fidelity: not met.** Measured defects of the executed study still recur, and the gate excludes the affected runs. Pilot 1 met its validity minimum of 26 counted runs per arm, with 27, 26, and 28 of 28 for A4, `Fixed-order`, and A6s, which is `Fixed-order` plus the skip rule in the [Pilot 1 design](preregistration/pilot1.md#design), and defects recurred in 3 of its 84 runs: an unclosed child twice and a `Monitor` write outside `history.md` once. The current gate, re-run on copies of 27 runs of the rebuilt A4 on ordinary non-evaluation prompts, rejects three for `Monitor` writes outside `history.md`. Fidelity is a property of the implementation, not support for the paper's claim.
 
 ## Pending decision
 
@@ -71,7 +71,7 @@ Every result comes from one model and one reasoning effort, and no result shows 
 | Pilot 1 | Turn-2 delegations, A4 minus `Fixed-order` | -0.61; p = 0.149 |
 | Pilot 1 | Turn-2 delegations, A4 minus A6s | -0.79; p = 0.035 |
 | Pilot 1 | Mean turn-2 tokens, A4, `Fixed-order`, and A6s | 441,962, 510,400, and 576,753 |
-| Pilot 1 | Turn-2 tokens, A4 against `Fixed-order` | p = 0.255 |
+| Pilot 1 | Turn-2 tokens, A4 minus `Fixed-order` | -68,438; p = 0.255 |
 | Pilot 1 | Turn-2 tokens, A4 minus A6s | -134,790; p = 0.042 |
 | Pilot 1 | [G2 gate](preregistration/pilot1.md#gates-and-decision), incorporation and breaks against `Fixed-order` and A6s | passed |
 | Pilot 1 | [G3 outcome](preregistration/pilot1.md#gates-and-decision), A4 against A6s | `no_difference` |
@@ -96,7 +96,7 @@ Every result comes from one model and one reasoning effort, and no result shows 
 | Requirement change | Pairwise judgments, A4 against `Fixed-order` | 18 wins, 19 losses, 22 ties |
 | Requirement change | Turn 2 switches to `Planning`, A4 and `Fixed-order` | 57 of 59 and 52 of 60 |
 
-A6s was the most expensive Pilot 1 arm. Pilot 1 reports 12 contrasts with no multiple-comparison correction, and its preregistration allows a cost statement only after a GO, so the cost differences against A6s support no claim.
+A6s was the most expensive Pilot 1 arm. Pilot 1 reports 12 contrasts with no multiple-comparison correction, and its preregistration places its cost rule under the claim that follows a GO, so the cost differences against A6s support no claim.
 
 An uncommitted re-analysis of the requirement-change runs found that turn-2 process calls, tokens, and edit locality were not lower for A4 than for `Fixed-order`. That re-analysis is not reproducible from the repository.
 
