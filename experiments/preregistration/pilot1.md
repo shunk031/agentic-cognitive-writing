@@ -65,22 +65,22 @@ K changes only cost statements: the paper may state that A4's turn 2 costs less 
 
 ## Power
 
-The simulated power of G1 on U alone is 0.76 when each A6 run rewrites every untargeted section with probability 0.5, and falls below 0.2 when that probability is 0.3. The estimate ignores the S route, so G1's power is at least this.
+A6's U under the current checker is unknown, so the power of G1 is given over a range of A6 means with no central value: G1 reaches 80% power on U alone when A6's mean U is about 0.52 or higher, against A4's Stage 0 mean of 0.11. The estimate ignores the S route, so G1's power is at least this.
 
-| A6 rewrite probability per run |   0.2 |   0.3 |   0.4 |   0.5 |   0.7 |
-| ------------------------------ | ----: | ----: | ----: | ----: | ----: |
-| G1 passes on U                 | 0.035 | 0.176 | 0.469 | 0.764 | 0.993 |
+| A6 mean U |   0.2 |   0.4 |  0.52 |   0.6 |   0.8 |
+| --------- | ----: | ----: | ----: | ----: | ----: |
+| G1 passes on U | 0.035 | 0.469 | 0.812 | 0.937 | 1.000 |
 
-The simulation makes these assumptions:
+At an A6 mean U of 0.51 the power is 0.789; with 2000 simulations the threshold is uncertain by about 0.01. The only current-checker A6 run that followed its procedure, a follow-up smoke run with the turn-2 product clause on one `remove` item, had U of 1.0 and S of about 0.70; one run gives no estimate of the mean. The simulation makes these assumptions:
 
 - 12 multi-section items with 2 runs per arm, analyzed by the G1 rule on U;
 - each A4 run draws U from Stage 0's 12 multi-section A4 runs: nine runs at 0, one at 1/3, and two at 1/2, a mean of 0.11;
-- each A6 run either rewrites every untargeted section (U = 1) or none (U = 0), as the two A6 runs of the follow-up smoke did on one `remove` item, one each; that smoke gives the central rate of 0.5, and the September-era smoke recorded rewriting but no per-run rate;
+- each A6 run either rewrites every untargeted section (U = 1) or none (U = 0), so A6's mean U is the probability of a rewrite; an A6 that changed part of the sections in every run would give a less variable U and more power at the same mean;
 - runs and items are independent, with no item effect; a positive item effect shared by the arms would raise the power;
-- 2000 simulations with seed 20261029.
+- 2000 simulations with seed 20261029 for each A6 mean.
 
 ```bash
-uv run --package agentic-cogwriter python -m agentic_cogwriter.analysis.pilot1 power --a6-rewrite 0.2 0.3 0.4 0.5 0.7
+uv run --package agentic-cogwriter python -m agentic_cogwriter.analysis.pilot1 power --a6-rewrite 0.2 0.4 0.51 0.52 0.6 0.8
 ```
 
 ## Consequences

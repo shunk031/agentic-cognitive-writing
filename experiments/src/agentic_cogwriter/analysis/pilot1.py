@@ -218,7 +218,8 @@ def power(a6_rewrite: float, sims: int, seed: int, items: int = 12) -> float:
 
     Each A4 run draws U from ``STAGE0_A4_U``; each A6 run rewrites every
     untargeted section (U = 1) with probability ``a6_rewrite`` and otherwise
-    none (U = 0), as in the follow-up smoke. Runs and items are independent.
+    none (U = 0), so ``a6_rewrite`` is A6's mean U. Runs and items are
+    independent.
     """
 
     rng = random.Random(seed)
