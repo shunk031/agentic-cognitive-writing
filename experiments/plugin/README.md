@@ -58,7 +58,7 @@ The variants' seed prompts live beside the skills in [`skills/`](skills/).
 
 - `cognitive-writing-fixed-order` is the main package's `Monitor` skill with a fixed order: each pass delegates `Planning`, `Translating`, and `Reviewing` in that order, and the `Monitor` stops only after `Reviewing`.
 - `cognitive-writing-task-objective` is the main package's `Monitor` skill without the goals file: the task is the single implicit objective, the Planner reports its organization of the material instead of writing goals, and the `Monitor` appends that organization, as reported, after later `Translating` scopes. The runner stages the A5 role copies under the shared role names and installs the A5 Codex agent definitions from [`task-objective-agents/`](task-objective-agents/) in place of the main package's, whose descriptions are written in goal terms.
-- `cognitive-writing-single-writer` is `cognitive-writing-single-context` with one paragraph per `Translating` step: the `Monitor`'s list of the kinds of work says one paragraph instead of prose, and the `Translating` section writes one paragraph per step.
+- `cognitive-writing-single-writer` is `cognitive-writing-single-context` with one paragraph per `Translating` step: the `Monitor`'s list of the kinds of work and the `Translating` section say one paragraph instead of prose, and the `Monitor` gives every `Translating` step a one-paragraph scope.
 - `cognitive-writing-single-context` is the main package's `Monitor` skill followed by the three role skills verbatim: the `Monitor` runs each selected process in its own context instead of spawning an agent.
 
 ## Invoke a variant

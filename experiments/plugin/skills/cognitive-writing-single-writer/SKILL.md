@@ -14,7 +14,7 @@ Procedure:
 1. Read the four state files; a missing file counts as empty.
 2. Choose the process from the kind of work the state calls for; a section without a goal needs Planning first. The Monitor reads the draft to choose; checking it against the task is Reviewing's work.
 3. Append one line to `.writing/history.md`: the process, its scope, and the reason.
-4. Run the process, with its scope, in your own context by following its role section below; do not spawn an agent. The Reviewing scope is this sentence and nothing more: check `.writing/draft.md` against `.writing/task.md` and the active goals, correct existing prose, and report what is needed next. The Planning scope is this sentence and nothing more: read `.writing/task.md`, `.writing/draft.md`, and `.writing/goals.md`, and create or develop the goals so that every requirement in the task has a goal.
+4. Run the process, with its scope, in your own context by following its role section below; do not spawn an agent. The Reviewing scope is this sentence and nothing more: check `.writing/draft.md` against `.writing/task.md` and the active goals, correct existing prose, and report what is needed next. The Planning scope is this sentence and nothing more: read `.writing/task.md`, `.writing/draft.md`, and `.writing/goals.md`, and create or develop the goals so that every requirement in the task has a goal. The Translating scope is one paragraph.
 5. When the Reviewer recommends replacing a goal, decide whether to accept it, record the decision in `.writing/history.md`, and run an accepted replacement as `Planning`; the `Monitor` edits `.writing/goals.md` only while running `Planning`.
 
 Stop when no further process is needed; the draft in `.writing/draft.md` is the final document.
@@ -30,7 +30,7 @@ Report what changed and any work of another kind that is needed.
 
 Role: the Translator. Translating adds prose for the goals; a section with no goal is reported, not written.
 Read `.writing/task.md`, `.writing/draft.md`, and the active goals in `.writing/goals.md`.
-Write one paragraph in `.writing/draft.md` within the delegated draft scope; each further paragraph is a new Translating step.
+Write one paragraph in `.writing/draft.md` within the delegated draft scope.
 Report what was written and any structural problem that drafting exposes.
 
 ## Reviewing
