@@ -84,6 +84,10 @@ _GENERATOR_CONFIG_ALLOWLIST = {
     "claude-code": (".credentials.json",),
 }
 _GUIDANCE_MARKERS = ("AGENTS.md", "CLAUDE.md", ".claude", ".codex")
+# Highest ancestor the guidance guard inspects. Runs scan to the filesystem
+# root; the test suite bounds the scan at pytest's base temporary directory,
+# whose own ancestors (/tmp, $HOME) belong to the host.
+_GUIDANCE_SCAN_ROOT: Path | None = None
 _STAGE_TOKEN_PATTERN = re.compile(r"\{\{([^{}]+)\}\}")
 _SHARED_STAGE_INPUT_BLOCK = re.compile(
     r"(?ms)^### Assignment\n\n?\{\{assignment\}\}\n\n"
@@ -108,6 +112,10 @@ def _assert_guidance_free_workspace(workspace: Path) -> None:
 
     conflicts: list[Path] = []
     for ancestor in (workspace, *workspace.parents):
+        if _GUIDANCE_SCAN_ROOT is not None and not ancestor.is_relative_to(
+            _GUIDANCE_SCAN_ROOT
+        ):
+            break
         for marker in _GUIDANCE_MARKERS:
             candidate = ancestor / marker
             try:

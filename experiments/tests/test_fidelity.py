@@ -433,20 +433,54 @@ def test_recorded_executed_study_run_shows_every_measured_defect() -> None:
 
 
 @pytest.mark.parametrize(
-    ("text", "language", "dominant", "mismatch"),
+    ("text", "language", "words", "characters", "dominant", "mismatch"),
     [
-        ("A memo about Hangzhou (杭州) tea.", "en", "LATIN", False),
-        ("关于杭州龙井茶的备忘录，涉及 Longjing 产区。", "en", "CJK", True),
-        ("关于杭州龙井茶的备忘录。", "zh", "CJK", False),
-        ("A memo about tea.", "zh", "LATIN", True),
-        ("123 — 456", "en", None, True),
+        # English terms inside Chinese prose: 21 Latin letters but 5 words.
+        (
+            "蔚来的BaaS模式与Tesla相比，gross margin在Q4有所改善。",
+            "zh",
+            5,
+            13,
+            "CJK",
+            False,
+        ),
+        (
+            "蔚来的BaaS模式与Tesla相比，gross margin在Q4有所改善。",
+            "en",
+            5,
+            13,
+            "CJK",
+            True,
+        ),
+        # English drifting into Chinese: more Latin letters, fewer units.
+        (
+            "The report covers revenue. 报告显示营收增长，毛利率提升。",
+            "en",
+            4,
+            13,
+            "CJK",
+            True,
+        ),
+        ("A memo about Hangzhou (杭州) tea.", "en", 5, 2, "LATIN", False),
+        # Fullwidth Latin counts as Latin.
+        ("ＴＨＥ ＲＥＰＯＲＴ ＣＯＶＥＲＳ 杭州", "en", 3, 2, "LATIN", False),
+        ("A memo about tea.", "zh", 4, 0, "LATIN", True),
+        ("Tea 杭州", "en", 1, 2, "CJK", True),
+        ("Hangzhou tea 杭州", "en", 2, 2, None, None),
+        ("123 456", "en", 0, 0, None, None),
     ],
 )
-def test_output_language_flags_a_dominant_script_mismatch(
-    text: str, language: str, dominant: str | None, mismatch: bool
+def test_output_language_compares_latin_words_with_cjk_characters(
+    text: str,
+    language: str,
+    words: int,
+    characters: int,
+    dominant: str | None,
+    mismatch: bool | None,
 ) -> None:
     result = check_output_language(text, language)
 
     assert result["expected_language"] == language
+    assert (result["latin_words"], result["cjk_characters"]) == (words, characters)
     assert result["dominant_script"] == dominant
     assert result["mismatch"] is mismatch

@@ -17,11 +17,14 @@ File changes. The completed ``FileChange`` items of every rollout that touch
 change by a delegated child, or by a descendant of one, belongs to that child's
 latest delegation started before the change. A change by the Monitor itself
 belongs to the interval after the latest delegation started before it. When a
-delegation has no matching ``task_started`` record, its start is unknown but
-no earlier than the start of any delegation issued before it, so a change that
-could belong to it is unattributed: it still updates the goal
-lines but counts toward no interval-based measure, and runs with unattributed
-changes are counted.
+delegation has no matching ``task_started`` record, its start is unknown, and
+no timing record bounds it reliably. A child's change is then unattributed when
+such a delegation of the child comes at or after the child's latest delegation
+started before the change: it still updates the goal lines but counts toward no
+interval-based measure, and runs with unattributed changes are counted. A
+change by the Monitor keeps its Monitor interval for goal events, because its
+author is certain, but cannot decide whether ``Planning`` preceded the first
+section.
 
 Goal lines. A goal line is a Markdown heading, bullet, or numbered item of
 ``goals.md``. It is compared in normalized form: heading marks, list markers,
@@ -136,6 +139,7 @@ class _Change(NamedTuple):
     change: dict[str, Any]
     delegation: int | None
     by_monitor: bool
+    ambiguous: bool
 
 
 def normalize(line: str) -> str:
@@ -287,21 +291,15 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
     starts: list[float] = []
     seen: Counter[str] = Counter()
     for delegation in delegations:
-        thread = delegation["thread"]
-        thread_turns = turns.get(thread, [])
-        n = seen[thread]
+        thread_turns = turns.get(delegation["thread"], [])
+        n = seen[delegation["thread"]]
         starts.append(thread_turns[n] if n < len(thread_turns) else float("inf"))
-        seen[thread] += 1
-
-    # A delegation starts no earlier than any delegation issued before it.
-    earliest = [
-        max((start for start in starts[: k + 1] if start != float("inf")), default=0)
-        for k in range(len(starts))
-    ]
+        seen[delegation["thread"]] += 1
     delegated = {d["thread"] for d in delegations}
 
-    def position(thread: str | None, at: float) -> tuple[int | None, bool]:
-        """Return the change's delegation, or None, and whether the Monitor made it."""
+    def position(thread: str | None, at: float) -> tuple[int | None, bool, bool]:
+        """Return the change's delegation, whether the Monitor made it, and
+        whether a delegation with an unknown start may own it."""
         while thread in metas and thread not in delegated:
             thread = metas[thread].get("parent_thread_id")
         by_monitor = thread not in delegated
@@ -312,14 +310,10 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
         )
         started = [k for k in candidates if starts[k] <= at]
         k = started[-1] if started else (-1 if by_monitor else candidates[0])
-        # A delegation with an unknown start that may have begun may own it.
-        if any(
-            starts[j] == float("inf") and earliest[j] <= at
-            for j in candidates
-            if j >= k
-        ):
-            return None, by_monitor
-        return k, by_monitor
+        # A delegation with an unknown start, from k on, may own the change.
+        ambiguous = any(starts[j] == float("inf") for j in candidates if j >= k)
+        # The Monitor's own change keeps its interval; a child's is unattributed.
+        return (None if ambiguous and not by_monitor else k), by_monitor, ambiguous
 
     changes = []
     for thread, thread_records in records.items():
@@ -381,7 +375,7 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
     )
     preceding = (
         None
-        if first_section is None or first_section.delegation is None
+        if first_section is None or first_section.ambiguous
         else first_section.delegation + first_section.by_monitor
     )
     translating = processes.index("translating") if "translating" in processes else None

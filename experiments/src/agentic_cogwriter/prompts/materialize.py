@@ -418,14 +418,19 @@ def _write_manifest(
 
 def build_writingbench(source_path: Path, language_path: Path) -> list[dict[str, Any]]:
     source_rows = _read_jsonl(source_path)
-    tagged = {row.get("index"): row for row in _read_jsonl(language_path)}
+    tagged_rows = _read_jsonl(language_path)
+    tagged = {row.get("index"): row for row in tagged_rows}
+    if len(tagged) != len(tagged_rows):
+        raise ValueError("WritingBench language file has a duplicate index")
     rows = []
     for source_row in source_rows:
         index = source_row.get("index")
         if not isinstance(index, int):
             raise TypeError("WritingBench index must be an integer")
         tagged_row = tagged.get(index, {})
-        if {key: tagged_row.get(key) for key in source_row} != source_row:
+        if {key: value for key, value in tagged_row.items() if key != "lang"} != (
+            source_row
+        ):
             raise ValueError(f"WritingBench language row {index} differs from source")
         rows.append(
             _manifest_row(
@@ -444,6 +449,9 @@ def build_writingbench(source_path: Path, language_path: Path) -> list[dict[str,
                 native_payload=source_row["checklist"],
             )
         )
+    # Every source index matched above, so any extra tagged row is unmatched.
+    if len(tagged) != len(rows):
+        raise ValueError("WritingBench language file indexes differ from source")
     return rows
 
 
