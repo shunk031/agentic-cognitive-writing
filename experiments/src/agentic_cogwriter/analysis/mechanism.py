@@ -75,6 +75,18 @@ script run with a tracked argument is listed although it may not have written,
 and a listed command's effect is missing from the events above.
 Goal lines supplied with the task are unknown, so the first change to a seeded
 ``goals.md`` counts as creation.
+
+Translating steps. The A7 single-writer skill limits each ``Translating`` step to
+one paragraph; the counts below record compliance and reject nothing. The label
+of a ``history.md`` line is its first word. Every completed ``FileChange`` item
+is replayed in completion order: its added ``history.md`` lines set the current
+label, and a ``draft.md`` change in an item made while the label is
+``Translating`` is a step. A step's blocks are its added lines (an added file's
+content, or a diff's ``+`` lines) split at blank lines and at unchanged lines;
+every block is a paragraph except a single Markdown heading line. Each run
+records ``translating_steps``, ``steps_with_exactly_one_paragraph``, and
+``max_paragraphs_in_a_step``; a condition sums the first two and takes the
+maximum of the third over its scorable runs.
 """
 
 from __future__ import annotations
@@ -120,6 +132,11 @@ PROCESS_DERIVED = frozenset(
         "runs_with_overlapping_delegations",
         "runs_with_unattributed_changes",
     }
+)
+STEP_COUNTS = (
+    "translating_steps",
+    "steps_with_exactly_one_paragraph",
+    "max_paragraphs_in_a_step",
 )
 COUNTS = (
     "runs_with_unrecorded_writes",
@@ -222,6 +239,48 @@ def adds_section(change: dict[str, Any]) -> bool:
     return False
 
 
+def _added_blocks(change: dict[str, Any]) -> list[list[str]]:
+    """Split a change's added lines into blocks at blank and unchanged lines."""
+
+    if change.get("type") == "add":
+        lines = str(change.get("content", "")).splitlines()
+    elif change.get("type") == "update":
+        lines = [
+            line[1:] if line.startswith("+") else ""
+            for line in str(change.get("unified_diff", "")).splitlines()
+            if not line.startswith(("-", "\\"))
+        ]
+    else:
+        return []
+    blocks: list[list[str]] = [[]]
+    for line in lines:
+        if line.strip():
+            blocks[-1].append(line)
+        elif blocks[-1]:
+            blocks.append([])
+    return [block for block in blocks if block]
+
+
+def translating_steps(items: Iterable[dict[str, dict[str, Any]]]) -> list[int]:
+    """Return the paragraphs of each ``draft.md`` change made under ``Translating``.
+
+    ``items`` are the ``changes`` mappings of ``FileChange`` items in order.
+    """
+
+    label, steps = None, []
+    for changes in items:
+        files = {PurePosixPath(path).parts[-2:]: c for path, c in changes.items()}
+        for block in _added_blocks(files.get((".writing", "history.md"), {})):
+            words = re.findall(r"[A-Za-z]+", block[-1])
+            label = words[0].lower() if words else None
+        if (".writing", "draft.md") in files and label == "translating":
+            blocks = _added_blocks(files[(".writing", "draft.md")])
+            steps.append(
+                sum(not (len(b) == 1 and _HEADING.match(b[0])) for b in blocks)
+            )
+    return steps
+
+
 def _ms(timestamp: Any) -> float:
     try:
         return datetime.fromisoformat(str(timestamp)).timestamp() * 1000
@@ -316,6 +375,7 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
         return (None if ambiguous and not by_monitor else k), by_monitor, ambiguous
 
     changes = []
+    file_changes: list[tuple[float, dict[str, Any]]] = []
     for thread, thread_records in records.items():
         for record in thread_records:
             payload = record.get("payload")
@@ -329,6 +389,7 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
             ):
                 continue
             at = float(payload.get("completed_at_ms") or 0)
+            file_changes.append((at, item.get("changes") or {}))
             for path, change in (item.get("changes") or {}).items():
                 parts = PurePosixPath(path).parts[-2:]
                 if parts[0] == ".writing" and parts[-1] in TRACKED:
@@ -336,6 +397,8 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
                         _Change(at, parts[-1], change, *position(thread, at))
                     )
     changes.sort(key=attrgetter("at"))
+    file_changes.sort(key=lambda pair: pair[0])
+    steps = translating_steps(item for _, item in file_changes)
 
     intervals = [
         (delegation, by_monitor, [c.change for c in group])
@@ -413,6 +476,9 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
         "overlapping_delegations": sum(d["overlaps"] for d in delegations),
         "unattributed_changes": sum(c.delegation is None for c in changes),
         "unrecorded_writes": writes,
+        "translating_steps": len(steps),
+        "steps_with_exactly_one_paragraph": steps.count(1),
+        "max_paragraphs_in_a_step": max(steps, default=None),
     }
 
 
@@ -459,6 +525,18 @@ def summarize(runs: Sequence[dict[str, Any]]) -> dict[str, Any]:
         ),
         "runs_with_unattributed_changes": sum(
             bool(run["unattributed_changes"]) for run in scorable
+        ),
+        "translating_steps": sum(run["translating_steps"] for run in scorable),
+        "steps_with_exactly_one_paragraph": sum(
+            run["steps_with_exactly_one_paragraph"] for run in scorable
+        ),
+        "max_paragraphs_in_a_step": max(
+            (
+                run["max_paragraphs_in_a_step"]
+                for run in scorable
+                if run["max_paragraphs_in_a_step"] is not None
+            ),
+            default=None,
         ),
     }
     if not any(run["delegation_required"] for run in runs):
@@ -509,7 +587,15 @@ def _cell(value: Any) -> str:
 def format_table(summary: dict[str, dict[str, Any]]) -> str:
     """Render per-condition summaries as a Markdown table with its notes."""
 
-    columns = ("runs", "completed", "scorable", *RATES, "mean_processes", *COUNTS)
+    columns = (
+        "runs",
+        "completed",
+        "scorable",
+        *RATES,
+        "mean_processes",
+        *COUNTS,
+        *STEP_COUNTS,
+    )
     lines = [
         "| condition | " + " | ".join(columns) + " |",
         "|---|" + "---:|" * len(columns),
@@ -528,7 +614,10 @@ def format_table(summary: dict[str, dict[str, Any]]) -> str:
         "goal_replaced counts every removed or rewritten goal. "
         "planning_before_first_section excludes runs without an attributed "
         "first heading "
-        f"({excluded}). n/a: the condition does not delegate.",
+        f"({excluded}). n/a: the condition does not delegate. "
+        "Translating-step counts cover draft changes made under a Translating "
+        "history line, where the A7 skill allows one paragraph; "
+        "max_paragraphs_in_a_step is n/a without such a step.",
     ]
     return "\n".join(lines)
 

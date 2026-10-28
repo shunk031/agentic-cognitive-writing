@@ -111,6 +111,28 @@ def test_unset_monitor_write_flag_enables_the_check(tmp_path: Path) -> None:
     assert load_condition_registry(conditions_dir)["A8"].monitor_writes_history_only
 
 
+def test_stage_files_default_off_and_parse_from_the_wrapper(tmp_path: Path) -> None:
+    assert all(not c.stage_files for c in load_condition_registry().values())
+    conditions_dir = _copy_conditions(tmp_path)
+    wrapper_path = conditions_dir / "a2_baseline.toml"
+    stages = '["a.md", ".writing/draft.md"]'
+    wrapper_path.write_text(
+        f"stage_files = {stages}\n" + wrapper_path.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    assert load_condition_registry(conditions_dir)["A2"].stage_files == (
+        "a.md",
+        ".writing/draft.md",
+    )
+    wrapper_path.write_text(
+        wrapper_path.read_text(encoding="utf-8").replace(stages, '"a.md"'),
+        encoding="utf-8",
+    )
+    with pytest.raises(ConfigurationError, match="stage_files must be a list"):
+        load_condition_registry(conditions_dir)
+
+
 def test_registry_rejects_non_boolean_delegation_requirement(tmp_path: Path) -> None:
     conditions_dir = _copy_conditions(tmp_path)
     wrapper_path = conditions_dir / "a4_plugin.toml"

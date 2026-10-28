@@ -296,6 +296,78 @@ def test_a_missing_longer_path_does_not_hide_a_read_of_its_suffix(
     ]
 
 
+def test_skill_paths_inside_patch_text_are_not_reads(tmp_path: Path) -> None:
+    outside = "/home/user/.agents/skills/x/SKILL.md"
+    patch = f"*** Begin Patch\\n*** Update File: {outside}\\n*** End Patch"
+    run = _clean_run()
+    run["rollouts"][CHILD].append(_read(f'apply_patch("{patch}")'))
+
+    assert _gate(_materialize(tmp_path, run))["status"] == "scorable"
+
+    run["rollouts"][CHILD].append(_read(f'apply_patch("{patch}"); cat {outside}'))
+    (tmp_path / "read").mkdir()
+
+    assert _gate(_materialize(tmp_path / "read", run))["reasons"] == [
+        f"thread {CHILD} read {outside} outside the staged skills"
+    ]
+
+
+STAGES = (
+    ".writing/baselines/linear/pre-write.md",
+    ".writing/baselines/linear/write.md",
+    ".writing/draft.md",
+)
+
+
+def _staged_run(*paths: str) -> dict[str, Any]:
+    run = _clean_run()
+    run["events"] = [
+        {"type": "thread.started", "thread_id": MONITOR},
+        *(_write(f"/run/workspace/{path}") for path in paths),
+    ]
+    del run["rollouts"][CHILD]
+    return run
+
+
+def _stage_gate(run_dir: Path, **overrides: Any) -> dict[str, Any]:
+    return _gate(
+        run_dir,
+        **{"stage_files": STAGES, "monitor_writes_history_only": False, **overrides},
+    )
+
+
+def test_stage_writes_once_each_in_order_are_scorable(tmp_path: Path) -> None:
+    run = _staged_run(*STAGES, ".writing/notes.md")
+
+    assert _stage_gate(_materialize(tmp_path, run))["status"] == "scorable"
+
+
+@pytest.mark.parametrize(
+    "paths",
+    [STAGES[:2], (STAGES[1], STAGES[0], STAGES[2]), (*STAGES, STAGES[2])],
+)
+def test_missing_reordered_or_repeated_stage_writes_reject_the_run(
+    tmp_path: Path, paths: tuple[str, ...]
+) -> None:
+    gate = _stage_gate(_materialize(tmp_path, _staged_run(*paths)))
+
+    assert gate["reasons"] == [f"stage writes were {list(paths)}, not {list(STAGES)}"]
+
+
+def test_shell_write_to_a_stage_file_rejects_the_run(tmp_path: Path) -> None:
+    run = _staged_run(*STAGES)
+    command = "cat > .writing/baselines/linear/write.md <<'EOF'\nx\nEOF"
+    run["rollouts"][MONITOR].append(
+        _read(f"exec_command({{cmd:{json.dumps(command)}}})")
+    )
+    run_dir = _materialize(tmp_path, run)
+
+    assert _stage_gate(run_dir)["reasons"] == [
+        f"thread {MONITOR} ran shell write {command!r}"
+    ]
+    assert _stage_gate(run_dir, stage_files=())["status"] == "scorable"
+
+
 @pytest.mark.parametrize(
     "path",
     [
