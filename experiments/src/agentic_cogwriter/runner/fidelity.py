@@ -111,6 +111,7 @@ def check_fidelity(
     monitor_writes_history_only: bool,
     roles: tuple[str, ...] = ROLES,
     stage_files: Sequence[str] = (),
+    spawn_message: str | None = None,
 ) -> dict[str, Any]:
     """Classify a finished run as scorable or rejected, with every reason.
 
@@ -120,12 +121,13 @@ def check_fidelity(
     path inside it or the run's workspace; records from other harnesses pass
     ``None``.
     ``stage_files``, when given, are workspace files the top-level thread writes
-    once each, in that order, by patch only.
+    once each, in that order, by patch only. ``spawn_message``, when given, is a
+    regular expression that every top-level spawn message must match in full.
     """
 
     if platform == "codex":
         reasons = _codex_reasons(
-            run_dir, monitor_writes_history_only, roles, stage_files
+            run_dir, monitor_writes_history_only, roles, stage_files, spawn_message
         )
         if codex_home is not None:
             reasons.extend(_skill_isolation_reasons(run_dir, codex_home))
@@ -397,6 +399,7 @@ def _codex_reasons(
     monitor_writes_history_only: bool,
     roles: tuple[str, ...],
     stage_files: Sequence[str],
+    spawn_message: str | None,
 ) -> list[str]:
     events, metas, records, malformed = read_codex_records(run_dir)
     if not events:
@@ -422,7 +425,10 @@ def _codex_reasons(
         receivers = item.get("receiver_thread_ids") or []
         if item.get("tool") == "spawn_agent":
             spawned.update(receivers)
-            spawn_prompts.update(dict.fromkeys(receivers, str(item.get("prompt"))))
+            prompt = str(item.get("prompt"))
+            spawn_prompts.update(dict.fromkeys(receivers, prompt))
+            if spawn_message and not re.fullmatch(spawn_message, prompt):
+                reasons.append(f"spawn message {prompt!r} does not match the template")
         elif item.get("tool") == "close_agent" and item.get("status") == "completed":
             closed.update(receivers)
 

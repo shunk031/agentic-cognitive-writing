@@ -32,7 +32,7 @@ def test_registry_parses_stages_from_condition_wrappers() -> None:
         "re_write",
     ]
     assert [stage.stage_id for stage in registry["A3"].stages] == [
-        "task-decomposition",
+        "task-node",
         "task-execution",
         "task-revision",
     ]

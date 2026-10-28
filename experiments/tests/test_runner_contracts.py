@@ -1147,7 +1147,8 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
     # Each child is a fresh agent that reads its own skill and is closed.
     for role in ("task-node", "task-execution"):
         sentence = (
-            f"Read the skill file at plugin/skills/{role}/SKILL.md and follow it."
+            f"Read the skill file at plugin/skills/{role}/SKILL.md and follow it "
+            "for task <task ID>."
         )
         assert sentence in text
         child = (skills / role / "SKILL.md").read_text()
@@ -1162,8 +1163,31 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
     assert "at depth 3 or deeper, where the root is at depth 0, the task is atomic" in (
         text
     )
+    # The spawn message carries nothing but the skill and the task ID; the gate
+    # rejects any other message, and the agent reads its fields from the graph.
+    assert "with nothing added; the agent reads the task's fields from the graph" in (
+        text
+    )
+    pattern = load_condition_registry()["A3"].spawn_message
+    assert re.fullmatch(
+        pattern,
+        "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
+        "for task root.c-1.",
+    )
+    assert not re.fullmatch(
+        pattern,
+        "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
+        "for task c1. It is atomic; write it.",
+    )
+    # The root's node agent sets its length; revision adds children only under
+    # suspended tasks, so new composition tasks reach a node agent.
+    assert "Initialize a root `composition` task with `length` `null`" in text
+    assert "add new typed child tasks with dependencies under a suspended task" in text
     node = (skills / "task-node/SKILL.md").read_text()
-    assert "At depth 3 or deeper, where the root is at depth 0" in node
+    assert "If the task's `length` is `null`, determine it from `.writing/task.md`" in (
+        node
+    )
+    assert "At depth 3 or deeper, the task is atomic without judgment" in node
     assert "longer than 1000 words may be split" in node
     assert "longer than 1500 words must be split" in node
     # The deliverable is the appended draft, not a final message or a trace.

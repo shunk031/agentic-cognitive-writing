@@ -5,6 +5,9 @@ analysis_family = "confirmatory"
 product_requires_draft = true
 # The coordinator writes the task graph, so it is not a history-only Monitor.
 monitor_writes_history_only = false
+# Each spawn message names only the agent's skill and its task; the agent reads
+# the task's fields from the graph, so the coordinator cannot steer its verdict.
+spawn_message = 'Read the skill file at plugin/skills/(?:task-node|task-execution)/SKILL\.md and follow it for task [A-Za-z0-9_.-]+\.'
 
 [package]
 name = "cognitive-writing-baselines"
@@ -27,8 +30,8 @@ claude_code = """/cognitive-writing-baselines:writing-adaptive-task-planning"""
 claude_code = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
 
 [trace]
-# The fidelity gate reads the decomposition and execution agents from the
-# harness records instead of a plugin trace.
+# The fidelity gate reads the node and execution agents from the harness
+# records instead of a plugin trace.
 required = false
 retrieval = "N/A"
 evidence = "N/A"
@@ -37,10 +40,10 @@ goal_events = "forbidden"
 require_delegation = true
 event_types = ["process_switch"]
 min_events = 1
-processes = ["task-decomposition", "task-execution", "task-revision"]
+processes = ["task-node", "task-execution", "task-revision"]
 
 [[stages]]
-id = "task-decomposition"
+id = "task-node"
 
 [[stages]]
 id = "task-execution"
