@@ -98,8 +98,8 @@ NO_GOAL_SKILL_PATHS = (
 NO_GOAL_FILE_RULE = "Do not create or modify `.writing/goals.md`"
 STAGE_SESSION_HEADER = (
     "The following {count} frozen stages run in order within this single session; "
-    "each stage's output is the input of the next, and only the final stage's "
-    "output is the final response."
+    "each stage's output is the input of the next, and the final stage's output "
+    "is the final document in `.writing/draft.md`."
 )
 SINGLE_STAGE_SESSION_HEADER = (
     "The following frozen stage runs within this single session; its output is the "
@@ -1106,6 +1106,29 @@ def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
     assert occurrences == 4
 
 
+def test_staged_skill_writes_each_frozen_stage_and_the_draft() -> None:
+    skill = REPO_ROOT / "experiments/baselines/skills/writing-linear"
+    body = (skill / "SKILL.md").read_text(encoding="utf-8").split("---\n", 2)[2]
+
+    assert body.splitlines()[5:10] == [
+        "1. Run `Pre-Write` and write its output to "
+        "`.writing/baselines/linear/pre-write.md`.",
+        "2. Run `Write` on the `Pre-Write` output and write its output to "
+        "`.writing/baselines/linear/write.md`.",
+        "3. Run `Re-Write` on the `Write` output and write its output to "
+        "`.writing/draft.md`.",
+        "",
+        "Do not create or modify `.writing/goals.md`. Do not skip, repeat, or add "
+        "a stage. `.writing/draft.md` is the final document.",
+    ]
+    assert "final response" not in body
+    assert "trace" not in body
+    assert sorted(path.name for path in skill.rglob("*") if path.is_file()) == [
+        "SKILL.md",
+        "openai.yaml",
+    ]
+
+
 def test_agentic_cog_writer_ends_with_the_draft_as_the_final_document() -> None:
     text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
         encoding="utf-8"
@@ -1164,6 +1187,55 @@ def test_single_context_skill_is_the_monitor_skill_running_roles_in_context() ->
         for role in ("planning", "translating", "reviewing")
     ]
     assert [path.name for path in a8_root.rglob("*")] == ["SKILL.md"]
+
+
+def test_single_writer_skill_is_single_context_with_one_paragraph_steps() -> None:
+    def text(path: str) -> list[str]:
+        return (REPO_ROOT / path).read_text(encoding="utf-8").splitlines()
+
+    a7_root = REPO_ROOT / "experiments/plugin/skills/cognitive-writing-single-writer"
+    a8 = text("experiments/plugin/skills/cognitive-writing-single-context/SKILL.md")
+    a7 = text("experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md")
+    changed = {(old, new) for old, new in zip(a8, a7, strict=True) if old != new}
+
+    assert {(old.split(" ")[0], new) for old, new in changed} == {
+        ("name:", "name: cognitive-writing-single-writer"),
+        (
+            "description:",
+            'description: "Experiment-comparison variant of the agentic-cog-writer '
+            "skill that runs each selected `Planning`, `Translating`, or `Reviewing` "
+            "process in the Monitor's own context instead of a subagent and limits "
+            "each `Translating` step to one paragraph. For internal comparison use "
+            "only, not the recommended default. Use when a controlled single-writer "
+            'comparison is explicitly requested."',
+        ),
+        (
+            "Kinds",
+            "Kinds of work: Planning changes the goals; Translating adds one "
+            "paragraph of prose for the goals; Reviewing corrects existing prose and "
+            "reports what is needed next. A role reports work of another kind "
+            "instead of doing it.",
+        ),
+        (
+            "Write",
+            "Write one paragraph in `.writing/draft.md` within the delegated draft "
+            "scope.",
+        ),
+        (
+            "4.",
+            "4. Run the process, with its scope, in your own context by following "
+            "its role section below; do not spawn an agent. The Reviewing scope is "
+            "this sentence and nothing more: check `.writing/draft.md` against "
+            "`.writing/task.md` and the active goals, correct existing prose, and "
+            "report what is needed next. The Planning scope is this sentence and "
+            "nothing more: read `.writing/task.md`, `.writing/draft.md`, and "
+            "`.writing/goals.md`, and create or develop the goals so that every "
+            "requirement in the task has a goal. The Translating scope is one "
+            "paragraph, a single block of prose; each further paragraph takes a new "
+            "pass through steps 1 to 4.",
+        ),
+    }
+    assert [path.name for path in a7_root.rglob("*")] == ["SKILL.md"]
 
 
 def test_fixed_order_skill_is_the_monitor_skill_with_a_fixed_cycle() -> None:
@@ -1759,8 +1831,15 @@ def test_monitor_conditions_install_the_repository_plugin_codex_adapter(
     assert "developer_instructions" in tomllib.loads((home / "config.toml").read_text())
 
 
-def test_single_context_installs_the_adapter_rules_without_delegation(
-    tmp_path: Path,
+@pytest.mark.parametrize(
+    ("condition_id", "skill_name"),
+    [
+        ("A7", "cognitive-writing-single-writer"),
+        ("A8", "cognitive-writing-single-context"),
+    ],
+)
+def test_in_context_conditions_install_the_adapter_rules_without_delegation(
+    tmp_path: Path, condition_id: str, skill_name: str
 ) -> None:
     home = tmp_path / "home"
     home.mkdir()
@@ -1768,13 +1847,13 @@ def test_single_context_installs_the_adapter_rules_without_delegation(
     runner = ExperimentRunner(_config(), output_root=tmp_path / "runs")
 
     staged = runner._stage_codex_plugin(
-        load_condition_registry()["A8"],
+        load_condition_registry()[condition_id],
         tmp_path / "workspace",
         codex_home=home,
         prompt=_prompt(),
     )
 
-    skill = home / "skills" / "cognitive-writing-single-context"
+    skill = home / "skills" / skill_name
     assert sorted(path.name for path in home.iterdir()) == [
         "config.toml",
         "rules",

@@ -1403,7 +1403,8 @@ class ExperimentRunner:
                 "\n\n"
                 f"The following {path_stage_count} frozen stages run in order within "
                 "this single session; each stage's output is the input of the next, "
-                "and only the final stage's output is the final response."
+                "and the final stage's output is the final document in "
+                "`.writing/draft.md`."
             )
         for stage_index, stage in enumerate(condition.stages):
             if stage.path is None:
