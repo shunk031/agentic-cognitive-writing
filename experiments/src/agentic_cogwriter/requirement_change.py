@@ -2,10 +2,10 @@
 
 The generator and the checkers use the standard library and stay outside the
 run workspace and the run output root. ``check`` refuses a run whose workspace
-holds a copy of this module or of the items file, or whose harness records name
-the module path, the items path, or the items file's hash. The checkers read
-only an item, the turn-1 output, and the final output, so they do not depend
-on how turn 2 was started.
+holds a copy of this module or of the items file, or whose harness records
+contain the module path or name, the items path, the items file's hash, or an
+item id. The checkers read only an item, the turn-1 output, and the final
+output, so they do not depend on how turn 2 was started.
 
 Requirements. For each prompt of ``PROMPT_IDS``, the output sections are the
 ``* Name:`` or ``* Name.`` entries of its first requested output constraint.
@@ -54,8 +54,9 @@ higher level or naming another of the item's sections, without fenced code or
 nested ones included, and a thematic break is not one; words match whole and
 case-insensitively; paragraphs are blank-line-separated blocks other than a
 lone heading. R5 of a remove change passes when no heading or line that is
-wholly bold matches S_j case-insensitively, and at most ``SURVIVAL`` of the
-distinct four-word sequences of S_j's turn-1 body occur anywhere in the final
+wholly bold matches S_j case-insensitively, apart from a trailing colon, and
+at most ``SURVIVAL`` of the distinct four-word sequences of S_j's turn-1 body
+that occur nowhere else in the turn-1 output occur anywhere in the final
 output. A run is checked on its turn-1 output and its final output:
 
 - incorporated: every changed or added requirement passes after turn 2;
@@ -64,8 +65,8 @@ output. A run is checked on its turn-1 output and its final output:
 - locality: over turn 1's sections, other than the change's target (S_a, S_b,
   or S_j; none for add), present after turn 1, the share whose
   whitespace-normalized body changed or vanished after turn 2, and the mean
-  ``difflib.SequenceMatcher`` ratio of each body before and after, zero for a
-  vanished one.
+  ``difflib.SequenceMatcher`` ratio, over whitespace-separated words without
+  autojunk, of each body before and after, zero for a vanished one.
 """
 
 from __future__ import annotations
@@ -384,14 +385,12 @@ def headings(text: str) -> list[tuple[int, int, str]]:
     return found
 
 
-def section_bodies(text: str, names: list[str]) -> dict[str, str]:
-    """Map each heading's text, at its first occurrence, to its body."""
+def _spans(text: str, names: list[str]) -> dict[str, tuple[int, int]]:
+    """Map each heading's text, at its first occurrence, to the line indexes of
+    its heading's last line and of the line after its body."""
 
-    text = text.replace(ENDING, "")
-    lines, found = text.splitlines(), headings(text)
-    outside = _unfenced(lines)
-    setext = {index - 1 for index, _, _ in found if not _HEADING.match(lines[index])}
-    bodies: dict[str, str] = {}
+    found, count = headings(text), len(text.splitlines())
+    spans: dict[str, tuple[int, int]] = {}
     for position, (index, level, name) in enumerate(found):
         end = next(
             (
@@ -399,17 +398,25 @@ def section_bodies(text: str, names: list[str]) -> dict[str, str]:
                 for i, lvl, other in found[position + 1 :]
                 if lvl <= level or other in names
             ),
-            len(lines),
+            count,
         )
-        bodies.setdefault(
-            name,
-            "\n".join(
-                lines[i]
-                for i in range(index + 1, end)
-                if outside[i] and i not in setext
-            ),
+        spans.setdefault(name, (index, end))
+    return spans
+
+
+def section_bodies(text: str, names: list[str]) -> dict[str, str]:
+    """Map each heading's text, at its first occurrence, to its body."""
+
+    text = text.replace(ENDING, "")
+    lines, found = text.splitlines(), headings(text)
+    outside = _unfenced(lines)
+    setext = {index - 1 for index, _, _ in found if not _HEADING.match(lines[index])}
+    return {
+        name: "\n".join(
+            lines[i] for i in range(index + 1, end) if outside[i] and i not in setext
         )
-    return bodies
+        for name, (index, end) in _spans(text, names).items()
+    }
 
 
 def _shingles(text: str) -> set[tuple[str, ...]]:
@@ -431,13 +438,21 @@ def passes(
         return text.rstrip().endswith(ENDING)
     found = [name for _, _, name in headings(text)]
     if kind == "absent":
-        removed = requirement["section"].casefold()
+        section = requirement["section"]
         bold = [
             m.group(2) for line in text.splitlines() if (m := _BOLD_LINE.match(line))
         ]
-        if any(name.strip().casefold() == removed for name in found + bold):
+        if any(
+            name.strip().rstrip(":").strip().casefold() == section.casefold()
+            for name in found + bold
+        ):
             return False
-        before = _shingles(section_bodies(turn1, names).get(requirement["section"], ""))
+        # Sequences the rest of turn 1 shares are no evidence of kept content.
+        before = _shingles(section_bodies(turn1, names).get(section, ""))
+        lines = turn1.replace(ENDING, "").splitlines()
+        if section in (spans := _spans("\n".join(lines), names)):
+            index, end = spans[section]
+            before -= _shingles("\n".join(lines[:index] + lines[end:]))
         kept = before & _shingles(text)
         return not before or len(kept) <= SURVIVAL * len(before)
     if kind == "headings":
@@ -481,7 +496,7 @@ def evaluate(item: dict[str, Any], turn1: str, final: str) -> dict[str, Any]:
     ]
     ratios = {
         name: SequenceMatcher(
-            None, " ".join(bodies1[name].split()), " ".join(bodies2[name].split())
+            None, bodies1[name].split(), bodies2[name].split(), autojunk=False
         ).ratio()
         if name in bodies2
         else 0.0
@@ -516,8 +531,8 @@ def assert_unexposed(run_dir: Path, items_path: Path, out: Path) -> None:
 
     The items file and the check's output must lie outside the run output
     root; the workspace must hold no copy of this module or the items file;
-    and the run's harness records must not name the module path, the items
-    path, or the items file's hash.
+    and the run's harness records must not contain the module path, the items
+    path, the items file's hash, the module name, or an item id.
     """
 
     root = run_dir.resolve().parents[3]
@@ -529,8 +544,11 @@ def assert_unexposed(run_dir: Path, items_path: Path, out: Path) -> None:
     for path in (run_dir / "workspace").rglob("*"):
         if path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() in digests:
             raise RuntimeError(f"{path} copies a generator or checker file")
-    needles = [str(module).encode(), str(items).encode()]
+    needles = [str(module).encode(), str(items).encode(), b"requirement_change"]
     needles.append(hashlib.sha256(items.read_bytes()).hexdigest().encode())
+    needles += [
+        item["id"].encode() for item in json.loads(items.read_text(encoding="utf-8"))
+    ]
     records = [*run_dir.glob("attempt-*.events.jsonl"), *run_dir.glob("sessions/**/*")]
     for path in records:
         if path.is_file() and any(needle in path.read_bytes() for needle in needles):

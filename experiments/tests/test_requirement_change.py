@@ -252,7 +252,7 @@ def test_term_swap_scores_the_swap_and_its_section_alone(generated: Path) -> Non
     moved = final.replace(f"Notes on {other} only.", f"Notes on {other} alone.")
     result = rc.evaluate(item, turn1, moved)
     assert result["changed_untargeted_sections"] == [other]
-    assert 0.9 < result["untargeted_similarity"][other] < 1
+    assert 0.5 < result["untargeted_similarity"][other] < 1
 
 
 def _remove_case(generated: Path) -> tuple[dict[str, Any], str, str, str]:
@@ -277,7 +277,17 @@ def test_remove_passes_a_clean_removal(generated: Path) -> None:
 
 @pytest.mark.parametrize(
     "variant",
-    ["preamble", "lowercase", "title", "bold", "setext", "renamed", "merged"],
+    [
+        "preamble",
+        "lowercase",
+        "title",
+        "bold",
+        "bold-colon",
+        "colon",
+        "setext",
+        "renamed",
+        "merged",
+    ],
 )
 def test_remove_fails_each_false_pass(generated: Path, variant: str) -> None:
     item, turn1, final, removed = _remove_case(generated)
@@ -288,6 +298,8 @@ def test_remove_fails_each_false_pass(generated: Path, variant: str) -> None:
         "lowercase": final.replace(rc.ENDING, f"## {removed.lower()}\n\n{rc.ENDING}"),
         "title": final.replace(rc.ENDING, f"## {removed.title()}\n\n{rc.ENDING}"),
         "bold": final.replace(rc.ENDING, f"**{removed}**\n\n{rc.ENDING}"),
+        "bold-colon": final.replace(rc.ENDING, f"**{removed}:**\n\n{rc.ENDING}"),
+        "colon": final.replace(rc.ENDING, f"## {removed}:\n\n{rc.ENDING}"),
         "setext": final.replace(
             rc.ENDING, f"{removed}\n{'=' * len(removed)}\n\n{rc.ENDING}"
         ),
@@ -298,6 +310,55 @@ def test_remove_fails_each_false_pass(generated: Path, variant: str) -> None:
     }[variant]
 
     assert rc.evaluate(item, turn1, final)["incorporated"] is False
+
+
+def test_remove_ignores_phrasing_turn_1_shared_with_other_sections(
+    generated: Path,
+) -> None:
+    item, turn1, final, removed = _remove_case(generated)
+    other = item["turn2"][0]["sections"][0]
+    # Turn 1 repeats the removed section's long sentence in a kept section, as
+    # sections on stakeholders and stakeholder requirements do.
+    shared = turn1.replace(
+        f"Notes on {other} only.", f"Notes on {other} only. {FILLER}"
+    )
+    kept = final.replace(f"Notes on {other} only.", f"Notes on {other} only. {FILLER}")
+
+    assert rc.evaluate(item, shared, kept)["incorporated"] is True
+    # Without the shared copy, the same sentence counts as kept content.
+    assert rc.evaluate(item, turn1, kept)["incorporated"] is False
+
+
+SENTENCES = [
+    f"Sentence {k} explains how office number {k} reports energy use to the board."
+    for k in range(8)
+]
+
+
+def test_similarity_compares_words_and_grades_a_paraphrase(generated: Path) -> None:
+    item = _item(generated, "term")
+    other = next(s for s in item["turn1"][0]["sections"] if s not in item["targets"])
+    body = " ".join(SENTENCES)
+    turn1 = witness(item["turn1"]).replace(f"Notes on {other} only.", body)
+    # Every other sentence is reworded with the same number of words.
+    paraphrase = " ".join(
+        s
+        if k % 2
+        else "This item tells which campus unit sends its power data each term."
+        for k, s in enumerate(SENTENCES)
+    )
+    reordered = " ".join(SENTENCES[4:] + SENTENCES[:4])
+
+    ratios = [
+        rc.evaluate(
+            item, turn1, witness(item["turn2"]).replace(f"Notes on {other} only.", text)
+        )["untargeted_similarity"][other]
+        for text in (body, paraphrase, reordered)
+    ]
+
+    assert ratios[0] == 1
+    assert 0.4 <= ratios[1] <= 0.6
+    assert 0.4 <= ratios[2] < 1
 
 
 def test_remove_keeps_a_nested_section_from_moving_its_neighbour(
@@ -355,7 +416,9 @@ def test_check_scores_breaks_and_locality_and_writes_outside_the_run(
         rc.check(generated / "items.json", other_item, run_dir, out, saved)
 
 
-@pytest.mark.parametrize("exposure", ["output", "items", "copy", "path", "hash"])
+@pytest.mark.parametrize(
+    "exposure", ["output", "items", "copy", "path", "hash", "module", "item"]
+)
 def test_check_refuses_a_run_that_could_see_the_checker(
     generated: Path, tmp_path: Path, exposure: str
 ) -> None:
@@ -374,9 +437,15 @@ def test_check_refuses_a_run_that_could_see_the_checker(
         shutil.copyfile(generated / "items.json", run_dir / "workspace" / "copy.json")
     elif exposure == "path":
         rollout.write_text(json.dumps({"cmd": f"cat {items.resolve()}"}) + "\n")
-    else:
+    elif exposure == "hash":
         digest = hashlib.sha256(items.read_bytes()).hexdigest()
         (run_dir / "attempt-001.events.jsonl").write_text(digest + "\n")
+    elif exposure == "module":
+        rollout.write_text(
+            '{"cmd": "python -m agentic_cogwriter.requirement_change"}\n'
+        )
+    else:
+        (run_dir / "attempt-001.events.jsonl").write_text(f'"{item["id"]}"\n')
 
     with pytest.raises(RuntimeError):
         rc.check(items, item["id"], run_dir, out)
