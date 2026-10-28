@@ -6,9 +6,9 @@ This file records the state, decisions, and working rules for the CogWriter expe
 
 No tested setting shows the current method better than A6 `Fixed-order` on quality, work, or edit locality. The [readiness criteria](#readiness-criteria) stand as follows, unfavorable results first; the [Evidence](#evidence) section gives each measurement condition, and the paper's [code-to-system map](../paper/sec/09_prompt_configuration.tex) names the condition codes.
 
-- **Outcome: not met.** No scored run of the rebuilt arms exists. In the September two-turn requirement-change runs of the executed study's plugin, A4 `Agentic CogWriter` against `Fixed-order` gave 18 wins, 19 losses, and 22 ties.
+- **Outcome: not met.** No scored run of the rebuilt arms exists. In the two-turn requirement-change runs of the executed study's plugin on 2026-10-12, A4 `Agentic CogWriter` against `Fixed-order` gave 18 wins, 19 losses, and 22 ties.
 - **Mechanism: not met.** In the 24 gate-passing runs of the rebuilt A4 on ordinary non-evaluation prompts, no run returned from `Reviewing` to `Planning` and none replaced a goal, against the executed study's 4.1% and 0.5%.
-- **Fidelity: met on ordinary non-evaluation prompts.** The gate passed 24 of 27 runs of the rebuilt A4 and rejected three with stated reasons. This is a property of the implementation, not support for the paper's claim.
+- **Fidelity: met for the ordinary-prompt setup.** The current gate, re-run on copies of 27 runs of the rebuilt A4 on ordinary non-evaluation prompts, passes 24 and rejects three with stated reasons. The runs predate the output-language statement and the gate's rejection of `Monitor` shell writes, so the result applies to that setup. Fidelity is a property of the implementation, not support for the paper's claim.
 
 ## Pending decision
 
@@ -18,7 +18,7 @@ The author is deciding the paper's claim, and no scored run happens before that 
 - **Evaluation resource.** Make a requirement-change benchmark, with incorporation and break rates as its measures, the primary contribution.
 - **Benchmark first.** Build the benchmark first and use it to decide on the rebuilt method with a preregistered go/no-go.
 
-A survey of prior work, verified against primary sources, found no accepted paper that isolates an LLM-chosen order of planning, drafting, and reviewing against a fixed order under the same generator. The nearest work is WebThinker[^2], WriteHERE[^3], and IS-CoT[^4]. The method's name also risks confusion with CogWriter[^5].
+A survey of prior work found no accepted paper that isolates an LLM-chosen order of planning, drafting, and reviewing against a fixed order under the same generator. The nearest work is WebThinker[^1], WriteHERE[^2], and IS-CoT[^3]. The method's name also risks confusion with CogWriter[^4].
 
 ## Current state
 
@@ -27,8 +27,9 @@ A survey of prior work, verified against primary sources, found no accepted pape
 - **Artifact.** The skills-only plugin under [`plugin/`](../plugin/) was rebuilt through [shunk031/agentic-cognitive-writing#148](https://github.com/shunk031/agentic-cognitive-writing/pull/148), [shunk031/agentic-cognitive-writing#150](https://github.com/shunk031/agentic-cognitive-writing/pull/150), and [shunk031/agentic-cognitive-writing#151](https://github.com/shunk031/agentic-cognitive-writing/pull/151), and is on the integration branch only. The `Monitor` delegates to fresh `Planning`, `Translating`, and `Reviewing` agents with fixed scopes and writes only `history.md`. The Planner replaces goals that conflict with the task. The Reviewer corrects existing prose and reports missing goals or sections. A goal covers a requirement only if the goal names the requirement's section.
 - **Runtime branch.** The `cw` runtime branch from the earlier redesign (`cogwriter-cw`) is closed by the author's decision; the rebuilt skills-only plugin is the only artifact. The branch stays for reference.
 - **Rebuilt conditions.** The integration branch holds the rebuilt A4, the ablations A5 `No-goals`, A6, A7 `Single-writer`, and A8 `Single-context`, and the baselines A2 `Staged`, A3 `Task-planning`, and B1 `Exploratory-1`, the paper's CogWriter-style exploratory baseline. A1 `Single-pass` keeps its skill, because its final response is its deliverable. Token accounting is not yet rebuilt.
+- **Paper build.** The A5 rename breaks the paper build on `rerun-arr2027`, because [`09_prompt_configuration.tex`](../paper/sec/09_prompt_configuration.tex) still displays the A5 skill under its removed path.
 - **Runner.** The runner isolates every Codex child's HOME, and the fidelity gate rejects skill reads outside the per-run Codex home; a relative read after a `cd` is a known limit of the gate. The scored output is `draft.md` itself for every draft-product condition, through [shunk031/agentic-cognitive-writing#156](https://github.com/shunk031/agentic-cognitive-writing/pull/156). The Claude Code invocation path is out of scope under [D14](#decisions).
-- **Merged since the previous handoff update.** These pull requests are on the integration branch:
+- **Not recorded in the previous handoff.** These pull requests are merged into the integration branch:
   - **Child input.** [shunk031/agentic-cognitive-writing#165](https://github.com/shunk031/agentic-cognitive-writing/pull/165) starts the generator child with stdin closed.
   - **Mechanism report.** [shunk031/agentic-cognitive-writing#166](https://github.com/shunk031/agentic-cognitive-writing/pull/166) reports mechanisms from Codex harness records, and [shunk031/agentic-cognitive-writing#168](https://github.com/shunk031/agentic-cognitive-writing/pull/168) bounds unknown delegation starts by ended delegations.
   - **Output language.** [shunk031/agentic-cognitive-writing#167](https://github.com/shunk031/agentic-cognitive-writing/pull/167) states the manifest's output language in every condition, and [shunk031/agentic-cognitive-writing#169](https://github.com/shunk031/agentic-cognitive-writing/pull/169) counts Latin words in the language check.
@@ -45,24 +46,27 @@ A survey of prior work, verified against primary sources, found no accepted pape
 
 Every result comes from one model and one reasoning effort, and no result shows the method ahead of `Fixed-order`. Each setting has its own measurement condition:
 
-- **Ordinary prompts.** The rebuilt A4 on the integration branch, run through the runner on 27 ordinary non-evaluation prompts, measured from harness records with the mechanism report. The gate rejected two runs for `Monitor` writes to `goals.md` or `draft.md` and one for a shell `touch` of state files.
-- **Seeded defect.** An earlier version of the rebuilt plugin, on ten DoLoMiTes[^1] prompts with one section removed, ten runs each. The [shunk031/agentic-cognitive-writing#151](https://github.com/shunk031/agentic-cognitive-writing/pull/151) body and its "All runs" comments hold every run table.
-- **Requirement change.** The executed study's plugin in September, on 59 prompts with a second turn that changes the requirements, A4 against `Fixed-order`.
+- **Ordinary prompts.** The rebuilt A4, run through the runner on 27 ordinary non-evaluation prompts and measured from harness records with the mechanism report. The runs used the runner as of [shunk031/agentic-cognitive-writing#165](https://github.com/shunk031/agentic-cognitive-writing/pull/165), before [shunk031/agentic-cognitive-writing#167](https://github.com/shunk031/agentic-cognitive-writing/pull/167) stated the output language and before [shunk031/agentic-cognitive-writing#170](https://github.com/shunk031/agentic-cognitive-writing/pull/170) seeded `history.md` and made `Monitor` shell writes a gate rejection. The gate counts come from the gate after [shunk031/agentic-cognitive-writing#170](https://github.com/shunk031/agentic-cognitive-writing/pull/170), re-run on copies of the runs: it rejects two runs for `Monitor` writes to `goals.md` or `draft.md` and one for a `Monitor` shell `touch` of the state files. The gate at run time rejected a different third run, for a failed skill read that the later gate skips.
+- **Seeded defect.** The A4 skills at the head of [shunk031/agentic-cognitive-writing#151](https://github.com/shunk031/agentic-cognitive-writing/pull/151), which equal those on `rerun-arr2027`, run directly from seeded states rather than through the runner and gate, on ten DoLoMiTes[^5] prompts with one section removed, ten runs each. The [shunk031/agentic-cognitive-writing#151](https://github.com/shunk031/agentic-cognitive-writing/pull/151) body and its "All runs" comments hold every run table.
+- **Requirement change.** Runs of the executed study's plugin on 2026-10-12, on 59 prompts with a second turn that changes the requirements, A4 against `Fixed-order`. The [revision-task results](https://github.com/shunk031/agentic-cognitive-writing/blob/92f497d12e73c5512eb1a898e8536458aae23e20/paper/results/revision-tasks/README.md) and [`results.json`](https://github.com/shunk031/agentic-cognitive-writing/blob/92f497d12e73c5512eb1a898e8536458aae23e20/paper/results/revision-tasks/results.json) on the `exp-revision-tasks` branch hold the counts. `Fixed-order` also returns to `Planning` by construction: A6 switches to `Planning` in 52 of its 60 turn-2 runs and delegates `Planning` in 53, so A4's 57 of 59 is not evidence of the mechanism.
 
 | Setting | Measure | Result |
 | --- | --- | --- |
 | Ordinary prompts | Runs passing the fidelity gate | 24 of 27 |
-| Ordinary prompts | One `Planning`-`Translating`-`Reviewing` cycle | 24 of 24 |
+| Ordinary prompts | `Planning` before the first `Translating` | 24 of 24 |
+| Ordinary prompts | Exactly one `Planning` delegation | 24 of 24 |
+| Ordinary prompts | Process sequence `Planning`, `Translating`, `Reviewing` | 22 of 24 |
+| Ordinary prompts | Process sequence `Planning`, `Translating`, `Reviewing`, `Translating`, `Reviewing` | 2 of 24 |
 | Ordinary prompts | `Reviewing` followed by `Planning` | 0 of 24 |
 | Ordinary prompts | Goal replacement | 0 of 24 |
 | Seeded defect | `Planning` before the removed section was written | 100 of 100 |
-| Seeded defect | First Reviewer found the gap | 69 of 100 |
+| Seeded defect | `Reviewing`, then `Planning`, before the section was written | 69 of 100 |
+| Seeded defect | Gap found first by the first Reviewer | 54 of 100 |
+| Seeded defect | Gap found first by the `Monitor`, planning first or stating the gap | 31 and 15 of 100 |
 | Requirement change | Pairwise judgments, A4 against `Fixed-order` | 18 wins, 19 losses, 22 ties |
-| Requirement change | `Monitor` returned to `Planning` | 57 of 59 |
-| Requirement change | Turn-2 median ratio A4 to `Fixed-order`, process calls | 1.00 |
-| Requirement change | Turn-2 median ratio A4 to `Fixed-order`, tokens | 1.07, 95% interval 0.96 to 1.28 |
-| Requirement change | Turn-2 median ratio A4 to `Fixed-order`, wall-clock time | 1.04 |
-| Requirement change | Untargeted paragraphs altered, A4 and `Fixed-order` | 0.59 and 0.58 |
+| Requirement change | Turn 2 switches to `Planning`, A4 and `Fixed-order` | 57 of 59 and 52 of 60 |
+
+An uncommitted re-analysis of the requirement-change runs found that turn-2 process calls, tokens, and edit locality were not lower for A4 than for `Fixed-order`. That re-analysis is not reproducible from the repository.
 
 ## Measured defects of the executed study
 
@@ -128,7 +132,7 @@ Results are ready for the paper when the rerun shows, from harness records, that
   - **Goal development.** Goal lines before, at least one added, none removed.
   - **Goal replacement.** At least one goal line removed, which includes a rewrite.
   - **Goal replacement after review.** A replaced interval in a `Planning` delegation that directly follows an ended `Reviewing` delegation. This, not the broader goal replacement, is the measure compared with the executed study's 0.5%.
-  - **`Planning` before the first section.** A `Planning` delegation precedes the first `draft.md` change that adds a heading. A run that adds no heading has no value, and neither does a run whose first such change is unattributed or made by the `Monitor`.
+  - **`Planning` before the first section.** A `Planning` delegation precedes the first `draft.md` change that adds a heading, including a heading the `Monitor` writes. A run that adds no heading has no value, and neither does a run whose first such change a delegation with an unknown start could own.
   - **`Reviewing` to `Planning`.** A `Planning` delegation directly follows an ended `Reviewing` delegation.
 
   Only `apply_patch` writes become `FileChange` items. The gate rejects shell writes to tracked files by the `Monitor`, and the report lists shell writes by role agents without rejecting them. `Planning` before each section, not only the first, is not yet measured.
@@ -143,8 +147,8 @@ No scored run happens before steps 1 and 2.
 2. Run a go/no-go pilot for the chosen claim on non-evaluation prompts, with its criteria fixed before it runs. Report it under the reporting rule in [Working rules](#working-rules).
 3. Resume or close the held B2 and A3 pull requests, and settle with the author the remaining protocol decisions the chosen claim needs, such as [D12, the evaluation task sets](#decisions), the success rule, and the scale and cost of any scored run.
 
-[^1]: Chaitanya Malaviya, Priyanka Agrawal, Kuzman Ganchev, Pranesh Srinivasan, Fantine Huot, Jonathan Berant, Mark Yatskar, Dipanjan Das, Mirella Lapata, and Chris Alberti. "DOLOMITES: Domain-Specific Long-Form Methodical Tasks." Transactions of the Association for Computational Linguistics, 2025. https://doi.org/10.1162/tacl_a_00727
-[^2]: Xiaoxi Li, Jiajie Jin, Guanting Dong, Hongjin Qian, Yongkang Wu, Ji-Rong Wen, Yutao Zhu, and Zhicheng Dou. "WebThinker: Empowering Large Reasoning Models with Deep Research Capability." Advances in Neural Information Processing Systems (NeurIPS), 2025. https://arxiv.org/abs/2504.21776
-[^3]: Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmidhuber. "Beyond Outlining: Heterogeneous Recursive Planning for Adaptive Long-form Writing with Language Models." Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing, 2025. https://doi.org/10.18653/v1/2025.emnlp-main.1254
-[^4]: Zechen Sun, Yuyang Sun, Zecheng Tang, Juntao Li, Wenpeng Hu, Wenliang Chen, Zhunchen Luo, Guotong Geng, and Min Zhang. "IS-CoT: Breaking the Long-form Generation Collapse via Interleaved Structural Thinking." Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), 2026. https://doi.org/10.18653/v1/2026.acl-long.911
-[^5]: Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen. "A Cognitive Writing Perspective for Constrained Long-Form Text Generation." Findings of the Association for Computational Linguistics: ACL 2025, 2025. https://doi.org/10.18653/v1/2025.findings-acl.511
+[^1]: Xiaoxi Li, Jiajie Jin, Guanting Dong, Hongjin Qian, Yongkang Wu, Ji-Rong Wen, Yutao Zhu, and Zhicheng Dou. "WebThinker: Empowering Large Reasoning Models with Deep Research Capability." Advances in Neural Information Processing Systems (NeurIPS), 2025. https://arxiv.org/abs/2504.21776
+[^2]: Ruibin Xiong, Yimeng Chen, Dmitrii Khizbullin, Mingchen Zhuge, and Jürgen Schmidhuber. "Beyond Outlining: Heterogeneous Recursive Planning for Adaptive Long-form Writing with Language Models." Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing, 2025. https://doi.org/10.18653/v1/2025.emnlp-main.1254
+[^3]: Zechen Sun, Yuyang Sun, Zecheng Tang, Juntao Li, Wenpeng Hu, Wenliang Chen, Zhunchen Luo, Guotong Geng, and Min Zhang. "IS-CoT: Breaking the Long-form Generation Collapse via Interleaved Structural Thinking." Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), 2026. https://doi.org/10.18653/v1/2026.acl-long.911
+[^4]: Kaiyang Wan, Honglin Mu, Rui Hao, Haoran Luo, Tianle Gu, and Xiuying Chen. "A Cognitive Writing Perspective for Constrained Long-Form Text Generation." Findings of the Association for Computational Linguistics: ACL 2025, 2025. https://doi.org/10.18653/v1/2025.findings-acl.511
+[^5]: Chaitanya Malaviya, Priyanka Agrawal, Kuzman Ganchev, Pranesh Srinivasan, Fantine Huot, Jonathan Berant, Mark Yatskar, Dipanjan Das, Mirella Lapata, and Chris Alberti. "DOLOMITES: Domain-Specific Long-Form Methodical Tasks." Transactions of the Association for Computational Linguistics, 2025. https://doi.org/10.1162/tacl_a_00727
