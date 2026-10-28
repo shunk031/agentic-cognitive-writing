@@ -3,12 +3,15 @@ title = "Adaptive Task Planning"
 skill = "writing-adaptive-task-planning"
 analysis_family = "confirmatory"
 product_requires_draft = true
+# The coordinator writes the task graph, so it is not a history-only Monitor.
 monitor_writes_history_only = false
 
 [package]
 name = "cognitive-writing-baselines"
 
 [plugins]
+# No codex_adapter: its agent types and spawn instruction are the A4 roles.
+# The A3 coordinator spawns default agents that read their own skill files.
 paths = ["experiments/baselines"]
 
 [adapters]
@@ -24,6 +27,9 @@ claude_code = """/cognitive-writing-baselines:writing-adaptive-task-planning"""
 claude_code = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
 
 [trace]
+# The fidelity gate reads the decomposition and execution agents from the
+# harness records instead of a plugin trace.
+required = false
 retrieval = "N/A"
 evidence = "N/A"
 citation = "N/A"

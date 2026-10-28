@@ -337,12 +337,13 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A2"].goal_events == "forbidden"
     assert registry["A3"].goal_events == "forbidden"
     assert registry["A4"].goal_events == "allowed"
-    monitor_skill_conditions = {"A4", "A5", "A6", "A8"}
-    assert not any(registry[name].trace_required for name in monitor_skill_conditions)
+    # Process history comes from the harness records for these conditions.
+    harness_record_conditions = {"A3", "A4", "A5", "A6", "A8"}
+    assert not any(registry[name].trace_required for name in harness_record_conditions)
     assert all(
         spec.trace_required
         for name, spec in registry.items()
-        if name not in monitor_skill_conditions
+        if name not in harness_record_conditions
     )
     assert registry["A5"].goal_events == "forbidden"
     assert registry["A6"].goal_events == "allowed"
@@ -436,12 +437,6 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
 
     result = runner.run_prompt(prompt, condition_id="A3", platform="codex")
 
-    events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
-    assert [event["process"] for event in events] == [
-        "task-decomposition",
-        "task-execution",
-        "task-revision",
-    ]
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["inputs"]["trace_policy"] == {
         "citation": "N/A",

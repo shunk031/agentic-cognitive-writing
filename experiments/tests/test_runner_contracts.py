@@ -1116,6 +1116,33 @@ def test_agentic_cog_writer_ends_with_the_draft_as_the_final_document() -> None:
     ) in text
 
 
+def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> None:
+    skills = REPO_ROOT / "experiments/baselines/skills"
+    text = (skills / "writing-adaptive-task-planning/SKILL.md").read_text()
+
+    # Each child is a fresh agent that reads its own skill and is closed.
+    for role in ("task-decomposition", "task-execution"):
+        sentence = (
+            f"Read the skill file at plugin/skills/{role}/SKILL.md and follow it."
+        )
+        assert sentence in text
+        child = (skills / role / "SKILL.md").read_text()
+        assert child.startswith(f"---\nname: {role}\n")
+        assert [path.name for path in (skills / role).rglob("*")] == ["SKILL.md"]
+    assert "`spawn_agent` with `fork_context` false" in text
+    assert "`close_agent` it before spawning the next one" in text
+    # Recursion: every task, children included, gets a decomposition verdict.
+    assert "the root and each child alike, to a decomposition agent" in text
+    assert "A task executes only after a decomposition agent has judged it atomic" in (
+        text
+    )
+    # The deliverable is the appended draft, not a final message or a trace.
+    assert "A composition execution appends its prose to `.writing/draft.md`" in text
+    assert "final response" not in text
+    assert "process.jsonl" not in text
+    assert ".writing/task.md" in text
+
+
 def test_single_context_skill_is_the_monitor_skill_running_roles_in_context() -> None:
     def body(path: str) -> str:
         return (REPO_ROOT / path).read_text(encoding="utf-8").split("---\n", 2)[2]
@@ -1835,9 +1862,12 @@ def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
         codex_home=tmp_path / "codex-home",
     )
 
-    staged_files = runner._stage_codex_plugin(condition, tmp_path / "workspace")
+    staged_files = runner._stage_codex_plugin(
+        condition, tmp_path / "workspace", prompt=_prompt()
+    )
 
     assert set(staged_files) == {
+        ".writing/task.md",
         "plugin/skills/cognitive-writing-fixed-order/SKILL.md",
         "plugin/skills/planning/SKILL.md",
         "plugin/skills/reviewing/SKILL.md",
@@ -3253,49 +3283,44 @@ def test_non_draft_condition_accepts_short_output(tmp_path: Path) -> None:
     }
 
 
-def test_a3_production_shaped_trace_and_draft_gate(tmp_path: Path) -> None:
+def test_a3_stages_its_agent_skills_and_scores_the_draft(tmp_path: Path) -> None:
     class A3Executor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
             result = super().run(
                 command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
             )
-            trace_path = cwd / ".writing" / "trace" / "process.jsonl"
-            trace_path.write_text(
-                "".join(
-                    json.dumps(
-                        _event(
-                            "process_switch",
-                            process=process,
-                        )
-                    )
-                    + "\n"
-                    for process in (
-                        "task-decomposition",
-                        "task-execution",
-                        "task-revision",
-                    )
-                )
-            )
-            (cwd / ".writing" / "draft.md").write_text("final " * 60)
+            (cwd / ".writing" / "draft.md").write_text("draft " * 60)
             rollout = Path(env["CODEX_HOME"]) / "sessions" / "attempt.jsonl"
             rollout.parent.mkdir(parents=True, exist_ok=True)
             rollout.write_bytes(result.stdout)
             return result
 
-    output = "final " * 60
     runner = _runner(
         tmp_path,
         executor=A3Executor(
-            [_result(output=output, usage={"output_tokens": 60}, subagent_spawns=1)]
+            [
+                _result(
+                    output="final " * 60,
+                    usage={"output_tokens": 60},
+                    subagent_spawns=1,
+                )
+            ]
         ),
     )
     result = runner.run_prompt(_prompt(), condition_id="A3", platform="codex")
-    events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
-    assert [event["process"] for event in events] == [
-        "task-decomposition",
-        "task-execution",
-        "task-revision",
-    ]
+
+    workspace = result.run_dir / "workspace"
+    for role in ("task-decomposition", "task-execution"):
+        assert (workspace / "plugin/skills" / role / "SKILL.md").read_bytes() == (
+            REPO_ROOT / "experiments/baselines/skills" / role / "SKILL.md"
+        ).read_bytes()
+    task = (workspace / ".writing/task.md").read_text()
+    assert task.startswith("## Assignment\nWrite a memo.")
+    assert not (workspace / ".writing/history.md").exists()
+    # The draft is scored verbatim; A3 needs no plugin trace.
+    assert (result.run_dir / "output.normalized.txt").read_text() == "draft " * 60
+    manifest = json.loads(result.manifest_path.read_text())
+    assert "trace_hash" not in manifest
 
 
 def test_a3_rejects_goal_events_and_goal_fields(tmp_path: Path) -> None:

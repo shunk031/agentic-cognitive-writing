@@ -16,7 +16,6 @@ from .manifest import LANGUAGES
 
 ROLES = ("planning", "translating", "reviewing")
 THREAD_LIMIT_ERROR = "agent thread limit reached"
-_ROLE_TOKEN = re.compile(r"\$(planning|translating|reviewing)\b")
 _SKILL_ROOT = re.compile(r"(?m)^- `r\d+` = `([^`]+)`$")
 # An absolute path, not the tail of a relative or variable-prefixed one.
 _ABSOLUTE_SKILL_FILE = re.compile(r"(?<![\w.~$}-])/[^\s\"'`\\]*/SKILL\.md")
@@ -114,16 +113,18 @@ def check_fidelity(
     codex_home: Path | None,
     requires_draft: bool,
     monitor_writes_history_only: bool,
+    roles: tuple[str, ...] = ROLES,
 ) -> dict[str, Any]:
     """Classify a finished run as scorable or rejected, with every reason.
 
-    ``codex_home`` is the run's own Codex home. When given, every skill root that
+    ``roles`` names the role skills a child may run; each child must read its
+    own. ``codex_home`` is the run's own Codex home. When given, every skill root that
     Codex listed must lie inside it, and every skill file read by absolute path
     inside it or the run's workspace; records from other harnesses pass ``None``.
     """
 
     if platform == "codex":
-        reasons = _codex_reasons(run_dir, monitor_writes_history_only)
+        reasons = _codex_reasons(run_dir, monitor_writes_history_only, roles)
         if codex_home is not None:
             reasons.extend(_skill_isolation_reasons(run_dir, codex_home))
     else:
@@ -344,17 +345,26 @@ def completed_items(events: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     ]
 
 
-def spawn_role(meta: dict[str, Any], prompt: str) -> str | None:
-    """Return a spawned child's role from its agent type or its ``$role`` prompt."""
+def spawn_role(
+    meta: dict[str, Any], prompt: str, roles: tuple[str, ...] = ROLES
+) -> str | None:
+    """Return a spawned child's role from its agent type or its spawn prompt.
+
+    The prompt names the role as a ``$role`` token or a ``skills/role/SKILL.md``
+    path, whichever comes first.
+    """
 
     role = meta.get("agent_role")
-    if role in ROLES:
+    if role in roles:
         return role
-    match = _ROLE_TOKEN.search(prompt)
-    return match.group(1) if match else None
+    names = "|".join(map(re.escape, roles))
+    match = re.search(rf"\$({names})\b|\bskills/({names})/SKILL\.md", prompt)
+    return next(filter(None, match.groups())) if match else None
 
 
-def _codex_reasons(run_dir: Path, monitor_writes_history_only: bool) -> list[str]:
+def _codex_reasons(
+    run_dir: Path, monitor_writes_history_only: bool, roles: tuple[str, ...]
+) -> list[str]:
     events, metas, records, malformed = read_codex_records(run_dir)
     if not events:
         return ["no Codex event stream was recorded"]
@@ -390,8 +400,10 @@ def _codex_reasons(run_dir: Path, monitor_writes_history_only: bool) -> list[str
         if meta.get("forked_from_id"):
             reasons.append(f"child {thread} was spawned with inherited context")
         if meta.get("parent_thread_id"):
-            role = spawn_role(meta, spawn_prompts.get(thread, ""))
-            if role and not _read_own_skill(records[thread], role):
+            role = spawn_role(meta, spawn_prompts.get(thread, ""), roles)
+            if role is None:
+                reasons.append(f"child {thread} was spawned without a role skill")
+            elif not _read_own_skill(records[thread], role):
                 reasons.append(f"{role} agent {thread} did not read its own SKILL.md")
 
     if monitor_writes_history_only:
