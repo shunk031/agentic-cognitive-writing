@@ -1,0 +1,11 @@
+name = "translator"
+description = "Draft writing tasks with the agentic-cognitive-writing plugin."
+
+# Optional overrides. Leave these commented to inherit the parent session.
+# model = "gpt-5"
+# model_reasoning_effort = "medium"
+# sandbox_mode = "read-only"
+
+developer_instructions = """
+Use and follow the agentic-cognitive-writing plugin's `$translating` skill before acting; it defines the required `.writing/` state read and report format. Work only within the delegated draft scope, preserve the user's intent, flag claims that need evidence, and leave goals and process-trace entries to the Monitor.
+"""

@@ -88,29 +88,6 @@ def test_registry_parses_delegation_requirement_with_false_default() -> None:
     assert registry["A8"].require_delegation is False
 
 
-def test_registry_limits_monitor_write_check_to_monitor_conditions() -> None:
-    registry = load_condition_registry()
-
-    assert {
-        condition_id
-        for condition_id, condition in registry.items()
-        if condition.monitor_writes_history_only
-    } == {"A4", "A5", "A6"}
-
-
-def test_unset_monitor_write_flag_enables_the_check(tmp_path: Path) -> None:
-    conditions_dir = _copy_conditions(tmp_path)
-    wrapper_path = conditions_dir / "a8_single_context.toml"
-    wrapper_path.write_text(
-        wrapper_path.read_text(encoding="utf-8").replace(
-            "monitor_writes_history_only = false\n", ""
-        ),
-        encoding="utf-8",
-    )
-
-    assert load_condition_registry(conditions_dir)["A8"].monitor_writes_history_only
-
-
 def test_registry_rejects_non_boolean_delegation_requirement(tmp_path: Path) -> None:
     conditions_dir = _copy_conditions(tmp_path)
     wrapper_path = conditions_dir / "a4_plugin.toml"

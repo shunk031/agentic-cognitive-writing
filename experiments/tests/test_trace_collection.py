@@ -337,16 +337,10 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A2"].goal_events == "forbidden"
     assert registry["A3"].goal_events == "forbidden"
     assert registry["A4"].goal_events == "allowed"
-    monitor_skill_conditions = {"A4", "A6", "A8"}
-    assert not any(registry[name].trace_required for name in monitor_skill_conditions)
-    assert all(
-        spec.trace_required
-        for name, spec in registry.items()
-        if name not in monitor_skill_conditions
-    )
+    assert registry["A4"].require_goal_events is True
     assert registry["A5"].goal_events == "forbidden"
     assert registry["A6"].goal_events == "allowed"
-    assert registry["A6"].require_goal_events is False
+    assert registry["A6"].require_goal_events is True
     assert registry["A7"].goal_events == "allowed"
     assert registry["A7"].require_goal_events is True
     assert registry["A7"].require_delegation is False
@@ -361,7 +355,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A8"].event_types == registry["A4"].event_types
     assert registry["A8"].trace_processes == registry["A4"].trace_processes
     assert registry["A8"].goal_events == "allowed"
-    assert registry["A8"].require_goal_events is False
+    assert registry["A8"].require_goal_events is True
     assert registry["A2"].process_order == (
         "pre-write",
         "write",
@@ -478,14 +472,7 @@ def test_claude_code_delegating_condition_bypasses_codex_delegation_gate(
     result = runner.run_prompt(prompt, condition_id="A3", platform="claude-code")
 
     manifest = json.loads(result.manifest_path.read_text())
-    assert manifest["status"] == "unscored"
-    assert manifest["fidelity_gate"] == {
-        "status": "rejected",
-        "reasons": [
-            "claude-code records expose no subagent or tool events, "
-            "so fidelity cannot be verified"
-        ],
-    }
+    assert manifest["status"] == "completed"
     assert manifest["delegation_check"] == {
         "required": True,
         "spawn_count": 0,

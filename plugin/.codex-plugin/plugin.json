@@ -1,0 +1,10 @@
+{
+  "name": "agentic-cognitive-writing",
+  "version": "0.1.0",
+  "description": "Operationalizes a cognitive process theory of writing as a Monitor skill with planning, translating, and reviewing agents.",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "shunk031"
+  },
+  "skills": "./skills/"
+}

@@ -72,8 +72,12 @@ SINGLE_TURN_CONTRACT = (
     "\n\n## Single-turn contract\n\n"
     "This is a single-turn task with no interactive user; never ask clarification "
     "questions. When the assignment underspecifies audience, purpose, or scope, "
-    "apply genre-appropriate defaults without stating them in the deliverable. "
-    "Do not change the deliverable's content contract."
+    "apply genre-appropriate defaults and record the assumptions. Conditions with "
+    "a `.writing/` workspace record assumptions in `.writing/assumptions.md`. "
+    "Do not state assumptions "
+    "briefly at the top of the deliverable. Conditions without `.writing/` apply "
+    "assumptions without an extra preamble. Do not change the deliverable's content "
+    "contract."
 )
 SINGLE_TURN_CONTRACT_TEXT = SINGLE_TURN_CONTRACT.removeprefix("\n\n") + "\n"
 DELEGATION_CONTRACT = (
@@ -365,8 +369,6 @@ refresh_interval_ms = 120000
     config_root = observed_config_dirs[0]
     assert executor.environments[0] is not None
     assert executor.environments[0][variable] == str(config_root.resolve())
-    if platform == "codex":
-        assert executor.environments[0]["HOME"] == str(config_root / "home")
     assert observed_config_files == [set(allowlist)]
     assert config_root == (tmp_path / "runs" / ".generator-config" / result.run_id)
     assert observed_config_modes == [0o700]
@@ -385,13 +387,8 @@ refresh_interval_ms = 120000
                         "env_http_headers": {"X-Env-Header": "env-value"},
                         "query_params": {"api-version": "version-value"},
                         "auth": {
-                            "command": "env",
-                            "args": [
-                                f"HOME={Path.home()}",
-                                "provider-auth",
-                                "--token",
-                                "token-value",
-                            ],
+                            "command": "provider-auth",
+                            "args": ["--token", "token-value"],
                             "refresh_interval_ms": 120000,
                         },
                     }
@@ -683,18 +680,6 @@ def test_synthesized_codex_config_drops_known_provider_capabilities() -> None:
     assert parsed["model_providers"]["test"] == {"name": "test"}
 
 
-def test_synthesized_codex_config_rejects_string_auth_args() -> None:
-    source_config = {
-        "model_provider": "p",
-        "model_providers": {
-            "p": {"name": "p", "auth": {"command": "helper", "args": "--flag"}}
-        },
-    }
-
-    with pytest.raises(ConfigurationError, match="auth args must be an array"):
-        _synthesized_codex_config(source_config, "xhigh")
-
-
 def test_synthesized_codex_config_round_trips_escaped_unicode_values() -> None:
     source_config = {
         "model_provider": "quoted-provider",
@@ -720,24 +705,11 @@ def test_synthesized_codex_config_round_trips_escaped_unicode_values() -> None:
     rendered = _synthesized_codex_config(source_config, "xhigh")
     parsed = tomllib.loads(rendered)
 
-    provider = source_config["model_providers"]["quoted-provider"]
     assert parsed == {
         "model_provider": "quoted-provider",
         "model_reasoning_effort": "xhigh",
         "model_providers": {
-            "quoted-provider": {
-                **provider,
-                "auth": {
-                    "command": "env",
-                    "args": [
-                        f"HOME={Path.home()}",
-                        r"auth\\helper",
-                        "--label",
-                        '値 "quoted"',
-                    ],
-                    "refresh_interval_ms": 42,
-                },
-            }
+            "quoted-provider": source_config["model_providers"]["quoted-provider"]
         },
     }
 
@@ -934,7 +906,7 @@ def test_codex_prompt_references_workspace_skill_file_without_plugin_install(
     assert "follow it" in prompt
     assert "$agentic-cog-writer" not in prompt
     assert "codex plugin add" not in prompt
-    assert "complete final text itself" not in prompt
+    assert "complete final text itself" in prompt
 
 
 def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> None:
@@ -946,12 +918,10 @@ def test_every_codex_wrapper_uses_file_reference_and_no_install_metadata() -> No
         assert "{codex_plugin_root}" in invocation
         assert "SKILL.md" in invocation
         assert "codex" not in wrapper["install"]
-        # Only a condition without a draft scores its final response.
-        final_text_rule = not condition.product_requires_draft
-        assert ("complete final text itself" in invocation) is final_text_rule
+        assert "complete final text itself" in invocation
         prompt = runner._plugin_prompt(condition, _prompt(), "codex")
         assert f"plugin/skills/{condition.skill_name}/SKILL.md" in prompt
-        assert ("complete final text itself" in prompt) is final_text_rule
+        assert "complete final text itself" in prompt
         if condition.condition_id in DELEGATING_CONDITIONS:
             assert DELEGATION_CONTRACT in prompt
         else:
@@ -1037,6 +1007,19 @@ def test_every_condition_prompt_has_the_uniform_single_turn_contract() -> None:
             assert SINGLE_TURN_CONTRACT in prompt
 
 
+def test_every_wrapper_records_assumptions_in_the_assumptions_file() -> None:
+    expected = (
+        "Conditions with a `.writing/` workspace record assumptions in "
+        "`.writing/assumptions.md`."
+    )
+    for condition in load_condition_registry().values():
+        for platform in ("codex", "claude_code"):
+            prompt = ExperimentRunner(
+                _config(), output_root=Path("runs")
+            )._plugin_prompt(condition, _prompt(), platform.replace("_", "-"))
+            assert expected in prompt
+
+
 def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
     occurrences = 0
     for path in NO_GOAL_SKILL_PATHS:
@@ -1047,108 +1030,133 @@ def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
     assert occurrences == 6
 
 
-def test_agentic_cog_writer_ends_with_the_draft_as_the_final_document() -> None:
+def test_agentic_cog_writer_final_response_checklist_is_non_skippable() -> None:
     text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
         encoding="utf-8"
     )
+    checklist = (
+        "Before sending the final response, complete this non-skippable checklist:\n\n"
+        "1. The complete current document is written to `.writing/draft.md`.\n"
+        "2. The trace holds one goal event (`goal_created`, `goal_developed`, or "
+        "`goal_regenerated`) for every goal recorded in `goals.md` during this run.\n"
+        "3. The final response contains the complete final text."
+    )
+    assert checklist in text
     assert (
-        "Stop when no further process is needed; the draft in `.writing/draft.md` "
-        "is the final document."
+        "The run is `INVALID` unless `.writing/draft.md` exists before the final "
+        "response and the final response contains the complete final text."
     ) in text
 
 
-def test_single_context_skill_is_the_monitor_skill_running_roles_in_context() -> None:
-    def body(path: str) -> str:
-        return (REPO_ROOT / path).read_text(encoding="utf-8").split("---\n", 2)[2]
+@pytest.mark.parametrize("reference_name", ("goals-format.md", "trace-jsonl-schema.md"))
+def test_a8_keeps_a4_trace_contract_and_removes_delegation(
+    reference_name: str,
+) -> None:
+    a4_text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    a8_text = (
+        REPO_ROOT
+        / "experiments/plugin/skills/cognitive-writing-single-context/SKILL.md"
+    ).read_text(encoding="utf-8")
 
-    a8_root = REPO_ROOT / "experiments/plugin/skills/cognitive-writing-single-context"
-    monitor, *roles = body(
-        "experiments/plugin/skills/cognitive-writing-single-context/SKILL.md"
-    ).split("\n\n## ")
-    a4 = body("plugin/skills/agentic-cog-writer/SKILL.md").rstrip("\n").splitlines()
-    changed = {
-        (old, new)
-        for old, new in zip(a4, monitor.splitlines(), strict=True)
-        if old != new
-    }
+    def section(text: str, heading: str, next_heading: str) -> str:
+        return text.split(heading, 1)[1].split(next_heading, 1)[0]
 
-    assert {(old.split(" ")[0], new) for old, new in changed} == {
-        (
-            "Role:",
-            "Role: the Monitor. It selects the next writing process from the state, "
-            "runs it in its own context, and records its decisions; outside a "
-            "process it writes nothing but `.writing/history.md`.",
-        ),
-        (
-            "4.",
-            "4. Run the process, with its scope, in your own context by following "
-            "its role section below; do not spawn an agent. The Reviewing scope is "
-            "this sentence and nothing more: check `.writing/draft.md` against "
-            "`.writing/task.md` and the active goals, correct existing prose, and "
-            "report what is needed next. The Planning scope is this sentence and "
-            "nothing more: read `.writing/task.md`, `.writing/draft.md`, and "
-            "`.writing/goals.md`, and create or develop the goals so that every "
-            "requirement in the task has a goal.",
-        ),
-        (
-            "5.",
-            "5. When the Reviewer recommends replacing a goal, decide whether to "
-            "accept it, record the decision in `.writing/history.md`, and run an "
-            "accepted replacement as `Planning`; the `Monitor` edits "
-            "`.writing/goals.md` only while running `Planning`.",
-        ),
-    }
-    # The role sections are the role skills' bodies, verbatim.
-    assert roles == [
-        f"{role.capitalize()}\n{body(f'plugin/skills/{role}/SKILL.md')}".rstrip("\n")
-        + ("\n" if role == "reviewing" else "")
-        for role in ("planning", "translating", "reviewing")
-    ]
-    assert [path.name for path in a8_root.rglob("*")] == ["SKILL.md"]
+    assert section(a8_text, "## Trace contract", "## References") == section(
+        a4_text, "## Trace contract", "## References"
+    )
+    a8_reference = (
+        REPO_ROOT
+        / "experiments"
+        / "plugin"
+        / "skills"
+        / "cognitive-writing-single-context"
+        / "references"
+        / reference_name
+    )
+    a4_reference = (
+        REPO_ROOT
+        / "plugin"
+        / "skills"
+        / "agentic-cog-writer"
+        / "references"
+        / reference_name
+    )
+    assert a8_reference.read_bytes() == a4_reference.read_bytes()
+    assert "## Delegation briefs" not in a8_text
+    assert "## In-context process execution" in a8_text
+    assert "spawn a native Codex subagent" not in a8_text
+    assert "Tell the user about proposals that affect intent" not in a8_text
+    assert "Let the user override any agent decision." not in a8_text
+    assert "every active goal with its ID plus the parent goal ID" in a8_text
+    assert "Cite the files or draft passages that support decisions." in a8_text
 
 
-def test_fixed_order_skill_is_the_monitor_skill_with_a_fixed_cycle() -> None:
-    def body(path: str) -> list[str]:
-        return (
-            (REPO_ROOT / path)
-            .read_text(encoding="utf-8")
-            .split("---\n", 2)[2]
-            .splitlines()
-        )
+def test_goal_aware_reviewing_reports_and_reconciles_verdicts() -> None:
+    reviewing_text = (REPO_ROOT / "plugin/skills/reviewing/SKILL.md").read_text(
+        encoding="utf-8"
+    )
+    for requirement in (
+        "one verdict for each active goal",
+        "identified by ID",
+        "exactly one of `keep`, `develop`, or `regenerate`",
+        "one sentence of evidence from the draft",
+        "include the proposed replacement purpose",
+        "brief has no goal network",
+        "Use one line per goal in the form",
+        "The verdict word must be lowercase",
+        "not `Keep`, `Develop`, `Regenerate`, or another synonym",
+    ):
+        assert requirement in reviewing_text
 
-    a4 = body("plugin/skills/agentic-cog-writer/SKILL.md")
-    a6 = body("experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md")
-    changed = {(old, new) for old, new in zip(a4, a6, strict=True) if old != new}
+    disposition_sentence = (
+        "Treat `Reviewing` verdicts as proposals. Record `goal_developed` only when "
+        "the Monitor updates that goal and adds its `goals.md` history row; "
+        "otherwise record an unacted-on `develop` verdict as a disposition without "
+        "a goal event."
+    )
+    regeneration_sentence = (
+        "For every `regenerate` verdict, either accept it or reject it. On acceptance, "
+        "update `goals.md` with a history row that keeps the original goal ID marked "
+        "`superseded` and gives the replacement a new goal ID, and emit "
+        "`goal_regenerated` with the replacement's `goal_id` and the original goal's "
+        "`parent_goal_id`; on rejection, write `rejected regeneration of <goal id>: "
+        "<reason>` in the next `process_switch` decision."
+    )
+    enumeration_sentence = (
+        "The next `process_switch` decision after a `Reviewing` pass must enumerate "
+        "every received `regenerate` verdict as `regeneration proposals: G2 accepted "
+        "(<reason>); G4 rejected (<reason>)`, substituting the actual goal IDs and "
+        "reasons, or `regeneration proposals: none` when no `regenerate` verdict was "
+        "received."
+    )
+    post_review_sentence = (
+        "Append that post-`Reviewing` `process_switch` carrying the enumeration before "
+        "either continuing or completing the run."
+    )
+    continuing_sentence = (
+        "If the run continues, set its `to_process` to the next process."
+    )
+    terminal_sentence = (
+        "If the run ends after `Reviewing`, set its `process` and `from_process` to "
+        "`reviewing` and its `to_process` to `null` before completing the run."
+    )
 
-    assert {(old.split(" ")[0], new) for old, new in changed} == {
-        (
-            "Role:",
-            "Role: the Monitor. It selects the next writing process from the fixed "
-            "order, delegates it, and records its decisions; it writes nothing but "
-            "`.writing/history.md`.",
-        ),
-        (
-            "2.",
-            "2. Take the next process in the fixed `Planning`, `Translating`, then "
-            "`Reviewing` order; each pass starts again with `Planning`. Checking the "
-            "draft against the task is Reviewing's work.",
-        ),
-        (
-            "5.",
-            "5. When the Reviewer recommends replacing a goal, decide whether to "
-            "accept it, record the decision in `.writing/history.md`, and delegate an "
-            "accepted replacement to the next pass's `Planning`; the `Monitor` does "
-            "not edit `.writing/goals.md`.",
-        ),
-        (
-            "Stop",
-            "Stop only after `Reviewing`, when no further process is needed; the "
-            "draft in `.writing/draft.md` is the final document.",
-        ),
-    }
+    for path in (
+        REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md",
+        REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md",
+    ):
+        text = path.read_text(encoding="utf-8")
+        assert "every active goal with its ID" in text
+        assert disposition_sentence in text
+        assert regeneration_sentence in text
+        assert enumeration_sentence in text
+        assert post_review_sentence in text
+        assert continuing_sentence in text
+        assert terminal_sentence in text
+        assert "record `goal_developed` for each `develop` verdict" not in text
 
-
-def test_no_goal_delegation_omits_the_goal_context() -> None:
     a5_text = (
         REPO_ROOT
         / "experiments/plugin/skills/cognitive-writing-no-goal-network/SKILL.md"
@@ -1159,6 +1167,16 @@ def test_no_goal_delegation_omits_the_goal_context() -> None:
     assert "- the assignment summary" in a5_delegation
     assert "goal network" not in a5_delegation.lower()
     assert "active goal" not in a5_delegation.lower()
+
+    fixed_cycle_sentence = (
+        "After a `regenerate` disposition, do not return to `Planning` within the "
+        "current pass or change the fixed order; complete the `Reviewing` pass, "
+        "then begin the next pass with `Planning`."
+    )
+    fixed_order_text = (
+        REPO_ROOT / "experiments/plugin/skills/cognitive-writing-fixed-order/SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert fixed_cycle_sentence in fixed_order_text
 
 
 @pytest.mark.parametrize(
@@ -1350,39 +1368,21 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         "skills/translating/SKILL.md": "translating role\n",
         "skills/reviewing/SKILL.md": "reviewing role\n",
     }
-    adapter_files = {
-        "agents/planning.toml": 'name = "planning"\n',
-        "agents/translating.toml": 'name = "translating"\n',
-        "agents/reviewing.toml": 'name = "reviewing"\n',
-        "rules/deny.rules": 'prefix_rule(pattern=["git"], decision="forbidden")\n',
-        "config.toml": 'developer_instructions = "Delegate."\n',
-    }
-    for relative, content in (
-        *files.items(),
-        *((f"codex/{name}", text) for name, text in adapter_files.items()),
-    ):
+    for relative, content in files.items():
         path = source_root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
-    codex_source = tmp_path / "codex-home"
-    codex_source.mkdir()
-    (codex_source / "config.toml").write_text(
-        'model_provider = "p"\n\n[model_providers.p]\nname = "p"\n'
-    )
-    observed_homes: list[dict[str, str]] = []
-    observed_configs: list[dict[str, object]] = []
 
     class StageExecutor:
         def run(self, command, *, cwd, timeout_seconds, env=None):
-            home = Path(env["CODEX_HOME"])
-            observed_homes.append(
-                {
-                    path.relative_to(home).as_posix(): path.read_text()
-                    for path in home.rglob("*")
-                    if path.is_file()
-                }
+            trace_path = cwd / ".writing" / "trace" / "process.jsonl"
+            trace_path.parent.mkdir(parents=True, exist_ok=True)
+            trace_path.write_text(
+                json.dumps(_event("process_switch"))
+                + "\n"
+                + json.dumps(_event("goal_created"))
+                + "\n"
             )
-            observed_configs.append(tomllib.loads((home / "config.toml").read_text()))
             (cwd / ".writing" / "draft.md").write_text("final output " * 10)
             result = _result(subagent_spawns=1)
             rollout = Path(env["CODEX_HOME"]) / "sessions" / "attempt.jsonl"
@@ -1395,49 +1395,22 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
         output_root=tmp_path / "runs",
         executor=StageExecutor(),
         codex_plugin_root=source_root,
-        codex_home=codex_source,
+        codex_home=tmp_path / "codex-home",
     )
 
     result = runner.run_prompt(
         _prompt(), condition_id="A4", platform="codex", run_id="staged"
     )
 
-    expected_home = {
-        **files,
-        **{name: text for name, text in adapter_files.items() if "/" in name},
-    }
-    [home] = observed_homes
-    assert {
-        name: text for name, text in home.items() if name != "config.toml"
-    } == expected_home
-    assert observed_configs == [
-        {
-            "developer_instructions": "Delegate.",
-            "model_provider": "p",
-            "model_reasoning_effort": "xhigh",
-            "model_providers": {"p": {"name": "p"}},
-        }
-    ]
     manifest = json.loads(result.manifest_path.read_text())
-    # A4 needs no plugin trace: the run reaches the fidelity gate without one.
-    assert "failure" not in manifest
-    assert "trace_hash" not in manifest
-    assert "fidelity_gate" in manifest
     staged_files = manifest["staged_files"]
-    task = (result.run_dir / "workspace" / ".writing" / "task.md").read_text()
-    assert task == (
-        "## Assignment\nWrite a memo.\n\n"
-        "## Supplied context\nProvided facts only.\n\n"
-        "## Requested output constraints\n{}\n"
-    )
     assert set(staged_files) == {
-        *(f"plugin/{relative}" for relative in files),
-        *(f"CODEX_HOME/{relative}" for relative in (*expected_home, "config.toml")),
-        ".writing/task.md",
+        "plugin/skills/agentic-cog-writer/SKILL.md",
+        "plugin/skills/agentic-cog-writer/references/trace.md",
+        "plugin/skills/planning/SKILL.md",
+        "plugin/skills/translating/SKILL.md",
+        "plugin/skills/reviewing/SKILL.md",
     }
-    assert staged_files["CODEX_HOME/config.toml"] == (
-        "sha256:" + hashlib.sha256(home["config.toml"].encode()).hexdigest()
-    )
     for relative, content in files.items():
         staged = result.run_dir / "workspace" / "plugin" / relative
         assert staged.read_text() == content
@@ -1463,89 +1436,13 @@ def test_codex_stages_skill_references_roles_and_hashes(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     ("condition_id", "skill_name"),
-    (("A4", "agentic-cog-writer"), ("A6", "cognitive-writing-fixed-order")),
+    (
+        ("A5", "cognitive-writing-no-goal-network"),
+        ("A6", "cognitive-writing-fixed-order"),
+        ("A8", "cognitive-writing-single-context"),
+    ),
 )
-def test_monitor_conditions_install_the_repository_plugin_codex_adapter(
-    tmp_path: Path, condition_id: str, skill_name: str
-) -> None:
-    home = tmp_path / "home"
-    home.mkdir()
-    runner = ExperimentRunner(_config(), output_root=tmp_path / "runs")
-
-    runner._stage_codex_plugin(
-        load_condition_registry()[condition_id],
-        tmp_path / "workspace",
-        codex_home=home,
-        prompt=_prompt(),
-    )
-
-    roles = ("planning", "translating", "reviewing")
-    assert sorted(path.name for path in (home / "skills").iterdir()) == sorted(
-        (skill_name, *roles)
-    )
-    assert all(
-        (home / "skills" / name / "SKILL.md").is_file() for name in (skill_name, *roles)
-    )
-    # A6 stages exactly what A4 stages; only the Monitor's SKILL.md differs.
-    assert [path.name for path in (home / "skills" / skill_name).rglob("*")] == [
-        "SKILL.md"
-    ]
-    assert sorted(path.name for path in (home / "agents").iterdir()) == sorted(
-        f"{role}.toml" for role in roles
-    )
-    assert [path.name for path in (home / "rules").iterdir()] == ["deny.rules"]
-    assert "developer_instructions" in tomllib.loads((home / "config.toml").read_text())
-
-
-def test_single_context_installs_the_adapter_rules_without_delegation(
-    tmp_path: Path,
-) -> None:
-    home = tmp_path / "home"
-    home.mkdir()
-    (home / "config.toml").write_text('model_reasoning_effort = "medium"\n')
-    runner = ExperimentRunner(_config(), output_root=tmp_path / "runs")
-
-    staged = runner._stage_codex_plugin(
-        load_condition_registry()["A8"],
-        tmp_path / "workspace",
-        codex_home=home,
-        prompt=_prompt(),
-    )
-
-    skill = home / "skills" / "cognitive-writing-single-context"
-    assert sorted(path.name for path in home.iterdir()) == [
-        "config.toml",
-        "rules",
-        "skills",
-    ]
-    assert [path.name for path in (home / "skills").iterdir()] == [skill.name]
-    assert [path.name for path in skill.rglob("*")] == ["SKILL.md"]
-    assert [path.name for path in (home / "rules").iterdir()] == ["deny.rules"]
-    assert (home / "config.toml").read_text() == 'model_reasoning_effort = "medium"\n'
-    assert ".writing/task.md" in staged
-
-
-def test_codex_adapter_config_conflicting_with_runner_settings_is_rejected(
-    tmp_path: Path,
-) -> None:
-    adapter = tmp_path / "plugin" / "codex"
-    for relative in ("agents", "rules"):
-        (adapter / relative).mkdir(parents=True)
-    (adapter / "config.toml").write_text('model_reasoning_effort = "low"\n')
-    home = tmp_path / "home"
-    home.mkdir()
-    (home / "config.toml").write_text('model_reasoning_effort = "medium"\n')
-
-    with pytest.raises(ConfigurationError, match="conflicts"):
-        ExperimentRunner._install_codex_adapter(adapter, {}, home, delegated=True)
-    assert (home / "config.toml").read_text() == 'model_reasoning_effort = "medium"\n'
-
-
-@pytest.mark.parametrize(
-    ("condition_id", "skill_name"),
-    (("A5", "cognitive-writing-no-goal-network"),),
-)
-def test_codex_stages_delegated_roles_and_trace_schema_for_a5(
+def test_codex_stages_delegated_roles_and_trace_schema_for_a5_a6_a8(
     tmp_path: Path, condition_id: str, skill_name: str
 ) -> None:
     source_root = tmp_path / "plugin-source"
@@ -1612,9 +1509,14 @@ def test_codex_stages_split_plugin_roots_with_explicit_experiment_root(
 
     assert set(staged_files) == {
         "plugin/skills/cognitive-writing-fixed-order/SKILL.md",
+        "plugin/skills/cognitive-writing-fixed-order/agents/openai.yaml",
+        "plugin/skills/cognitive-writing-fixed-order/evals/evals.json",
         "plugin/skills/planning/SKILL.md",
+        "plugin/skills/planning/agents/openai.yaml",
         "plugin/skills/reviewing/SKILL.md",
+        "plugin/skills/reviewing/agents/openai.yaml",
         "plugin/skills/translating/SKILL.md",
+        "plugin/skills/translating/agents/openai.yaml",
     }
 
 
@@ -1711,12 +1613,7 @@ def test_a8_accepts_in_context_execution_without_spawn_event(tmp_path: Path) -> 
     result = runner.run_prompt(_prompt(), condition_id="A8", platform="codex")
 
     manifest = json.loads(result.manifest_path.read_text())
-    assert manifest["status"] == "unscored"
-    assert manifest["scoring"] == {"status": "excluded"}
-    assert manifest["fidelity_gate"] == {
-        "status": "rejected",
-        "reasons": ["Codex event stream has no thread.started event"],
-    }
+    assert manifest["status"] == "completed"
     assert manifest["subagent_spawn_count"] == 0
     assert manifest["delegation_check"] == {
         "required": False,
@@ -1724,38 +1621,10 @@ def test_a8_accepts_in_context_execution_without_spawn_event(tmp_path: Path) -> 
         "execution_mode": "in_context",
         "passed": True,
     }
-
-
-def test_codex_run_with_complete_clean_records_stays_scoring_eligible(
-    tmp_path: Path,
-) -> None:
-    class RecordedExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds, env=None):
-            rollout = Path(env["CODEX_HOME"]) / "sessions" / "rollout-session-1.jsonl"
-            rollout.parent.mkdir(parents=True)
-            rollout.write_text(
-                json.dumps({"type": "session_meta", "payload": {"id": "session-1"}})
-                + "\n"
-            )
-            return super().run(
-                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
-            )
-
-    result = _result()
-    started = json.dumps({"type": "thread.started", "thread_id": "session-1"})
-    result = replace(result, stdout=f"{started}\n".encode() + result.stdout)
-    runner = _runner(
-        tmp_path / "runs",
-        executor=RecordedExecutor([result]),
-        codex_home=tmp_path / "codex-home",
-    )
-
-    run = runner.run_prompt(_prompt(), condition_id="A1", platform="codex")
-
-    manifest = json.loads(run.manifest_path.read_text())
-    assert manifest["fidelity_gate"] == {"status": "scorable", "reasons": []}
-    assert manifest["status"] == "completed"
-    assert manifest["scoring"] == {"status": "eligible"}
+    assert [
+        json.loads(line)["event_type"]
+        for line in result.trace_path.read_text().splitlines()
+    ] == ["process_switch", "goal_created"]
 
 
 def test_required_delegation_fails_closed_without_spawn_event(tmp_path: Path) -> None:
@@ -2543,10 +2412,17 @@ class _RetryExecutor:
         trace_path = cwd / ".writing" / "trace" / "process.jsonl"
         trace_path.parent.mkdir(parents=True, exist_ok=True)
         if any("cognitive-writing-single-context" in argument for argument in command):
+            trace_path.write_text(
+                json.dumps(_event("process_switch", process="planning"))
+                + "\n"
+                + json.dumps(_event("goal_created", process="goal-setting"))
+                + "\n"
+            )
             (cwd / ".writing" / "draft.md").write_text("draft " * 10)
-        trace_path.write_text(
-            json.dumps(_event("process_switch", process="generate")) + "\n"
-        )
+        else:
+            trace_path.write_text(
+                json.dumps(_event("process_switch", process="generate")) + "\n"
+            )
         return self.results.pop(0)
 
 
@@ -2660,54 +2536,45 @@ def test_a5_rejects_a_new_goals_file(tmp_path: Path) -> None:
         runner.run_prompt(_prompt(), condition_id="A5", platform="codex")
 
 
-def test_draft_product_scores_draft_md_verbatim(tmp_path: Path) -> None:
-    draft_bytes = b"# Title\r\n\r\nBody text with trailing space.  \n\n"
-
-    class DraftExecutor(_RetryExecutor):
+def test_runner_rejects_a_summary_when_workspace_draft_is_the_product(
+    tmp_path: Path,
+) -> None:
+    class SummaryExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
             result = super().run(
                 command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
             )
-            (cwd / ".writing" / "draft.md").write_bytes(draft_bytes)
+            draft = cwd / ".writing" / "draft.md"
+            draft.write_text("draft " * 100)
             return result
 
     runner = _runner(
-        tmp_path, executor=DraftExecutor([_result(output="short summary")])
+        tmp_path,
+        executor=SummaryExecutor([_result(output="short summary")]),
     )
 
-    result = runner.run_prompt(_prompt(), condition_id="A8", platform="codex")
+    with pytest.raises(ExecutionError, match="less than 50% of draft.md"):
+        runner.run_prompt(
+            _prompt(),
+            condition_id="A3",
+            platform="codex",
+            run_id="summary-output",
+        )
 
-    run_dir = result.run_dir
-    assert (run_dir / "output.normalized.txt").read_bytes() == draft_bytes
-    assert (run_dir / "output.raw").read_bytes() == draft_bytes
-    manifest = json.loads(result.manifest_path.read_text())
+    run_dir = tmp_path / "WritingBench" / "A3" / "codex" / "summary-output"
+    assert not (run_dir / "output.raw").exists()
     assert (
-        manifest["output_hash"] == f"sha256:{hashlib.sha256(draft_bytes).hexdigest()}"
+        (run_dir / "workspace" / ".writing" / "draft.md")
+        .read_text()
+        .startswith("draft")
     )
-    assert manifest["product_gate"]["rule"] == (
-        "workspace/.writing/draft.md is the scored output, verbatim"
-    )
-    assert (
-        "scored output is not workspace/.writing/draft.md"
-        not in manifest["fidelity_gate"]["reasons"]
-    )
+    manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    assert manifest["failure"]["type"] == "ExecutionError"
+    assert manifest["failure"]["message"].endswith("final_chars=13, draft_chars=599")
 
 
-@pytest.mark.parametrize(
-    ("draft", "message"),
-    [
-        (
-            None,
-            "requires workspace/.writing/draft.md as its scored output; "
-            "the workspace has no draft.md",
-        ),
-        ("  \n", "wrote an empty workspace/.writing/draft.md"),
-    ],
-)
-def test_draft_product_without_draft_fails_with_reason(
-    tmp_path: Path, draft: str | None, message: str
-) -> None:
-    class A2Executor(_RetryExecutor):
+def test_a2_rejects_short_response_against_its_draft(tmp_path: Path) -> None:
+    class A2DraftExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
             result = super().run(
                 command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
@@ -2730,25 +2597,18 @@ def test_draft_product_without_draft_fails_with_reason(
                     )
                 )
             )
-            if draft is not None:
-                (cwd / ".writing" / "draft.md").write_text(draft)
+            (cwd / ".writing" / "draft.md").write_text("draft " * 300)
             return result
 
     runner = _runner(
-        tmp_path, executor=A2Executor([_result(output="complete text " * 100)])
+        tmp_path,
+        executor=A2DraftExecutor(
+            [_result(output="one two three four five six seven eight nine ten")]
+        ),
     )
 
-    with pytest.raises(ExecutionError, match=re.escape(message)):
-        runner.run_prompt(
-            _prompt(), condition_id="A2", platform="codex", run_id="no-draft"
-        )
-
-    run_dir = tmp_path / "WritingBench" / "A2" / "codex" / "no-draft"
-    assert not (run_dir / "output.raw").exists()
-    assert not (run_dir / "output.normalized.txt").exists()
-    manifest = json.loads((run_dir / "run-manifest.json").read_text())
-    assert manifest["failure"]["type"] == "ExecutionError"
-    assert message in manifest["failure"]["message"]
+    with pytest.raises(ExecutionError, match="less than 50% of draft.md"):
+        runner.run_prompt(_prompt(), condition_id="A2", platform="codex")
 
 
 def test_runner_does_not_substitute_draft_for_empty_final_response(
@@ -2976,27 +2836,17 @@ def test_non_draft_condition_accepts_short_output(tmp_path: Path) -> None:
         requested_output_constraints={"min_words": 20},
         row_hash="row-hash",
     )
-
-    class StrayDraftExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds, env=None):
-            result = super().run(
-                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
-            )
-            (cwd / ".writing" / "draft.md").write_text("stray draft " * 50)
-            return result
-
     runner = _runner(
         tmp_path,
-        executor=StrayDraftExecutor(
-            [_result(output="short", usage={"output_tokens": 2})]
-        ),
+        executor=_RetryExecutor([_result(output="short", usage={"output_tokens": 2})]),
     )
 
-    result = runner.run_prompt(prompt, condition_id="A1", platform="codex")
+    runner.run_prompt(prompt, condition_id="A1", platform="codex")
 
-    # A1 has no draft product, so its final response stays the scored output.
-    assert (result.run_dir / "output.normalized.txt").read_text() == "short"
-    manifest = json.loads(result.manifest_path.read_text())
+    run_dir = tmp_path / "WritingBench" / "A1" / "codex"
+    manifest = json.loads(
+        next(run_dir.iterdir()).joinpath("run-manifest.json").read_text()
+    )
     assert manifest["product_gate"] == {
         "requires_draft": False,
         "rule": "final response must be non-empty",

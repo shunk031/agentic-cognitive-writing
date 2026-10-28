@@ -38,7 +38,6 @@ from .execution import (
     extract_token_usage,
     reject_retrieval,
 )
-from .fidelity import check_fidelity
 from .hashing import sha256_bytes, sha256_file
 from .manifest import PromptRecord, load_benchmark_provenance
 from .trace import (
@@ -75,6 +74,7 @@ class RunResult:
     run_id: str
 
 
+FINAL_OUTPUT_DRAFT_RATIO = 0.5
 _GENERATOR_CONFIG_ENV = {
     "codex": "CODEX_HOME",
     "claude-code": "CLAUDE_CONFIG_DIR",
@@ -128,26 +128,6 @@ def _assert_guidance_free_workspace(workspace: Path) -> None:
         raise ConfigurationError(
             f"Refusing to start: workspace has guidance ancestors: {markers}"
         )
-
-
-def _shared_values(prompt: PromptRecord) -> dict[str, str]:
-    return {
-        "assignment": prompt.input_text,
-        "supplied_context": prompt.supplied_context or "(none)",
-        "output_constraints": json.dumps(
-            prompt.requested_output_constraints, ensure_ascii=False, sort_keys=True
-        ),
-    }
-
-
-def _task_sections(shared_values: Mapping[str, str]) -> dict[str, str]:
-    return {
-        "assignment": f"## Assignment\n{shared_values['assignment']}",
-        "supplied_context": f"## Supplied context\n{shared_values['supplied_context']}",
-        "output_constraints": (
-            f"## Requested output constraints\n{shared_values['output_constraints']}"
-        ),
-    }
 
 
 def _generator_model_family(runtime_config: RuntimeConfig, platform: str) -> str:
@@ -289,16 +269,6 @@ def _synthesized_codex_config(
         auth = provider["auth"]
         if not isinstance(auth, Mapping):
             raise ConfigurationError("Codex provider auth must be a table")
-        if not isinstance(auth.get("args", []), list):
-            raise ConfigurationError("Codex provider auth args must be an array")
-        if "command" in auth:
-            # The child Codex runs with a per-run HOME so that it discovers no
-            # host skills; the host's credential command keeps the host HOME.
-            auth = {
-                **auth,
-                "command": "env",
-                "args": [f"HOME={Path.home()}", auth["command"], *auth.get("args", [])],
-            }
         lines.extend(["", f"[model_providers.{provider_key}.auth]"])
         for key, value in auth.items():
             kind = _CODEX_AUTH_SCHEMA.get(key)
@@ -316,36 +286,34 @@ def _synthesized_codex_config(
     return "\n".join(lines) + "\n"
 
 
-def _scored_output(
-    stdout: bytes, draft_path: Path, *, condition_id: str, requires_draft: bool
-) -> bytes:
-    """Return the scored product: draft.md verbatim, or the final response."""
+def _validate_final_product(
+    output: str,
+    draft: str | None,
+    *,
+    condition_id: str,
+    requires_draft: bool,
+) -> None:
+    """Require the response channel to carry the complete product text."""
 
-    if not requires_draft:
-        output = extract_output(stdout)
-        if not output.strip():
+    final_chars = len(output.strip())
+    if not final_chars:
+        raise ExecutionError(
+            f"Condition {condition_id} produced no final response; "
+            "draft.md is not accepted as a substitute"
+        )
+    if requires_draft and draft is None:
+        raise ExecutionError(
+            f"Condition {condition_id} requires workspace/.writing/draft.md; "
+            "the final response cannot substitute for a missing draft"
+        )
+    if requires_draft and draft is not None:
+        draft_chars = len(draft.strip())
+        if final_chars < draft_chars * FINAL_OUTPUT_DRAFT_RATIO:
             raise ExecutionError(
-                f"Condition {condition_id} produced no final response; "
-                "draft.md is not accepted as a substitute"
+                f"Condition {condition_id} final response is less than "
+                f"{FINAL_OUTPUT_DRAFT_RATIO:.0%} of draft.md; "
+                f"final_chars={final_chars}, draft_chars={draft_chars}"
             )
-        return output.encode("utf-8")
-    if not draft_path.is_file():
-        raise ExecutionError(
-            f"Condition {condition_id} requires workspace/.writing/draft.md "
-            "as its scored output; the workspace has no draft.md"
-        )
-    try:
-        draft = draft_path.read_bytes()
-        text = draft.decode("utf-8")
-    except (OSError, UnicodeError) as exc:
-        raise ExecutionError(
-            f"Cannot read workspace draft {draft_path}: {exc}"
-        ) from exc
-    if not text.strip():
-        raise ExecutionError(
-            f"Condition {condition_id} wrote an empty workspace/.writing/draft.md"
-        )
-    return draft
 
 
 def _delegation_check(
@@ -373,7 +341,10 @@ def _product_gate(condition: ConditionSpec, config: RuntimeConfig) -> dict[str, 
     if condition.product_requires_draft:
         return {
             "requires_draft": True,
-            "rule": "workspace/.writing/draft.md is the scored output, verbatim",
+            "rule": (
+                "workspace/.writing/draft.md must exist and the final response "
+                "must be at least 50% of its characters"
+            ),
             "unit": config.output_unit,
         }
     return {
@@ -562,10 +533,6 @@ class ExperimentRunner:
         try:
             config_root.mkdir(mode=0o700, parents=True, exist_ok=False)
             created_config_root = True
-            if platform == "codex":
-                # Codex lists $HOME/.agents/skills as a user skill root and no config
-                # key disables it, so the child gets an empty HOME in its own home.
-                (config_root / "home").mkdir(mode=0o700)
             for filename in _GENERATOR_CONFIG_ALLOWLIST[platform]:
                 source = source_root / filename
                 try:
@@ -607,8 +574,6 @@ class ExperimentRunner:
 
         child_environment = dict(os.environ)
         child_environment[_GENERATOR_CONFIG_ENV[platform]] = str(config_root.resolve())
-        if platform == "codex":
-            child_environment["HOME"] = str((config_root / "home").resolve())
         return config_root, child_environment
 
     def _sweep_stale_generator_configs(self) -> None:
@@ -783,12 +748,7 @@ class ExperimentRunner:
                     f"pinned version {expected_version!r}"
                 )
             if platform == "codex":
-                staged_files = self._stage_codex_plugin(
-                    condition,
-                    workspace,
-                    codex_home=generator_config_dir,
-                    prompt=prompt,
-                )
+                staged_files = self._stage_codex_plugin(condition, workspace)
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -990,16 +950,25 @@ class ExperimentRunner:
                     else None
                 ),
             )
-            scored = _scored_output(
-                result.stdout,
-                workspace / ".writing" / "draft.md",
+            output = extract_output(result.stdout)
+            draft_path = workspace / ".writing" / "draft.md"
+            draft = None
+            if draft_path.is_file():
+                try:
+                    draft = draft_path.read_text(encoding="utf-8")
+                except (OSError, UnicodeError) as exc:
+                    raise ExecutionError(
+                        f"Cannot read workspace draft {draft_path}: {exc}"
+                    ) from exc
+            reject_retrieval(output.encode("utf-8"), b"")
+            budget.consume(
+                self.runtime_config.count_output_units(output), stage="final_output"
+            )
+            _validate_final_product(
+                output,
+                draft,
                 condition_id=condition.condition_id,
                 requires_draft=condition.product_requires_draft,
-            )
-            reject_retrieval(scored, b"")
-            budget.consume(
-                self.runtime_config.count_output_units(scored.decode("utf-8")),
-                stage="final_output",
             )
             if condition.goal_events == "forbidden":
                 assert_untouched(protected_goals, goals_before)
@@ -1009,31 +978,30 @@ class ExperimentRunner:
                 started_at=started_at,
                 manifest_written_at=timestamp(),
             )
-            copied_trace = run_dir / required_trace
-            if condition.trace_required:
-                if not trace_path.is_file():
-                    raise ExecutionError(
-                        f"Condition {condition.condition_id} produced no plugin "
-                        f"trace at {trace_path}"
-                    )
-                trace_files = collect_plugin_trace(workspace, run_dir)
-                if required_trace not in trace_files or not copied_trace.is_file():
-                    raise ExecutionError(
-                        f"Condition {condition.condition_id} could not collect "
-                        f"plugin trace from {trace_path}"
-                    )
-                reject_retrieval(copied_trace.read_bytes(), b"")
-                validate_trace(
-                    copied_trace,
-                    condition_id=condition.condition_id,
-                    declared_processes=condition.trace_processes,
-                    goal_events=condition.goal_events,
-                    allowed_event_types=condition.event_types,
-                    min_events=condition.min_events,
-                    max_events=condition.max_events,
-                    process_order=condition.process_order,
-                    require_goal_events=condition.require_goal_events,
+            if not trace_path.is_file():
+                raise ExecutionError(
+                    f"Condition {condition.condition_id} produced no plugin trace at "
+                    f"{trace_path}"
                 )
+            trace_files = collect_plugin_trace(workspace, run_dir)
+            copied_trace = run_dir / required_trace
+            if required_trace not in trace_files or not copied_trace.is_file():
+                raise ExecutionError(
+                    f"Condition {condition.condition_id} could not collect plugin "
+                    f"trace from {trace_path}"
+                )
+            reject_retrieval(copied_trace.read_bytes(), b"")
+            validate_trace(
+                copied_trace,
+                condition_id=condition.condition_id,
+                declared_processes=condition.trace_processes,
+                goal_events=condition.goal_events,
+                allowed_event_types=condition.event_types,
+                min_events=condition.min_events,
+                max_events=condition.max_events,
+                process_order=condition.process_order,
+                require_goal_events=condition.require_goal_events,
+            )
             delegation_check = _delegation_check(
                 condition, platform, len(subagent_spawn_ids)
             )
@@ -1048,15 +1016,8 @@ class ExperimentRunner:
                     f"execution; {len(subagent_spawn_ids)} spawn_agent event(s) "
                     "were observed"
                 )
-            output_path.write_bytes(scored)
-            normalized_path.write_bytes(scored)
-            fidelity_gate = check_fidelity(
-                run_dir,
-                platform=platform,
-                codex_home=generator_config_dir.resolve(),
-                requires_draft=condition.product_requires_draft,
-                monitor_writes_history_only=condition.monitor_writes_history_only,
-            )
+            output_path.write_bytes(output.encode("utf-8"))
+            normalized_path.write_text(output, encoding="utf-8")
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -1065,21 +1026,13 @@ class ExperimentRunner:
                     platform=platform,
                     adapter=adapter,
                     run_id=run_id,
-                    status=(
-                        "completed"
-                        if fidelity_gate["status"] == "scorable"
-                        else "unscored"
-                    ),
+                    status="completed",
                     started_at=started_at,
                     cli_version=cli_version,
                     attempts=attempts,
                     budget=budget,
                     output_hash=f"sha256:{sha256_file(output_path)}",
-                    trace_hash=(
-                        f"sha256:{sha256_file(copied_trace)}"
-                        if condition.trace_required
-                        else None
-                    ),
+                    trace_hash=f"sha256:{sha256_file(copied_trace)}",
                     stage_prompt_hashes=stage_prompt_hashes,
                     contract_hashes=contract_hashes,
                     benchmark_provenance=benchmark_provenance,
@@ -1093,7 +1046,6 @@ class ExperimentRunner:
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
-                    fidelity_gate=fidelity_gate,
                 ),
             )
             return RunResult(
@@ -1341,11 +1293,25 @@ class ExperimentRunner:
             contract_texts[name].removesuffix("\n") for name in contract_names
         )
         invocation = f"{invocation}\n\n{contracts}"
-        shared_values = _shared_values(prompt)
+        constraints = json.dumps(
+            prompt.requested_output_constraints,
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+        shared_values = {
+            "assignment": prompt.input_text,
+            "supplied_context": prompt.supplied_context or "(none)",
+            "output_constraints": constraints,
+        }
         stage_text, carried_tokens = self._stage_prompt_text(condition, shared_values)
+        generic_values = [
+            f"## Assignment\n{shared_values['assignment']}",
+            f"## Supplied context\n{shared_values['supplied_context']}",
+            f"## Requested output constraints\n{shared_values['output_constraints']}",
+        ]
         generic_block = "\n\n".join(
             value
-            for token, value in _task_sections(shared_values).items()
+            for token, value in zip(_SHARED_STAGE_TOKENS, generic_values, strict=True)
             if token not in carried_tokens
         )
         if generic_block:
@@ -1508,25 +1474,13 @@ class ExperimentRunner:
         "agentic-cog-writer": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-no-goal-network": _CODEX_ROLE_SKILL_DIRECTORIES,
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
+        "cognitive-writing-single-context": _CODEX_ROLE_SKILL_DIRECTORIES,
     }
 
     def _stage_codex_plugin(
-        self,
-        condition: ConditionSpec,
-        workspace: Path,
-        *,
-        codex_home: Path | None = None,
-        prompt: PromptRecord | None = None,
+        self, condition: ConditionSpec, workspace: Path
     ) -> dict[str, str]:
-        """Stage the invoked skill and delegated role skills inside the workspace.
-
-        A wrapper that names ``plugins.codex_adapter`` also installs the plugin's
-        Codex adapter into ``codex_home``: the staged skills under ``skills/``,
-        the adapter's ``agents/`` and ``rules/``, and its ``config.toml`` layered
-        over the runner's synthesized one; an in-context condition gets only the
-        skills and rules. It also writes the prompt's task sections to
-        ``.writing/task.md``, the plugin's task state.
-        """
+        """Stage the invoked skill and delegated role skills inside the workspace."""
 
         selected_root = self._codex_plugin_root(condition)
         source_roots = (
@@ -1564,102 +1518,11 @@ class ExperimentRunner:
                 staged_root / relative,
                 dirs_exist_ok=True,
             )
-        staged = {
+        return {
             path.relative_to(workspace).as_posix(): f"sha256:{sha256_file(path)}"
             for path in sorted(staged_root.rglob("*"))
             if path.is_file()
         }
-        adapter = self._wrapper(condition)["plugins"].get("codex_adapter")
-        if adapter is None:
-            return staged
-        if codex_home is None or prompt is None:
-            raise ConfigurationError(
-                "Codex adapter staging requires a Codex home and a prompt"
-            )
-        # An ablation skill lives in another root than the plugin's adapter.
-        adapter_root = next(
-            (root / adapter for root in source_roots if (root / adapter).is_dir()),
-            None,
-        )
-        if adapter_root is None:
-            raise ManifestError(
-                f"No configured plugin path has Codex adapter {adapter}"
-            )
-        self._install_codex_adapter(
-            adapter_root,
-            sources,
-            codex_home,
-            delegated=condition.require_delegation,
-        )
-        task_path = workspace / ".writing" / "task.md"
-        task_path.parent.mkdir(parents=True, exist_ok=True)
-        task_path.write_text(
-            "\n\n".join(_task_sections(_shared_values(prompt)).values()) + "\n",
-            encoding="utf-8",
-        )
-        staged[".writing/task.md"] = f"sha256:{sha256_file(task_path)}"
-        staged.update(
-            {
-                f"CODEX_HOME/{path.relative_to(codex_home).as_posix()}": (
-                    f"sha256:{sha256_file(path)}"
-                )
-                for path in sorted(codex_home.rglob("*"))
-                if path.is_file()
-                and path.relative_to(codex_home).parts[0]
-                in {"skills", "agents", "rules", "config.toml"}
-            }
-        )
-        return staged
-
-    @staticmethod
-    def _install_codex_adapter(
-        adapter_root: Path,
-        sources: Mapping[Path, Path],
-        codex_home: Path,
-        *,
-        delegated: bool,
-    ) -> None:
-        """Install skills, agents, rules, and layered config into ``codex_home``.
-
-        The agents and the config's spawn instruction are the delegation
-        mechanism, so an in-context condition installs only skills and rules.
-        """
-
-        directories = ("agents", "rules") if delegated else ("rules",)
-        required = (*directories, "config.toml") if delegated else directories
-        for relative in required:
-            if not (adapter_root / relative).exists():
-                raise ManifestError(
-                    f"Codex adapter {adapter_root} is missing {relative}"
-                )
-        for relative, source in sources.items():
-            shutil.copytree(source, codex_home / relative)
-        for relative in directories:
-            shutil.copytree(adapter_root / relative, codex_home / relative)
-        if not delegated:
-            return
-
-        plugin_text = (adapter_root / "config.toml").read_text(encoding="utf-8")
-        plugin_config = tomllib.loads(plugin_text)
-        # Top-level keys only, so they can precede the runner's tables;
-        # merge parsed tables if the adapter ever needs one.
-        if any(isinstance(value, dict) for value in plugin_config.values()):
-            raise ConfigurationError(
-                f"Codex adapter config {adapter_root / 'config.toml'} "
-                "must hold only top-level keys"
-            )
-        config_path = codex_home / "config.toml"
-        runner_text = (
-            config_path.read_text(encoding="utf-8") if config_path.is_file() else ""
-        )
-        layered = f"{plugin_text.rstrip()}\n\n{runner_text}"
-        try:
-            tomllib.loads(layered)
-        except tomllib.TOMLDecodeError as exc:
-            raise ConfigurationError(
-                "Codex adapter config conflicts with the runner's Codex settings"
-            ) from exc
-        config_path.write_text(layered, encoding="utf-8")
 
     def _manifest(
         self,
@@ -1690,7 +1553,6 @@ class ExperimentRunner:
         rollout_collection: Mapping[str, Any] | None = None,
         spawn_extraction: Mapping[str, Any] | None = None,
         trace_timestamps: Mapping[str, Any] | None = None,
-        fidelity_gate: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         wrapper_hash = f"sha256:{sha256_file(condition.plugin_config)}"
         if platform == "codex":
@@ -1900,8 +1762,6 @@ class ExperimentRunner:
             manifest["inputs"]["native_payload"] = prompt.native_payload
         if trace_timestamps is not None:
             manifest["trace_timestamps"] = dict(trace_timestamps)
-        if fidelity_gate is not None:
-            manifest["fidelity_gate"] = dict(fidelity_gate)
         if output_hash is not None:
             manifest["output_hash"] = output_hash
         if trace_hash is not None:

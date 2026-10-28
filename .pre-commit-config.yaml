@@ -3,9 +3,7 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: ^experiments/tests/fixtures/fidelity/
       - id: end-of-file-fixer
-        exclude: ^experiments/tests/fixtures/fidelity/
       - id: check-yaml
       - id: check-toml
       - id: check-added-large-files

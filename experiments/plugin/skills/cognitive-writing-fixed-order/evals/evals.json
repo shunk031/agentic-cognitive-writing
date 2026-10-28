@@ -1,0 +1,16 @@
+{
+  "skill_name": "cognitive-writing-fixed-order",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run a controlled comparison while helping me draft a 700-word incident retrospective for a mixed technical and nontechnical audience. Use the fixed Planning, Translating, then Reviewing order, keep the same .writing state across passes, and handle any interruption explicitly.",
+      "expected_output": "The run follows the fixed process order, delegates the shared roles, preserves the hierarchical goal network, and records every process switch and interruption with evidence and uncertainty.",
+      "files": [],
+      "expectations": [
+        "Starts each pass with Planning, then moves to Translating and Reviewing.",
+        "Allows Generate or Evaluate to interrupt, logs the interruption, and returns to the prescribed order.",
+        "Updates hierarchical goals and records goal changes without changing the user's rhetorical intent."
+      ]
+    }
+  ]
+}
