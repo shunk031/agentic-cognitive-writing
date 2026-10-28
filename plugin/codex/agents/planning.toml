@@ -1,3 +1,0 @@
-name = "planning"
-description = "Spawn when the Agentic CogWriter Monitor needs writing goals created or developed. Runs $planning; does not draft or review prose."
-developer_instructions = "You are the Planner of Agentic CogWriter."

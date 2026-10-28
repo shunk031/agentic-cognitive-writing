@@ -1,0 +1,7 @@
+interface:
+  display_name: "Fixed-order comparison"
+  short_description: "Compare writing with a fixed process order"
+  default_prompt: "Run a fixed-order comparison using the shared writing state."
+
+policy:
+  allow_implicit_invocation: false

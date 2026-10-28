@@ -1,2 +1,0 @@
-prefix_rule(pattern=["git"], decision="forbidden", justification="Agents must not run git.")
-prefix_rule(pattern=[["cp", "mv", "rm"]], decision="forbidden", justification="Agents must not copy, move, or delete files.")
