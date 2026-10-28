@@ -1154,11 +1154,16 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
         assert [path.name for path in (skills / role).rglob("*")] == ["SKILL.md"]
     assert "`spawn_agent` with `fork_context` false" in text
     assert "`close_agent` it before spawning the next one" in text
-    # Recursion: every task, children included, gets a decomposition verdict.
+    # Recursion: every composition task above depth 3, children included, gets a
+    # decomposition verdict; reasoning tasks and deeper tasks are atomic.
     assert "the root and each child alike, to a decomposition agent" in text
-    assert "A task executes only after a decomposition agent has judged it atomic" in (
+    assert "a `reasoning` task is atomic" in text
+    assert "a composition task at depth 3 or deeper, where the root is at depth 0" in (
         text
     )
+    decomposition = (skills / "task-decomposition/SKILL.md").read_text()
+    assert "longer than 1000 words may be split" in decomposition
+    assert "longer than 1500 words must be split" in decomposition
     # The deliverable is the appended draft, not a final message or a trace.
     assert "A composition execution appends its prose to `.writing/draft.md`" in text
     assert "final response" not in text
