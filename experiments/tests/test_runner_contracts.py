@@ -3504,6 +3504,15 @@ def test_baseline_stages_its_agent_skills_and_scores_the_draft(
     task = (workspace / ".writing/task.md").read_text()
     assert task.startswith("## Assignment\nWrite a memo.")
     assert not (workspace / ".writing/history.md").exists()
+    graph = workspace / ".writing/baselines/adaptive-task-planning/task-graph.json"
+    if condition_id == "A3":
+        # The runner seeds the root, whose goal is the task text verbatim.
+        seeded = json.loads(graph.read_text())
+        assert seeded["root_task_id"] == "root"
+        assert seeded["tasks"][0]["goal"] == task
+        assert seeded["tasks"][0]["length"] is None
+    else:
+        assert not graph.exists()
     # The draft is scored verbatim; the condition needs no plugin trace.
     assert (result.run_dir / "output.normalized.txt").read_text() == "draft " * 60
     manifest = json.loads(result.manifest_path.read_text())

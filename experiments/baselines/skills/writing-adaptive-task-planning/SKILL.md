@@ -23,7 +23,7 @@ Delegate each selected task to a fresh agent: `spawn_agent` with `fork_context` 
 
 ## Persisted graph contract
 
-Persist the graph at `.writing/baselines/adaptive-task-planning/task-graph.json`. Keep the file valid JSON after every mutation. The top-level object includes `version`, `root_task_id`, `tasks`, and `updated_at`. Each task includes:
+Persist the graph at `.writing/baselines/adaptive-task-planning/task-graph.json`. Keep the file valid JSON after every mutation. The top-level object includes `version`, `root_task_id`, and `tasks`. Each task includes:
 
 - `id`, a stable project-local identifier
 - `type`, exactly `reasoning` or `composition`
@@ -40,7 +40,7 @@ Store task results under `.writing/baselines/adaptive-task-planning/results/` wh
 
 ## Procedure
 
-1. Read the task in `.writing/task.md`. If the graph does not exist, initialize a root `composition` task whose `goal` is the text of `.writing/task.md` verbatim and whose `length` is `null`, as WriteHERE's root goal is the question itself. Do not read or modify `.writing/goals.md`.
+1. Read the task in `.writing/task.md` and the graph, which the runner seeds with a root `composition` task whose `goal` is the text of `.writing/task.md` verbatim and whose `length` is `null`, as WriteHERE's root goal is the question itself. Never change a task's goal. Do not read or modify `.writing/goals.md`.
 2. Select the active task nearest the root by breadth-first depth, breaking ties with the graph's stable task order. A task is ready when every dependency is `silent`.
 3. Delegate a selected `composition` task, the root and each child alike, to a node agent. The agent judges whether the task is atomic; at depth 3 or deeper, where the root is at depth 0, the task is atomic without judgment, as in WriteHERE's report mode. Record the agent's report exactly: a length it sets, and its child tasks with their IDs, types, goals, and lengths as reported. If it returns child tasks, add them to the graph with each composition child depending on every composition child before it so that prose is appended in document order, mark the parent `suspended`, and persist the graph before scheduling another task. If the agent appended its prose to `.writing/draft.md`, record the result, mark the task `silent`, and persist the graph.
 4. Delegate a selected `reasoning` task, which is atomic as in WriteHERE's report mode, to an execution agent, which writes a bounded reasoning or planning artifact to its result file. Record the result, mark the task `silent`, and persist the graph. A `suspended` task becomes `silent` when all of its children are `silent`.

@@ -1630,6 +1630,34 @@ class ExperimentRunner:
                 encoding="utf-8",
             )
             staged[".writing/task.md"] = f"sha256:{sha256_file(task_path)}"
+            if condition.task_graph is not None:
+                # The root goal is the task text verbatim, so the runner seeds it.
+                graph_path = workspace / condition.task_graph["path"]
+                graph_path.parent.mkdir(parents=True, exist_ok=True)
+                root = {
+                    "id": "root",
+                    "type": "composition",
+                    "goal": task_path.read_text(encoding="utf-8"),
+                    "length": None,
+                    "depth": 0,
+                    "dependencies": [],
+                    "status": "active",
+                    "result": None,
+                    "parent_id": None,
+                    "children": [],
+                }
+                graph_path.write_text(
+                    json.dumps(
+                        {"version": 1, "root_task_id": "root", "tasks": [root]},
+                        ensure_ascii=False,
+                        indent=2,
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+                staged[condition.task_graph["path"]] = (
+                    f"sha256:{sha256_file(graph_path)}"
+                )
         if adapter is None:
             return staged
         if codex_home is None:
