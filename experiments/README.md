@@ -95,14 +95,14 @@ uv run --project experiments agentic-cogwriter-mechanism-report \
 
 ## Check requirement changes
 
-The requirement-change module generates, for eight DoLoMiTes prompts of the non-evaluation smoke pool, four checkable turn-1 requirements per prompt and one seeded change per prompt and change class, and checks runs against them. The generator and checkers use the standard library and stay outside the run workspace; the check refuses a run whose workspace holds a copy of the module or of the items file. The checkers read only an item, the turn-1 output, and the final output, so they do not depend on how turn 2 was started. The module docstring of [`requirement_change.py`](src/agentic_cogwriter/requirement_change.py) defines each rule.
+The requirement-change module generates, for eight DoLoMiTes prompts of the non-evaluation smoke pool, four checkable turn-1 requirements per prompt and one seeded change per prompt and change class, and checks runs against them. The generator, its items, and the check results stay outside the run workspace and the run output root. The check refuses a run that holds a copy of the module or the items file, or whose harness records name the module path, the items path, or the items file's hash. The checkers read only an item, the turn-1 output, and the final output, so they do not depend on how turn 2 was started. The module docstring of [`requirement_change.py`](src/agentic_cogwriter/requirement_change.py) defines each rule.
 
 ```bash
 uv run --package agentic-cogwriter python -m agentic_cogwriter.requirement_change generate --out /path/to/items
-uv run --package agentic-cogwriter python -m agentic_cogwriter.requirement_change check --items /path/to/items/items.json --item dolomites-673.remove /path/to/run-dir
+uv run --package agentic-cogwriter python -m agentic_cogwriter.requirement_change check --items /path/to/items/items.json --item dolomites-673.remove --out /path/to/checks/run.json /path/to/run-dir
 ```
 
-`generate` writes `manifest.jsonl`, the prompt rows with the turn-1 requirements added to their constraints, `items.json`, and `followup/<item-id>.txt`, the change for `--followup-file`. An item id is the prompt id and the change class, and `assigned` marks the frozen assignment of each class to two prompts. `check` reads the run's `turn1/output.normalized.txt`, or the file given with `--turn1`, and its `output.normalized.txt`. It writes `change-check.json` into the run directory with three results: whether every changed requirement passes after turn 2, which unchanged requirements that passed after turn 1 fail after turn 2, and the share of untargeted sections whose text changed.
+`generate` writes `manifest.jsonl`, the prompt rows with the turn-1 requirements added to their constraints, `items.json`, and `followup/<item-id>.txt`, the change for `--followup-file`. An item id is the prompt id and the change class, and `assigned` marks the frozen assignment of each class to two prompts. `check` reads the run's `turn1/output.normalized.txt`, or the file given with `--turn1`, and its `output.normalized.txt`. It writes four results to `--out`: whether every changed requirement passes after turn 2, which unchanged requirements that passed after turn 1 fail after turn 2, the share of untargeted sections whose text changed, and their mean text similarity.
 
 ## Score a completed run
 
