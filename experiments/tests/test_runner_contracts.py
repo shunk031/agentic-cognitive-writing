@@ -1156,12 +1156,12 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
     assert "`close_agent` it before spawning the next one" in text
     # Recursion: every composition task above depth 3, children included, gets a
     # decomposition verdict; reasoning tasks and deeper tasks are atomic.
-    assert "the root and each child alike, to a decomposition agent" in text
-    assert "a `reasoning` task is atomic" in text
-    assert "a composition task at depth 3 or deeper, where the root is at depth 0" in (
+    assert "`true` for a `reasoning` task and for a composition task at depth 3" in (
         text
     )
-    assert "the coordinator never judges it atomic itself, whatever its length" in text
+    assert "If the selected task's `atomic` is `null`, delegate it" in text
+    assert "the root and each child alike, to a decomposition agent" in text
+    assert "The coordinator never sets `atomic` itself for such a task" in text
     decomposition = (skills / "task-decomposition/SKILL.md").read_text()
     assert "longer than 1000 words may be split" in decomposition
     assert "longer than 1500 words must be split" in decomposition

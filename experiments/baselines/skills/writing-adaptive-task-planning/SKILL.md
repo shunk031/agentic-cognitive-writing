@@ -34,6 +34,7 @@ Persist the graph at `.writing/baselines/adaptive-task-planning/task-graph.json`
 - `result`, either `null` or the task's returned result
 - `parent_id`, the containing task ID or `null` for the root
 - `children`, an ordered list of child task IDs
+- `atomic`, `true` for a `reasoning` task and for a composition task at depth 3 or deeper, where the root is at depth 0, as in WriteHERE's report mode; for any other task `null` until a decomposition agent's verdict sets it to `true` or `false`
 
 Store task results under `.writing/baselines/adaptive-task-planning/results/` when they are too large for the graph file. Use project-relative paths in the graph. A suspended task has been decomposed or is waiting for dependencies. An active task is ready for planning or execution. A silent task has completed or failed and will not be scheduled again.
 
@@ -41,8 +42,8 @@ Store task results under `.writing/baselines/adaptive-task-planning/results/` wh
 
 1. Read the task in `.writing/task.md`. Initialize a root `composition` task if the graph does not exist. Do not read or modify `.writing/goals.md`.
 2. Select the active task nearest the root by breadth-first depth, breaking ties with the graph's stable task order. A task is ready when every dependency is `silent`.
-3. As in WriteHERE's report mode, a `reasoning` task is atomic, and so is a composition task at depth 3 or deeper, where the root is at depth 0; neither goes to a decomposition agent. Delegate every other newly selected composition task, the root and each child alike, to a decomposition agent, which judges whether the task is atomic. If the task is not atomic, the agent returns typed child tasks and dependencies. Add the children to the graph, with each composition child depending on every composition child before it so that prose is appended in document order, mark the parent `suspended`, and persist the graph before scheduling another task. Such a task executes only after a decomposition agent has judged it atomic; the coordinator never judges it atomic itself, whatever its length.
-4. If the task is atomic, delegate it to an execution agent. A reasoning execution writes a bounded reasoning or planning artifact to its result file. A composition execution appends its prose to `.writing/draft.md`. Record the result, mark the task `silent`, and persist the graph. A `suspended` task becomes `silent` when all of its children are `silent`.
+3. If the selected task's `atomic` is `null`, delegate it, the root and each child alike, to a decomposition agent, which judges whether the task is atomic, and record the verdict in `atomic`. If the task is not atomic, the agent returns typed child tasks and dependencies. Add the children to the graph, with each composition child depending on every composition child before it so that prose is appended in document order, mark the parent `suspended`, and persist the graph before scheduling another task. The coordinator never sets `atomic` itself for such a task, whatever its length.
+4. If the task's `atomic` is `true`, delegate it to an execution agent. A reasoning execution writes a bounded reasoning or planning artifact to its result file. A composition execution appends its prose to `.writing/draft.md`. Record the result, mark the task `silent`, and persist the graph. A `suspended` task becomes `silent` when all of its children are `silent`.
 5. After each composition task completes, re-read the current aggregated text in `.writing/draft.md`. Before scheduling the next task, the coordinator may perform text-conditioned graph revision. Allowed revision operations are:
    - revise the goal text of an active or suspended task
    - add new typed child tasks with dependencies under any non-silent task
