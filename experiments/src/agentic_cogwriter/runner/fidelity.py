@@ -26,8 +26,8 @@ _PARENT_SEGMENT = re.compile(r"(?:^|[^\w.])\.\.(?:/|$)")
 _CALL_TYPES = frozenset({"function_call", "custom_tool_call", "local_shell_call"})
 _OUTPUT_TYPES = frozenset({"function_call_output", "custom_tool_call_output"})
 _COMMAND = re.compile(r"""\bcmd"?\s*:\s*(["'`])((?:(?!\1)[^\\]|\\.)*)\1""")
-# apply_patch text names the files it writes and reads nothing.
-_PATCH = re.compile(r"\*\*\* Begin Patch.*?(?:\*\*\* End Patch|$)", re.S)
+# The path of a patch header line names a file to write, not a read.
+_PATCH_HEADER = re.compile(r"\*\*\* (?:(?:Add|Update|Delete) File|Move to): $")
 TRACKED_FILES = ("goals.md", "draft.md")
 _HARMLESS_REDIRECT = re.compile(r"\d*>\s*/dev/null|\d*>&\d")
 _HEREDOC = re.compile(
@@ -249,7 +249,9 @@ def _writes_tracked(command: str, names: tuple[str, ...] = TRACKED_FILES) -> boo
     write function; a script run with a tracked argument counts as a write.
     ``git reset --hard``, ``git stash`` other than ``list`` or ``show``,
     ``git apply``, and ``patch -p`` always count. A ``$variable`` target counts
-    as tracked when the command names a tracked path anywhere.
+    as tracked when the command names a tracked path anywhere. The rule is
+    textual, so inline code that reads one tracked file and writes another
+    file, such as a Python heredoc reading a stage file, is flagged.
     """
 
     # ponytail: a hand tokenizer; a path reached through a `cd` or `find -exec`, or
@@ -494,10 +496,15 @@ def _skill_isolation_reasons(run_dir: Path, codex_home: Path) -> list[str]:
             elif payload.get("type") in _CALL_TYPES:
                 # Known limit: a relative path without a `..` segment passes even
                 # after a `cd` out of the workspace, as in `cd /x && cat SKILL.md`.
-                text = _PATCH.sub(" ", json.dumps(payload).replace("\\n", " "))
+                text = json.dumps(payload).replace("\\n", " ")
                 # A read of a path that does not exist reads nothing.
                 missing = outputs.get(payload.get("call_id"), "")
-                for read in _ABSOLUTE_SKILL_FILE.findall(text):
+                for match in _ABSOLUTE_SKILL_FILE.finditer(text):
+                    read = match.group()
+                    if _PATCH_HEADER.search(
+                        text, max(0, match.start() - 24), match.start()
+                    ):
+                        continue
                     if re.search(
                         r"(?:^|[\s:'\"])"
                         + re.escape(read)

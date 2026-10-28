@@ -296,20 +296,28 @@ def test_a_missing_longer_path_does_not_hide_a_read_of_its_suffix(
     ]
 
 
-def test_skill_paths_inside_patch_text_are_not_reads(tmp_path: Path) -> None:
-    outside = "/home/user/.agents/skills/x/SKILL.md"
-    patch = f"*** Begin Patch\\n*** Update File: {outside}\\n*** End Patch"
+OUTSIDE = "/home/user/.agents/skills/x/SKILL.md"
+PATCH = f"*** Begin Patch\\n*** Update File: {OUTSIDE}\\n*** End Patch"
+
+
+@pytest.mark.parametrize(
+    ("call", "status"),
+    [
+        # A patch header names a file to write, as in a failed apply_patch.
+        (f'apply_patch("{PATCH}")', "scorable"),
+        (f'apply_patch("{PATCH}"); cat {OUTSIDE}', "rejected"),
+        (f"cat <<'EOF'\\n*** Begin Patch\\nEOF\\ncat {OUTSIDE}", "rejected"),
+        (f"echo '*** Begin Patch'; cat {OUTSIDE}; echo '*** End Patch'", "rejected"),
+        (f"grep -n '*** Begin Patch' a.md; sed -n 1p {OUTSIDE}", "rejected"),
+    ],
+)
+def test_only_patch_header_paths_are_not_skill_reads(
+    tmp_path: Path, call: str, status: str
+) -> None:
     run = _clean_run()
-    run["rollouts"][CHILD].append(_read(f'apply_patch("{patch}")'))
+    run["rollouts"][CHILD].append(_read(call))
 
-    assert _gate(_materialize(tmp_path, run))["status"] == "scorable"
-
-    run["rollouts"][CHILD].append(_read(f'apply_patch("{patch}"); cat {outside}'))
-    (tmp_path / "read").mkdir()
-
-    assert _gate(_materialize(tmp_path / "read", run))["reasons"] == [
-        f"thread {CHILD} read {outside} outside the staged skills"
-    ]
+    assert _gate(_materialize(tmp_path, run))["status"] == status
 
 
 STAGES = (
