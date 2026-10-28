@@ -10,4 +10,4 @@ At depth 3 or deeper, the task is atomic without judgment, as in WriteHERE's rep
 If it is not atomic, write no file and propose its child tasks, each with an ID, a type of `reasoning` or `composition`, a goal, a target length for a composition child, and dependencies on sibling IDs; the composition children together cover the task's goal in document order. Retrieval tasks are not allowed.
 If it is atomic, append the prose for its goal to the end of `.writing/draft.md`; do not edit existing text.
 Use only the task and the supplied context; do not browse, search, or use an external source.
-Report the verdict, any length set, and either the child tasks or what was written.
+End the report with one fenced `json` block holding an object with `verdict` (`"atomic"` or `"not atomic"`), `length` (the length set from the task, or `null`), and `children` (a list of objects with `id`, `type`, `goal`, `length`, and `dependencies`, empty when atomic).

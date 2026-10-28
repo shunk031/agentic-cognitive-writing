@@ -1079,6 +1079,7 @@ class ExperimentRunner:
                 or ROLES,
                 stage_files=condition.stage_files,
                 spawn_message=condition.spawn_message,
+                task_graph=condition.task_graph,
             )
             self._write_json(
                 manifest_path,

@@ -1181,9 +1181,20 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
     )
     # The root's node agent sets its length; revision adds children only under
     # suspended tasks, so new composition tasks reach a node agent.
-    assert "Initialize a root `composition` task with `length` `null`" in text
-    assert "add new typed child tasks with dependencies under a suspended task" in text
+    assert "whose `goal` is the text of `.writing/task.md` verbatim" in text
+    assert "whose `length` is `null`" in text
+    # The coordinator records reports exactly and never writes a goal or children.
+    assert "Record the agent's report exactly" in text
+    assert "it never writes a goal, and only node agents add child tasks" in text
+    assert "revise the goal text" not in text
+    assert "add new typed child tasks" not in text
+    task_graph = load_condition_registry()["A3"].task_graph
+    assert task_graph["skills"] == {
+        "composition": "task-node",
+        "reasoning": "task-execution",
+    }
     node = (skills / "task-node/SKILL.md").read_text()
+    assert "End the report with one fenced `json` block" in node
     assert "If the task's `length` is `null`, determine it from `.writing/task.md`" in (
         node
     )

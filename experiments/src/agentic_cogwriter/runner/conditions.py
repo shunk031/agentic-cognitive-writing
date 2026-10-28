@@ -70,6 +70,7 @@ class ConditionSpec:
     trace_required: bool = True
     stage_files: tuple[str, ...] = ()
     spawn_message: str | None = None
+    task_graph: Mapping[str, Any] | None = None
 
     @property
     def trace_policy_dict(self) -> dict[str, str]:
@@ -174,6 +175,16 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
             raise ConfigurationError(
                 f"Wrapper {wrapper_path} spawn_message must be a regular expression"
             ) from exc
+    task_graph = wrapper.get("task_graph")
+    if task_graph is not None and not (
+        isinstance(task_graph, Mapping)
+        and all(isinstance(task_graph.get(key), str) for key in ("path", "root_goal"))
+        and isinstance(task_graph.get("skills"), Mapping)
+        and "composition" in task_graph["skills"]
+    ):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} task_graph needs path, root_goal, and skills"
+        )
     package = wrapper.get("package")
     if not isinstance(package, Mapping):
         raise ConfigurationError(f"Wrapper {wrapper_path} must define a package table")
@@ -351,6 +362,7 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
         trace_required=trace_required,
         stage_files=tuple(stage_files),
         spawn_message=spawn_message,
+        task_graph=task_graph,
     )
 
 

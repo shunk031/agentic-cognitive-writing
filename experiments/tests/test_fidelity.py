@@ -652,3 +652,133 @@ def test_output_language_compares_latin_words_with_cjk_characters(
     assert (result["latin_words"], result["cjk_characters"]) == (words, characters)
     assert result["dominant_script"] == dominant
     assert result["mismatch"] is mismatch
+
+
+TASK_GRAPH = {
+    "path": ".writing/baselines/adaptive-task-planning/task-graph.json",
+    "root_goal": ".writing/task.md",
+    "skills": {"composition": "task-node", "reasoning": "task-execution"},
+}
+TASK_TEXT = "## Assignment\nWrite a memo.\n"
+
+
+def _graph_run(tmp_path: Path, **change: Any) -> Path:
+    """An A3 run whose root node agent splits the root into two children."""
+
+    children = [
+        {"id": "c1", "type": "composition", "goal": "Open.", "length": 300},
+        {"id": "r1", "type": "reasoning", "goal": "Plan.", "length": None},
+    ]
+    report = {"verdict": "not atomic", "length": 800, "children": children}
+    message = change.get(
+        "message",
+        "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
+        "for task root",
+    )
+    graph_write = f'*** Add File: {TASK_GRAPH["path"]}\n+"root"'
+    run = _clean_run()
+    run["events"][2] = _collab("spawn_agent", prompt=message)
+    run["rollouts"][MONITOR].extend(
+        [_read(graph_write)] if change.get("write_first", True) else []
+    )
+    run["rollouts"][MONITOR].append(_read(f"spawn_agent({{message:{message!r}}})"))
+    run["rollouts"][CHILD][0]["payload"]["agent_role"] = "default"
+    run["rollouts"][CHILD][1] = _read(
+        "sed -n '1,200p' plugin/skills/task-node/SKILL.md"
+    )
+    run["rollouts"][CHILD].append(
+        {
+            "type": "response_item",
+            "payload": {
+                "type": "message",
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "output_text",
+                        "text": f"Done.\n```json\n{json.dumps(report)}\n```\n",
+                    }
+                ],
+            },
+        }
+    )
+    run_dir = _materialize(tmp_path, run)
+    recorded = change.get("children", children)
+    tasks = [
+        {
+            "id": "root",
+            "type": "composition",
+            "goal": change.get("root_goal", TASK_TEXT),
+            "length": 800,
+            "parent_id": None,
+            "children": [child["id"] for child in recorded],
+        },
+        *({**child, "parent_id": "root", "children": []} for child in recorded),
+    ]
+    graph = run_dir / "workspace" / TASK_GRAPH["path"]
+    graph.parent.mkdir(parents=True)
+    graph.write_text(json.dumps({"root_task_id": "root", "tasks": tasks}))
+    (run_dir / "workspace" / ".writing" / "task.md").write_text(TASK_TEXT)
+    return run_dir
+
+
+@pytest.mark.parametrize(
+    ("change", "reasons"),
+    [
+        ({}, []),
+        (
+            {"root_goal": "Write a short memo."},
+            ["root goal is not .writing/task.md verbatim"],
+        ),
+        (
+            {"write_first": False},
+            ["task root was spawned before the graph named it"],
+        ),
+        (
+            {
+                "message": "Read the skill file at plugin/skills/task-execution/"
+                "SKILL.md and follow it for task root"
+            },
+            [
+                f"task-execution agent {CHILD} did not read its own SKILL.md",
+                "task root of type composition ran task-execution",
+                "task-execution task root has children",
+            ],
+        ),
+        (
+            {
+                "children": [
+                    {
+                        "id": "c1",
+                        "type": "composition",
+                        "goal": "Open well.",
+                        "length": 300,
+                    },
+                    {"id": "r1", "type": "reasoning", "goal": "Plan.", "length": None},
+                ]
+            },
+            ["task c1 goal differs from its parent's report"],
+        ),
+        (
+            {
+                "children": [
+                    {"id": "c1", "type": "composition", "goal": "Open.", "length": 300}
+                ]
+            },
+            ["task root children ['c1'] are not the reported ['c1', 'r1']"],
+        ),
+    ],
+)
+def test_task_graph_checks_spawns_against_the_graph(
+    tmp_path: Path, change: dict[str, Any], reasons: list[str]
+) -> None:
+    run_dir = _graph_run(tmp_path, **change)
+
+    assert (
+        _gate(
+            run_dir,
+            monitor_writes_history_only=False,
+            roles=("task-node", "task-execution"),
+            task_graph=TASK_GRAPH,
+        )["reasons"]
+        == reasons
+    )
