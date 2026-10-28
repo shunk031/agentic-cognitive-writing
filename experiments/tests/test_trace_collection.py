@@ -337,7 +337,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A2"].goal_events == "forbidden"
     assert registry["A3"].goal_events == "forbidden"
     assert registry["A4"].goal_events == "allowed"
-    untraced_conditions = {"A2", "A4", "A5", "A6", "A8"}
+    untraced_conditions = {"A2", "A4", "A5", "A6", "A7", "A8"}
     assert not any(registry[name].trace_required for name in untraced_conditions)
     assert all(
         spec.trace_required
@@ -348,7 +348,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A6"].goal_events == "allowed"
     assert registry["A6"].require_goal_events is False
     assert registry["A7"].goal_events == "allowed"
-    assert registry["A7"].require_goal_events is True
+    assert registry["A7"].require_goal_events is False
     assert registry["A7"].require_delegation is False
     assert registry["A8"].require_delegation is False
     assert registry["A1"].event_types == ("process_switch",)
