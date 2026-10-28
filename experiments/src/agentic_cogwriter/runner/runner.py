@@ -1077,6 +1077,7 @@ class ExperimentRunner:
                     )
                 )
                 or ROLES,
+                stage_files=condition.stage_files,
             )
             self._write_json(
                 manifest_path,
