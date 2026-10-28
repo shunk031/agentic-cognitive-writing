@@ -9,6 +9,7 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import time
 import tomllib
 from dataclasses import replace
@@ -1180,7 +1181,20 @@ def test_cogwriter_style_skill_delegates_to_closed_skill_agents() -> None:
         assert sentence in text
         child = (skills / role / "SKILL.md").read_text()
         assert child.startswith(f"---\nname: {role}\n")
-        assert [path.name for path in (skills / role).rglob("*")] == ["SKILL.md"]
+    assert [path.name for path in (skills / "cogwriter-planning").rglob("*")] == [
+        "SKILL.md"
+    ]
+    assert sorted(
+        path.name for path in (skills / "cogwriter-generation").rglob("*")
+    ) == ["SKILL.md", "count_words.py"]
+    # One integer target per segment, counted by CogWriter's rule.
+    planning = (skills / "cogwriter-planning/SKILL.md").read_text()
+    assert "`target_words` as one integer word count" in planning
+    generation = (skills / "cogwriter-generation/SKILL.md").read_text()
+    assert (
+        "`python3 plugin/skills/cogwriter-generation/count_words.py <segment file>`"
+        in generation
+    )
     assert "`spawn_agent` with `fork_context` false" in text
     # Parallel segments stay below Codex's six open agents.
     assert "Keep at most four agents open at a time" in text
@@ -1194,6 +1208,24 @@ def test_cogwriter_style_skill_delegates_to_closed_skill_agents() -> None:
     assert "final response" not in text
     assert "process.jsonl" not in text
     assert ".writing/task.md" in text
+
+
+def test_cogwriter_word_count_follows_the_upstream_rule(tmp_path: Path) -> None:
+    script = (
+        REPO_ROOT / "experiments/baselines/skills/cogwriter-generation/count_words.py"
+    )
+    segment = tmp_path / "S01.md"
+    # 4 CJK characters, then "sub-task", "ma^2", and "it's"; punctuation is free.
+    segment.write_text("融资租赁，sub-task (ma^2) it's!\u3000。\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(script), str(segment)],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert result.stdout == "7\n"
 
 
 def test_single_context_skill_is_the_monitor_skill_running_roles_in_context() -> None:

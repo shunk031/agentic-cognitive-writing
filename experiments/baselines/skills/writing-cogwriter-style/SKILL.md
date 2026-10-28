@@ -28,10 +28,10 @@ Delegate each planning pass and each segment to a fresh agent: `spawn_agent` wit
 ## Procedure
 
 1. Read `.writing/task.md`. Do not read or modify `.writing/goals.md`.
-2. Run exactly one initial-planning pass with a planning agent. It writes a structured plan with an ordered list of segment IDs, each segment's purpose, required content, target length, dependencies, and whole-document constraints to `.writing/baselines/cogwriter-style/plan-initial.json`.
+2. Run exactly one initial-planning pass with a planning agent. It writes a structured plan with an ordered list of segment IDs, each segment's purpose, required content, integer target word count, dependencies, and whole-document constraints to `.writing/baselines/cogwriter-style/plan-initial.json`.
 3. Run exactly one immediate plan-revision pass with a fresh planning agent. It checks the complete initial plan against the task and writes one revised, normalized plan to `.writing/baselines/cogwriter-style/plan.json`, without a second planning pass.
 4. Run parallel segment generation: one segment agent per revised segment. Every segment agent reads the complete plan, not only its local item, together with the task. A segment agent may perform one local plan adjustment before writing, but it must not change the top-level order or invent a new process. It writes its segment to `.writing/baselines/cogwriter-style/segments/<segment ID>.md`.
-5. Each segment agent then runs the length-review loop on its own segment: while the segment's word count is more than 10% away from its target length, it expands or compresses the segment toward the target while preserving meaning and coherence. Length review is not a general content review or a retrieval pass.
+5. Each segment agent then runs the length-review loop on its own segment: while the segment's word count, by CogWriter's counting rule, is more than 10% away from its target length, it expands or compresses the segment toward the target while preserving meaning and coherence. Length review is not a general content review or a retrieval pass.
 6. Write `.writing/draft.md` by concatenating the segment files in plan order with one shell command, without retyping them. The draft is the final document.
 
 The adaptation does not claim to reproduce CogWriter[^1]'s original models, prompts, dataset, token limits, monitoring implementation, or reported results. The adaptation preserves the published control-flow ideas needed for this comparison and makes the platform, input, budget, and no-retrieval differences explicit.
