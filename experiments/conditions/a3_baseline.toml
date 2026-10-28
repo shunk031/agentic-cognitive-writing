@@ -42,6 +42,14 @@ event_types = ["process_switch"]
 min_events = 1
 processes = ["task-node", "task-execution", "task-revision"]
 
+# The gate checks each spawn against the graph: the task is in it under a skill
+# of its type, the root goal is the task text, and each node agent's reported
+# children are recorded as reported.
+[task_graph]
+path = ".writing/baselines/adaptive-task-planning/task-graph.json"
+root_goal = ".writing/task.md"
+skills = { composition = "task-node", reasoning = "task-execution" }
+
 [[stages]]
 id = "task-node"
 

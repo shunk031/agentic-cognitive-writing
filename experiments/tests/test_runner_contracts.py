@@ -1181,9 +1181,20 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
     )
     # The root's node agent sets its length; revision adds children only under
     # suspended tasks, so new composition tasks reach a node agent.
-    assert "Initialize a root `composition` task with `length` `null`" in text
-    assert "add new typed child tasks with dependencies under a suspended task" in text
+    assert "whose `goal` is the text of `.writing/task.md` verbatim" in text
+    assert "whose `length` is `null`" in text
+    # The coordinator records reports exactly and never writes a goal or children.
+    assert "Record the agent's report exactly" in text
+    assert "it never writes a goal, and only node agents add child tasks" in text
+    assert "revise the goal text" not in text
+    assert "add new typed child tasks" not in text
+    task_graph = load_condition_registry()["A3"].task_graph
+    assert task_graph["skills"] == {
+        "composition": "task-node",
+        "reasoning": "task-execution",
+    }
     node = (skills / "task-node/SKILL.md").read_text()
+    assert "End the report with one fenced `json` block" in node
     assert "If the task's `length` is `null`, determine it from `.writing/task.md`" in (
         node
     )
@@ -3493,6 +3504,15 @@ def test_baseline_stages_its_agent_skills_and_scores_the_draft(
     task = (workspace / ".writing/task.md").read_text()
     assert task.startswith("## Assignment\nWrite a memo.")
     assert not (workspace / ".writing/history.md").exists()
+    graph = workspace / ".writing/baselines/adaptive-task-planning/task-graph.json"
+    if condition_id == "A3":
+        # The runner seeds the root, whose goal is the task text verbatim.
+        seeded = json.loads(graph.read_text())
+        assert seeded["root_task_id"] == "root"
+        assert seeded["tasks"][0]["goal"] == task
+        assert seeded["tasks"][0]["length"] is None
+    else:
+        assert not graph.exists()
     # The draft is scored verbatim; the condition needs no plugin trace.
     assert (result.run_dir / "output.normalized.txt").read_text() == "draft " * 60
     manifest = json.loads(result.manifest_path.read_text())

@@ -7,7 +7,7 @@ import os
 import re
 import unicodedata
 from collections import Counter, defaultdict
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import cache
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -112,6 +112,7 @@ def check_fidelity(
     roles: tuple[str, ...] = ROLES,
     stage_files: Sequence[str] = (),
     spawn_message: str | None = None,
+    task_graph: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Classify a finished run as scorable or rejected, with every reason.
 
@@ -123,6 +124,8 @@ def check_fidelity(
     ``stage_files``, when given, are workspace files the top-level thread writes
     once each, in that order, by patch only. ``spawn_message``, when given, is a
     regular expression that every top-level spawn message must match in full.
+    ``task_graph``, when given, configures the task-graph checks of
+    ``_task_graph_reasons``.
     """
 
     if platform == "codex":
@@ -131,6 +134,8 @@ def check_fidelity(
         )
         if codex_home is not None:
             reasons.extend(_skill_isolation_reasons(run_dir, codex_home))
+        if task_graph is not None:
+            reasons.extend(_task_graph_reasons(run_dir, task_graph))
     else:
         reasons = [
             f"{platform} records expose no subagent or tool events, "
@@ -543,4 +548,130 @@ def _skill_isolation_reasons(run_dir: Path, codex_home: Path) -> list[str]:
                         reasons.append(
                             f"thread {thread} read {read} through a parent directory"
                         )
+    return list(dict.fromkeys(reasons))
+
+
+_SPAWNED_TASK = re.compile(
+    r"skills/([\w-]+)/SKILL\.md and follow it for task ([A-Za-z0-9_.-]+)"
+)
+_JSON_BLOCK = re.compile(r"```json\s*(.*?)```", re.S)
+
+
+def _last_report(records: list[dict[str, Any]]) -> str:
+    texts = [
+        part.get("text", "")
+        for payload in _response_items(records)
+        if payload.get("type") == "message" and payload.get("role") == "assistant"
+        for part in payload.get("content") or []
+        if isinstance(part, dict)
+    ]
+    return texts[-1] if texts else ""
+
+
+def _task_graph_reasons(run_dir: Path, config: Mapping[str, Any]) -> list[str]:
+    """Check an agent-per-task run against its task graph.
+
+    ``config`` names the graph file, the task file that the root goal copies
+    verbatim, and the skill for each task type. Each spawned task must be in the
+    final graph under a skill of its type, and a coordinator call that touches
+    the graph must name it before the spawn, unless it is the root the runner
+    seeds. Each agent of a type whose skill is
+    ``config["skills"]["composition"]`` reports its verdict as a fenced JSON
+    object, and the graph records its children, their types, goals, and lengths,
+    and any length it sets exactly as reported. Known limit: the spawn-time check
+    is textual, so it shows that the ID was written before the spawn, not that the
+    graph file then held it.
+    """
+
+    workspace = run_dir / "workspace"
+    graph_path = workspace / config["path"]
+    try:
+        graph = json.loads(graph_path.read_text(encoding="utf-8"))
+        listed = graph["tasks"]
+        tasks = {
+            str(task["id"]): task
+            for task in (listed.values() if isinstance(listed, dict) else listed)
+        }
+    except (OSError, ValueError, KeyError, TypeError):
+        return [f"task graph {config['path']} is missing or invalid"]
+    reasons: list[str] = []
+    # The runner seeds the root, so no coordinator call needs to name it.
+    root_id = str(graph.get("root_task_id"))
+    root = tasks.get(root_id)
+    task_text = (workspace / config["root_goal"]).read_text(encoding="utf-8")
+    if root is None or str(root.get("goal", "")).strip() != task_text.strip():
+        reasons.append(f"root goal is not {config['root_goal']} verbatim")
+
+    events, metas, records, _ = read_codex_records(run_dir)
+    skills = config["skills"]
+    graph_name = PurePosixPath(config["path"]).name
+    for thread, meta in sorted(metas.items()):
+        if meta.get("parent_thread_id"):
+            continue
+        written = ""
+        for payload in _response_items(records[thread]):
+            if payload.get("type") not in _CALL_TYPES:
+                continue
+            text = json.dumps(payload)
+            for match in _SPAWNED_TASK.finditer(text):
+                task = match.group(2)
+                before = written + (text[: match.start()] if graph_name in text else "")
+                if (
+                    task in tasks
+                    and task != root_id
+                    and not re.search(
+                        rf"(?<![\w.-]){re.escape(task)}(?![\w.-])", before
+                    )
+                ):
+                    reasons.append(f"task {task} was spawned before the graph named it")
+            if graph_name in text:
+                written += text
+
+    for item in completed_items(events):
+        if item.get("type") != "collab_tool_call" or item.get("tool") != "spawn_agent":
+            continue
+        match = _SPAWNED_TASK.search(str(item.get("prompt")))
+        if match is None:
+            continue
+        skill, task = match.groups()
+        entry = tasks.get(task)
+        if entry is None:
+            reasons.append(f"spawned task {task} is not in the task graph")
+            continue
+        if skills.get(entry.get("type")) != skill:
+            reasons.append(f"task {task} of type {entry.get('type')} ran {skill}")
+        children = [str(child) for child in entry.get("children") or []]
+        if skill != skills["composition"]:
+            if children:
+                reasons.append(f"{skill} task {task} has children")
+            continue
+        report = "".join(
+            _last_report(records[thread])
+            for thread in item.get("receiver_thread_ids") or []
+        )
+        blocks = _JSON_BLOCK.findall(report)
+        try:
+            verdict = json.loads(blocks[-1])
+            reported = verdict.get("children") or []
+            ids = [str(child["id"]) for child in reported]
+        except (IndexError, ValueError, AttributeError, KeyError, TypeError):
+            reasons.append(f"{skill} agent for task {task} reported no JSON verdict")
+            continue
+        if (
+            verdict.get("length") is not None
+            and entry.get("length") != verdict["length"]
+        ):
+            reasons.append(f"task {task} length differs from its agent's report")
+        if children != ids:
+            reasons.append(
+                f"task {task} children {children} are not the reported {ids}"
+            )
+            continue
+        for child in reported:
+            recorded = tasks.get(str(child["id"]), {})
+            for field in ("type", "goal", "length"):
+                if recorded.get(field) != child.get(field):
+                    reasons.append(
+                        f"task {child['id']} {field} differs from its parent's report"
+                    )
     return list(dict.fromkeys(reasons))
