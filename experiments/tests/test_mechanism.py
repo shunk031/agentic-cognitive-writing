@@ -409,6 +409,70 @@ def test_a_replacement_after_translating_is_not_after_review(tmp_path: Path) -> 
     assert detail["goal_replaced_after_review"] is False
 
 
+def test_a_followup_turn_splits_delegations_and_goal_events(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    run_dir = _run(
+        tmp_path,
+        [_spawn("p1", "$planning create the goals"), _wait("p1")],
+        {"p1": _rollout("p1", (10_000, GOALS, _add(FIRST_GOALS)), turns=(5,))},
+    )
+    _jsonl(
+        run_dir / "attempt-002.events.jsonl",
+        [
+            _collab("send_input", "p1", prompt="apply the change"),
+            _wait("p1"),
+            _spawn("t2", "$translating write"),
+            _wait("t2"),
+        ],
+    )
+    monitor = _rollout("monitor", parent=None) + [_exec("touch .writing/goals.md")]
+    # Each attempt collects the appended rollouts again, as a prefix of the next.
+    _jsonl(run_dir / "sessions/attempt-001/rollout-monitor.jsonl", monitor)
+    _jsonl(run_dir / "sessions/attempt-002/rollout-monitor.jsonl", monitor)
+    _jsonl(
+        run_dir / "sessions/attempt-002/rollout-p1.jsonl",
+        _rollout(
+            "p1",
+            (10_000, GOALS, _add(FIRST_GOALS)),
+            (70_000, GOALS, _update(REWRITE)),
+            turns=(5, 65),
+        ),
+    )
+    _jsonl(
+        run_dir / "sessions/attempt-002/rollout-t2.jsonl",
+        _rollout("t2", (80_000, DRAFT, _add("# Title\n")), turns=(75,)),
+    )
+    manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    manifest["followup"] = {
+        "turn1_attempts": 1,
+        "turn2_started_at": "1970-01-01T00:01:00+00:00",
+    }
+    (run_dir / "run-manifest.json").write_text(json.dumps(manifest))
+
+    assert main(["--runs-root", str(tmp_path)]) == 0
+    detail = json.loads((run_dir / "mechanism.json").read_text())
+
+    assert [(d["process"], d["turn"]) for d in detail["delegations"]] == [
+        ("planning", 1),
+        ("planning", 2),
+        ("translating", 2),
+    ]
+    assert [(i["turn"], i["event"]) for i in detail["goal_intervals"]] == [
+        (1, "created"),
+        (2, "replaced"),
+    ]
+    assert detail["turn2_processes"] == ["planning", "translating"]
+    assert detail["turn2_goal_events"] == ["replaced"]
+    # The Monitor's rollout, collected twice, is read once.
+    assert [w["command"] for w in detail["unrecorded_writes"]] == [
+        "touch .writing/goals.md"
+    ]
+    out = capsys.readouterr().out
+    assert "| A4 | 1 | 2.00 | 0/1 0.00 [0.00, 0.79] | 0/1 0.00 [0.00, 0.79] " in out
+    assert "| 1/1 1.00 [0.21, 1.00] |" in out.splitlines()[-3]
+
+
 def test_a_reused_child_starts_a_new_delegation(tmp_path: Path) -> None:
     detail = _detail(
         tmp_path,

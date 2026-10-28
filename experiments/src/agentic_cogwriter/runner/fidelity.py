@@ -363,7 +363,9 @@ def read_codex_records(
             malformed.append(path.name)
             continue
         metas[str(meta.get("id"))] = meta
-        records[str(meta.get("id"))].extend(lines[1:])
+        # A resumed thread's rollout is appended to and collected again, so the
+        # latest attempt's copy holds every record once.
+        records[str(meta.get("id"))] = lines[1:]
     return events, metas, records, malformed
 
 

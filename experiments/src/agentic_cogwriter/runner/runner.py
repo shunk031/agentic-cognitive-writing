@@ -37,6 +37,7 @@ from .execution import (
     extract_output,
     extract_token_usage,
     reject_retrieval,
+    rollout_token_usage,
 )
 from .fidelity import ROLES, check_fidelity, check_output_language
 from .hashing import sha256_bytes, sha256_file
@@ -74,6 +75,9 @@ class RunResult:
     trace_path: Path
     run_id: str
 
+
+# The heading under which a follow-up turn's change is appended to task.md.
+FOLLOWUP_HEADING = "## Change 1 (governs where it conflicts with the task above)"
 
 _GENERATOR_CONFIG_ENV = {
     "codex": "CODEX_HOME",
@@ -668,8 +672,14 @@ class ExperimentRunner:
         condition_id: str,
         platform: str,
         run_id: str | None = None,
+        followup: str | None = None,
     ) -> RunResult:
-        """Run one top-level skill session and copy its plugin-owned trace."""
+        """Run one top-level skill session and copy its plugin-owned trace.
+
+        A ``followup`` change resumes the session for a second turn after turn 1's
+        products are snapshotted under ``turn1/`` and the change is appended to
+        ``.writing/task.md``; the second turn's product is the run's output.
+        """
 
         self.runtime_config.require_scored_run()
         condition = self.conditions.get(condition_id)
@@ -729,6 +739,7 @@ class ExperimentRunner:
             token_usage: dict[str, int] | None = None
             token_accounting_error: str | None = None
             trace_timestamps: Mapping[str, Any] | None = None
+            followup_record: dict[str, Any] | None = None
             subagent_spawn_ids: set[str] = set()
             rollout_collection: dict[str, Any] = {
                 "status": "absent",
@@ -934,14 +945,10 @@ class ExperimentRunner:
                         token_accounting_error = str(exc)
                         observed_usage = None
                     if observed_usage is not None:
-                        if token_usage is None:
-                            token_usage = {
-                                "output_tokens": 0,
-                                "reasoning_output_tokens": 0,
-                                "total_tokens": 0,
-                            }
-                        for key, value in observed_usage.items():
-                            token_usage[key] += value
+                        # turn.completed reports the session's cumulative usage, and
+                        # a retry or follow-up resumes the session, so the latest
+                        # observation supersedes the earlier ones.
+                        token_usage = observed_usage
                         if token_usage["total_tokens"] > budget.limit:
                             raise BudgetExceeded(
                                 "Codex turn usage exceeds the shared output "
@@ -987,23 +994,97 @@ class ExperimentRunner:
                     ),
                 )
 
-            result, attempts = self._run_turn_with_retry(
-                adapter,
-                model_id=self.runtime_config.model_for(platform),
-                prompt=command_prompt,
-                cwd=workspace,
-                env=generator_environment,
-                attempts=attempts,
-                plugin_dirs=(
-                    self._plugin_dirs(condition) if platform != "codex" else ()
-                ),
-                record_attempt=record_attempt,
-                snapshot_sessions=(
-                    (lambda: self._snapshot_codex_sessions(generator_config_dir))
-                    if platform == "codex"
-                    else None
-                ),
-            )
+            def run_turn(prompt_text: str, session_id: str | None):
+                return self._run_turn_with_retry(
+                    adapter,
+                    model_id=self.runtime_config.model_for(platform),
+                    prompt=prompt_text,
+                    cwd=workspace,
+                    env=generator_environment,
+                    attempts=attempts,
+                    session_id=session_id,
+                    plugin_dirs=(
+                        self._plugin_dirs(condition) if platform != "codex" else ()
+                    ),
+                    record_attempt=record_attempt,
+                    snapshot_sessions=(
+                        (lambda: self._snapshot_codex_sessions(generator_config_dir))
+                        if platform == "codex"
+                        else None
+                    ),
+                )
+
+            def gate() -> dict[str, Any]:
+                return check_fidelity(
+                    run_dir,
+                    platform=platform,
+                    codex_home=generator_config_dir.resolve(),
+                    requires_draft=condition.product_requires_draft,
+                    monitor_writes_history_only=condition.monitor_writes_history_only,
+                    roles=tuple(
+                        path.name
+                        for path in self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(
+                            condition.skill_name, {}
+                        )
+                    )
+                    or ROLES,
+                    stage_files=condition.stage_files,
+                    spawn_message=condition.spawn_message,
+                )
+
+            result, attempts = run_turn(command_prompt, None)
+            if followup is not None:
+                if not result.session_id:
+                    raise ExecutionError("Cannot resume a turn without its session_id")
+                turn1_dir = run_dir / "turn1"
+                turn1_dir.mkdir()
+                turn1_product = _scored_output(
+                    result.stdout,
+                    workspace / ".writing" / "draft.md",
+                    condition_id=condition.condition_id,
+                    requires_draft=condition.product_requires_draft,
+                )
+                (turn1_dir / "output.normalized.txt").write_bytes(turn1_product)
+                for name in ("draft.md", "goals.md"):
+                    if (workspace / ".writing" / name).is_file():
+                        shutil.copyfile(workspace / ".writing" / name, turn1_dir / name)
+                # The gate compares the run output with the draft, so it judges
+                # turn 1 against turn 1's product; turn 2 overwrites the output.
+                normalized_path.write_bytes(turn1_product)
+                turn1_gate = gate()
+                task_path = workspace / ".writing" / "task.md"
+                if task_path.is_file():
+                    with task_path.open("a", encoding="utf-8") as task:
+                        task.write(f"\n{FOLLOWUP_HEADING}\n{followup.strip()}\n")
+                followup_path = run_dir / "followup.txt"
+                followup_path.write_text(followup, encoding="utf-8")
+                turn1_attempts = attempts
+                followup_record = {
+                    "message_hash": f"sha256:{sha256_file(followup_path)}",
+                    "task_hash": (
+                        f"sha256:{sha256_file(task_path)}"
+                        if task_path.is_file()
+                        else None
+                    ),
+                    "turn1_attempts": turn1_attempts,
+                    "turn1_fidelity_gate": turn1_gate,
+                    "turn1_hashes": {
+                        path.name: f"sha256:{sha256_file(path)}"
+                        for path in sorted(turn1_dir.iterdir())
+                    },
+                    "turn2_started_at": timestamp(),
+                }
+                result, attempts = run_turn(followup, result.session_id)
+                if platform == "codex":
+                    turn1_usage = rollout_token_usage(run_dir, turn1_attempts)
+                    total_usage = rollout_token_usage(run_dir, attempts)
+                    followup_record["rollout_token_usage"] = {
+                        "turn1": turn1_usage,
+                        "turn2": {
+                            key: value - turn1_usage.get(key, 0)
+                            for key, value in total_usage.items()
+                        },
+                    }
             scored = _scored_output(
                 result.stdout,
                 workspace / ".writing" / "draft.md",
@@ -1064,22 +1145,7 @@ class ExperimentRunner:
                 )
             output_path.write_bytes(scored)
             normalized_path.write_bytes(scored)
-            fidelity_gate = check_fidelity(
-                run_dir,
-                platform=platform,
-                codex_home=generator_config_dir.resolve(),
-                requires_draft=condition.product_requires_draft,
-                monitor_writes_history_only=condition.monitor_writes_history_only,
-                roles=tuple(
-                    path.name
-                    for path in self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(
-                        condition.skill_name, {}
-                    )
-                )
-                or ROLES,
-                stage_files=condition.stage_files,
-                spawn_message=condition.spawn_message,
-            )
+            fidelity_gate = gate()
             self._write_json(
                 manifest_path,
                 self._manifest(
@@ -1116,6 +1182,7 @@ class ExperimentRunner:
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
+                    followup=followup_record,
                     fidelity_gate=fidelity_gate,
                     output_language=check_output_language(
                         scored.decode("utf-8"), prompt.language
@@ -1196,6 +1263,7 @@ class ExperimentRunner:
                     rollout_collection=rollout_collection,
                     spawn_extraction=spawn_extraction,
                     trace_timestamps=trace_timestamps,
+                    followup=followup_record,
                     failure=failure,
                 ),
             )
@@ -1228,6 +1296,7 @@ class ExperimentRunner:
         cwd: Path,
         env: Mapping[str, str],
         attempts: int,
+        session_id: str | None = None,
         plugin_dirs: tuple[str, ...] = (),
         record_attempt: Callable[
             [int, ExecutionResult | None, SessionSnapshot | None], None
@@ -1239,7 +1308,6 @@ class ExperimentRunner:
 
         max_attempts = self.runtime_config.retry_count + 1
         local_attempts = 0
-        session_id: str | None = None
         while local_attempts < max_attempts:
             local_attempts += 1
             attempts += 1
@@ -1761,6 +1829,7 @@ class ExperimentRunner:
         rollout_collection: Mapping[str, Any] | None = None,
         spawn_extraction: Mapping[str, Any] | None = None,
         trace_timestamps: Mapping[str, Any] | None = None,
+        followup: Mapping[str, Any] | None = None,
         fidelity_gate: Mapping[str, Any] | None = None,
         output_language: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
@@ -1972,6 +2041,8 @@ class ExperimentRunner:
             manifest["inputs"]["native_payload"] = prompt.native_payload
         if trace_timestamps is not None:
             manifest["trace_timestamps"] = dict(trace_timestamps)
+        if followup is not None:
+            manifest["followup"] = dict(followup)
         if fidelity_gate is not None:
             manifest["fidelity_gate"] = dict(fidelity_gate)
         if output_language is not None:

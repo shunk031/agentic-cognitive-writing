@@ -39,6 +39,12 @@ def build_parser() -> argparse.ArgumentParser:
             "defaults to the selected wrapper's configured plugin paths"
         ),
     )
+    parser.add_argument(
+        "--followup-file",
+        type=Path,
+        default=None,
+        help="Resume the session with this file's change as a second turn",
+    )
     return parser
 
 
@@ -57,6 +63,11 @@ def main(argv: list[str] | None = None) -> int:
         manifest.get(args.prompt_id),
         condition_id=args.condition,
         platform=args.platform,
+        followup=(
+            args.followup_file.read_text(encoding="utf-8")
+            if args.followup_file
+            else None
+        ),
     )
     print(result.run_dir)
     return 0

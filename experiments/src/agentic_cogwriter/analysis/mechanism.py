@@ -66,6 +66,13 @@ run never delegates. The declaration is the run manifest's
 ``delegation_check.required``; a manifest without it counts as not requiring
 delegation.
 
+Turns. A run with a follow-up turn records in its manifest the attempts of turn
+1 and the time turn 2 started. A delegation belongs to turn 2 when its item
+comes from a later attempt's event stream, and a file change when it completed
+at or after that time; a goal interval never spans the two turns. Each such run
+also reports turn 2's processes and goal events alone, and a condition reports
+turn 2's mean process count and goal-event rates over its two-turn runs.
+
 Unrecorded writes. Only ``apply_patch`` writes become ``FileChange`` items. Each
 run therefore lists the shell commands whose write targets ``goals.md``,
 ``draft.md``, ``.writing`` itself, or a glob under it, by the rules of the
@@ -102,6 +109,7 @@ from operator import attrgetter
 from pathlib import Path, PurePosixPath
 from typing import Any, NamedTuple
 
+from ..runner.execution import _json_objects
 from ..runner.fidelity import (
     completed_items,
     read_codex_records,
@@ -120,6 +128,7 @@ RATES = (
     *(f"goal_{event}" for event in GOAL_EVENTS),
     "goal_replaced_after_review",
 )
+TURN2_RATES = tuple(f"turn2_goal_{event}" for event in GOAL_EVENTS)
 # Values that need delegations; missing for conditions that declare none.
 PROCESS_DERIVED = frozenset(
     {
@@ -128,6 +137,7 @@ PROCESS_DERIVED = frozenset(
         "reviewing_then_planning",
         "goal_replaced_after_review",
         "mean_processes",
+        "turn2_mean_processes",
         "runs_with_reused_children",
         "runs_with_overlapping_delegations",
         "runs_with_unattributed_changes",
@@ -157,6 +167,7 @@ class _Change(NamedTuple):
     delegation: int | None
     by_monitor: bool
     ambiguous: bool
+    turn: int
 
 
 def normalize(line: str) -> str:
@@ -301,13 +312,30 @@ def _ended(item: dict[str, Any], thread: str) -> bool:
     )
 
 
-def analyze_run(run_dir: Path) -> dict[str, Any]:
-    """Return one run's delegations, goal intervals, and mechanism flags."""
+def analyze_run(
+    run_dir: Path, followup: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Return one run's delegations, goal intervals, and mechanism flags.
+
+    ``followup`` is the run manifest's record of a follow-up turn, if any.
+    """
 
     events, metas, records, _ = read_codex_records(run_dir)
+    turn2_item = turn2_at = float("inf")
+    if followup is not None:
+        turn2_item = len(
+            completed_items(
+                event
+                for path in sorted(run_dir.glob("attempt-*.events.jsonl"))[
+                    : followup["turn1_attempts"]
+                ]
+                for event in _json_objects(path.read_bytes())
+            )
+        )
+        turn2_at = _ms(followup["turn2_started_at"])
     prompts: dict[str, str] = {}
     delegations: list[dict[str, Any]] = []
-    for item in completed_items(events):
+    for index, item in enumerate(completed_items(events)):
         if item.get("type") != "collab_tool_call":
             continue
         for thread in item.get("receiver_thread_ids") or []:
@@ -324,6 +352,7 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
                         "overlaps": any(not d["ended"] for d in delegations),
                         "previous_ended": bool(delegations)
                         and delegations[-1]["ended"],
+                        "turn": 1 + (index >= turn2_item),
                     }
                 )
             elif _ended(item, thread):
@@ -394,22 +423,29 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
                 parts = PurePosixPath(path).parts[-2:]
                 if parts[0] == ".writing" and parts[-1] in TRACKED:
                     changes.append(
-                        _Change(at, parts[-1], change, *position(thread, at))
+                        _Change(
+                            at,
+                            parts[-1],
+                            change,
+                            *position(thread, at),
+                            1 + (at >= turn2_at),
+                        )
                     )
     changes.sort(key=attrgetter("at"))
     file_changes.sort(key=lambda pair: pair[0])
     steps = translating_steps(item for _, item in file_changes)
 
     intervals = [
-        (delegation, by_monitor, [c.change for c in group])
-        for (delegation, by_monitor), group in groupby(
+        (delegation, by_monitor, turn, [c.change for c in group])
+        for (delegation, by_monitor, turn), group in groupby(
             (c for c in changes if c.file == "goals.md"),
-            key=attrgetter("delegation", "by_monitor"),
+            key=attrgetter("delegation", "by_monitor", "turn"),
         )
     ]
     goal_intervals = [
         {
             "delegation": delegation,
+            "turn": turn,
             "process": "unattributed"
             if delegation is None
             else "monitor"
@@ -417,7 +453,7 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
             else processes[delegation],
             **interval,
         }
-        for (delegation, by_monitor, _), interval in zip(
+        for (delegation, by_monitor, turn, _), interval in zip(
             intervals,
             classify_goal_intervals(group for *_, group in intervals),
             strict=True,
@@ -450,8 +486,18 @@ def analyze_run(run_dir: Path) -> dict[str, Any]:
     return {
         "processes": processes,
         "delegations": [
-            {key: d[key] for key in ("thread", "tool", "process", "overlaps")}
+            {key: d[key] for key in ("thread", "tool", "process", "overlaps", "turn")}
             for d in delegations
+        ],
+        "turn2_processes": None
+        if followup is None
+        else [d["process"] for d in delegations if d["turn"] == 2],
+        "turn2_goal_events": None
+        if followup is None
+        else [
+            i["event"]
+            for i in goal_intervals
+            if i["turn"] == 2 and i["event"] and i["process"] != "unattributed"
         ],
         "goal_intervals": goal_intervals,
         "planning_before_first_translating": "planning" in processes[:translating],
@@ -497,6 +543,7 @@ def summarize(runs: Sequence[dict[str, Any]]) -> dict[str, Any]:
     """Aggregate gate-passing runs: each rate with a 95% Wilson interval."""
 
     scorable = [run for run in runs if run["fidelity"] == "scorable"]
+    two_turn = [run for run in scorable if run["turn2_processes"] is not None]
     summary = {
         "runs": len(runs),
         "completed": sum(run["status"] == "completed" for run in runs),
@@ -513,6 +560,18 @@ def summarize(runs: Sequence[dict[str, Any]]) -> dict[str, Any]:
             if scorable
             else None
         ),
+        "turn2_runs": len(two_turn),
+        "turn2_mean_processes": (
+            sum(len(run["turn2_processes"]) for run in two_turn) / len(two_turn)
+            if two_turn
+            else None
+        ),
+        **{
+            f"turn2_goal_{event}": _rate(
+                [event in run["turn2_goal_events"] for run in two_turn]
+            )
+            for event in GOAL_EVENTS
+        },
         "runs_with_unrecorded_writes": sum(
             bool(run["unrecorded_writes"]) for run in scorable
         ),
@@ -559,7 +618,7 @@ def report(roots: Sequence[Path]) -> dict[str, dict[str, Any]]:
                 "delegation_required": bool(
                     (manifest.get("delegation_check") or {}).get("required")
                 ),
-                **analyze_run(manifest_path.parent),
+                **analyze_run(manifest_path.parent, manifest.get("followup")),
             }
             (manifest_path.parent / "mechanism.json").write_text(
                 json.dumps(run, indent=2) + "\n", encoding="utf-8"
@@ -619,6 +678,21 @@ def format_table(summary: dict[str, dict[str, Any]]) -> str:
         "history line, where the A7 skill allows one paragraph; "
         "max_paragraphs_in_a_step is n/a without such a step.",
     ]
+    if any(row["turn2_runs"] for row in summary.values()):
+        turn2 = ("turn2_runs", "turn2_mean_processes", *TURN2_RATES)
+        lines += [
+            "",
+            "| condition | " + " | ".join(turn2) + " |",
+            "|---|" + "---:|" * len(turn2),
+            *(
+                f"| {condition} | "
+                + " | ".join(_cell(row[column]) for column in turn2)
+                + " |"
+                for condition, row in summary.items()
+            ),
+            "",
+            "The turn2_ columns cover the follow-up turn of scorable two-turn runs.",
+        ]
     return "\n".join(lines)
 
 

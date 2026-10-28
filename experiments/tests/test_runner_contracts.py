@@ -3071,6 +3071,144 @@ def test_retry_reuses_the_returned_session_id(
     assert "session-1" in executor.calls[1]
 
 
+def test_followup_resumes_the_session_and_gates_and_counts_each_turn(
+    tmp_path: Path,
+) -> None:
+    change = "Add a section on maintenance after the section on design."
+
+    def rollout(thread: str, output_tokens: int, **meta: object) -> list[dict]:
+        rows: list[dict] = [
+            {"type": "event_msg", "payload": {"type": "task_started"}},
+            {
+                "type": "event_msg",
+                "payload": {
+                    "type": "token_count",
+                    "info": {
+                        "total_token_usage": {
+                            "output_tokens": output_tokens,
+                            "total_tokens": output_tokens,
+                        }
+                    },
+                },
+            },
+        ]
+        if meta:
+            rows[:0] = [
+                {"type": "session_meta", "payload": {"id": thread, **meta}},
+                {
+                    "type": "response_item",
+                    "payload": {
+                        "type": "function_call",
+                        "arguments": "cat plugin/skills/planning/SKILL.md",
+                    },
+                },
+            ]
+        return rows
+
+    class TwoTurnExecutor(_RetryExecutor):
+        def run(self, command, *, cwd, timeout_seconds, env=None):
+            turn = len(self.calls) + 1
+            sessions = Path(env["CODEX_HOME"]) / "sessions"
+            sessions.mkdir(parents=True, exist_ok=True)
+            # The resumed Monitor appends to its rollout with cumulative usage.
+            monitor = rollout("session-1", 10 * turn + 5 * (turn - 1))
+            if turn == 1:
+                monitor.insert(
+                    0, {"type": "session_meta", "payload": {"id": "session-1"}}
+                )
+            with (sessions / "rollout-session-1.jsonl").open("a") as file:
+                file.writelines(json.dumps(row) + "\n" for row in monitor)
+            child = rollout(
+                f"child-{turn}",
+                4 + turn,
+                parent_thread_id="session-1",
+                agent_role="planning",
+            )
+            (sessions / f"rollout-child-{turn}.jsonl").write_text(
+                "".join(json.dumps(row) + "\n" for row in child)
+            )
+            (cwd / ".writing" / "draft.md").write_text(f"draft {turn} " * 10)
+            if turn == 1:
+                (cwd / ".writing" / "goals.md").write_text("# Goals\n- One\n")
+            return super().run(
+                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
+            )
+
+    def turn_result(turn: int) -> ExecutionResult:
+        spawn = {
+            "id": f"collab-{turn}",
+            "type": "collab_tool_call",
+            "tool": "spawn_agent",
+            "status": "completed",
+            "receiver_thread_ids": [f"child-{turn}"],
+            "prompt": "$planning plan",
+        }
+        events = [
+            {"type": "thread.started", "thread_id": "session-1"},
+            {"type": "item.completed", "item": spawn},
+        ]
+        if turn == 1:
+            # Turn 2 leaves its child open, which only the final gate sees.
+            close = {**spawn, "id": "close-1", "tool": "close_agent"}
+            events.append({"type": "item.completed", "item": close})
+        result = _result(usage={"output_tokens": 10 * turn + 5 * (turn - 1)})
+        stream = "".join(json.dumps(event) + "\n" for event in events)
+        return replace(result, stdout=stream.encode() + result.stdout)
+
+    condition = replace(
+        load_condition_registry()["A1"],
+        require_delegation=True,
+        product_requires_draft=True,
+        goal_events="allowed",
+    )
+    executor = TwoTurnExecutor([turn_result(1), turn_result(2)])
+    runner = _runner(
+        tmp_path / "runs",
+        condition_registry={"A1": condition},
+        executor=executor,
+        codex_home=tmp_path / "codex-home",
+    )
+
+    run = runner.run_prompt(
+        _prompt(), condition_id="A1", platform="codex", followup=change
+    )
+
+    assert executor.calls[1][:4] == ["codex", "exec", "resume", "session-1"]
+    assert 'sandbox_mode="workspace-write"' in executor.calls[1]
+    assert executor.calls[1][-1] == change
+    turn1 = run.run_dir / "turn1"
+    assert (turn1 / "draft.md").read_text() == "draft 1 " * 10
+    assert (turn1 / "output.normalized.txt").read_text() == "draft 1 " * 10
+    assert (turn1 / "goals.md").read_text() == "# Goals\n- One\n"
+    assert (run.run_dir / "output.normalized.txt").read_text() == "draft 2 " * 10
+    task = run.run_dir / "workspace" / ".writing" / "task.md"
+    assert task.read_text().endswith(f"\n{runner_module.FOLLOWUP_HEADING}\n{change}\n")
+    # The resumed Monitor's rollout is collected again for turn 2.
+    assert (run.run_dir / "sessions/attempt-002/rollout-session-1.jsonl").is_file()
+    manifest = json.loads(run.manifest_path.read_text())
+    followup = manifest["followup"]
+    assert (
+        followup["message_hash"]
+        == "sha256:" + hashlib.sha256(change.encode()).hexdigest()
+    )
+    assert (
+        followup["task_hash"]
+        == "sha256:" + hashlib.sha256(task.read_bytes()).hexdigest()
+    )
+    assert followup["turn1_attempts"] == 1
+    assert followup["turn1_fidelity_gate"] == {"status": "scorable", "reasons": []}
+    assert manifest["fidelity_gate"] == {
+        "status": "rejected",
+        "reasons": ["child child-2 was never closed"],
+    }
+    assert followup["rollout_token_usage"] == {
+        "turn1": {"output_tokens": 15, "total_tokens": 15},
+        "turn2": {"output_tokens": 21, "total_tokens": 21},
+    }
+    # turn.completed is cumulative over the session, so turn 2's replaces turn 1's.
+    assert manifest["token_accounting"]["output_tokens"] == 25
+
+
 def test_retry_exhaustion_fails_after_fixed_attempt_count(tmp_path: Path) -> None:
     executor = _RetryExecutor([_result(returncode=1), _result(returncode=1)])
     runner = _runner(tmp_path, _config(retry_policy=1), executor=executor)
