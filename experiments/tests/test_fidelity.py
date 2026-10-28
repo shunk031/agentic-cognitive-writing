@@ -729,9 +729,19 @@ def _graph_run(tmp_path: Path, **change: Any) -> Path:
             {"root_goal": "Write a short memo."},
             ["root goal is not .writing/task.md verbatim"],
         ),
+        # The runner seeds the root, so its spawn needs no earlier graph write.
+        ({"write_first": False}, []),
         (
-            {"write_first": False},
-            ["task root was spawned before the graph named it"],
+            {
+                "write_first": False,
+                "message": "Read the skill file at plugin/skills/task-node/SKILL.md "
+                "and follow it for task c1",
+            },
+            [
+                "task c1 was spawned before the graph named it",
+                "task c1 length differs from its agent's report",
+                "task c1 children [] are not the reported ['c1', 'r1']",
+            ],
         ),
         (
             {

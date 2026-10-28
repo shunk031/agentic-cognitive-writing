@@ -574,7 +574,8 @@ def _task_graph_reasons(run_dir: Path, config: Mapping[str, Any]) -> list[str]:
     ``config`` names the graph file, the task file that the root goal copies
     verbatim, and the skill for each task type. Each spawned task must be in the
     final graph under a skill of its type, and a coordinator call that touches
-    the graph must name it before the spawn. Each agent of a type whose skill is
+    the graph must name it before the spawn, unless it is the root the runner
+    seeds. Each agent of a type whose skill is
     ``config["skills"]["composition"]`` reports its verdict as a fenced JSON
     object, and the graph records its children, their types, goals, and lengths,
     and any length it sets exactly as reported. Known limit: the spawn-time check
@@ -594,7 +595,9 @@ def _task_graph_reasons(run_dir: Path, config: Mapping[str, Any]) -> list[str]:
     except (OSError, ValueError, KeyError, TypeError):
         return [f"task graph {config['path']} is missing or invalid"]
     reasons: list[str] = []
-    root = tasks.get(str(graph.get("root_task_id")))
+    # The runner seeds the root, so no coordinator call needs to name it.
+    root_id = str(graph.get("root_task_id"))
+    root = tasks.get(root_id)
     task_text = (workspace / config["root_goal"]).read_text(encoding="utf-8")
     if root is None or str(root.get("goal", "")).strip() != task_text.strip():
         reasons.append(f"root goal is not {config['root_goal']} verbatim")
@@ -613,8 +616,12 @@ def _task_graph_reasons(run_dir: Path, config: Mapping[str, Any]) -> list[str]:
             for match in _SPAWNED_TASK.finditer(text):
                 task = match.group(2)
                 before = written + (text[: match.start()] if graph_name in text else "")
-                if task in tasks and not re.search(
-                    rf"(?<![\w.-]){re.escape(task)}(?![\w.-])", before
+                if (
+                    task in tasks
+                    and task != root_id
+                    and not re.search(
+                        rf"(?<![\w.-]){re.escape(task)}(?![\w.-])", before
+                    )
                 ):
                     reasons.append(f"task {task} was spawned before the graph named it")
             if graph_name in text:
