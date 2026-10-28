@@ -17,7 +17,7 @@ Prior work motivates the measure: in **Mr Dre**[^1], deep-research agents revisi
 No earlier measurement favors A4 on preservation, and none measures A6 with the current checker on a run that followed its procedure more than once.
 
 - **Requirement-change runs of 2026-10-12.** The [handoff's Evidence section](../HANDOFF.md#evidence) records that an uncommitted re-analysis of these runs found turn-2 process calls, tokens, and edit locality not lower for A4 than for `Fixed-order`. The runs used the executed study's skills and a retyped deliverable, the re-analysis measured paragraphs rather than sections, and it is not reproducible from the repository, so it informs no number here.
-- **Follow-up smoke.** Two A4 and two A6 runs of `dolomites-673.remove` used the plugin at [the smoke's commit](https://github.com/shunk031/agentic-cognitive-writing/commit/f7722475b309aa6c9e9f020a00e9a2395bcd11e3). The first run of each arm, A4 `0ab77414` and A6 `55f78d72`, had no turn-2 product clause and did not follow its procedure, so both are excluded from every rate. The two runs that followed their procedure, A4 `7ceb7743` and A6 `8d97acb9`, each changed every untargeted section (U = 1.0); A6's S was about 0.70. One run per arm estimates no rate.
+- **Follow-up smoke.** Two A4 and two A6 runs of `dolomites-673.remove` used the plugin at [the smoke's commit](https://github.com/shunk031/agentic-cognitive-writing/commit/f7722475b309aa6c9e9f020a00e9a2395bcd11e3). The first run of each arm, A4 `0ab77414` and A6 `55f78d72`, had no turn-2 product clause and did not follow its procedure, so both are excluded from every rate. The two runs that followed their procedure, both on that item, each changed every untargeted section: A6 `8d97acb9` with U of 1.0 and S of about 0.70, and A4 `7ceb7743` with U of 1.0 and S of about 0.52. Together they show no A6 disadvantage on that item; one run per arm estimates no rate.
 - **Stage 0.** Unedited A4 ran once on each of the 14 items. All 14 runs passed the fidelity gate, 13 incorporated the change, none broke an unchanged requirement that had passed turn 1, and 3 of the 12 multi-section runs changed an untargeted section, a mean U of 0.11 and a mean S of 0.98. Turn 2 ran no `Translating` in 9 runs and a full `Planning`, `Translating`, `Reviewing` sequence in 5, and its tokens about equaled turn 1's.
 - **Mechanism report.** This preregistration's change to the [mechanism report](../src/agentic_cogwriter/analysis/mechanism.py) counts `Reviewing` followed by `Planning`, and a goal replacement after review, only within one turn. On Stage 0's two-turn runs the change lowers `reviewing_then_planning` from 14 of 14 to 2 of 14 and `goal_replaced_after_review` from 13 of 14 to 2 of 14, because the earlier rule counted a turn-2 `Planning` that answered the change as following turn 1's last `Reviewing`.
 
@@ -76,16 +76,19 @@ K changes only cost statements: the paper may state that A4's turn 2 costs less 
 
 ## Power
 
-Because A6's U is unknown, power is given over a grid of A6 means with no central value. G1 reaches 80% power at an A6 mean U of about 0.52, against A4's Stage 0 mean of 0.11, and GO reaches it at about 0.53 with no breaks and 0.56 at a 5% break rate. At a 10% break rate GO stays below 80% at every A6 mean, because G2 alone then passes only about 79% of the time.
+Because A6's U is unknown, power is given over a grid of A6 means with no central value. The pilot's power is the probability of GO, which needs G2 as well as G1, so it is below G1's power at every A6 mean: G1 alone reaches 80% at an A6 mean U of about 0.52, against A4's Stage 0 mean of 0.11, while GO reaches 80% only at about 0.53 with no breaks and 0.56 at a 5% break rate, and never at a 10% break rate.
 
 | A6 mean U      | equal to A4 |   0.2 |   0.4 |   0.6 |   0.8 |
 | -------------- | ----------: | ----: | ----: | ----: | ----: |
 | G1             |       0.003 | 0.027 | 0.476 | 0.938 | 1.000 |
+| G2, no breaks  |       0.986 | 0.981 | 0.981 | 0.981 | 0.981 |
+| G2, 5% breaks  |       0.896 | 0.904 | 0.904 | 0.904 | 0.904 |
+| G2, 10% breaks |       0.800 | 0.791 | 0.791 | 0.791 | 0.791 |
 | GO, no breaks  |       0.003 | 0.027 | 0.466 | 0.919 | 0.981 |
 | GO, 5% breaks  |       0.003 | 0.025 | 0.431 | 0.851 | 0.904 |
 | GO, 10% breaks |       0.003 | 0.021 | 0.381 | 0.745 | 0.791 |
 
-G2 passes in about 98%, 90%, and 79% of simulated pilots at break rates of 0, 5%, and 10%, whatever A6's U, because the arms are equal on C and B in every scenario. Two consequences follow. With equal arms, GO is a 0.3% false positive. With an A4 that truly preserves more, a NO-GO is still likely when A6 rewrites in fewer than about half of its runs, and G2 alone fails one pilot in five at a 10% break rate, so a NO-GO at this size is weak evidence against the claim.
+G2's pass rate does not depend on A6's U, because the arms are equal on C and B in every scenario; it differs across columns only by simulation noise. Two consequences follow. With equal arms, GO is a 0.3% false positive. With an A4 that truly preserves more, a NO-GO is still likely when A6 rewrites in fewer than about half of its runs, and G2 alone fails one pilot in five at a 10% break rate, so a NO-GO at this size is weak evidence against the claim.
 
 The simulation makes these assumptions:
 
