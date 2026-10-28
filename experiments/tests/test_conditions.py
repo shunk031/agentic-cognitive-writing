@@ -69,6 +69,7 @@ def test_registry_keeps_wrapper_paths_and_families() -> None:
         "A4": "confirmatory",
         "A5": "confirmatory",
         "A6": "confirmatory",
+        "A6s": "exploratory",
         "A7": "confirmatory",
         "A8": "exploratory",
         "B1": "exploratory",
@@ -84,7 +85,7 @@ def test_registry_parses_delegation_requirement_with_false_default() -> None:
         condition_id
         for condition_id, condition in registry.items()
         if condition.require_delegation
-    } == {"A3", "A4", "A5", "A6", "B1"}
+    } == {"A3", "A4", "A5", "A6", "A6s", "B1"}
     assert registry["A8"].require_delegation is False
 
 
@@ -95,7 +96,7 @@ def test_registry_limits_monitor_write_check_to_monitor_conditions() -> None:
         condition_id
         for condition_id, condition in registry.items()
         if condition.monitor_writes_history_only
-    } == {"A4", "A5", "A6"}
+    } == {"A4", "A5", "A6", "A6s"}
 
 
 def test_unset_monitor_write_flag_enables_the_check(tmp_path: Path) -> None:

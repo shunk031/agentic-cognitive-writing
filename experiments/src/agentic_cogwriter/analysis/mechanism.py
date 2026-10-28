@@ -46,8 +46,10 @@ its ``+`` lines, a deleted file empties them), and each interval that changes
 Each replaced interval records its removed and added goal lines, normalized and
 raw, for a manual audit. A replacement after review is a replaced interval in a
 ``Planning`` delegation that directly follows a ``Reviewing`` delegation that
-had ended; it is the measure comparable to the executed study's accepted goal
-replacement.
+had ended in the same turn; it is the measure comparable to the executed
+study's accepted goal replacement. A turn-2 ``Planning`` delegation that
+follows turn 1's last ``Reviewing`` answers the follow-up message, not a
+review, so it does not count.
 
 Process order. ``Planning`` precedes the first ``Translating`` when the first
 ``Planning`` delegation comes before the first ``Translating`` delegation, or
@@ -56,7 +58,7 @@ delegation precedes the first ``draft.md`` change that adds a normalized heading
 a run that adds no heading, or whose first such change is unattributed, has no
 value. ``Reviewing`` is followed by
 ``Planning`` when a ``Planning`` delegation directly follows a ``Reviewing``
-delegation that had ended.
+delegation that had ended in the same turn.
 
 Aggregation. Rates count runs that pass the fidelity gate, with a 95% Wilson
 interval. A condition whose wrapper does not require delegation, such as A8,
@@ -461,12 +463,14 @@ def analyze_run(
     ]
 
     def after_review(k: int) -> bool:
-        """Return whether delegation k is Planning right after an ended Reviewing."""
+        """Return whether delegation k is Planning right after an ended
+        Reviewing of the same turn."""
         return (
             k > 0
             and processes[k] == "planning"
             and processes[k - 1] == "reviewing"
             and delegations[k]["previous_ended"]
+            and delegations[k]["turn"] == delegations[k - 1]["turn"]
         )
 
     first_section = next(

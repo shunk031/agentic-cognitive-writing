@@ -20,6 +20,7 @@ CONDITION_IDS = (
     "A4",
     "A5",
     "A6",
+    "A6s",
     "A7",
     "A8",
     "B1",
@@ -370,6 +371,6 @@ def load_condition_registry(
         loaded[spec.condition_id] = spec
     if set(loaded) != set(CONDITION_IDS):
         raise ConfigurationError(
-            "Condition wrappers must define exactly A1 through A8, B1, and B2"
+            "Condition wrappers must define exactly A1 through A8, A6s, B1, and B2"
         )
     return {condition_id: loaded[condition_id] for condition_id in CONDITION_IDS}

@@ -1,0 +1,40 @@
+condition_id = "A6s"
+skill = "cognitive-writing-fixed-order-skip"
+analysis_family = "exploratory"
+product_requires_draft = true
+
+[package]
+name = "cognitive-writing-experiments"
+
+[plugins]
+paths = ["plugin", "experiments/plugin"]
+codex_adapter = "codex"
+
+[adapters]
+codex = "codex_exec"
+claude_code = "claude_print"
+
+[invocation]
+codex = """Read the skill file at {codex_plugin_root}/skills/cognitive-writing-fixed-order-skip/SKILL.md and follow it."""
+
+claude_code = """/cognitive-writing-experiments:cognitive-writing-fixed-order-skip"""
+
+[install]
+claude_code = ["/plugin marketplace add .", "/plugin install agentic-cognitive-writing@agentic-cognitive-writing-process", "/plugin install cognitive-writing-experiments@agentic-cognitive-writing-process"]
+
+[trace]
+# A6 plus the Pilot 1 skip rule; the rest is A6.
+# The Monitor writes only .writing/history.md, as in A4; the fidelity gate reads
+# process history from the harness records instead of a plugin trace.
+required = false
+retrieval = "not_applicable"
+evidence = "plugin_recorded"
+citation = "plugin_recorded"
+goal_events = "allowed"
+event_types = ["process_switch", "goal_created", "goal_developed", "goal_regenerated"]
+min_events = 1
+require_delegation = true
+processes = ["planning", "generate", "organize", "goal-setting", "translating", "reviewing", "evaluate", "revise"]
+
+[[stages]]
+id = "plugin_session"
