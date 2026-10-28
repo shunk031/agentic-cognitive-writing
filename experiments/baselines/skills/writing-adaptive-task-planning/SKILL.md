@@ -28,6 +28,7 @@ Persist the graph at `.writing/baselines/adaptive-task-planning/task-graph.json`
 - `id`, a stable project-local identifier
 - `type`, exactly `reasoning` or `composition`
 - `goal`, the task objective
+- `length`, the target length of a composition task, or `null` for a reasoning task
 - `dependencies`, a list of task IDs that must finish first
 - `status`, one of `active`, `suspended`, or `silent`
 - `result`, either `null` or the task's returned result
