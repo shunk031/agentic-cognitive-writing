@@ -285,3 +285,31 @@ def test_runs_must_use_the_run_commit(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="run commit c2"):
         load_runs(run_map, items, "c2")
+
+
+def test_resume_may_keep_the_sandbox_by_flag(tmp_path: Path) -> None:
+    entries, items = _files(tmp_path, REWRITTEN)
+    for entry in entries:
+        path = Path(entry["run_dir"]) / "run-manifest.json"
+        manifest = json.loads(path.read_text())
+        manifest["models_and_execution"]["command_flags"]["continuation_args"] = [
+            "exec",
+            "resume",
+            "--sandbox",
+            "workspace-write",
+        ]
+        path.write_text(json.dumps(manifest))
+
+    assert analyze(_load(tmp_path, entries, items))["excluded"] == []
+
+
+def test_every_manifest_must_record_the_configuration(tmp_path: Path) -> None:
+    entries, items = _files(tmp_path, REWRITTEN)
+    for entry in entries:
+        path = Path(entry["run_dir"]) / "run-manifest.json"
+        manifest = json.loads(path.read_text())
+        del manifest["models_and_execution"]["decoding"]
+        path.write_text(json.dumps(manifest))
+
+    with pytest.raises(ValueError, match="lacks the model, effort"):
+        _load(tmp_path, entries, items)

@@ -26,8 +26,8 @@ excluded with every reason that applies:
 - no component of the run directory names a prompt or a change class.
 
 Every manifest present must record one generator model, reasoning effort,
-and Codex version, and the given run commit as both plugin commits; otherwise
-the analysis stops.
+and Codex version, none of them missing, and the given run commit as both
+plugin commits; otherwise the analysis stops.
 
 Measures, all of turn 2: U, the share of untargeted sections changed
 (``locality``); S, their mean word-level similarity (``mean_similarity``); B,
@@ -197,7 +197,9 @@ def _input_reasons(manifest: dict, run_dir: Path, arm: str, message: str) -> lis
         ):
             reasons.append(f"staged {skill} skill differs from the pinned hash")
     flags = (manifest.get("models_and_execution") or {}).get("command_flags") or {}
-    if 'sandbox_mode="workspace-write"' not in (flags.get("continuation_args") or []):
+    resume = flags.get("continuation_args") or []
+    # Either form the Codex adapter accepts.
+    if not {"workspace-write", 'sandbox_mode="workspace-write"'} & set(resume):
         reasons.append("resume does not keep the workspace-write sandbox")
     return reasons
 
@@ -276,6 +278,8 @@ def load_runs(run_map: Path, items_path: Path, commit: str) -> list[dict[str, An
         runs.append(record)
     if len(configurations) > 1:
         raise ValueError(f"Runs differ in configuration: {sorted(configurations)}")
+    if any(None in config[:3] for config in configurations):
+        raise ValueError("A manifest lacks the model, effort, or Codex version")
     if any(config[3:] != (commit, commit) for config in configurations):
         raise ValueError(f"Runs did not use the run commit {commit}")
     return runs
