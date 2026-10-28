@@ -24,6 +24,37 @@ _SKILL_FILE_TOKEN = re.compile(r"[^\s\"'`\\]*SKILL\.md")
 _PARENT_SEGMENT = re.compile(r"(?:^|[^\w.])\.\.(?:/|$)")
 _CALL_TYPES = frozenset({"function_call", "custom_tool_call", "local_shell_call"})
 _OUTPUT_TYPES = frozenset({"function_call_output", "custom_tool_call_output"})
+_COMMAND = re.compile(r"""\bcmd"?\s*:\s*(["'`])((?:(?!\1)[^\\]|\\.)*)\1""")
+_TARGET = re.compile(
+    r"\b(?:goals|draft)\.md\b|\.writing(?:/\S*[*?\[]|/?(?=[\s'\"`;|&)]|$))"
+)
+_HARMLESS_REDIRECT = re.compile(r"\d*>\s*/dev/null|\d*>&\d")
+_HEREDOC = re.compile(
+    r"<<-?\s*(['\"]?)(\w+)\1([^\n]*)\n(?:(?:.*?\n)??[ \t]*\2[ \t]*(?=\n|$)|.*)", re.S
+)
+_TOKEN = re.compile(
+    r"""(?P<op>\$\(|[;&|()<>`\n]+)"""
+    r"""|(?P<word>(?:'[^']*'|"(?:[^"\\]|\\.)*"|\\.|[^\s;&|()<>`'"\\])+|['"\\])"""
+)
+_QUOTED = re.compile(r"""'([^']*)'|"((?:[^"\\]|\\.)*)"|\\(.)""")
+# A tracked file, bare or under `.writing`, `.writing` itself, or a glob under it.
+_TRACKED_PATH = re.compile(
+    r"(?:^|=|(?:^|[/=])\.writing/)(?:goals|draft)\.md$"
+    r"|(?:^|[/=])\.writing(?:/?|/[^/]*[*?\[{][^/]*)$"
+)
+_INPLACE = re.compile(r"-[a-zA-Z]*i|--in-place")
+_INLINE_CODE = re.compile(r"-\w*[ceE]|-")
+_CODE_WRITE = re.compile(
+    r"""\bopen\w*\s*\([^\n]*?['"](?:(?:[wax][bt+]*|r[bt]*\+[bt+]*)['"]|\+?>)"""
+    r"""|\.(?:write_text|write_bytes|unlink|touch)\s*\(|\bFile\.write\s*\("""
+    r"""|\b(?:write|append)File\w*\s*\(|\bos\.(?:remove|rename)\s*\("""
+    r"""|\bshutil\.move\s*\("""
+)
+_SKIPPED_WORDS = frozenset(
+    {"sudo", "env", "command", "nohup", "time", "xargs", "exec", "{", "!"}
+    | {"do", "then", "else", "if", "while", "until"}
+)
+_PATH_WRITERS = frozenset({"mv", "rm", "touch", "truncate", "sponge", "ed", "tee"})
 
 
 def _script(char: str) -> str | None:
@@ -107,6 +138,131 @@ def check_fidelity(
         ):
             reasons.append("scored output is not workspace/.writing/draft.md")
     return {"status": "rejected" if reasons else "scorable", "reasons": reasons}
+
+
+def _commands(payload: dict[str, Any]) -> list[str]:
+    kind = payload.get("type")
+    if kind == "custom_tool_call":
+        commands = []
+        for quote, text in _COMMAND.findall(str(payload.get("input", ""))):
+            try:
+                commands.append(json.loads(f'"{text}"') if quote == '"' else text)
+            except json.JSONDecodeError:
+                commands.append(text)
+        return commands
+    if kind == "function_call":
+        try:
+            arguments = json.loads(payload.get("arguments") or "{}")
+        except json.JSONDecodeError:
+            return []
+        command = arguments.get("cmd") or arguments.get("command")
+    elif kind == "local_shell_call":
+        command = (payload.get("action") or {}).get("command")
+    else:
+        return []
+    if isinstance(command, list):
+        command = " ".join(map(str, command))
+    return [command] if isinstance(command, str) else []
+
+
+def _simple_command_writes(words: list[str], heredocs: str) -> bool:
+    """Return whether one simple command writes a tracked path."""
+
+    while words and (words[0] in _SKIPPED_WORDS or re.match(r"\w+=", words[0])):
+        words = words[1:]
+    if not words:
+        return False
+    name, args = PurePosixPath(words[0]).name, words[1:]
+    options = [arg for arg in args if arg.startswith("-")]
+    paths = [arg for arg in args if _TRACKED_PATH.search(arg)]
+    if name in ("bash", "sh", "zsh"):
+        flag = next((k for k, arg in enumerate(args) if re.match(r"-\w*c", arg)), -1)
+        return flag >= 0 and _writes_tracked(" ".join(args[flag + 1 :]))
+    if name == "git":
+        rest = args
+        while rest and rest[0].startswith("-"):
+            rest = rest[2:] if rest[0] in ("-C", "-c") else rest[1:]
+        sub, rest = (rest[0], rest[1:]) if rest else ("", [])
+        if sub == "stash":
+            return rest[:1] not in (["list"], ["show"])
+        return (
+            (sub == "reset" and "--hard" in rest)
+            or sub == "apply"
+            or (sub in ("checkout", "restore") and bool(paths))
+        )
+    if name == "patch":
+        return bool(paths) or any(re.match(r"-p\d", option) for option in options)
+    if name in ("cp", "install"):
+        target = args[args.index("-t") + 1 :] if "-t" in args else args[-1:]
+        return any(_TRACKED_PATH.search(arg) for arg in target[:1])
+    if name == "dd":
+        return any(path.startswith("of=") for path in paths)
+    if name in ("sed", "perl", "ruby") and any(map(_INPLACE.match, options)):
+        return bool(paths)
+    if re.fullmatch(r"python[\d.]*|perl|ruby|node", name):
+        script = [arg for arg in args if not arg.startswith("-")]
+        if not script or any(map(_INLINE_CODE.fullmatch, options)):
+            code = " ".join(args) + "\n" + heredocs
+            return bool(_CODE_WRITE.search(code) and _TARGET.search(code))
+        # The script's code is not recorded, so a tracked argument may be written.
+        return bool(paths)
+    return name in _PATH_WRITERS and bool(paths)
+
+
+def _writes_tracked(command: str) -> bool:
+    """Return whether a shell command writes a tracked file or ``.writing``.
+
+    A redirection, ``tee``, ``sponge``, ``mv``, ``rm``, ``touch``, ``truncate``,
+    ``ed``, ``patch``, in-place ``sed``, ``perl``, or ``ruby``, or ``git checkout``
+    or ``restore`` writes when a path argument is tracked; ``cp`` and ``install``
+    when the destination is, and ``dd`` when ``of=`` is. Inline interpreter code
+    writes when it names a tracked path and opens a file for writing or calls a
+    write function; a script run with a tracked argument counts as a write.
+    ``git reset --hard``, ``git stash`` other than ``list`` or ``show``,
+    ``git apply``, and ``patch -p`` always count.
+    """
+
+    # ponytail: a hand tokenizer; a path reached through a variable, a `cd`, or
+    # `find -exec` is missed, and a bash parser would close that if it matters.
+    if "apply_patch" in command:
+        return False
+    heredocs = "\n".join(match.group(0) for match in _HEREDOC.finditer(command))
+    text = _HEREDOC.sub(lambda match: match.group(3) + "\n", command)
+    text = _HARMLESS_REDIRECT.sub("", text)
+    words: list[str] = []
+    redirect = skip = False
+    for match in _TOKEN.finditer(text):
+        token = match.group("op")
+        if token is None:
+            word = _QUOTED.sub(
+                lambda m: next(g for g in m.groups() if g is not None),
+                match.group("word"),
+            )
+            if redirect and _TRACKED_PATH.search(word):
+                return True
+            if not (redirect or skip):
+                words.append(word)
+            redirect = skip = False
+            continue
+        if any(char in token for char in ";|()`\n$") or "&&" in token or token == "&":
+            if _simple_command_writes(words, heredocs):
+                return True
+            words = []
+        redirect, skip = ">" in token, "<" in token and ">" not in token
+    return _simple_command_writes(words, heredocs)
+
+
+def unrecorded_writes(records: Iterable[dict[str, Any]]) -> list[str]:
+    """Return shell commands that look like writes to the tracked files."""
+
+    return [
+        command
+        for record in records
+        if record.get("type") == "response_item"
+        and isinstance(record.get("payload"), dict)
+        for command in _commands(record["payload"])
+        if _writes_tracked(command)
+    ]
 
 
 def _response_items(records: Iterable[dict[str, Any]]) -> Iterable[dict[str, Any]]:
@@ -224,8 +380,11 @@ def _codex_reasons(run_dir: Path, monitor_writes_history_only: bool) -> list[str
                 reasons.append(f"{role} agent {thread} did not read its own SKILL.md")
 
     if monitor_writes_history_only:
-        # Known limit: only apply_patch writes become file_change items; a shell
-        # redirect by the Monitor is not visible here.
+        # Only apply_patch writes become file_change items, so the Monitor's shell
+        # commands go through the textual write detector.
+        for thread in sorted(top_level & records.keys()):
+            for command in unrecorded_writes(records[thread]):
+                reasons.append(f"Monitor ran shell write {command!r}")
         for item in items:
             if item.get("type") != "file_change" or item.get("status") != "completed":
                 continue
@@ -258,6 +417,11 @@ def _skill_isolation_reasons(run_dir: Path, codex_home: Path) -> list[str]:
         lines = _json_objects(path.read_bytes())
         meta = lines[0].get("payload") if lines else None
         thread = meta.get("id") if isinstance(meta, dict) else path.name
+        outputs = {
+            payload.get("call_id"): json.dumps(payload)
+            for payload in _response_items(lines)
+            if payload.get("type") in _OUTPUT_TYPES and payload.get("call_id")
+        }
         for payload in _response_items(lines):
             if payload.get("type") == "message":
                 for part in payload.get("content") or []:
@@ -272,7 +436,16 @@ def _skill_isolation_reasons(run_dir: Path, codex_home: Path) -> list[str]:
                 # Known limit: a relative path without a `..` segment passes even
                 # after a `cd` out of the workspace, as in `cd /x && cat SKILL.md`.
                 text = json.dumps(payload).replace("\\n", " ")
+                # A read of a path that does not exist reads nothing.
+                missing = outputs.get(payload.get("call_id"), "")
                 for read in _ABSOLUTE_SKILL_FILE.findall(text):
+                    if re.search(
+                        r"(?:^|[\s:'\"])"
+                        + re.escape(read)
+                        + r": No such file or directory",
+                        missing,
+                    ):
+                        continue
                     if not inside(read, codex_home, run_dir / "workspace"):
                         reasons.append(
                             f"thread {thread} read {read} outside the staged skills"
