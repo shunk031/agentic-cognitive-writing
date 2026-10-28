@@ -3,6 +3,12 @@ skill = "writing-linear"
 analysis_family = "confirmatory"
 product_requires_draft = true
 monitor_writes_history_only = false
+# The fidelity gate requires one patch write to each stage file, in this order.
+stage_files = [
+  ".writing/baselines/linear/pre-write.md",
+  ".writing/baselines/linear/write.md",
+  ".writing/draft.md",
+]
 
 [package]
 name = "cognitive-writing-baselines"

@@ -1077,6 +1077,7 @@ class ExperimentRunner:
                     )
                 )
                 or ROLES,
+                stage_files=condition.stage_files,
             )
             self._write_json(
                 manifest_path,
@@ -1541,7 +1542,7 @@ class ExperimentRunner:
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
         "writing-adaptive-task-planning": {
             Path("skills") / role: Path("skills") / role
-            for role in ("task-decomposition", "task-execution")
+            for role in ("task-node", "task-execution")
         },
         "writing-cogwriter-style": {
             Path("skills") / role: Path("skills") / role

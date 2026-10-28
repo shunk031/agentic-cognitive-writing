@@ -7,7 +7,8 @@ import os
 import re
 import unicodedata
 from collections import Counter, defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
+from functools import cache
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -24,9 +25,9 @@ _PARENT_SEGMENT = re.compile(r"(?:^|[^\w.])\.\.(?:/|$)")
 _CALL_TYPES = frozenset({"function_call", "custom_tool_call", "local_shell_call"})
 _OUTPUT_TYPES = frozenset({"function_call_output", "custom_tool_call_output"})
 _COMMAND = re.compile(r"""\bcmd"?\s*:\s*(["'`])((?:(?!\1)[^\\]|\\.)*)\1""")
-_TARGET = re.compile(
-    r"\b(?:goals|draft)\.md\b|\.writing(?:/\S*[*?\[]|/?(?=[\s'\"`;|&)]|$))"
-)
+# The path of a patch header line names a file to write, not a read.
+_PATCH_HEADER = re.compile(r"\*\*\* (?:(?:Add|Update|Delete) File|Move to): $")
+TRACKED_FILES = ("goals.md", "draft.md")
 _HARMLESS_REDIRECT = re.compile(r"\d*>\s*/dev/null|\d*>&\d")
 _HEREDOC = re.compile(
     r"<<-?\s*(['\"]?)(\w+)\1([^\n]*)\n(?:(?:.*?\n)??[ \t]*\2[ \t]*(?=\n|$)|.*)", re.S
@@ -36,11 +37,6 @@ _TOKEN = re.compile(
     r"""|(?P<word>(?:'[^']*'|"(?:[^"\\]|\\.)*"|\\.|[^\s;&|()<>`'"\\])+|['"\\])"""
 )
 _QUOTED = re.compile(r"""'([^']*)'|"((?:[^"\\]|\\.)*)"|\\(.)""")
-# A tracked file, bare or under `.writing`, `.writing` itself, or a glob under it.
-_TRACKED_PATH = re.compile(
-    r"(?:^|=|(?:^|[/=])\.writing/)(?:goals|draft)\.md$"
-    r"|(?:^|[/=])\.writing(?:/?|/[^/]*[*?\[{][^/]*)$"
-)
 # Bundled switches such as `-0pi`; `-M`, `-I`, and `-x` take the rest of the token.
 _INPLACE = re.compile(r"-(?![MIx])\w*i|--in-place")
 # A whole-word variable, alone or as an operand such as `of=$f`.
@@ -114,17 +110,23 @@ def check_fidelity(
     requires_draft: bool,
     monitor_writes_history_only: bool,
     roles: tuple[str, ...] = ROLES,
+    stage_files: Sequence[str] = (),
 ) -> dict[str, Any]:
     """Classify a finished run as scorable or rejected, with every reason.
 
     ``roles`` names the role skills a child may run; each child must read its
-    own. ``codex_home`` is the run's own Codex home. When given, every skill root that
-    Codex listed must lie inside it, and every skill file read by absolute path
-    inside it or the run's workspace; records from other harnesses pass ``None``.
+    own. ``codex_home`` is the run's own Codex home. When given, every skill root
+    that Codex listed must lie inside it, and every skill file read by absolute
+    path inside it or the run's workspace; records from other harnesses pass
+    ``None``.
+    ``stage_files``, when given, are workspace files the top-level thread writes
+    once each, in that order, by patch only.
     """
 
     if platform == "codex":
-        reasons = _codex_reasons(run_dir, monitor_writes_history_only, roles)
+        reasons = _codex_reasons(
+            run_dir, monitor_writes_history_only, roles, stage_files
+        )
         if codex_home is not None:
             reasons.extend(_skill_isolation_reasons(run_dir, codex_home))
     else:
@@ -169,8 +171,30 @@ def _commands(payload: dict[str, Any]) -> list[str]:
     return [command] if isinstance(command, str) else []
 
 
+@cache
+def _tracked_patterns(
+    names: tuple[str, ...],
+) -> tuple[re.Pattern[str], re.Pattern[str]]:
+    """Return the path-argument and anywhere-in-text patterns for tracked files.
+
+    A path argument is tracked when it is a named file, bare or anywhere under
+    `.writing`, `.writing` itself, or a glob directly under it.
+    """
+
+    files = "|".join(map(re.escape, names))
+    path = re.compile(
+        rf"(?:^|=|(?:^|[/=])\.writing/(?:[^/]+/)*)(?:{files})$"
+        r"|(?:^|[/=])\.writing(?:/?|/[^/]*[*?\[{][^/]*)$"
+    )
+    text = re.compile(rf"\b(?:{files})\b|\.writing(?:/\S*[*?\[]|/?(?=[\s'\"`;|&)]|$))")
+    return path, text
+
+
 def _simple_command_writes(
-    words: list[str], heredocs: str, tracked: Callable[[str], bool]
+    words: list[str],
+    heredocs: str,
+    tracked: Callable[[str], bool],
+    names: tuple[str, ...],
 ) -> bool:
     """Return whether one simple command writes a tracked path."""
 
@@ -183,7 +207,7 @@ def _simple_command_writes(
     paths = [arg for arg in args if tracked(arg)]
     if name in ("bash", "sh", "zsh"):
         flag = next((k for k, arg in enumerate(args) if re.match(r"-\w*c", arg)), -1)
-        return flag >= 0 and _writes_tracked(" ".join(args[flag + 1 :]))
+        return flag >= 0 and _writes_tracked(" ".join(args[flag + 1 :]), names)
     if name == "git":
         rest = args
         while rest and rest[0].startswith("-"):
@@ -209,14 +233,17 @@ def _simple_command_writes(
         script = [arg for arg in args if not arg.startswith("-")]
         if not script or any(map(_INLINE_CODE.fullmatch, options)):
             code = " ".join(args) + "\n" + heredocs
-            return bool(_CODE_WRITE.search(code) and _TARGET.search(code))
+            named = _tracked_patterns(names)[1]
+            return bool(_CODE_WRITE.search(code) and named.search(code))
         # The script's code is not recorded, so a tracked argument may be written.
         return bool(paths)
     return name in _PATH_WRITERS and bool(paths)
 
 
-def _writes_tracked(command: str) -> bool:
+def _writes_tracked(command: str, names: tuple[str, ...] = TRACKED_FILES) -> bool:
     """Return whether a shell command writes a tracked file or ``.writing``.
+
+    The tracked files are ``names``, by default ``goals.md`` and ``draft.md``.
 
     A redirection, ``tee``, ``sponge``, ``mv``, ``rm``, ``touch``, ``truncate``,
     ``ed``, ``patch``, in-place ``sed``, ``perl``, or ``ruby``, or ``git checkout``
@@ -226,7 +253,9 @@ def _writes_tracked(command: str) -> bool:
     write function; a script run with a tracked argument counts as a write.
     ``git reset --hard``, ``git stash`` other than ``list`` or ``show``,
     ``git apply``, and ``patch -p`` always count. A ``$variable`` target counts
-    as tracked when the command names a tracked path anywhere.
+    as tracked when the command names a tracked path anywhere. The rule is
+    textual, so inline code that reads one tracked file and writes another
+    file, such as a Python heredoc reading a stage file, is flagged.
     """
 
     # ponytail: a hand tokenizer; a path reached through a `cd` or `find -exec`, or
@@ -234,13 +263,12 @@ def _writes_tracked(command: str) -> bool:
     # parser would close that if it matters.
     if "apply_patch" in command:
         return False
+    path, named = _tracked_patterns(names)
     # A variable may hold a tracked path when the command names one anywhere.
-    variables = bool(_TARGET.search(command))
+    variables = bool(named.search(command))
 
     def tracked(word: str) -> bool:
-        return bool(
-            _TRACKED_PATH.search(word) or (variables and _VARIABLE.search(word))
-        )
+        return bool(path.search(word) or (variables and _VARIABLE.search(word)))
 
     heredocs = "\n".join(match.group(0) for match in _HEREDOC.finditer(command))
     text = _HEREDOC.sub(lambda match: match.group(3) + "\n", command)
@@ -261,14 +289,16 @@ def _writes_tracked(command: str) -> bool:
             redirect = skip = False
             continue
         if any(char in token for char in ";|()`\n$") or "&&" in token or token == "&":
-            if _simple_command_writes(words, heredocs, tracked):
+            if _simple_command_writes(words, heredocs, tracked, names):
                 return True
             words = []
         redirect, skip = ">" in token, "<" in token and ">" not in token
-    return _simple_command_writes(words, heredocs, tracked)
+    return _simple_command_writes(words, heredocs, tracked, names)
 
 
-def unrecorded_writes(records: Iterable[dict[str, Any]]) -> list[str]:
+def unrecorded_writes(
+    records: Iterable[dict[str, Any]], names: tuple[str, ...] = TRACKED_FILES
+) -> list[str]:
     """Return shell commands that look like writes to the tracked files."""
 
     return [
@@ -277,7 +307,7 @@ def unrecorded_writes(records: Iterable[dict[str, Any]]) -> list[str]:
         if record.get("type") == "response_item"
         and isinstance(record.get("payload"), dict)
         for command in _commands(record["payload"])
-        if _writes_tracked(command)
+        if _writes_tracked(command, names)
     ]
 
 
@@ -363,7 +393,10 @@ def spawn_role(
 
 
 def _codex_reasons(
-    run_dir: Path, monitor_writes_history_only: bool, roles: tuple[str, ...]
+    run_dir: Path,
+    monitor_writes_history_only: bool,
+    roles: tuple[str, ...],
+    stage_files: Sequence[str],
 ) -> list[str]:
     events, metas, records, malformed = read_codex_records(run_dir)
     if not events:
@@ -420,6 +453,23 @@ def _codex_reasons(
                 if PurePosixPath(path).parts[-2:] != (".writing", "history.md"):
                     reasons.append(f"Monitor wrote {path}")
 
+    if stage_files:
+        stages = [PurePosixPath(stage).parts for stage in stage_files]
+        written = [
+            "/".join(stage)
+            for item in items
+            if item.get("type") == "file_change" and item.get("status") == "completed"
+            for change in item.get("changes") or []
+            for stage in stages
+            if PurePosixPath(str(change.get("path", ""))).parts[-len(stage) :] == stage
+        ]
+        if written != list(stage_files):
+            reasons.append(f"stage writes were {written}, not {list(stage_files)}")
+        names = tuple(dict.fromkeys(stage[-1] for stage in stages))
+        for thread in sorted(records):
+            for command in unrecorded_writes(records[thread], names):
+                reasons.append(f"thread {thread} ran shell write {command!r}")
+
     # Closing a child also closes its descendants, so top-level closes suffice.
     for thread in sorted(spawned - closed):
         reasons.append(f"child {thread} was never closed")
@@ -465,7 +515,12 @@ def _skill_isolation_reasons(run_dir: Path, codex_home: Path) -> list[str]:
                 text = json.dumps(payload).replace("\\n", " ")
                 # A read of a path that does not exist reads nothing.
                 missing = outputs.get(payload.get("call_id"), "")
-                for read in _ABSOLUTE_SKILL_FILE.findall(text):
+                for match in _ABSOLUTE_SKILL_FILE.finditer(text):
+                    read = match.group()
+                    if _PATCH_HEADER.search(
+                        text, max(0, match.start() - 24), match.start()
+                    ):
+                        continue
                     if re.search(
                         r"(?:^|[\s:'\"])"
                         + re.escape(read)
