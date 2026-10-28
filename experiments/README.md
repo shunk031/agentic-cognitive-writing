@@ -95,14 +95,14 @@ uv run --project experiments agentic-cogwriter-mechanism-report \
 
 ## Check requirement changes
 
-The requirement-change module generates, for eight DoLoMiTes prompts of the non-evaluation smoke pool, four checkable turn-1 requirements and one seeded change per prompt, and checks two-turn runs against them. The generator and checkers use the standard library and stay outside the run workspace; the check refuses a run whose workspace holds a copy of the module or of the items file. The module docstring of [`requirement_change.py`](src/agentic_cogwriter/requirement_change.py) defines each rule.
+The requirement-change module generates, for eight DoLoMiTes prompts of the non-evaluation smoke pool, four checkable turn-1 requirements per prompt and one seeded change per prompt and change class, and checks runs against them. The generator and checkers use the standard library and stay outside the run workspace; the check refuses a run whose workspace holds a copy of the module or of the items file. The checkers read only an item, the turn-1 output, and the final output, so they do not depend on how turn 2 was started. The module docstring of [`requirement_change.py`](src/agentic_cogwriter/requirement_change.py) defines each rule.
 
 ```bash
 uv run --package agentic-cogwriter python -m agentic_cogwriter.requirement_change generate --out /path/to/items
-uv run --package agentic-cogwriter python -m agentic_cogwriter.requirement_change check --items /path/to/items/items.json /path/to/run-dir
+uv run --package agentic-cogwriter python -m agentic_cogwriter.requirement_change check --items /path/to/items/items.json --item dolomites-673.remove /path/to/run-dir
 ```
 
-`generate` writes `manifest.jsonl`, the prompt rows with the turn-1 requirements added to their constraints, `items.json`, and `followup/<prompt-id>.txt`, the change message for `--followup-file`. `check` writes `change-check.json` into each run directory: whether every changed requirement passes after turn 2, which unchanged requirements that passed after turn 1 fail after turn 2, and the share of untargeted sections whose text changed.
+`generate` writes `manifest.jsonl`, the prompt rows with the turn-1 requirements added to their constraints, `items.json`, and `followup/<item-id>.txt`, the change for `--followup-file`. An item id is the prompt id and the change class, and `assigned` marks the frozen assignment of each class to two prompts. `check` reads the run's `turn1/output.normalized.txt`, or the file given with `--turn1`, and its `output.normalized.txt`. It writes `change-check.json` into the run directory with three results: whether every changed requirement passes after turn 2, which unchanged requirements that passed after turn 1 fail after turn 2, and the share of untargeted sections whose text changed.
 
 ## Score a completed run
 
