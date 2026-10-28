@@ -109,7 +109,7 @@ class FakeExecutor:
                     ("re-write",),
                 ),
                 "writing-adaptive-task-planning": (
-                    ("task-decomposition",),
+                    ("task-node",),
                     ("task-execution",),
                     ("task-revision",),
                 ),
@@ -270,12 +270,12 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     a3_wrapper = tomllib.loads(registry["A3"].plugin_config.read_text(encoding="utf-8"))
     assert a3_wrapper["title"] == "Adaptive Task Planning"
     assert a3_wrapper["trace"]["processes"] == [
-        "task-decomposition",
+        "task-node",
         "task-execution",
         "task-revision",
     ]
     assert tuple(stage.stage_id for stage in registry["A3"].stages) == (
-        "task-decomposition",
+        "task-node",
         "task-execution",
         "task-revision",
     )
@@ -302,7 +302,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A1"].trace_processes == ("generate",)
     assert registry["A2"].trace_processes == ("pre-write", "write", "re-write")
     assert registry["A3"].trace_processes == (
-        "task-decomposition",
+        "task-node",
         "task-execution",
         "task-revision",
     )
@@ -337,7 +337,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A2"].goal_events == "forbidden"
     assert registry["A3"].goal_events == "forbidden"
     assert registry["A4"].goal_events == "allowed"
-    untraced_conditions = {"A2", "A4", "A5", "A6", "A7", "A8"}
+    untraced_conditions = {"A2", "A3", "A4", "A5", "A6", "A7", "A8"}
     assert not any(registry[name].trace_required for name in untraced_conditions)
     assert all(
         spec.trace_required
@@ -434,12 +434,6 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
 
     result = runner.run_prompt(prompt, condition_id="A3", platform="codex")
 
-    events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
-    assert [event["process"] for event in events] == [
-        "task-decomposition",
-        "task-execution",
-        "task-revision",
-    ]
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["inputs"]["trace_policy"] == {
         "citation": "N/A",
@@ -453,7 +447,7 @@ def test_a3_manifest_keeps_na_trace_policy_without_runner_events(tmp_path):
         "min_events": 1,
         "process_order": None,
         "processes": [
-            "task-decomposition",
+            "task-node",
             "task-execution",
             "task-revision",
         ],

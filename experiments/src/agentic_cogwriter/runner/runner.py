@@ -38,7 +38,7 @@ from .execution import (
     extract_token_usage,
     reject_retrieval,
 )
-from .fidelity import check_fidelity, check_output_language
+from .fidelity import ROLES, check_fidelity, check_output_language
 from .hashing import sha256_bytes, sha256_file
 from .manifest import LANGUAGES, PromptRecord, load_benchmark_provenance
 from .trace import (
@@ -1070,7 +1070,15 @@ class ExperimentRunner:
                 codex_home=generator_config_dir.resolve(),
                 requires_draft=condition.product_requires_draft,
                 monitor_writes_history_only=condition.monitor_writes_history_only,
+                roles=tuple(
+                    path.name
+                    for path in self._CODEX_DELEGATED_SKILL_DIRECTORIES.get(
+                        condition.skill_name, {}
+                    )
+                )
+                or ROLES,
                 stage_files=condition.stage_files,
+                spawn_message=condition.spawn_message,
             )
             self._write_json(
                 manifest_path,
@@ -1533,6 +1541,10 @@ class ExperimentRunner:
             for role in ("planning", "translating", "reviewing")
         },
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
+        "writing-adaptive-task-planning": {
+            Path("skills") / role: Path("skills") / role
+            for role in ("task-node", "task-execution")
+        },
     }
     # A condition listed here installs its own agent definitions in place of the
     # adapter's `agents/`, so the role descriptions match its role skills.
@@ -1554,9 +1566,10 @@ class ExperimentRunner:
         Codex adapter into ``codex_home``: the staged skills under ``skills/``,
         the adapter's ``agents/`` and ``rules/``, and its ``config.toml`` layered
         over the runner's synthesized one; an in-context condition gets only the
-        skills and rules. It also writes the prompt's task sections to
-        ``.writing/task.md``, the plugin's task state, and creates an empty
-        ``.writing/history.md`` for the Monitor to append to.
+        skills and rules. Such a condition also gets an empty
+        ``.writing/history.md`` for the Monitor to append to. It, or any
+        delegating condition, gets the prompt's task sections in
+        ``.writing/task.md``, the task state its agents read.
         """
 
         selected_root = self._codex_plugin_root(condition)
@@ -1602,12 +1615,20 @@ class ExperimentRunner:
             if path.is_file()
         }
         adapter = self._wrapper(condition)["plugins"].get("codex_adapter")
+        if adapter is not None or condition.require_delegation:
+            if prompt is None:
+                raise ConfigurationError("Task staging requires a prompt")
+            task_path = workspace / ".writing" / "task.md"
+            task_path.parent.mkdir(parents=True, exist_ok=True)
+            task_path.write_text(
+                "\n\n".join(_task_sections(_shared_values(prompt)).values()) + "\n",
+                encoding="utf-8",
+            )
+            staged[".writing/task.md"] = f"sha256:{sha256_file(task_path)}"
         if adapter is None:
             return staged
-        if codex_home is None or prompt is None:
-            raise ConfigurationError(
-                "Codex adapter staging requires a Codex home and a prompt"
-            )
+        if codex_home is None:
+            raise ConfigurationError("Codex adapter staging requires a Codex home")
         # An ablation skill lives in another root than the plugin's adapter.
         adapter_root = next(
             (root / adapter for root in source_roots if (root / adapter).is_dir()),
@@ -1635,15 +1656,8 @@ class ExperimentRunner:
             delegated=condition.require_delegation,
             agents_root=agents_root,
         )
-        task_path = workspace / ".writing" / "task.md"
-        task_path.parent.mkdir(parents=True, exist_ok=True)
-        task_path.write_text(
-            "\n\n".join(_task_sections(_shared_values(prompt)).values()) + "\n",
-            encoding="utf-8",
-        )
-        staged[".writing/task.md"] = f"sha256:{sha256_file(task_path)}"
+        history_path = workspace / ".writing" / "history.md"
         # Every adapter condition's Monitor appends to the history, so it exists.
-        history_path = task_path.with_name("history.md")
         history_path.touch()
         staged[".writing/history.md"] = f"sha256:{sha256_file(history_path)}"
         staged.update(

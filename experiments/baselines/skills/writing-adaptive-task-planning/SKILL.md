@@ -15,9 +15,11 @@ The runner gives this condition the same assignment, supplied context, context-w
 
 Retrieval tasks are disabled under the equal-information policy. The graph may contain only `reasoning` and `composition` task types. Do not create a retrieval node, browse, search, call a retrieval tool, access the Internet, or use an external source. The runner records retrieval, evidence gathering, and citation handling as `N/A` in the run accounting by design. A missing fact remains uncertain or is omitted.
 
-The final response must contain the complete final text (the runner enforces this; a parallel runner change exists).
+This adaptation uses the task graph as its only planning structure. Do not create or modify `.writing/goals.md` and emit no goal events. The user owns rhetorical intent, factual authority, final wording, and publication. The coordinator owns graph state, ready-task scheduling, subagent dispatch, and persistence; it never judges atomicity or writes prose. Node agents own each composition task's atomicity verdict and its proposed child tasks or prose, and execution agents own reasoning results. A native subagent must not launch a nested `codex exec` process or spawn an agent.
 
-This adaptation uses the task graph as its only planning structure. Do not create or modify `.writing/goals.md` and emit no goal events. The user owns rhetorical intent, factual authority, final wording, and publication. The coordinator owns graph state, ready-task scheduling, subagent dispatch, persistence, and trace recording. Typed task subagents own their returned reasoning or composition results. A native subagent must not launch a nested `codex exec` process.
+## Delegation
+
+Delegate each selected task to a fresh agent: `spawn_agent` with `fork_context` false and a message that is exactly `Read the skill file at plugin/skills/task-node/SKILL.md and follow it for task <task ID>` for a `composition` task, or exactly `Read the skill file at plugin/skills/task-execution/SKILL.md and follow it for task <task ID>` for a `reasoning` task, where the task ID is letters, digits, `_`, `.`, or `-`, with nothing added; the agent reads the task's fields from the graph. Then `wait` for the agent and `close_agent` it before spawning the next one.
 
 ## Persisted graph contract
 
@@ -26,6 +28,8 @@ Persist the graph at `.writing/baselines/adaptive-task-planning/task-graph.json`
 - `id`, a stable project-local identifier
 - `type`, exactly `reasoning` or `composition`
 - `goal`, the task objective
+- `length`, the target length of a composition task, or `null` for a reasoning task and for the root until its node agent sets it from the task
+- `depth`, 0 for the root and one more than the parent for every other task
 - `dependencies`, a list of task IDs that must finish first
 - `status`, one of `active`, `suspended`, or `silent`
 - `result`, either `null` or the task's returned result
@@ -36,33 +40,18 @@ Store task results under `.writing/baselines/adaptive-task-planning/results/` wh
 
 ## Procedure
 
-1. Read `.writing/assignment.md` and the supplied context. Initialize a root `composition` task if the graph does not exist. Do not read or modify `.writing/goals.md`.
-2. Select the active task nearest the root by breadth-first depth, breaking ties with the graph's stable task order. Give the subagent the task's parent context, dependency results, relevant graph structure, assignment, and supplied context.
-3. Ask the subagent whether the task is atomic under the two enabled types. If the task is not atomic, ask it for typed child tasks and dependencies. Add the children to the graph, mark the parent `suspended`, and persist the graph before scheduling another task.
-4. If the task is atomic, dispatch its typed executor. A reasoning executor returns a bounded reasoning or planning artifact. A composition executor returns prose for its task. Store the result, mark the task `silent`, update dependent tasks, and persist the graph.
-5. After each composition task completes and its result is stored, re-read the current aggregated text, meaning the composition results produced so far in dependency order. Before scheduling the next task, the coordinator may perform text-conditioned graph revision. Allowed revision operations are:
+1. Read the task in `.writing/task.md`. Initialize a root `composition` task with `length` `null` if the graph does not exist. Do not read or modify `.writing/goals.md`.
+2. Select the active task nearest the root by breadth-first depth, breaking ties with the graph's stable task order. A task is ready when every dependency is `silent`.
+3. Delegate a selected `composition` task, the root and each child alike, to a node agent. The agent judges whether the task is atomic; at depth 3 or deeper, where the root is at depth 0, the task is atomic without judgment, as in WriteHERE's report mode. When the agent reports the root's length, record it. If the agent returns child tasks, add them to the graph as reported, with each composition child depending on every composition child before it so that prose is appended in document order, mark the parent `suspended`, and persist the graph before scheduling another task. If the agent appended its prose to `.writing/draft.md`, record the result, mark the task `silent`, and persist the graph.
+4. Delegate a selected `reasoning` task, which is atomic as in WriteHERE's report mode, to an execution agent, which writes a bounded reasoning or planning artifact to its result file. Record the result, mark the task `silent`, and persist the graph. A `suspended` task becomes `silent` when all of its children are `silent`.
+5. After each composition task completes, re-read the current aggregated text in `.writing/draft.md`. Before scheduling the next task, the coordinator may perform text-conditioned graph revision. Allowed revision operations are:
    - revise the goal text of an active or suspended task
-   - add new typed child tasks with dependencies under any non-silent task
+   - add new typed child tasks with dependencies under a suspended task
    - retire an active or suspended task by marking it `silent` with a result that notes the retirement
    - add or reorder dependencies among non-silent tasks while keeping the graph acyclic
 
-   Each revision appends one schema-valid `process_switch` event with `process: "task-revision"`. The event's `evidence` cites the specific current-text observation that motivated the revision, and its `decision` names the affected task IDs. Revision must not modify or reopen a silent task's result, rewrite already-composed text because composition tasks own prose, introduce task types beyond `reasoning` and `composition`, select or name a writing process, touch `.writing/goals.md`, or emit goal events.
-6. Continue the recursive decompose-or-execute loop until the root composition task is silent. Aggregate composition results in dependency and child order and write the final document to `.writing/draft.md`.
-7. Append one schema-valid `process_switch` event to `.writing/trace/process.jsonl` for each observable graph action that enters a top-level task state. The trace contract has a variable event count with a minimum of one event for a successful run. Every event's `process` value must be exactly one of `task-decomposition`, `task-execution`, or `task-revision`; no other process value is allowed. Explain the task ID, type, dependency evidence, and state change in `decision` and `evidence`. The trace must never claim that a writing-process choice occurred when only the task graph changed.
-
-Before sending the final response, complete this non-skippable checklist:
-
-1. The root task is `silent`.
-2. The aggregated document is written to `.writing/draft.md`.
-3. The final response contains the complete final text.
-
-The run is `INVALID` unless all three checks pass. Returning the complete text without writing `.writing/draft.md` does not satisfy the contract.
-
-Every trace event includes `timestamp`, `event_type`, `responsible_agent`, `process`, `decision`, `evidence`, `open_uncertainty`, `from_process`, and `to_process`. Use `responsible_agent: "runner"`, add the graph and relevant result files to `artifacts`, and preserve unresolved dependencies or claims in `open_uncertainty`. Retrieval, evidence, and citation fields are `N/A` by design in the runner's derived accounting, not fabricated trace events. Do not append goal events or hidden reasoning. In the JSON object, `timestamp`, `event_type`, `responsible_agent`, `process`, and `decision` are strings; `evidence` and `open_uncertainty` are arrays of strings; `from_process` and `to_process` are strings or `null`; and `artifacts` is an array of project-relative path strings; set `timestamp` to the current wall-clock time obtained from the shell at write time, for example `date -Is`, and never copy example timestamps. For example:
-
-```json
-{"timestamp":"2026-01-15T09:00:00+09:00","event_type":"process_switch","responsible_agent":"runner","process":"task-decomposition","decision":"Decompose the root composition task into typed child tasks.","evidence":[".writing/baselines/adaptive-task-planning/task-graph.json"],"open_uncertainty":[],"from_process":null,"to_process":"task-decomposition","artifacts":[".writing/baselines/adaptive-task-planning/task-graph.json"]}
-```
+   Revision must not modify or reopen a silent task's result, rewrite already-composed text because composition tasks own prose, introduce task types beyond `reasoning` and `composition`, select or name a writing process, touch `.writing/goals.md`, or emit goal events.
+6. Continue the recursive decompose-or-execute loop until the root task is `silent`. The text in `.writing/draft.md` is then the final document.
 
 The adaptation follows WriteHERE[^1]'s released typed task graph, dependency-aware states, recursive decomposition, and interleaved execution semantics. It does not reproduce the original retrieval agent, prompts, models, frontend, benchmark, or graph implementation. The experiment compares task-structure adaptation under a common no-retrieval information policy.
 
