@@ -240,7 +240,12 @@ def _config():
 def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions():
     registry = load_condition_registry()
 
-    assert set(registry) == {*(f"A{index}" for index in range(1, 9)), "B1", "B2"}
+    assert set(registry) == {
+        *(f"A{index}" for index in range(1, 9)),
+        "A6s",
+        "B1",
+        "B2",
+    }
     assert [
         registry[condition].skill_name
         for condition in (
@@ -250,6 +255,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
             "A4",
             "A5",
             "A6",
+            "A6s",
             "A7",
             "A8",
             "B1",
@@ -262,6 +268,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
         "agentic-cog-writer",
         "cognitive-writing-task-objective",
         "cognitive-writing-fixed-order",
+        "cognitive-writing-fixed-order-skip",
         "cognitive-writing-single-writer",
         "cognitive-writing-single-context",
         "writing-cogwriter-style",
@@ -337,7 +344,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A2"].goal_events == "forbidden"
     assert registry["A3"].goal_events == "forbidden"
     assert registry["A4"].goal_events == "allowed"
-    untraced_conditions = {"A2", "A3", "A4", "A5", "A6", "A7", "A8", "B1"}
+    untraced_conditions = {"A2", "A3", "A4", "A5", "A6", "A6s", "A7", "A8", "B1"}
     assert not any(registry[name].trace_required for name in untraced_conditions)
     assert all(
         spec.trace_required

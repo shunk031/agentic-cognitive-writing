@@ -89,7 +89,7 @@ DELEGATION_CONTRACT = (
     "coordinator is not permitted in this run and fails the run."
 )
 DELEGATION_CONTRACT_TEXT = DELEGATION_CONTRACT + "\n"
-DELEGATING_CONDITIONS = ("A3", "A4", "A5", "A6", "B1")
+DELEGATING_CONDITIONS = ("A3", "A4", "A5", "A6", "A6s", "B1")
 
 NO_GOAL_SKILL_PATHS = (
     REPO_ROOT / "experiments/baselines/skills/writing-linear/SKILL.md",
@@ -196,6 +196,7 @@ def _plugin_source(tmp_path: Path) -> Path:
         "agentic-cog-writer",
         "cognitive-writing-task-objective",
         "cognitive-writing-fixed-order",
+        "cognitive-writing-fixed-order-skip",
         "cognitive-writing-single-writer",
         "cognitive-writing-single-context",
         "writing-cogwriter-style",
@@ -1102,7 +1103,14 @@ def test_every_condition_prompt_states_the_manifest_output_language_once(
     section = f"## Output language\nWrite the deliverable in {name}."
     runner = ExperimentRunner(_config(), output_root=Path("runs"))
     conditions = load_condition_registry()
-    assert sorted(conditions) == [*(f"A{n}" for n in range(1, 9)), "B1", "B2"]
+    assert sorted(conditions) == [
+        *(f"A{n}" for n in range(1, 7)),
+        "A6s",
+        "A7",
+        "A8",
+        "B1",
+        "B2",
+    ]
     for condition in conditions.values():
         for platform in PLATFORMS:
             composed = runner._plugin_prompt(condition, prompt, platform)
@@ -1405,6 +1413,42 @@ def test_fixed_order_skill_is_the_monitor_skill_with_a_fixed_cycle() -> None:
             "draft in `.writing/draft.md` is the final document.",
         ),
     }
+
+
+def test_skip_skill_is_the_fixed_order_skill_with_the_pilot1_rule() -> None:
+    skills = REPO_ROOT / "experiments/plugin/skills"
+    lines = difflib.unified_diff(
+        (skills / "cognitive-writing-fixed-order/SKILL.md")
+        .read_text(encoding="utf-8")
+        .splitlines(),
+        (skills / "cognitive-writing-fixed-order-skip/SKILL.md")
+        .read_text(encoding="utf-8")
+        .splitlines(),
+        n=0,
+        lineterm="",
+    )
+    step2 = (
+        "2. Take the next process in the fixed `Planning`, `Translating`, then "
+        "`Reviewing` order; each pass starts again with `Planning`. Checking the "
+        "draft against the task is Reviewing's work."
+    )
+
+    changed = [
+        line
+        for line in lines
+        if line.startswith(("+", "-")) and not line.startswith(("+++", "---"))
+    ]
+
+    assert changed == [
+        "-name: cognitive-writing-fixed-order",
+        "+name: cognitive-writing-fixed-order-skip",
+        f"-{step2}",
+        f"+{step2} Skip `Translating` when the latest `Planning` report added no "
+        "goal that lacks prose. The pass then continues with `Reviewing`.",
+    ]
+    assert [
+        p.name for p in (skills / "cognitive-writing-fixed-order-skip").iterdir()
+    ] == ["SKILL.md"]
 
 
 def test_task_objective_skills_are_the_a4_skills_without_goal_wording() -> None:

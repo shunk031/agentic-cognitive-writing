@@ -1667,6 +1667,7 @@ class ExperimentRunner:
             for role in ("planning", "translating", "reviewing")
         },
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
+        "cognitive-writing-fixed-order-skip": _CODEX_ROLE_SKILL_DIRECTORIES,
         "writing-adaptive-task-planning": {
             Path("skills") / role: Path("skills") / role
             for role in ("task-node", "task-execution")

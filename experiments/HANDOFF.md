@@ -131,9 +131,9 @@ Results are ready for the paper when the rerun shows, from harness records, that
   - **Goal creation.** No goal line before, at least one after.
   - **Goal development.** Goal lines before, at least one added, none removed.
   - **Goal replacement.** At least one goal line removed, which includes a rewrite.
-  - **Goal replacement after review.** A replaced interval in a `Planning` delegation that directly follows an ended `Reviewing` delegation. This, not the broader goal replacement, is the measure compared with the executed study's 0.5%.
+  - **Goal replacement after review.** A replaced interval in a `Planning` delegation that directly follows a `Reviewing` delegation that ended in the same turn. This, not the broader goal replacement, is the measure compared with the executed study's 0.5%.
   - **`Planning` before the first section.** A `Planning` delegation precedes the first `draft.md` change that adds a heading, including a heading the `Monitor` writes. A run that adds no heading has no value, and neither does a run whose first such change a delegation with an unknown start could own.
-  - **`Reviewing` to `Planning`.** A `Planning` delegation directly follows an ended `Reviewing` delegation.
+  - **`Reviewing` to `Planning`.** A `Planning` delegation directly follows a `Reviewing` delegation that ended in the same turn.
 
   Only `apply_patch` writes become `FileChange` items. The gate rejects shell writes to tracked files by the `Monitor`, and the report lists shell writes by role agents without rejecting them. `Planning` before each section, not only the first, is not yet measured.
 

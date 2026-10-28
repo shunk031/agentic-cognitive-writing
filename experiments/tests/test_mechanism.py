@@ -473,6 +473,46 @@ def test_a_followup_turn_splits_delegations_and_goal_events(
     assert "| 1/1 1.00 [0.21, 1.00] |" in out.splitlines()[-3]
 
 
+def test_turn2_planning_after_turn1_reviewing_is_not_after_review(
+    tmp_path: Path,
+) -> None:
+    run_dir = _run(
+        tmp_path,
+        [
+            _spawn("p1", "$planning create the goals"),
+            _wait("p1"),
+            _spawn("r1", "$reviewing check"),
+            _collab("close_agent", "r1"),
+        ],
+        {
+            "p1": _rollout("p1", (10_000, GOALS, _add(FIRST_GOALS)), turns=(5,)),
+            "r1": _rollout("r1", turns=(20,)),
+        },
+    )
+    _jsonl(
+        run_dir / "attempt-002.events.jsonl",
+        [_spawn("p2", "$planning apply the change"), _wait("p2")],
+    )
+    _jsonl(
+        run_dir / "sessions/attempt-002/rollout-p2.jsonl",
+        _rollout("p2", (70_000, GOALS, _update(REWRITE)), turns=(65,)),
+    )
+    manifest = json.loads((run_dir / "run-manifest.json").read_text())
+    manifest["followup"] = {
+        "turn1_attempts": 1,
+        "turn2_started_at": "1970-01-01T00:01:00+00:00",
+    }
+    (run_dir / "run-manifest.json").write_text(json.dumps(manifest))
+
+    assert main(["--runs-root", str(tmp_path)]) == 0
+    detail = json.loads((run_dir / "mechanism.json").read_text())
+
+    assert detail["processes"] == ["planning", "reviewing", "planning"]
+    assert detail["turn2_goal_events"] == ["replaced"]
+    assert detail["reviewing_then_planning"] is False
+    assert detail["goal_replaced_after_review"] is False
+
+
 def test_a_reused_child_starts_a_new_delegation(tmp_path: Path) -> None:
     detail = _detail(
         tmp_path,
