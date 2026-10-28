@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import tomllib
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -67,6 +68,8 @@ class ConditionSpec:
     product_requires_draft: bool
     monitor_writes_history_only: bool = True
     trace_required: bool = True
+    stage_files: tuple[str, ...] = ()
+    spawn_message: str | None = None
 
     @property
     def trace_policy_dict(self) -> dict[str, str]:
@@ -155,6 +158,22 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
         raise ConfigurationError(
             f"Wrapper {wrapper_path} monitor_writes_history_only must be a boolean"
         )
+    stage_files = wrapper.get("stage_files", [])
+    if not (
+        isinstance(stage_files, list)
+        and all(isinstance(path, str) and path for path in stage_files)
+    ):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} stage_files must be a list of paths"
+        )
+    spawn_message = wrapper.get("spawn_message")
+    if spawn_message is not None:
+        try:
+            re.compile(spawn_message)
+        except (TypeError, re.error) as exc:
+            raise ConfigurationError(
+                f"Wrapper {wrapper_path} spawn_message must be a regular expression"
+            ) from exc
     package = wrapper.get("package")
     if not isinstance(package, Mapping):
         raise ConfigurationError(f"Wrapper {wrapper_path} must define a package table")
@@ -330,6 +349,8 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
         product_requires_draft=product_requires_draft,
         monitor_writes_history_only=monitor_writes_history_only,
         trace_required=trace_required,
+        stage_files=tuple(stage_files),
+        spawn_message=spawn_message,
     )
 
 

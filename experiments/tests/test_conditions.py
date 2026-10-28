@@ -32,7 +32,7 @@ def test_registry_parses_stages_from_condition_wrappers() -> None:
         "re_write",
     ]
     assert [stage.stage_id for stage in registry["A3"].stages] == [
-        "task-decomposition",
+        "task-node",
         "task-execution",
         "task-revision",
     ]
@@ -109,6 +109,30 @@ def test_unset_monitor_write_flag_enables_the_check(tmp_path: Path) -> None:
     )
 
     assert load_condition_registry(conditions_dir)["A8"].monitor_writes_history_only
+
+
+def test_stage_files_apply_to_a2_only(tmp_path: Path) -> None:
+    registry = load_condition_registry()
+
+    assert {cid: c.stage_files for cid, c in registry.items() if c.stage_files} == {
+        "A2": (
+            ".writing/baselines/linear/pre-write.md",
+            ".writing/baselines/linear/write.md",
+            ".writing/draft.md",
+        )
+    }
+    conditions_dir = _copy_conditions(tmp_path)
+    wrapper_path = conditions_dir / "a2_baseline.toml"
+    text = wrapper_path.read_text(encoding="utf-8")
+    wrapper_path.write_text(
+        text[: text.index("stage_files")]
+        + 'stage_files = "a.md"\n'
+        + text[text.index("]\n", text.index("stage_files")) + 2 :],
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ConfigurationError, match="stage_files must be a list"):
+        load_condition_registry(conditions_dir)
 
 
 def test_registry_rejects_non_boolean_delegation_requirement(tmp_path: Path) -> None:

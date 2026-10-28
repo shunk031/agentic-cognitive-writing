@@ -15,11 +15,11 @@ The runner gives this condition the same assignment, supplied context, context-w
 
 Retrieval tasks are disabled under the equal-information policy. The graph may contain only `reasoning` and `composition` task types. Do not create a retrieval node, browse, search, call a retrieval tool, access the Internet, or use an external source. The runner records retrieval, evidence gathering, and citation handling as `N/A` in the run accounting by design. A missing fact remains uncertain or is omitted.
 
-This adaptation uses the task graph as its only planning structure. Do not create or modify `.writing/goals.md` and emit no goal events. The user owns rhetorical intent, factual authority, final wording, and publication. The coordinator owns graph state, ready-task scheduling, subagent dispatch, and persistence. Decomposition agents own their atomicity verdicts and proposed child tasks, and execution agents own their reasoning or composition results. A native subagent must not launch a nested `codex exec` process or spawn an agent.
+This adaptation uses the task graph as its only planning structure. Do not create or modify `.writing/goals.md` and emit no goal events. The user owns rhetorical intent, factual authority, final wording, and publication. The coordinator owns graph state, ready-task scheduling, subagent dispatch, and persistence; it never judges atomicity or writes prose. Node agents own each composition task's atomicity verdict and its proposed child tasks or prose, and execution agents own reasoning results. A native subagent must not launch a nested `codex exec` process or spawn an agent.
 
 ## Delegation
 
-Delegate each decomposition and each execution to a fresh agent: `spawn_agent` with `fork_context` false and a message that begins with "Read the skill file at plugin/skills/task-decomposition/SKILL.md and follow it." or "Read the skill file at plugin/skills/task-execution/SKILL.md and follow it.", followed by the task's ID, type, and goal, its parent's goal, and the paths of its dependency results. Then `wait` for the agent and `close_agent` it before spawning the next one.
+Delegate each selected task to a fresh agent: `spawn_agent` with `fork_context` false and a message that is exactly `Read the skill file at plugin/skills/task-node/SKILL.md and follow it for task <task ID>` for a `composition` task, or exactly `Read the skill file at plugin/skills/task-execution/SKILL.md and follow it for task <task ID>` for a `reasoning` task, where the task ID is letters, digits, `_`, `.`, or `-`, with nothing added; the agent reads the task's fields from the graph. Then `wait` for the agent and `close_agent` it before spawning the next one.
 
 ## Persisted graph contract
 
@@ -28,7 +28,8 @@ Persist the graph at `.writing/baselines/adaptive-task-planning/task-graph.json`
 - `id`, a stable project-local identifier
 - `type`, exactly `reasoning` or `composition`
 - `goal`, the task objective
-- `length`, the target length of a composition task, or `null` for a reasoning task
+- `length`, the target length of a composition task, or `null` for a reasoning task and for the root until its node agent sets it from the task
+- `depth`, 0 for the root and one more than the parent for every other task
 - `dependencies`, a list of task IDs that must finish first
 - `status`, one of `active`, `suspended`, or `silent`
 - `result`, either `null` or the task's returned result
@@ -39,13 +40,13 @@ Store task results under `.writing/baselines/adaptive-task-planning/results/` wh
 
 ## Procedure
 
-1. Read the task in `.writing/task.md`. Initialize a root `composition` task if the graph does not exist. Do not read or modify `.writing/goals.md`.
+1. Read the task in `.writing/task.md`. Initialize a root `composition` task with `length` `null` if the graph does not exist. Do not read or modify `.writing/goals.md`.
 2. Select the active task nearest the root by breadth-first depth, breaking ties with the graph's stable task order. A task is ready when every dependency is `silent`.
-3. Delegate every newly selected task, the root and each child alike, to a decomposition agent, which judges whether the task is atomic under the two enabled types. If the task is not atomic, the agent returns typed child tasks and dependencies. Add the children to the graph, with each composition child depending on every composition child before it so that prose is appended in document order, mark the parent `suspended`, and persist the graph before scheduling another task. A task executes only after a decomposition agent has judged it atomic.
-4. If the task is atomic, delegate it to an execution agent. A reasoning execution writes a bounded reasoning or planning artifact to its result file. A composition execution appends its prose to `.writing/draft.md`. Record the result, mark the task `silent`, and persist the graph. A `suspended` task becomes `silent` when all of its children are `silent`.
+3. Delegate a selected `composition` task, the root and each child alike, to a node agent. The agent judges whether the task is atomic; at depth 3 or deeper, where the root is at depth 0, the task is atomic without judgment, as in WriteHERE's report mode. When the agent reports the root's length, record it. If the agent returns child tasks, add them to the graph as reported, with each composition child depending on every composition child before it so that prose is appended in document order, mark the parent `suspended`, and persist the graph before scheduling another task. If the agent appended its prose to `.writing/draft.md`, record the result, mark the task `silent`, and persist the graph.
+4. Delegate a selected `reasoning` task, which is atomic as in WriteHERE's report mode, to an execution agent, which writes a bounded reasoning or planning artifact to its result file. Record the result, mark the task `silent`, and persist the graph. A `suspended` task becomes `silent` when all of its children are `silent`.
 5. After each composition task completes, re-read the current aggregated text in `.writing/draft.md`. Before scheduling the next task, the coordinator may perform text-conditioned graph revision. Allowed revision operations are:
    - revise the goal text of an active or suspended task
-   - add new typed child tasks with dependencies under any non-silent task
+   - add new typed child tasks with dependencies under a suspended task
    - retire an active or suspended task by marking it `silent` with a result that notes the retirement
    - add or reorder dependencies among non-silent tasks while keeping the graph acyclic
 

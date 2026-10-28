@@ -9,6 +9,7 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import time
 import tomllib
 from dataclasses import replace
@@ -1106,6 +1107,29 @@ def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
     assert occurrences == 4
 
 
+def test_staged_skill_writes_each_frozen_stage_and_the_draft() -> None:
+    skill = REPO_ROOT / "experiments/baselines/skills/writing-linear"
+    body = (skill / "SKILL.md").read_text(encoding="utf-8").split("---\n", 2)[2]
+
+    assert body.splitlines()[5:10] == [
+        "1. Run `Pre-Write` and write its output to "
+        "`.writing/baselines/linear/pre-write.md`.",
+        "2. Run `Write` on the `Pre-Write` output and write its output to "
+        "`.writing/baselines/linear/write.md`.",
+        "3. Run `Re-Write` on the `Write` output and write its output to "
+        "`.writing/draft.md`.",
+        "",
+        "Do not create or modify `.writing/goals.md`. Do not skip, repeat, or add "
+        "a stage. `.writing/draft.md` is the final document.",
+    ]
+    assert "final response" not in body
+    assert "trace" not in body
+    assert sorted(path.name for path in skill.rglob("*") if path.is_file()) == [
+        "SKILL.md",
+        "openai.yaml",
+    ]
+
+
 def test_agentic_cog_writer_ends_with_the_draft_as_the_final_document() -> None:
     text = (REPO_ROOT / "plugin/skills/agentic-cog-writer/SKILL.md").read_text(
         encoding="utf-8"
@@ -1121,9 +1145,10 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
     text = (skills / "writing-adaptive-task-planning/SKILL.md").read_text()
 
     # Each child is a fresh agent that reads its own skill and is closed.
-    for role in ("task-decomposition", "task-execution"):
+    for role in ("task-node", "task-execution"):
         sentence = (
-            f"Read the skill file at plugin/skills/{role}/SKILL.md and follow it."
+            f"`Read the skill file at plugin/skills/{role}/SKILL.md and follow it "
+            "for task <task ID>`"
         )
         assert sentence in text
         child = (skills / role / "SKILL.md").read_text()
@@ -1131,13 +1156,43 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
         assert [path.name for path in (skills / role).rglob("*")] == ["SKILL.md"]
     assert "`spawn_agent` with `fork_context` false" in text
     assert "`close_agent` it before spawning the next one" in text
-    # Recursion: every task, children included, gets a decomposition verdict.
-    assert "the root and each child alike, to a decomposition agent" in text
-    assert "A task executes only after a decomposition agent has judged it atomic" in (
+    # Recursion: one node agent per composition task judges atomicity, then
+    # returns children or writes; the coordinator never judges or writes.
+    assert "the root and each child alike, to a node agent" in text
+    assert "it never judges atomicity or writes prose" in text
+    assert "at depth 3 or deeper, where the root is at depth 0, the task is atomic" in (
         text
     )
+    # The spawn message carries nothing but the skill and the task ID; the gate
+    # rejects any other message, and the agent reads its fields from the graph.
+    assert "with nothing added; the agent reads the task's fields from the graph" in (
+        text
+    )
+    pattern = load_condition_registry()["A3"].spawn_message
+    assert re.fullmatch(
+        pattern,
+        "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
+        "for task root.c-1",
+    )
+    assert not re.fullmatch(
+        pattern,
+        "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
+        "for task c1. It is atomic; write it",
+    )
+    # The root's node agent sets its length; revision adds children only under
+    # suspended tasks, so new composition tasks reach a node agent.
+    assert "Initialize a root `composition` task with `length` `null`" in text
+    assert "add new typed child tasks with dependencies under a suspended task" in text
+    node = (skills / "task-node/SKILL.md").read_text()
+    assert "If the task's `length` is `null`, determine it from `.writing/task.md`" in (
+        node
+    )
+    assert "At depth 3 or deeper, the task is atomic without judgment" in node
+    assert "longer than 1000 words may be split" in node
+    assert "longer than 1500 words must be split" in node
     # The deliverable is the appended draft, not a final message or a trace.
-    assert "A composition execution appends its prose to `.writing/draft.md`" in text
+    assert "append the prose for its goal to the end of `.writing/draft.md`" in node
+    assert "atomic`" not in text
     assert "final response" not in text
     assert "process.jsonl" not in text
     assert ".writing/task.md" in text
@@ -1152,7 +1207,20 @@ def test_cogwriter_style_skill_delegates_to_closed_skill_agents() -> None:
         assert sentence in text
         child = (skills / role / "SKILL.md").read_text()
         assert child.startswith(f"---\nname: {role}\n")
-        assert [path.name for path in (skills / role).rglob("*")] == ["SKILL.md"]
+    assert [path.name for path in (skills / "cogwriter-planning").rglob("*")] == [
+        "SKILL.md"
+    ]
+    assert sorted(
+        path.name for path in (skills / "cogwriter-generation").rglob("*")
+    ) == ["SKILL.md", "count_words.py"]
+    # One integer target per segment, counted by CogWriter's rule.
+    planning = (skills / "cogwriter-planning/SKILL.md").read_text()
+    assert "`target_words` as one integer word count" in planning
+    generation = (skills / "cogwriter-generation/SKILL.md").read_text()
+    assert (
+        "`python3 plugin/skills/cogwriter-generation/count_words.py <segment file>`"
+        in generation
+    )
     assert "`spawn_agent` with `fork_context` false" in text
     # Parallel segments stay below Codex's six open agents.
     assert "Keep at most four agents open at a time" in text
@@ -1166,6 +1234,24 @@ def test_cogwriter_style_skill_delegates_to_closed_skill_agents() -> None:
     assert "final response" not in text
     assert "process.jsonl" not in text
     assert ".writing/task.md" in text
+
+
+def test_cogwriter_word_count_follows_the_upstream_rule(tmp_path: Path) -> None:
+    script = (
+        REPO_ROOT / "experiments/baselines/skills/cogwriter-generation/count_words.py"
+    )
+    segment = tmp_path / "S01.md"
+    # 4 CJK characters, then "sub-task", "ma^2", and "it's"; punctuation is free.
+    segment.write_text("融资租赁，sub-task (ma^2) it's!\u3000。\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(script), str(segment)],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert result.stdout == "7\n"
 
 
 def test_storm_style_skill_runs_in_context_and_writes_the_draft() -> None:
@@ -1231,6 +1317,55 @@ def test_single_context_skill_is_the_monitor_skill_running_roles_in_context() ->
         for role in ("planning", "translating", "reviewing")
     ]
     assert [path.name for path in a8_root.rglob("*")] == ["SKILL.md"]
+
+
+def test_single_writer_skill_is_single_context_with_one_paragraph_steps() -> None:
+    def text(path: str) -> list[str]:
+        return (REPO_ROOT / path).read_text(encoding="utf-8").splitlines()
+
+    a7_root = REPO_ROOT / "experiments/plugin/skills/cognitive-writing-single-writer"
+    a8 = text("experiments/plugin/skills/cognitive-writing-single-context/SKILL.md")
+    a7 = text("experiments/plugin/skills/cognitive-writing-single-writer/SKILL.md")
+    changed = {(old, new) for old, new in zip(a8, a7, strict=True) if old != new}
+
+    assert {(old.split(" ")[0], new) for old, new in changed} == {
+        ("name:", "name: cognitive-writing-single-writer"),
+        (
+            "description:",
+            'description: "Experiment-comparison variant of the agentic-cog-writer '
+            "skill that runs each selected `Planning`, `Translating`, or `Reviewing` "
+            "process in the Monitor's own context instead of a subagent and limits "
+            "each `Translating` step to one paragraph. For internal comparison use "
+            "only, not the recommended default. Use when a controlled single-writer "
+            'comparison is explicitly requested."',
+        ),
+        (
+            "Kinds",
+            "Kinds of work: Planning changes the goals; Translating adds one "
+            "paragraph of prose for the goals; Reviewing corrects existing prose and "
+            "reports what is needed next. A role reports work of another kind "
+            "instead of doing it.",
+        ),
+        (
+            "Write",
+            "Write one paragraph in `.writing/draft.md` within the delegated draft "
+            "scope.",
+        ),
+        (
+            "4.",
+            "4. Run the process, with its scope, in your own context by following "
+            "its role section below; do not spawn an agent. The Reviewing scope is "
+            "this sentence and nothing more: check `.writing/draft.md` against "
+            "`.writing/task.md` and the active goals, correct existing prose, and "
+            "report what is needed next. The Planning scope is this sentence and "
+            "nothing more: read `.writing/task.md`, `.writing/draft.md`, and "
+            "`.writing/goals.md`, and create or develop the goals so that every "
+            "requirement in the task has a goal. The Translating scope is one "
+            "paragraph, a single block of prose; each further paragraph takes a new "
+            "pass through steps 1 to 4.",
+        ),
+    }
+    assert [path.name for path in a7_root.rglob("*")] == ["SKILL.md"]
 
 
 def test_fixed_order_skill_is_the_monitor_skill_with_a_fixed_cycle() -> None:
@@ -1826,8 +1961,15 @@ def test_monitor_conditions_install_the_repository_plugin_codex_adapter(
     assert "developer_instructions" in tomllib.loads((home / "config.toml").read_text())
 
 
-def test_single_context_installs_the_adapter_rules_without_delegation(
-    tmp_path: Path,
+@pytest.mark.parametrize(
+    ("condition_id", "skill_name"),
+    [
+        ("A7", "cognitive-writing-single-writer"),
+        ("A8", "cognitive-writing-single-context"),
+    ],
+)
+def test_in_context_conditions_install_the_adapter_rules_without_delegation(
+    tmp_path: Path, condition_id: str, skill_name: str
 ) -> None:
     home = tmp_path / "home"
     home.mkdir()
@@ -1835,13 +1977,13 @@ def test_single_context_installs_the_adapter_rules_without_delegation(
     runner = ExperimentRunner(_config(), output_root=tmp_path / "runs")
 
     staged = runner._stage_codex_plugin(
-        load_condition_registry()["A8"],
+        load_condition_registry()[condition_id],
         tmp_path / "workspace",
         codex_home=home,
         prompt=_prompt(),
     )
 
-    skill = home / "skills" / "cognitive-writing-single-context"
+    skill = home / "skills" / skill_name
     assert sorted(path.name for path in home.iterdir()) == [
         "config.toml",
         "rules",
@@ -3326,7 +3468,7 @@ def test_non_draft_condition_accepts_short_output(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     ("condition_id", "roles"),
     (
-        ("A3", ("task-decomposition", "task-execution")),
+        ("A3", ("task-node", "task-execution")),
         ("B1", ("cogwriter-planning", "cogwriter-generation")),
     ),
 )

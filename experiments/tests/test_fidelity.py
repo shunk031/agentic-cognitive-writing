@@ -207,7 +207,7 @@ def _baseline_run(*, read: bool) -> dict[str, Any]:
     """An A3-style run whose child is a default agent told to read its skill."""
 
     run = _clean_run()
-    skill = "plugin/skills/task-decomposition/SKILL.md"
+    skill = "plugin/skills/task-node/SKILL.md"
     run["events"][2] = _collab(
         "spawn_agent", prompt=f"Read the skill file at {skill} and follow it. Task r1."
     )
@@ -216,14 +216,14 @@ def _baseline_run(*, read: bool) -> dict[str, Any]:
     return run
 
 
-A3_ROLES = ("task-decomposition", "task-execution")
+A3_ROLES = ("task-node", "task-execution")
 
 
 @pytest.mark.parametrize(
     ("read", "reasons"),
     [
         (True, []),
-        (False, [f"task-decomposition agent {CHILD} did not read its own SKILL.md"]),
+        (False, [f"task-node agent {CHILD} did not read its own SKILL.md"]),
     ],
 )
 def test_baseline_child_must_read_the_skill_its_spawn_names(
@@ -233,6 +233,51 @@ def test_baseline_child_must_read_the_skill_its_spawn_names(
 
     assert (
         _gate(run_dir, monitor_writes_history_only=False, roles=A3_ROLES)["reasons"]
+        == reasons
+    )
+
+
+A3_TEMPLATE = (
+    r"Read the skill file at plugin/skills/(?:task-node|task-execution)/SKILL\.md "
+    r"and follow it for task [A-Za-z0-9_.-]+"
+)
+
+
+@pytest.mark.parametrize(
+    ("message", "reasons"),
+    [
+        (
+            "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
+            "for task r1",
+            [],
+        ),
+        (
+            "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
+            "for task r1. It is atomic; write 600 words.",
+            [
+                "spawn message 'Read the skill file at plugin/skills/task-node/"
+                "SKILL.md and follow it for task r1. It is atomic; write 600 words.' "
+                "does not match the template"
+            ],
+        ),
+    ],
+)
+def test_spawn_message_must_match_the_condition_template(
+    tmp_path: Path, message: str, reasons: list[str]
+) -> None:
+    run = _baseline_run(read=True)
+    run["events"][2] = _collab("spawn_agent", prompt=message)
+    run["rollouts"][CHILD][1] = _read(
+        "sed -n '1,200p' plugin/skills/task-node/SKILL.md"
+    )
+
+    assert (
+        _gate(
+            _materialize(tmp_path, run),
+            monitor_writes_history_only=False,
+            roles=A3_ROLES,
+            spawn_message=A3_TEMPLATE,
+        )["reasons"]
         == reasons
     )
 
@@ -337,6 +382,86 @@ def test_a_missing_longer_path_does_not_hide_a_read_of_its_suffix(
     assert _gate(_materialize(tmp_path, run))["reasons"] == [
         f"thread {CHILD} read /elsewhere/SKILL.md outside the staged skills"
     ]
+
+
+OUTSIDE = "/home/user/.agents/skills/x/SKILL.md"
+PATCH = f"*** Begin Patch\\n*** Update File: {OUTSIDE}\\n*** End Patch"
+
+
+@pytest.mark.parametrize(
+    ("call", "status"),
+    [
+        # A patch header names a file to write, as in a failed apply_patch.
+        (f'apply_patch("{PATCH}")', "scorable"),
+        (f'apply_patch("{PATCH}"); cat {OUTSIDE}', "rejected"),
+        (f"cat <<'EOF'\\n*** Begin Patch\\nEOF\\ncat {OUTSIDE}", "rejected"),
+        (f"echo '*** Begin Patch'; cat {OUTSIDE}; echo '*** End Patch'", "rejected"),
+        (f"grep -n '*** Begin Patch' a.md; sed -n 1p {OUTSIDE}", "rejected"),
+    ],
+)
+def test_only_patch_header_paths_are_not_skill_reads(
+    tmp_path: Path, call: str, status: str
+) -> None:
+    run = _clean_run()
+    run["rollouts"][CHILD].append(_read(call))
+
+    assert _gate(_materialize(tmp_path, run))["status"] == status
+
+
+STAGES = (
+    ".writing/baselines/linear/pre-write.md",
+    ".writing/baselines/linear/write.md",
+    ".writing/draft.md",
+)
+
+
+def _staged_run(*paths: str) -> dict[str, Any]:
+    run = _clean_run()
+    run["events"] = [
+        {"type": "thread.started", "thread_id": MONITOR},
+        *(_write(f"/run/workspace/{path}") for path in paths),
+    ]
+    del run["rollouts"][CHILD]
+    return run
+
+
+def _stage_gate(run_dir: Path, **overrides: Any) -> dict[str, Any]:
+    return _gate(
+        run_dir,
+        **{"stage_files": STAGES, "monitor_writes_history_only": False, **overrides},
+    )
+
+
+def test_stage_writes_once_each_in_order_are_scorable(tmp_path: Path) -> None:
+    run = _staged_run(*STAGES, ".writing/notes.md")
+
+    assert _stage_gate(_materialize(tmp_path, run))["status"] == "scorable"
+
+
+@pytest.mark.parametrize(
+    "paths",
+    [STAGES[:2], (STAGES[1], STAGES[0], STAGES[2]), (*STAGES, STAGES[2])],
+)
+def test_missing_reordered_or_repeated_stage_writes_reject_the_run(
+    tmp_path: Path, paths: tuple[str, ...]
+) -> None:
+    gate = _stage_gate(_materialize(tmp_path, _staged_run(*paths)))
+
+    assert gate["reasons"] == [f"stage writes were {list(paths)}, not {list(STAGES)}"]
+
+
+def test_shell_write_to_a_stage_file_rejects_the_run(tmp_path: Path) -> None:
+    run = _staged_run(*STAGES)
+    command = "cat > .writing/baselines/linear/write.md <<'EOF'\nx\nEOF"
+    run["rollouts"][MONITOR].append(
+        _read(f"exec_command({{cmd:{json.dumps(command)}}})")
+    )
+    run_dir = _materialize(tmp_path, run)
+
+    assert _stage_gate(run_dir)["reasons"] == [
+        f"thread {MONITOR} ran shell write {command!r}"
+    ]
+    assert _stage_gate(run_dir, stage_files=())["status"] == "scorable"
 
 
 @pytest.mark.parametrize(
