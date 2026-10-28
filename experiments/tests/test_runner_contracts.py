@@ -1208,7 +1208,8 @@ def test_single_writer_skill_is_single_context_with_one_paragraph_steps() -> Non
             "nothing more: read `.writing/task.md`, `.writing/draft.md`, and "
             "`.writing/goals.md`, and create or develop the goals so that every "
             "requirement in the task has a goal. The Translating scope is one "
-            "paragraph.",
+            "paragraph, a single block of prose; each further paragraph takes a new "
+            "pass through steps 1 to 4.",
         ),
     }
     assert [path.name for path in a7_root.rglob("*")] == ["SKILL.md"]
