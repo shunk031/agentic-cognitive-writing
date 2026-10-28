@@ -23,14 +23,14 @@ claude_code = """/cognitive-writing-baselines:writing-linear"""
 claude_code = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
 
 [trace]
+# The fidelity gate reads the run from the harness records instead of a
+# plugin trace.
+required = false
 retrieval = "not_applicable"
 evidence = "plugin_recorded"
 citation = "plugin_recorded"
 goal_events = "forbidden"
 event_types = ["process_switch"]
-min_events = 3
-max_events = 3
-process_order = ["pre-write", "write", "re-write"]
 processes = ["pre-write", "write", "re-write"]
 
 [[stages]]
