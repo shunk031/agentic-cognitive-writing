@@ -237,6 +237,51 @@ def test_baseline_child_must_read_the_skill_its_spawn_names(
     )
 
 
+A3_TEMPLATE = (
+    r"Read the skill file at plugin/skills/(?:task-node|task-execution)/SKILL\.md "
+    r"and follow it for task [A-Za-z0-9_.-]+\."
+)
+
+
+@pytest.mark.parametrize(
+    ("message", "reasons"),
+    [
+        (
+            "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
+            "for task r1.",
+            [],
+        ),
+        (
+            "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
+            "for task r1. It is atomic; write 600 words.",
+            [
+                "spawn message 'Read the skill file at plugin/skills/task-node/"
+                "SKILL.md and follow it for task r1. It is atomic; write 600 words.' "
+                "does not match the template"
+            ],
+        ),
+    ],
+)
+def test_spawn_message_must_match_the_condition_template(
+    tmp_path: Path, message: str, reasons: list[str]
+) -> None:
+    run = _baseline_run(read=True)
+    run["events"][2] = _collab("spawn_agent", prompt=message)
+    run["rollouts"][CHILD][1] = _read(
+        "sed -n '1,200p' plugin/skills/task-node/SKILL.md"
+    )
+
+    assert (
+        _gate(
+            _materialize(tmp_path, run),
+            monitor_writes_history_only=False,
+            roles=A3_ROLES,
+            spawn_message=A3_TEMPLATE,
+        )["reasons"]
+        == reasons
+    )
+
+
 def test_child_spawned_without_a_role_skill_rejects_the_run(tmp_path: Path) -> None:
     run = _baseline_run(read=True)
     run["events"][2] = _collab("spawn_agent", prompt="Decompose task r1.")
