@@ -2,12 +2,15 @@ condition_id = "B1"
 skill = "writing-cogwriter-style"
 analysis_family = "exploratory"
 product_requires_draft = true
+# The coordinator assembles the draft, so it is not a history-only Monitor.
 monitor_writes_history_only = false
 
 [package]
 name = "cognitive-writing-baselines"
 
 [plugins]
+# No codex_adapter: its agent types and spawn instruction are the A4 roles.
+# The B1 coordinator spawns default agents that read their own skill files.
 paths = ["experiments/baselines"]
 
 [adapters]
@@ -23,15 +26,15 @@ claude_code = """/cognitive-writing-baselines:writing-cogwriter-style"""
 claude_code = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
 
 [trace]
+# The fidelity gate reads the planning and generation agents from the harness
+# records instead of a plugin trace.
+required = false
 retrieval = "not_applicable"
 evidence = "plugin_recorded"
 citation = "plugin_recorded"
 goal_events = "forbidden"
 require_delegation = true
 event_types = ["process_switch"]
-min_events = 4
-max_events = 4
-process_order = ["initial-planning", "immediate-plan-revision", "parallel-segment-generation", "length-review"]
 processes = ["initial-planning", "immediate-plan-revision", "parallel-segment-generation", "length-review"]
 
 [[stages]]

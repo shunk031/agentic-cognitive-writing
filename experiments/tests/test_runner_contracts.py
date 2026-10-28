@@ -9,6 +9,7 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import time
 import tomllib
 from dataclasses import replace
@@ -1195,6 +1196,62 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
     assert "final response" not in text
     assert "process.jsonl" not in text
     assert ".writing/task.md" in text
+
+
+def test_cogwriter_style_skill_delegates_to_closed_skill_agents() -> None:
+    skills = REPO_ROOT / "experiments/baselines/skills"
+    text = (skills / "writing-cogwriter-style/SKILL.md").read_text()
+
+    for role in ("cogwriter-planning", "cogwriter-generation"):
+        sentence = f"Read the skill file at plugin/skills/{role}/SKILL.md and follow it"
+        assert sentence in text
+        child = (skills / role / "SKILL.md").read_text()
+        assert child.startswith(f"---\nname: {role}\n")
+    assert [path.name for path in (skills / "cogwriter-planning").rglob("*")] == [
+        "SKILL.md"
+    ]
+    assert sorted(
+        path.name for path in (skills / "cogwriter-generation").rglob("*")
+    ) == ["SKILL.md", "count_words.py"]
+    # One integer target per segment, counted by CogWriter's rule.
+    planning = (skills / "cogwriter-planning/SKILL.md").read_text()
+    assert "`target_words` as one integer word count" in planning
+    generation = (skills / "cogwriter-generation/SKILL.md").read_text()
+    assert (
+        "`python3 plugin/skills/cogwriter-generation/count_words.py <segment file>`"
+        in generation
+    )
+    assert "`spawn_agent` with `fork_context` false" in text
+    # Parallel segments stay below Codex's six open agents.
+    assert "Keep at most four agents open at a time" in text
+    assert "`close_agent` each one before spawning more" in text
+    # The length rule is CogWriter's tolerance, not an undefined runner value.
+    assert "more than 10% away from its target length" in text
+    assert "runner's fixed" not in text
+    # The deliverable is the concatenated segments, not a final message or trace.
+    assert "concatenating the segment files in plan order" in text
+    assert "without retyping them" in text
+    assert "final response" not in text
+    assert "process.jsonl" not in text
+    assert ".writing/task.md" in text
+
+
+def test_cogwriter_word_count_follows_the_upstream_rule(tmp_path: Path) -> None:
+    script = (
+        REPO_ROOT / "experiments/baselines/skills/cogwriter-generation/count_words.py"
+    )
+    segment = tmp_path / "S01.md"
+    # 4 CJK characters, then "sub-task", "ma^2", and "it's"; punctuation is free.
+    segment.write_text("融资租赁，sub-task (ma^2) it's!\u3000。\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(script), str(segment)],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert result.stdout == "7\n"
 
 
 def test_single_context_skill_is_the_monitor_skill_running_roles_in_context() -> None:
@@ -3393,7 +3450,16 @@ def test_non_draft_condition_accepts_short_output(tmp_path: Path) -> None:
     }
 
 
-def test_a3_stages_its_agent_skills_and_scores_the_draft(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("condition_id", "roles"),
+    (
+        ("A3", ("task-node", "task-execution")),
+        ("B1", ("cogwriter-planning", "cogwriter-generation")),
+    ),
+)
+def test_baseline_stages_its_agent_skills_and_scores_the_draft(
+    tmp_path: Path, condition_id: str, roles: tuple[str, ...]
+) -> None:
     class A3Executor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
             result = super().run(
@@ -3417,17 +3483,17 @@ def test_a3_stages_its_agent_skills_and_scores_the_draft(tmp_path: Path) -> None
             ]
         ),
     )
-    result = runner.run_prompt(_prompt(), condition_id="A3", platform="codex")
+    result = runner.run_prompt(_prompt(), condition_id=condition_id, platform="codex")
 
     workspace = result.run_dir / "workspace"
-    for role in ("task-node", "task-execution"):
+    for role in roles:
         assert (workspace / "plugin/skills" / role / "SKILL.md").read_bytes() == (
             REPO_ROOT / "experiments/baselines/skills" / role / "SKILL.md"
         ).read_bytes()
     task = (workspace / ".writing/task.md").read_text()
     assert task.startswith("## Assignment\nWrite a memo.")
     assert not (workspace / ".writing/history.md").exists()
-    # The draft is scored verbatim; A3 needs no plugin trace.
+    # The draft is scored verbatim; the condition needs no plugin trace.
     assert (result.run_dir / "output.normalized.txt").read_text() == "draft " * 60
     manifest = json.loads(result.manifest_path.read_text())
     assert "trace_hash" not in manifest
