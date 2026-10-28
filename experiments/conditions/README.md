@@ -8,4 +8,4 @@ A4 invokes `agentic-cog-writer` from `agentic-cognitive-writing`. A5, A6, A7, an
 
 Shared prompt paragraphs live in [`contracts/`](contracts/). The runner appends `single_turn.md` to Codex invocations, adds `delegation.md` when `require_delegation = true`, and appends `workspace.md` followed by `single_turn.md` to Claude Code invocations; wrapper files retain only condition-specific invocation text. The runner renders contract names and generic shared-input blocks as `##` headings, frozen stage titles as `##` headings, and frozen stage labels as `###` headings.
 
-Every condition uses `.writing/trace/process.jsonl` written by its selected skill. The no-retrieval A3 and B2 wrappers omit citation generation and mark retrieval, evidence, and citation traces as `N/A` in their wrapper policies.
+Every condition whose wrapper does not set `trace.required = false` uses `.writing/trace/process.jsonl` written by its selected skill; the fidelity gate reads the other conditions from the harness records. The no-retrieval A3 and B2 wrappers omit citation generation and mark retrieval, evidence, and citation traces as `N/A` in their wrapper policies.

@@ -98,8 +98,8 @@ NO_GOAL_SKILL_PATHS = (
 NO_GOAL_FILE_RULE = "Do not create or modify `.writing/goals.md`"
 STAGE_SESSION_HEADER = (
     "The following {count} frozen stages run in order within this single session; "
-    "each stage's output is the input of the next, and only the final stage's "
-    "output is the final response."
+    "each stage's output is the input of the next, and the final stage's output "
+    "is the final document in `.writing/draft.md`."
 )
 SINGLE_STAGE_SESSION_HEADER = (
     "The following frozen stage runs within this single session; its output is the "
@@ -1104,6 +1104,29 @@ def test_no_goal_skills_forbid_creating_or_modifying_the_goals_file() -> None:
         assert "Leave `.writing/goals.md` untouched" not in text
         assert "Leave `goals.md` untouched" not in text
     assert occurrences == 4
+
+
+def test_staged_skill_writes_each_frozen_stage_and_the_draft() -> None:
+    skill = REPO_ROOT / "experiments/baselines/skills/writing-linear"
+    body = (skill / "SKILL.md").read_text(encoding="utf-8").split("---\n", 2)[2]
+
+    assert body.splitlines()[5:10] == [
+        "1. Run `Pre-Write` and write its output to "
+        "`.writing/baselines/linear/pre-write.md`.",
+        "2. Run `Write` on the `Pre-Write` output and write its output to "
+        "`.writing/baselines/linear/write.md`.",
+        "3. Run `Re-Write` on the `Write` output and write its output to "
+        "`.writing/draft.md`.",
+        "",
+        "Do not create or modify `.writing/goals.md`. Do not skip, repeat, or add "
+        "a stage. `.writing/draft.md` is the final document.",
+    ]
+    assert "final response" not in body
+    assert "trace" not in body
+    assert [path.name for path in skill.rglob("*") if path.is_file()] == [
+        "SKILL.md",
+        "openai.yaml",
+    ]
 
 
 def test_agentic_cog_writer_ends_with_the_draft_as_the_final_document() -> None:
