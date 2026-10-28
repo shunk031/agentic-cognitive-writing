@@ -16,11 +16,11 @@ The package layout uses [`.claude-plugin/plugin.json`](.claude-plugin/plugin.jso
 | A2 Staged Writing | `writing-linear` | One `Pre-Write`, `Write`, and `Re-Write` pass in one session, each stage's output written to a file | None; the harness records show the stage files and `.writing/draft.md` |
 | A3 Adaptive Task Planning | `writing-adaptive-task-planning` | Persisted typed task graph with recursive decomposition, execution, and text-conditioned graph revision; each composition task runs in a fresh node agent that judges atomicity and then splits or writes, and each reasoning task in a fresh execution agent; each agent reads its own skill | No plugin trace; the fidelity gate reads the agents from the harness records; retrieval is `N/A` |
 | B1 CogWriter-style | `writing-cogwriter-style` | Initial plan, immediate plan revision, parallel segment generation, and per-segment length review, each planning pass and segment in a fresh agent that reads its own skill | No plugin trace; the fidelity gate reads the agents from the harness records |
-| B2 STORM-style | `writing-storm-style` | Perspective discovery, simulated question answering, outline, per-section draft, and polish | Five stage events; retrieval, evidence, and citation are `N/A` |
+| B2 STORM-style | `writing-storm-style` | Perspective discovery, simulated question answering, outline, per-section draft, and polish, in one session without agents | No plugin trace; retrieval, evidence, and citation are `N/A` |
 
 ## Shared run policy
 
-Every condition reads `.writing/assignment.md` and the supplied context under the same tool, model, budget, and no-retrieval policy. The runner writes observable events to `.writing/trace/process.jsonl`; the final document normally lives at `.writing/draft.md`. Retrieval, evidence gathering, and citation traces are `N/A` for A3 Adaptive Task Planning and B2 STORM-style because the shared policy disables those operations.
+Every condition receives the assignment, supplied context, and requested output constraints in its prompt under the same tool, model, budget, and no-retrieval policy, and the runner also writes them to `.writing/task.md` for the delegating A3 and B1. The final document is `.writing/draft.md`, except for A1, whose final response is its deliverable. Retrieval, evidence gathering, and citation traces are `N/A` for A3 Adaptive Task Planning and B2 STORM-style because the shared policy disables those operations.
 
 ## Adaptation caveats
 

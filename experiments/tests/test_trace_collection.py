@@ -337,7 +337,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A2"].goal_events == "forbidden"
     assert registry["A3"].goal_events == "forbidden"
     assert registry["A4"].goal_events == "allowed"
-    untraced_conditions = {"A2", "A3", "A4", "A5", "A6", "A7", "A8", "B1"}
+    untraced_conditions = {"A2", "A3", "A4", "A5", "A6", "A7", "A8", "B1", "B2"}
     assert not any(registry[name].trace_required for name in untraced_conditions)
     assert all(
         spec.trace_required
@@ -366,7 +366,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A3"].process_order is None
 
 
-def test_runner_uses_one_top_level_turn_and_plugin_trace_for_b2(tmp_path, monkeypatch):
+def test_runner_uses_one_top_level_turn_for_b2(tmp_path, monkeypatch):
     prompt = PromptRecord(
         prompt_id="p-1",
         benchmark_name="WritingBench",
@@ -386,29 +386,16 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_b2(tmp_path, monkey
 
     result = runner.run_prompt(prompt, condition_id="B2", platform="codex")
 
-    events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
-    assert [event["process"] for event in events] == [
-        "perspective-discovery",
-        "simulated-question-answering",
-        "outline",
-        "per-section-draft",
-        "polish",
-    ]
+    # B2 needs no plugin trace; the run is one top-level turn.
     assert len(executor.calls) == 1
     assert "resume" not in executor.calls[0][0]
     assert any(
         "/skills/writing-storm-style/SKILL.md" in argument
         for argument in executor.calls[0][0]
     )
-    assert (
-        result.trace_path.relative_to(result.run_dir).as_posix()
-        == ".writing/trace/process.jsonl"
-    )
     manifest = json.loads(result.manifest_path.read_text())
     assert manifest["output_hash"].startswith("sha256:")
-    assert manifest["trace_hash"] == (
-        "sha256:" + hashlib.sha256(result.trace_path.read_bytes()).hexdigest()
-    )
+    assert "trace_hash" not in manifest
     assert manifest["trace_timestamps"] == {
         "events": 5,
         "unparseable": 0,

@@ -1254,6 +1254,21 @@ def test_cogwriter_word_count_follows_the_upstream_rule(tmp_path: Path) -> None:
     assert result.stdout == "7\n"
 
 
+def test_storm_style_skill_runs_in_context_and_writes_the_draft() -> None:
+    text = (
+        REPO_ROOT / "experiments/baselines/skills/writing-storm-style/SKILL.md"
+    ).read_text()
+
+    assert "in this session; do not spawn an agent" in text
+    assert "subagent" not in text
+    assert "Play the question-asker and the expert in turn" in text
+    assert "write the polished document to `.writing/draft.md`" in text
+    assert "final response" not in text
+    assert "process.jsonl" not in text
+    assert ".writing/assignment.md" not in text
+    assert not load_condition_registry()["B2"].require_delegation
+
+
 def test_single_context_skill_is_the_monitor_skill_running_roles_in_context() -> None:
     def body(path: str) -> str:
         return (REPO_ROOT / path).read_text(encoding="utf-8").split("---\n", 2)[2]
