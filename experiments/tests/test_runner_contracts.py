@@ -1161,6 +1161,7 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
     assert "a composition task at depth 3 or deeper, where the root is at depth 0" in (
         text
     )
+    assert "the coordinator never judges it atomic itself, whatever its length" in text
     decomposition = (skills / "task-decomposition/SKILL.md").read_text()
     assert "longer than 1000 words may be split" in decomposition
     assert "longer than 1500 words must be split" in decomposition
