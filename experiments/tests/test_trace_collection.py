@@ -337,12 +337,12 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A2"].goal_events == "forbidden"
     assert registry["A3"].goal_events == "forbidden"
     assert registry["A4"].goal_events == "allowed"
-    monitor_skill_conditions = {"A4", "A5", "A6", "A7", "A8"}
-    assert not any(registry[name].trace_required for name in monitor_skill_conditions)
+    untraced_conditions = {"A2", "A4", "A5", "A6", "A7", "A8"}
+    assert not any(registry[name].trace_required for name in untraced_conditions)
     assert all(
         spec.trace_required
         for name, spec in registry.items()
-        if name not in monitor_skill_conditions
+        if name not in untraced_conditions
     )
     assert registry["A5"].goal_events == "forbidden"
     assert registry["A6"].goal_events == "allowed"
@@ -362,15 +362,11 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A8"].trace_processes == registry["A4"].trace_processes
     assert registry["A8"].goal_events == "allowed"
     assert registry["A8"].require_goal_events is False
-    assert registry["A2"].process_order == (
-        "pre-write",
-        "write",
-        "re-write",
-    )
+    assert registry["A2"].process_order is None
     assert registry["A3"].process_order is None
 
 
-def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path, monkeypatch):
+def test_runner_uses_one_top_level_turn_and_plugin_trace_for_b2(tmp_path, monkeypatch):
     prompt = PromptRecord(
         prompt_id="p-1",
         benchmark_name="WritingBench",
@@ -388,18 +384,20 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path, monkey
     executor = FakeExecutor()
     runner = _runner(tmp_path, executor=executor)
 
-    result = runner.run_prompt(prompt, condition_id="A2", platform="codex")
+    result = runner.run_prompt(prompt, condition_id="B2", platform="codex")
 
     events = [json.loads(line) for line in result.trace_path.read_text().splitlines()]
     assert [event["process"] for event in events] == [
-        "pre-write",
-        "write",
-        "re-write",
+        "perspective-discovery",
+        "simulated-question-answering",
+        "outline",
+        "per-section-draft",
+        "polish",
     ]
     assert len(executor.calls) == 1
     assert "resume" not in executor.calls[0][0]
     assert any(
-        "/skills/writing-linear/SKILL.md" in argument
+        "/skills/writing-storm-style/SKILL.md" in argument
         for argument in executor.calls[0][0]
     )
     assert (
@@ -412,9 +410,9 @@ def test_runner_uses_one_top_level_turn_and_plugin_trace_for_a2(tmp_path, monkey
         "sha256:" + hashlib.sha256(result.trace_path.read_bytes()).hexdigest()
     )
     assert manifest["trace_timestamps"] == {
-        "events": 3,
+        "events": 5,
         "unparseable": 0,
-        "out_of_window": 3,
+        "out_of_window": 5,
         "non_monotonic": 0,
         "plausible": False,
     }
