@@ -8,6 +8,7 @@ from agentic_cogwriter.analysis.mechanism import (
     adds_section,
     classify_goal_intervals,
     main,
+    translating_steps,
     unrecorded_writes,
 )
 
@@ -190,6 +191,33 @@ def test_shell_writes_to_tracked_files_are_flagged() -> None:
         "python3 fix.py .writing/draft.md",
         "bash -lc cp old.md .writing/draft.md",
     ]
+
+
+def _history(line: str) -> dict[str, Any]:
+    return {"/w/.writing/history.md": _update(f"@@ -1 +1,2 @@\n old\n+{line}\n")}
+
+
+def test_translating_steps_count_draft_paragraphs_under_translating() -> None:
+    steps = translating_steps(
+        [
+            # A Planning change creating an empty draft is not a step.
+            {**_history("Planning — goals"), "/w/.writing/draft.md": _add("")},
+            {
+                **_history("Translating — title and opening"),
+                "/w/.writing/draft.md": _add("## Terms\n\nOne.\nStill one.\n"),
+            },
+            {
+                "/w/.writing/draft.md": _update(
+                    "@@ -4 +4,4 @@\n Still one.\n+Two.\n+\n+## 2. Fees\n+Three.\n"
+                ),
+                **_history("- **Translating**: fees"),
+            },
+            {**_history("Reviewing — fixes"), "/w/.writing/draft.md": _add("A.\n")},
+        ]
+    )
+
+    # A heading line alone is not a paragraph; an unchanged line ends a block.
+    assert steps == [1, 2]
 
 
 def _jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
@@ -462,7 +490,11 @@ def test_a_change_after_an_untimed_reuse_is_unattributed(
     assert detail["goal_created"] is False
     assert detail["goal_replaced"] is False
     assert detail["goal_replaced_after_review"] is False
-    assert capsys.readouterr().out.splitlines()[2].endswith("| 0 | 0 | 1 | 0 | 1 |")
+    assert (
+        capsys.readouterr()
+        .out.splitlines()[2]
+        .endswith("| 0 | 0 | 1 | 0 | 1 | 0 | 0 | n/a |")
+    )
 
 
 def test_planning_before_reviewing_ends_is_an_overlap(tmp_path: Path) -> None:

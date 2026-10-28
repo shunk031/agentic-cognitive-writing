@@ -67,6 +67,7 @@ class ConditionSpec:
     product_requires_draft: bool
     monitor_writes_history_only: bool = True
     trace_required: bool = True
+    stage_files: tuple[str, ...] = ()
 
     @property
     def trace_policy_dict(self) -> dict[str, str]:
@@ -154,6 +155,14 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
     if not isinstance(monitor_writes_history_only, bool):
         raise ConfigurationError(
             f"Wrapper {wrapper_path} monitor_writes_history_only must be a boolean"
+        )
+    stage_files = wrapper.get("stage_files", [])
+    if not (
+        isinstance(stage_files, list)
+        and all(isinstance(path, str) and path for path in stage_files)
+    ):
+        raise ConfigurationError(
+            f"Wrapper {wrapper_path} stage_files must be a list of paths"
         )
     package = wrapper.get("package")
     if not isinstance(package, Mapping):
@@ -330,6 +339,7 @@ def _load_wrapper(wrapper_path: Path) -> ConditionSpec:
         product_requires_draft=product_requires_draft,
         monitor_writes_history_only=monitor_writes_history_only,
         trace_required=trace_required,
+        stage_files=tuple(stage_files),
     )
 
 

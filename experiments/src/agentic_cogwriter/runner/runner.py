@@ -1070,6 +1070,7 @@ class ExperimentRunner:
                 codex_home=generator_config_dir.resolve(),
                 requires_draft=condition.product_requires_draft,
                 monitor_writes_history_only=condition.monitor_writes_history_only,
+                stage_files=condition.stage_files,
             )
             self._write_json(
                 manifest_path,
