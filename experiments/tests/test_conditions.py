@@ -111,24 +111,26 @@ def test_unset_monitor_write_flag_enables_the_check(tmp_path: Path) -> None:
     assert load_condition_registry(conditions_dir)["A8"].monitor_writes_history_only
 
 
-def test_stage_files_default_off_and_parse_from_the_wrapper(tmp_path: Path) -> None:
-    assert all(not c.stage_files for c in load_condition_registry().values())
+def test_stage_files_apply_to_a2_only(tmp_path: Path) -> None:
+    registry = load_condition_registry()
+
+    assert {cid: c.stage_files for cid, c in registry.items() if c.stage_files} == {
+        "A2": (
+            ".writing/baselines/linear/pre-write.md",
+            ".writing/baselines/linear/write.md",
+            ".writing/draft.md",
+        )
+    }
     conditions_dir = _copy_conditions(tmp_path)
     wrapper_path = conditions_dir / "a2_baseline.toml"
-    stages = '["a.md", ".writing/draft.md"]'
+    text = wrapper_path.read_text(encoding="utf-8")
     wrapper_path.write_text(
-        f"stage_files = {stages}\n" + wrapper_path.read_text(encoding="utf-8"),
+        text[: text.index("stage_files")]
+        + 'stage_files = "a.md"\n'
+        + text[text.index("]\n", text.index("stage_files")) + 2 :],
         encoding="utf-8",
     )
 
-    assert load_condition_registry(conditions_dir)["A2"].stage_files == (
-        "a.md",
-        ".writing/draft.md",
-    )
-    wrapper_path.write_text(
-        wrapper_path.read_text(encoding="utf-8").replace(stages, '"a.md"'),
-        encoding="utf-8",
-    )
     with pytest.raises(ConfigurationError, match="stage_files must be a list"):
         load_condition_registry(conditions_dir)
 
