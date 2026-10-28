@@ -76,13 +76,14 @@ class RunResult:
     run_id: str
 
 
-# Every condition's follow-up message, and the block appended to task.md, opens
-# with this heading.
+# The follow-up change block, the same bytes for every condition, opens with this
+# heading; task.md receives the block, and the turn-2 message adds the
+# condition's own turn-1 product clause after it.
 FOLLOWUP_HEADING = "## Change 1 (governs where it conflicts with the task above)"
 
 
 def followup_message(change: str) -> str:
-    """Return the follow-up turn's message, the same bytes for every condition."""
+    """Return the follow-up change block, the same bytes for every condition."""
 
     return f"{FOLLOWUP_HEADING}\n{change.strip()}\n"
 
@@ -1064,11 +1065,15 @@ class ExperimentRunner:
                 normalized_path.write_bytes(turn1_product)
                 # The frozen stage order describes turn 1; turn 2 may revise any file.
                 turn1_gate = gate(condition.stage_files)
-                message = followup_message(followup)
+                change = followup_message(followup)
                 task_path = workspace / ".writing" / "task.md"
                 if task_path.is_file():
                     with task_path.open("a", encoding="utf-8") as task:
-                        task.write(f"\n{message}")
+                        task.write(f"\n{change}")
+                # Each condition re-enters its own procedure with turn 1's clause.
+                message = f"{change}\n" + self._invocation(
+                    condition, platform, Path("plugin")
+                )
                 followup_path = run_dir / "followup.txt"
                 followup_path.write_text(message, encoding="utf-8")
                 turn1_attempts = attempts
@@ -1442,27 +1447,7 @@ class ExperimentRunner:
         codex_prompt_root: str | Path | None = None,
         contract_hashes: MutableMapping[str, str] | None = None,
     ) -> str:
-        wrapper = self._wrapper(condition)
-        key = platform.replace("-", "_")
-        invocation = wrapper.get("invocation", {}).get(key)
-        if not isinstance(invocation, str) or not invocation.strip():
-            raise ManifestError(
-                f"Plugin wrapper {condition.plugin_config} has no {key} invocation"
-            )
-        if platform == "codex":
-            prompt_root = Path(codex_prompt_root or "plugin")
-            if prompt_root.is_absolute():
-                raise ManifestError(
-                    "Codex skill prompt path must be workspace-relative"
-                )
-            invocation = invocation.replace(
-                "{codex_plugin_root}", prompt_root.as_posix()
-            )
-            if "{codex_plugin_root}" in invocation:
-                raise ManifestError(
-                    f"Plugin wrapper {condition.plugin_config} has an unresolved "
-                    "Codex plugin root"
-                )
+        invocation = self._invocation(condition, platform, codex_prompt_root)
         contract_texts, observed_contract_hashes = self._read_contracts()
         if contract_hashes is not None:
             contract_hashes.update(observed_contract_hashes)
@@ -1487,6 +1472,37 @@ class ExperimentRunner:
         if generic_block:
             generic_block = f"\n\n{generic_block}"
         return f"{invocation}{generic_block}{stage_text}"
+
+    def _invocation(
+        self,
+        condition: ConditionSpec,
+        platform: str,
+        codex_prompt_root: str | Path | None = None,
+    ) -> str:
+        """Return the wrapper's rendered invocation, the prompt's product clause."""
+
+        wrapper = self._wrapper(condition)
+        key = platform.replace("-", "_")
+        invocation = wrapper.get("invocation", {}).get(key)
+        if not isinstance(invocation, str) or not invocation.strip():
+            raise ManifestError(
+                f"Plugin wrapper {condition.plugin_config} has no {key} invocation"
+            )
+        if platform == "codex":
+            prompt_root = Path(codex_prompt_root or "plugin")
+            if prompt_root.is_absolute():
+                raise ManifestError(
+                    "Codex skill prompt path must be workspace-relative"
+                )
+            invocation = invocation.replace(
+                "{codex_plugin_root}", prompt_root.as_posix()
+            )
+            if "{codex_plugin_root}" in invocation:
+                raise ManifestError(
+                    f"Plugin wrapper {condition.plugin_config} has an unresolved "
+                    "Codex plugin root"
+                )
+        return invocation
 
     def _stage_prompt_hashes(self, condition: ConditionSpec) -> dict[str, str | None]:
         """Re-read frozen stage files and verify the bytes used for the prompt."""
