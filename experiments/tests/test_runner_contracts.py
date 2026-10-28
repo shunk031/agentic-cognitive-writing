@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import difflib
 import fcntl
 import hashlib
@@ -3071,30 +3072,32 @@ def test_retry_reuses_the_returned_session_id(
     assert "session-1" in executor.calls[1]
 
 
-def test_followup_resumes_the_session_and_gates_and_counts_each_turn(
-    tmp_path: Path,
-) -> None:
-    change = "Add a section on maintenance after the section on design."
+CHANGE = "Add a section on maintenance after the section on design."
 
-    def rollout(thread: str, output_tokens: int, **meta: object) -> list[dict]:
-        rows: list[dict] = [
-            {"type": "event_msg", "payload": {"type": "task_started"}},
-            {
-                "type": "event_msg",
-                "payload": {
-                    "type": "token_count",
-                    "info": {
-                        "total_token_usage": {
-                            "output_tokens": output_tokens,
-                            "total_tokens": output_tokens,
-                        }
-                    },
+
+def _rollout_rows(thread: str, output_tokens: int, **meta: object) -> list[dict]:
+    """Return one turn of a thread's rollout; ``meta`` starts a new rollout."""
+
+    rows: list[dict] = [
+        {"type": "event_msg", "payload": {"type": "task_started"}},
+        {
+            "type": "event_msg",
+            "payload": {
+                "type": "token_count",
+                "info": {
+                    "total_token_usage": {
+                        "output_tokens": output_tokens,
+                        "total_tokens": output_tokens,
+                    }
                 },
             },
-        ]
-        if meta:
-            rows[:0] = [
-                {"type": "session_meta", "payload": {"id": thread, **meta}},
+        },
+    ]
+    if meta:
+        rows[:0] = [{"type": "session_meta", "payload": {"id": thread, **meta}}]
+        if meta.get("parent_thread_id"):
+            rows.insert(
+                1,
                 {
                     "type": "response_item",
                     "payload": {
@@ -3102,94 +3105,126 @@ def test_followup_resumes_the_session_and_gates_and_counts_each_turn(
                         "arguments": "cat plugin/skills/planning/SKILL.md",
                     },
                 },
-            ]
-        return rows
+            )
+    return rows
 
-    class TwoTurnExecutor(_RetryExecutor):
-        def run(self, command, *, cwd, timeout_seconds, env=None):
-            turn = len(self.calls) + 1
-            sessions = Path(env["CODEX_HOME"]) / "sessions"
-            sessions.mkdir(parents=True, exist_ok=True)
-            # The resumed Monitor appends to its rollout with cumulative usage.
-            monitor = rollout("session-1", 10 * turn + 5 * (turn - 1))
-            if turn == 1:
-                monitor.insert(
-                    0, {"type": "session_meta", "payload": {"id": "session-1"}}
-                )
-            with (sessions / "rollout-session-1.jsonl").open("a") as file:
-                file.writelines(json.dumps(row) + "\n" for row in monitor)
-            child = rollout(
-                f"child-{turn}",
-                4 + turn,
-                parent_thread_id="session-1",
-                agent_role="planning",
-            )
-            (sessions / f"rollout-child-{turn}.jsonl").write_text(
-                "".join(json.dumps(row) + "\n" for row in child)
-            )
-            (cwd / ".writing" / "draft.md").write_text(f"draft {turn} " * 10)
-            if turn == 1:
-                (cwd / ".writing" / "goals.md").write_text("# Goals\n- One\n")
-            return super().run(
-                command, cwd=cwd, timeout_seconds=timeout_seconds, env=env
-            )
 
-    def turn_result(turn: int) -> ExecutionResult:
-        spawn = {
-            "id": f"collab-{turn}",
-            "type": "collab_tool_call",
-            "tool": "spawn_agent",
-            "status": "completed",
-            "receiver_thread_ids": [f"child-{turn}"],
-            "prompt": "$planning plan",
-        }
-        events = [
-            {"type": "thread.started", "thread_id": "session-1"},
-            {"type": "item.completed", "item": spawn},
-        ]
+class _TwoTurnExecutor(_RetryExecutor):
+    """Write each turn's Monitor and child rollouts and its own draft."""
+
+    def __init__(
+        self, turns: list[tuple[ExecutionResult, list[str]]], goals: bool = False
+    ) -> None:
+        super().__init__([result for result, _ in turns])
+        self.children = [children for _, children in turns]
+        self.goals = goals
+
+    def run(self, command, *, cwd, timeout_seconds, env=None):
+        turn = len(self.calls) + 1
+        sessions = Path(env["CODEX_HOME"]) / "sessions"
+        sessions.mkdir(parents=True, exist_ok=True)
+        # The resumed Monitor appends to its rollout with cumulative usage.
+        monitor = _rollout_rows("session-1", 10 * turn + 5 * (turn - 1))
         if turn == 1:
-            # Turn 2 leaves its child open, which only the final gate sees.
-            close = {**spawn, "id": "close-1", "tool": "close_agent"}
-            events.append({"type": "item.completed", "item": close})
-        result = _result(usage={"output_tokens": 10 * turn + 5 * (turn - 1)})
-        stream = "".join(json.dumps(event) + "\n" for event in events)
-        return replace(result, stdout=stream.encode() + result.stdout)
+            monitor.insert(0, {"type": "session_meta", "payload": {"id": "session-1"}})
+        with (sessions / "rollout-session-1.jsonl").open("a") as file:
+            file.writelines(json.dumps(row) + "\n" for row in monitor)
+        for child in self.children[turn - 1]:
+            rows = _rollout_rows(
+                child, 4 + turn, parent_thread_id="session-1", agent_role="planning"
+            )
+            (sessions / f"rollout-{child}.jsonl").write_text(
+                "".join(json.dumps(row) + "\n" for row in rows)
+            )
+        (cwd / ".writing" / "draft.md").write_text(f"draft {turn} " * 10)
+        if turn == 1 and self.goals:
+            (cwd / ".writing" / "goals.md").write_text("# Goals\n- One\n")
+        return super().run(command, cwd=cwd, timeout_seconds=timeout_seconds, env=env)
 
-    condition = replace(
+
+def _turn_result(turn: int, items: list[dict]) -> ExecutionResult:
+    result = _result(usage={"output_tokens": 10 * turn + 5 * (turn - 1)})
+    events = [{"type": "thread.started", "thread_id": "session-1"}] + [
+        {"type": "item.completed", "item": {"id": f"item-{turn}-{k}", **item}}
+        for k, item in enumerate(items)
+    ]
+    stream = "".join(json.dumps(event) + "\n" for event in events)
+    return replace(result, stdout=stream.encode() + result.stdout)
+
+
+def _collab(tool: str, child: str) -> dict:
+    return {
+        "type": "collab_tool_call",
+        "tool": tool,
+        "status": "completed",
+        "receiver_thread_ids": [child],
+        "prompt": "$planning plan",
+    }
+
+
+def _patch(path: str) -> dict:
+    return {"type": "file_change", "status": "completed", "changes": [{"path": path}]}
+
+
+def _delegating_a1():
+    return replace(
         load_condition_registry()["A1"],
         require_delegation=True,
         product_requires_draft=True,
         goal_events="allowed",
     )
-    executor = TwoTurnExecutor([turn_result(1), turn_result(2)])
+
+
+def test_followup_resumes_the_session_and_gates_and_counts_each_turn(
+    tmp_path: Path,
+) -> None:
+    executor = _TwoTurnExecutor(
+        [
+            (
+                _turn_result(
+                    1,
+                    [
+                        _collab("spawn_agent", "child-1"),
+                        _collab("close_agent", "child-1"),
+                    ],
+                ),
+                ["child-1"],
+            ),
+            # Turn 2 leaves its child open, which only the final gate sees.
+            (_turn_result(2, [_collab("spawn_agent", "child-2")]), ["child-2"]),
+        ],
+        goals=True,
+    )
     runner = _runner(
         tmp_path / "runs",
-        condition_registry={"A1": condition},
+        condition_registry={"A1": _delegating_a1()},
         executor=executor,
         codex_home=tmp_path / "codex-home",
     )
 
     run = runner.run_prompt(
-        _prompt(), condition_id="A1", platform="codex", followup=change
+        _prompt(), condition_id="A1", platform="codex", followup=CHANGE
     )
 
+    message = runner_module.followup_message(CHANGE)
+    assert message == f"{runner_module.FOLLOWUP_HEADING}\n{CHANGE}\n"
     assert executor.calls[1][:4] == ["codex", "exec", "resume", "session-1"]
     assert 'sandbox_mode="workspace-write"' in executor.calls[1]
-    assert executor.calls[1][-1] == change
+    assert executor.calls[1][-1] == message
     turn1 = run.run_dir / "turn1"
     assert (turn1 / "draft.md").read_text() == "draft 1 " * 10
     assert (turn1 / "output.normalized.txt").read_text() == "draft 1 " * 10
     assert (turn1 / "goals.md").read_text() == "# Goals\n- One\n"
     assert (run.run_dir / "output.normalized.txt").read_text() == "draft 2 " * 10
     task = run.run_dir / "workspace" / ".writing" / "task.md"
-    assert task.read_text().endswith(f"\n{runner_module.FOLLOWUP_HEADING}\n{change}\n")
+    assert task.read_text().endswith(f"\n\n{message}")
     # The resumed Monitor's rollout is collected again for turn 2.
     assert (run.run_dir / "sessions/attempt-002/rollout-session-1.jsonl").is_file()
     manifest = json.loads(run.manifest_path.read_text())
     followup = manifest["followup"]
     assert (
         followup["message_hash"]
-        == "sha256:" + hashlib.sha256(change.encode()).hexdigest()
+        == "sha256:" + hashlib.sha256(message.encode()).hexdigest()
     )
     assert (
         followup["task_hash"]
@@ -3201,12 +3236,125 @@ def test_followup_resumes_the_session_and_gates_and_counts_each_turn(
         "status": "rejected",
         "reasons": ["child child-2 was never closed"],
     }
+    assert manifest["status"] == "unscored"
     assert followup["rollout_token_usage"] == {
         "turn1": {"output_tokens": 15, "total_tokens": 15},
         "turn2": {"output_tokens": 21, "total_tokens": 21},
     }
-    # turn.completed is cumulative over the session, so turn 2's replaces turn 1's.
+    # turn.completed is cumulative over the session; the budget applies per turn.
     assert manifest["token_accounting"]["output_tokens"] == 25
+    assert followup["budget"] == {
+        "turn1": {"tokens": 10, "output_units": 20},
+        "turn2": {"tokens": 15, "output_units": 20},
+    }
+
+
+def test_a_turn_1_violation_rejects_a_two_turn_run(tmp_path: Path) -> None:
+    # The turn-1 child stays open until turn 2 closes it.
+    executor = _TwoTurnExecutor(
+        [
+            (_turn_result(1, [_collab("spawn_agent", "child-1")]), ["child-1"]),
+            (_turn_result(2, [_collab("close_agent", "child-1")]), []),
+        ]
+    )
+    runner = _runner(
+        tmp_path / "runs",
+        condition_registry={"A1": _delegating_a1()},
+        executor=executor,
+        codex_home=tmp_path / "codex-home",
+    )
+
+    run = runner.run_prompt(
+        _prompt(), condition_id="A1", platform="codex", followup=CHANGE
+    )
+
+    manifest = json.loads(run.manifest_path.read_text())
+    assert manifest["fidelity_gate"] == {
+        "status": "rejected",
+        "reasons": ["turn 1: child child-1 was never closed"],
+    }
+    assert manifest["status"] == "unscored"
+    assert manifest["scoring"] == {"status": "excluded"}
+
+
+@pytest.mark.parametrize("ordered", [True, False])
+def test_stage_order_binds_turn_1_and_turn_2_may_revise_the_draft(
+    tmp_path: Path, ordered: bool
+) -> None:
+    stages = list(load_condition_registry()["A2"].stage_files)
+    turn1 = stages if ordered else [stages[1], stages[0], stages[2]]
+    executor = _TwoTurnExecutor(
+        [
+            (_turn_result(1, [_patch(f"/w/{path}") for path in turn1]), []),
+            (_turn_result(2, [_patch("/w/.writing/draft.md")]), []),
+        ]
+    )
+    runner = _runner(
+        tmp_path / "runs", executor=executor, codex_home=tmp_path / "codex-home"
+    )
+
+    run = runner.run_prompt(
+        _prompt(), condition_id="A2", platform="codex", followup=CHANGE
+    )
+
+    manifest = json.loads(run.manifest_path.read_text())
+    assert manifest["fidelity_gate"] == (
+        {"status": "scorable", "reasons": []}
+        if ordered
+        else {
+            "status": "rejected",
+            "reasons": [f"turn 1: stage writes were {turn1}, not {stages}"],
+        }
+    )
+
+
+def test_every_condition_receives_the_same_followup_bytes(tmp_path: Path) -> None:
+    message = runner_module.followup_message(CHANGE)
+    for condition_id in sorted(load_condition_registry()):
+        executor = _TwoTurnExecutor(
+            [(_turn_result(1, []), []), (_turn_result(2, []), [])]
+        )
+        runner = _runner(
+            tmp_path / condition_id,
+            executor=executor,
+            codex_home=tmp_path / "codex-home",
+        )
+        # Later checks may fail these fake runs; only the turn-2 message matters.
+        with contextlib.suppress(Exception):
+            runner.run_prompt(
+                _prompt(), condition_id=condition_id, platform="codex", followup=CHANGE
+            )
+
+        assert executor.calls[1][-1] == message, condition_id
+        tasks = list(
+            (tmp_path / condition_id).glob("*/*/*/*/workspace/.writing/task.md")
+        )
+        # Conditions without task.md get none; the others get the same block.
+        if condition_id in ("A1", "A2", "B2"):
+            assert tasks == [], condition_id
+        else:
+            assert tasks[0].read_text().endswith(f"\n\n{message}"), condition_id
+
+
+def test_the_output_budget_applies_to_each_turn(tmp_path: Path) -> None:
+    # 60 tokens in turn 1 and 70 in turn 2 each fit a 100-token budget.
+    turns = [
+        _result(usage={"output_tokens": 60}),
+        _result(usage={"output_tokens": 130}),
+    ]
+    runner = _runner(tmp_path, executor=_RetryExecutor(turns))
+
+    run = runner.run_prompt(
+        _prompt(), condition_id="A1", platform="codex", followup=CHANGE
+    )
+
+    budget = json.loads(run.manifest_path.read_text())["followup"]["budget"]
+    assert (budget["turn1"]["tokens"], budget["turn2"]["tokens"]) == (60, 70)
+    over = [_result(usage={"output_tokens": 60}), _result(usage={"output_tokens": 161})]
+    with pytest.raises(BudgetExceeded, match="per-turn"):
+        _runner(tmp_path / "over", executor=_RetryExecutor(over)).run_prompt(
+            _prompt(), condition_id="A1", platform="codex", followup=CHANGE
+        )
 
 
 def test_retry_exhaustion_fails_after_fixed_attempt_count(tmp_path: Path) -> None:

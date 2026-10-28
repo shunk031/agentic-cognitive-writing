@@ -76,8 +76,16 @@ class RunResult:
     run_id: str
 
 
-# The heading under which a follow-up turn's change is appended to task.md.
+# Every condition's follow-up message, and the block appended to task.md, opens
+# with this heading.
 FOLLOWUP_HEADING = "## Change 1 (governs where it conflicts with the task above)"
+
+
+def followup_message(change: str) -> str:
+    """Return the follow-up turn's message, the same bytes for every condition."""
+
+    return f"{FOLLOWUP_HEADING}\n{change.strip()}\n"
+
 
 _GENERATOR_CONFIG_ENV = {
     "codex": "CODEX_HOME",
@@ -869,6 +877,9 @@ class ExperimentRunner:
                 ),
             )
 
+            # The budget applies to each turn, so a follow-up turn starts afresh.
+            turn_start_tokens = 0
+
             def record_attempt(
                 attempt_number: int,
                 result: ExecutionResult | None,
@@ -949,11 +960,11 @@ class ExperimentRunner:
                         # a retry or follow-up resumes the session, so the latest
                         # observation supersedes the earlier ones.
                         token_usage = observed_usage
-                        if token_usage["total_tokens"] > budget.limit:
+                        turn_tokens = token_usage["total_tokens"] - turn_start_tokens
+                        if turn_tokens > budget.limit:
                             raise BudgetExceeded(
-                                "Codex turn usage exceeds the shared output "
-                                f"budget: used={token_usage['total_tokens']}, "
-                                f"limit={budget.limit}"
+                                "Codex turn usage exceeds the per-turn output "
+                                f"budget: used={turn_tokens}, limit={budget.limit}"
                             )
                     if (
                         result.returncode == 0
@@ -1014,7 +1025,7 @@ class ExperimentRunner:
                     ),
                 )
 
-            def gate() -> dict[str, Any]:
+            def gate(stage_files: tuple[str, ...]) -> dict[str, Any]:
                 return check_fidelity(
                     run_dir,
                     platform=platform,
@@ -1028,7 +1039,7 @@ class ExperimentRunner:
                         )
                     )
                     or ROLES,
-                    stage_files=condition.stage_files,
+                    stage_files=stage_files,
                     spawn_message=condition.spawn_message,
                 )
 
@@ -1051,14 +1062,17 @@ class ExperimentRunner:
                 # The gate compares the run output with the draft, so it judges
                 # turn 1 against turn 1's product; turn 2 overwrites the output.
                 normalized_path.write_bytes(turn1_product)
-                turn1_gate = gate()
+                # The frozen stage order describes turn 1; turn 2 may revise any file.
+                turn1_gate = gate(condition.stage_files)
+                message = followup_message(followup)
                 task_path = workspace / ".writing" / "task.md"
                 if task_path.is_file():
                     with task_path.open("a", encoding="utf-8") as task:
-                        task.write(f"\n{FOLLOWUP_HEADING}\n{followup.strip()}\n")
+                        task.write(f"\n{message}")
                 followup_path = run_dir / "followup.txt"
-                followup_path.write_text(followup, encoding="utf-8")
+                followup_path.write_text(message, encoding="utf-8")
                 turn1_attempts = attempts
+                turn_start_tokens = token_usage["total_tokens"] if token_usage else 0
                 followup_record = {
                     "message_hash": f"sha256:{sha256_file(followup_path)}",
                     "task_hash": (
@@ -1073,8 +1087,16 @@ class ExperimentRunner:
                         for path in sorted(turn1_dir.iterdir())
                     },
                     "turn2_started_at": timestamp(),
+                    "budget": {
+                        "turn1": {
+                            "tokens": turn_start_tokens,
+                            "output_units": self.runtime_config.count_output_units(
+                                turn1_product.decode("utf-8")
+                            ),
+                        }
+                    },
                 }
-                result, attempts = run_turn(followup, result.session_id)
+                result, attempts = run_turn(message, result.session_id)
                 if platform == "codex":
                     turn1_usage = rollout_token_usage(run_dir, turn1_attempts)
                     total_usage = rollout_token_usage(run_dir, attempts)
@@ -1096,6 +1118,12 @@ class ExperimentRunner:
                 self.runtime_config.count_output_units(scored.decode("utf-8")),
                 stage="final_output",
             )
+            if followup_record is not None:
+                followup_record["budget"]["turn2"] = {
+                    "tokens": (token_usage["total_tokens"] if token_usage else 0)
+                    - turn_start_tokens,
+                    "output_units": budget.used,
+                }
             if condition.goal_events == "forbidden":
                 assert_untouched(protected_goals, goals_before)
             required_trace = ".writing/trace/process.jsonl"
@@ -1145,7 +1173,21 @@ class ExperimentRunner:
                 )
             output_path.write_bytes(scored)
             normalized_path.write_bytes(scored)
-            fidelity_gate = gate()
+            if followup_record is None:
+                fidelity_gate = gate(condition.stage_files)
+            else:
+                # A two-turn run is scorable only if turn 1 and the whole run pass.
+                turn1_reasons = followup_record["turn1_fidelity_gate"]["reasons"]
+                reasons = list(
+                    dict.fromkeys(
+                        [f"turn 1: {reason}" for reason in turn1_reasons]
+                        + gate(())["reasons"]
+                    )
+                )
+                fidelity_gate = {
+                    "status": "rejected" if reasons else "scorable",
+                    "reasons": reasons,
+                }
             self._write_json(
                 manifest_path,
                 self._manifest(
