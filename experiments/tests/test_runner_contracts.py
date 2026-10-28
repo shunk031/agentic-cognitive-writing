@@ -1144,7 +1144,7 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
     text = (skills / "writing-adaptive-task-planning/SKILL.md").read_text()
 
     # Each child is a fresh agent that reads its own skill and is closed.
-    for role in ("task-decomposition", "task-execution"):
+    for role in ("task-node", "task-execution"):
         sentence = (
             f"Read the skill file at plugin/skills/{role}/SKILL.md and follow it."
         )
@@ -1154,19 +1154,20 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
         assert [path.name for path in (skills / role).rglob("*")] == ["SKILL.md"]
     assert "`spawn_agent` with `fork_context` false" in text
     assert "`close_agent` it before spawning the next one" in text
-    # Recursion: every composition task above depth 3, children included, gets a
-    # decomposition verdict; reasoning tasks and deeper tasks are atomic.
-    assert "`true` for a `reasoning` task and for a composition task at depth 3" in (
+    # Recursion: one node agent per composition task judges atomicity, then
+    # returns children or writes; the coordinator never judges or writes.
+    assert "the root and each child alike, to a node agent" in text
+    assert "it never judges atomicity or writes prose" in text
+    assert "at depth 3 or deeper, where the root is at depth 0, the task is atomic" in (
         text
     )
-    assert "If the selected task's `atomic` is `null`, delegate it" in text
-    assert "the root and each child alike, to a decomposition agent" in text
-    assert "The coordinator never sets `atomic` itself for such a task" in text
-    decomposition = (skills / "task-decomposition/SKILL.md").read_text()
-    assert "longer than 1000 words may be split" in decomposition
-    assert "longer than 1500 words must be split" in decomposition
+    node = (skills / "task-node/SKILL.md").read_text()
+    assert "At depth 3 or deeper, where the root is at depth 0" in node
+    assert "longer than 1000 words may be split" in node
+    assert "longer than 1500 words must be split" in node
     # The deliverable is the appended draft, not a final message or a trace.
-    assert "A composition execution appends its prose to `.writing/draft.md`" in text
+    assert "append the prose for its goal to the end of `.writing/draft.md`" in node
+    assert "atomic`" not in text
     assert "final response" not in text
     assert "process.jsonl" not in text
     assert ".writing/task.md" in text
@@ -3395,7 +3396,7 @@ def test_a3_stages_its_agent_skills_and_scores_the_draft(tmp_path: Path) -> None
     result = runner.run_prompt(_prompt(), condition_id="A3", platform="codex")
 
     workspace = result.run_dir / "workspace"
-    for role in ("task-decomposition", "task-execution"):
+    for role in ("task-node", "task-execution"):
         assert (workspace / "plugin/skills" / role / "SKILL.md").read_bytes() == (
             REPO_ROOT / "experiments/baselines/skills" / role / "SKILL.md"
         ).read_bytes()

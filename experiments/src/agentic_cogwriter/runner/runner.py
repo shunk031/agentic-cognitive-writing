@@ -1542,7 +1542,7 @@ class ExperimentRunner:
         "cognitive-writing-fixed-order": _CODEX_ROLE_SKILL_DIRECTORIES,
         "writing-adaptive-task-planning": {
             Path("skills") / role: Path("skills") / role
-            for role in ("task-decomposition", "task-execution")
+            for role in ("task-node", "task-execution")
         },
     }
     # A condition listed here installs its own agent definitions in place of the

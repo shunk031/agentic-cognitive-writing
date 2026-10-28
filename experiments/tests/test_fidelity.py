@@ -207,7 +207,7 @@ def _baseline_run(*, read: bool) -> dict[str, Any]:
     """An A3-style run whose child is a default agent told to read its skill."""
 
     run = _clean_run()
-    skill = "plugin/skills/task-decomposition/SKILL.md"
+    skill = "plugin/skills/task-node/SKILL.md"
     run["events"][2] = _collab(
         "spawn_agent", prompt=f"Read the skill file at {skill} and follow it. Task r1."
     )
@@ -216,14 +216,14 @@ def _baseline_run(*, read: bool) -> dict[str, Any]:
     return run
 
 
-A3_ROLES = ("task-decomposition", "task-execution")
+A3_ROLES = ("task-node", "task-execution")
 
 
 @pytest.mark.parametrize(
     ("read", "reasons"),
     [
         (True, []),
-        (False, [f"task-decomposition agent {CHILD} did not read its own SKILL.md"]),
+        (False, [f"task-node agent {CHILD} did not read its own SKILL.md"]),
     ],
 )
 def test_baseline_child_must_read_the_skill_its_spawn_names(
