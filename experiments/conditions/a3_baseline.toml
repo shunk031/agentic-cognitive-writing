@@ -7,7 +7,7 @@ product_requires_draft = true
 monitor_writes_history_only = false
 # Each spawn message names only the agent's skill and its task; the agent reads
 # the task's fields from the graph, so the coordinator cannot steer its verdict.
-spawn_message = 'Read the skill file at plugin/skills/(?:task-node|task-execution)/SKILL\.md and follow it for task [A-Za-z0-9_.-]+\.'
+spawn_message = 'Read the skill file at plugin/skills/(?:task-node|task-execution)/SKILL\.md and follow it for task [A-Za-z0-9_.-]+'
 
 [package]
 name = "cognitive-writing-baselines"

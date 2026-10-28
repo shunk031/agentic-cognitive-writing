@@ -19,7 +19,7 @@ This adaptation uses the task graph as its only planning structure. Do not creat
 
 ## Delegation
 
-Delegate each selected task to a fresh agent: `spawn_agent` with `fork_context` false and a message that is exactly "Read the skill file at plugin/skills/task-node/SKILL.md and follow it for task <task ID>." for a `composition` task, or exactly "Read the skill file at plugin/skills/task-execution/SKILL.md and follow it for task <task ID>." for a `reasoning` task, with nothing added; the agent reads the task's fields from the graph. Then `wait` for the agent and `close_agent` it before spawning the next one.
+Delegate each selected task to a fresh agent: `spawn_agent` with `fork_context` false and a message that is exactly `Read the skill file at plugin/skills/task-node/SKILL.md and follow it for task <task ID>` for a `composition` task, or exactly `Read the skill file at plugin/skills/task-execution/SKILL.md and follow it for task <task ID>` for a `reasoning` task, where the task ID is letters, digits, `_`, `.`, or `-`, with nothing added; the agent reads the task's fields from the graph. Then `wait` for the agent and `close_agent` it before spawning the next one.
 
 ## Persisted graph contract
 

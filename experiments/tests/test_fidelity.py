@@ -239,7 +239,7 @@ def test_baseline_child_must_read_the_skill_its_spawn_names(
 
 A3_TEMPLATE = (
     r"Read the skill file at plugin/skills/(?:task-node|task-execution)/SKILL\.md "
-    r"and follow it for task [A-Za-z0-9_.-]+\."
+    r"and follow it for task [A-Za-z0-9_.-]+"
 )
 
 
@@ -248,7 +248,7 @@ A3_TEMPLATE = (
     [
         (
             "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
-            "for task r1.",
+            "for task r1",
             [],
         ),
         (

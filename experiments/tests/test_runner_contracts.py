@@ -1146,8 +1146,8 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
     # Each child is a fresh agent that reads its own skill and is closed.
     for role in ("task-node", "task-execution"):
         sentence = (
-            f"Read the skill file at plugin/skills/{role}/SKILL.md and follow it "
-            "for task <task ID>."
+            f"`Read the skill file at plugin/skills/{role}/SKILL.md and follow it "
+            "for task <task ID>`"
         )
         assert sentence in text
         child = (skills / role / "SKILL.md").read_text()
@@ -1171,12 +1171,12 @@ def test_task_planning_skill_delegates_every_task_to_a_closed_skill_agent() -> N
     assert re.fullmatch(
         pattern,
         "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
-        "for task root.c-1.",
+        "for task root.c-1",
     )
     assert not re.fullmatch(
         pattern,
         "Read the skill file at plugin/skills/task-node/SKILL.md and follow it "
-        "for task c1. It is atomic; write it.",
+        "for task c1. It is atomic; write it",
     )
     # The root's node agent sets its length; revision adds children only under
     # suspended tasks, so new composition tasks reach a node agent.
