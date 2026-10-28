@@ -1123,7 +1123,7 @@ def test_staged_skill_writes_each_frozen_stage_and_the_draft() -> None:
     ]
     assert "final response" not in body
     assert "trace" not in body
-    assert [path.name for path in skill.rglob("*") if path.is_file()] == [
+    assert sorted(path.name for path in skill.rglob("*") if path.is_file()) == [
         "SKILL.md",
         "openai.yaml",
     ]
