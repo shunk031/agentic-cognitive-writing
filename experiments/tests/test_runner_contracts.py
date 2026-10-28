@@ -98,8 +98,8 @@ NO_GOAL_SKILL_PATHS = (
 NO_GOAL_FILE_RULE = "Do not create or modify `.writing/goals.md`"
 STAGE_SESSION_HEADER = (
     "The following {count} frozen stages run in order within this single session; "
-    "each stage's output is the input of the next, and only the final stage's "
-    "output is the final response."
+    "each stage's output is the input of the next, and the final stage's output "
+    "is the final document in `.writing/draft.md`."
 )
 SINGLE_STAGE_SESSION_HEADER = (
     "The following frozen stage runs within this single session; its output is the "
@@ -1166,6 +1166,21 @@ def test_cogwriter_style_skill_delegates_to_closed_skill_agents() -> None:
     assert "final response" not in text
     assert "process.jsonl" not in text
     assert ".writing/task.md" in text
+
+
+def test_storm_style_skill_runs_in_context_and_writes_the_draft() -> None:
+    text = (
+        REPO_ROOT / "experiments/baselines/skills/writing-storm-style/SKILL.md"
+    ).read_text()
+
+    assert "in this session; do not spawn an agent" in text
+    assert "subagent" not in text
+    assert "Play the question-asker and the expert in turn" in text
+    assert "write the polished document to `.writing/draft.md`" in text
+    assert "final response" not in text
+    assert "process.jsonl" not in text
+    assert ".writing/assignment.md" not in text
+    assert not load_condition_registry()["B2"].require_delegation
 
 
 def test_single_context_skill_is_the_monitor_skill_running_roles_in_context() -> None:

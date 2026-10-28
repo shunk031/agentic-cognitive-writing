@@ -2,12 +2,14 @@ condition_id = "B2"
 skill = "writing-storm-style"
 analysis_family = "exploratory"
 product_requires_draft = true
+# B2 runs every stage in one session, which writes the draft.
 monitor_writes_history_only = false
 
 [package]
 name = "cognitive-writing-baselines"
 
 [plugins]
+# No codex_adapter: B2 spawns no agent.
 paths = ["experiments/baselines"]
 
 [adapters]
@@ -23,14 +25,16 @@ claude_code = """/cognitive-writing-baselines:writing-storm-style"""
 claude_code = ["/plugin marketplace add .", "/plugin install cognitive-writing-baselines@agentic-cognitive-writing-process"]
 
 [trace]
+# The fidelity gate reads the run from the harness records instead of a
+# plugin trace.
+required = false
 retrieval = "N/A"
 evidence = "N/A"
 citation = "N/A"
 goal_events = "forbidden"
+# Every stage runs in the top-level session; a spawn fails the run.
+require_delegation = false
 event_types = ["process_switch"]
-min_events = 5
-max_events = 5
-process_order = ["perspective-discovery", "simulated-question-answering", "outline", "per-section-draft", "polish"]
 processes = ["perspective-discovery", "simulated-question-answering", "outline", "per-section-draft", "polish"]
 
 [[stages]]
