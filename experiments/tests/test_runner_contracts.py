@@ -1196,7 +1196,7 @@ def test_single_writer_skill_is_single_context_with_one_paragraph_steps() -> Non
         (
             "Write",
             "Write one paragraph in `.writing/draft.md` within the delegated draft "
-            "scope.",
+            "scope; each further paragraph is a new Translating step.",
         ),
     }
     assert [path.name for path in a7_root.rglob("*")] == ["SKILL.md"]

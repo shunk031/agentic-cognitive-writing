@@ -30,7 +30,7 @@ Report what changed and any work of another kind that is needed.
 
 Role: the Translator. Translating adds prose for the goals; a section with no goal is reported, not written.
 Read `.writing/task.md`, `.writing/draft.md`, and the active goals in `.writing/goals.md`.
-Write one paragraph in `.writing/draft.md` within the delegated draft scope.
+Write one paragraph in `.writing/draft.md` within the delegated draft scope; each further paragraph is a new Translating step.
 Report what was written and any structural problem that drafting exposes.
 
 ## Reviewing
