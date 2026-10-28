@@ -17,6 +17,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from agentic_cogwriter.runner import runner as runner_module
 from agentic_cogwriter.runner.adapters import PlatformAdapter
 from agentic_cogwriter.runner.cli import build_parser
 from agentic_cogwriter.runner.conditions import (
@@ -829,6 +830,21 @@ def test_runner_rejects_guidance_ancestor_before_starting_a_session(
 
     assert executor.calls == []
     assert not (blocked_root / "runs" / "WritingBench").exists()
+
+
+def test_guidance_scan_root_bounds_only_the_test_suite(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    host = tmp_path / "host"
+    (host / ".codex").mkdir(parents=True)
+    workspace = host / "runs" / "workspace"
+    monkeypatch.setattr(runner_module, "_GUIDANCE_SCAN_ROOT", host / "runs")
+
+    runner_module._assert_guidance_free_workspace(workspace)
+
+    monkeypatch.setattr(runner_module, "_GUIDANCE_SCAN_ROOT", None)
+    with pytest.raises(ConfigurationError, match=r"host/\.codex"):
+        runner_module._assert_guidance_free_workspace(workspace)
 
 
 def _event(
@@ -1936,11 +1952,18 @@ def test_a8_accepts_in_context_execution_without_spawn_event(tmp_path: Path) -> 
 
 
 @pytest.mark.parametrize(
-    ("output", "dominant", "mismatch"),
-    [("final output " * 10, "LATIN", False), ("最终输出" * 10, "CJK", True)],
+    ("output", "units", "dominant", "mismatch"),
+    [
+        ("final output " * 10, (20, 0), "LATIN", False),
+        ("最终输出" * 10, (0, 40), "CJK", True),
+    ],
 )
 def test_codex_run_with_complete_clean_records_stays_scoring_eligible(
-    tmp_path: Path, output: str, dominant: str, mismatch: bool
+    tmp_path: Path,
+    output: str,
+    units: tuple[int, int],
+    dominant: str,
+    mismatch: bool,
 ) -> None:
     class RecordedExecutor(_RetryExecutor):
         def run(self, command, *, cwd, timeout_seconds, env=None):
@@ -1973,6 +1996,8 @@ def test_codex_run_with_complete_clean_records_stays_scoring_eligible(
     assert manifest["output_language"] == {
         "expected_language": "en",
         "expected_script": "LATIN",
+        "latin_words": units[0],
+        "cjk_characters": units[1],
         "dominant_script": dominant,
         "dominant_share": 1.0,
         "mismatch": mismatch,
