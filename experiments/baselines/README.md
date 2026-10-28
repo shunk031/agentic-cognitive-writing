@@ -13,7 +13,7 @@ The package layout uses [`.claude-plugin/plugin.json`](.claude-plugin/plugin.jso
 | Condition | Skill | Fixed behavior | Trace expectation |
 | --- | --- | --- | --- |
 | A1 Single-pass | `writing-single-shot` | One complete generation pass | One generation event |
-| A2 Staged Writing | `writing-linear` | One `Pre-Write`, `Write`, and `Re-Write` pass | Three stage-transition events |
+| A2 Staged Writing | `writing-linear` | One `Pre-Write`, `Write`, and `Re-Write` pass in one session, each stage's output written to a file | None; the harness records show the stage files and `.writing/draft.md` |
 | A3 Adaptive Task Planning | `writing-adaptive-task-planning` | Persisted typed task graph with recursive decomposition, execution, and text-conditioned graph revision; each decomposition and execution runs in a fresh agent that reads its own skill | No plugin trace; the fidelity gate reads the agents from the harness records; retrieval is `N/A` |
 | B1 CogWriter-style | `writing-cogwriter-style` | Initial plan, immediate plan revision, parallel segment generation, and per-segment length review, each planning pass and segment in a fresh agent that reads its own skill | No plugin trace; the fidelity gate reads the agents from the harness records |
 | B2 STORM-style | `writing-storm-style` | Perspective discovery, simulated question answering, outline, per-section draft, and polish | Five stage events; retrieval, evidence, and citation are `N/A` |
