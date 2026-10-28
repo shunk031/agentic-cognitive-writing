@@ -93,6 +93,17 @@ uv run --project experiments agentic-cogwriter-mechanism-report \
   --runs-root /path/to/codex-runs
 ```
 
+## Check requirement changes
+
+The requirement-change module generates, for eight DoLoMiTes prompts of the non-evaluation smoke pool, four checkable turn-1 requirements and one seeded change per prompt, and checks two-turn runs against them. The generator and checkers use the standard library and stay outside the run workspace; the check refuses a run whose workspace holds a copy of the module or of the items file. The module docstring of [`requirement_change.py`](src/agentic_cogwriter/requirement_change.py) defines each rule.
+
+```bash
+uv run --package agentic-cogwriter python -m agentic_cogwriter.requirement_change generate --out /path/to/items
+uv run --package agentic-cogwriter python -m agentic_cogwriter.requirement_change check --items /path/to/items/items.json /path/to/run-dir
+```
+
+`generate` writes `manifest.jsonl`, the prompt rows with the turn-1 requirements added to their constraints, `items.json`, and `followup/<prompt-id>.txt`, the change message for `--followup-file`. `check` writes `change-check.json` into each run directory: whether every changed requirement passes after turn 2, which unchanged requirements that passed after turn 1 fail after turn 2, and the share of untargeted sections whose text changed.
+
 ## Score a completed run
 
 The scorer in [`src/agentic_cogwriter/judges/`](src/agentic_cogwriter/judges/) reads a completed run's `run-manifest.json`, `prompt.txt`, and `output.normalized.txt`, then writes `scores.jsonl` and `scores-manifest.json` beside the run artifacts. The manifest records the versioned template hash, source-run hashes, API usage counters, response hash, attempt count, score-record hash, and the runtime judge-family evidence chain. A successful command prints the `scores.jsonl` path. Pairwise scoring writes both presentation records only after both judgments pass validation.
