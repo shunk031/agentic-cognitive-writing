@@ -1542,6 +1542,10 @@ class ExperimentRunner:
             Path("skills") / role: Path("skills") / role
             for role in ("task-decomposition", "task-execution")
         },
+        "writing-cogwriter-style": {
+            Path("skills") / role: Path("skills") / role
+            for role in ("cogwriter-planning", "cogwriter-generation")
+        },
     }
     # A condition listed here installs its own agent definitions in place of the
     # adapter's `agents/`, so the role descriptions match its role skills.

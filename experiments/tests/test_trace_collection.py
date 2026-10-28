@@ -338,7 +338,7 @@ def test_registry_uses_uniform_skill_wrappers_and_marks_exploratory_conditions()
     assert registry["A3"].goal_events == "forbidden"
     assert registry["A4"].goal_events == "allowed"
     # Process history comes from the harness records for these conditions.
-    harness_record_conditions = {"A3", "A4", "A5", "A6", "A8"}
+    harness_record_conditions = {"A3", "A4", "A5", "A6", "A8", "B1"}
     assert not any(registry[name].trace_required for name in harness_record_conditions)
     assert all(
         spec.trace_required
